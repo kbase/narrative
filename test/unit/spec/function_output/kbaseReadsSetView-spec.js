@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseReadsSetView'
-], function(Widget) {
-    describe('Test the kbaseReadsSetView widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseReadsSetView'], (Widget) => {
+    'use strict';
+    describe('The kbaseReadsSetView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

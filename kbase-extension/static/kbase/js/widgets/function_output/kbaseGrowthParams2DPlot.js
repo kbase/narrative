@@ -1,134 +1,133 @@
-
-
-
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'plotly',
-		'kbaseGrowthMatrixAbstract',
-		'kbaseTabs',
-		'jquery-dataTables'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Plotly,
-		kbaseGrowthMatrixAbstract,
-		kbaseTabs,
-		jquery_dataTables
-	) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'plotly',
+    'kbaseGrowthMatrixAbstract',
+    'kbaseTabs',
+    'jquery-dataTables',
+], (KBWidget, bootstrap, $, Plotly, kbaseGrowthMatrixAbstract, kbaseTabs, jquery_dataTables) => {
     return KBWidget({
         name: 'kbaseGrowthParams2DPlot',
-        parent : kbaseGrowthMatrixAbstract,
+        parent: kbaseGrowthMatrixAbstract,
         version: '1.0.0',
 
-        setTestParameters: function(){
-//            this.options.growthParam = 'maxRate';
-//            this.options.conditionParamX = 'Tungsten';
-//            this.options.conditionParamY = 'Strain';
-////            this.options.columnIds = 'C1,C3';
-//            this.options.conditionFilter = [
-//                {'Molybdenum': 100}
-//            ];
+        setTestParameters: function () {
+            //            this.options.growthParam = 'maxRate';
+            //            this.options.conditionParamX = 'Tungsten';
+            //            this.options.conditionParamY = 'Strain';
+            ////            this.options.columnIds = 'C1,C3';
+            //            this.options.conditionFilter = [
+            //                {'Molybdenum': 100}
+            //            ];
         },
 
-        buildWidget: function($containerDiv){
-
-            var growthParamNames = {
-                "maxRate": "Max growth rate",
-                "maxRateTime": "Max growth rate time",
-                "maxOD":  "Max OD",
-                "maxODTime": "Max OD time"
+        buildWidget: function ($containerDiv) {
+            const growthParamNames = {
+                maxRate: 'Max growth rate',
+                maxRateTime: 'Max growth rate time',
+                maxOD: 'Max OD',
+                maxODTime: 'Max OD time',
             };
 
-            var growthParamType = this.options.growthParam;
-            var growthParamName = growthParamNames[growthParamType];
-            var conditionParamX = this.options.conditionParamX;
-            var conditionParamY = this.options.conditionParamY;
+            const growthParamType = this.options.growthParam;
+            const growthParamName = growthParamNames[growthParamType];
+            const conditionParamX = this.options.conditionParamX;
+            const conditionParamY = this.options.conditionParamY;
 
-
-            this.buildPlot($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY);
-
+            this.buildPlot(
+                $containerDiv,
+                growthParamType,
+                growthParamName,
+                conditionParamX,
+                conditionParamY
+            );
         },
 
-        buildPlot: function($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY){
-            var self = this;
+        buildPlot: function (
+            $containerDiv,
+            growthParamType,
+            growthParamName,
+            conditionParamX,
+            conditionParamY
+        ) {
+            const self = this;
             var data = [];
-            var xLabel = "";
-            var yLabel = "";
+            let xLabel = '';
+            let yLabel = '';
 
-            var xUnit = null;
-            var yUnit = null;
+            let xUnit = null;
+            let yUnit = null;
 
-            var xValues = {};
-            var yValues = {};
-            var zValues = {};
+            const xValues = {};
+            const yValues = {};
+            const zValues = {};
 
-            var conditions = self.conditions;
-            for(var ci in conditions){
-                var condition = conditions[ci];
+            const conditions = self.conditions;
+            for (const ci in conditions) {
+                const condition = conditions[ci];
 
                 var xValue;
                 var yValue;
-                for(var i in condition.metadata){
-                    var propValue  = condition.metadata[i];
-                    if( propValue.entity != 'Condition') continue;
+                for (var i in condition.metadata) {
+                    const propValue = condition.metadata[i];
+                    if (propValue.entity != 'Condition') continue;
 
-                    if( propValue.property_name == conditionParamX){
+                    if (propValue.property_name == conditionParamX) {
                         xValue = propValue.property_value;
-                        xLabel = propValue.property_name;// + "." + propValue.property_name;
+                        xLabel = propValue.property_name; // + "." + propValue.property_name;
                         xUnit = propValue.property_unit;
-                        if(propValue.property_unit != undefined && propValue.property_unit != ''){
-                            xLabel += " (" + propValue.property_unit + ")";
+                        if (propValue.property_unit != undefined && propValue.property_unit != '') {
+                            xLabel += ' (' + propValue.property_unit + ')';
                         }
                     }
-                    if( propValue.property_name == conditionParamY){
+                    if (propValue.property_name == conditionParamY) {
                         yValue = propValue.property_value;
-                        yLabel = propValue.property_name;// + "." + propValue.property_name;
+                        yLabel = propValue.property_name; // + "." + propValue.property_name;
                         yUnit = propValue.property_unit;
-                        if(propValue.property_unit != undefined && propValue.property_unit != ''){
-                            yLabel += " (" + propValue.property_unit + ")";
+                        if (propValue.property_unit != undefined && propValue.property_unit != '') {
+                            yLabel += ' (' + propValue.property_unit + ')';
                         }
                     }
                 }
                 xValues[xValue] = xValue;
                 yValues[yValue] = yValue;
-                zValues[xValue + "_" + yValue] = condition[growthParamType];
+                zValues[xValue + '_' + yValue] = condition[growthParamType];
             }
-
 
             // Build data X's, Y's, and Z's
-            var dataXs = [];
-            for(var i in xValues){
-                dataXs.push( xUnit ?  parseFloat(xValues[i]) : xValues[i]);
+            const dataXs = [];
+            for (var i in xValues) {
+                dataXs.push(xUnit ? parseFloat(xValues[i]) : xValues[i]);
             }
-//            console.log('xUnit', xUnit);
-//            console.log('before sort: dataXs', dataXs);
-            dataXs.sort(function(a, b) { return a > b ? 1 : -1});
-//            console.log('after sort: dataXs', dataXs);
-//            dataXs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
+            //            console.log('xUnit', xUnit);
+            //            console.log('before sort: dataXs', dataXs);
+            dataXs.sort((a, b) => {
+                return a > b ? 1 : -1;
+            });
+            //            console.log('after sort: dataXs', dataXs);
+            //            dataXs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
 
-            var dataYs = [];
-            for(var i in yValues){
-                dataYs.push( yUnit ?  parseFloat(yValues[i]) : yValues[i]);
+            const dataYs = [];
+            for (var i in yValues) {
+                dataYs.push(yUnit ? parseFloat(yValues[i]) : yValues[i]);
             }
-//            console.log('yUnit', yUnit);
-//            console.log('before sort: dataYs', dataYs);
-            dataYs.sort(function(a, b) { return a > b ? 1 : -1});
-//            console.log('after sort: dataYs', dataYs);
-//            dataYs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
+            //            console.log('yUnit', yUnit);
+            //            console.log('before sort: dataYs', dataYs);
+            dataYs.sort((a, b) => {
+                return a > b ? 1 : -1;
+            });
+            //            console.log('after sort: dataYs', dataYs);
+            //            dataYs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
 
-
-            var dataZs = [];
-            for(var yIndex in dataYs){
-                var row = [];
-                for(var xIndex in dataXs){
-                    var key = dataXs[xIndex] + "_" + dataYs[yIndex];
-                    if(key in zValues){
+            const dataZs = [];
+            for (const yIndex in dataYs) {
+                const row = [];
+                for (const xIndex in dataXs) {
+                    const key = dataXs[xIndex] + '_' + dataYs[yIndex];
+                    if (key in zValues) {
                         row.push(zValues[key]);
-                    } else{
+                    } else {
                         row.push(undefined);
                     }
                 }
@@ -136,61 +135,62 @@ define (
             }
 
             var data = [
-              {
-                x: dataXs,
-                y: dataYs,
-                z: dataZs,
-                type: 'heatmap'
-              }
+                {
+                    x: dataXs,
+                    y: dataYs,
+                    z: dataZs,
+                    type: 'heatmap',
+                },
             ];
 
             // Build title
-            var title = growthParamName;
-            var filters = self.options.conditionFilter;
-            if(filters){
-                title += '<br><span style="font-size:0.8em; font-style: italic">constrained parameteres: ';
+            let title = growthParamName;
+            const filters = self.options.conditionFilter;
+            if (filters) {
+                title +=
+                    '<br><span style="font-size:0.8em; font-style: italic">constrained parameteres: ';
                 var i = 0;
-                for(var param in filters){
-                    var value = filters[param];
-                    if(i > 0){
+                for (const param in filters) {
+                    const value = filters[param];
+                    if (i > 0) {
                         title += ', ';
                     }
-                    title += param + ":" + value;
+                    title += param + ':' + value;
                     i++;
                 }
-                title += "</span>";
+                title += '</span>';
             }
 
-            var layout = {
+            const layout = {
                 autosize: true,
                 margin: {
                     l: 50,
                     r: 50,
                     b: 100,
                     t: 100,
-                    pad: 4
+                    pad: 4,
                 },
                 title: title,
                 titlefont: {
-                    color: "rgb(33, 33, 33)",
-                    family: "",
-                    size: 0
+                    color: 'rgb(33, 33, 33)',
+                    family: '',
+                    size: 0,
                 },
                 xaxis: {
                     title: xLabel,
-                    type:"category",
-//                    autorange:false
+                    type: 'category',
+                    //                    autorange:false
                 },
                 yaxis: {
                     title: yLabel,
-                    type:"category",
-//                    autorange:false
-                }
+                    type: 'category',
+                    //                    autorange:false
+                },
             };
 
-            var $plotDiv = $("<div/>");
-            $containerDiv.append( $plotDiv );
-            Plotly.plot( $plotDiv[0], data, layout, {showLink: false} );
-        }
+            const $plotDiv = $('<div/>');
+            $containerDiv.append($plotDiv);
+            Plotly.plot($plotDiv[0], data, layout, { showLink: false });
+        },
     });
 });

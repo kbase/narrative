@@ -1,5 +1,5 @@
 from requests.exceptions import HTTPError
-from biokbase.NarrativeJobService.baseclient import ServerError as NJSServerError
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
@@ -27,23 +27,23 @@ def transform_job_exception(e):
     ServerError - thrown by the server, usually due to a 500 (ish) exception
     HTTPError - a more mundane HTTP exception
     """
-    if isinstance(e, NJSServerError):
-        return NarrativeException(e.code, e.message, e.name, 'njs')
+    if isinstance(e, EEServerError):
+        return NarrativeException(e.code, e.message, e.name, "njs")
     elif isinstance(e, UJSServerError):
-        return NarrativeException(e.code, e.message, e.name, 'ujs')
+        return NarrativeException(e.code, e.message, e.name, "ujs")
     elif isinstance(e, HTTPError):
         code = e.response.status_code
         if code == 404 or code == 502 or code == 503:
             # service not found
-            msg = 'A KBase service is currently unavailable.'
+            msg = "A KBase service is currently unavailable."
         elif code == 504 or code == 598 or code == 599:
             # service timeout
-            msg = 'There was a temporary network connection error.'
+            msg = "There was a temporary network connection error."
         elif code == 500:
             # internal error. dunno what to do.
-            msg = 'An internal error occurred in the KBase service.'
+            msg = "An internal error occurred in the KBase service."
         else:
-            msg = 'An untracked error occurred.'
-        return NarrativeException(e.response.status_code, msg, 'HTTPError', 'network')
+            msg = "An untracked error occurred."
+        return NarrativeException(e.response.status_code, msg, "HTTPError", "network")
     else:
-        return NarrativeException(-1, str(e), 'Exception', 'unknown')
+        return NarrativeException(-1, str(e), "Exception", "unknown")

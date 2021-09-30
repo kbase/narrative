@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -8,18 +6,18 @@ define([
     '../validation',
     'common/events',
     'bootstrap',
-    'css!font-awesome'
-], function(Promise, $, Jupyter, html, Validation, Events) {
+    'css!font-awesome',
+], (Promise, $, Jupyter, html, Validation, Events) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             parent,
             container,
@@ -36,7 +34,6 @@ define([
         options.required = spec.required();
         options.enabled = true;
 
-
         /*
          * If the parameter is optional, and is empty, return null.
          * If it allows multiple values, wrap single results in an array
@@ -47,7 +44,9 @@ define([
          */
 
         function getInputValue() {
-            var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
+            const checkbox = container.querySelector(
+                '[data-element="input-container"] [data-element="input"]'
+            );
             if (checkbox.checked) {
                 return valueChecked;
             }
@@ -58,37 +57,37 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
         function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function(prop) {
+            const newObj = {};
+            props.forEach((prop) => {
                 newObj[prop] = from[prop];
             });
             return newObj;
         }
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
-                var rawValue = getInputValue(),
+                let rawValue = getInputValue(),
                     // TODO should actually create the set of checkbox values and
-                    // make this a validation option, although not specified as 
+                    // make this a validation option, although not specified as
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),
-                        values: [valueChecked, valueUnchecked]
+                        values: [valueChecked, valueUnchecked],
                     },
                     validationResult;
 
@@ -101,7 +100,7 @@ define([
                     validated: true,
                     diagnosis: validationResult.diagnosis,
                     errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
+                    value: validationResult.parsedValue,
                 };
             });
         }
@@ -113,45 +112,53 @@ define([
          */
 
         function makeInputControl(currentValue, data, events, bus) {
-            var selectOptions = [
-                option({
-                    value: 'yes',
-                    selected: (currentValue === 'yes' ? true : false)
-                }, 'Yes'),
-                option({
-                    value: 'no',
-                    selected: (currentValue === 'no' ? true : false)
-                }, 'No')
+            const selectOptions = [
+                option(
+                    {
+                        value: 'yes',
+                        selected: currentValue === 'yes' ? true : false,
+                    },
+                    'Yes'
+                ),
+                option(
+                    {
+                        value: 'no',
+                        selected: currentValue === 'no' ? true : false,
+                    },
+                    'No'
+                ),
             ];
 
             // CONTROL
-            return select({
-                id: events.addEvent({
-                    type: 'change',
-                    handler: function(e) {
-                        validate()
-                            .then(function(result) {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function (e) {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     bus.send({
                                         type: 'changed',
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.send({
                                     type: 'validation',
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }
-                }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function render(params) {
-            var events = Events.make(),
+            const events = Events.make(),
                 inputControl = makeInputControl(params.value || config.initialValue, events, bus);
 
             $container.find('[data-element="input-container"]').html(inputControl);
@@ -159,26 +166,26 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    bus.send({
-                        type: 'validation',
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.send({
+                    type: 'validation',
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
@@ -186,12 +193,12 @@ define([
         function init() {}
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = node;
                 container = node.appendChild(document.createElement('div'));
                 $container = $(container);
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -200,29 +207,28 @@ define([
         }
 
         function start() {
-            return Promise.try(function() {});
+            return Promise.try(() => {});
         }
 
         function run(params) {
-            return Promise.try(function() {
-                    return render(params);
-                })
-                .then(function() {
-                    return autoValidate();
-                });
+            return Promise.try(() => {
+                return render(params);
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         return {
             init: init,
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

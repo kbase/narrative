@@ -5,16 +5,15 @@
  * @public
  */
 
-(function( $, undefined ) {
+(function ($, undefined) {
     return KBWidget({
-        name: "GenomeImportWidget",
-        parent : kbaseTabbedInput,
-        version: "1.0.0",
-        options: {
-        },
-        init: function(options) {
+        name: 'GenomeImportWidget',
+        parent: kbaseTabbedInput,
+        version: '1.0.0',
+        options: {},
+        init: function (options) {
             this._super(options);
             return this;
         },
     });
-})( jQuery );
+})(jQuery);

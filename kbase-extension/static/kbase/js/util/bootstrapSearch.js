@@ -14,21 +14,13 @@
  * inputFunction - gets fired off when a user inputs something.
  * addonFunction - gets fired off when a user clicks the addon area. default = clear input.
  * escFunction - gets fired off if escape (key 27) is hit while the input is focused.
+ * delay - time in ms before firing the input function (default 300)
  */
 
-define([
-    'jquery',
-    'bluebird',
-    'base/js/namespace',
-    'bootstrap'
-], function (
-    $,
-    Promise,
-    Jupyter
-) {
+define(['jquery', 'bluebird', 'base/js/namespace', 'bootstrap'], ($, Promise, Jupyter) => {
     'use strict';
 
-    var BootstrapSearch = function($target, options) {
+    const BootstrapSearch = function ($target, options) {
         options = options || {};
 
         if (!options.placeholder) {
@@ -46,75 +38,85 @@ define([
         if (!options.filledIcon.startsWith('fa-')) {
             options.filledIcon = 'fa-' + options.filledIcon;
         }
+        if (!options.delay) {
+            options.delay = 300;
+        }
 
         this.options = options;
         this.initialize($target);
     };
 
-    BootstrapSearch.prototype.initialize = function($target) {
-        var self = this;
+    BootstrapSearch.prototype.initialize = function ($target) {
+        const self = this;
 
         // structure.
-        var $input = $('<input type="text">')
+        const $input = $('<input type="text">')
             .attr('Placeholder', this.options.placeholder)
             .addClass('form-control');
 
-        var $addonBtn = $('<span>')
+        const $addonBtn = $('<span>')
             .addClass('input-group-addon btn btn-default kb-method-search-clear')
             .attr('type', 'button')
             .css({
-                'border': '1px solid #ccc',
+                border: '1px solid #ccc',
                 'border-radius': '2px',
-                'border-left': 'none'
+                'border-left': 'none',
             });
 
-        var $addonIcon = $('<span>')
-            .addClass('fa ' + this.options.emptyIcon);
+        const $addonIcon = $('<span>').addClass('fa ' + this.options.emptyIcon);
 
         $addonBtn.append($addonIcon);
 
-        var $container = $('<div>')
-            .addClass('input-group')
-            .append($input)
-            .append($addonBtn);
+        const $container = $('<div>').addClass('input-group').append($input).append($addonBtn);
 
         $target.append($container);
 
         // event bindings.
-        $input.on('focus', function () {
-            if (Jupyter && Jupyter.narrative) {
-                Jupyter.narrative.disableKeyboardManager();
-            }
-        }).on('blur', function () {
-            if (Jupyter && Jupyter.narrative) {
-                Jupyter.narrative.disableKeyboardManager();
-            }
-        }).on('input change', function (e) {
-            if ($input.val()) {
-                $addonIcon.removeClass(self.options.emptyIcon);
-                $addonIcon.addClass(self.options.filledIcon);
-            }
-            else {
-                $addonIcon.removeClass(self.options.filledIcon);
-                $addonIcon.addClass(self.options.emptyIcon);
-            }
-            if (self.options.inputFunction) {
-                self.options.inputFunction(e);
-            }
-        }).on('keyup', function (e) {
-            if (e.keyCode === 27) {
-                if (self.options.escFunction) {
-                    self.options.escFunction(e);
+        $input
+            .on('focus', () => {
+                if (Jupyter && Jupyter.narrative) {
+                    Jupyter.narrative.disableKeyboardManager();
                 }
-            }
-        });
+            })
+            .on('blur', () => {
+                if (Jupyter && Jupyter.narrative) {
+                    Jupyter.narrative.disableKeyboardManager();
+                }
+            })
+            .on('input', (e, ignoreDelay) => {
+                if ($input.val()) {
+                    $addonIcon.removeClass(self.options.emptyIcon);
+                    $addonIcon.addClass(self.options.filledIcon);
+                } else {
+                    $addonIcon.removeClass(self.options.filledIcon);
+                    $addonIcon.addClass(self.options.emptyIcon);
+                }
+                if (self.options.inputFunction) {
+                    if (self.delayTimeout) {
+                        clearTimeout(self.delayTimeout);
+                    }
+                    if (ignoreDelay) {
+                        return self.options.inputFunction(e);
+                    }
+                    self.delayTimeout = setTimeout(
+                        () => self.options.inputFunction(e),
+                        self.options.delay
+                    );
+                }
+            })
+            .on('keyup', (e) => {
+                if (e.keyCode === 27) {
+                    if (self.options.escFunction) {
+                        self.options.escFunction(e);
+                    }
+                }
+            });
 
-        $addonBtn.click(function(e) {
+        $addonBtn.click((e) => {
             if (!self.options.addonFunction) {
                 $input.val('');
-                $input.trigger('input');
-            }
-            else {
+                $input.trigger('input', [true]);
+            } else {
                 self.options.addonFunction(e);
             }
         });
@@ -123,19 +125,18 @@ define([
         this.$container = $container;
     };
 
-    BootstrapSearch.prototype.val = function(val) {
-        var retVal;
+    BootstrapSearch.prototype.val = function (val) {
+        let retVal;
         if (val === undefined || val === null) {
             retVal = this.$input.val();
-        }
-        else {
+        } else {
             retVal = this.$input.val(val);
-            this.$input.trigger('input');
+            this.$input.trigger('input', [true]);
         }
         return retVal;
     };
 
-    BootstrapSearch.prototype.focus = function() {
+    BootstrapSearch.prototype.focus = function () {
         this.$input.focus();
     };
 

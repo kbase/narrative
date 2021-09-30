@@ -1,0 +1,2786 @@
+[
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "biome"
+            }
+        },
+        "title": "Biome",
+        "description": "Biome from ENVO (child of ENVO:00000428)",
+        "examples": [
+            "FENVO:01001831"
+        ],
+        "type": "string",
+        "format": "ontology-term",
+        "ancestorTerm": "ENVO:00000428",
+        "namespace": "envo_ontology"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "city_township"
+            }
+        },
+        "title": "City/Township",
+        "description": "City or Township where the sample was collected",
+        "examples": [
+            "Palisades"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "collection_time"
+            }
+        },
+        "title": "Collection time",
+        "description": "Date amd time when the sample was collected in ISO 8601 format",
+        "examples": [
+            "2021-04-28T09:10:23-07:00"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "comment"
+            }
+        },
+        "title": "Comment",
+        "description": "Free form Comment",
+        "examples": [
+            "TODO"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "continent"
+            }
+        },
+        "title": "Continent",
+        "description": "Continent",
+        "examples": [
+            "North America"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "country"
+            }
+        },
+        "title": "Country",
+        "description": "Country",
+        "examples": [
+            "United States"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "county"
+            }
+        },
+        "title": "County",
+        "description": "County",
+        "examples": [
+            "Alameda"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "depth_bgs"
+            },
+            "unit": "m"
+        },
+        "title": "Depth",
+        "description": "depth in meters below ground surface (m BGS)",
+        "examples": [
+            5
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "description"
+            }
+        },
+        "title": "Description",
+        "description": "Free text to describe features of a sample such as its components, texture, color, shape, etc.",
+        "examples": [
+            "dredge with 50 pieces of basalt and mud"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "elevation"
+            },
+            "formatting": {
+                "useGrouping": true
+            }
+        },
+        "title": "Elevation",
+        "description": "Elevation at which a sample was collected. Use negative values for depth below sea level. Minimum elevation if a range is provided for the elevation/depth below sea level.",
+        "examples": [
+            678.5,
+            -4536
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "elevation_end"
+            },
+            "formatting": {
+                "useGrouping": true
+            }
+        },
+        "title": "Elevation End",
+        "description": "End elevation at which a sample was collected. Use negative values for depth below sea level. Minimum elevation if a range is provided for the elevation/depth below sea level.",
+        "examples": [
+            673.5,
+            -4520
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:aodc"
+            },
+            "unit": "cells/g"
+        },
+        "title": "AODC",
+        "description": "units in cells per gram",
+        "examples": [
+            200456.8368
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:aquifer"
+            }
+        },
+        "title": "Aquifer",
+        "description": "Aquifer",
+        "examples": [
+            "B",
+            "wB",
+            "U/wB",
+            "wB"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:area_name"
+            }
+        },
+        "title": "Area Name",
+        "description": "Area Name",
+        "examples": [
+            "Area 2",
+            "Background A",
+            "Area 4"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:average_water_level"
+            },
+            "unit": "ft"
+        },
+        "title": "Average Water Level",
+        "description": "units in ft above mean sea level (ft AMSL)",
+        "examples": [
+            1006.01
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:biomass_carbon"
+            },
+            "unit": "mg/g"
+        },
+        "title": "Biomass Carbon",
+        "description": "units in milligrams per gram",
+        "examples": [
+            0.98
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:boncat_activity"
+            },
+            "unit": "cells/g"
+        },
+        "title": "BONCAT Activity",
+        "description": "units in cells per gram",
+        "examples": [
+            1270000
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:boring"
+            },
+            "unit": "ft"
+        },
+        "title": "Boring depth",
+        "description": "boring depth in ft below groud surface (ft BGS)",
+        "examples": [
+            50.25
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:boring_diameter"
+            },
+            "unit": "in"
+        },
+        "title": "Boring Diameter",
+        "description": "boring diameter in inches",
+        "examples": [
+            8
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:boring_refusal"
+            }
+        },
+        "title": "Boring Refusal",
+        "description": "Boring Refusal (Y/N)",
+        "examples": [
+            "Y",
+            "N"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:collection_time"
+            }
+        },
+        "title": "Collection time",
+        "description": "Collection Time",
+        "examples": [
+            "9:39:00 AM"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:condition"
+            }
+        },
+        "title": "Condition",
+        "description": "Condition",
+        "examples": [
+            "Open"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:conductivity"
+            },
+            "unit": "mS/cm"
+        },
+        "title": "Conductivity",
+        "description": "conductivity in millisiemens per centimeter",
+        "examples": [
+            802.65
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:dapi_cell_count"
+            }
+        },
+        "title": "DAPI Cell Count",
+        "description": "DAPI cell count in cells per gram",
+        "examples": [
+            9690000
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:date"
+            }
+        },
+        "title": "Date",
+        "description": "Date (YYYY-MM-DD)",
+        "examples": [
+            "2019-06-18"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:dna_picogreen_total"
+            },
+            "unit": "ng"
+        },
+        "title": "DNA Picogreen Total",
+        "description": "units in nanograms",
+        "examples": [
+            228.6658163
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:drive_casing_end_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Drive Casing End Depth",
+        "description": "drive casing end depth in ft below ground surface (ft BGS)",
+        "examples": [
+            27
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:drive_casing_id"
+            },
+            "unit": "in"
+        },
+        "title": "Drive Casing ID",
+        "description": "drive casing inner diameter in inches",
+        "examples": [
+            2.625
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:drive_casing_od"
+            },
+            "unit": "in"
+        },
+        "title": "Drive Casing OD",
+        "description": "drive casing outer diameter in inches",
+        "examples": [
+            3.25
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:drive_casing_start_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Drive Casing Start Depth",
+        "description": "units in ft below ground surface (ft BGS)",
+        "examples": [
+            10
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:drive_casing_type"
+            }
+        },
+        "title": "Drive Casing Type",
+        "description": "Drive Casing Type",
+        "examples": [
+            "GP DT-32"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:experiment_name"
+            }
+        },
+        "title": "Experiment Name",
+        "description": "Experiment Name",
+        "examples": [
+            "100 Well"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:filter"
+            },
+            "unit": "microns"
+        },
+        "title": "Filter",
+        "description": "Filter pore size in microns",
+        "examples": [
+            "2",
+            "10"
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:fraction"
+            }
+        },
+        "title": "Fraction",
+        "description": "Fraction",
+        "examples": [
+            "Spin Down",
+            "Total Cells",
+            ".2um"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:fractures_cavities_waterbreaks"
+            }
+        },
+        "title": "Fractures/Cavities/WaterBreaks",
+        "description": "Fractures/Cavities/WaterBreaks",
+        "examples": [
+            "WB @ 14, 41"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:functional_area"
+            }
+        },
+        "title": "Functional Area",
+        "description": "Functional Area",
+        "examples": [
+            "S-3 Site",
+            "New Hope Pond"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:geological_zone"
+            }
+        },
+        "title": "Geological Zone",
+        "description": "Geological Zone",
+        "examples": [
+            "Saturated",
+            "Vadose"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:ground_elevation"
+            },
+            "unit": "ft"
+        },
+        "title": "Ground Elevation",
+        "description": "ground elevation in ft above mean sea level (ft AMSL)",
+        "examples": [
+            1004.62
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:installation_method"
+            }
+        },
+        "title": "Installation Method",
+        "description": "Method of installation",
+        "examples": [
+            "CORE",
+            "AUGER",
+            "MANUAL"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:leucine_activity"
+            }
+        },
+        "title": "Leucine Activity (ngC/day cell)",
+        "description": "units in ngC/day cell",
+        "examples": [
+            0.000576856
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:lower_seal_end_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Lower Seal End Depth",
+        "description": "Lower seal end depth in ft below ground surface (ft BGS)",
+        "examples": [
+            22.1
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:lower_seal_start_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Lower Seal Start Depth",
+        "description": "Lower seal start depth in ft below ground surface (ft BGS)",
+        "examples": [
+            20.25
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:lower_seal_type"
+            }
+        },
+        "title": "Lower Seal Type",
+        "description": "Lower Seal Type (BENT; BENT-PEL)",
+        "examples": [
+            "BENT-PEL",
+            "BENT"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:maturation_time"
+            }
+        },
+        "title": "Maturation Time",
+        "description": "Maturation Time",
+        "examples": [
+            "24hr",
+            "72hr"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:max_water_level"
+            },
+            "unit": "ft"
+        },
+        "title": "Max Water Level",
+        "description": "Maximum water level in ft above mean sea level (ft AMSL)",
+        "examples": [
+            1008.41
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:method"
+            }
+        },
+        "title": "Method",
+        "description": "Method",
+        "examples": [
+            "BONCAT",
+            "PMA",
+            "No PMA"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:min_water_level"
+            },
+            "unit": "ft"
+        },
+        "title": "Min Water Level",
+        "description": "Minimum water level in ft above mean sea level (ft AMSL)",
+        "examples": [
+            1002.99
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:moisture"
+            },
+            "unit": "percent"
+        },
+        "title": "Moisture",
+        "description": "percent moisture",
+        "examples": [
+            11.26
+        ],
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open"
+            }
+        },
+        "title": "Open",
+        "description": "Open (yes/no)",
+        "examples": [
+            "yes",
+            "no"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_casing_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Open Casing Depth",
+        "description": "Open casing depth in ft below ground surface (ft BGS)",
+        "examples": [
+            92
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_casing_id"
+            },
+            "unit": "in"
+        },
+        "title": "Open Casing ID",
+        "description": "open casing inner diameter in inches (in)",
+        "examples": [
+            6.12
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_casing_od"
+            },
+            "unit": "in"
+        },
+        "title": "Open Casing OD",
+        "description": "open casing outer diameter in inches (in)",
+        "examples": [
+            6.62
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_casing_type"
+            }
+        },
+        "title": "Open Casing Type",
+        "description": "Open Casing Type (SF25; STL)",
+        "examples": [
+            "SF25",
+            "STL"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_hole_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Open Hole Depth",
+        "description": "Open hole depth in ft below ground surface (ft BGS)",
+        "examples": [
+            92
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_hole_diameter"
+            },
+            "unit": "in"
+        },
+        "title": "Open Hole Diameter",
+        "description": "Open hole diameter in inches",
+        "examples": [
+            10
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_interval_diameter"
+            },
+            "unit": "in"
+        },
+        "title": "Open Interval Diameter",
+        "description": "Open interval diameter in inches",
+        "examples": [
+            6
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_interval_end_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Open Interval End Depth",
+        "description": "Open interval end depth in ft below ground surface (ft BGS)",
+        "examples": [
+            125
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:open_interval_start_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Open Interval Start Depth",
+        "description": "Open interval start depth in ft below ground surface (ft BGS)",
+        "examples": [
+            92
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:organic_carbon"
+            },
+            "unit": "mg/g"
+        },
+        "title": "Organic Carbon",
+        "description": "Organic carbon in milligrams per gram dry weight",
+        "examples": [
+            0.532
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:origination_or_plug_abandon"
+            }
+        },
+        "title": "Origination or Plug/Abandon",
+        "description": "Origination or Plug/Abandon (Date)",
+        "examples": [
+            "02/06/92"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:packing_depth_end"
+            },
+            "unit": "ft"
+        },
+        "title": "Packing Depth End",
+        "description": "Packind depth end in ft below ground surface (ft BGS)",
+        "examples": [
+            17.5
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:packing_depth_start"
+            },
+            "unit": "ft"
+        },
+        "title": "Packing Depth Start",
+        "description": "Packind depth start in ft below ground surface (ft BGS)",
+        "examples": [
+            15.08
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:packing_type"
+            }
+        },
+        "title": "Packing Type",
+        "description": "Packing Type (e.g. SAND; SAND-2)",
+        "examples": [
+            "SAND",
+            "SAND-2"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:pore_water_extraction"
+            },
+            "unit": "microliters"
+        },
+        "title": "Pore Water Extraction",
+        "description": "Pore water extraction in microliters",
+        "examples": [
+            200
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:recovery_factor"
+            }
+        },
+        "title": "Recovery Factor",
+        "description": "Recovery Factor",
+        "examples": [
+            1.57
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:redox_potential"
+            }
+        },
+        "title": "Redox Potential",
+        "description": "Redox Potential",
+        "examples": [
+            421.5
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:replicate"
+            }
+        },
+        "title": "Replicate",
+        "description": "Replicate",
+        "examples": [
+            "A1",
+            "A2",
+            "B1",
+            "C"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:rock_formation"
+            }
+        },
+        "title": "Rock Formation",
+        "description": "Rock Formation",
+        "examples": [
+            "Conasauga/Maynardville Limestone",
+            "Conasauga/Nolichucky Shale"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screen_bottom_elevation"
+            },
+            "unit": "ft"
+        },
+        "title": "Screen Bottom Elevation",
+        "description": "Screen bottom elevation in ft above mean sea level (ft AMSL)",
+        "examples": [
+            985.27
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screen_end_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Screen End Depth",
+        "description": "Screen end depth in ft below ground surface (ft BGS)",
+        "examples": [
+            14.39
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screen_start_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Screen Start Depth",
+        "description": "Screen start depth in ft below ground surface (ft BGS)",
+        "examples": [
+            14.14
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screen_top_elevation"
+            },
+            "unit": "ft"
+        },
+        "title": "Screen Top Elevation",
+        "description": "Screen top elevation in ft above mean sea level (ft AMSL)",
+        "examples": [
+            "985.52:was"
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screen_type"
+            }
+        },
+        "title": "Screen Type",
+        "description": "Screen Type",
+        "examples": [
+            "PP/.02"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screened"
+            }
+        },
+        "title": "Screened",
+        "description": "Screened (yes/no)",
+        "examples": [
+            "yes",
+            "no"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:screened_interval"
+            },
+            "unit": "ft"
+        },
+        "title": "Screened Interval",
+        "description": "Screened interval in ft",
+        "examples": [
+            0.25
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:time_zone"
+            }
+        },
+        "title": "Time Zone",
+        "description": "Time Zone (relative to UTC)",
+        "examples": [
+            "UTC-4"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:top_of_casing_elevation"
+            },
+            "unit": "ft"
+        },
+        "title": "Top of Casing Elevation",
+        "description": "Top of casing elevation in ft above mean sea level (ft AMSL)",
+        "examples": [
+            1000.9076
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:top_of_casing_stickup"
+            },
+            "unit": "ft"
+        },
+        "title": "Top of Casing Stickup",
+        "description": "Top of casing stickup in ft",
+        "examples": [
+            1.84
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:top_of_fresh_bedrock"
+            },
+            "unit": "ft"
+        },
+        "title": "Top of Fresh Bedrock",
+        "description": "Top of fresh bedrock in ft below ground surface (ft BGS)",
+        "examples": [
+            6.4
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:top_of_weathered_bedrock"
+            },
+            "unit": "ft"
+        },
+        "title": "Top of Weathered Bedrock",
+        "description": "Top of weathered bedrock in ft below ground surface (ft BGS)",
+        "examples": [
+            8
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:total_carbon"
+            },
+            "unit": "mg/g"
+        },
+        "title": "Total Carbon",
+        "description": "Total carbon in milligrams per gram dry weight",
+        "examples": [
+            0.3689
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:total_nitrogen"
+            },
+            "unit": "mg/g"
+        },
+        "title": "Total Nitrogen",
+        "description": "Total nitrogen in milligrams per gram dry weight",
+        "examples": [
+            0.0572
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:treatment"
+            }
+        },
+        "title": "Treatment",
+        "description": "Treatment",
+        "examples": [
+            "HPG",
+            "No HPG"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:upper_seal_end_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Upper Seal End Depth",
+        "description": "Upper seal end depth in ft below ground surface (ft BGS)",
+        "examples": [
+            12
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:upper_seal_start_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Upper Seal Start Depth",
+        "description": "Upper seal start depth in ft below ground surface (ft BGS)",
+        "examples": [
+            10
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:upper_seal_type"
+            }
+        },
+        "title": "Upper Seal Type",
+        "description": "Upper Seal Type",
+        "examples": [
+            "BENT",
+            "BENT-PEL"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_casing_depth"
+            },
+            "unit": "ft"
+        },
+        "title": "Well Casing Depth",
+        "description": "Well casing depth in ft below ground surface (ft BGS)",
+        "examples": [
+            45.25
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_casing_id"
+            },
+            "unit": "in"
+        },
+        "title": "Well Casing ID",
+        "description": "Well casing inner diameter. units in inches",
+        "examples": [
+            3.975
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_casing_od"
+            },
+            "unit": "in"
+        },
+        "title": "Well Casing OD",
+        "description": "Well casing outer diameter. units in inches",
+        "examples": [
+            4.5
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_casing_type"
+            }
+        },
+        "title": "Well Casing Type",
+        "description": "Well Casing Type",
+        "examples": [
+            "SP",
+            "MP"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_name"
+            }
+        },
+        "title": "Well Name",
+        "description": "Well Name (ID)",
+        "examples": [
+            "GW085",
+            "GW098"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_status"
+            }
+        },
+        "title": "Well Status",
+        "description": "Status of Well",
+        "examples": [
+            "Active",
+            "Inactive"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "enigma:well_type"
+            }
+        },
+        "title": "Type of Well",
+        "description": "Type of Welll (SP; MP)",
+        "examples": [
+            "SP",
+            "MP"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "env_package"
+            }
+        },
+        "title": "Environmental Package",
+        "description": "Environmental Package (MIxS vocabulary)",
+        "examples": [
+            "Water",
+            "Soil"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "feature"
+            }
+        },
+        "title": "Feature",
+        "description": "Feature from ENVO (child of ENVO:01000813)",
+        "examples": [
+            "ENVO:00000314"
+        ],
+        "type": "string",
+        "format": "ontology-term",
+        "ancestorTerm": "ENVO:01000813",
+        "namespace": "envo_ontology"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:biosample_id"
+            }
+        },
+        "title": "Ecosystem Type",
+        "description": "GOLD biosample identifier",
+        "examples": [
+            "Gb0291112"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:community"
+            }
+        },
+        "title": "Community",
+        "description": "Community Sampled",
+        "examples": [
+            "microbial communities"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:ecosystem"
+            }
+        },
+        "title": "Ecosystem (GOLD)",
+        "description": "Ecosystem (GOLD)",
+        "examples": [
+            "Environmental"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:ecosystem_category"
+            }
+        },
+        "title": "Ecosystem Category",
+        "description": "Ecosystem Category (GOLD)",
+        "examples": [
+            "Aquatic"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:ecosystem_path_id"
+            }
+        },
+        "title": "Ecosystem Path ID",
+        "description": "Ecosystem Path ID (GOLD)",
+        "examples": [
+            3948
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:ecosystem_subtype"
+            }
+        },
+        "title": "Ecosystem Subtype",
+        "description": "Ecosystem Subtype (GOLD)",
+        "examples": [
+            "Lake"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:ecosystem_type"
+            }
+        },
+        "title": "Ecosystem Type",
+        "description": "Ecosystem Type (GOLD)",
+        "examples": [
+            "Freshwater"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:habitat"
+            }
+        },
+        "title": "Habitat",
+        "description": "Sample Habitat (MIGS-6)",
+        "examples": [
+            "Lake sediment"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:specific_ecosystem"
+            }
+        },
+        "title": "Specific Ecosystem Term",
+        "description": "Specific Ecosystem (GOLD)",
+        "examples": [
+            "Sediment"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "gold:study_id"
+            }
+        },
+        "title": "GOLD study identifier",
+        "description": "GOLD study identifier",
+        "examples": [
+            "Gs0131983"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "latitude"
+            },
+            "unit": "degrees",
+            "formatting": {
+                "minimumFractionDigits": 3,
+                "maximumFractionDigits": 3
+            }
+        },
+        "title": "Latitude",
+        "description": "Latitude of the location where the sample was collected in WGS 84 coordinate system. ('Start latitude' for linear sampling features such as dredges.) Needs to be entered in decimal degrees. Negative values for South latitudes.",
+        "examples": [
+            5.89634
+        ],
+        "type": "number",
+        "minimum": -90,
+        "maximum": 90
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "latitude_end"
+            },
+            "unit": "degrees",
+            "formatting": {
+                "minimumFractionDigits": 3,
+                "maximumFractionDigits": 3
+            }
+        },
+        "title": "Latitude End",
+        "description": "End latitude of the location where the sample was collected in WGS 84 coordinate system. ('End latitude' for linear sampling features such as dredges.) Needs to be entered in decimal degrees. Negative values for South latitudes.",
+        "examples": [
+            5.89634
+        ],
+        "type": "number",
+        "minimum": -90,
+        "maximum": 90
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "locality"
+            }
+        },
+        "title": "Locality",
+        "description": "Name of the specific place where your sample was collected. This could be the name of a mine, a volcanic field, a vent field, or similar",
+        "examples": [
+            "Franklin Mine",
+            "Craters of the Moon National Park"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "locality_description"
+            }
+        },
+        "title": "Locality description",
+        "description": "Additional information about the specific place where your sample was collected",
+        "examples": [
+            "on private land"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "location_description"
+            }
+        },
+        "title": "Location description",
+        "description": "Free text description of the location",
+        "examples": [
+            "flank of volcanic cone"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "longitude"
+            },
+            "unit": "degrees",
+            "formatting": {
+                "minimumFractionDigits": 3,
+                "maximumFractionDigits": 3
+            }
+        },
+        "title": "Longitude",
+        "description": "Longitude of the location where the sample was collected in WGS 84 cooridinate system. ('Start longitude' for linear sampling features such as dredges.) Needs to be entered in decimal degrees. Negative values for 'West' longitudes.",
+        "examples": [
+            -103.785
+        ],
+        "type": "number",
+        "minimum": -180,
+        "maximum": 180
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "longitude_end"
+            },
+            "unit": "degrees",
+            "formatting": {
+                "minimumFractionDigits": 3,
+                "maximumFractionDigits": 3
+            }
+        },
+        "title": "Longitude End",
+        "description": "End longitude of the location where the sample was collected in WGS 84 cooridinate system. Needs to be entered in decimal degrees. Negative values for 'West' longitudes.",
+        "examples": [
+            -103.285
+        ],
+        "type": "number",
+        "minimum": -180,
+        "maximum": 180
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "material"
+            }
+        },
+        "title": "Material",
+        "description": "Material from ENVO (child of ENVO:00010483)",
+        "examples": [
+            "ENVO:01001614"
+        ],
+        "type": "string",
+        "format": "ontology-term",
+        "ancestorTerm": "ENVO:00010483",
+        "namespace": "envo_ontology"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "modification_date"
+            }
+        },
+        "title": "Modification Date",
+        "description": "Modification date",
+        "examples": [
+            "01-OCT-19 11.32.17.481000000 AM"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "name"
+            }
+        },
+        "title": "Sample Name",
+        "description": "name validator",
+        "examples": [
+            "SAM1234",
+            "IEMEG0001"
+        ],
+        "type": "string",
+        "maxLength": 240
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "ncbi:taxonomy_name"
+            }
+        },
+        "title": "NCBI taxonomy name",
+        "description": "NCBI Taxonomy Name",
+        "examples": [
+            "soil metagenome"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "nmdc:omics_type"
+            }
+        },
+        "title": "NMDC OMICS type",
+        "description": "NMDC OMICS Type",
+        "examples": [
+            "Metagenome",
+            "Metatranscriptome"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "other_names"
+            }
+        },
+        "title": "Other name(s)",
+        "description": "Other name(s) used for the sample.",
+        "examples": [
+            "TRPOW",
+            "T-PROW"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "ph"
+            },
+            "unit": "pH"
+        },
+        "title": "pH",
+        "description": "pH of sample",
+        "examples": [
+            7
+        ],
+        "type": "number",
+        "minimum": -10,
+        "maximum": 20
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "purpose"
+            }
+        },
+        "title": "Purpose",
+        "description": "Purpose of the Sample",
+        "examples": [
+            "Biogeochemistry, geochemistry and microbiology"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sample_template"
+            }
+        },
+        "title": "Template",
+        "description": "Template Format",
+        "examples": [
+            "SESAR",
+            "ENIGMA",
+            "KBASE"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:age_max"
+            },
+            "unit": "years"
+        },
+        "title": "Age (max)",
+        "description": "Maximum geological age in years",
+        "examples": [
+            4.6
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:age_min"
+            },
+            "unit": "years"
+        },
+        "title": "Age (min)",
+        "description": "minimum geological age in years",
+        "examples": [
+            4.2
+        ],
+        "type": "number",
+        "minimum": 0
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:age_unit"
+            }
+        },
+        "title": "Age Unit",
+        "description": "Unit for the age provided",
+        "examples": [
+            "Ma"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:archive_contact_current"
+            }
+        },
+        "title": "Current archive contact",
+        "description": "Address and/or email of the person who should be contacted for information about or access to the sample.",
+        "examples": [
+            "curator@ldeo.columbia.edu"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:archive_contact_original"
+            }
+        },
+        "title": "Original archive contact",
+        "description": "Address and/or email of the person who should be contacted for information about the sample's original archive.",
+        "examples": [
+            "curator@ldeo.columbia.edu"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:archive_current"
+            }
+        },
+        "title": "Current archive",
+        "description": "Name of institution, museum, or repository where the sample is currently stored.",
+        "examples": [
+            "Lamont Deep Sea Core Repository",
+            "Palisades, NY"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:archive_original"
+            }
+        },
+        "title": "Original archive",
+        "description": "Name of institution, museum, or repository where the sample is originally stored.",
+        "examples": [
+            "Lamont Deep Sea Core Repository",
+            "Palisades, NY"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:classification"
+            }
+        },
+        "title": "Classification",
+        "description": "Taxonomy (formal classification) Formal categorization of sample.",
+        "examples": [
+            "Igneous>Plutonic>Felsic",
+            "Plagioclase"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:classification_comment"
+            }
+        },
+        "title": "Classification Comment",
+        "description": "Classification Comment",
+        "examples": [
+            "TODO"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_date"
+            }
+        },
+        "title": "Collection date",
+        "description": "Date when the sample was collected.",
+        "examples": [
+            "2015-03-31"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_date_end"
+            }
+        },
+        "title": "Collection date (end)",
+        "description": "Date when the sample collection was finished (if a date range is provided).",
+        "examples": [
+            "2015-03-31"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_date_precision"
+            }
+        },
+        "title": "Collection date precision",
+        "description": "Precision to display the collection date and time.",
+        "examples": [
+            "year",
+            "month",
+            "day",
+            "time"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_method"
+            }
+        },
+        "title": "Collection method",
+        "description": "Method by which a sample was collected",
+        "examples": [
+            "Dredging",
+            "Manual"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_method_description"
+            }
+        },
+        "title": "Collection method description",
+        "description": "Additional information about the collection method",
+        "examples": [
+            "Hand sample collected from the top part of a large boulder"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_time"
+            }
+        },
+        "title": "Collection time",
+        "description": "Time when the sample was collected.",
+        "examples": [
+            "12:05:03Z"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collection_time_end"
+            }
+        },
+        "title": "Collection time (end)",
+        "description": "End time when the sample was collected.",
+        "examples": [
+            "13:05:01Z"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collector_chief_scientist"
+            }
+        },
+        "title": "Collector/Chief Scientist name",
+        "description": "Name of the person who collected the sample. In case of larger field programs, name of chief scientist responsible for sample collection.",
+        "examples": [
+            "Jane Smith"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:collector_chief_scientist_address"
+            }
+        },
+        "title": "Collector/Chief Scientist address",
+        "description": "Institution, address, & email of the collector or chief scientist.",
+        "examples": [
+            "Woods Hole Oceanographic Institution, Woods Hole, MA"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:depth_in_core_max"
+            },
+            "unit": "meters"
+        },
+        "title": "Depth in Core (max)",
+        "description": "maximum depth in core in meters",
+        "examples": [
+            0.003
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:depth_in_core_min"
+            },
+            "unit": "meters"
+        },
+        "title": "Depth in Core (min)",
+        "description": "Minimum depth in core in meters",
+        "examples": [
+            0.001
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:depth_scale"
+            }
+        },
+        "title": "Depth scale",
+        "description": "Unit in which the depth is provided",
+        "examples": [
+            "MBSF",
+            "cm"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:easting"
+            },
+            "unit": "m"
+        },
+        "title": "Easting",
+        "description": "Easting in meters",
+        "examples": [
+            305294
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:elevation_end"
+            },
+            "unit": "m"
+        },
+        "title": "Elevation end",
+        "description": "Elevation end in meters",
+        "examples": [
+            "673.5",
+            "-4520"
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:elevation_start"
+            },
+            "unit": "m"
+        },
+        "title": "Elevation start",
+        "description": "Elevation start in meters",
+        "examples": [
+            "678.5",
+            "-4536"
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:elevation_unit"
+            }
+        },
+        "title": "Elevation Unit",
+        "description": "Unit in which elevation start and/or end are provided in.",
+        "examples": [
+            "meters",
+            "feet",
+            "miles",
+            "kilometers"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:field_name"
+            }
+        },
+        "title": "Field name (informal classification)",
+        "description": "Taxonomy (field name) Informal classification of sample.",
+        "examples": [
+            "basalt",
+            "amphibole",
+            "sea water"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:field_program_cruise"
+            }
+        },
+        "title": "Field program/cruise",
+        "description": "Name or identifier of the field program (cruise or expedition), during which the sample was collected.",
+        "examples": [
+            "TN182"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:geological_age"
+            }
+        },
+        "title": "Geological Age",
+        "description": "Age of a sample as described by the stratigraphic era, period, state, etc.",
+        "examples": [
+            "Cretaceous"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:geological_unit"
+            }
+        },
+        "title": "Geological Unit",
+        "description": "A body of rock established as a distinct entity in the classification of the Earth's rocks, e.g. Supergroup, Group, Formation, or Flow",
+        "examples": [
+            "Coconino Sandstone",
+            "Fig Tree Formation"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:igsn"
+            }
+        },
+        "title": "IGSN",
+        "description": "IGSN assigned by SESAR",
+        "examples": [
+            "IEMEG0001"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:is_archived"
+            }
+        },
+        "title": "Is Archived",
+        "description": "Is Archived",
+        "examples": [
+            "Y",
+            "N"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:launch_id"
+            }
+        },
+        "title": "Launch ID",
+        "description": "Further identifying information about the launch",
+        "examples": [
+            "3969",
+            "J2-434"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:launch_platform_name"
+            }
+        },
+        "title": "Launch platform name",
+        "description": "The name of the launch used to collect the sample.",
+        "examples": [
+            "Alvin",
+            "Jason II"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:launch_type"
+            }
+        },
+        "title": "Launch type",
+        "description": "The type of launch used to collect the sample.",
+        "examples": [
+            "HOV"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:material"
+            }
+        },
+        "title": "Material (SESAR)",
+        "description": "Material that the sample consists of using SESAR vocabulary.",
+        "examples": [
+            "Rock",
+            "Liquid>Aqueous"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:navigation_type"
+            }
+        },
+        "title": "Navigation type",
+        "description": "Navigation type",
+        "examples": [
+            "GPS"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:northing"
+            },
+            "unit": "m"
+        },
+        "title": "Northing",
+        "description": "Northing in meters",
+        "examples": [
+            4111279
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:parent_igsn"
+            }
+        },
+        "title": "Parent IGSN",
+        "description": "IGSN of Parent Sample",
+        "examples": [
+            "IEMEG0002"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:physiographic_feature_name"
+            }
+        },
+        "title": "Name of physiographic feature",
+        "description": "Name of the physiographic feature that you entered",
+        "examples": [
+            "East Pacific Rise",
+            "Dead Sea"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:physiographic_feature_primary"
+            }
+        },
+        "title": "Primary physiographic feature",
+        "description": "Type of physical feature that your sample was collected from (see suggested list)",
+        "examples": [
+            "volcano",
+            "mid-ocean ridge"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:platform_description"
+            }
+        },
+        "title": "Platform description",
+        "description": "Description of platform for the cruise.",
+        "examples": [
+            "TODO"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:platform_name"
+            }
+        },
+        "title": "Platform name",
+        "description": "Name of platform for the cruise.",
+        "examples": [
+            "R/V Roger Revelle"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:platform_type"
+            }
+        },
+        "title": "Platform type",
+        "description": "Type of platform for the cruise.",
+        "examples": [
+            "Ship"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:registrant_current"
+            }
+        },
+        "title": "Current Registrant Name",
+        "description": "Registrant of the sample in SESAR",
+        "examples": [
+            "Jane Smith"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:registrant_org"
+            }
+        },
+        "title": "Organization Registrant Name",
+        "description": "Registrant organization of the sample in SESAR",
+        "examples": [
+            "Jane Smith"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:related_identifiers"
+            }
+        },
+        "title": "Related Identifiers",
+        "description": "IGSN of Related Samples",
+        "examples": [
+            "IEMEG0003"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:related_url"
+            }
+        },
+        "title": "Related URL",
+        "description": "Related URL associated with the samples",
+        "examples": [
+            "https://doi.org/10.1594/IEDA/999999"
+        ],
+        "type": "string",
+        "format": "url"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:related_url_description"
+            }
+        },
+        "title": "Related URL Description",
+        "description": "Free text description of the related URL",
+        "examples": [
+            "DOI for related published data"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:related_url_type"
+            }
+        },
+        "title": "Related URL Type",
+        "description": "Related URL type. Either DOI or Regular URL",
+        "examples": [
+            "DOI"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:relation_type"
+            }
+        },
+        "title": "Relation Type",
+        "description": "Relation Type",
+        "examples": [
+            "TODO"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:release_date"
+            }
+        },
+        "title": "Release date",
+        "description": "Date when sample metadata is publicly accessible and searchable. If null, defaults to date of registration (recommended).",
+        "examples": [
+            "2018-03-15"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:sample_type"
+            }
+        },
+        "title": "Sample Type",
+        "description": "Sample Type",
+        "examples": [
+            "Core, Core Section"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:size"
+            }
+        },
+        "title": "Size",
+        "description": "Size of the registered object, such as the dimension of a specimen, the length of a core, or the weight of a dredge",
+        "examples": [
+            "2x4",
+            "45"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:size_unit"
+            }
+        },
+        "title": "Size unit",
+        "description": "Unit for the numerical value provided for 'size'.",
+        "examples": [
+            "cm",
+            "kg"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:state_province"
+            }
+        },
+        "title": "State/Province",
+        "description": "State or Province where the sample was collected",
+        "examples": [
+            "Alaska"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:sub-object_type"
+            }
+        },
+        "title": "Sub-object type",
+        "description": "More descriptive Object Type. This applies only to samples with Object Type set to Individual Sample.",
+        "examples": [
+            "Thin section",
+            "Powder"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:vertical_datum"
+            }
+        },
+        "title": "Vertical Datum",
+        "description": "Vertical datum used to calculate the elevation",
+        "examples": [
+            "NAVD88",
+            "MSL"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "sesar:zone"
+            }
+        },
+        "title": "Zone",
+        "description": "Zone for the geographic Cartesian coordinate \"11R\"",
+        "examples": [
+            "11R"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "size"
+            },
+            "unit": "m^3"
+        },
+        "title": "Size",
+        "description": "Size in meters cubed",
+        "examples": [
+            0.025
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "state_province"
+            }
+        },
+        "title": "State/Province",
+        "description": "State or Province",
+        "examples": [
+            "Alaska"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "study_doi"
+            }
+        },
+        "title": "Study DOI",
+        "description": "Study DOI",
+        "examples": [
+            "TODO"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "study_principal_investigator"
+            }
+        },
+        "title": "Study Principal Investigator",
+        "description": "Study Principal Investigator",
+        "examples": [
+            "Charles Darwin"
+        ],
+        "type": "string"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "temperature"
+            },
+            "unit": "celsius"
+        },
+        "title": "Temperature",
+        "description": "Temperature (Celsius)",
+        "examples": [
+            22.1
+        ],
+        "type": "number"
+    },
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "kbase": {
+            "sample": {
+                "key": "url"
+            }
+        },
+        "title": "URL",
+        "description": "URL for Sample",
+        "examples": [
+            "http://igsn.org/IEBWE0001"
+        ],
+        "type": "string",
+        "format": "url"
+    }
+]

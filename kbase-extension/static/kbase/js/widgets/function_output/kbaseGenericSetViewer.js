@@ -43,7 +43,7 @@ define([
             this.state = {
                 setType: null,
                 error: null
-            }
+            };
             this.setTypes = {
                 'KBaseSets.ReadsAlignmentSet': {
                     module: ReadsAlignmentSet
@@ -51,7 +51,7 @@ define([
                 'KBaseSets.AssemblySet': {
                     module: AssemblySet
                 }
-            }
+            };
         }
 
         componentDidMount() {
@@ -74,7 +74,7 @@ define([
                     // set types defined above.
                     const objectType = [objectInfo.typeModule, objectInfo.typeName].join('.');
 
-                    const mapping = this.setTypes[objectType]
+                    const mapping = this.setTypes[objectType];
                     console.warn('about to map...', infos, this.props, this.state);
                     if (mapping) {
                         // return h(mapping.module, {

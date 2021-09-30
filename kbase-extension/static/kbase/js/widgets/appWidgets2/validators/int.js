@@ -1,8 +1,5 @@
-define([
-    'bluebird'
-], function(Promise) {
-
-
+define(['bluebird'], (Promise) => {
+    'use strict';
 
     function toInteger(value) {
         switch (typeof value) {
@@ -17,78 +14,67 @@ define([
                 }
                 throw new Error('Invalid integer format');
             default:
-                throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
         }
     }
 
     function importString(value) {
-        var plainValue,
-            parsedValue;
-
         if (value === undefined || value === null) {
             return null;
         }
 
         if (typeof value !== 'string') {
-            throw new Error('value must be a string (it is of type "' + (typeof value) + '")');
-        } else {
-            plainValue = value.trim();
-            if (plainValue === '') {
-                return null;
-            }
-            parsedValue = toInteger(plainValue);
+            throw new Error('value must be a string (it is of type "' + typeof value + '")');
         }
 
-        return parsedValue;
+        const plainValue = value.trim();
+        if (plainValue === '') {
+            return null;
+        }
+        return toInteger(plainValue);
     }
-
-    // function validateInt(value, min, max) {
-    //     if (isNaN(value)) {
-    //         return 'value must be numeric';
-    //     }
-    //     if (max && max < value) {
-    //         return 'the maximum value for this parameter is ' + max;
-    //     }
-    //     if (min && min > value) {
-    //         return 'the minimum value for this parameter is ' + min;
-    //     }
-    // }
 
     function validateInt(value, min, max) {
         if (typeof value !== 'number') {
-            return {
-                id: 'non-numeric',
-                message: 'value must be numeric'
-            };
+            try {
+                value = toInteger(value);
+            } catch (error) {
+                return {
+                    id: 'non-numeric',
+                    message: 'value must be numeric',
+                };
+            }
         }
         if (isNaN(value)) {
             return {
                 id: 'non-numeric',
-                message: 'value must be numeric'
+                message: 'value must be numeric',
             };
         }
         if (value - Math.floor(value) !== 0) {
             return {
                 id: 'non-integer',
-                message: 'value is a number but not an integer'
+                message: 'value is a number but not an integer',
             };
         }
         if (max && max < value) {
             return {
                 id: 'int-above-maximum',
-                message: 'the maximum value for this parameter is ' + max
+                message: 'the maximum value for this parameter is ' + max,
             };
         }
         if (min && min > value) {
             return {
                 id: 'int-below-minimum',
-                message: 'the minimum value for this parameter is ' + min
+                message: 'the minimum value for this parameter is ' + min,
             };
         }
     }
 
     function applyConstraints(value, constraints) {
-        var messageId, errorMessage, diagnosis = 'valid';
+        let messageId,
+            errorMessage,
+            diagnosis = 'valid';
 
         if (value === null) {
             if (constraints.required) {
@@ -99,13 +85,11 @@ define([
                 diagnosis = 'optional-empty';
             }
         } else {
-            var error = validateInt(value, constraints.min, constraints.max);
+            const error = validateInt(value, constraints.min, constraints.max);
             if (error) {
                 errorMessage = error.message;
                 messageId = error.id;
                 diagnosis = 'invalid';
-            } else {
-                diagnosis = 'valid';
             }
         }
 
@@ -113,42 +97,19 @@ define([
             isValid: errorMessage ? false : true,
             messageId: messageId,
             errorMessage: errorMessage,
-            diagnosis: diagnosis
+            diagnosis: diagnosis,
         };
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints);
         });
     }
 
-    // function validate(value, constraints) {
-    //     try {
-    //         var nativeValue = importString(value);
-    //         return {
-    //             value: {
-    //                 original: value,
-    //                 parsed: nativeValue
-    //             },
-    //             validation: applyConstraints(nativeValue, constraints)
-    //         };
-    //     } catch (ex) {
-    //         return {
-    //             value: {
-    //                 original: value
-    //             },
-    //             validation: {
-    //                 isValid: false,
-    //                 errorMessage: ex.message,
-    //                 diagnosis: 'invalid'
-    //             }
-    //         };
-    //     }
-    // }
     return {
         importString: importString,
         applyConstraints: applyConstraints,
-        validate: validate
+        validate: validate,
     };
 });

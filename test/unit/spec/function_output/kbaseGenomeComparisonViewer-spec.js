@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseGenomeComparisonViewer'
-], function(Widget) {
-    describe('Test the kbaseGenomeComparisonViewer widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseGenomeComparisonViewer'], (Widget) => {
+    'use strict';
+    describe('The kbaseGenomeComparisonViewer widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

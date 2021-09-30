@@ -1,60 +1,85 @@
-define([
-    'handlebars'
-], function (
-    Handlebars
-) {
+define(['handlebars'], (Handlebars) => {
     'use strict';
 
     function compileTemplates(templates) {
-        return templates.map(function (template) {
-            if (typeof template.template === 'string') {
+        return templates.map(({ template, id, label }) => {
+            if (typeof template === 'string') {
                 return {
-                    label: template.label,
-                    template: Handlebars.compile(template.template)
+                    id,
+                    label,
+                    template: Handlebars.compile(template),
                 };
-            } else if (template.template instanceof Array) {
+            } else if (template instanceof Array) {
                 return {
-                    label: template.label,
-                    template: compileTemplates(template.template)
+                    template: compileTemplates(template),
                 };
             } else {
                 return {
-                    label: template.label,
-                    template: Handlebars.compile('')
+                    id,
+                    label,
+                    template: Handlebars.compile(''),
                 };
             }
         });
     }
 
     function applyMetadataTemplates(templates, data) {
-        return templates.map(function (template) {
-            var value;
-            if (template.template instanceof Array) {
-                value = applyMetadataTemplates(template.template, data);
+        return templates.map(({ template, id, label }) => {
+            let value;
+            if (template instanceof Array) {
+                value = applyMetadataTemplates(template, data);
             } else {
-                value = template.template(data);
+                value = template(data);
             }
             return {
-                label: template.label,
-                value: value
+                id: id,
+                label,
+                value: value,
             };
         });
     }
 
     function requireArg(arg, name) {
-        var argPath = name.split('.');
-        for (var i = 0; i < argPath.length; i += 1) {
-            var key = argPath[i];
+        const argPath = name.split('.');
+        for (let i = 0; i < argPath.length; i += 1) {
+            const key = argPath[i];
             if (!(key in arg)) {
-                throw new Error('Required argument "' + key + '" in "' + name +  '" is required but missing');
+                throw new Error(
+                    'Required argument "' + key + '" in "' + name + '" is required but missing'
+                );
             }
             arg = arg[key];
         }
         return arg;
     }
+
+    function listObjectsWithSets(narrativeService, workspaceName, type) {
+        return narrativeService
+            .callFunc('list_objects_with_sets', [
+                {
+                    ws_name: workspaceName,
+                    types: [type],
+                    includeMetadata: 1,
+                },
+            ])
+            .then(([data]) => {
+                return data.data.map((item) => {
+                    const info = item.object_info;
+                    const objectName = info[1];
+                    const metadata = info[10] || {};
+                    return {
+                        info,
+                        objectName,
+                        metadata,
+                    };
+                });
+            });
+    }
+
     return Object.freeze({
-        compileTemplates: compileTemplates,
-        applyMetadataTemplates: applyMetadataTemplates,
-        requireArg: requireArg
+        compileTemplates,
+        applyMetadataTemplates,
+        requireArg,
+        listObjectsWithSets,
     });
 });

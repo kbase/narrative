@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'RankAbundancePlot'
-], function(Widget) {
-    describe('Test the RankAbundancePlot widget', function() {
-        it('Should do things', function() {
-
+define(['RankAbundancePlot'], (Widget) => {
+    'use strict';
+    describe('The RankAbundancePlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

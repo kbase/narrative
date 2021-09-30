@@ -8,10 +8,11 @@ import json
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
 
-tokenenv = 'KB_AUTH_TOKEN'
+tokenenv = "KB_AUTH_TOKEN"
 token_api_url = URLS.auth + "/api/V2"
 endpt_token = "/token"
 endpt_token_revoke = "/tokens/revoke"
+endpt_user_display = "/users/?list="
 
 
 def validate_token():
@@ -50,7 +51,7 @@ def get_user_info(token):
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
     auth_info = json.loads(r.content)
-    auth_info['token'] = token
+    auth_info["token"] = token
     return auth_info
 
 
@@ -64,9 +65,9 @@ def init_session_env(auth_info, ip):
         user: the username of whoever created the auth token
       ip: the client IP address
     """
-    set_environ_token(auth_info.get('token', None))
-    kbase_env.session = auth_info.get('id', '')
-    kbase_env.user = auth_info.get('user', '')
+    set_environ_token(auth_info.get("token", None))
+    kbase_env.session = auth_info.get("id", "")
+    kbase_env.user = auth_info.get("user", "")
     kbase_env.client_ip = ip
 
 
@@ -89,8 +90,7 @@ def get_agent_token(login_token, token_name="NarrativeAgent"):
     expires: expiration date, ms since epoch
     created: ms since epoch
     """
-    headers = {"Authorization": login_token,
-               "Content-Type": "Application/json"}
+    headers = {"Authorization": login_token, "Content-Type": "Application/json"}
     data = json.dumps({"name": token_name})
     r = requests.post(token_api_url + endpt_token, headers=headers, data=data)
     if r.status_code != requests.codes.ok:
@@ -108,6 +108,18 @@ def revoke_token(auth_token, revoke_id):
     revoke_id - the id of the token to invalidate
     """
     headers = {"Authorization": auth_token}
-    r = requests.delete(URLS.auth + endpt_token_revoke + "/" + revoke_id, headers=headers)
+    r = requests.delete(
+        URLS.auth + endpt_token_revoke + "/" + revoke_id, headers=headers
+    )
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
+
+
+def get_display_names(auth_token: str, user_ids: list) -> dict:
+    headers = {"Authorization": auth_token}
+    r = requests.get(
+        token_api_url + endpt_user_display + ",".join(user_ids), headers=headers
+    )
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    return r.json()

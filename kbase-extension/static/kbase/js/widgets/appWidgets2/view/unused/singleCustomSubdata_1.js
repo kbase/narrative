@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -12,19 +10,8 @@ define([
     'common/dom',
     'common/props',
     'bootstrap',
-    'css!font-awesome'
-], function (
-    $,
-    Promise,
-    Handlebars,
-    html,
-    Workspace,
-    Validation,
-    Events,
-    Runtime,
-    Dom,
-    Props
-    ) {
+    'css!font-awesome',
+], ($, Promise, Handlebars, html, Workspace, Validation, Events, Runtime, Dom, Props) => {
     'use strict';
 
     /*
@@ -43,8 +30,9 @@ define([
      */
 
     // Constants
-    var t = html.tag,
-        div = t('div'), p = t('p'),
+    const t = html.tag,
+        div = t('div'),
+        p = t('p'),
         select = t('select'),
         option = t('option');
 
@@ -65,9 +53,9 @@ define([
             //    value: null
             //},
             options = {
-                objectSelectionPageSize: 20
+                objectSelectionPageSize: 20,
             },
-        runtime = Runtime.make(),
+            runtime = Runtime.make(),
             dom;
 
         // Validate configuration.
@@ -81,43 +69,47 @@ define([
         options.enabled = true;
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
-                selectOptions = [option({value: ''}, '')];
+                selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
-                var selected = false,
-                    optionLabel = availableValue.desc,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value === availableValue.id) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map((availableValue) => {
+                    let selected = false,
+                        optionLabel = availableValue.desc,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value === availableValue.id) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || null;
-            
+
             if (value) {
-                return  '1 / ' + String(availableValues.length) + ' items';
+                return '1 / ' + String(availableValues.length) + ' items';
             } else {
-                return  '0 / ' + String(availableValues.length) + ' items';
-                
+                return '0 / ' + String(availableValues.length) + ' items';
             }
         }
 
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var selectOptions,
+            let selectOptions,
                 size = 1,
                 multiple = false,
                 availableValues = model.getItem('availableValues'),
@@ -128,7 +120,19 @@ define([
                 multiple = true;
             }
             if (!availableValues) {
-                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + constraints.referredParameter);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        constraints.referredParameter
+                );
             }
             //if (availableValues.length === 0) {
             //    return 'No items found';
@@ -137,39 +141,41 @@ define([
             selectOptions = buildOptions();
 
             // CONTROL
-            return div({style: {border: '1px silver solid'}}, [
-                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
-                select({
-                    id: events.addEvent({
-                        type: 'change',
-                        handler: function (e) {
-                            validate()
-                                .then(function (result) {
+            return div({ style: { border: '1px silver solid' } }, [
+                div({ style: { fontStyle: 'italic' }, dataElement: 'count' }, buildCount()),
+                select(
+                    {
+                        id: events.addEvent({
+                            type: 'change',
+                            handler: function (e) {
+                                validate().then((result) => {
                                     if (result.isValid) {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     } else if (result.diagnosis === 'required-missing') {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     }
                                     bus.emit('validation', {
                                         errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis
+                                        diagnosis: result.diagnosis,
                                     });
                                 });
-                        }
-                    }),
-                    size: size,
-                    multiple: multiple,
-                    class: 'form-control',
-                    dataElement: 'input'
-                }, selectOptions)
+                            },
+                        }),
+                        size: size,
+                        multiple: multiple,
+                        class: 'form-control',
+                        dataElement: 'input',
+                    },
+                    selectOptions
+                ),
             ]);
         }
 
@@ -177,12 +183,12 @@ define([
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
          * Cases:
-         * 
+         *
          * - change in source data - fetch new data, populate available values,
          *   reset selected values, remove existing options, add new options.
-         *   
+         *
          * - change in selected items - remove all selections, add new selections
-         * 
+         *
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
@@ -202,12 +208,10 @@ define([
 
                     break;
                 case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
-
-
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
             }
         }
 
@@ -220,13 +224,14 @@ define([
          * values.
          */
         function getInputValue() {
-            var control = dom.getElement('input-container.input');
+            const control = dom.getElement('input-container.input');
             if (!control) {
                 return null;
             }
-            var input = control.selectedOptions,
-                i, values = [];
-            
+            let input = control.selectedOptions,
+                i,
+                values = [];
+
             if (control.selectedOptions.length === 0) {
                 return;
             }
@@ -244,36 +249,35 @@ define([
         }
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
-                var rawValue = getInputValue(),
+                const rawValue = getInputValue(),
                     validationOptions = {
-                        required: constraints.required
+                        required: constraints.required,
                     };
 
                 return Validation.validateText(rawValue, validationOptions);
-            })
-                .then(function (validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
-                });
+            }).then((validationResult) => {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue,
+                };
+            });
         }
 
         // unsafe, but pretty.
         function getProp(obj, props) {
-            props.forEach(function (prop) {
+            props.forEach((prop) => {
                 obj = obj[prop];
             });
             return obj;
@@ -285,41 +289,37 @@ define([
             if (!model.getItem('referenceObjectName')) {
                 return [];
             }
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
+            const workspace = new Workspace(runtime.config('services.workspace.url'), {
+                    token: runtime.authToken(),
+                }),
                 subObjectIdentity = {
                     ref: workspaceId + '/' + model.getItem('referenceObjectName'),
-                    included: [constraints.subdataIncluded]
+                    included: [constraints.subdataIncluded],
                 };
-            return workspace.get_object_subset([
-                subObjectIdentity
-            ])
-                .then(function (result) {
-                    var subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
-                    return constraints.map(subdata);
-                });
+            return workspace.get_object_subset([subObjectIdentity]).then((result) => {
+                const subdata = Props.make({ data: result[0].data }).getItem(
+                    constraints.subdataPath
+                );
+                return constraints.map(subdata);
+            });
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return fetchData();
-            })
-                .then(function (data) {
-                    model.setItem('availableValues', data);
-                });
+            }).then((data) => {
+                model.setItem('availableValues', data);
+            });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
 
         /*
          * Creates the markup
@@ -327,23 +327,26 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events, bus),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    content = div(
+                        {
+                            class: 'input-group',
+                            style: {
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
             })
-                .then(function () {
+                .then(() => {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR in render', err);
                 });
         }
@@ -354,21 +357,24 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function registerEvents() {
-            bus.on('reset-to-defaults', function (message) {
+            bus.on('reset-to-defaults', (message) => {
                 resetModelValue();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
@@ -376,7 +382,7 @@ define([
                 updateInputControl('availableValues');
                 updateInputControl('value');
             });
-            bus.on('update', function (message) {
+            bus.on('update', (message) => {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -393,18 +399,18 @@ define([
             //                   bus }
             //                });
 
-            bus.on('parameter-changed', function (message) {
+            bus.on('parameter-changed', (message) => {
                 if (message.parameter === constraints.referredParameter) {
-                    var newValue = message.newValue;
+                    let newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
                     }
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
-                        .then(function () {
+                        .then(() => {
                             updateInputControl('availableValues');
                         })
-                        .catch(function (err) {
+                        .catch((err) => {
                             console.error('ERROR syncing available values', err);
                         });
                 }
@@ -416,26 +422,26 @@ define([
             // Rather than explicitly refer to that parameter, we have a
             // generic capability to receive updates for that value, after
             // which we re-fetch the values, and re-render the control.
-//            bus.on('update-reference-object', function (message) {
-//                model.setItem('referenceObjectName', value)
-//                setReferenceValue(message.objectRef);
-//            });
+            //            bus.on('update-reference-object', function (message) {
+            //                model.setItem('referenceObjectName', value)
+            //                setReferenceValue(message.objectRef);
+            //            });
             bus.emit('sync');
         }
 
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     $container = $(container);
                     dom = Dom.make({
-                        node: container
+                        node: container,
                     });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
@@ -455,8 +461,8 @@ define([
             data: {
                 referenceObjectName: null,
                 availableValues: [],
-                value: null
-            }
+                value: null,
+            },
             //,
             //onUpdate: function (props) {
             //    // render();
@@ -465,13 +471,13 @@ define([
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

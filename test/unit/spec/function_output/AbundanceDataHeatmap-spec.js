@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'AbundanceDataHeatmap'
-], function(Widget) {
-    describe('Test the AbundanceDataHeatmap widget', function() {
-        it('Should do things', function() {
-
+define(['AbundanceDataHeatmap'], (Widget) => {
+    'use strict';
+    describe('The AbundanceDataHeatmap widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

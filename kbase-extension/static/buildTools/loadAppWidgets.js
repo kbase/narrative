@@ -19,15 +19,14 @@ define([
     'widgets/appWidgets2/display/undefinedDisplay',
     'widgets/appWidgets2/editors/readsSetEditor',
     'widgets/appWidgets2/editors/readsSetEditorView',
-    'widgets/appWidgets2/input/autocompleteInput',
     'widgets/appWidgets2/input/checkboxInput',
     'widgets/appWidgets2/input/customSubdataInput',
     'widgets/appWidgets2/input/fileInput',
     'widgets/appWidgets2/input/floatInput',
     'widgets/appWidgets2/input/intInput',
     'widgets/appWidgets2/input/newObjectInput',
-    'widgets/appWidgets2/input/objectInput',
-    'widgets/appWidgets2/input/objectRefInput',
+    // 'widgets/appWidgets2/input/objectInput',
+    // 'widgets/appWidgets2/input/objectRefInput',
     'widgets/appWidgets2/input/select2ObjectInput',
     'widgets/appWidgets2/input/selectInput',
     'widgets/appWidgets2/input/sequenceInput',
@@ -103,5 +102,7 @@ define([
     'common/ui',
     'common/unodep',
     'common/utils',
-    'common/validation'
-], function () { return; });
+    'common/validation',
+], () => {
+    return;
+});

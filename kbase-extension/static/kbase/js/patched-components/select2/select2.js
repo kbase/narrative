@@ -1,3 +1,4 @@
+/* global jQuery */
 /*
 Copyright 2012 Igor Vaynberg
 
@@ -37,10 +38,8 @@ the specific language governing permissions and limitations under the Apache Lic
         });
     }
 })(jQuery);
-
 (function ($, undefined) {
     "use strict";
-    /*global document, window, jQuery, console */
 
     if (window.Select2 !== undefined) {
         return;
@@ -1455,9 +1454,6 @@ the specific language governing permissions and limitations under the Apache Lic
             else {
                 this.container.removeClass('select2-drop-auto-width');
             }
-
-            //console.log("below/ droptop:", dropTop, "dropHeight", dropHeight, "sum", (dropTop+dropHeight)+" viewport bottom", viewportBottom, "enough?", enoughRoomBelow);
-            //console.log("above/ offset.top", offset.top, "dropHeight", dropHeight, "top", (offset.top-dropHeight), "scrollTop", this.body.scrollTop(), "enough?", enoughRoomAbove);
 
             // fix positioning when body has an offset and is not position: static
             if (this.body.css('position') !== 'static') {

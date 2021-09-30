@@ -1,14 +1,22 @@
-/*global define, minLength*/
-/*jslint white:true,browser:true*/
-define([
-    'bluebird',
-    'kb_service/client/workspace',
-    'kb_service/utils'
-], function(Promise, Workspace, serviceUtils) {
+define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
+    Promise,
+    Workspace,
+    serviceUtils
+) => {
     'use strict';
 
     function Validators() {
-
+        /**
+         * Converts a string to an integer.
+         * If it's not a string (or an integer already), this throws an Error.
+         * Floats are not reduced into integers, unless the decimal part === 0.
+         * @param {string|number} value
+         * @returns {number} the integer version of the value.
+         * @throws {*} an error if:
+         * - the value is a non-integer number,
+         * - if the value is a non-int-parseable string,
+         * - if value is anything else (like an Array or Object)
+         */
         function toInteger(value) {
             switch (typeof value) {
                 case 'number':
@@ -22,10 +30,15 @@ define([
                     }
                     throw new Error('Invalid integer format');
                 default:
-                    throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                    throw new Error('Type ' + typeof value + ' cannot be converted to integer');
             }
         }
 
+        /**
+         * Returns true if the value is an empty string (or entirely whitespace), or null.
+         * Returns false otherwise.
+         * @param {*} value
+         */
         function isEmptyString(value) {
             if (value === null) {
                 return true;
@@ -36,8 +49,20 @@ define([
             return false;
         }
 
+        /**
+         * This validates a single value against a set of acceptable values. For example, if
+         * value = 'a', and and options.values = ['a', 'b', 'c'], this will return
+         * {isValid: true}, since all the elements of value are present in options.values.
+         *
+         * This doesn't do any parsing, but will set an errorMessage in the return if a required
+         * value is undefined.
+         * @param {Array} value - the value to validate
+         * @param {Object} options
+         *  - required = boolean (default false)
+         *  - values = Array, the set of acceptable values
+         */
         function validateSet(value, options) {
-            var errorMessage, diagnosis;
+            let errorMessage, diagnosis;
             // values are raw, no parsing.
 
             // the only meaningful value for an empty value is 'undefined'.
@@ -49,9 +74,11 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                if (!options.values.some(function(setValue) {
-                        return (setValue === value);
-                    })) {
+                if (
+                    !options.values.some((setValue) => {
+                        return setValue === value;
+                    })
+                ) {
                     diagnosis = 'invalid';
                     errorMessage = 'Value not in the set';
                 } else {
@@ -64,48 +91,22 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: value
+                parsedValue: value,
             };
         }
 
-        /*
-         * A workspace ref, but using names ...
+        /**
+         * Validates whether the value is a valid object data palette reference path,
+         * consisting of only numerical values in the reference (e.g.: 1/2/3;4/5/6;7/8/9)
+         * Note that this doesn't check to see if the path is real, just if it's syntactically
+         * valid.
+         * @param {string} value
+         * @param {Object} options
+         * - required - boolean
+         * @returns {Object}
          */
-        function validateWorkspaceObjectNameRef(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis;
-
-            if (typeof value !== 'string') {
-                diagnosis = 'invalid';
-                errorMessage = 'value must be a string in workspace object name format';
-            } else {
-                parsedValue = value.trim();
-                if (!parsedValue) {
-                    if (options.required) {
-                        diagnosis = 'required-missing';
-                        errorMessage = 'value is required';
-                    } else {
-                        diagnosis = 'optional-empty';
-                    }
-                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'Invalid object reference format (#/#/#)';
-                } else {
-                    diagnosis = 'valid';
-                }
-            }
-            return {
-                isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue
-            };
-        }
-
         function validateWorkspaceDataPaletteRef(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis;
+            let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = 'invalid';
@@ -123,7 +124,7 @@ define([
                     } else {
                         diagnosis = 'optional-empty';
                     }
-                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*/.test(value)) {
+                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*$/.test(value)) {
                     diagnosis = 'invalid';
                     errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
                 } else {
@@ -135,17 +136,25 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
+        /**
+         * Validates whether the given string is a workspace object reference. In this case,
+         * specifically, an UPA. That means it must have the format ##/##/## to be valid.
+         *
+         * It can also be valid if options.required == true and value is not present.
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         */
         function validateWorkspaceObjectRef(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis;
+            let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string in workspace object name format';
+                errorMessage = 'value must be a string in workspace object reference format';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length === 0) {
@@ -158,202 +167,130 @@ define([
                     } else {
                         diagnosis = 'optional-empty';
                     }
-                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
+                } else if (!/^\d+\/\d+\/\d+$/.test(parsedValue)) {
                     diagnosis = 'invalid';
-                    errorMessage = 'Invalid object reference format (#/#/#)';
+                    errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = 'valid';
                 }
             }
-            var result = {
+            return {
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
-            return result;
         }
 
         function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
-            var workspace = new Workspace(serviceUrl, {
-                token: authToken
+            const workspace = new Workspace(serviceUrl, {
+                token: authToken,
             });
 
-            return workspace.get_object_info_new({
+            return workspace
+                .get_object_info_new({
                     objects: [{ wsid: workspaceId, name: objectName }],
-                    ignoreErrors: 1
+                    ignoreErrors: 1,
                 })
-                .then(function(data) {
+                .then((data) => {
+                    console.error(data);
                     if (data[0]) {
                         return serviceUtils.objectInfoToObject(data[0]);
+                    } else {
+                        return null;
                     }
                 });
         }
 
-        function workspaceObjectExists(workspaceId, objectName, authToken, serviceUrl) {
-            var workspace = new Workspace(serviceUrl, {
-                token: authToken
-            });
-
-            /*
-             * Crude to ignore errors, but we are checking for existence, which under
-             * normal conditions in a narrative will be the only condition under
-             * which the requested object info will be null.
-             * However, it is certainly possible that this will mask other errors.
-             * One solution is to let the failure trigger an exception, but then
-             * the user's browser log will contain scary red error messages.
-             */
-            return workspace.get_object_info_new({
-                    objects: [{ wsid: workspaceId, name: objectName }],
-                    ignoreErrors: 1
-                })
-                .then(function(data) {
-                    if (data[0]) {
-                        return true;
-                    }
-                    // but should never get here
-                    return false;
-                });
-            //                .catch(function (err) {
-            //                    if (err.error.error.match(/us\.kbase\.workspace\.database\.exceptions\.NoSuchObjectException/)) {
-            //                        return false;
-            //                    }
-            //                    throw err;
-            //                });
-        }
-
+        /**
+         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
+         * object.
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         * - shouldNotExist - boolean
+         * - workspaceId - int
+         * - workspaceServiceUrl - string(url),
+         * - types - Array
+         */
         function validateWorkspaceObjectName(value, options) {
-            var parsedValue,
-                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+            let parsedValue,
+                messageId,
+                shortMessage,
+                errorMessage,
+                diagnosis = 'valid';
 
-            return Promise.try(function() {
-                    if (typeof value !== 'string') {
-                        diagnosis = 'invalid';
-                        errorMessage = 'value must be a string in workspace object name format';
-                    } else {
-                        parsedValue = value.trim();
-                        if (parsedValue.length === 0) {
-                            parsedValue = null;
-                        }
-
-                        if (!parsedValue) {
-                            if (options.required) {
-                                messageId = 'required-missing';
-                                diagnosis = 'required-missing';
-                                errorMessage = 'value is required';
-                            } else {
-                                diagnosis = 'optional-empty';
-                            }
-                        } else if (/\s/.test(parsedValue)) {
-                            messageId = 'obj-name-no-spaces';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not contain a space';
-                        } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
-                            messageId = 'obj-name-not-integer';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not be in the form of an integer';
-                        } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
-                            messageId = 'obj-name-invalid-characters';
-                            diagnosis = 'invalid';
-                            errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
-                        } else if (parsedValue.length > 255) {
-                            messageId = 'obj-name-too-long';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not exceed 255 characters in length';
-                        } else if (options.shouldNotExist) {
-                            return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                                .then(function(objectInfo) {
-                                    if (objectInfo) {
-                                        var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                            matchingType = options.types.some(function(typeId) {
-                                                if (typeId === type) {
-                                                    return true;
-                                                }
-                                                return false;
-                                            });
-                                        if (!matchingType) {
-                                            messageId = 'obj-overwrite-diff-type';
-                                            errorMessage = 'an object already exists with this name and is not of the same type';
-                                            diagnosis = 'invalid';
-                                        } else {
-                                            messageId = 'obj-overwrite-warning';
-                                            shortMessage = 'an object already exists with this name';
-                                            diagnosis = 'suspect';
-                                        }
+            return Promise.try(() => {
+                const validateName = validateWorkspaceObjectNameString(value, options);
+                errorMessage = validateName.errorMessage;
+                shortMessage = validateName.shortMessage;
+                messageId = validateName.messageId;
+                diagnosis = validateName.diagnosis;
+                parsedValue = validateName.parsedValue;
+                if (options.shouldNotExist) {
+                    return getObjectInfo(
+                        options.workspaceId,
+                        parsedValue,
+                        options.authToken,
+                        options.workspaceServiceUrl
+                    ).then((objectInfo) => {
+                        if (objectInfo) {
+                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                matchingType = options.types.some((typeId) => {
+                                    if (typeId === type) {
+                                        return true;
                                     }
+                                    return false;
                                 });
-                        }
-                    }
-                })
-                .then(function() {
-                    return {
-                        isValid: errorMessage ? false : true,
-                        messageId: messageId,
-                        errorMessage: errorMessage,
-                        shortMessage: shortMessage,
-                        diagnosis: diagnosis,
-                        value: value,
-                        parsedValue: parsedValue
-                    };
-                });
-        }
-
-        function validateWorkspaceObjectRefSet(value, options) {
-            // TODO: validate each item.
-            var parsedValue,
-                messageId, shortMessage, errorMessage, diagnosis = 'valid';
-            return Promise.try(function() {
-                    if (!(value instanceof Array)) {
-                        diagnosis = 'invalid';
-                        errorMessage = 'value must be an array';
-                    } else {
-                        parsedValue = value;
-                        if (parsedValue.length === 0) {
-                            if (options.required) {
-                                messageId = 'required-missing';
-                                diagnosis = 'required-missing';
-                                errorMessage = 'value is required';
+                            if (!matchingType) {
+                                messageId = 'obj-overwrite-diff-type';
+                                errorMessage =
+                                    'an object already exists with this name and is not of the same type';
+                                diagnosis = 'invalid';
                             } else {
-                                diagnosis = 'optional-empty';
+                                messageId = 'obj-overwrite-warning';
+                                shortMessage = 'an object already exists with this name';
+                                diagnosis = 'suspect';
                             }
-                        } else {
-                            // TODO: validate each object name and report errors...
                         }
-                    }
-                })
-                .then(function() {
-                    return {
-                        isValid: errorMessage ? false : true,
-                        messageId: messageId,
-                        errorMessage: errorMessage,
-                        shortMessage: shortMessage,
-                        diagnosis: diagnosis,
-                        value: value,
-                        parsedValue: parsedValue
-                    };
-                });
+                    });
+                }
+            }).then(() => {
+                return {
+                    isValid: errorMessage ? false : true,
+                    messageId: messageId,
+                    errorMessage: errorMessage,
+                    shortMessage: shortMessage,
+                    diagnosis: diagnosis,
+                    value: value,
+                    parsedValue: parsedValue,
+                };
+            });
         }
 
         function validateInteger(value, min, max) {
             if (max && max < value) {
                 return {
                     id: 'int-above-maximum',
-                    message: 'the maximum value for this parameter is ' + max
+                    message: 'the maximum value for this parameter is ' + max,
                 };
             }
             if (min && min > value) {
                 return {
                     id: 'int-below-minimum',
-                    message: 'the minimum value for this parameter is ' + min
+                    message: 'the minimum value for this parameter is ' + min,
                 };
             }
         }
 
         function validateIntString(value, options) {
-            var plainValue,
+            let plainValue,
                 parsedValue,
-                errorObject, messageId, errorMessage, diagnosis = 'valid',
+                errorObject,
+                messageId,
+                errorMessage,
+                diagnosis = 'valid',
                 min = options.min_int,
                 max = options.max_int;
 
@@ -368,7 +305,7 @@ define([
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
                 messageId = 'incoming-value-not-string';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 plainValue = value.trim();
                 try {
@@ -397,7 +334,7 @@ define([
                 diagnosis: diagnosis,
                 value: value,
                 plainValue: plainValue,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -417,9 +354,10 @@ define([
         }
 
         function validateFloatString(value, options) {
-            var normalizedValue,
+            let normalizedValue,
                 parsedValue,
-                errorMessage, diagnosis,
+                errorMessage,
+                diagnosis,
                 min = options.min_float,
                 max = options.max_float;
 
@@ -432,15 +370,11 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
-                try {
-                    normalizedValue = value.trim();
-                    parsedValue = parseFloat(normalizedValue);
-                    errorMessage = validateFloat(parsedValue, min, max);
-                } catch (error) {
-                    errorMessage = error.message;
-                }
+                normalizedValue = value.trim();
+                parsedValue = parseFloat(normalizedValue);
+                errorMessage = validateFloat(parsedValue, min, max);
                 if (errorMessage) {
                     parsedValue = undefined;
                     diagnosis = 'invalid';
@@ -454,16 +388,93 @@ define([
                 diagnosis: diagnosis,
                 value: value,
                 normalizedValue: normalizedValue,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
+        function validateWorkspaceObjectNameString(value, options) {
+            let parsedValue,
+                messageId,
+                shortMessage,
+                errorMessage,
+                diagnosis = 'valid';
+
+            if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string in workspace object name format';
+            } else {
+                parsedValue = value.trim();
+                if (!parsedValue) {
+                    if (options.required) {
+                        messageId = 'required-missing';
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (/\s/.test(parsedValue)) {
+                    messageId = 'obj-name-no-spaces';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not contain a space';
+                } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                    messageId = 'obj-name-not-integer';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not be in the form of an integer';
+                } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                    messageId = 'obj-name-invalid-characters';
+                    diagnosis = 'invalid';
+                    errorMessage =
+                        'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                } else if (parsedValue.length > 255) {
+                    messageId = 'obj-name-too-long';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not exceed 255 characters in length';
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                messageId: messageId,
+                errorMessage: errorMessage,
+                shortMessage: shortMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue,
+            };
+        }
+
+        /**
+         * Validates a text string against a set of optional constraints. Will fail if:
+         * - required and missing,
+         * - has a min_length, and is shorter
+         * - has a max_length, and is longer
+         * - has a regexp_constraint and doesn't match it
+         * - is a type option of "WorkspaceObjectName", and isn't a valid workspace object name
+         * (ignoring all other constraints)
+         *
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         * - min_length - int
+         * - max_length - int
+         * - regexp_constraint - regex (bare string of form /regex/)
+         * - type - string, only available now is "WorkspaceObjectName" - if that's present, this
+         *      gets validated as a workspace object name (meaning that string lengths and regexp
+         *      are ignored)
+         */
         function validateText(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis = 'valid',
+            let parsedValue,
+                errorMessage,
+                diagnosis = 'valid',
                 minLength = options.min_length,
                 maxLength = options.max_length,
-                regexp = options.regexp_constraint ? new RegExp(regexp) : false;
+                regexp = options.regexp_constraint ? new RegExp(options.regexp_constraint) : false;
+
+            if (options.type) {
+                switch (options.type) {
+                    case 'WorkspaceObjectName':
+                        return validateWorkspaceObjectNameString(value, options);
+                }
+            }
 
             if (isEmptyString(value)) {
                 if (options.required) {
@@ -474,7 +485,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
@@ -485,7 +496,9 @@ define([
                     errorMessage = 'the maximum length for this parameter is ' + maxLength;
                 } else if (regexp && !regexp.test(parsedValue)) {
                     diagnosis = 'invalid';
-                    errorMessage = 'The text value did not match the regular expression constraint ' + options.regexp_constraint;
+                    errorMessage =
+                        'The text value did not match the regular expression constraint ' +
+                        options.regexp_constraint;
                 } else {
                     diagnosis = 'valid';
                 }
@@ -496,24 +509,31 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
-        function validateTextSet(set, options) {
-            var errorMessage, diagnosis,
-                parsedSet;
+        /**
+         * Validates that all values in the given "set" (an Array) are present in options.values.
+         * If any are missing, this will not validate.
+         * @param {Array} value
+         * @param {*} options
+         */
+        function validateTextSet(value, options) {
+            let errorMessage, diagnosis, parsedSet;
             // values are raw, no parsing.
-
-            if (set === null) {
+            if (value === null) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
                 }
+            } else if (!(value instanceof Array)) {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be an array';
             } else {
-                parsedSet = set.filter(function(setValue) {
+                parsedSet = value.filter((setValue) => {
                     return !isEmptyString(setValue);
                 });
                 if (parsedSet.length === 0) {
@@ -524,8 +544,8 @@ define([
                         diagnosis = 'optional-empty';
                     }
                 } else if (options.values) {
-                    var matchedSet = parsedSet.filter(function(setValue) {
-                        return (options.values.indexOf(setValue) >= 0);
+                    const matchedSet = parsedSet.filter((setValue) => {
+                        return options.values.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = 'invalid';
@@ -543,8 +563,8 @@ define([
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
-                value: set,
-                parsedValue: parsedSet
+                value: value,
+                parsedValue: parsedSet,
             };
         }
 
@@ -565,14 +585,20 @@ define([
             }
         }
 
-        // As with all validators, the key is that this validates form input,
-        // in its raw form. For booleans is a string taking the form of a boolean
-        // symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
-        // may be represented as a two or three state dropdown or set of radio buttons,
-        // etc.
+        /**
+         * As with all validators, the key is that this validates form input,
+         * in its raw form. For booleans is a string taking the form of a boolean
+         * symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
+         * may be represented as a two or three state dropdown or set of radio buttons,
+         * etc.
+         * @param {string|boolean} value
+         * @param {*} options
+         * - required - boolean
+         */
         function validateBoolean(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis = 'valid';
+            let parsedValue,
+                errorMessage,
+                diagnosis = 'valid';
 
             if (isEmptyString(value)) {
                 if (options.required) {
@@ -583,7 +609,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 try {
                     parsedValue = stringToBoolean(value);
@@ -598,7 +624,17 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
+            };
+        }
+
+        function validateTrue(value) {
+            return {
+                isValid: true,
+                errorMessage: null,
+                diagnosis: 'valid',
+                value: value,
+                parsedValue: value,
             };
         }
 
@@ -606,7 +642,6 @@ define([
             validateWorkspaceDataPaletteRef: validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
-            validateWorkspaceObjectRefSet: validateWorkspaceObjectRefSet,
             validateInteger: validateInteger,
             validateIntString: validateIntString,
             validateIntegerField: validateIntString,
@@ -617,7 +652,8 @@ define([
             validateSet: validateSet,
             validateStringSet: validateTextSet,
             validateTextSet: validateTextSet,
-            validateBoolean: validateBoolean
+            validateBoolean: validateBoolean,
+            validateTrue: validateTrue,
         };
     }
 

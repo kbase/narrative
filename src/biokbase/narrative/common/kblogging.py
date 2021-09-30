@@ -14,33 +14,34 @@ from logging import handlers
 import os
 import threading
 import time
+
 # Local
 from .util import kbase_env
 from . import log_proxy
 from .log_common import format_event
 from .narrative_logger import NarrativeLogger
 
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__date__ = '2014-07-31'
+__author__ = "Dan Gunter <dkgunter@lbl.gov>"
+__date__ = "2014-07-31"
 
-## Constants
+# Constants
 
 KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
 
 # env var with location of proxy config file
-KBASE_PROXY_ENV = 'KBASE_PROXY_CONFIG'
+KBASE_PROXY_ENV = "KBASE_PROXY_CONFIG"
 
-## Internal logging
+# Internal logging
 
 _log = logging.getLogger("tornado.application")
 _narr_log = NarrativeLogger()
 
 # WTF is going on logging
-#def _logdbg(m):
+# def _logdbg(m):
 #    open("/tmp/wtf", "a").write(m + "\n")
 
-## External functions
+# External functions
 
 
 def get_narrative_logger():
@@ -69,6 +70,7 @@ def get_logger(name="", init=False):
         reset_handlers()
     return logging.getLogger(_kbase_log_name(name))
 
+
 def log_event(log, event, mapping):
     """Log an event and a mapping.
 
@@ -80,7 +82,9 @@ def log_event(log, event, mapping):
     msg = format_event(event, mapping)
     log.info(msg)
 
-## Internal functions and classes
+
+# Internal functions and classes
+
 
 def _kbase_log_name(name):
     """Smarter name of KBase logger."""
@@ -93,16 +97,20 @@ def _kbase_log_name(name):
     # relative name
     return "biokbase." + name
 
-def _has_handler_type(log, type_):
-    return any(map(lambda h: isinstance(h, type_), log.handlers))
 
-## Custom handlers
+def _has_handler_type(log, type_):
+    return any([isinstance(h, type_) for h in log.handlers])
+
+
+# Custom handlers
+
 
 class BufferedSocketHandler(handlers.SocketHandler):
     """Buffer up messages to a socket, sending them asynchronously.
     Starts a separate thread to pull messages off and send them.
     Ignores any messages that did not come from `log_event()`, above.
     """
+
     def __init__(self, *args):
         handlers.SocketHandler.__init__(self, *args)
         self._dbg = _log.isEnabledFor(logging.DEBUG)
@@ -143,10 +151,10 @@ class BufferedSocketHandler(handlers.SocketHandler):
         if self._skip(record):
             return
         # stuff 'extra' from environment into record
-        #_logdbg("@@ stuffing into record: {}".format(kbase_env))
+        # _logdbg("@@ stuffing into record: {}".format(kbase_env))
         record.__dict__.update(kbase_env)
-        if 'auth_token' in record.__dict__:
-            del record.__dict__['auth_token']
+        if "auth_token" in record.__dict__:
+            del record.__dict__["auth_token"]
         self.buf_lock.acquire()
         try:
             self.buf.append(record)
@@ -157,10 +165,9 @@ class BufferedSocketHandler(handlers.SocketHandler):
         """Return True if this record should not go to a socket"""
         # Do not forward records that didn't get logged through
         # kblogging.log_event
-        if record.funcName != 'log_event':
+        if record.funcName != "log_event":
             if self._dbg:
-                _log.debug("Skip: funcName {} != log_event"
-                           .format(record.funcName))
+                _log.debug("Skip: funcName {} != log_event".format(record.funcName))
             return
 
     def _emit(self, record):
@@ -199,20 +206,24 @@ def init_handlers():
 
     if not _has_handler_type(g_log, handlers.SocketHandler):
         cfg = get_proxy_config()
-        g_log.debug("Opening socket to proxy at {}:{}".format(
-            cfg.host, cfg.port))
+        g_log.debug("Opening socket to proxy at {}:{}".format(cfg.host, cfg.port))
         sock_handler = BufferedSocketHandler(cfg.host, cfg.port)
         g_log.addHandler(sock_handler)
+
 
 def get_proxy_config():
     config_file = os.environ.get(KBASE_PROXY_ENV, None)
     if config_file:
         _log.info("Configuring KBase logging from file '{}'".format(config_file))
     else:
-        _log.warn("Configuring KBase logging from defaults ({} is empty, or not found)"
-                  .format(KBASE_PROXY_ENV))
-#    return log_proxy.ProxyConfiguration(config_file)
+        _log.warning(
+            "Configuring KBase logging from defaults ({} is empty, or not found)".format(
+                KBASE_PROXY_ENV
+            )
+        )
+    #    return log_proxy.ProxyConfiguration(config_file)
     return log_proxy.ProxyConfigurationWrapper(config_file)
+
 
 def reset_handlers():
     """Remove & re-add all handlers."""
@@ -220,7 +231,8 @@ def reset_handlers():
         g_log.removeHandler(g_log.handlers.pop())
     init_handlers()
 
-## Run the rest of this on import
+
+# Run the rest of this on import
 
 # Get root log obj.
 g_log = get_logger()
@@ -229,9 +241,10 @@ g_log = get_logger()
 if not g_log.handlers:
     init_handlers()
 
+
 class NarrativeUIError(object):
-    """Created by Narrative UI javascript on an error.
-    """
+    """Created by Narrative UI javascript on an error."""
+
     ui_log = get_logger("narrative_ui")
 
     def __init__(self, is_fatal, where="unknown location", what="unknown condition"):

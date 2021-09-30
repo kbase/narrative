@@ -2,21 +2,17 @@
 A collection of helpful utilities for running batches of jobs.
 """
 from biokbase.narrative.staging.helper import Helper as StagingHelper
-import specmanager
+from . import specmanager
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import (
-    system_variable
-)
+from biokbase.narrative.app_util import system_variable
 import re
 from decimal import Decimal
 from itertools import product
 from copy import deepcopy
-from string import (
-    Formatter,
-    Template
-)
+from string import Formatter, Template
 
-def get_input_scaffold(app, tag='release', use_defaults=False):
+
+def get_input_scaffold(app, tag="release", use_defaults=False):
     """
     Builds a "scaffold" structure of what app inputs are used, in the structure that's
     expected by 'run_app_batch' (also the structure expected by 'run_app'). This will
@@ -39,9 +35,12 @@ def get_input_scaffold(app, tag='release', use_defaults=False):
 
     input_scaffold = dict()
     for p in spec_params:
-        if p['id'] not in grouped_params:
-            input_scaffold[p['id']] = _make_scaffold_input(p, spec_params_dict, use_defaults)
+        if p["id"] not in grouped_params:
+            input_scaffold[p["id"]] = _make_scaffold_input(
+                p, spec_params_dict, use_defaults
+            )
     return input_scaffold
+
 
 def _index_spec_params(spec_params):
     """
@@ -53,14 +52,15 @@ def _index_spec_params(spec_params):
     spec_params_dict = dict()
     grouped_parents = dict()
     for p in spec_params:
-        spec_params_dict[p['id']] = p
+        spec_params_dict[p["id"]] = p
         # groupify the parameters - identify params that are part of groups, and don't include
         # them in the list separately.
-        children = p.get('parameter_ids')
+        children = p.get("parameter_ids")
         if children:
             for child in children:
-                grouped_parents[child] = p['id']
+                grouped_parents[child] = p["id"]
     return (spec_params_dict, grouped_parents)
+
 
 def _make_scaffold_input(param, params_dict, use_defaults):
     """
@@ -68,16 +68,18 @@ def _make_scaffold_input(param, params_dict, use_defaults):
             this is the one that we are providing the info about for the scaffold.
     params_dict = dict of all params.
     """
-    if param.get('is_group', False):
+    if param.get("is_group", False):
         group_dict = dict()
-        for group_param_id in param.get('parameter_ids', []):
-            group_dict[group_param_id] = _make_scaffold_input(params_dict[group_param_id], params_dict, use_defaults)
-        if param.get('allow_multiple'):
+        for group_param_id in param.get("parameter_ids", []):
+            group_dict[group_param_id] = _make_scaffold_input(
+                params_dict[group_param_id], params_dict, use_defaults
+            )
+        if param.get("allow_multiple"):
             return [group_dict]
         else:
             return group_dict
-    if use_defaults and param.get('default'):
-        return param.get('default')
+    if use_defaults and param.get("default"):
+        return param.get("default")
     return None
 
 
@@ -93,11 +95,9 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
 
     This first prototype just returns a list of dictionaries, where each dict contains 'type', 'upa', and 'name' keys for each object.
     """
-    ws_name = system_variable('workspace')
-    service = clients.get('service')
-    service_params = {
-        'ws_name': ws_name
-    }
+    ws_name = system_variable("workspace")
+    service = clients.get("service")
+    service_params = {"ws_name": ws_name}
     if obj_type is not None:
         # matches:
         # foo.bar
@@ -108,33 +108,44 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
         # foobar-
         # foo.bar-1.2.0
         if not re.match(r"[A-Za-z]+\.[A-Za-z]+(-\d+\.\d+)?$", obj_type):
-            raise ValueError('{} is not a valid type. Valid types are of the format "Module.Type" or "Module.Type-Version"'.format(obj_type))
-        service_params['types'] = [obj_type]
-    all_obj = service.sync_call('NarrativeService.list_objects_with_sets', [service_params])[0]
+            raise ValueError(
+                '{} is not a valid type. Valid types are of the format "Module.Type" or "Module.Type-Version"'.format(
+                    obj_type
+                )
+            )
+        service_params["types"] = [obj_type]
+    all_obj = service.sync_call(
+        "NarrativeService.list_objects_with_sets", [service_params]
+    )[0]
     obj_list = list()
-    for obj in all_obj['data']:
+    for obj in all_obj["data"]:
         # filtration!
         # 1. ignore narratives
-        if 'KBaseNarrative.Narrative' in obj['object_info'][2]:
+        if "KBaseNarrative.Narrative" in obj["object_info"][2]:
             continue
         # 2. name filter
         if name is not None:
             name = str(name).lower()
             # if we're not strict, just search for the string
-            if fuzzy_name is True and name not in obj['object_info'][1].lower():
+            if fuzzy_name is True and name not in obj["object_info"][1].lower():
                 continue
-            elif fuzzy_name is False and name != obj['object_info'][1].lower():
+            elif fuzzy_name is False and name != obj["object_info"][1].lower():
                 continue
-        upa_prefix = ''                               # gavin's gonna wreck me.
-        if 'dp_info' in obj:                          # seriously.
-            upa_prefix = obj['dp_info']['ref'] + ';'  # not like I want to support this, either...
-        info = obj['object_info']
-        obj_list.append({
-            "upa": "{}{}/{}/{}".format(upa_prefix, info[6], info[0], info[4]),
-            "name": info[1],
-            "type": info[2]
-        })
+        upa_prefix = ""  # gavin's gonna wreck me.
+        if "dp_info" in obj:  # seriously.
+            upa_prefix = (
+                obj["dp_info"]["ref"] + ";"
+            )  # not like I want to support this, either...
+        info = obj["object_info"]
+        obj_list.append(
+            {
+                "upa": "{}{}/{}/{}".format(upa_prefix, info[6], info[0], info[4]),
+                "name": info[1],
+                "type": info[2],
+            }
+        )
     return obj_list
+
 
 def list_files(name=None):
     """
@@ -153,7 +164,8 @@ def list_files(name=None):
     filter_files = [f for f in files if name in f.lower()]
     return filter_files
 
-def generate_input_batch(app, tag='release', **kwargs):
+
+def generate_input_batch(app, tag="release", **kwargs):
     """
     This takes in an app, tag, and set of loosely-defined kwargs to build a batch of app runs.
     app is the app id, in the format "Module/method", e.g.("MEGAHIT/run_megahit")
@@ -247,17 +259,19 @@ def generate_input_batch(app, tag='release', **kwargs):
     sm = specmanager.SpecManager()
     spec = sm.get_spec(app, tag=tag)
     if not kwargs:
-        raise ValueError("No inputs were given! If you just want to build an empty input set, try get_input_scaffold.")
+        raise ValueError(
+            "No inputs were given! If you just want to build an empty input set, try get_input_scaffold."
+        )
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
     # Initial checking, make sure all kwargs exist as params.
     input_vals = dict()
     output_vals = dict()
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         if k not in spec_params_dict:
             raise ValueError("{} is not a parameter".format(k))
-        elif spec_params_dict[k].get('is_output'):
+        elif spec_params_dict[k].get("is_output"):
             output_vals[k] = v
         elif isinstance(v, tuple):
             # if it's a tuple, unravel it to generate values.
@@ -274,7 +288,11 @@ def generate_input_batch(app, tag='release', **kwargs):
     batch_inputs = list()
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
-    batch_size = reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+    batch_size = 1
+    for p in product_inputs:
+        batch_size *= len(
+            p
+        )  # reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
     # prepare output values
     output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
 
@@ -291,19 +309,18 @@ def generate_input_batch(app, tag='release', **kwargs):
             else:
                 next_input[name] = p[idx]
         # handle output params
-        for out_key, out_val in output_vals.iteritems():
+        for out_key, out_val in output_vals.items():
             if isinstance(out_val, list):
                 next_input[out_key] = out_val[batch_count]
             else:
                 t = Template(out_val)
-                sub_dict = {
-                    'run_number': batch_count
-                }
+                sub_dict = {"run_number": batch_count}
                 sub_dict.update(_flatten_params(next_input))
                 next_input[out_key] = t.substitute(sub_dict)
         batch_inputs.append(next_input)
         batch_count = batch_count + 1
     return batch_inputs
+
 
 def _flatten_params(d):
     """
@@ -313,19 +330,26 @@ def _flatten_params(d):
     Group params are only one level deep, right?
     """
     flat = dict()
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if isinstance(v, dict):
             flat.update(_flatten_params(v))
         elif isinstance(v, list):
             # clean up lists to be acceptable output names
             # e.g. goes from [1, 2, 3] to '1_2_3'
             trim_list = str(v)
-            trim_list = re.sub('[\[\]\s\']', '', trim_list) # remove [, ], spaces and quotes
-            trim_list = re.sub('[^A-Za-z0-9|._-]', '_', trim_list) # turn unacceptable characters into underscores
+            trim_list = re.sub(
+                r"[\[\]\s']", "", trim_list
+            )  # remove [, ], spaces and quotes
+            trim_list = re.sub(
+                "[^A-Za-z0-9|._-]", "_", trim_list
+            )  # turn unacceptable characters into underscores
             flat[k] = trim_list
         else:
-            flat[k] = re.sub('[^A-Za-z0-9|._-]', '_', str(v)) # turn unacceptable characters into underscores
+            flat[k] = re.sub(
+                "[^A-Za-z0-9|._-]", "_", str(v)
+            )  # turn unacceptable characters into underscores
     return flat
+
 
 def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
     """
@@ -339,25 +363,42 @@ def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
     If anything fails, raises a ValueError.
     """
     parsed_out_vals = deepcopy(output_vals)  # avoid side effects
-    for p_id, p in spec_params_dict.iteritems():
+    for p_id, p in spec_params_dict.items():
         val = output_vals.get(p_id)
         if val:
             if isinstance(val, list):
                 if len(val) != batch_size:
-                    raise ValueError("The output parameter {} must have {} values if it's a list".format(p_id, batch_size))
+                    raise ValueError(
+                        "The output parameter {} must have {} values if it's a list".format(
+                            p_id, batch_size
+                        )
+                    )
             elif val is not None:
                 # check keys in the string
                 for i in Formatter().parse(val):
                     field = i[1]
-                    if field and field not in spec_params_dict and field != 'run_number':
-                        raise ValueError("Output template field {} doesn't match a parameter id or 'run_number'".format(field))
+                    if (
+                        field
+                        and field not in spec_params_dict
+                        and field != "run_number"
+                    ):
+                        raise ValueError(
+                            "Output template field {} doesn't match a parameter id or 'run_number'".format(
+                                field
+                            )
+                        )
         else:
-            if p.get('is_output'):
-                if not p['default']:
-                    raise ValueError('No output template provided for parameter "{}" and no default value found!'.format(p_id))
+            if p.get("is_output"):
+                if not p["default"]:
+                    raise ValueError(
+                        'No output template provided for parameter "{}" and no default value found!'.format(
+                            p_id
+                        )
+                    )
                 else:
-                    parsed_out_vals[p_id] = p['default'] + "${run_number}"
+                    parsed_out_vals[p_id] = p["default"] + "${run_number}"
     return parsed_out_vals
+
 
 def _is_singleton(input_value, param_info):
     """
@@ -380,6 +421,7 @@ def _is_singleton(input_value, param_info):
             return False
     return True
 
+
 def _generate_vals(t):
     """
     Interpolates values from a 3-tuple (min, interval, max)
@@ -393,22 +435,25 @@ def _generate_vals(t):
     If it's not a 3-tuple, raises an exception.
     """
     if len(t) != 3:
-        raise ValueError('The input tuple must have 3 values')
+        raise ValueError("The input tuple must have 3 values")
     try:
         # deals with floating point errors
         start = Decimal(str(t[0]))
         interval = Decimal(str(t[1]))
         target = Decimal(str(t[2]))
-    except:
-        raise ValueError('The input tuple must be entirely numeric')
+    except BaseException:
+        raise ValueError("The input tuple must be entirely numeric")
     if interval == 0:
-        raise ValueError('The interval value must not be 0')
+        raise ValueError("The interval value must not be 0")
     if (start < target and interval < 0) or (start > target and interval > 0):
-        raise ValueError('The maximum value of this tuple will never be reached based on the interval value')
+        raise ValueError(
+            "The maximum value of this tuple will never be reached based on the interval value"
+        )
     vals = [start]
 
-    while (vals[-1] < target and vals[-1] + interval <= target) or \
-          (vals[-1] > target and vals[-1] + interval >= target):
+    while (vals[-1] < target and vals[-1] + interval <= target) or (
+        vals[-1] > target and vals[-1] + interval >= target
+    ):
         vals.append(vals[-1] + interval)
     # turn them back into floats at the end.
     return [float(v) for v in vals]

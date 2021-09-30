@@ -1,22 +1,18 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
-define([
-    'bluebird',
-    'uuid',
-    'common/ui',
-    'kb_common/html'
-], function(Promise, Uuid, UI, html) {
+define(['bluebird', 'uuid', 'common/ui', 'kb_common/html'], (Promise, Uuid, UI, html) => {
     'use strict';
 
     var t = html.tag,
         div = t('div'),
+        pre = t('pre'),
         ul = t('ul'),
-        li = t('li');
+        li = t('li'),
+        pre = t('pre');
 
     function convertJobError(errorInfo) {
-        var errorId = new Uuid(4).format(),
-            errorType, errorMessage, errorDetail;
+        let errorId = new Uuid(4).format(),
+            errorType,
+            errorMessage,
+            errorDetail;
         if (errorInfo.error) {
             // Classic KBase rpc error message
             errorType = errorInfo.name;
@@ -36,7 +32,10 @@ define([
             location: 'job execution',
             type: errorType,
             message: errorMessage,
-            detail: errorDetail
+            detail: errorDetail,
+            advice:
+                'If the app fails consistently, ' +
+                'please contact us at https://www.kbase.us/support ',
         };
     }
 
@@ -45,52 +44,47 @@ define([
             location: 'app cell',
             type: errorInfo.title,
             message: errorInfo.message,
-            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map(function(adv) {
-                return li(adv);
-            })),
-            detail: errorInfo.detail
-                // info:  errorInfo ? html.makeObjTable(errorInfo.info, {rotated: true, classes: []}) : null
+            advice: ul(
+                { style: { paddingLeft: '1.2em' } },
+                errorInfo.advice.map((adv) => {
+                    return li(adv);
+                })
+            ),
+            detail: errorInfo.detail,
         };
     }
 
     function renderErrorLayout() {
         return div([
-            div({ style: { fontWeight: 'bold' } }, [
-                'Type'
-            ]),
+            div({ style: { fontWeight: 'bold' } }, ['Type']),
             div({ dataElement: 'type' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Message'
-            ]),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Message']),
             div({ dataElement: 'message' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Advice'
-            ]),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Advice']),
             div({ dataElement: 'advice' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Detail'
-            ]),
-            div({
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Detail']),
+            pre({
                 dataElement: 'detail',
                 style: {
-                    border: '0px silver solid',
+                    border: '0px',
+                    maxHeight: '100rem',
+                    overflowY: 'auto',
                     padding: '4px',
-                    xoverflowY: 'auto',
-                    wordBreak: 'break-word'
-                }
+                    wordBreak: 'break-word',
+                },
             }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Info'
-            ]),
-            div({ dataElement: 'info' })
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Info']),
+            div({ dataElement: 'info' }),
         ]);
     }
 
     function factory(config) {
-        var container, ui, model = config.model;
+        let container,
+            ui,
+            model = config.model;
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = arg.node;
 
                 // Very simple for now, just render the results json in a prettier than normal fashion.
@@ -99,7 +93,7 @@ define([
 
                 ui = UI.make({ node: container });
 
-                var viewModel;
+                let viewModel;
                 if (model.hasItem('exec.jobState.error')) {
                     viewModel = convertJobError(model.getItem('exec.jobState.error'));
                 } else if (model.hasItem('internalError')) {
@@ -109,7 +103,7 @@ define([
                         location: 'unknown',
                         type: 'unknown',
                         message: 'An unknown error was detected',
-                        detail: ''
+                        detail: '',
                     };
                 }
                 console.error('errorTab', viewModel);
@@ -119,20 +113,20 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container.innerHTML = 'Bye from error';
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

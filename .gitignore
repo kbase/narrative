@@ -11,10 +11,12 @@ kbase-extension/log/
 kbase-extension/kbase_templates/old/
 kbase-extension/static/components/
 kbase-extension/static/ext_components/
+kbase-extension/static/ext_modules/
 node_modules/
 install.log
 /src/build/
 /venvs/
+/venv/
 .projectKnowledge
 nbproject
 static/dist
@@ -22,6 +24,8 @@ my_narrative_venv/
 narrative_venv/
 new_narrative_env_2/
 js-coverage
+cover
+_attic
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
@@ -63,6 +67,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 /coverage/
+/python-coverage/
 htmlcov/
 .tox/
 .coverage
@@ -72,6 +77,13 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+karma-result.json
+
+# Integration test logs
+/selenium-standalone-logs/
+
+# Test tokens
+/test/*.tok
 
 # Translations
 *.mo
@@ -89,3 +101,7 @@ target/
 # IDE / Editor
 .vscode
 /tags
+.idea
+
+# For yarn users
+yarn.lock

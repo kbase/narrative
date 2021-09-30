@@ -1,31 +1,28 @@
-/*global define*/
-/*jslint white:true,browser:true */
-
-define([], function() {
+define([], () => {
     'use strict';
 
     // Static methods
     function isArray(testValue) {
-        return (testValue instanceof Array);
+        return testValue instanceof Array;
     }
 
     function isNumber(testValue) {
-        return (typeof testValue === 'number');
+        return typeof testValue === 'number';
     }
-
 
     function setDataItem(data, path, value) {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
         if (path.length === 0) {
             return;
         }
         // pop off the last property for setting at the end.
-        var propKey = path.pop(),
-            key, temp = data;
+        let propKey = path.pop(),
+            key,
+            temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
             key = path.shift();
@@ -43,14 +40,15 @@ define([], function() {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
         if (path.length === 0) {
             return;
         }
         // pop off the last property for setting at the end.
-        var propKey = path.pop(),
-            key, temp = data;
+        let propKey = path.pop(),
+            key,
+            temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
             key = path.shift();
@@ -63,7 +61,7 @@ define([], function() {
             temp[propKey] = [];
         }
         temp = temp[propKey];
-        // Finally set the property.        
+        // Finally set the property.
 
         if (typeof temp === 'object' && temp.push) {
             temp.push(value);
@@ -75,13 +73,12 @@ define([], function() {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
-        var i, temp = data;
+        let i,
+            temp = data;
         for (i = 0; i < path.length; i += 1) {
-            if ((temp === undefined) ||
-                (typeof temp !== 'object') ||
-                (temp === null)) {
+            if (temp === undefined || typeof temp !== 'object' || temp === null) {
                 return defaultValue;
             }
             temp = temp[path[i]];
@@ -96,13 +93,12 @@ define([], function() {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
-        var i, temp = data;
+        let i,
+            temp = data;
         for (i = 0; i < path.length; i += 1) {
-            if ((temp === undefined) ||
-                (typeof temp !== 'object') ||
-                (temp === null)) {
+            if (temp === undefined || typeof temp !== 'object' || temp === null) {
                 return defaultValue;
             }
             temp = temp[path[i]];
@@ -121,16 +117,17 @@ define([], function() {
         if (!config) {
             config = {};
         }
-        var obj = config.data || {},
+        let obj = config.data || {},
             lastObj,
             historyCount = 0,
             updateHandler = config.onUpdate,
             historyEnabled = updateHandler ? true : false,
             lastValueSaved = false,
-            timer, api;
+            timer,
+            api;
 
         /*
-         * In enabled by setting an update handler via the onUpdate factory 
+         * In enabled by setting an update handler via the onUpdate factory
          * configuration property, this function should be run whenever the
          * property is updated. It will then run the update handler callback.
          * This is a way to enable essentially synchronization of the props
@@ -144,7 +141,7 @@ define([], function() {
                 return;
             }
 
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(() => {
                 try {
                     timer = null;
                     if (historyEnabled) {
@@ -183,13 +180,12 @@ define([], function() {
             lastValueSaved = false;
         }
 
-
         function getItem(props, defaultValue) {
             return getDataItem(obj, props, defaultValue);
         }
 
         function copyItem(props, defaultValue) {
-            var item = getItem(props, defaultValue);
+            const item = getItem(props, defaultValue);
             if (item !== undefined) {
                 return JSON.parse(JSON.stringify(item));
             }
@@ -199,11 +195,10 @@ define([], function() {
             if (typeof propPath === 'string') {
                 propPath = propPath.split('.');
             }
-            var i, temp = obj;
+            let i,
+                temp = obj;
             for (i = 0; i < propPath.length; i += 1) {
-                if ((temp === undefined) ||
-                    (typeof temp !== 'object') ||
-                    (temp === null)) {
+                if (temp === undefined || typeof temp !== 'object' || temp === null) {
                     return false;
                 }
                 temp = temp[propPath[i]];
@@ -214,7 +209,6 @@ define([], function() {
             return true;
         }
 
-
         function setItem(path, value) {
             ensureHistory();
             setDataItem(obj, path, value);
@@ -223,7 +217,7 @@ define([], function() {
 
         function pushItem(path, value) {
             ensureHistory();
-            var len = pushDataItem(obj, path, value);
+            const len = pushDataItem(obj, path, value);
             run();
             return len;
         }
@@ -247,9 +241,10 @@ define([], function() {
             if (path.length === 0) {
                 return;
             }
-            increment = (increment === undefined) ? 1 : increment;
-            var propKey = path.pop(),
-                key, temp = obj;
+            increment = increment === undefined ? 1 : increment;
+            let propKey = path.pop(),
+                key,
+                temp = obj;
             while (path.length > 0) {
                 key = path.shift();
                 if (temp[key] === undefined) {
@@ -271,37 +266,6 @@ define([], function() {
             return temp[propKey];
         }
 
-        //        function pushItem(path, value) {
-        //            if (typeof path === 'string') {
-        //                path = path.split('.');
-        //            }
-        //            if (path.length === 0) {
-        //                return;
-        //            }
-        //            var propKey = path.pop(),
-        //                key, temp = obj;
-        //            while (path.length > 0) {
-        //                key = path.shift();
-        //                if (temp[key] === undefined) {
-        //                    temp[key] = {};
-        //                }
-        //                temp = temp[key];
-        //            }
-        //            ensureHistory();
-        //            if (temp[propKey] === undefined) {
-        //                temp[propKey] = [value];
-        //            } else {
-        //                if (temp[propKey])
-        //                    if (isArray(temp[propKey])) {
-        //                        temp[propKey].push(value);
-        //                    } else {
-        //                        throw new Error('Can only push onto an Array');
-        //                    }
-        //            }
-        //            run();
-        //            return temp[propKey];
-        //        }
-
         function deleteItem(path) {
             if (typeof path === 'string') {
                 path = path.split('.');
@@ -309,8 +273,9 @@ define([], function() {
             if (path.length === 0) {
                 return;
             }
-            var propKey = path.pop(),
-                key, temp = obj;
+            let propKey = path.pop(),
+                key,
+                temp = obj;
             while (path.length > 0) {
                 key = path.shift();
                 if (temp[key] === undefined) {
@@ -334,24 +299,24 @@ define([], function() {
             pushItem: pushItem,
             popItem: popItem,
             reset: reset,
-            getRawObject: function() {
+            getRawObject: function () {
                 return obj;
             },
-            getLastRawObject: function() {
+            getLastRawObject: function () {
                 return lastObj;
             },
-            getHistoryCount: getHistoryCount
+            getHistoryCount: getHistoryCount,
         };
         return api;
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
         getDataItem: getDataItem,
         setDataItem: setDataItem,
         pushDataItem: pushDataItem,
-        popDataItem: popDataItem
+        popDataItem: popDataItem,
     };
 });

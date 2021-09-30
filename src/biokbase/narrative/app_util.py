@@ -10,7 +10,7 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
 
-app_version_tags = ['release', 'beta', 'dev']
+app_version_tags = ["release", "beta", "dev"]
 
 
 def check_tag(tag, raise_exception=False):
@@ -21,7 +21,10 @@ def check_tag(tag, raise_exception=False):
     """
     tag_exists = tag in app_version_tags
     if not tag_exists and raise_exception:
-        raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(app_version_tags)))
+        raise ValueError(
+            "Can't find tag %s - allowed tags are %s"
+            % (tag, ", ".join(app_version_tags))
+        )
     else:
         return tag_exists
 
@@ -52,31 +55,33 @@ def system_variable(var):
     if anything is not found, returns None
     """
     var = var.lower()
-    if var == 'workspace':
-        return os.environ.get('KB_WORKSPACE_ID', None)
-    elif var == 'workspace_id':
-        ws_name = os.environ.get('KB_WORKSPACE_ID', None)
+    if var == "workspace":
+        return os.environ.get("KB_WORKSPACE_ID", None)
+    elif var == "workspace_id":
+        ws_name = os.environ.get("KB_WORKSPACE_ID", None)
         if ws_name is None:
             return None
         try:
-            ws_info = clients.get('workspace').get_workspace_info({'workspace': ws_name})
+            ws_info = clients.get("workspace").get_workspace_info(
+                {"workspace": ws_name}
+            )
             return ws_info[0]
-        except:
+        except BaseException:
             return None
-    elif var == 'user_id':
+    elif var == "user_id":
         token = biokbase.auth.get_auth_token()
         if token is None:
             return None
         try:
             user_info = biokbase.auth.get_user_info(token)
-            return user_info.get('user', None)
-        except:
+            return user_info.get("user", None)
+        except BaseException:
             return None
         # TODO: make this better with more exception handling.
-    elif var == 'timestamp_epoch_ms':
+    elif var == "timestamp_epoch_ms":
         # get epoch time in milliseconds
-        return int(time.time()*1000)
-    elif var == 'timestamp_epoch_sec':
+        return int(time.time() * 1000)
+    elif var == "timestamp_epoch_sec":
         # get epoch time in seconds
         return int(time.time())
     else:
@@ -115,24 +120,24 @@ def map_inputs_from_job(job_inputs, app_spec):
     original inputs set by the user.
     """
     input_dict = dict()
-    spec_inputs = app_spec['behavior']['kb_service_input_mapping']
+    spec_inputs = app_spec["behavior"]["kb_service_input_mapping"]
 
     # expect the inputs to be valid. so things in the expected position should be the
     # right things (either dict, list, singleton)
     for param in spec_inputs:
-        if 'input_parameter' not in param:
+        if "input_parameter" not in param:
             continue
-        input_param = param.get('input_parameter', None)
-        position = param.get('target_position', 0)
-        prop = param.get('target_property', None)
+        input_param = param.get("input_parameter", None)
+        position = param.get("target_position", 0)
+        prop = param.get("target_property", None)
         value = job_inputs[position]
         if prop is not None:
             value = value.get(prop, None)
 
         # that's the value. Now, if it was transformed, try to transform it back.
-        if 'target_type_transform' in param:
-            transform_type = param['target_type_transform']
-            if transform_type.startswith('list') and isinstance(value, list):
+        if "target_type_transform" in param:
+            transform_type = param["target_type_transform"]
+            if transform_type.startswith("list") and isinstance(value, list):
                 inner_transform = transform_type[5:-1]
                 for i in range(len(value)):
                     value[i] = _untransform(inner_transform, value[i])
@@ -144,68 +149,77 @@ def map_inputs_from_job(job_inputs, app_spec):
 
 
 def _untransform(transform_type, value):
-    if transform_type == 'ref' and isinstance(value, basestring):
+    if transform_type == "ref" and isinstance(value, str):
         # shear off everything before the first '/' - there should just be one.
-        slash = value.find('/')
+        slash = value.find("/")
         if slash == -1:
             return value
         else:
-            return value[slash+1:]
+            return value[slash + 1 :]
     else:
         return value
 
 
 def app_param(p):
-    p_info = {'id': p['id'], 'is_group': False}
+    p_info = {"id": p["id"], "is_group": False}
 
-    if p['optional'] == 0:
-        p_info['optional'] = False
+    if p["optional"] == 0:
+        p_info["optional"] = False
     else:
-        p_info['optional'] = True
+        p_info["optional"] = True
 
-    p_info['short_hint'] = p['short_hint']
-    p_info['description'] = p['description']
-    p_info['type'] = p['field_type'].lower()
-    p_info['is_output'] = False
+    p_info["short_hint"] = p["short_hint"]
+    p_info["description"] = p["description"]
+    p_info["type"] = p["field_type"].lower()
+    p_info["is_output"] = False
 
-    p_info['allow_multiple'] = False
-    if p['allow_multiple'] == 1:
-        p_info['allow_multiple'] = True
+    p_info["allow_multiple"] = False
+    if p["allow_multiple"] == 1:
+        p_info["allow_multiple"] = True
 
-    if p_info['type'] == 'dropdown':
-        p_info['allowed_values'] = [opt['value'] for opt in p['dropdown_options']['options']]
-    if p_info['type'] == 'checkbox':
-        p_info['allowed_values'] = [True, False]
+    if p_info["type"] == "dropdown":
+        p_info["allowed_values"] = [
+            opt["value"] for opt in p["dropdown_options"]["options"]
+        ]
+    if p_info["type"] == "checkbox":
+        p_info["allowed_values"] = [True, False]
 
-    defaults = p['default_values']
+    defaults = p["default_values"]
     # remove any empty strings, because that's silly
     defaults = [x for x in defaults if x]
-    if p_info['allow_multiple']:
-        p_info['default'] = defaults
+    if p_info["allow_multiple"]:
+        p_info["default"] = defaults
     else:
-        p_info['default'] = defaults[0] if len(defaults) > 0 else None
+        p_info["default"] = defaults[0] if len(defaults) > 0 else None
 
-    if 'checkbox_options' in p and len(p['checkbox_options'].keys()) == 2:
-        p_info['checkbox_map'] = [p['checkbox_options']['checked_value'], p['checkbox_options']['unchecked_value']]
+    if "checkbox_options" in p and len(p["checkbox_options"].keys()) == 2:
+        p_info["checkbox_map"] = [
+            p["checkbox_options"]["checked_value"],
+            p["checkbox_options"]["unchecked_value"],
+        ]
 
-    if 'text_options' in p:
-        opts = p['text_options']
-        if 'is_output_name' in opts:
-            p_info['is_output'] = opts['is_output_name']
-        if 'valid_ws_types' in opts and len(opts['valid_ws_types']) > 0:
-            p_info['allowed_types'] = opts['valid_ws_types']
-        if 'validate_as' in opts and p_info['type'] != 'checkbox' and p_info['type'] != 'custom':
-            p_info['type'] = opts['validate_as']
-        if 'min_float' in opts:
-            p_info['min_val'] = opts['min_float']
-        if 'min_int' in opts:
-            p_info['min_val'] = opts['min_int']
-        if 'max_float' in opts:
-            p_info['max_val'] = opts['max_float']
-        if 'max_int' in opts:
-            p_info['max_val'] = opts['max_int']
-        if 'regex_constraint' in opts and len(opts['regex_constraint']):
-            p_info['regex_constraint'] = opts['regex_constraint']
+    if "text_options" in p:
+        opts = p["text_options"]
+        if "is_output_name" in opts:
+            p_info["is_output"] = opts["is_output_name"]
+        if "valid_ws_types" in opts and len(opts["valid_ws_types"]) > 0:
+            p_info["allowed_types"] = opts["valid_ws_types"]
+        if (
+            "validate_as" in opts
+            and p_info["type"] != "checkbox"
+            and p_info["type"] != "custom"
+        ):
+            p_info["type"] = opts["validate_as"]
+        if "min_float" in opts:
+            p_info["min_val"] = opts["min_float"]
+        if "min_int" in opts:
+            p_info["min_val"] = opts["min_int"]
+        if "max_float" in opts:
+            p_info["max_val"] = opts["max_float"]
+        if "max_int" in opts:
+            p_info["max_val"] = opts["max_int"]
+        if "regex_constraint" in opts and len(opts["regex_constraint"]):
+            p_info["regex_constraint"] = opts["regex_constraint"]
     return p_info
 
 
@@ -214,45 +228,53 @@ def map_outputs_from_state(state, params, app_spec):
     Returns the dict of output values from a completed app.
     Also returns the output widget.
     """
-    if 'behavior' not in app_spec:
+    if "behavior" not in app_spec:
         raise ValueError("Invalid app spec - unable to map outputs")
     widget_params = dict()
-    out_mapping_key = 'kb_service_output_mapping'
-    if out_mapping_key not in app_spec['behavior']:
+    out_mapping_key = "kb_service_output_mapping"
+    if out_mapping_key not in app_spec["behavior"]:
         # for viewers or short-running things, but the inner keys are the same.
-        out_mapping_key = 'output_mapping'
+        out_mapping_key = "output_mapping"
 
-    spec_params = dict((app_spec_param['id'], app_param(app_spec_param))
-                       for app_spec_param in app_spec['parameters'])
+    spec_params = dict(
+        (app_spec_param["id"], app_param(app_spec_param))
+        for app_spec_param in app_spec["parameters"]
+    )
 
-    for out_param in app_spec['behavior'].get(out_mapping_key, []):
+    for out_param in app_spec["behavior"].get(out_mapping_key, []):
         value = None
         input_param_id = None
-        if 'narrative_system_variable' in out_param:
-            value = system_variable(out_param['narrative_system_variable'])
-        elif 'constant_value' in out_param:
-            value = out_param['constant_value']
-        elif 'input_parameter' in out_param:
-            input_param_id = out_param['input_parameter']
+        if "narrative_system_variable" in out_param:
+            value = system_variable(out_param["narrative_system_variable"])
+        elif "constant_value" in out_param:
+            value = out_param["constant_value"]
+        elif "input_parameter" in out_param:
+            input_param_id = out_param["input_parameter"]
             value = params.get(input_param_id, None)
-        elif 'service_method_output_path' in out_param:
-            value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
+        elif "service_method_output_path" in out_param:
+            value = get_result_sub_path(
+                state["job_output"]["result"], out_param["service_method_output_path"]
+            )
 
         spec_param = None
         if input_param_id:
             spec_param = spec_params.get(input_param_id)
-        value = transform_param_value(out_param.get('target_type_transform'), value, spec_param)
+        value = transform_param_value(
+            out_param.get("target_type_transform"), value, spec_param
+        )
 
-        p_id = out_param.get('target_property', None)
+        p_id = out_param.get("target_property", None)
         if p_id is not None:
             widget_params[p_id] = value
         else:
             widget_params = value
 
-    output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
+    output_widget = app_spec.get("widgets", {}).get(
+        "output", "kbaseDefaultNarrativeOutput"
+    )
     # Yes, sometimes silly people put the string 'null' in their spec.
-    if (output_widget == 'null'):
-        output_widget = 'kbaseDefaultNarrativeOutput'
+    if output_widget == "null":
+        output_widget = "kbaseDefaultNarrativeOutput"
 
     return (output_widget, widget_params)
 
@@ -319,16 +341,16 @@ def extract_ws_refs(app_id, tag, spec_params, params):
     if they are actual workspace objects.
     """
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict((spec_params[i]['id'], spec_params[i])
-                       for i in range(len(spec_params)))
-    workspace = system_variable('workspace')
+    params_dict = dict(
+        (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
+    )
+    workspace = system_variable("workspace")
     ws_input_refs = list()
     for p in spec_params:
-        if p['id'] in params:
-            (wsref, err) = check_parameter(p,
-                                           params[p['id']],
-                                           workspace,
-                                           all_params=params_dict)
+        if p["id"] in params:
+            (wsref, err) = check_parameter(
+                p, params[p["id"]], workspace, all_params=params_dict
+            )
             if wsref is not None:
                 if isinstance(wsref, list):
                     for ref in wsref:
@@ -353,22 +375,23 @@ def validate_parameters(app_id, tag, spec_params, params):
     problem and a (hopefully useful!) hint for the user as to what went
     wrong.
     """
-    spec_param_ids = [p['id'] for p in spec_params]
+    spec_param_ids = [p["id"] for p in spec_params]
 
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict((spec_params[i]['id'], spec_params[i])
-                       for i in range(len(spec_params)))
+    params_dict = dict(
+        (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
+    )
 
     # First, test for presence.
     missing_params = list()
     for p in spec_params:
-        if not p['optional'] and \
-           not p['default'] and \
-           not params.get(p['id'], None):
-            missing_params.append(p['id'])
+        if not p["optional"] and not p["default"] and not params.get(p["id"], None):
+            missing_params.append(p["id"])
     if len(missing_params):
-        msg = 'Missing required parameters {} - try executing app_usage(' \
-              '"{}", tag="{}") for more information'
+        msg = (
+            "Missing required parameters {} - try executing app_usage("
+            '"{}", tag="{}") for more information'
+        )
         msg = msg.format(json.dumps(missing_params), app_id, tag)
         raise ValueError(msg)
 
@@ -378,19 +401,23 @@ def validate_parameters(app_id, tag, spec_params, params):
         if p not in spec_param_ids:
             extra_params.append(p)
     if len(extra_params):
-        msg = 'Unknown parameters {} - maybe something was misspelled?\n' \
-              'execute app_usage("{}", tag="{}") for more information'
+        msg = (
+            "Unknown parameters {} - maybe something was misspelled?\n"
+            'execute app_usage("{}", tag="{}") for more information'
+        )
         msg = msg.format(json.dumps(extra_params), app_id, tag)
         raise ValueError(msg)
 
     # Now, validate parameter values.
     # Should also check if input (NOT OUTPUT) object variables are
     # present in the current workspace
-    workspace = system_variable('workspace')
-    ws_id = system_variable('workspace_id')
+    workspace = system_variable("workspace")
+    ws_id = system_variable("workspace_id")
     if workspace is None or ws_id is None:
-        msg = 'Unable to retrive current Narrative workspace ' \
-              'information! workspace={}, workspace_id={}'
+        msg = (
+            "Unable to retrive current Narrative workspace "
+            "information! workspace={}, workspace_id={}"
+        )
         msg = msg.format(workspace, ws_id)
         raise ValueError(msg)
 
@@ -399,13 +426,12 @@ def validate_parameters(app_id, tag, spec_params, params):
     # to run_job as a separate param to track provenance.
     ws_input_refs = list()
     for p in spec_params:
-        if p['id'] in params:
-            (wsref, err) = check_parameter(p,
-                                           params[p['id']],
-                                           workspace,
-                                           all_params=params_dict)
+        if p["id"] in params:
+            (wsref, err) = check_parameter(
+                p, params[p["id"]], workspace, all_params=params_dict
+            )
             if err is not None:
-                param_errors.append("{} - {}".format(p['id'], err))
+                param_errors.append("{} - {}".format(p["id"], err))
             if wsref is not None:
                 if isinstance(wsref, list):
                     for ref in wsref:
@@ -414,22 +440,23 @@ def validate_parameters(app_id, tag, spec_params, params):
                 else:
                     ws_input_refs.append(wsref)
     if len(param_errors):
-        raise ValueError('Parameter value errors found!\n{}'.format(
-            "\n".join(param_errors)))
+        raise ValueError(
+            "Parameter value errors found!\n{}".format("\n".join(param_errors))
+        )
 
     # Hooray, parameters are validated. Set them up for transfer.
     for p in spec_params:
         # If any param is a checkbox, need to map from boolean to actual
         # expected value in p['checkbox_map']
         # note that True = 0th elem, False = 1st
-        if p['type'] == 'checkbox':
-            if p['id'] in params:
-                checkbox_idx = 0 if params[p['id']] else 1
-                params[p['id']] = p['checkbox_map'][checkbox_idx]
+        if p["type"] == "checkbox":
+            if p["id"] in params:
+                checkbox_idx = 0 if params[p["id"]] else 1
+                params[p["id"]] = p["checkbox_map"][checkbox_idx]
         # While we're at it, set the default values for any
         # unset parameters that have them
-        if p.get('default', '') and p['id'] not in params:
-            params[p['id']] = p['default']
+        if p.get("default", "") and p["id"] not in params:
+            params[p["id"]] = p["default"]
 
     return (params, ws_input_refs)
 
@@ -456,25 +483,20 @@ def check_parameter(param, value, workspace, all_params=dict()):
         All spec parameters. Really only needed when validating a parameter
         group, because it probably needs to dig into all of them.
     """
-    if param['allow_multiple'] and isinstance(value, list):
+    if param["allow_multiple"] and isinstance(value, list):
         ws_refs = list()
         error_list = list()
         for v in value:
-            if param['type'] == 'group':
+            if param["type"] == "group":
                 # returns ref and err as a list
-                (ref, err) = validate_group_values(param,
-                                                   v,
-                                                   workspace,
-                                                   all_params)
+                (ref, err) = validate_group_values(param, v, workspace, all_params)
                 if err:
                     error_list += err
                 if ref:
                     ws_refs += ref
             else:
                 # returns a single ref / err pair
-                (ref, err) = validate_param_value(param,
-                                                  v,
-                                                  workspace)
+                (ref, err) = validate_param_value(param, v, workspace)
                 if err:
                     error_list.append(err)
                 if ref:
@@ -495,17 +517,11 @@ def validate_group_values(param, value, workspace, spec_params):
 
     for param_id in value:
         if param_id not in spec_params:
-            err.append(
-                'Unknown parameter id "{}" in parameter group'.format(
-                    param_id
-                )
-            )
+            err.append('Unknown parameter id "{}" in parameter group'.format(param_id))
             continue
-        if param_id not in param.get('parameter_ids', []):
+        if param_id not in param.get("parameter_ids", []):
             err.append(
-                'Unmappable parameter id "{}" in parameter group'.format(
-                    param_id
-                )
+                'Unmappable parameter id "{}" in parameter group'.format(param_id)
             )
             continue
         (param_ref, param_err) = validate_param_value(
@@ -544,114 +560,145 @@ def validate_param_value(param, value, workspace):
         return (ws_ref, None)
 
     # Also, for strings, an empty string is the same as null/None
-    if param['type'] in ['string', 'dropdown', 'checkbox'] and \
-            isinstance(value, basestring) and value == '':
+    if (
+        param["type"] in ["string", "dropdown", "checkbox"]
+        and isinstance(value, str)
+        and value == ""
+    ):
         return (ws_ref, None)
 
     # cases - value == list (checked by wrapping function,
     #  check_parameter), int, float, others get rejected
-    if param['type'] == 'group' and not (isinstance(value, list) or
-                                         isinstance(value, dict)):
+    if param["type"] == "group" and not (
+        isinstance(value, list) or isinstance(value, dict)
+    ):
         return (ws_ref, "a parameter group must be of type list or dict")
-    elif param['type'] == 'mapping' and not isinstance(value, dict):
+    elif param["type"] == "mapping" and not isinstance(value, dict):
         return (ws_ref, "a parameter of type 'mapping' must be a dict")
-    elif param['type'] == 'textsubdata' and \
-            not (isinstance(value, basestring) or
-                 isinstance(value, list)):
-        return (ws_ref, "input value not supported for 'textsubdata' type - "
-                        "only str or list is supported")
-    elif param['type'] == 'custom_textsubdata' and \
-            not (isinstance(value, basestring) or
-                 isinstance(value, list)):
-        return (ws_ref, "input value not supported for 'custom_textsubdata' type - "
-                        "only str or list is supported")
-    elif param['type'] not in ['group', 'mapping', 'textsubdata', 'custom_textsubdata', 'custom'] and \
-            not (isinstance(value, basestring) or
-                 isinstance(value, int) or
-                 isinstance(value, float)):
-        return (ws_ref, "input value not supported for '" + str(param['type']) +
-                        "' type - only str, int or float")
+    elif param["type"] == "textsubdata" and not (
+        isinstance(value, str) or isinstance(value, list)
+    ):
+        return (
+            ws_ref,
+            "input value not supported for 'textsubdata' type - "
+            "only str or list is supported",
+        )
+    elif param["type"] == "custom_textsubdata" and not (
+        isinstance(value, str) or isinstance(value, list)
+    ):
+        return (
+            ws_ref,
+            "input value not supported for 'custom_textsubdata' type - "
+            "only str or list is supported",
+        )
+    elif param["type"] not in [
+        "group",
+        "mapping",
+        "textsubdata",
+        "custom_textsubdata",
+        "custom",
+    ] and not (
+        isinstance(value, str) or isinstance(value, int) or isinstance(value, float)
+    ):
+        return (
+            ws_ref,
+            "input value not supported for '"
+            + str(param["type"])
+            + "' type - only str, int or float",
+        )
 
-    # check types. basestring is pretty much anything (it'll just get
+    # check types. str is pretty much anything (it'll just get
     # casted), but ints, floats, or lists are funky.
-    if param['type'] == 'int' and not isinstance(value, int):
-        return (ws_ref, 'Given value {} is not an int'.format(value))
-    elif param['type'] == 'float' and not (isinstance(value, float) or
-                                           isinstance(value, int)):
-        return (ws_ref, 'Given value {} is not a number'.format(value))
+    if param["type"] == "int" and not isinstance(value, int):
+        return (ws_ref, "Given value {} is not an int".format(value))
+    elif param["type"] == "float" and not (
+        isinstance(value, float) or isinstance(value, int)
+    ):
+        return (ws_ref, "Given value {} is not a number".format(value))
 
     # if it's expecting a workspace object, check if that's present,
     # and a valid type
-    if 'allowed_types' in param and len(param['allowed_types']) > 0 and \
-            not param['is_output']:
+    if (
+        "allowed_types" in param
+        and len(param["allowed_types"]) > 0
+        and not param["is_output"]
+    ):
         try:
             # If we see a / , assume it's already an object reference.
-            if '/' in value:
-                path_items = [item.strip() for item in value.split(';')]
+            if "/" in value:
+                path_items = [item.strip() for item in value.split(";")]
                 for path_item in path_items:
-                    if len(path_item.split('/')) > 3:
-                        return (ws_ref, ('Data reference named {} does not ' +
-                                         'have the right format - should be ' +
-                                         'workspace/object/version(optional)'
-                                         ).format(value))
-                info = clients.get('workspace').get_object_info_new({
-                    'objects': [{'ref': value}]
-                })[0]
-                path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
-                ws_ref = ';'.join(path_items)
+                    if len(path_item.split("/")) > 3:
+                        return (
+                            ws_ref,
+                            (
+                                "Data reference named {} does not "
+                                + "have the right format - should be "
+                                + "workspace/object/version(optional)"
+                            ).format(value),
+                        )
+                info = clients.get("workspace").get_object_info_new(
+                    {"objects": [{"ref": value}]}
+                )[0]
+                path_items[len(path_items) - 1] = "{}/{}/{}".format(
+                    info[6], info[0], info[4]
+                )
+                ws_ref = ";".join(path_items)
             # Otherwise, assume it's a name, not a reference.
             else:
-                info = clients.get('workspace').get_object_info_new({
-                    'objects': [{'workspace': workspace, 'name': value}]
-                })[0]
+                info = clients.get("workspace").get_object_info_new(
+                    {"objects": [{"workspace": workspace, "name": value}]}
+                )[0]
                 ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
             type_ok = False
-            for t in param['allowed_types']:
+            for t in param["allowed_types"]:
                 if re.match(t, info[2]):
                     type_ok = True
             if not type_ok:
-                msg = 'Type of data object, {}, ' \
-                      'does not match allowed types'
+                msg = "Type of data object, {}, " "does not match allowed types"
                 return (ws_ref, msg.format(info[2]))
         except Exception as e:
             print(e)
-            msg = 'Data object named {} not found with this Narrative.'
+            msg = "Data object named {} not found with this Narrative."
             return (ws_ref, msg.format(value))
 
     # if it expects a set of allowed values, check if this one matches
-    if 'allowed_values' in param:
-        if value not in param['allowed_values']:
-            return (ws_ref, "Given value '{}' is not permitted"
-                            "in the allowed set.".format(value))
+    if "allowed_values" in param:
+        if value not in param["allowed_values"]:
+            return (
+                ws_ref,
+                "Given value '{}' is not permitted" "in the allowed set.".format(value),
+            )
 
     # if it expects a numerical value in a certain range, check that.
-    if 'max_val' in param:
+    if "max_val" in param:
         try:
-            if float(value) > param['max_val']:
-                return (ws_ref, "Given value {} should be <= {}".format(
-                        value, param['max_val']))
-        except:
-            return (ws_ref,
-                    "Given value {} must be a number".format(value))
+            if float(value) > param["max_val"]:
+                return (
+                    ws_ref,
+                    "Given value {} should be <= {}".format(value, param["max_val"]),
+                )
+        except BaseException:
+            return (ws_ref, "Given value {} must be a number".format(value))
 
-    if 'min_val' in param:
+    if "min_val" in param:
         try:
-            if float(value) < param['min_val']:
-                return (ws_ref, "Given value {} should be >= {}".format(
-                        value, param['min_val']))
-        except:
-            return (ws_ref,
-                    "Given value {} must be a number".format(value))
+            if float(value) < param["min_val"]:
+                return (
+                    ws_ref,
+                    "Given value {} should be >= {}".format(value, param["min_val"]),
+                )
+        except BaseException:
+            return (ws_ref, "Given value {} must be a number".format(value))
 
     # if it's an output object, make sure it follows the data object rules.
-    if param.get('is_output', False):
-        if re.search(r'\s', value):
+    if param.get("is_output", False):
+        if re.search(r"\s", value):
             return (ws_ref, "Spaces are not allowed in data object names.")
-        if re.match(r'^\d+$', value):
+        if re.match(r"^\d+$", value):
             return (ws_ref, "Data objects cannot be just a number.")
-        if not re.match(r'^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
-            return (ws_ref,
-                    "Data object names can only include symbols: _ - . |")
+        if not re.match(r"^[a-z0-9|\.|\||_\-]*$", value, re.IGNORECASE):
+            return (ws_ref, "Data object names can only include symbols: _ - . |")
 
     # Last, regex. not being used in any extant specs, but cover it anyway.
     # Disabled for now - the regex string that works in javascript may not work
@@ -670,18 +717,27 @@ def validate_param_value(param, value, workspace):
 
 def resolve_single_ref(workspace, value):
     ret = None
-    if '/' in value:
-        path_items = [item.strip() for item in value.split(';')]
+    if "/" in value:
+        path_items = [item.strip() for item in value.split(";")]
         for path_item in path_items:
-            if len(path_item.split('/')) > 3:
-                raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
-            # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
-        info = clients.get('workspace').get_object_info_new({'objects': [{'ref': value}]})[0]
+            if len(path_item.split("/")) > 3:
+                raise ValueError(
+                    "Object reference {} has too many slashes  - should be workspace/object/version(optional)".format(
+                        value
+                    )
+                )
+            # return (ws_ref, 'Data reference named {} does not have the right format
+            # - should be workspace/object/version(optional)')
+        info = clients.get("workspace").get_object_info_new(
+            {"objects": [{"ref": value}]}
+        )[0]
         path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
-        ret = ';'.join(path_items)
+        ret = ";".join(path_items)
     # Otherwise, assume it's a name, not a reference.
     else:
-        info = clients.get('workspace').get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+        info = clients.get("workspace").get_object_info_new(
+            {"objects": [{"workspace": workspace, "name": value}]}
+        )[0]
         ret = "{}/{}/{}".format(info[6], info[0], info[4])
     return ret
 
@@ -699,11 +755,11 @@ def resolve_ref_if_typed(value, spec_param):
     then ensure that the reference points to an object in the current
     workspace, and transform the value into an absolute reference to it.
     """
-    is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
-    if 'allowed_types' in spec_param and not is_output:
-        allowed_types = spec_param['allowed_types']
+    is_output = "is_output" in spec_param and spec_param["is_output"] == 1
+    if "allowed_types" in spec_param and not is_output:
+        allowed_types = spec_param["allowed_types"]
         if len(allowed_types) > 0:
-            workspace = system_variable('workspace')
+            workspace = system_variable("workspace")
             return resolve_ref(workspace, value)
     return value
 
@@ -720,22 +776,30 @@ def transform_param_value(transform_type, value, spec_param):
 
     Returns a transformed (or not) value.
     """
-    if transform_type is None and spec_param is not None and spec_param['type'] == 'textsubdata':
+    if (
+        transform_type is None
+        and spec_param is not None
+        and spec_param["type"] == "textsubdata"
+    ):
         transform_type = "string"
 
-    if transform_type is None or transform_type == "none" or transform_type == "object-name":
+    if (
+        transform_type is None
+        or transform_type == "none"
+        or transform_type == "object-name"
+    ):
         return value
 
     elif transform_type == "ref" or transform_type == "unresolved-ref":
         # make unresolved workspace ref (like 'ws-name/obj-name')
-        if (value is not None) and ('/' not in value):
-            value = system_variable('workspace') + '/' + value
+        if (value is not None) and ("/" not in value):
+            value = system_variable("workspace") + "/" + value
         return value
 
     elif transform_type == "resolved-ref":
         # make a workspace ref
         if value is not None:
-            value = resolve_ref(system_variable('workspace'), value)
+            value = resolve_ref(system_variable("workspace"), value)
         return value
 
     elif transform_type == "future-default":
@@ -763,8 +827,7 @@ def transform_param_value(transform_type, value, spec_param):
         else:
             return str(value)
 
-    elif transform_type.startswith("list<") and \
-            transform_type.endswith(">"):
+    elif transform_type.startswith("list<") and transform_type.endswith(">"):
         # make it a list of transformed types.
         list_type = transform_type[5:-1]
         if isinstance(value, list):
@@ -776,5 +839,4 @@ def transform_param_value(transform_type, value, spec_param):
             return [transform_param_value(list_type, value, None)]
 
     else:
-        raise ValueError("Unsupported Transformation type: " +
-                         transform_type)
+        raise ValueError("Unsupported Transformation type: " + transform_type)

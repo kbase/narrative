@@ -143,10 +143,8 @@ define([
             widget.loggedInCallback(null, { token: 'token' });
 
             const warnings = [
-                new RegExp('The selected cluster has 55 genes\\.'),
-                new RegExp(
-                    'Heatmaps for clusters with more than 50 genes are not displayed inline, for performance reasons\\.'
-                ),
+                /The selected cluster has 55 genes[.]/,
+                /Heatmaps for clusters with more than 50 genes are not displayed inline, for performance reasons[.]/
             ];
 
             // Ensure heatmap is displayed.
@@ -176,10 +174,8 @@ define([
             widget.loggedInCallback(null, { token: 'token' });
 
             const warnings = [
-                new RegExp('The selected cluster has 262 genes\\.'),
-                new RegExp(
-                    'Heatmaps cannot be generated for clusters with more than 200 genes, for performance reasons\\.'
-                ),
+                /The selected cluster has 262 genes[.]/,
+                /Heatmaps cannot be generated for clusters with more than 200 genes, for performance reasons[.]/
             ];
 
             await waitForAlert($host, warnings, 5000);

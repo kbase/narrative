@@ -14,7 +14,7 @@
         "@wdio/spec-reporter": "7.10.1",
         "bower": "1.8.12",
         "chrome-launcher": "0.14.0",
-        "chromedriver": "92.0.2",
+        "chromedriver": "94.0.0",
         "commander": "8.1.0",
         "eslint": "7.32.0",
         "eslint-config-prettier": "8.3.0",

@@ -43,7 +43,7 @@
         "lint-staged": "11.1.2",
         "msw": "0.35.0",
         "prettier": "2.3.2",
-        "puppeteer": "10.2.0",
+        "puppeteer": "10.4.0",
         "requirejs": "2.3.6",
         "selenium-standalone": "7.1.0",
         "selenium-webdriver": "3.6.0",

@@ -2,16 +2,16 @@ define([
     'jquery',
     'bluebird',
     'handlebars',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     '../validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'common/props',
     'bootstrap',
     'css!font-awesome',
-], ($, Promise, Handlebars, html, Workspace, Validation, Events, Runtime, Dom, Props) => {
+], ($, Promise, Handlebars, html, Workspace, Validation, Events, Runtime, Ui, Props) => {
     'use strict';
 
     /*
@@ -56,7 +56,7 @@ define([
                 objectSelectionPageSize: 20,
             },
             runtime = Runtime.make(),
-            dom;
+            ui;
 
         // Validate configuration.
         if (!workspaceId) {
@@ -195,7 +195,7 @@ define([
                 case 'value':
                     // just change the selections.
                     var count = buildCount();
-                    dom.setContent('input-control.count', count);
+                    ui.setContent('input-control.count', count);
 
                     break;
                 case 'availableValues':
@@ -203,8 +203,8 @@ define([
                     // re-apply the selections from the value
                     var options = buildOptions(),
                         count = buildCount();
-                    dom.setContent('input-control.input', options);
-                    dom.setContent('input-control.count', count);
+                    ui.setContent('input-control.input', options);
+                    ui.setContent('input-control.count', count);
 
                     break;
                 case 'referenceObjectName':
@@ -224,7 +224,7 @@ define([
          * values.
          */
         function getInputValue() {
-            const control = dom.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
             if (!control) {
                 return null;
             }
@@ -340,7 +340,7 @@ define([
                         inputControl
                     );
 
-                dom.setContent('input-container', content);
+                ui.setContent('input-container', content);
                 events.attachEvents(container);
             })
                 .then(() => {
@@ -437,7 +437,7 @@ define([
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     $container = $(container);
-                    dom = Dom.make({
+                    ui = Ui.make({
                         node: container,
                     });
 

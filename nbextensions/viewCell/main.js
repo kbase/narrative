@@ -25,7 +25,7 @@ define([
     'common/parameterSpec',
     'common/cellUtils',
     'common/clock',
-    'common/dom',
+    'common/ui',
     'common/props',
     'util/icon',
     'common/jupyter',
@@ -46,7 +46,7 @@ define([
     ParameterSpec,
     utils,
     Clock,
-    Dom,
+    Ui,
     Props,
     Icon,
     jupyter,
@@ -250,8 +250,8 @@ define([
                     runtime: runtime,
                     workspaceInfo: workspaceInfo,
                 }),
-                dom = Dom.make({ node: cell.input[0] }),
-                kbaseNode = dom.createNode(
+                ui = Ui.make({ node: cell.input[0] }),
+                kbaseNode = ui.createNode(
                     div({
                         dataSubareaType: 'view-cell-input',
                     })

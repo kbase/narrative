@@ -16,7 +16,6 @@ define([
     'kb_service/utils',
     // LOCAL
     'common/ui',
-    'common/dom',
     'common/runtime',
     'common/events',
     'common/props',
@@ -29,7 +28,6 @@ define([
     sdkClientExceptions,
     serviceUtils,
     UI,
-    Dom,
     Runtime,
     Events,
     Props,

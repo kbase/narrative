@@ -75,7 +75,6 @@ define([
     'common/cellUtils',
     'common/clock',
     'common/data',
-    'common/dom',
     'common/error',
     'common/events',
     'common/format',

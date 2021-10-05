@@ -170,7 +170,7 @@ table {
 
 .modal-cover-content {
   background: rgb(255 255 255);
-  border: 1px solid rgb(102 102 102);
+  border: 1px solid use_color('base');
   border-radius: 3px;
   padding: 5px;
 }
@@ -207,7 +207,7 @@ table {
 /* custom checkboxes (prototyped) */
 
 .ncheck {
-  border: 1px solid rgb(204 204 204);
+  border: 1px solid use_color('base-lighter');
   height: 15px;
   margin-left: auto;
   margin-right: auto;

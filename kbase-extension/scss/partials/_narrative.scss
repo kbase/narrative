@@ -209,7 +209,7 @@ span#searchspan { /* FIXME */
   text-shadow: none !important;
 
   > div {
-    color: rgb(102 102 102) !important;
+    color: use_color('base') !important;
   }
 
   .kb-nav-btn-txt {
@@ -459,7 +459,7 @@ p#site-title { /* FIXME */
   background-color: use_color('mid-blue');
   border-bottom: 6px solid rgb(206 206 206);
   border-right: 6px solid rgb(206 206 206);
-  color: rgb(187 222 251);
+  color: use_color('primary-lighter');
   cursor: pointer;
   display: none;
   font-size: 16px;
@@ -481,7 +481,7 @@ p#site-title { /* FIXME */
   background-color: use_color('mid-blue');
   border-bottom: 6px solid use_color('mid-blue');
   border-top: 6px solid use_color('mid-blue');
-  color: rgb(187 222 251);
+  color: use_color('primary-lighter');
   cursor: pointer;
   display: inline-block;
   font-size: 16px;
@@ -499,7 +499,7 @@ p#site-title { /* FIXME */
   background-color: use_color('mid-blue');
   border-bottom: 6px solid use_color('mid-blue');
   border-top: 6px solid use_color('mid-blue');
-  color: rgb(187 222 251);
+  color: use_color('primary-lighter');
   cursor: pointer;
   display: inline-block;
   font-size: 16px;
@@ -636,13 +636,13 @@ p#site-title { /* FIXME */
       width: 123px;
 
       &.tab1 {
-        background: linear-gradient(rgb(102 102 102), rgb(187 187 187));
+        background: linear-gradient(use_color('base'), rgb(187 187 187));
         color: rgb(255 255 255);
         float: right;
       }
 
       &.tab2 {
-        background: linear-gradient(rgb(204 204 204), rgb(153 153 153));
+        background: linear-gradient(use_color('base-lighter'), use_color('base-light'));
       }
     }
   }
@@ -803,7 +803,7 @@ fieldset {
 div {
   &.dataset-cell,
   &.function-cell {
-    border: 1px solid rgb(204 204 204);
+    border: 1px solid use_color('base-lighter');
     margin: 3px auto;
     padding: 7px 17px;
     width: 90%;
@@ -874,12 +874,12 @@ img.dataset-cell {
   width: 90%;
 
   &:hover {
-    border: 2px dotted rgb(204 204 204);
+    border: 2px dotted use_color('base-lighter');
   }
 }
 
 p.textcuepara {
-  color: rgb(204 204 204);
+  color: use_color('base-lighter');
   display: none;
   height: 1em;
   margin: 0;
@@ -957,7 +957,7 @@ p span.notification {
   }
 
   > a::after {
-    border-color: transparent transparent transparent rgb(204 204 204);
+    border-color: transparent transparent transparent use_color('base-lighter');
     border-style: solid;
     border-width: 5px 0 5px 5px;
     content: ' ';
@@ -1157,7 +1157,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   margin: 0 0 0 3px;
 
   &:hover {
-    color: rgb(102 102 102);
+    color: use_color('base');
     cursor: hand;
     cursor: pointer;
   }
@@ -1213,7 +1213,7 @@ div#notebook_panel { /* FIXME Jupyter css */
       padding: 2px 5px;
 
       &:hover {
-        background-color: rgb(204 204 204);
+        background-color: use_color('base-lighter');
         text-decoration: none !important;
       }
     }
@@ -1291,7 +1291,7 @@ div#notebook_panel { /* FIXME Jupyter css */
     width: 100%;
 
     &:nth-child(odd) {
-      background-color: rgb(238 238 238);
+      background-color: use_color('base-lightest');
       border-bottom: 1px solid rgb(221 221 221);
     }
 
@@ -1356,7 +1356,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   }
 
   h2 {
-    color: rgb(153 153 153);
+    color: use_color('base-light');
     font-size: 80%;
     font-style: italic;
     font-weight: 100;
@@ -1380,7 +1380,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   }
 
   .version {
-    color: rgb(102 102 102);
+    color: use_color('base');
     font-size: 80%;
   }
 
@@ -1406,7 +1406,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   }
 
   h2 {
-    color: rgb(153 153 153);
+    color: use_color('base-light');
     font-size: 80%;
     font-style: italic;
     font-weight: 100;
@@ -1424,10 +1424,10 @@ div#notebook_panel { /* FIXME Jupyter css */
 }
 
 .kb-function-dim {
-  background-color: rgb(238 238 238) !important;
+  background-color: use_color('base-lightest') !important;
 
   .panel-heading {
-    background-color: rgb(238 238 238) !important;
+    background-color: use_color('base-lightest') !important;
   }
 }
 
@@ -1448,7 +1448,7 @@ div#notebook_panel { /* FIXME Jupyter css */
 }
 
 .kb-toolbar-open {
-  border-bottom: 1px solid rgb(204 204 204);
+  border-bottom: 1px solid use_color('base-lighter');
   border-radius: 0;
 }
 
@@ -1489,7 +1489,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   }
 
   h2 {
-    color: rgb(102 102 102);
+    color: use_color('base');
     font: normal 400 15px/1.5 $typeface-page-text;
     margin: 3px;
     opacity: inherit;
@@ -1506,6 +1506,10 @@ div#notebook_panel { /* FIXME Jupyter css */
       float: right;
       margin-top: 5px;
     }
+  }
+  // grey out the form while running
+  &.running form {
+    opacity: 0.6;
   }
 }
 
@@ -1552,18 +1556,12 @@ td {
   tr:hover {
     td,
     th {
-      background: rgb(238 238 238);
+      background: use_color('base-lightest');
     }
   }
 }
 
-/* grey out the form while running */
-
-.kb-cell-run.running form {
-  opacity: 0.6;
-}
-
-/* progress "meter" */
+/* progress bar */
 
 .kb-cell-progress {
   display: none;
@@ -1644,17 +1642,24 @@ td {
 
 /** output cell styling */
 
-.kb-cell-output .panel {
-  border-radius: 0;
-}
+.kb-cell-output {
+  .panel {
+    border-radius: 0;
+  }
 
-.kb-cell-output-content {
-  overflow-x: auto;
-  padding: 5px;
-}
+  .panel-heading {
+    padding: 5px 10px;
+  }
 
-.kb-cell-output .panel .panel-heading {
-  padding: 5px 10px;
+  /* override from some jupyter style? */
+  .nav > li > a {
+    padding: 5px 10px;
+  }
+
+  &-content {
+    overflow-x: auto;
+    padding: 5px;
+  }
 }
 
 .rendered_html {
@@ -1665,12 +1670,6 @@ td {
   :link {
     text-decoration: none;
   }
-}
-
-/* override from some jupyter style? */
-
-.kb-cell-output .nav > li > a {
-  padding: 5px 10px;
 }
 
 .kb-cell-error .panel-heading {
@@ -1985,7 +1984,7 @@ button {
     background-color: use_color('mid-blue');
     border: 0;
     border-radius: 1px;
-    box-shadow: 1px 1px 1px rgb(204 204 204);
+    box-shadow: 1px 1px 1px use_color('base-lighter');
     color: rgb(255 255 255);
     font-size: 13px;
     padding: 10px 20px;
@@ -2247,7 +2246,7 @@ button.kb-data-obj {
   }
 
   &[disabled] {
-    background-color: rgb(187 222 251);
+    background-color: use_color('primary-lighter');
     box-shadow: none;
     color: rgb(255 255 255);
   }
@@ -2356,7 +2355,7 @@ button.kb-data-obj {
 }
 
 .kb-function-dim .kb-data-list-obj-row {
-  border-left-color: rgb(238 238 238);
+  border-left-color: use_color('base-lightest');
 }
 
 .kb-data-list-obj-row:hover,
@@ -2472,7 +2471,7 @@ button.kb-data-obj {
   }
 
   &[disabled] {
-    background-color: rgb(187 222 251);
+    background-color: use_color('primary-lighter');
     box-shadow: none;
     color: rgb(255 255 255);
   }
@@ -2604,7 +2603,7 @@ button.kb-data-obj {
     margin: 2px;
 
     &:hover {
-      background-color: rgb(238 238 238);
+      background-color: use_color('base-lightest');
     }
 
     &:nth-child(odd) {
@@ -2612,7 +2611,7 @@ button.kb-data-obj {
     }
 
     &:hover:nth-child(odd) {
-      background-color: rgb(238 238 238);
+      background-color: use_color('base-lightest');
     }
   }
 
@@ -2705,7 +2704,7 @@ button.kb-data-obj {
 .kbcb-app-card {
   background: rgb(241 241 245);
   border-radius: 2px;
-  color: rgb(102 102 102);
+  color: use_color('base');
   height: 100%;
   overflow: hidden;
   text-align: center;
@@ -2802,7 +2801,7 @@ button.kb-data-obj {
 .kbcb-app-page {
   background: rgb(241 241 245);
   border-radius: 2px;
-  color: rgb(102 102 102);
+  color: use_color('base');
   text-align: center;
 }
 
@@ -2979,7 +2978,7 @@ button.kb-data-obj {
   margin: 10px 20px 0 0;
 
   span {
-    color: rgb(153 153 153);
+    color: use_color('base-light');
     font-size: 0.9em;
     font-weight: 700;
   }
@@ -3035,7 +3034,7 @@ button.kb-data-obj {
 
 #kb-view-mode-narr-hide {
   background-color: use_color('mid-blue');
-  color: rgb(187 222 251);
+  color: use_color('primary-lighter');
   cursor: pointer;
   display: block;
   float: left;
@@ -3061,7 +3060,7 @@ button.kb-data-obj {
 
 #popdiv {
   background-color: rgb(252 252 252);
-  border: 1px solid rgb(204 204 204);
+  border: 1px solid use_color('base-lighter');
   font-size: 12px;
   position: absolute;
   visibility: hidden;

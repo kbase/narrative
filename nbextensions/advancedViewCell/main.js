@@ -23,7 +23,7 @@ define([
     './widgets/advancedViewCellWidget',
     'common/runtime',
     'common/cellUtils',
-    'common/dom',
+    'common/ui',
     'util/icon',
     'common/jupyter',
     'common/spec',
@@ -40,7 +40,7 @@ define([
     ViewCellWidget,
     Runtime,
     utils,
-    Dom,
+    Ui,
     Icon,
     jupyter,
     Spec,
@@ -210,8 +210,8 @@ define([
                     runtime: runtime,
                     workspaceInfo: workspaceInfo,
                 }),
-                dom = Dom.make({ node: cell.input[0] }),
-                kbaseNode = dom.createNode(
+                ui = Ui.make({ node: cell.input[0] }),
+                kbaseNode = ui.createNode(
                     div({
                         dataSubareaType: 'view-cell-input',
                     })

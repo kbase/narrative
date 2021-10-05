@@ -4,13 +4,13 @@ define([
     'kb_common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'common/runtime',
     './singleCustomSelect',
     'bootstrap',
 
     'css!font-awesome',
-], (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleSelectInputWidget) => {
+], (Promise, Jupyter, html, Validation, Events, Ui, Runtime, SingleSelectInputWidget) => {
     'use strict';
 
     // Constants
@@ -25,7 +25,7 @@ define([
             container,
             parent,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 value: [],
             },
@@ -100,7 +100,7 @@ define([
          */
 
         function getInputValue() {
-            return dom.getElement('input-container.input').value;
+            return ui.getElement('input-container.input').value;
         }
 
         /*
@@ -345,7 +345,7 @@ define([
             const events = Events.make(),
                 control = makeInputControl(events, bus);
 
-            dom.setContent('input-container', control);
+            ui.setContent('input-container', control);
             widgets.forEach((widget) => {
                 widget.instance.start().then(() => {
                     widget.bus.emit('run', {
@@ -410,7 +410,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = Ui.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

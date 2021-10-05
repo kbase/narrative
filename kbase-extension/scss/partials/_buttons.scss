@@ -3,7 +3,7 @@
 .btn.kb-flat-btn {
   background-color: rgb(255 255 255);
   border: 0;
-  color: rgb(102 102 102);
+  color: use_color('base');
   margin: 0;
   text-shadow: none !important;
 
@@ -14,7 +14,7 @@
 
   &:active,
   &:hover {
-    background-color: rgb(204 204 204);
+    background-color: use_color('base-lighter');
   }
 }
 

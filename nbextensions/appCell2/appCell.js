@@ -4,7 +4,7 @@ define([
     'common/cellUtils',
     'common/runtime',
     'common/html',
-    'common/dom',
+    'common/ui',
     'util/icon',
     'common/jupyter',
     'common/error',
@@ -17,7 +17,7 @@ define([
     utils,
     Runtime,
     html,
-    Dom,
+    Ui,
     Icon,
     jupyter,
     Error,
@@ -142,8 +142,8 @@ define([
                 cellBus = runtime.bus().makeChannelBus({
                     description: 'Parent comm for The Cell Bus',
                 });
-                const dom = Dom.make({ node: cell.input[0] }),
-                    kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
+                const ui = Ui.make({ node: cell.input[0] }),
+                    kbaseNode = ui.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 appCellWidget = AppCellWidget.make({
                     bus: cellBus,
                     cell: cell,

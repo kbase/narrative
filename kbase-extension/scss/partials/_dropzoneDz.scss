@@ -5,7 +5,7 @@
 }
 
 .dz-file {
-  border: 1px solid rgb(238 238 238);
+  border: 1px solid use_color('base-lightest');
   font: 16px $typeface-page-text;
   margin: 2px 0;
   padding: 5px 0;
@@ -83,7 +83,7 @@
   overflow-y: auto;
 
   &-progress__header {
-    border-bottom: 1px solid rgb(238 238 238);
+    border-bottom: 1px solid use_color('base-lightest');
     display: none;
     margin-bottom: 5px;
   }

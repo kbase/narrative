@@ -8,10 +8,10 @@ define([
     '../validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'bootstrap',
     'css!font-awesome',
-], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, Dom) => {
+], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, UI) => {
     'use strict';
 
     // Constants
@@ -28,7 +28,7 @@ define([
             parent,
             container,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
@@ -113,7 +113,7 @@ define([
          * values.
          */
         function getInputValue() {
-            const control = dom.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
                 return;
@@ -258,7 +258,7 @@ define([
                     inputControl = makeInputControl(events, bus),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
-                dom.setContent('input-container', content);
+                ui.setContent('input-container', content);
                 events.attachEvents(container);
             });
         }
@@ -341,7 +341,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = UI.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

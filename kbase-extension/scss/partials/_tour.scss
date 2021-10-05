@@ -22,13 +22,13 @@
   > {
     h3.popover-title {
       background-color: use_color('mid-blue');
-      color: rgb(255 255 255);
+      color: use_color('white');
       font: 16px $typeface-page-text;
     }
 
     .popover-content,
     .popover-navigation {
-      background-color: rgb(238 238 238);
+      background-color: use_color('base-lightest');
     }
 
     .close-btn {

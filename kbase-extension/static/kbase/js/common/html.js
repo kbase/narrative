@@ -29,6 +29,7 @@ define(['uuid'], (Uuid) => {
             return '-' + m.toLowerCase();
         });
     }
+
     function makeStyleAttribs(attribs) {
         return Object.keys(attribs)
             .map((rawKey) => {
@@ -206,14 +207,6 @@ define(['uuid'], (Uuid) => {
         return 'kb_html_' + new Uuid(4).format();
     }
 
-    function makePanel(arg) {
-        const klass = arg.class || 'default';
-        return div({ class: 'panel panel-' + klass }, [
-            div({ class: 'panel-heading' }, [span({ class: 'panel-title' }, arg.title)]),
-            div({ class: 'panel-body' }, [arg.content]),
-        ]);
-    }
-
     function loading(msg) {
         const prompt = msg ? `${msg} &nbsp;&nbsp;` : '';
         return span([prompt, i({ class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom' })]);
@@ -304,7 +297,6 @@ define(['uuid'], (Uuid) => {
         genId,
         isSimpleObject,
         loading,
-        makePanel,
         makeTabs,
         merge,
         tag,

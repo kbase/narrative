@@ -125,26 +125,26 @@ define([
             ]);
         }
 
-        clickTab(e) {
-            e.preventDefault();
-            const tabID = e.target.getAttribute('href').substr(1);
-            const tab = e.target.parentNode;
-            const tabPanels = tab.parentNode.nextSibling;
-            const panel = tabPanels.querySelector('#' + tabID);
+        clickTab(event) {
+            event.preventDefault();
+            const tabID = event.target.getAttribute('href').substr(1);
+            const selectetdTabElement = event.target.parentNode;
+            const tabPanels = selectetdTabElement.parentNode.nextSibling;
+            const selectedPanelElement = tabPanels.querySelector('#' + tabID);
 
             // iterate through siblings until none are active.
-            const tabs = tab.parentNode;
+            const tabs = selectetdTabElement.parentNode;
             for (const tab of [].slice.call(tabs.childNodes)) {
                 tab.classList.remove('active');
             }
 
-            tab.classList.add('active');
+            selectetdTabElement.classList.add('active');
 
             // same for panels
             for (const panel of [].slice.call(tabPanels.childNodes)) {
                 panel.classList.remove('active', 'in');
             }
-            panel.classList.add('active', 'in');
+            selectedPanelElement.classList.add('active', 'in');
         }
 
         renderOverview() {

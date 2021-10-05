@@ -21,7 +21,6 @@ define([
 
             const {
                 dna_size, gc_content, num_contigs,
-                // base_counts: { A, C, T, G }
             } = selectedItem.value;
 
             const rows = [
@@ -63,17 +62,6 @@ define([
             });
         }
     }
-
-    // class AssemblySetLoader extends Loader {
-    //     constructor(props) {
-    //         props = {
-    //             ...props,
-    //             method: 'get_assembly_set_v1',
-    //             module: AssemblySet
-    //         };
-    //         super(props);
-    //     }
-    // }
 
     return AssemblySetLoader;
 });

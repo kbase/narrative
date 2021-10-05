@@ -1,5 +1,5 @@
 define([
-    '../../util/mswUtils',
+    '../../utils/mswUtils',
     'jsonrpc/1.1/DynamicServiceClient',
     'jsonrpc/1.1/errors',
     './helpers',

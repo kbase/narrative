@@ -1,0 +1,24 @@
+.SetComponent .Table {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.SetComponent .Table > .Row {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  margin: 4px 0;
+  align-items: center;
+  height: 1.5em;
+}
+
+.SetComponent .Table > .Row > .Col:nth-child(1) {
+  font-weight: bold;
+  color: rgba(100, 100, 100);
+  flex: 0 0 15em;
+}
+
+.SetComponent .Table > .Row > .Col:nth-child(2) {
+  flex: 1 1 0;
+}

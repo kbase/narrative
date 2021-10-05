@@ -379,6 +379,13 @@ require.config({
         GenomeCategorizer: 'kbase/js/widgets/function_output/GenomeCategorizer',
         'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
+        /*
+            React components
+        */
+        React: 'kbase/js/react_components/globalReact',
+        ReactDOM: 'kbase/js/react_components/globalReactDOM',
+        react_components: 'kbase/js/react_components',
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -522,5 +529,18 @@ require.config({
         bootstrap: {
             deps: ['jquery', 'jqueryui'],
         },
+        // React: {
+        //     init: () => {
+        //         'use strict';
+        //         alert('hello?');
+        //         return window.React;
+        //     }
+        // },
+        // ReactDOM: {
+        //     init: () => {
+        //         'use strict';
+        //         return window.ReactDOM;
+        //     }
+        // }
     },
 });

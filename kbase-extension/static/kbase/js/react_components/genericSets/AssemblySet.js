@@ -10,23 +10,19 @@ define([
 ) => {
     'use strict';
 
-    const { createElement: e } = React;
+    const { createElement: e, Component } = React;
 
     class AssemblySet extends SetComponent {
-        constructor(props) {
-            super(props);
-        }
-
         renderItemTable() {
-            const item = this.props.currentItem.value;
-            if (!item) {
-                return;
+            const selectedItem = this.props.set.selectedItem;
+            if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
+                return null;
             }
 
             const {
                 dna_size, gc_content, num_contigs,
                 // base_counts: { A, C, T, G }
-            } = item.data;
+            } = selectedItem.value;
 
             const rows = [
                 {
@@ -58,16 +54,26 @@ define([
         }
     }
 
-    class AssemblySetLoader extends Loader {
-        constructor(props) {
-            props = {
-                ...props,
+    class AssemblySetLoader extends Component {
+        render() {
+            return e(Loader, {
+                ...this.props,
                 method: 'get_assembly_set_v1',
                 module: AssemblySet
-            };
-            super(props);
+            });
         }
     }
+
+    // class AssemblySetLoader extends Loader {
+    //     constructor(props) {
+    //         props = {
+    //             ...props,
+    //             method: 'get_assembly_set_v1',
+    //             module: AssemblySet
+    //         };
+    //         super(props);
+    //     }
+    // }
 
     return AssemblySetLoader;
 });

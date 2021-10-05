@@ -13,14 +13,10 @@ define([
     const { createElement: e, Component } = React;
 
     class ReadsAlignmentSet extends SetComponent {
-        constructor(props) {
-            super(props);
-        }
-
         renderItemTable() {
-            const item = this.props.currentItem.value;
-            if (!item) {
-                return;
+            const selectedItem = this.props.set.selectedItem;
+            if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
+                return null;
             }
 
             const {
@@ -31,7 +27,7 @@ define([
                     total_reads, unmapped_reads, mapped_reads, multiple_alignments,
                     singletons
                 }
-            } = item.data;
+            } = selectedItem.value;
 
             const rows = [
                 {
@@ -113,9 +109,6 @@ define([
     }
 
     class ReadsAlignmentSetLoader extends Component {
-        constructor(props) {
-            super(props);
-        }
         render() {
             return e(Loader, {
                 ...this.props,

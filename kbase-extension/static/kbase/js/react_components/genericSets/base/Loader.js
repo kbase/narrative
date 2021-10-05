@@ -21,7 +21,7 @@ define([
             if (!props.method) {
                 console.error('method not supplied to Loader');
                 this.state = {
-                    state: 'error',
+                    status: 'error',
                     error: new Error('Prop "method" required for Loader Component')
                 };
                 return;
@@ -30,7 +30,7 @@ define([
             if (!props.module) {
                 console.error('module not supplied to Loader Component');
                 this.state = {
-                    state: 'error',
+                    status: 'error',
                     error: new Error('Prop "method" required for Loader Component')
                 };
                 return;
@@ -38,134 +38,148 @@ define([
             this.method = props.method;
             this.module = props.module;
             this.state = {
-                state: null, // 'loading', 'error', 'loaded'
-                data: {
-                    items: {
-                        value: null,
-                        error: null
-                    },
-                    currentItem: {
-                        objectRef: null,
-                        value: null,
-                        error: null,
-                        loading: false
-                    }
-                },
-                error: null
+                status: 'ok',
+                set: {
+                    status: null
+                }
             };
-            this.currentItemRef = null;
+            this.selectedItemRef = null;
         }
 
-        componentDidMount() {
+        async componentDidMount() {
+            // We wait on this so we are sure that the set is fetched before attempting
+            // to set the default selected item.
+            await this.getSet();
+
+            // Note that we don't catch the error for fetching an item here, 
+            // we let it be a runaway promise. Error catching for fetching an item
+            // is handled separately.
+            this.getSelectedItem();
+        }
+
+        async getSet() {
             this.setState({
-                state: 'loading'
+                ...this.state,
+                set: {
+                    status: 'loading'
+                }
             });
-            this.fetchSet()
-                .then((items) => {
-                    if (items.length > 0) {
-                        this.currentItemRef = items[0].ref;
-                    }
-                    this.setState({
-                        state: 'loaded',
-                        data: {
-                            ...this.state.data,
-                            items: {
-                                value: items,
-                                error: null
-                            }
+            try {
+                const { description, items } = await this.fetchSet();
+
+                // Sets the first item as selected if there are any.
+                if (items.length > 0) {
+                    this.selectedItemRef = items[0].ref;
+                }
+
+                this.setState({
+                    ...this.state,
+                    set: {
+                        status: 'loaded',
+                        value: {
+                            description,
+                            items,
+                        },
+                        selectedItem: {
+                            status: null
                         }
-                    });
-                    this.getCurrentItem();
-                })
-                .catch((error) => {
-                    console.error('Error fetching the set', error);
-                    this.setState({
-                        state: 'error',
-                        error
-                    });
+
+                    }
                 });
+            } catch (error) {
+                console.error('Error fetching the set', error);
+                this.setState({
+                    ...this.state,
+                    set: {
+                        status: 'error',
+                        error
+                    }
+                });
+                return;
+            }
         }
 
-        fetchSet() {
+        async fetchSet() {
             const setApi = new DynamicServiceClient({
                 url: this.props.serviceWizardURL,
                 module: 'SetAPI',
                 token: this.props.token,
             });
-            return setApi.callFunc(this.method, [{
+            const [{ data: { description, items } }] = await setApi.callFunc(this.method, [{
                 ref: this.props.objectRef,
                 include_item_info: 1
-            }])
-                .then(([result]) => {
-                    const { data: { description, items } } = result;
-                    items.forEach((item) => {
-                        item.objectInfo = ServiceUtils.objectInfoToObject(item.info);
-                    });
-                    return items;
-                });
+            }]);
+
+            // Augment the items with objectinfo in the object form (native form is an array).
+            items.forEach((item) => {
+                item.objectInfo = ServiceUtils.objectInfoToObject(item.info);
+            });
+            return { description, items };
         }
 
-        getCurrentItem() {
-            if (!this.currentItemRef) {
+        async getSelectedItem() {
+            if (!this.selectedItemRef) {
                 return;
             }
             this.setState({
-                data: {
-                    ...this.state.data,
-                    currentItem: {
-                        ...this.state.data.currentItem,
-                        loading: true
+                ...this.state,
+                set: {
+                    ...this.state.set,
+                    selectedItem: {
+                        // note that we keep the selected item even if we are
+                        // (re)loading.
+                        ...this.state.set.selectedItem,
+                        status: 'loading'
                     }
                 }
             });
-            this.fetchSetElement(this.currentItemRef)
-                .then((item) => {
-                    this.setState({
-                        data: {
-                            ...this.state.data,
-                            currentItem: {
-                                value: item,
-                                loading: false,
-                                error: false
-                            }
+            try {
+                const item = await this.fetchSetElement(this.selectedItemRef);
+                this.setState({
+                    ...this.state,
+                    set: {
+                        ...this.state.set,
+                        selectedItem: {
+                            status: 'loaded',
+                            value: item
                         }
-                    });
-                })
-                .catch((error) => {
-                    this.setState({
-                        data: {
-                            ...this.state.data,
-                            currentItem: {
-                                value: null,
-                                loading: false,
-                                error
-                            }
-                        }
-                    });
+                    }
                 });
+            } catch (error) {
+                this.setState({
+                    ...this.state,
+                    set: {
+                        ...this.state.set,
+                        selectedItem: {
+                            status: 'error',
+                            error
+                        }
+                    }
+                });
+            }
         }
 
-        fetchSetElement(ref) {
+        async fetchSetElement(ref) {
             const workspace = new ServiceClient({
                 url: this.props.workspaceURL,
                 module: 'Workspace',
                 token: this.props.token
             });
-            return workspace.callFunc('get_objects2', [{
+            const [result] = await workspace.callFunc('get_objects2', [{
                 objects: [{
                     ref
                 }]
-            }])
-                .then(([result]) => {
-                    const item = result.data[0];
-                    item.objectInfo = ServiceUtils.objectInfoToObject(item.info);
-                    return item;
-                });
+            }]);
+
+            const object = result.data[0];
+            const item = object.data;
+            item.objectInfo = ServiceUtils.objectInfoToObject(object.info);
+            return item;
         }
 
         selectItem(itemRef) {
-            this.currentItemRef = itemRef;
-            this.getCurrentItem();
+            this.selectedItemRef = itemRef;
+            this.getSelectedItem();
         }
 
         renderError() {
@@ -182,20 +196,21 @@ define([
         }
 
         render() {
-            switch (this.state.state) {
+            switch (this.state.status) {
                 case null:
                 case 'loading':
                     return this.renderLoading();
                 case 'error':
-                    return this.renderError();
-                case 'loaded':
+                    return this.renderError(this.state.error);
+                case 'ok':
                     return e(this.module, {
-                        items: this.state.data.items,
-                        currentItem: this.state.data.currentItem,
+                        set: this.state.set,
                         selectItem: (itemRef) => {
                             this.selectItem(itemRef);
                         }
                     });
+                default:
+                    this.renderError(new Error(`Unsupported status ${this.state.status}`));
             }
         }
     }

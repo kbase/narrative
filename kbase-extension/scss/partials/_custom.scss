@@ -72,7 +72,7 @@ div {
   }
 
   &.cell {
-    border: 1px solid rgb(204 204 204);
+    border: 1px solid use_color('base-lighter');
     border-left-width: 5px;
     border-radius: 0;
     margin: 8px 0;
@@ -292,7 +292,7 @@ div {
 
   &.unselected {
     .btn-default {
-      color: rgb(204 204 204);
+      color: use_color('base-lighter');
     }
 
     .app-icon,

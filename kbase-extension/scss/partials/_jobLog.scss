@@ -25,10 +25,6 @@ $counter-name: code-list-counter;
     @include body-text;
   }
 
-  &__status_container {
-    @include body-text;
-  }
-
   &__job_status_detail_container {
     div:first-of-type {
       font-weight: 700;

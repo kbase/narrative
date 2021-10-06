@@ -376,14 +376,12 @@ define([
                 }),
             ]);
 
-            const content = form(
+            return form(
                 {
                     dataElement: `${cssClassType}-widget-form`,
                 },
                 [formContent]
             );
-
-            return content;
         }
 
         // MESSAGE HANDLERS

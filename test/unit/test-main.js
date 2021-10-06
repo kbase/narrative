@@ -19,7 +19,7 @@ document.nbjs_translations = {
 };
 
 // hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
-window.createReactClass = () => {};
+window.createReactClass = () => { };
 
 requirejs.config({
     baseUrl: '/narrative/static/',
@@ -37,6 +37,8 @@ requirejs.config({
         // Note that this is only provided in the testing amd module configuration;
         // Mock Service Worker (MSW) is not active in the actual Narrative web app.
         msw: 'ext_modules/msw/index',
+        // React: 'ext_modules/react/react.development',
+        // ReactDOM: 'ext_modules/react/react-dom.development',
     },
     map: {
         '*': {

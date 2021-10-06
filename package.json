@@ -51,6 +51,7 @@
         "selenium-webdriver": "4.0.0-rc-2",
         "string.prototype.endswith": "1.0.0",
         "string.prototype.startswith": "1.0.0",
+        "stylelint": "13.13.1",
         "stylelint-config-standard": "22.0.0",
         "terser": "5.9.0",
         "wdio-chromedriver-service": "7.2.2",
@@ -86,7 +87,7 @@
         "test": "karma start test/unit/karma.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
         "prepare": "husky install",
-        "install-npm": "node scripts/install-npm.js"
+        "install-node-modules": "bash scripts/install-node-modules.sh"
     },
     "lint-staged": {
         "*.js": [

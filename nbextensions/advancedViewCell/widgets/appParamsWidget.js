@@ -34,19 +34,17 @@ define([
         div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
-            container,
-            ui,
-            bus,
-            places,
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
+        let container, ui, places;
 
         // DATA
 
@@ -70,8 +68,8 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
+                    appSpec,
+                    parameterSpec,
                     workspaceId: workspaceInfo.id,
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
@@ -129,7 +127,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
+                    handle: function () {
                         return paramsBus.request(
                             { id: parameterSpec.id },
                             {
@@ -154,9 +152,9 @@ define([
                                 key: 'get-parameter-value',
                             }
                         )
-                        .then((message) => {
+                        .then((_message) => {
                             bus.emit('parameter-value', {
-                                parameter: message.parameter,
+                                parameter: _message.parameter,
                             });
                         });
                 });
@@ -243,7 +241,7 @@ define([
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -263,7 +261,7 @@ define([
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -278,21 +276,6 @@ define([
         function renderLayout() {
             const events = Events.make(),
                 content = form({ dataElement: 'input-widget-form' }, [
-                    // ui.buildPanel({
-                    //     title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
-                    //     name: 'input-objects-area',
-                    //     body: div({ dataElement: 'input-fields' }),
-                    //     classes: ['kb-panel-light']
-                    // }),
-
-                    // div({
-                    //     dataElement: 'parameters-area',
-                    // }, [
-                    //     div({
-                    //         dataElement: 'parameter-fields'
-                    //     })
-                    // ])
-
                     ui.buildPanel({
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
@@ -301,8 +284,8 @@ define([
                 ]);
 
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -312,7 +295,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout();
             container.innerHTML = layout.content;
@@ -332,11 +315,6 @@ define([
                     widget.bus.emit('reset-to-defaults');
                 });
             });
-            // bus.on('toggle-advanced', function () {
-            //     settings.showAdvanced = !settings.showAdvanced;
-            //     // renderAdvanced('input-objects');
-            //     renderAdvanced('parameters');
-            // });
             runtime.bus().on('workspace-changed', () => {
                 widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
@@ -355,11 +333,11 @@ define([
                 .map((parameterId) => {
                     const id = html.genId();
                     view[parameterId] = {
-                        id: id,
+                        id,
                     };
 
                     return div({
-                        id: id,
+                        id,
                         dataParameter: parameterId,
                     });
                 })
@@ -368,9 +346,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
-                view: view,
-                paramMap: paramMap,
+                params,
+                view,
+                paramMap,
             };
         }
 
@@ -384,13 +362,6 @@ define([
 
             return Promise.try(() => {
                 const params = model.getItem('parameters'),
-                    // inputParams = makeParamsLayout(
-                    //     params.layout.filter(function (id) {
-                    //         return (params.specs[id].ui.class === 'input');
-                    //     })
-                    //     .map(function (id) {
-                    //         return params.specs[id];
-                    //     })),
                     parameterParams = makeParamsLayout(
                         params.layout
                             .filter((id) => {
@@ -401,75 +372,47 @@ define([
                             })
                     );
 
-                return (
-                    Promise.resolve()
-                        // .then(function () {
-                        //     if (inputParams.layout.length === 0) {
-                        //         ui.getElement('input-objects-area').classList.add('hidden');
-                        //     } else {
-                        //         places.inputFields.innerHTML = inputParams.content;
-                        //         return Promise.all(inputParams.layout.map(function (parameterId) {
-                        //             var spec = inputParams.paramMap[parameterId];
-                        //             try {
-                        //                 return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
-                        //                     .then(function (widget) {
-                        //                         widgets.push(widget);
+                return Promise.resolve()
+                    .then(() => {
+                        if (parameterParams.layout.length === 0) {
+                            ui.getElement('parameters-area').classList.add('hidden');
+                        } else {
+                            places.parameterFields.innerHTML = parameterParams.content;
+                            return Promise.all(
+                                parameterParams.layout.map((parameterId) => {
+                                    const spec = parameterParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                        //                         return widget.start({
-                        //                             node: document.getElementById(inputParams.view[parameterId].id)
-                        //                         });
-                        //                     });
-                        //             } catch (ex) {
-                        //                 console.error('Error making input field widget', ex);
-                        //                 var errorDisplay = div({ style: { border: '1px solid red' } }, [
-                        //                     ex.message
-                        //                 ]);
-                        //                 document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
-                        //             }
-                        //         }));
-                        //     }
-                        // })
-                        .then(() => {
-                            if (parameterParams.layout.length === 0) {
-                                ui.getElement('parameters-area').classList.add('hidden');
-                            } else {
-                                places.parameterFields.innerHTML = parameterParams.content;
-                                return Promise.all(
-                                    parameterParams.layout.map((parameterId) => {
-                                        const spec = parameterParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
-
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        parameterParams.view[spec.id].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    parameterParams.view[spec.id].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px solid red' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                parameterParams.view[spec.id].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            renderAdvanced('input-objects');
-                            renderAdvanced('parameters');
-                        })
-                );
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            parameterParams.view[spec.id].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        renderAdvanced('input-objects');
+                        renderAdvanced('parameters');
+                    });
             });
         }
 
@@ -505,7 +448,6 @@ define([
                                 parameter: message.parameter,
                             },
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
             });
@@ -517,13 +459,9 @@ define([
             });
         }
 
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
             bus: function () {
                 return bus;
             },

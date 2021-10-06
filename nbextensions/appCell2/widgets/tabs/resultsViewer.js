@@ -47,7 +47,7 @@ define([
                             name: 'results',
                             hidden: true,
                             type: 'default',
-                            classes: ['kb-panel-container'],
+                            classes: ['kb-panel-results'],
                         }),
                         div({ dataElement: 'report' }),
                         div({ dataElement: 'next-steps' }),
@@ -75,7 +75,7 @@ define([
                     );
                 }
 
-                // Look up this app's info to get it's suggested next steps.
+                // Look up this app's info to get its suggested next steps.
                 return nms.get_method_full_info({
                     ids: [model.getItem('app.id')],
                     tag: model.getItem('app.tag'),
@@ -89,7 +89,7 @@ define([
                     if (suggestions.next_methods) {
                         return nms.get_method_spec({
                             ids: suggestions.next_methods,
-                            tag: tag,
+                            tag,
                         });
                     }
                 })
@@ -131,6 +131,9 @@ define([
 
         function renderNextApps(apps) {
             apps = apps || [];
+            if (!apps.length) {
+                return;
+            }
             const events = Events.make();
             let appList = div([
                 'No suggestions available! ',
@@ -182,8 +185,8 @@ define([
         function stop() {}
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

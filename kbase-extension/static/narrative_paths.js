@@ -382,8 +382,9 @@ require.config({
         /*
             React components
         */
-        React: 'kbase/js/react_components/globalReact',
-        ReactDOM: 'kbase/js/react_components/globalReactDOM',
+
+        react: 'ext_modules/react/react.development',
+        'react-dom': 'ext_modules/react-dom/react-dom.development',
         react_components: 'kbase/js/react_components',
 
         /***

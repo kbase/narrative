@@ -372,7 +372,7 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: panelBody,
-                    classes: ['kb-panel-light'],
+                    classes: ['kb-panel-bulk-params'],
                 }),
             ]);
 
@@ -500,9 +500,8 @@ define([
                         [ex.message]
                     );
 
-                    container.querySelector(
-                        '#' + filePathParams.view[spec.id].id
-                    ).innerHTML = errorDisplay;
+                    container.querySelector('#' + filePathParams.view[spec.id].id).innerHTML =
+                        errorDisplay;
 
                     throw new Error(`Error making input field widget: ${ex}`);
                 });

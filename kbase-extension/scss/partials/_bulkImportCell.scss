@@ -139,8 +139,6 @@ $tab-widget-padding: 0.4rem;
     }
 
     &__inputs {
-      @include default-container-padding;
-
       flex: 1;
     }
 

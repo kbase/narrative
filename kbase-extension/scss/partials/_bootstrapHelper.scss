@@ -24,6 +24,7 @@
 .kb-panel {
   &-light,
   &-batch,
+  &-bulk-params,
   &-params,
   &-container,
   &-results {
@@ -75,6 +76,7 @@
 
 .kb-panel-batch,
 .kb-panel-params,
+.kb-panel-bulk-params,
 .kb-panel-results {
   .panel-heading {
     border-bottom: 0;
@@ -84,14 +86,14 @@
 
   .panel-body {
     border-bottom: 0;
-    margin: 0 10px 15px;
+    margin: 0 15px 5px;
     padding: 0;
   }
 }
 
-.kb-panel-batch {
+.kb-panel-params {
   .panel-body {
-    margin: 0 15px 5px;
+    margin: 0 10px 15px;
   }
 }
 

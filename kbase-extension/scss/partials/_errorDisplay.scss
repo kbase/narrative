@@ -6,17 +6,29 @@
 
     margin-top: 1rem;
   }
+  // .kb-error-display__summary
+  &__summary {
+    .kb-app-cell-tab-pane__container--error & {
+      margin-top: 0;
+    }
+  }
 
   &__stacktrace_code {
     @include code-block;
   }
 
-  &__advice_list_item {
-    padding-left: 1.5rem;
+  &__advice_list {
+    list-style: none;
+    padding-left: 0;
   }
 
+  // .kb-error-display__container
   &__container {
     @include default-container-padding;
+
+    &.kb-log__error_container {
+      padding: 0;
+    }
   }
 }
 

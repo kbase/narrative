@@ -32,7 +32,8 @@ define([
     const t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
         const runtime = Runtime.make(),
@@ -93,8 +94,8 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
+                    appSpec,
+                    parameterSpec,
                     workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
@@ -238,7 +239,7 @@ define([
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -258,7 +259,7 @@ define([
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -273,68 +274,71 @@ define([
         function renderBatchModeMessage() {
             return ui.buildPanel({
                 title: span('Batch Mode'),
+                classes: ['kb-panel-batch'],
                 name: 'batch-mode-doc',
-                body: div(
-                    {
-                        style: 'margin-left: 3ex',
-                    },
-                    [
-                        div(
-                            'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
-                        ),
-                        div('Also, the "Job Status" tab will show the inputs for each job.'),
-                        div({ style: 'margin-top: 1ex' }, [
-                            'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.',
-                        ]),
-                    ]
-                ),
-                classes: ['kb-panel-light'],
+                body: div([
+                    p(
+                        'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
+                    ),
+                    p('The "Job Status" tab will show the inputs for each job.'),
+                    p(
+                        'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.'
+                    ),
+                ]),
             });
         }
 
         function renderLayout(batchMode) {
             const events = Events.make();
-            let formContent = [];
             if (batchMode) {
-                formContent.push(renderBatchModeMessage());
-            } else {
-                formContent = formContent.concat([
+                return {
+                    events,
+                    content: renderBatchModeMessage(),
+                };
+            }
+
+            const classes = ['kb-panel-params'];
+            const content = form(
+                {
+                    dataElement: 'input-widget-form',
+                    class: 'kb-panel-params__container',
+                },
+                [
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-cell__message--advanced-hidden',
                             }),
                         ]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-cell__message--advanced-hidden',
                             }),
                         ]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
+                        classes,
                         title: 'Output Objects',
                         name: 'output-objects-area',
                         body: div({ dataElement: 'output-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
-                ]);
-            }
-            const content = form({ dataElement: 'input-widget-form' }, formContent);
+                ]
+            );
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -344,7 +348,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
@@ -391,11 +395,11 @@ define([
                 .map((parameterId) => {
                     const id = html.genId();
                     view[parameterId] = {
-                        id: id,
+                        id,
                     };
 
                     return div({
-                        id: id,
+                        id,
                         dataParameter: parameterId,
                     });
                 })
@@ -404,9 +408,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
-                view: view,
-                paramMap: paramMap,
+                params,
+                view,
+                paramMap,
             };
         }
 
@@ -622,8 +626,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
             bus: function () {
                 return bus;
             },

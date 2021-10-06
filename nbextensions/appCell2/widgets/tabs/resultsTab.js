@@ -24,7 +24,7 @@ define([
 
             const jobState = model.getItem('exec.jobState');
             if (jobState.child_jobs && jobState.child_jobs.length) {
-                return startBatch(jobState);
+                return startBatch();
             } else {
                 return startSingle(jobState);
             }
@@ -133,8 +133,8 @@ define([
                 const layout = batchLayout();
                 container.innerHTML = layout;
 
-                jobList = JobStateList.make({ model: model });
-                resultsViewer = JobResult.make({ model: model });
+                jobList = JobStateList.make({ model });
+                resultsViewer = JobResult.make({ model });
                 startResults({
                     jobId: model.getItem('exec.jobState.job_id'),
                     isParentJob: true,
@@ -160,7 +160,7 @@ define([
                                     node: resultNode,
                                     jobId: selectedJobId,
                                     isParentJob: arg.isParentJob,
-                                    jobState: jobState,
+                                    jobState,
                                 });
                             case 'error':
                             case 'suspend':
@@ -189,11 +189,11 @@ define([
 
         function startSingle(jobState) {
             return Promise.try(() => {
-                resultsViewer = JobResult.make({ model: model });
+                resultsViewer = JobResult.make({ model });
                 return resultsViewer.start({
                     node: container,
                     jobId: jobState.job_id,
-                    jobState: jobState,
+                    jobState,
                     isParentJob: true,
                 });
             });
@@ -211,8 +211,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

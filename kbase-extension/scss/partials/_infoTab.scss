@@ -1,0 +1,13 @@
+.kb-info-tab {
+
+  // .kb-info-tab__container
+  &__container {
+    @include default-container-padding;
+  }
+
+  // .kb-info-tab__description
+  &__description {}
+
+  // .kb-info-tab__infoList
+  &__infoList {}
+}

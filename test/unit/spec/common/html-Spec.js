@@ -32,24 +32,6 @@ define(['common/html', 'testUtil'], (html, TestUtil) => {
             );
         });
 
-        // makePanel
-        it('Makes a panel', () => {
-            const panelDef = [
-                {
-                    title: 'Panel 1',
-                    body: 'This is panel 1',
-                },
-                {
-                    title: 'Panel2',
-                    body: 'This is panel 2',
-                },
-            ];
-            const panelContent =
-                '<div class="panel panel-default"><div class="panel-heading"><span class="panel-title"></span></div><div class="panel-body"></div></div>';
-            const panel = html.makePanel(panelDef);
-            expect(panel).toEqual(panelContent);
-        });
-
         // makeTabs
         it('Makes tabs', () => {
             const arg = {

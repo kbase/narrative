@@ -11,7 +11,6 @@ define([
         data: TestBulkImportObject,
         onUpdate: () => {},
     });
-    const jobTabContainerClass = 'kb-job__tab_container';
 
     describe('The job status tab module', () => {
         afterEach(() => {
@@ -63,12 +62,10 @@ define([
         it('should start the job status tab widget', async function () {
             expect(container.classList.length).toBe(0);
             await this.jobStatusTabInstance.start({ node: container });
-
-            expect(container).toHaveClass(jobTabContainerClass);
             expect(container.childNodes.length).toBe(1);
 
             const [firstChild] = container.childNodes;
-            expect(firstChild).toHaveClass('kb-job__container');
+            expect(firstChild).toHaveClass('kb-job-status-tab__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
             expect(JobStatusTable.make).toHaveBeenCalled();
             expect(this.stateList.start).toHaveBeenCalledTimes(1);
@@ -83,7 +80,6 @@ define([
             expect(container.classList.length).toBe(0);
 
             await this.jobStatusTabInstance.start({ node: container });
-            expect(container).toHaveClass(jobTabContainerClass);
             expect(JobStatusTable.make).toHaveBeenCalled();
             expect(this.stateList.start).toHaveBeenCalled();
 

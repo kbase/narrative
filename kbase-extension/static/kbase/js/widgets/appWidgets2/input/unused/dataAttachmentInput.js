@@ -1,13 +1,13 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'common/runtime',
     'bootstrap',
     'css!font-awesome',
-], (Promise, html, Validation, Events, Dom, Runtime) => {
+], (Promise, html, Validation, Events, UI, Runtime) => {
     'use strict';
 
     // Constants
@@ -23,7 +23,7 @@ define([
             container,
             parent,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 value: {},
             },
@@ -448,7 +448,7 @@ define([
             const events = Events.make(),
                 control = makeInputControl(events, bus);
 
-            dom.setContent('input-container', control);
+            ui.setContent('input-container', control);
             widgets.forEach((widget) => {
                 widget.instance.start().then(() => {
                     widget.bus.emit('run', {
@@ -512,7 +512,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = UI.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

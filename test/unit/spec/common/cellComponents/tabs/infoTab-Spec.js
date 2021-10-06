@@ -88,7 +88,7 @@ define(['common/cellComponents/tabs/infoTab', 'testUtil'], (InfoTab, TestUtil) =
         });
 
         it('returns the defined description', () => {
-            expect(infoTab.firstChild.textContent).toBe(appSpec.full_info.description);
+            expect(infoTab.firstChild.firstChild.textContent).toBe(appSpec.full_info.description);
         });
 
         it('returns an item for each parameter', () => {

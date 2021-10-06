@@ -180,7 +180,7 @@ define([
             collapseId = html.genId(),
             type = args.type || 'primary',
             collapseClasses = ['panel-collapse collapse'],
-            toggleClasses = [];
+            toggleClasses = ['panel-title-collapse-toggle'];
         let icon,
             classes = ['panel', 'panel-' + type];
 

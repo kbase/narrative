@@ -7,7 +7,7 @@
   cursor: pointer;
 
   &.job-selected {
-    background-color: rgb(238 238 238);
+    background-color: use_color('base-lightest');
   }
 }
 

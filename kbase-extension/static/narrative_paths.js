@@ -105,7 +105,6 @@ require.config({
         runtimeManager: 'kbase/js/widgetApi/runtimeManager',
         messageManager: 'kbase/js/widgetApi/messageManager',
         narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
-        narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
         common: 'kbase/js/common',

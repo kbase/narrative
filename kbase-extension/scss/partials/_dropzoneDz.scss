@@ -5,7 +5,7 @@
 }
 
 .dz-file {
-  border: 1px solid rgb(238 238 238);
+  border: 1px solid use_color('base-lightest');
   font: 16px $typeface-page-text;
   margin: 2px 0;
   padding: 5px 0;
@@ -77,13 +77,13 @@
 }
 
 .kb-dropzone {
-  border: 2px dashed rgb(33 150 243) !important;
+  border: 2px dashed use_color('mid-blue') !important;
   margin-bottom: 5px;
   max-height: 150px;
   overflow-y: auto;
 
   &-progress__header {
-    border-bottom: 1px solid rgb(238 238 238);
+    border-bottom: 1px solid use_color('base-lightest');
     display: none;
     margin-bottom: 5px;
   }

@@ -30,3 +30,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@mixin default-container-padding {
+  padding: $padding-large-horizontal;
+}

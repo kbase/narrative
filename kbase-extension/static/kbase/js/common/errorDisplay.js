@@ -314,6 +314,7 @@ define(['bluebird', 'common/html'], (Promise, html) => {
         function stop() {
             return Promise.try(() => {
                 container.innerHTML = '';
+                container.classList.remove(`${cssBaseClass}__container`);
             });
         }
 

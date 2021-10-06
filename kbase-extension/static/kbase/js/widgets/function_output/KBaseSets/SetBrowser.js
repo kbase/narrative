@@ -1,24 +1,25 @@
 define([
-    'React',
-    '../../ShowError',
+    'react',
+    'react_components/ErrorMessage',
+
+    // For effect
     'bootstrap',
-    'css!./SetComponent.css'
+    'css!./SetBrowser.css'
 ], (
     React,
-    ShowError
+    ErrorMessage
 ) => {
     'use strict';
 
     const { createElement: e, Component } = React;
 
-    class SetComponent extends Component {
+    class SetBrowser extends Component {
         constructor(props) {
             super(props);
-            this.tabsRef = null;
         }
 
         renderError() {
-            return e(ShowError, {
+            return e(ErrorMessage, {
                 error: this.state.error
             });
         }
@@ -64,99 +65,79 @@ define([
                     display: 'inline-block',
                     position: 'relative'
                 }
-            }, content);
+            }, ...content);
         }
 
         renderSelector() {
             return [
                 e('div', {
-                    className: 'Col'
+                    className: 'Col',
                 }, 'Select alignment to view:'),
                 e('div', {
                     className: 'form-inline Col',
-                }, e('div', { className: 'form-group' }, [
-                    e('select', {
-                        onChange: this.selectItem.bind(this),
-                        className: 'form-control',
-                        style: {
-                            marginLeft: '0',
-                            marginRight: '0',
-                            padding: '4px'
-                        }
-                    }, this.props.set.value.items.map(({ label, ref, objectInfo }) => {
-                        return e('option', { value: ref }, [
-                            e('span', null, [
-                                objectInfo.name,
-                                '(', label, ')'
-                            ])]);
-                    }))
-                ]))
+                }, e('div', { className: 'form-group' }, e('select', {
+                    onChange: this.selectItem.bind(this),
+                    className: 'form-control',
+                    style: {
+                        marginLeft: '0',
+                        marginRight: '0',
+                        padding: '4px'
+                    }
+                }, this.props.set.value.items.map(({ label, ref, objectInfo }) => {
+                    if (label) {
+                        return e('option', { value: ref, key: ref }, objectInfo.name, ' (', label, ')');
+                    } else {
+                        return e('option', { value: ref, key: ref }, objectInfo.name);
+                    }
+                }))
+                ))
             ];
         }
 
         renderHeader() {
             return e('div', {
-                className: 'Table'
-
-            }, [
+                className: 'Table',
+            }, ...[
                 e('div', {
-                    className: 'Row'
-                }, [
+                    className: 'Row',
+                }, ...[
                     e('div', {
-                        className: 'Col'
+                        className: 'Col',
                     }, 'Description:'),
                     e('div', {
-                        className: 'Col'
+                        className: 'Col',
                     }, this.props.set.value.description)
                 ]),
                 e('div', {
-                    className: 'Row'
-                }, [
+                    className: 'Row',
+                }, ...[
                     e('div', {
-                        className: 'Col'
+                        className: 'Col',
                     }, 'Alignment type:'),
                     e('div', {
-                        className: 'Col'
+                        className: 'Col',
                     }, this.renderItemType())
                 ]),
                 e('div', {
-                    className: 'Row'
-                }, this.renderSelector()),
+                    className: 'Row',
+                }, ...this.renderSelector()),
             ]);
         }
 
-        clickTab(event) {
-            event.preventDefault();
-            const tabID = event.target.getAttribute('href').substr(1);
-            const selectetdTabElement = event.target.parentNode;
-            const tabPanels = selectetdTabElement.parentNode.nextSibling;
-            const selectedPanelElement = tabPanels.querySelector('#' + tabID);
-
-            // iterate through siblings until none are active.
-            const tabs = selectetdTabElement.parentNode;
-            for (const tab of [].slice.call(tabs.childNodes)) {
-                tab.classList.remove('active');
-            }
-
-            selectetdTabElement.classList.add('active');
-
-            // same for panels
-            for (const panel of [].slice.call(tabPanels.childNodes)) {
-                panel.classList.remove('active', 'in');
-            }
-            selectedPanelElement.classList.add('active', 'in');
+        renderItemTable() {
+            throw new Error('renderItemTable not implemented in subclass');
         }
 
         renderOverview() {
             const isLoading = [null, 'loading'].includes(this.props.set.selectedItem.status);
-            return e('div', null, [
+            return e('div', { key: 'overview' }, ...[
                 this.renderHeader(),
                 // The item area
                 e('div', {
                     style: {
                         position: 'relative'
                     }
-                }, [
+                }, ...[
                     isLoading ? e('div', {
                         style: {
                             position: 'absolute',
@@ -208,63 +189,7 @@ define([
         }
 
         renderViewer() {
-            return e('div', {
-                ref: (x) => {
-                    this.tabsRef = x;
-                }
-            }, [
-                e('ul', {
-                    className: 'nav nav-tabs',
-                    role: "tablist"
-                }, [
-                    e('li', {
-                        role: 'presentation',
-                        className: 'active'
-                    }, e('a', {
-                        href: '#overview',
-                        role: 'tab',
-                        dataToggle: 'tab',
-                        ariaControls: 'overview',
-                        onClick: this.clickTab.bind(this)
-                    }, 'Overview')),
-                    // An example of a second tab.
-                    // I have a feeling that tabs will need to move into the
-                    // subclass if there is significant divergence.
-                    // On the other hand, we may want to start with implementing tabs
-                    // for common views across set types - comparison (all instances
-                    // of a set in a table), metadata (about the set itself).
-                    // Maybe custom visualizations can just be provided as an array 
-                    // of tab specs.
-                    // h('li', {
-                    //     role: 'presentation'
-                    // }, h('a', {
-                    //     href: '#info',
-                    //     role: 'tab',
-                    //     dataToggle: 'tab',
-                    //     ariaControls: 'info',
-                    //     onClick: this.clickTab.bind(this)
-                    // }, 'Info'))
-                ]),
-                e('div', {
-                    className: 'tab-content',
-                    style: {
-                        paddingTop: '10px'
-                    }
-                }, [
-                    e('div', {
-                        role: 'tabpanel',
-                        className: 'tab-pane fade in active',
-                        id: 'overview'
-                    }, this.renderOverview()),
-                    // An example of a second tab panel area.
-                    // h('div', {
-                    //     role: 'tabpanel',
-                    //     className: 'tab-pane fade',
-                    //     id: 'info'
-                    // }, 'info here')
-
-                ])
-            ]);
+            return this.renderOverview();
         }
 
         renderState() {
@@ -285,10 +210,10 @@ define([
 
         render() {
             return e('div', {
-                className: 'SetComponent'
+                className: 'SetBrowser'
             }, this.renderState());
         }
     }
 
-    return SetComponent;
+    return SetBrowser;
 });

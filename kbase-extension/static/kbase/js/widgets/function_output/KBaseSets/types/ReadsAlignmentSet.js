@@ -1,18 +1,18 @@
 define([
-    'React',
-    './base/SetComponent',
-    './base/Loader',
+    'react',
+    '../SetBrowser',
+    '../SetLoader',
     'bootstrap'
 ], (
     React,
-    SetComponent,
-    Loader
+    SetBrowser,
+    SetLoader
 ) => {
     'use strict';
 
     const { createElement: e, Component } = React;
 
-    class ReadsAlignmentSet extends SetComponent {
+    class ReadsAlignmentSet extends SetBrowser {
         renderItemTable() {
             const selectedItem = this.props.set.selectedItem;
             if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
@@ -95,22 +95,22 @@ define([
                     ]
                 }
             ];
-            return e('div', null, e('table', {
+            return e('table', {
                 className: 'table table-bordered table-striped'
             }, e('tbody', null,
                 rows.map(({ label, value }) => {
-                    return e('tr', null, [
+                    return e('tr', { key: label },
                         e('th', { width: '20%', style: { textAlign: 'left' } }, label),
                         e('td', null, value)
-                    ]);
+                    );
                 }))
-            ));
+            );
         }
     }
 
     class ReadsAlignmentSetLoader extends Component {
         render() {
-            return e(Loader, {
+            return e(SetLoader, {
                 ...this.props,
                 method: 'get_reads_alignment_set_v1',
                 module: ReadsAlignmentSet

@@ -1,21 +1,25 @@
 define([
-    'React',
+    'react',
     'kb_common/jsonRpc/genericClient',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_service/utils',
-    '../../ShowError'
+    'react_components/ErrorMessage'
 ], (
     React,
     ServiceClient,
     DynamicServiceClient,
     ServiceUtils,
-    ShowError
+    ErrorMessage
 ) => {
     'use strict';
 
     const { createElement: e, Component } = React;
 
-    class Loader extends Component {
+    /**
+     * A class implementing a component which essentially forms the data backbone for
+     * the set component
+     */
+    class SetLoader extends Component {
         constructor(props) {
             super(props);
             if (!props.method) {
@@ -51,7 +55,7 @@ define([
             // to set the default selected item.
             await this.getSet();
 
-            // Note that we don't catch the error for fetching an item here, 
+            // Note that we don't catch the error for fetching an item here,
             // we let it be a runaway promise. Error catching for fetching an item
             // is handled separately.
             this.getSelectedItem();
@@ -183,7 +187,7 @@ define([
         }
 
         renderError() {
-            return e(ShowError, {
+            return e(ErrorMessage, {
                 error: this.state.error
             });
         }
@@ -215,5 +219,5 @@ define([
         }
     }
 
-    return Loader;
+    return SetLoader;
 });

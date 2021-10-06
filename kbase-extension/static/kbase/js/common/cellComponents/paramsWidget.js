@@ -315,7 +315,7 @@ define([
                         class: 'kb-app-params__fields--parameters',
                         dataElement: 'parameter-fields',
                     }),
-                    classes: ['kb-panel-light'],
+                    classes: ['kb-panel-bulk-params'],
                 }),
             ]);
 
@@ -429,9 +429,8 @@ define([
                         },
                         [ex.message]
                     );
-                    container.querySelector(
-                        '#' + parameterInfo.view[paramSpec.id].id
-                    ).innerHTML = errorDisplay;
+                    container.querySelector('#' + parameterInfo.view[paramSpec.id].id).innerHTML =
+                        errorDisplay;
 
                     throw new Error(`Error making input field widget: ${ex}`);
                 });

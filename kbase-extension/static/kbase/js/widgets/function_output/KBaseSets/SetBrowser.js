@@ -29,43 +29,18 @@ define([
             this.props.selectItem(selectControl.value);
         }
 
-        renderErrorMessage(error) {
-            return e('span', [
-                e('span', {
-                    style: {
-                        fontWeight: 'bold'
-                    }
-                }, 'Error!'),
-                e('span', {
-                }, error.message),
-            ]);
-        }
-
         renderItemType() {
-            const selectedItem = this.props.set.selectedItem;
-            const content = [];
-            if (selectedItem.status === null) {
-                content.push(this.renderLoading());
-            } else if (selectedItem.status === 'error') {
-                content.push(this.renderErrorMessage(selectedItem.error));
+            // Note that the type is set when the set is first loaded, and will be
+            // null if there are no set items. The type is derived from the object
+            // referred to by a set item.
+            if (this.props.set.value.type === null) {
+                return e('i', null, 'n/a');
             } else {
-                if (selectedItem.value) {
-                    content.push(e('a', {
-                        href: `/#spec/type/${selectedItem.value.objectInfo.type}`,
-                        target: '_blank'
-                    }, selectedItem.value.objectInfo.type));
-                }
-                if (selectedItem.status === 'loading') {
-                    content.push(this.renderLoading());
-                }
+                return e('a', {
+                    href: `/#spec/type/${this.props.set.value.type}`,
+                    target: '_blank'
+                }, this.props.set.value.type);
             }
-
-            return e('div', {
-                style: {
-                    display: 'inline-block',
-                    position: 'relative'
-                }
-            }, ...content);
         }
 
         renderSelector() {
@@ -77,12 +52,7 @@ define([
                     className: 'form-inline Col',
                 }, e('div', { className: 'form-group' }, e('select', {
                     onChange: this.selectItem.bind(this),
-                    className: 'form-control',
-                    style: {
-                        marginLeft: '0',
-                        marginRight: '0',
-                        padding: '4px'
-                    }
+                    className: 'form-control'
                 }, this.props.set.value.items.map(({ label, ref, objectInfo }) => {
                     if (label) {
                         return e('option', { value: ref, key: ref }, objectInfo.name, ' (', label, ')');
@@ -130,28 +100,15 @@ define([
 
         renderOverview() {
             const isLoading = [null, 'loading'].includes(this.props.set.selectedItem.status);
-            return e('div', { key: 'overview' }, ...[
+            // const isLoading = true;
+            return e('div', { key: 'overview', className: 'Overview' }, ...[
                 this.renderHeader(),
                 // The item area
                 e('div', {
-                    style: {
-                        position: 'relative'
-                    }
+                    className: 'OverlayWrapper'
                 }, ...[
-                    isLoading ? e('div', {
-                        style: {
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            bottom: 0
-                        }
-                    }, this.renderLoading(3)) : null,
-                    e('div', {
-                        style: {
-                            minHeight: '5em'
-                        }
-                    }, this.renderItemTable())
+                    this.renderItemTable(),
+                    isLoading ? this.renderLoading(3) : null
                 ])
             ]);
         }
@@ -168,22 +125,8 @@ define([
                 return '';
             })();
             return e('div', {
-                style: {
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }
+                className: 'LoadingOverlay'
             }, e('i', {
-                style: {
-                    color: 'rgba(150, 150, 150, 1)',
-                },
                 className: `fa fa-spinner fa-pulse fa-fw ${sizeClass}`
             }));
         }

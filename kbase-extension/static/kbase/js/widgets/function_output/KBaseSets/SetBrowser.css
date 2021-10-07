@@ -16,9 +16,40 @@
 .SetBrowser .Table > .Row > .Col:nth-child(1) {
   font-weight: bold;
   color: rgba(100, 100, 100);
-  flex: 0 0 15em;
+  flex: 0 0 13em;
 }
 
 .SetBrowser .Table > .Row > .Col:nth-child(2) {
   flex: 1 1 0;
+}
+
+/* tweak bootstrap styling here */
+.SetBrowser select.form-control {
+  margin-left: 0;
+  margin-right: 0;
+  padding: 4px;
+}
+
+.SetBrowser .Overview .OverlayWrapper {
+  position: relative;
+}
+
+.SetBrowser .Overview .OverlayWrapper .LoadingOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: rgba(150, 150, 150, 1);
+}
+
+.SetBrowser .Overview table th {
+  width: 20%;
+  font-weight: bold;
+  text-align: left;
 }

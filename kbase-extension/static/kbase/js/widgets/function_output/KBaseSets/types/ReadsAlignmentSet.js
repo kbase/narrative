@@ -100,7 +100,7 @@ define([
             }, e('tbody', null,
                 rows.map(({ label, value }) => {
                     return e('tr', { key: label },
-                        e('th', { width: '20%', style: { textAlign: 'left' } }, label),
+                        e('th', null, label),
                         e('td', null, value)
                     );
                 }))

@@ -74,22 +74,41 @@ define([
                 // Sets the first item as selected if there are any.
                 if (items.length > 0) {
                     this.selectedItemRef = items[0].ref;
+                    const selectedItem = await this.fetchSetElement(items[0].ref);
+                    this.setState({
+                        ...this.state,
+                        set: {
+                            status: 'loaded',
+                            value: {
+                                description,
+                                type: selectedItem.objectInfo.type,
+                                items,
+                            },
+                            selectedItem: {
+                                status: 'loaded',
+                                value: selectedItem
+                            }
+
+                        }
+                    });
+                } else {
+                    this.setState({
+                        ...this.state,
+                        set: {
+                            status: 'loaded',
+                            value: {
+                                description,
+                                type: null,
+                                items,
+                            },
+                            selectedItem: {
+                                status: null
+                            }
+
+                        }
+                    });
                 }
 
-                this.setState({
-                    ...this.state,
-                    set: {
-                        status: 'loaded',
-                        value: {
-                            description,
-                            items,
-                        },
-                        selectedItem: {
-                            status: null
-                        }
-
-                    }
-                });
             } catch (error) {
                 console.error('Error fetching the set', error);
                 this.setState({

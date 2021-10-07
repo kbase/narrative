@@ -1,6 +1,6 @@
 # Bulk Import Output Cells
 
-Date: 2021-10-12
+Date: 2021-10-05
 
 One of the features of the App Cell is that it can produce Output Cells after a run. These typically contain views of the data that was transformed via the app, including new calculations being made or new data being created. However, in the Bulk Import cell, this could result in dozens or more new cells all being created at once, which could overwhelm a user or lead to other confusion from what should be an easy upload process.
 

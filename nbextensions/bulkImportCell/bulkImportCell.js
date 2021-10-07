@@ -606,7 +606,7 @@ define([
 
             // initialise the job manager
             jobManager = new JobManager({
-                model: model,
+                model,
                 bus: runtime.bus(),
             });
 
@@ -784,12 +784,10 @@ define([
                     doRunCellAction();
                     break;
                 case 'cancel':
-                    doCancelCellAction();
+                    doCellAction('cancel');
                     break;
                 case 'resetApp':
-                    // TODO implement
-                    alert('resetting app');
-                    doResetCellAction();
+                    doCellAction('reset');
                     break;
                 case 'offline':
                     // TODO implement / test better
@@ -814,24 +812,33 @@ define([
         }
 
         /**
-         * Globally cancels all running jobs and the run status by the following steps.
-         * 1. If we've clicked run, but we don't have any jobs yet, just remove the
-         *    listener and ignore the jobs.
-         *    //TODO: make this wait for jobs to start first, then cancel them all in turn?
-         *      or set up some state that we catch jobs when they appear and THEN cancel them?
-         *      Maybe send a kernel message to stop all jobs with this run id?
-         * 2. If we have a list of jobs, cancel them all.
-         * 3. Return to the editing state, trigger updateEditingState.
+         * Either cancel or reset the app
+         *
+         * Cancel all running jobs and reset the cell for editing. Both actions
+         * have the same effect but the user dialogs shown differ.
+         *
+         * The user is shown a dialog to confirm their choice prior to cancellation
+         * and resetting.
+         * If a job run has been triggered, the batch job will be terminated, which
+         * will also terminate all the child jobs.
+         *
+         * @param {string} actionType - either 'cancel' or 'reset'; defaults to 'reset'
          */
-        async function doCancelCellAction() {
-            const confirmed = await DialogMessages.showDialog({ action: 'cancelBulkImport' });
+        async function doCellAction(actionType) {
+            if (!actionType) {
+                actionType = 'reset';
+            }
+            const action = actionType === 'cancel' ? 'cancelBulkImport' : 'appReset';
+            const confirmed = await DialogMessages.showDialog({ action });
 
             if (confirmed) {
                 // if the runStatusListener is not null,
                 // the FE has yet to receive data about the new batch job
                 // handleRunStatus will cancel the batch job when it receives that message
                 cancelBatch = true;
-                controlPanel.setExecMessage('Canceling...');
+                controlPanel.setExecMessage(
+                    actionType === 'cancel' ? 'Canceling...' : 'Resetting app...'
+                );
 
                 // if runStatusListener is null, the batch job data is available and
                 // the job can be cancelled immediately.
@@ -844,7 +851,16 @@ define([
 
         function cancelBatchJob() {
             jobManager.cancelBatchJob();
-            doResetCellAction();
+            resetCell();
+        }
+
+        function resetCell() {
+            resetRunStatusListener();
+            jobManager.resetJobs();
+            cancelBatch = null;
+            updateEditingState();
+            Jupyter.notebook.save_checkpoint();
+            switchToTab('configure');
         }
 
         function resetRunStatusListener() {
@@ -852,19 +868,6 @@ define([
                 busEventManager.remove(runStatusListener);
                 runStatusListener = null;
             }
-        }
-
-        /**
-         * Reset the cell to the editing state
-         */
-        function doResetCellAction() {
-            // TODO: ensure this makes all the necessary changes
-            resetRunStatusListener();
-            jobManager.resetJobs();
-            cancelBatch = null;
-            updateEditingState();
-            Jupyter.notebook.save_checkpoint();
-            switchToTab('configure');
         }
 
         /**

@@ -98,6 +98,16 @@ try:
         nb_server = run_narrative()
         print("narrative started")
         try:
+            print("running bulk import tests")
+            resp_unit = subprocess.check_call(
+                ["npm", "run", "test_bulk_import"],
+                stderr=subprocess.STDOUT,
+                shell=False,
+            )  # nosec
+        except subprocess.CalledProcessError as e:
+            resp_unit = e.returncode
+        try:
+            print("running unit tests")
             resp_unit = subprocess.check_call(
                 ["npm", "run", "test"],
                 stderr=subprocess.STDOUT,

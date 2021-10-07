@@ -1,4 +1,3 @@
-// process.env.CHROME_BIN = require('puppeteer').executablePath();
 module.exports = function (config) {
     'use strict';
     config.set({
@@ -28,9 +27,8 @@ module.exports = function (config) {
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': [
-                'coverage',
-            ],
+            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
+                ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
             'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
             'nbextensions/bulkImportCell/**/*.js': ['coverage'],
@@ -83,6 +81,7 @@ module.exports = function (config) {
             'kbase-extension/static/buildTools/*.js',
             'kbase-extension/static/ext_components/**/test/**/*.js',
             'kbase-extension/static/kbase/js/patched-components/**/*',
+            'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
         ],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter

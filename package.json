@@ -98,6 +98,7 @@
         "sassv": "sass --version",
         "stylelint": "stylelint --config .stylelintrc.yaml --fix kbase-extension/scss/**/*.scss",
         "tdd": "karma start test/unit/karma.local.conf.js --auto-watch --no-single-run",
+        "test_bulk_import": "karma start test/unit/karma.bulkImport.conf.js",
         "test_chrome": "karma start test/unit/karma.local.conf.js --browsers=Chrome --single-run=false",
         "test_firefox": "karma start test/unit/karma.local.conf.js --browsers=Firefox --single-run=false",
         "test_local": "karma start test/unit/karma.local.conf.js",

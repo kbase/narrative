@@ -1,9 +1,12 @@
 define([
     '/narrative/nbextensions/appCell2/appCell',
+    'base/js/namespace',
+    'common/semaphore',
     'testUtil',
     'narrativeMocks',
+    'narrativeConfig',
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
-], (AppCell, TestUtil, Mocks, TestAppSpec) => {
+], (AppCell, Jupyter, Semaphore, TestUtil, Mocks, Config, TestAppSpec) => {
     'use strict';
 
     fdescribe('test the base AppCell2 module', () => {
@@ -13,9 +16,58 @@ define([
             });
         });
 
+        beforeEach(() => {
+            const commSemaphore = Semaphore.make();
+            commSemaphore.add('comm', false);
+            commSemaphore.set('comm', 'ready');
+            jasmine.Ajax.install();
+            Jupyter.notebook = {
+                writable: true
+            };
+            Jupyter.narrative = {
+                readonly: false,
+                getAuthToken: () => 'fakeToken'
+            };
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
+            jasmine.Ajax.uninstall();
+        });
+
         describe('create AppCell tests', () => {
-            afterEach(() => {
-                TestUtil.clearRuntime();
+            beforeEach(() => {
+                // mock NMS.get_method_spec,
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('narrative_method_store'),
+                    body: /get_method_spec/,
+                    response: [TestAppSpec]
+                });
+
+                // mock NMS.get_method_full_info,
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('narrative_method_store'),
+                    body: /get_method_full_info/,
+                    response: [Object.assign({}, TestAppSpec.info, {
+                        description: 'test app',
+                        suggestions: {
+                            next_methods: [],
+                            related_apps: [],
+                            next_apps: [],
+                            related_methods: []
+                        },
+                        screenshots: [],
+                        publications: [],
+                        namespace: 'NarrativeTest'
+                    })]
+                });
+
+                // mock Catalog.get_exec_aggr_stats (not used here)
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('catalog'),
+                    body: /get_exec_aggr_stats/,
+                    response: [{}]
+                });
             });
 
             it('makes an AppCell without starting it', () => {
@@ -32,14 +84,46 @@ define([
                 const appTag = 'release';
                 const appType = 'app';
 
-                // mock NMS.get_method_spec, NMS.get_method_full_info, Catalog.get_exec_aggr_stats
-                return appCell.upgradeToAppCell(TestAppSpec, appTag, appType);
+
+                return appCell.upgradeToAppCell(TestAppSpec, appTag, appType)
+                    .then(() => {
+                        expect(fakeCell.metadata.kbase.type).toEqual('app');
+                        expect(fakeCell.metadata.kbase.appCell).toEqual(jasmine.any(Object));
+                    });
             });
 
-            // it('restores an existing AppCell', () => {
-            //     const fakeAppCell = Mocks.buildMockCell('code', 'app');
-
-            // });
+            it('restores an existing AppCell', () => {
+                const fakeAppCell = Mocks.buildMockCell('code', 'app');
+                fakeAppCell.metadata.kbase.appCell = {
+                    app: {
+                        id: TestAppSpec.info.id,
+                        spec: TestAppSpec,
+                        tag: 'dev',
+                        version: '0.0.0'
+                    },
+                    executionStats: {}, // provided from Catalog, not needed for mock
+                    fsm: {
+                        currentState: {
+                            mode: 'editing',
+                            params: 'incomplete'
+                        }
+                    },
+                    output: {
+                        byJob: {}
+                    },
+                    params: {
+                        simple_string: null
+                    },
+                    'user-settings': {
+                        showCodeInputArea: false
+                    }
+                };
+                const appCell = AppCell.make({ cell: fakeAppCell });
+                return appCell.setupCell()
+                    .then(() => {
+                        expect(appCell).toBeDefined();
+                    });
+            });
         });
 
         describe('isAppCell tests', () => {

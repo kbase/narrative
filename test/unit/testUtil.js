@@ -182,6 +182,7 @@ define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.
             }
             window.kbaseRuntime = null;
         }
+        window.__kbase_semaphores__ = {};
         StagingFileCache.clearCache();
     }
 

@@ -9,7 +9,7 @@ define([
 ], (AppCell, Jupyter, Semaphore, TestUtil, Mocks, Config, TestAppSpec) => {
     'use strict';
 
-    fdescribe('test the base AppCell2 module', () => {
+    describe('test the base AppCell2 module', () => {
         it('loads with expected functions', () => {
             ['make', 'isAppCell'].forEach((fn) => {
                 expect(AppCell[fn]).toEqual(jasmine.any(Function));

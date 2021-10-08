@@ -38,8 +38,7 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
                     const value = arg.model.getItem(['params', message.parameter]);
                     bus.send(
                         {
-                            //                            parameter: message.parameter,
-                            value: value,
+                            value,
                         },
                         {
                             // This points the update back to a listener on this key

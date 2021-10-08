@@ -55,8 +55,7 @@ define([
                 );
                 container.innerHTML = layout;
 
-                // If there's a "report_ref" key in the results, load and show the report.
-                // console.log('SHOWING RESULTS', result);
+                // If there's a "report_name" key in the results, load and show the report.
                 const result = model.getItem('exec.outputWidgetInfo');
                 if (arg.isParentJob && result && result.params && result.params.report_name) {
                     renderReportView(result.params);

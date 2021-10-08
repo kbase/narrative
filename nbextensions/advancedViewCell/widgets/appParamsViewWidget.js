@@ -601,11 +601,9 @@ define([
                     // we then create our widgets
                     renderParameters()
                         .then(() => {
-                            // do something after success
                             attachEvents();
                         })
                         .catch((err) => {
-                            // do somethig with the error.
                             console.error('ERROR in start', err);
                         });
                 });

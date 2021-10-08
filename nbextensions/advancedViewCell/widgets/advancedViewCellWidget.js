@@ -183,7 +183,6 @@ define(
                         params,
                         outputWidgetState
                     );
-                // TODO: do something with the runId
                 cell.set_text(code);
             }
 
@@ -194,9 +193,6 @@ define(
             function initializeFSM() {
                 let currentState = model.getItem('fsm.currentState');
                 if (!currentState) {
-                    // TODO: evaluate the state of things to try to guess the state?
-                    // Or is this just an error unless it is a new cell?
-                    // currentState = {mode: 'editing', params: 'incomplete'};
                     currentState = { mode: 'new' };
                 }
                 fsm = Fsm.make({
@@ -204,12 +200,8 @@ define(
                     initialState: {
                         mode: 'new',
                     },
-                    //xinitialState: {
-                    //    mode: 'editing', params: 'incomplete'
-                    //},
                     onNewState: function (fsm) {
                         model.setItem('fsm.currentState', fsm.getCurrentState().state);
-                        // save the narrative!
                     },
                     bus: bus,
                 });
@@ -395,7 +387,6 @@ define(
                                                     body: [div({ dataElement: 'content' })],
                                                 }),
                                                 ui.buildCollapsiblePanel({
-                                                    // title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
                                                     id: configureId,
                                                     title:
                                                         'Configure ' +
@@ -541,7 +532,7 @@ define(
                         ui.setButtonLabel('toggle-code-view', label);
                     });
                     bus.on('show-notifications', () => {
-                        // doShowNotifications();
+                        /* no op */
                     });
                     bus.on('edit-cell-metadata', () => {
                         doEditCellMetadata();
@@ -628,7 +619,6 @@ define(
                             });
                         widgets.paramsInputWidget = {
                             path: ['parameters-group', 'widget'],
-                            // module: widgetModule,
                             bus: bus,
                             instance: widget,
                         };

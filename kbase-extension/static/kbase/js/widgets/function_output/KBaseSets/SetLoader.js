@@ -75,6 +75,22 @@ define([
                 if (items.length > 0) {
                     this.selectedItemRef = items[0].ref;
                     const selectedItem = await this.fetchSetElement(items[0].ref);
+                    // DATAGEN: place in test/widgets/function_output/KBaseSets/data/type_#.json
+                    // where type is the KBaseSets type, # is just a serial number to enable
+                    // more than one test data per type.
+                    // console.log('SEL', JSON.stringify({
+                    //     status: 'loaded',
+                    //     value: {
+                    //         description,
+                    //         type: selectedItem.objectInfo.type,
+                    //         items,
+                    //     },
+                    //     selectedItem: {
+                    //         status: 'loaded',
+                    //         value: selectedItem
+                    //     }
+
+                    // }));
                     this.setState({
                         ...this.state,
                         set: {

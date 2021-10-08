@@ -1,0 +1,1609 @@
+{
+    "status": "loaded",
+    "value": {
+        "description": "binned assemblies from NewBins",
+        "type": "KBaseGenomeAnnotations.Assembly-6.0",
+        "items": [
+            {
+                "label": "",
+                "ref": "42874/24/1",
+                "info": [
+                    24,
+                    "NewBins.001.fasta_assembly",
+                    "KBaseGenomeAnnotations.Assembly-6.0",
+                    "2019-05-21T18:56:26+0000",
+                    1,
+                    "eapearson",
+                    42874,
+                    "eapearson:narrative_1558464800819",
+                    "7a8b50b010bfc22ff14a5b688e30fd73",
+                    27036,
+                    {
+                        "GC content": "0.67468",
+                        "Size": "3178097",
+                        "N Contigs": "181",
+                        "MD5": "3c038ea131ddc1001b6d93ee90bfd603"
+                    }
+                ],
+                "objectInfo": {
+                    "id": 24,
+                    "name": "NewBins.001.fasta_assembly",
+                    "type": "KBaseGenomeAnnotations.Assembly-6.0",
+                    "save_date": "2019-05-21T18:56:26+0000",
+                    "version": 1,
+                    "saved_by": "eapearson",
+                    "wsid": 42874,
+                    "ws": "eapearson:narrative_1558464800819",
+                    "checksum": "7a8b50b010bfc22ff14a5b688e30fd73",
+                    "size": 27036,
+                    "metadata": {
+                        "GC content": "0.67468",
+                        "Size": "3178097",
+                        "N Contigs": "181",
+                        "MD5": "3c038ea131ddc1001b6d93ee90bfd603"
+                    },
+                    "ref": "42874/24/1",
+                    "obj_id": "ws.42874.obj.24",
+                    "typeModule": "KBaseGenomeAnnotations",
+                    "typeName": "Assembly",
+                    "typeMajorVersion": "6",
+                    "typeMinorVersion": "0",
+                    "saveDate": "2019-05-21T18:56:26.000Z"
+                }
+            },
+            {
+                "label": "",
+                "ref": "42874/25/1",
+                "info": [
+                    25,
+                    "NewBins.002.fasta_assembly",
+                    "KBaseGenomeAnnotations.Assembly-6.0",
+                    "2019-05-21T18:56:52+0000",
+                    1,
+                    "eapearson",
+                    42874,
+                    "eapearson:narrative_1558464800819",
+                    "f8f0debe80cbd10a23a0459cdec47498",
+                    7187,
+                    {
+                        "GC content": "0.6215",
+                        "Size": "536073",
+                        "N Contigs": "45",
+                        "MD5": "6cdaccf20e0026b6bbc0d676b08093a4"
+                    }
+                ],
+                "objectInfo": {
+                    "id": 25,
+                    "name": "NewBins.002.fasta_assembly",
+                    "type": "KBaseGenomeAnnotations.Assembly-6.0",
+                    "save_date": "2019-05-21T18:56:52+0000",
+                    "version": 1,
+                    "saved_by": "eapearson",
+                    "wsid": 42874,
+                    "ws": "eapearson:narrative_1558464800819",
+                    "checksum": "f8f0debe80cbd10a23a0459cdec47498",
+                    "size": 7187,
+                    "metadata": {
+                        "GC content": "0.6215",
+                        "Size": "536073",
+                        "N Contigs": "45",
+                        "MD5": "6cdaccf20e0026b6bbc0d676b08093a4"
+                    },
+                    "ref": "42874/25/1",
+                    "obj_id": "ws.42874.obj.25",
+                    "typeModule": "KBaseGenomeAnnotations",
+                    "typeName": "Assembly",
+                    "typeMajorVersion": "6",
+                    "typeMinorVersion": "0",
+                    "saveDate": "2019-05-21T18:56:52.000Z"
+                }
+            }
+        ]
+    },
+    "selectedItem": {
+        "status": "loaded",
+        "value": {
+            "assembly_id": "NewBins.001.fasta_assembly",
+            "base_counts": {
+                "A": 523014,
+                "C": 1104409,
+                "G": 1039788,
+                "T": 510886
+            },
+            "contigs": {
+                "k119_100": {
+                    "contig_id": "k119_100",
+                    "description": "",
+                    "gc_content": 0.66932,
+                    "length": 13333,
+                    "md5": "92548ce8450b06b4542ec64dc086787c",
+                    "name": "k119_100"
+                },
+                "k119_101": {
+                    "contig_id": "k119_101",
+                    "description": "",
+                    "gc_content": 0.66151,
+                    "length": 11510,
+                    "md5": "7472ac9f7916ad73b95fe821c5142484",
+                    "name": "k119_101"
+                },
+                "k119_102": {
+                    "contig_id": "k119_102",
+                    "description": "",
+                    "gc_content": 0.68051,
+                    "length": 8573,
+                    "md5": "c5d62257b78f1857fb38ac82e34bb6c4",
+                    "name": "k119_102"
+                },
+                "k119_103": {
+                    "contig_id": "k119_103",
+                    "description": "",
+                    "gc_content": 0.69133,
+                    "length": 8177,
+                    "md5": "0a6ae17d56c0fa816d24b4a80473e665",
+                    "name": "k119_103"
+                },
+                "k119_104": {
+                    "contig_id": "k119_104",
+                    "description": "",
+                    "gc_content": 0.67122,
+                    "length": 42956,
+                    "md5": "6585e0590618b63445603428f1864d86",
+                    "name": "k119_104"
+                },
+                "k119_105": {
+                    "contig_id": "k119_105",
+                    "description": "",
+                    "gc_content": 0.66254,
+                    "length": 26036,
+                    "md5": "a1acb284d83ca49a3e85fc7af26e2178",
+                    "name": "k119_105"
+                },
+                "k119_106": {
+                    "contig_id": "k119_106",
+                    "description": "",
+                    "gc_content": 0.66446,
+                    "length": 8595,
+                    "md5": "08f7d5e375d6e4abcc15a345100f02ec",
+                    "name": "k119_106"
+                },
+                "k119_107": {
+                    "contig_id": "k119_107",
+                    "description": "",
+                    "gc_content": 0.67255,
+                    "length": 9690,
+                    "md5": "e3a74c933231525ebb747e79c8a2a24d",
+                    "name": "k119_107"
+                },
+                "k119_108": {
+                    "contig_id": "k119_108",
+                    "description": "",
+                    "gc_content": 0.68605,
+                    "length": 19401,
+                    "md5": "1ce4b5faa3901d8d945ba51898424dfd",
+                    "name": "k119_108"
+                },
+                "k119_109": {
+                    "contig_id": "k119_109",
+                    "description": "",
+                    "gc_content": 0.66352,
+                    "length": 16943,
+                    "md5": "a2a8d42c7b9a5f5c40ea9c19d2d1e15f",
+                    "name": "k119_109"
+                },
+                "k119_11": {
+                    "contig_id": "k119_11",
+                    "description": "",
+                    "gc_content": 0.7063,
+                    "length": 11573,
+                    "md5": "234158d7f5240ef0a24d85d3d0e74492",
+                    "name": "k119_11"
+                },
+                "k119_110": {
+                    "contig_id": "k119_110",
+                    "description": "",
+                    "gc_content": 0.69419,
+                    "length": 10853,
+                    "md5": "d324d47b1e071c06b711f7fb8635f53b",
+                    "name": "k119_110"
+                },
+                "k119_111": {
+                    "contig_id": "k119_111",
+                    "description": "",
+                    "gc_content": 0.66598,
+                    "length": 4889,
+                    "md5": "f5e97c4834a402e7c088d187f3564195",
+                    "name": "k119_111"
+                },
+                "k119_112": {
+                    "contig_id": "k119_112",
+                    "description": "",
+                    "gc_content": 0.65599,
+                    "length": 23107,
+                    "md5": "33ea2de4dad3eb2b5ad851b97562b172",
+                    "name": "k119_112"
+                },
+                "k119_113": {
+                    "contig_id": "k119_113",
+                    "description": "",
+                    "gc_content": 0.67011,
+                    "length": 7160,
+                    "md5": "88970048c61fc90e3ecf22c7d82d39f9",
+                    "name": "k119_113"
+                },
+                "k119_114": {
+                    "contig_id": "k119_114",
+                    "description": "",
+                    "gc_content": 0.7066,
+                    "length": 8306,
+                    "md5": "966508dad8b30334b5828e2cfd77fdf4",
+                    "name": "k119_114"
+                },
+                "k119_115": {
+                    "contig_id": "k119_115",
+                    "description": "",
+                    "gc_content": 0.65923,
+                    "length": 22317,
+                    "md5": "845bc7cd7ce13823b68ca410ae0ad8d5",
+                    "name": "k119_115"
+                },
+                "k119_117": {
+                    "contig_id": "k119_117",
+                    "description": "",
+                    "gc_content": 0.67671,
+                    "length": 10591,
+                    "md5": "6d5d545257dbea1c96bfe32d37fcbe88",
+                    "name": "k119_117"
+                },
+                "k119_12": {
+                    "contig_id": "k119_12",
+                    "description": "",
+                    "gc_content": 0.67902,
+                    "length": 9016,
+                    "md5": "fc3a7bfddb5be5fe23157c91c620d736",
+                    "name": "k119_12"
+                },
+                "k119_120": {
+                    "contig_id": "k119_120",
+                    "description": "",
+                    "gc_content": 0.67532,
+                    "length": 9745,
+                    "md5": "6ef85d8591ae2cdba079040848b3e598",
+                    "name": "k119_120"
+                },
+                "k119_121": {
+                    "contig_id": "k119_121",
+                    "description": "",
+                    "gc_content": 0.65521,
+                    "length": 7010,
+                    "md5": "5ae62e7c19ee98989d2e57a18649f2ee",
+                    "name": "k119_121"
+                },
+                "k119_123": {
+                    "contig_id": "k119_123",
+                    "description": "",
+                    "gc_content": 0.67053,
+                    "length": 13795,
+                    "md5": "58a3c27ace377b6e90166c6fcca89521",
+                    "name": "k119_123"
+                },
+                "k119_125": {
+                    "contig_id": "k119_125",
+                    "description": "",
+                    "gc_content": 0.66457,
+                    "length": 16036,
+                    "md5": "b17c4790cb5b1d0eceeebd413d181e4b",
+                    "name": "k119_125"
+                },
+                "k119_126": {
+                    "contig_id": "k119_126",
+                    "description": "",
+                    "gc_content": 0.65869,
+                    "length": 15722,
+                    "md5": "b321c53e775004c5c3aec1d141ce2126",
+                    "name": "k119_126"
+                },
+                "k119_128": {
+                    "contig_id": "k119_128",
+                    "description": "",
+                    "gc_content": 0.6631,
+                    "length": 7299,
+                    "md5": "e2cd9d6d2e4491caed0eacfab28f9758",
+                    "name": "k119_128"
+                },
+                "k119_129": {
+                    "contig_id": "k119_129",
+                    "description": "",
+                    "gc_content": 0.66193,
+                    "length": 9087,
+                    "md5": "55bb4846ce5d067adc3b69c052e5f53a",
+                    "name": "k119_129"
+                },
+                "k119_13": {
+                    "contig_id": "k119_13",
+                    "description": "",
+                    "gc_content": 0.71472,
+                    "length": 9149,
+                    "md5": "4b6df1521d6d5aa7ade2a9a1af63e5b4",
+                    "name": "k119_13"
+                },
+                "k119_130": {
+                    "contig_id": "k119_130",
+                    "description": "",
+                    "gc_content": 0.67102,
+                    "length": 23816,
+                    "md5": "fd302e1ddaca329687b7ce294f98c5b1",
+                    "name": "k119_130"
+                },
+                "k119_131": {
+                    "contig_id": "k119_131",
+                    "description": "",
+                    "gc_content": 0.67976,
+                    "length": 13699,
+                    "md5": "cbc01eee614e2d9accf8d703f1b695a3",
+                    "name": "k119_131"
+                },
+                "k119_134": {
+                    "contig_id": "k119_134",
+                    "description": "",
+                    "gc_content": 0.66589,
+                    "length": 8165,
+                    "md5": "1ee1bde2f0ddb52bafaf4323fcc7d6d9",
+                    "name": "k119_134"
+                },
+                "k119_136": {
+                    "contig_id": "k119_136",
+                    "description": "",
+                    "gc_content": 0.66454,
+                    "length": 6734,
+                    "md5": "611dbf830fb21e8cb60c93e5728aca97",
+                    "name": "k119_136"
+                },
+                "k119_137": {
+                    "contig_id": "k119_137",
+                    "description": "",
+                    "gc_content": 0.66557,
+                    "length": 27432,
+                    "md5": "1f99db00e415ee95a6a730f49028b74c",
+                    "name": "k119_137"
+                },
+                "k119_138": {
+                    "contig_id": "k119_138",
+                    "description": "",
+                    "gc_content": 0.67408,
+                    "length": 11877,
+                    "md5": "04e2e9e492d9158468bc81aeeb8ea6e9",
+                    "name": "k119_138"
+                },
+                "k119_139": {
+                    "contig_id": "k119_139",
+                    "description": "",
+                    "gc_content": 0.66989,
+                    "length": 25985,
+                    "md5": "a9843513c14f8286240f178f76d6f239",
+                    "name": "k119_139"
+                },
+                "k119_14": {
+                    "contig_id": "k119_14",
+                    "description": "",
+                    "gc_content": 0.67842,
+                    "length": 15365,
+                    "md5": "51babc8745032a1caa97bf768e3d9316",
+                    "name": "k119_14"
+                },
+                "k119_140": {
+                    "contig_id": "k119_140",
+                    "description": "",
+                    "gc_content": 0.68272,
+                    "length": 29056,
+                    "md5": "ddad175851943301c634822e68f5590c",
+                    "name": "k119_140"
+                },
+                "k119_141": {
+                    "contig_id": "k119_141",
+                    "description": "",
+                    "gc_content": 0.68317,
+                    "length": 8784,
+                    "md5": "96f6b0ade8842d81215473023a70b8db",
+                    "name": "k119_141"
+                },
+                "k119_142": {
+                    "contig_id": "k119_142",
+                    "description": "",
+                    "gc_content": 0.66217,
+                    "length": 16218,
+                    "md5": "0c8c447d614267415787cdebd81264fb",
+                    "name": "k119_142"
+                },
+                "k119_143": {
+                    "contig_id": "k119_143",
+                    "description": "",
+                    "gc_content": 0.6981,
+                    "length": 8546,
+                    "md5": "79c93d621957e74b90d76e9044362160",
+                    "name": "k119_143"
+                },
+                "k119_144": {
+                    "contig_id": "k119_144",
+                    "description": "",
+                    "gc_content": 0.6762,
+                    "length": 8079,
+                    "md5": "2cf4dac089590287cf1bd7236b79ff82",
+                    "name": "k119_144"
+                },
+                "k119_145": {
+                    "contig_id": "k119_145",
+                    "description": "",
+                    "gc_content": 0.6716,
+                    "length": 21413,
+                    "md5": "38239e1e27a0fa173ac07d4243c7a5ff",
+                    "name": "k119_145"
+                },
+                "k119_146": {
+                    "contig_id": "k119_146",
+                    "description": "",
+                    "gc_content": 0.68372,
+                    "length": 15404,
+                    "md5": "e1e898c8853c59bda3eb308a9340634e",
+                    "name": "k119_146"
+                },
+                "k119_147": {
+                    "contig_id": "k119_147",
+                    "description": "",
+                    "gc_content": 0.68509,
+                    "length": 9501,
+                    "md5": "e9c2abf4f3afea44cbf505a1c3b83d80",
+                    "name": "k119_147"
+                },
+                "k119_149": {
+                    "contig_id": "k119_149",
+                    "description": "",
+                    "gc_content": 0.669,
+                    "length": 15991,
+                    "md5": "e05637e0a70249d479c2f5bfbb14b8d8",
+                    "name": "k119_149"
+                },
+                "k119_150": {
+                    "contig_id": "k119_150",
+                    "description": "",
+                    "gc_content": 0.66293,
+                    "length": 17418,
+                    "md5": "ef493606d58ce3b0be93fa2eb7939d7f",
+                    "name": "k119_150"
+                },
+                "k119_151": {
+                    "contig_id": "k119_151",
+                    "description": "",
+                    "gc_content": 0.67301,
+                    "length": 20181,
+                    "md5": "2a3bebb54e11139c3548296968393d4d",
+                    "name": "k119_151"
+                },
+                "k119_152": {
+                    "contig_id": "k119_152",
+                    "description": "",
+                    "gc_content": 0.68243,
+                    "length": 9645,
+                    "md5": "b97c7ca305e569236c531979d01b17aa",
+                    "name": "k119_152"
+                },
+                "k119_153": {
+                    "contig_id": "k119_153",
+                    "description": "",
+                    "gc_content": 0.67604,
+                    "length": 13122,
+                    "md5": "557cb9bf1ecdcb8e5fae52c793d748e7",
+                    "name": "k119_153"
+                },
+                "k119_154": {
+                    "contig_id": "k119_154",
+                    "description": "",
+                    "gc_content": 0.68066,
+                    "length": 5004,
+                    "md5": "fe4334f3a51ab567db14b64fa245d864",
+                    "name": "k119_154"
+                },
+                "k119_155": {
+                    "contig_id": "k119_155",
+                    "description": "",
+                    "gc_content": 0.67119,
+                    "length": 25510,
+                    "md5": "37bcc559a4e20b942ca167bfab8571b5",
+                    "name": "k119_155"
+                },
+                "k119_157": {
+                    "contig_id": "k119_157",
+                    "description": "",
+                    "gc_content": 0.67205,
+                    "length": 20814,
+                    "md5": "8a32f1f8482af8c799bd35d51a1d3a5d",
+                    "name": "k119_157"
+                },
+                "k119_158": {
+                    "contig_id": "k119_158",
+                    "description": "",
+                    "gc_content": 0.68436,
+                    "length": 9891,
+                    "md5": "6260904450e712ad28955e1271963414",
+                    "name": "k119_158"
+                },
+                "k119_16": {
+                    "contig_id": "k119_16",
+                    "description": "",
+                    "gc_content": 0.69508,
+                    "length": 10124,
+                    "md5": "529e943c6a1c66de7b344acc5545843f",
+                    "name": "k119_16"
+                },
+                "k119_160": {
+                    "contig_id": "k119_160",
+                    "description": "",
+                    "gc_content": 0.6794,
+                    "length": 43652,
+                    "md5": "7224f6124ab3eb85058d9071862e172a",
+                    "name": "k119_160"
+                },
+                "k119_161": {
+                    "contig_id": "k119_161",
+                    "description": "",
+                    "gc_content": 0.68201,
+                    "length": 23101,
+                    "md5": "428889a175593083f6791b51625aafd9",
+                    "name": "k119_161"
+                },
+                "k119_163": {
+                    "contig_id": "k119_163",
+                    "description": "",
+                    "gc_content": 0.6874,
+                    "length": 17764,
+                    "md5": "b91d9a6d4b4947339d8d92ffd7819de0",
+                    "name": "k119_163"
+                },
+                "k119_167": {
+                    "contig_id": "k119_167",
+                    "description": "",
+                    "gc_content": 0.65746,
+                    "length": 16553,
+                    "md5": "4c6e1b4a86d4dc5320460d4651eb83e5",
+                    "name": "k119_167"
+                },
+                "k119_169": {
+                    "contig_id": "k119_169",
+                    "description": "",
+                    "gc_content": 0.66478,
+                    "length": 15032,
+                    "md5": "cbfa2992bdbd5a4d7694af9f75aac1bb",
+                    "name": "k119_169"
+                },
+                "k119_17": {
+                    "contig_id": "k119_17",
+                    "description": "",
+                    "gc_content": 0.69108,
+                    "length": 22119,
+                    "md5": "7f86015ed8b241a9e57921d93e58c76d",
+                    "name": "k119_17"
+                },
+                "k119_170": {
+                    "contig_id": "k119_170",
+                    "description": "",
+                    "gc_content": 0.68458,
+                    "length": 8934,
+                    "md5": "898cbc422a1550819ed7be56202f9d04",
+                    "name": "k119_170"
+                },
+                "k119_171": {
+                    "contig_id": "k119_171",
+                    "description": "",
+                    "gc_content": 0.6901,
+                    "length": 16231,
+                    "md5": "1756d57410ae0073cc27c71aa79f0094",
+                    "name": "k119_171"
+                },
+                "k119_175": {
+                    "contig_id": "k119_175",
+                    "description": "",
+                    "gc_content": 0.68166,
+                    "length": 20092,
+                    "md5": "bc053a180d4fbe1277d38aa9c290a600",
+                    "name": "k119_175"
+                },
+                "k119_176": {
+                    "contig_id": "k119_176",
+                    "description": "",
+                    "gc_content": 0.67201,
+                    "length": 31019,
+                    "md5": "adb107c13c46c44b868954651b99fc95",
+                    "name": "k119_176"
+                },
+                "k119_177": {
+                    "contig_id": "k119_177",
+                    "description": "",
+                    "gc_content": 0.67105,
+                    "length": 37598,
+                    "md5": "ebf513ed37d3a43e2870092647065136",
+                    "name": "k119_177"
+                },
+                "k119_178": {
+                    "contig_id": "k119_178",
+                    "description": "",
+                    "gc_content": 0.67866,
+                    "length": 17035,
+                    "md5": "ec19fa62f23e59fb08444720978364a5",
+                    "name": "k119_178"
+                },
+                "k119_179": {
+                    "contig_id": "k119_179",
+                    "description": "",
+                    "gc_content": 0.66743,
+                    "length": 43549,
+                    "md5": "8847c61a0f9ba10bd8aaf9a3760f7c93",
+                    "name": "k119_179"
+                },
+                "k119_180": {
+                    "contig_id": "k119_180",
+                    "description": "",
+                    "gc_content": 0.6596,
+                    "length": 11372,
+                    "md5": "a91514b196e32e0c058963a91edcb192",
+                    "name": "k119_180"
+                },
+                "k119_181": {
+                    "contig_id": "k119_181",
+                    "description": "",
+                    "gc_content": 0.66214,
+                    "length": 13038,
+                    "md5": "af1281da6ebe50cd05251bb0154fe42f",
+                    "name": "k119_181"
+                },
+                "k119_182": {
+                    "contig_id": "k119_182",
+                    "description": "",
+                    "gc_content": 0.67672,
+                    "length": 21214,
+                    "md5": "478225cdc2dd294733e023ad25daf566",
+                    "name": "k119_182"
+                },
+                "k119_187": {
+                    "contig_id": "k119_187",
+                    "description": "",
+                    "gc_content": 0.67187,
+                    "length": 5318,
+                    "md5": "485bbe2670d341c277e26bf35bad751d",
+                    "name": "k119_187"
+                },
+                "k119_188": {
+                    "contig_id": "k119_188",
+                    "description": "",
+                    "gc_content": 0.66882,
+                    "length": 26641,
+                    "md5": "89ab53c85ce434dccbaa4e859c5aff69",
+                    "name": "k119_188"
+                },
+                "k119_19": {
+                    "contig_id": "k119_19",
+                    "description": "",
+                    "gc_content": 0.69848,
+                    "length": 7220,
+                    "md5": "09ed80110bf695787a3071a891958458",
+                    "name": "k119_19"
+                },
+                "k119_190": {
+                    "contig_id": "k119_190",
+                    "description": "",
+                    "gc_content": 0.65582,
+                    "length": 15861,
+                    "md5": "d53e67820566067a0dc746381edd853d",
+                    "name": "k119_190"
+                },
+                "k119_193": {
+                    "contig_id": "k119_193",
+                    "description": "",
+                    "gc_content": 0.66785,
+                    "length": 9318,
+                    "md5": "fadf44b850ffbd7320c8212419fd0f0c",
+                    "name": "k119_193"
+                },
+                "k119_195": {
+                    "contig_id": "k119_195",
+                    "description": "",
+                    "gc_content": 0.68266,
+                    "length": 8524,
+                    "md5": "f140ae4ded0ab44a409748fa7b51fe7e",
+                    "name": "k119_195"
+                },
+                "k119_196": {
+                    "contig_id": "k119_196",
+                    "description": "",
+                    "gc_content": 0.67438,
+                    "length": 36810,
+                    "md5": "c1248c9684852dd20005687f2a7f4e9f",
+                    "name": "k119_196"
+                },
+                "k119_197": {
+                    "contig_id": "k119_197",
+                    "description": "",
+                    "gc_content": 0.67158,
+                    "length": 12222,
+                    "md5": "40d706b797495609c195c62d37347245",
+                    "name": "k119_197"
+                },
+                "k119_198": {
+                    "contig_id": "k119_198",
+                    "description": "",
+                    "gc_content": 0.67776,
+                    "length": 15535,
+                    "md5": "43e3840589e79a6b0fe837b3ac609cb6",
+                    "name": "k119_198"
+                },
+                "k119_199": {
+                    "contig_id": "k119_199",
+                    "description": "",
+                    "gc_content": 0.65108,
+                    "length": 4855,
+                    "md5": "5c5a3cb811389267d4a76397f6e405dc",
+                    "name": "k119_199"
+                },
+                "k119_2": {
+                    "contig_id": "k119_2",
+                    "description": "",
+                    "gc_content": 0.66275,
+                    "length": 6974,
+                    "md5": "e29e2b48883670ef3fb39f7018993693",
+                    "name": "k119_2"
+                },
+                "k119_20": {
+                    "contig_id": "k119_20",
+                    "description": "",
+                    "gc_content": 0.65947,
+                    "length": 22961,
+                    "md5": "6b41a0f21f81b12207ee5db8b19d4ce4",
+                    "name": "k119_20"
+                },
+                "k119_201": {
+                    "contig_id": "k119_201",
+                    "description": "",
+                    "gc_content": 0.69183,
+                    "length": 5961,
+                    "md5": "c8f5f41d42202dc6b42e309e070dec2c",
+                    "name": "k119_201"
+                },
+                "k119_202": {
+                    "contig_id": "k119_202",
+                    "description": "",
+                    "gc_content": 0.66424,
+                    "length": 30572,
+                    "md5": "e70dff769ffeea4435aea2af0651813f",
+                    "name": "k119_202"
+                },
+                "k119_203": {
+                    "contig_id": "k119_203",
+                    "description": "",
+                    "gc_content": 0.66739,
+                    "length": 25047,
+                    "md5": "dc0217848317d6b9cbe8b2f350c8db00",
+                    "name": "k119_203"
+                },
+                "k119_205": {
+                    "contig_id": "k119_205",
+                    "description": "",
+                    "gc_content": 0.66546,
+                    "length": 13858,
+                    "md5": "ec03da556964156095fd4259da4d52c0",
+                    "name": "k119_205"
+                },
+                "k119_206": {
+                    "contig_id": "k119_206",
+                    "description": "",
+                    "gc_content": 0.6679,
+                    "length": 4866,
+                    "md5": "6cfa8ac064403864cf20fe7ea524beef",
+                    "name": "k119_206"
+                },
+                "k119_207": {
+                    "contig_id": "k119_207",
+                    "description": "",
+                    "gc_content": 0.67642,
+                    "length": 32289,
+                    "md5": "2960980ae280babbf0a9636e4736f5a8",
+                    "name": "k119_207"
+                },
+                "k119_208": {
+                    "contig_id": "k119_208",
+                    "description": "",
+                    "gc_content": 0.66817,
+                    "length": 53591,
+                    "md5": "b16ebfe3e86f696428625f21fe725c50",
+                    "name": "k119_208"
+                },
+                "k119_209": {
+                    "contig_id": "k119_209",
+                    "description": "",
+                    "gc_content": 0.6789,
+                    "length": 18941,
+                    "md5": "4cad4a8fa542d7795fb3ad0bcb17f3a5",
+                    "name": "k119_209"
+                },
+                "k119_21": {
+                    "contig_id": "k119_21",
+                    "description": "",
+                    "gc_content": 0.69626,
+                    "length": 10305,
+                    "md5": "4588cf37f2f0d2676c9614d48ef21142",
+                    "name": "k119_21"
+                },
+                "k119_210": {
+                    "contig_id": "k119_210",
+                    "description": "",
+                    "gc_content": 0.66613,
+                    "length": 39920,
+                    "md5": "6534507759f48544f47299cef2839889",
+                    "name": "k119_210"
+                },
+                "k119_211": {
+                    "contig_id": "k119_211",
+                    "description": "",
+                    "gc_content": 0.68649,
+                    "length": 8322,
+                    "md5": "36f3049ad74875a04da101ab9b09d8d9",
+                    "name": "k119_211"
+                },
+                "k119_214": {
+                    "contig_id": "k119_214",
+                    "description": "",
+                    "gc_content": 0.70775,
+                    "length": 18183,
+                    "md5": "7bf387a080ddf828df94371327a02ba6",
+                    "name": "k119_214"
+                },
+                "k119_215": {
+                    "contig_id": "k119_215",
+                    "description": "",
+                    "gc_content": 0.68056,
+                    "length": 6596,
+                    "md5": "ce90f41dddf143767e7b271dc01479cc",
+                    "name": "k119_215"
+                },
+                "k119_216": {
+                    "contig_id": "k119_216",
+                    "description": "",
+                    "gc_content": 0.65736,
+                    "length": 36146,
+                    "md5": "4a335fb8583e278f346d809b23bffda5",
+                    "name": "k119_216"
+                },
+                "k119_217": {
+                    "contig_id": "k119_217",
+                    "description": "",
+                    "gc_content": 0.66995,
+                    "length": 17452,
+                    "md5": "741df68f38e539096a6ccec801894d74",
+                    "name": "k119_217"
+                },
+                "k119_22": {
+                    "contig_id": "k119_22",
+                    "description": "",
+                    "gc_content": 0.71281,
+                    "length": 13096,
+                    "md5": "27c3d05b1e956a4bdd6f1ec2884e5ce8",
+                    "name": "k119_22"
+                },
+                "k119_220": {
+                    "contig_id": "k119_220",
+                    "description": "",
+                    "gc_content": 0.68457,
+                    "length": 36132,
+                    "md5": "0b3986d5124f151f8560a1bfd0c212fa",
+                    "name": "k119_220"
+                },
+                "k119_222": {
+                    "contig_id": "k119_222",
+                    "description": "",
+                    "gc_content": 0.6799,
+                    "length": 17654,
+                    "md5": "cd7d81a337d5a8b275869b83272b985b",
+                    "name": "k119_222"
+                },
+                "k119_224": {
+                    "contig_id": "k119_224",
+                    "description": "",
+                    "gc_content": 0.69066,
+                    "length": 11890,
+                    "md5": "0e60cbcae46943fcd8a22fee53893bd8",
+                    "name": "k119_224"
+                },
+                "k119_225": {
+                    "contig_id": "k119_225",
+                    "description": "",
+                    "gc_content": 0.66895,
+                    "length": 18680,
+                    "md5": "910a14091371a6ecf81672d707e012a3",
+                    "name": "k119_225"
+                },
+                "k119_227": {
+                    "contig_id": "k119_227",
+                    "description": "",
+                    "gc_content": 0.69071,
+                    "length": 6156,
+                    "md5": "7c1f579fb0c19f96383ef094de2a66e8",
+                    "name": "k119_227"
+                },
+                "k119_228": {
+                    "contig_id": "k119_228",
+                    "description": "",
+                    "gc_content": 0.67181,
+                    "length": 24181,
+                    "md5": "4848ba08190bdb46e1abf6ec82b1fda6",
+                    "name": "k119_228"
+                },
+                "k119_230": {
+                    "contig_id": "k119_230",
+                    "description": "",
+                    "gc_content": 0.6657,
+                    "length": 16916,
+                    "md5": "def8a6bc3d23e9dd08a1ea389cf8ffce",
+                    "name": "k119_230"
+                },
+                "k119_232": {
+                    "contig_id": "k119_232",
+                    "description": "",
+                    "gc_content": 0.66888,
+                    "length": 18510,
+                    "md5": "641f379a680dc82e067c4ef936c026a9",
+                    "name": "k119_232"
+                },
+                "k119_233": {
+                    "contig_id": "k119_233",
+                    "description": "",
+                    "gc_content": 0.69106,
+                    "length": 14501,
+                    "md5": "de0dca9ad99efdad42779fb94bfc4e1f",
+                    "name": "k119_233"
+                },
+                "k119_234": {
+                    "contig_id": "k119_234",
+                    "description": "",
+                    "gc_content": 0.6578,
+                    "length": 7817,
+                    "md5": "7e74464a05ee432dbc8388db0505a06b",
+                    "name": "k119_234"
+                },
+                "k119_235": {
+                    "contig_id": "k119_235",
+                    "description": "",
+                    "gc_content": 0.68112,
+                    "length": 10882,
+                    "md5": "35e181e68cefc854b16a91d846aa4f75",
+                    "name": "k119_235"
+                },
+                "k119_236": {
+                    "contig_id": "k119_236",
+                    "description": "",
+                    "gc_content": 0.67884,
+                    "length": 59422,
+                    "md5": "748f3da4240c2203e2f4f68bb7fd0a2d",
+                    "name": "k119_236"
+                },
+                "k119_237": {
+                    "contig_id": "k119_237",
+                    "description": "",
+                    "gc_content": 0.70596,
+                    "length": 18035,
+                    "md5": "33c451c6794f3f8254d5369f0e5e5550",
+                    "name": "k119_237"
+                },
+                "k119_25": {
+                    "contig_id": "k119_25",
+                    "description": "",
+                    "gc_content": 0.67784,
+                    "length": 33881,
+                    "md5": "09fad293af3636bd855033c2028a8f7d",
+                    "name": "k119_25"
+                },
+                "k119_26": {
+                    "contig_id": "k119_26",
+                    "description": "",
+                    "gc_content": 0.6713,
+                    "length": 5750,
+                    "md5": "a2b28e823cfe415c288e310e3e943e8c",
+                    "name": "k119_26"
+                },
+                "k119_27": {
+                    "contig_id": "k119_27",
+                    "description": "",
+                    "gc_content": 0.68828,
+                    "length": 7109,
+                    "md5": "755273fb6e3445fb53dbd40a9e9ca4b7",
+                    "name": "k119_27"
+                },
+                "k119_28": {
+                    "contig_id": "k119_28",
+                    "description": "",
+                    "gc_content": 0.68532,
+                    "length": 37975,
+                    "md5": "81146a71be4088d0192cce4f2e8495ae",
+                    "name": "k119_28"
+                },
+                "k119_29": {
+                    "contig_id": "k119_29",
+                    "description": "",
+                    "gc_content": 0.67967,
+                    "length": 19424,
+                    "md5": "c6f450b065e98b170398340a17018b17",
+                    "name": "k119_29"
+                },
+                "k119_3": {
+                    "contig_id": "k119_3",
+                    "description": "",
+                    "gc_content": 0.67531,
+                    "length": 8405,
+                    "md5": "5246720879a5e0be5eafa5adb069f4fa",
+                    "name": "k119_3"
+                },
+                "k119_30": {
+                    "contig_id": "k119_30",
+                    "description": "",
+                    "gc_content": 0.69466,
+                    "length": 6406,
+                    "md5": "8a3f90f8a9e1bd19f5722a17a4b637b2",
+                    "name": "k119_30"
+                },
+                "k119_32": {
+                    "contig_id": "k119_32",
+                    "description": "",
+                    "gc_content": 0.67479,
+                    "length": 38381,
+                    "md5": "dec7f75d4d102b4ae5817d407cb02280",
+                    "name": "k119_32"
+                },
+                "k119_33": {
+                    "contig_id": "k119_33",
+                    "description": "",
+                    "gc_content": 0.67331,
+                    "length": 13205,
+                    "md5": "2ae175567cd1e8dc0f2cacaebf222855",
+                    "name": "k119_33"
+                },
+                "k119_34": {
+                    "contig_id": "k119_34",
+                    "description": "",
+                    "gc_content": 0.68217,
+                    "length": 35809,
+                    "md5": "741dc4f4a7da44582ddafc02166c0b2b",
+                    "name": "k119_34"
+                },
+                "k119_36": {
+                    "contig_id": "k119_36",
+                    "description": "",
+                    "gc_content": 0.66604,
+                    "length": 11768,
+                    "md5": "8a755e2dcc42b996c4e7479dc86dd410",
+                    "name": "k119_36"
+                },
+                "k119_37": {
+                    "contig_id": "k119_37",
+                    "description": "",
+                    "gc_content": 0.65757,
+                    "length": 58552,
+                    "md5": "224bb01a1227d920b2d89c2ad6bffebf",
+                    "name": "k119_37"
+                },
+                "k119_38": {
+                    "contig_id": "k119_38",
+                    "description": "",
+                    "gc_content": 0.67704,
+                    "length": 8518,
+                    "md5": "78f89dfb99701b16e59aab2b53a089df",
+                    "name": "k119_38"
+                },
+                "k119_39": {
+                    "contig_id": "k119_39",
+                    "description": "",
+                    "gc_content": 0.69353,
+                    "length": 7955,
+                    "md5": "eb522e9a4677cee9d53fea6fc6c0d73b",
+                    "name": "k119_39"
+                },
+                "k119_40": {
+                    "contig_id": "k119_40",
+                    "description": "",
+                    "gc_content": 0.6731,
+                    "length": 9795,
+                    "md5": "3de3c34fa1b5ea553ed49000751883b7",
+                    "name": "k119_40"
+                },
+                "k119_41": {
+                    "contig_id": "k119_41",
+                    "description": "",
+                    "gc_content": 0.6838,
+                    "length": 5449,
+                    "md5": "5f99729a2d7a01f95fa52c31a8dad2bf",
+                    "name": "k119_41"
+                },
+                "k119_42": {
+                    "contig_id": "k119_42",
+                    "description": "",
+                    "gc_content": 0.66763,
+                    "length": 6604,
+                    "md5": "9af143b6fe0abed2f40be0a43e8c653a",
+                    "name": "k119_42"
+                },
+                "k119_43": {
+                    "contig_id": "k119_43",
+                    "description": "",
+                    "gc_content": 0.68942,
+                    "length": 17538,
+                    "md5": "3367a5aed8554150e8440c7f0ca35262",
+                    "name": "k119_43"
+                },
+                "k119_44": {
+                    "contig_id": "k119_44",
+                    "description": "",
+                    "gc_content": 0.68729,
+                    "length": 5964,
+                    "md5": "4bc2df7cb78edc572af45a79754e3d82",
+                    "name": "k119_44"
+                },
+                "k119_45": {
+                    "contig_id": "k119_45",
+                    "description": "",
+                    "gc_content": 0.68293,
+                    "length": 9304,
+                    "md5": "a2225ae67ab0baf3ac0b3288ad48c074",
+                    "name": "k119_45"
+                },
+                "k119_46": {
+                    "contig_id": "k119_46",
+                    "description": "",
+                    "gc_content": 0.67011,
+                    "length": 9879,
+                    "md5": "a208a613d09ffca1f7bf7367a382d658",
+                    "name": "k119_46"
+                },
+                "k119_47": {
+                    "contig_id": "k119_47",
+                    "description": "",
+                    "gc_content": 0.65804,
+                    "length": 17002,
+                    "md5": "ce9fcc2b675f24782664e4c394d24cde",
+                    "name": "k119_47"
+                },
+                "k119_5": {
+                    "contig_id": "k119_5",
+                    "description": "",
+                    "gc_content": 0.68337,
+                    "length": 8818,
+                    "md5": "7e3d5c51ccd11a566e013049a435ee5a",
+                    "name": "k119_5"
+                },
+                "k119_50": {
+                    "contig_id": "k119_50",
+                    "description": "",
+                    "gc_content": 0.66063,
+                    "length": 35928,
+                    "md5": "b7a207909a893e06a9aac81174cd72e7",
+                    "name": "k119_50"
+                },
+                "k119_51": {
+                    "contig_id": "k119_51",
+                    "description": "",
+                    "gc_content": 0.652,
+                    "length": 12730,
+                    "md5": "cf8f42a64d10eef5ec3e18cbc3f299e8",
+                    "name": "k119_51"
+                },
+                "k119_52": {
+                    "contig_id": "k119_52",
+                    "description": "",
+                    "gc_content": 0.68801,
+                    "length": 11667,
+                    "md5": "0f6d9541ff3c5178029cf40cdfc23ca4",
+                    "name": "k119_52"
+                },
+                "k119_55": {
+                    "contig_id": "k119_55",
+                    "description": "",
+                    "gc_content": 0.68873,
+                    "length": 9095,
+                    "md5": "24ef6da599fd2395ccb5dcb76cf061ae",
+                    "name": "k119_55"
+                },
+                "k119_56": {
+                    "contig_id": "k119_56",
+                    "description": "",
+                    "gc_content": 0.66455,
+                    "length": 21526,
+                    "md5": "da466bf5d96e78a406397dd849fe62b4",
+                    "name": "k119_56"
+                },
+                "k119_57": {
+                    "contig_id": "k119_57",
+                    "description": "",
+                    "gc_content": 0.68627,
+                    "length": 5288,
+                    "md5": "d0416132e08a0620d788e7136a40e69b",
+                    "name": "k119_57"
+                },
+                "k119_58": {
+                    "contig_id": "k119_58",
+                    "description": "",
+                    "gc_content": 0.66346,
+                    "length": 18194,
+                    "md5": "e9abb991932a933ee5aef805a4f9f460",
+                    "name": "k119_58"
+                },
+                "k119_6": {
+                    "contig_id": "k119_6",
+                    "description": "",
+                    "gc_content": 0.66583,
+                    "length": 3202,
+                    "md5": "fc2260de267ad2990aeae357b94170ae",
+                    "name": "k119_6"
+                },
+                "k119_60": {
+                    "contig_id": "k119_60",
+                    "description": "",
+                    "gc_content": 0.67411,
+                    "length": 26052,
+                    "md5": "3396b6b15175db830e9dde85e3cb5a7c",
+                    "name": "k119_60"
+                },
+                "k119_61": {
+                    "contig_id": "k119_61",
+                    "description": "",
+                    "gc_content": 0.67869,
+                    "length": 62672,
+                    "md5": "f5290f417632338cd5ea12fbfffd3ea0",
+                    "name": "k119_61"
+                },
+                "k119_62": {
+                    "contig_id": "k119_62",
+                    "description": "",
+                    "gc_content": 0.66043,
+                    "length": 5242,
+                    "md5": "2362190f572701d775b3e57d613e0ff0",
+                    "name": "k119_62"
+                },
+                "k119_64": {
+                    "contig_id": "k119_64",
+                    "description": "",
+                    "gc_content": 0.65317,
+                    "length": 5037,
+                    "md5": "1c1efd8910272a493e37b7dd42eb48bb",
+                    "name": "k119_64"
+                },
+                "k119_65": {
+                    "contig_id": "k119_65",
+                    "description": "",
+                    "gc_content": 0.66651,
+                    "length": 15011,
+                    "md5": "b3e39ba1f5df1b08c818bafbd111ff2f",
+                    "name": "k119_65"
+                },
+                "k119_66": {
+                    "contig_id": "k119_66",
+                    "description": "",
+                    "gc_content": 0.69427,
+                    "length": 10794,
+                    "md5": "2eb55f8348dbf476b747323ad426ad00",
+                    "name": "k119_66"
+                },
+                "k119_67": {
+                    "contig_id": "k119_67",
+                    "description": "",
+                    "gc_content": 0.67487,
+                    "length": 5647,
+                    "md5": "6378fad7d3d41ec6d1c795ad53e12a04",
+                    "name": "k119_67"
+                },
+                "k119_68": {
+                    "contig_id": "k119_68",
+                    "description": "",
+                    "gc_content": 0.68121,
+                    "length": 24433,
+                    "md5": "1b2083773cbfa4c720bf4ebe9c1564f9",
+                    "name": "k119_68"
+                },
+                "k119_69": {
+                    "contig_id": "k119_69",
+                    "description": "",
+                    "gc_content": 0.67452,
+                    "length": 30272,
+                    "md5": "5c6e3755bee04022d377d154b439c8a8",
+                    "name": "k119_69"
+                },
+                "k119_7": {
+                    "contig_id": "k119_7",
+                    "description": "",
+                    "gc_content": 0.67447,
+                    "length": 14395,
+                    "md5": "e698c53ac4b7c759a321662de26c2530",
+                    "name": "k119_7"
+                },
+                "k119_70": {
+                    "contig_id": "k119_70",
+                    "description": "",
+                    "gc_content": 0.65185,
+                    "length": 4972,
+                    "md5": "66d2baaa452c5d718c0f84b8c82b0e5b",
+                    "name": "k119_70"
+                },
+                "k119_71": {
+                    "contig_id": "k119_71",
+                    "description": "",
+                    "gc_content": 0.70236,
+                    "length": 5641,
+                    "md5": "b33df2c0b977b2e9793cca25ab621785",
+                    "name": "k119_71"
+                },
+                "k119_72": {
+                    "contig_id": "k119_72",
+                    "description": "",
+                    "gc_content": 0.66392,
+                    "length": 6912,
+                    "md5": "93b68240d26fe3fd5f2d7e208aa4f3a4",
+                    "name": "k119_72"
+                },
+                "k119_73": {
+                    "contig_id": "k119_73",
+                    "description": "",
+                    "gc_content": 0.68507,
+                    "length": 11609,
+                    "md5": "d9bd66f15e9784e589715b906c436b9d",
+                    "name": "k119_73"
+                },
+                "k119_74": {
+                    "contig_id": "k119_74",
+                    "description": "",
+                    "gc_content": 0.67566,
+                    "length": 21946,
+                    "md5": "95340d45536052f94e12a784adc8f793",
+                    "name": "k119_74"
+                },
+                "k119_75": {
+                    "contig_id": "k119_75",
+                    "description": "",
+                    "gc_content": 0.66053,
+                    "length": 7606,
+                    "md5": "c943d39b6a128f1457c39f4c756d3dd5",
+                    "name": "k119_75"
+                },
+                "k119_76": {
+                    "contig_id": "k119_76",
+                    "description": "",
+                    "gc_content": 0.67532,
+                    "length": 39155,
+                    "md5": "8c55efd32d1cc29efe86f00e38c093a8",
+                    "name": "k119_76"
+                },
+                "k119_77": {
+                    "contig_id": "k119_77",
+                    "description": "",
+                    "gc_content": 0.66408,
+                    "length": 13021,
+                    "md5": "3e0c8f90bb8800f01350a31b4234685a",
+                    "name": "k119_77"
+                },
+                "k119_78": {
+                    "contig_id": "k119_78",
+                    "description": "",
+                    "gc_content": 0.68484,
+                    "length": 19317,
+                    "md5": "66ee072a4736444450abd847b9a6b6cb",
+                    "name": "k119_78"
+                },
+                "k119_79": {
+                    "contig_id": "k119_79",
+                    "description": "",
+                    "gc_content": 0.67117,
+                    "length": 33817,
+                    "md5": "4c21213487f709b9071c1e1c496b28c9",
+                    "name": "k119_79"
+                },
+                "k119_8": {
+                    "contig_id": "k119_8",
+                    "description": "",
+                    "gc_content": 0.66741,
+                    "length": 10319,
+                    "md5": "b2e4cc5c6155973ba465bea77cf4811c",
+                    "name": "k119_8"
+                },
+                "k119_80": {
+                    "contig_id": "k119_80",
+                    "description": "",
+                    "gc_content": 0.67589,
+                    "length": 5924,
+                    "md5": "7ccbbe27b8292abb895172e1d569637d",
+                    "name": "k119_80"
+                },
+                "k119_81": {
+                    "contig_id": "k119_81",
+                    "description": "",
+                    "gc_content": 0.6733,
+                    "length": 7738,
+                    "md5": "3035d94d44ec8c19ad244fbd7fa9d31b",
+                    "name": "k119_81"
+                },
+                "k119_82": {
+                    "contig_id": "k119_82",
+                    "description": "",
+                    "gc_content": 0.68636,
+                    "length": 14797,
+                    "md5": "6aede4f7226992f4e2ff6df85c59b710",
+                    "name": "k119_82"
+                },
+                "k119_83": {
+                    "contig_id": "k119_83",
+                    "description": "",
+                    "gc_content": 0.68209,
+                    "length": 6763,
+                    "md5": "9d81349f641777541ebf9bd49661d325",
+                    "name": "k119_83"
+                },
+                "k119_84": {
+                    "contig_id": "k119_84",
+                    "description": "",
+                    "gc_content": 0.67774,
+                    "length": 7677,
+                    "md5": "fb5e865c9cdacf87d734748cb9d22c05",
+                    "name": "k119_84"
+                },
+                "k119_85": {
+                    "contig_id": "k119_85",
+                    "description": "",
+                    "gc_content": 0.666,
+                    "length": 15614,
+                    "md5": "f64e49284e883defa9cc494f35ee3c15",
+                    "name": "k119_85"
+                },
+                "k119_86": {
+                    "contig_id": "k119_86",
+                    "description": "",
+                    "gc_content": 0.68894,
+                    "length": 17704,
+                    "md5": "cf4b0799f1dd27bebeea17d6d9706046",
+                    "name": "k119_86"
+                },
+                "k119_87": {
+                    "contig_id": "k119_87",
+                    "description": "",
+                    "gc_content": 0.68203,
+                    "length": 27874,
+                    "md5": "473bb827e61c60830dcfbdeb4fe5671d",
+                    "name": "k119_87"
+                },
+                "k119_88": {
+                    "contig_id": "k119_88",
+                    "description": "",
+                    "gc_content": 0.6709,
+                    "length": 23525,
+                    "md5": "313d61bd96e83db6d93d91225172c496",
+                    "name": "k119_88"
+                },
+                "k119_89": {
+                    "contig_id": "k119_89",
+                    "description": "",
+                    "gc_content": 0.71124,
+                    "length": 8301,
+                    "md5": "69a58062ee1a46111321c481c45764f0",
+                    "name": "k119_89"
+                },
+                "k119_9": {
+                    "contig_id": "k119_9",
+                    "description": "",
+                    "gc_content": 0.66677,
+                    "length": 6182,
+                    "md5": "32c4079b210567645466e9b6590a4c75",
+                    "name": "k119_9"
+                },
+                "k119_90": {
+                    "contig_id": "k119_90",
+                    "description": "",
+                    "gc_content": 0.67577,
+                    "length": 22071,
+                    "md5": "0b3d38724e0b2adb9b04f4ddb4919d40",
+                    "name": "k119_90"
+                },
+                "k119_91": {
+                    "contig_id": "k119_91",
+                    "description": "",
+                    "gc_content": 0.67168,
+                    "length": 89360,
+                    "md5": "7fbc43cbb81f826614d838df4a21a44b",
+                    "name": "k119_91"
+                },
+                "k119_92": {
+                    "contig_id": "k119_92",
+                    "description": "",
+                    "gc_content": 0.67276,
+                    "length": 16245,
+                    "md5": "3082120e8d46b5fb724eada9a37f5849",
+                    "name": "k119_92"
+                },
+                "k119_93": {
+                    "contig_id": "k119_93",
+                    "description": "",
+                    "gc_content": 0.67877,
+                    "length": 18308,
+                    "md5": "a3eba10e77ac68315bbbf86cca2c8c43",
+                    "name": "k119_93"
+                },
+                "k119_94": {
+                    "contig_id": "k119_94",
+                    "description": "",
+                    "gc_content": 0.68054,
+                    "length": 38189,
+                    "md5": "f26b33749350f8ca61ac291bee92a61b",
+                    "name": "k119_94"
+                },
+                "k119_95": {
+                    "contig_id": "k119_95",
+                    "description": "",
+                    "gc_content": 0.69158,
+                    "length": 6530,
+                    "md5": "960613bae77c928e4e91c1c81c7a29fb",
+                    "name": "k119_95"
+                },
+                "k119_96": {
+                    "contig_id": "k119_96",
+                    "description": "",
+                    "gc_content": 0.68187,
+                    "length": 64754,
+                    "md5": "fa399ddfffd05c00b3f14cf3f4208162",
+                    "name": "k119_96"
+                },
+                "k119_97": {
+                    "contig_id": "k119_97",
+                    "description": "",
+                    "gc_content": 0.66303,
+                    "length": 20444,
+                    "md5": "36ba843a8a33384d97ec1fbb7a976d9d",
+                    "name": "k119_97"
+                }
+            },
+            "dna_size": 3178097,
+            "fasta_handle_info": {
+                "handle": {
+                    "file_name": "NewBins.001.fasta",
+                    "hid": "KBH_473953",
+                    "id": "a600b645-9666-4106-9be7-1acf5139a6ee",
+                    "remote_md5": "43dee551a79139f295b0ce1479048677",
+                    "type": "shock",
+                    "url": "https://ci.kbase.us/services/shock-api"
+                },
+                "node_file_name": "NewBins.001.fasta",
+                "shock_id": "a600b645-9666-4106-9be7-1acf5139a6ee",
+                "size": 3179999
+            },
+            "fasta_handle_ref": "KBH_473953",
+            "gc_content": 0.67468,
+            "md5": "3c038ea131ddc1001b6d93ee90bfd603",
+            "num_contigs": 181,
+            "type": "Unknown",
+            "objectInfo": {
+                "id": 24,
+                "name": "NewBins.001.fasta_assembly",
+                "type": "KBaseGenomeAnnotations.Assembly-6.0",
+                "save_date": "2019-05-21T18:56:26+0000",
+                "version": 1,
+                "saved_by": "eapearson",
+                "wsid": 42874,
+                "ws": "eapearson:narrative_1558464800819",
+                "checksum": "7a8b50b010bfc22ff14a5b688e30fd73",
+                "size": 27036,
+                "metadata": {
+                    "GC content": "0.67468",
+                    "Size": "3178097",
+                    "N Contigs": "181",
+                    "MD5": "3c038ea131ddc1001b6d93ee90bfd603"
+                },
+                "ref": "42874/24/1",
+                "obj_id": "ws.42874.obj.24",
+                "typeModule": "KBaseGenomeAnnotations",
+                "typeName": "Assembly",
+                "typeMajorVersion": "6",
+                "typeMinorVersion": "0",
+                "saveDate": "2019-05-21T18:56:26.000Z"
+            }
+        }
+    }
+}

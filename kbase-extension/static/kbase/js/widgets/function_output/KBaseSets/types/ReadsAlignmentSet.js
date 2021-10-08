@@ -1,16 +1,14 @@
 define([
     'react',
     '../SetBrowser',
-    '../SetLoader',
     'bootstrap'
 ], (
     React,
     SetBrowser,
-    SetLoader
 ) => {
     'use strict';
 
-    const { createElement: e, Component } = React;
+    const { createElement: e } = React;
 
     class ReadsAlignmentSet extends SetBrowser {
         renderItemTable() {
@@ -108,15 +106,16 @@ define([
         }
     }
 
-    class ReadsAlignmentSetLoader extends Component {
-        render() {
-            return e(SetLoader, {
-                ...this.props,
-                method: 'get_reads_alignment_set_v1',
-                module: ReadsAlignmentSet
-            });
-        }
-    }
+    // class ReadsAlignmentSetLoader extends Component {
+    //     render() {
+    //         return e(SetLoader, {
+    //             ...this.props,
+    //             method: 'get_reads_alignment_set_v1',
+    //             module: ReadsAlignmentSet
+    //         });
+    //     }
+    // }
 
-    return ReadsAlignmentSetLoader;
+    // return ReadsAlignmentSetLoader;
+    return ReadsAlignmentSet;
 });

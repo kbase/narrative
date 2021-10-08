@@ -13,10 +13,30 @@ define([
 
     const { createElement: e, Component } = React;
 
+    /**
+     * A class implementing the base behavior for a browser for any set type
+     * in the KBaseSets type module.
+     * 
+     * It is an "abstract" class. Subclasses must implement methods in the abstract
+     * section below.
+     * 
+     * 
+     */
+
     class SetBrowser extends Component {
-        constructor(props) {
-            super(props);
+        // Abstract
+
+        /**
+         * Renders a set element as a rotated table of summary properties.
+         * Must be implemented by a subclass.
+         * @abstract
+         * @returns {void} nothing useful
+         */
+        renderItemTable() {
+            throw new Error('renderItemTable not implemented in subclass');
         }
+
+        // Implementation
 
         renderError() {
             return e(ErrorMessage, {
@@ -94,9 +114,7 @@ define([
             ]);
         }
 
-        renderItemTable() {
-            throw new Error('renderItemTable not implemented in subclass');
-        }
+
 
         renderOverview() {
             const isLoading = [null, 'loading'].includes(this.props.set.selectedItem.status);

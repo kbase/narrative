@@ -77,6 +77,7 @@ define([
     'widgets/function_output/KBaseSets/types/ReadsAlignmentSet',
     'widgets/function_output/KBaseSets/types/AssemblySet',
     'react_components/ErrorMessage',
+    'widgets/function_output/KBaseSets/SetLoader',
 
     // For effect
     'bootstrap'
@@ -86,7 +87,8 @@ define([
     ServiceUtils,
     ReadsAlignmentSet,
     AssemblySet,
-    ErrorMessage
+    ErrorMessage,
+    SetLoader
 ) => {
     'use strict';
 
@@ -96,10 +98,12 @@ define([
     // must be components implemented as defined in `react_components/genericSets`.
     const SET_TYPE_TO_MODULE_MAPPING = {
         'KBaseSets.ReadsAlignmentSet': {
-            module: ReadsAlignmentSet
+            module: ReadsAlignmentSet,
+            method: 'get_reads_alignment_set_v1'
         },
         'KBaseSets.AssemblySet': {
-            module: AssemblySet
+            module: AssemblySet,
+            method: 'get_assembly_set_v1'
         }
     };
 
@@ -154,7 +158,8 @@ define([
                 this.setState({
                     status: 'loaded',
                     setType: objectType,
-                    module: mapping.module
+                    module: mapping.module,
+                    method: mapping.method
                 });
             } catch (error) {
                 console.error('Error getting object info', error);
@@ -172,12 +177,21 @@ define([
         }
 
         renderLoaded() {
-            return e(this.state.module, {
+            return e(SetLoader, {
                 token: this.props.token,
                 workspaceURL: this.props.workspaceURL,
                 serviceWizardURL: this.props.serviceWizardURL,
-                objectRef: this.props.objectRef
+                objectRef: this.props.objectRef,
+                method: this.state.method,
+                module: this.state.module
             });
+
+            // return e(this.state.module, {
+            //     token: this.props.token,
+            //     workspaceURL: this.props.workspaceURL,
+            //     serviceWizardURL: this.props.serviceWizardURL,
+            //     objectRef: this.props.objectRef
+            // });
         }
 
         render() {

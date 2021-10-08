@@ -58,19 +58,19 @@ Implemented in other viewers:
 KBaseSets.DifferentialExpressionMatrixSet
 SetAPI.get_differential_expression_matrix_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_differential_expression_matrix_set/spec.json
+https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_differential_expression_matrix_set
 and this viewer does not work
 
 KBaseSets.ExpressionSet
 SetAPI.get_expression_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_rnaseq_sample_expression/spec.json
+https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_rnaseq_sample_expression
 and that viewer doesn't work
 
 KBaseSets.ReadsSet
 SetAPI.get_reads_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_reads_set/spec.json
+https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_reads_set
 and the current viewer works
 
 KBaseSets.SampleSet
@@ -89,3 +89,4 @@ can't find any data, or any app which outputs this type, or accepts as input (ac
 
 KBaseSets.GenomeSet
 SetAPI.get_genome_set_v1
+Can't find a way to get ahold of a KBaseSets.GenomeSet to play with.

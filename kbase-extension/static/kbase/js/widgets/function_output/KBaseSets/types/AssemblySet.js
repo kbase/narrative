@@ -1,16 +1,14 @@
 define([
     'react',
     '../SetBrowser',
-    '../SetLoader',
     'bootstrap'
 ], (
     React,
     SetBrowser,
-    SetLoader
 ) => {
     'use strict';
 
-    const { createElement: e, Component } = React;
+    const { createElement: e } = React;
 
     class AssemblySet extends SetBrowser {
         renderItemTable() {
@@ -53,15 +51,16 @@ define([
         }
     }
 
-    class AssemblySetLoader extends Component {
-        render() {
-            return e(SetLoader, {
-                ...this.props,
-                method: 'get_assembly_set_v1',
-                module: AssemblySet
-            });
-        }
-    }
+    // class AssemblySetLoader extends Component {
+    //     render() {
+    //         return e(SetLoader, {
+    //             ...this.props,
+    //             method: 'get_assembly_set_v1',
+    //             module: AssemblySet
+    //         });
+    //     }
+    // }
 
-    return AssemblySetLoader;
+    // return AssemblySetLoader;
+    return AssemblySet;
 });

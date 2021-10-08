@@ -118,6 +118,13 @@ define([
             };
         }
 
+        /**
+         * This sets up and starts an AppCell by instantiating and starting up its AppCellWidget.
+         * It also specializes the Cell object by adding extra functions to it that are relevant for
+         * KBase user needs.
+         * @returns a Promise that resolves into an object with the generated AppCellWidget and
+         *   top level cell Bus (as `widget` and `bus` keys, respectively).
+         */
         function setupCell() {
             // Only handle kbase cells.
             if (!isAppCell(cell)) {

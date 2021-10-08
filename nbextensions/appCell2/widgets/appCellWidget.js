@@ -86,10 +86,7 @@ define(
                 { cell } = config,
                 saveMaxFrequency = config.saveMaxFrequency || 5000,
                 parentBus = config.bus,
-                // HMM. Sync with metadata, or just keep everything there?
                 widgets = {},
-                // TODO: the cell bus should be created and managed through main.js,
-                // that is, the extension.
                 cellBus = runtime.bus().makeChannelBus({
                     name: {
                         cell: cellUtils.getMeta(cell, 'attributes', 'id'),
@@ -563,8 +560,6 @@ define(
                     newBatchMode = !curBatchState,
                     runState = fsm.getCurrentState();
                 if (runState.state.mode !== 'editing') {
-                    // TODO: should make a popup with warning, continuing = resetting, etc.
-                    // for now, just ignore.
                     return;
                 }
                 model.setItem('user-settings.batchMode', newBatchMode);
@@ -954,7 +949,6 @@ define(
                 } else {
                     code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
                 }
-                // TODO: do something with the runId
                 _cell.set_text(code);
             }
 
@@ -965,8 +959,6 @@ define(
             function initializeFSM() {
                 let currentState = model.getItem('fsm.currentState');
                 if (!currentState) {
-                    // TODO: evaluate the state of things to try to guess the state?
-                    // Or is this just an error unless it is a new cell?
                     currentState = { mode: 'new' };
                 }
                 fsm = Fsm.make({
@@ -976,7 +968,6 @@ define(
                     },
                     onNewState: function (_fsm) {
                         model.setItem('fsm.currentState', _fsm.getCurrentState().state);
-                        // save the narrative!
                     },
                 });
                 // fsm events
@@ -1347,7 +1338,7 @@ define(
                 const newFsmState = (function () {
                     switch (message.event) {
                         case 'launched_job':
-                            // NEW: start listening for jobs.
+                            // start listening for jobs.
                             startListeningForJobMessages(message.job_id);
                             return { mode: 'processing', stage: 'launched' };
                         case 'error':
@@ -1420,10 +1411,6 @@ define(
                 }
                 renderUI();
             }
-
-            // TODO: runId needs to be obtained here from the model.
-            //       it is created during the code build (since it needs to be passed
-            //       to the kernel)
             function doRun() {
                 if (readOnly) {
                     console.warn('run request ignored in readOnly mode');

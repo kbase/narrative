@@ -186,7 +186,7 @@ To support more advanced testing scenarios, involving authentication, search, et
 
 ## Files involved
 
-- test/unit/util/mswUtils.js
+- test/unit/utils/mswUtils.js
 - test/unit/karma.conf.js
 - test/unit/test-main.js
 - package.json

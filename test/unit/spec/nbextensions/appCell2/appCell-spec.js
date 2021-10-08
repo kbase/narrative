@@ -9,7 +9,7 @@ define([
 ], (AppCell, Jupyter, Semaphore, TestUtil, Mocks, Config, TestAppSpec) => {
     'use strict';
 
-    describe('test the base AppCell2 module', () => {
+    fdescribe('test the base AppCell2 module', () => {
         it('loads with expected functions', () => {
             ['make', 'isAppCell'].forEach((fn) => {
                 expect(AppCell[fn]).toEqual(jasmine.any(Function));
@@ -115,7 +115,7 @@ define([
                 });
             });
 
-            it('restores an existing AppCell', () => {
+            it('start a pre-upgraded AppCell', () => {
                 const fakeAppCell = Mocks.buildMockCell('code', 'app');
                 fakeAppCell.metadata.kbase.appCell = {
                     app: {
@@ -142,8 +142,14 @@ define([
                     },
                 };
                 const appCell = AppCell.make({ cell: fakeAppCell });
-                return appCell.setupCell().then(() => {
-                    expect(appCell).toBeDefined();
+                return appCell.setupCell().then((ret) => {
+                    expect(ret.widget).toBeDefined();
+                    ['init', 'attach', 'start', 'stop', 'detach', 'run'].forEach((fn) => {
+                        expect(ret.widget[fn]).toEqual(jasmine.any(Function));
+                    });
+                    expect(ret.bus).toBeDefined();
+                    // really it should match a UUID, but close enough to ensure it's real?
+                    expect(ret.bus.channelName).toEqual(jasmine.any(String));
                 });
             });
         });

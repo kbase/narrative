@@ -89,8 +89,13 @@ def run_narrative():
     return nb_server
 
 
-resp_unit = 0
-resp_integration = 0
+resp = {
+    "bulk_import": -1,
+    "unit": -1,
+    "integration": -1,
+}
+
+
 try:
     if options.unit:
         print("starting unit tests")
@@ -99,22 +104,22 @@ try:
         print("narrative started")
         try:
             print("running bulk import tests")
-            resp_unit = subprocess.check_call(
+            resp["bulk_import"] = subprocess.check_call(
                 ["npm", "run", "test_bulk_import"],
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec
         except subprocess.CalledProcessError as e:
-            resp_unit = e.returncode
+            resp["bulk_import"] = e.returncode
         try:
-            print("running unit tests")
-            resp_unit = subprocess.check_call(
+            print("running main unit tests")
+            resp["unit"] = subprocess.check_call(
                 ["npm", "run", "test"],
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec
         except subprocess.CalledProcessError as e:
-            resp_unit = e.returncode
+            resp["unit"] = e.returncode
     if options.integration:
         env = os.environ.copy()
         base_url = env.get("BASE_URL", None)
@@ -125,14 +130,14 @@ try:
             env["BASE_URL"] = base_url
         print("starting integration tests")
         try:
-            resp_integration = subprocess.check_call(
+            resp["integration"] = subprocess.check_call(
                 ["npx", "wdio", "test/integration/wdio.conf.js"],
                 stderr=subprocess.STDOUT,
                 env=env,
                 shell=False,
             )  # nosec
         except subprocess.CalledProcessError as e:
-            resp_integration = e.returncode
+            resp["integration"] = e.returncode
 except Exception as e:
     print(f"Error! {str(e)}")
 finally:
@@ -140,11 +145,10 @@ finally:
     if nb_server is not None:
         print("Killing server.")
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-    if resp_unit != 0:
-        print(f"Unit tests completed with code {resp_unit}")
-    if resp_integration != 0:
-        print(f"Integration tests completed with code {resp_integration}")
     exit_code = 0
-    if resp_unit != 0 or resp_integration != 0:
-        exit_code = 1
+    for key in resp.keys():
+        if resp[key] != -1:
+            print(f"{key} tests completed with code {resp[key]}")
+            if resp[key] != 0:
+                exit_code = 1
     sys.exit(exit_code)

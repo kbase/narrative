@@ -528,8 +528,8 @@ define([
          */
         function requestLatestJobLog() {
             scrollToEndOnNext = true;
-            awaitingLog = true;
             ui.showElement('spinner');
+            awaitingLog = true;
             bus.emit('request-job-log', {
                 jobId,
                 options: {

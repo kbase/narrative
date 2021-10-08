@@ -34,8 +34,3 @@
 @mixin default-container-padding {
   padding: $padding-large-horizontal;
 }
-
-@mixin advanced-hidden {
-  font-style: italic;
-  margin-left: 6px;
-}

@@ -32,8 +32,7 @@ define([
     const t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div'),
-        p = t('p');
+        div = t('div');
 
     function factory(config) {
         const runtime = Runtime.make(),
@@ -94,8 +93,8 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec,
-                    parameterSpec,
+                    appSpec: appSpec,
+                    parameterSpec: parameterSpec,
                     workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
@@ -233,14 +232,13 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
                 showAdvancedButton = ui.buildButton({
-                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events,
+                    events: events,
                 });
 
                 ui.setContent(
@@ -254,14 +252,13 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
                 showAdvancedButton = ui.buildButton({
-                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events,
+                    events: events,
                 });
 
                 ui.setContent(
@@ -276,71 +273,68 @@ define([
         function renderBatchModeMessage() {
             return ui.buildPanel({
                 title: span('Batch Mode'),
-                classes: ['kb-panel-batch'],
                 name: 'batch-mode-doc',
-                body: div([
-                    p(
-                        'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
-                    ),
-                    p('The "Job Status" tab will show the inputs for each job.'),
-                    p(
-                        'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.'
-                    ),
-                ]),
+                body: div(
+                    {
+                        style: 'margin-left: 3ex',
+                    },
+                    [
+                        div(
+                            'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
+                        ),
+                        div('Also, the "Job Status" tab will show the inputs for each job.'),
+                        div({ style: 'margin-top: 1ex' }, [
+                            'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.',
+                        ]),
+                    ]
+                ),
+                classes: ['kb-panel-light'],
             });
         }
 
         function renderLayout(batchMode) {
             const events = Events.make();
+            let formContent = [];
             if (batchMode) {
-                return {
-                    events,
-                    content: renderBatchModeMessage(),
-                };
-            }
-
-            const classes = ['kb-panel-params'];
-            const content = form(
-                {
-                    dataElement: 'input-widget-form',
-                    class: 'kb-panel-params__container',
-                },
-                [
+                formContent.push(renderBatchModeMessage());
+            } else {
+                formContent = formContent.concat([
                     ui.buildPanel({
-                        classes,
                         title: span([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                class: 'kb-app-cell__message--advanced-hidden',
+                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
+                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
-                        classes,
                         title: span([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                class: 'kb-app-cell__message--advanced-hidden',
+                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
+                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
-                        classes,
                         title: 'Output Objects',
                         name: 'output-objects-area',
                         body: div({ dataElement: 'output-fields' }),
+                        classes: ['kb-panel-light'],
                     }),
-                ]
-            );
+                ]);
+            }
+            const content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
-                content,
-                events,
+                content: content,
+                events: events,
             };
         }
 
@@ -350,7 +344,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus,
+                bus: bus,
             });
             const layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
@@ -397,11 +391,11 @@ define([
                 .map((parameterId) => {
                     const id = html.genId();
                     view[parameterId] = {
-                        id,
+                        id: id,
                     };
 
                     return div({
-                        id,
+                        id: id,
                         dataParameter: parameterId,
                     });
                 })
@@ -410,9 +404,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params,
-                view,
-                paramMap,
+                params: params,
+                view: view,
+                paramMap: paramMap,
             };
         }
 
@@ -628,8 +622,8 @@ define([
         }
 
         return {
-            start,
-            stop,
+            start: start,
+            stop: stop,
             bus: function () {
                 return bus;
             },

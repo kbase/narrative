@@ -179,7 +179,7 @@ define([
                     );
                     expect(renderedAdvancedParam).toBeDefined();
                     expect(renderedAdvancedParam).toHaveClass(
-                        'kb-app-params__fields--parameters-hidden'
+                        'kb-app-params__fields--parameters__hidden_field'
                     );
                 });
             });

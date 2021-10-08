@@ -711,6 +711,7 @@ define([
                 events = Events.make();
             let content = div(
                 {
+                    dataElement: 'kb-log',
                     class: `${cssBaseClass}__container`,
                 },
                 [
@@ -906,7 +907,7 @@ define([
             }
 
             ui.setContent(
-                'status-line',
+                'kb-log.status-line',
                 [
                     div(
                         {
@@ -933,12 +934,12 @@ define([
                 });
                 runClock
                     .start({
-                        node: ui.getElement('status-line.clock'),
+                        node: ui.getElement('kb-log.status-line.clock'),
                         startTime: jobState.running,
                     })
                     .catch((err) => {
                         console.warn('Clock problem:', err);
-                        ui.setContent('status-line.clock', '');
+                        ui.setContent('kb-log.status-line.clock', '');
                     });
                 return;
             }
@@ -955,7 +956,7 @@ define([
                     model: errorModel,
                 });
                 errorContent.start({
-                    node: ui.getElement('status-line.error-container'),
+                    node: ui.getElement('kb-log.status-line.error-container'),
                 });
             }
         }

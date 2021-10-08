@@ -123,8 +123,11 @@ define([
                 const cellElement = cell.element;
                 cellElement.addClass('kb-cell').addClass('kb-app-cell');
 
-                // Just hide the code area. If it is to be displayed due to the cell
+                // Just ide the code area. If it is to be displayed due to the cell
                 // settings, that will be handled by the app cell widget.
+                // var codeInputArea = cell.input.find('.input_area');
+                // codeInputArea[0].classList.add('hidden');
+
                 specializeCell();
 
                 // The kbase property is only used for managing runtime state of the cell
@@ -219,7 +222,7 @@ define([
                 // TODO: this should capture the entire app spec, so don't need
                 // to carry appSpec around.
                 spec = Spec.make({
-                    appSpec,
+                    appSpec: appSpec,
                 });
 
                 const meta = {
@@ -250,14 +253,16 @@ define([
 
                 // Add the params
                 utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
+                // initializeParams(appSpec);
                 // Complete the cell setup.
                 return setupCell();
             });
         }
 
         return Object.freeze({
-            setupCell,
-            upgradeToAppCell,
+            // initializeParams: initializeParams,
+            setupCell: setupCell,
+            upgradeToAppCell: upgradeToAppCell,
         });
     }
 
@@ -265,6 +270,6 @@ define([
         make: function (config) {
             return factory(config);
         },
-        isAppCell,
+        isAppCell: isAppCell,
     };
 });

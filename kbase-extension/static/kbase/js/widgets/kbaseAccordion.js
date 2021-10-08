@@ -27,8 +27,7 @@ Widget to create an accordion control. Easy to use!
 
 */
 
-define(['kbwidget', 'jquery'], (KBWidget, $) => {
-    'use strict';
+define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
     return KBWidget({
         name: 'kbaseAccordion',
         version: '1.0.0',
@@ -73,7 +72,7 @@ define(['kbwidget', 'jquery'], (KBWidget, $) => {
                             .append(
                                 $('<div></div>')
                                     .addClass('panel-heading')
-                                    .css('padding', '0')
+                                    .css('padding', '0px')
                                     .append(
                                         $('<i></i>')
                                             .css('margin-right', '5px')
@@ -89,7 +88,7 @@ define(['kbwidget', 'jquery'], (KBWidget, $) => {
                                     )
                                     .append(
                                         $('<a></a>')
-                                            .css('padding', '0')
+                                            .css('padding', '0px')
                                             .attr('href', '#')
                                             .attr('title', val.title)
                                             .css('height', 22 * val.fontMultiplier + 'px')
@@ -106,14 +105,14 @@ define(['kbwidget', 'jquery'], (KBWidget, $) => {
 
                                         if ($opened != undefined) {
                                             $opened.collapse('hide');
-                                            const $i = $opened.parent().first().find('i');
+                                            var $i = $opened.parent().first().find('i');
                                             $i.removeClass('fa fa-chevron-down');
                                             $i.addClass('fa fa-chevron-right');
                                         }
 
                                         if ($target.get(0) != $opened.get(0)) {
                                             $target.collapse('show');
-                                            const $i = $(this).parent().find('i');
+                                            var $i = $(this).parent().find('i');
                                             $i.removeClass('fa fa-chevron-right');
                                             $i.addClass('fa fa-chevron-down');
                                         }

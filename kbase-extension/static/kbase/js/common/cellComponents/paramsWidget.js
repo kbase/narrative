@@ -13,8 +13,7 @@ define([
     const tag = html.tag,
         form = tag('form'),
         span = tag('span'),
-        div = tag('div'),
-        cssBaseClass = 'kb-app-params';
+        div = tag('div');
 
     function factory(config) {
         const viewOnly = config.viewOnly || false;
@@ -246,7 +245,7 @@ define([
 
             //remove or add the hidden field class
             for (const [, entry] of Object.entries(advancedInputs)) {
-                entry.classList.toggle(`${cssBaseClass}__fields--parameters-hidden`);
+                entry.classList.toggle('kb-app-params__fields--parameters__hidden_field');
             }
 
             return advancedInputs;
@@ -280,14 +279,13 @@ define([
                 }
 
                 showAdvancedButton = ui.buildButton({
-                    class: `${cssBaseClass}__toggle--advanced-hidden`,
-                    label,
+                    label: label,
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events,
+                    events: events,
                 });
 
                 ui.setContent(
@@ -308,16 +306,16 @@ define([
                     title: span([
                         'Parameters',
                         span({
-                            class: `${cssBaseClass}__message--advanced-hidden`,
+                            class: 'kb-app-params__advanced-message--parameters',
                             dataElement: 'advanced-hidden-message',
                         }),
                     ]),
                     name: 'parameters-area',
                     body: div({
-                        class: `${cssBaseClass}__fields--parameters`,
+                        class: 'kb-app-params__fields--parameters',
                         dataElement: 'parameter-fields',
                     }),
-                    classes: ['kb-panel-bulk-params'],
+                    classes: ['kb-panel-light'],
                 }),
             ]);
 
@@ -431,8 +429,9 @@ define([
                         },
                         [ex.message]
                     );
-                    container.querySelector('#' + parameterInfo.view[paramSpec.id].id).innerHTML =
-                        errorDisplay;
+                    container.querySelector(
+                        '#' + parameterInfo.view[paramSpec.id].id
+                    ).innerHTML = errorDisplay;
 
                     throw new Error(`Error making input field widget: ${ex}`);
                 });

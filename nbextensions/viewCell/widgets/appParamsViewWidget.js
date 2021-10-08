@@ -33,18 +33,19 @@ define([
         div = t('div');
 
     function factory(config) {
-        const runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
-            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
+            container,
+            ui,
+            bus,
+            places,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
-
-        let container, ui, places;
 
         // DATA
         /*
@@ -257,7 +258,6 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
                 showAdvancedButton = ui.buildButton({
-                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -278,7 +278,6 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
                 showAdvancedButton = ui.buildButton({
-                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -326,7 +325,7 @@ define([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                class: 'kb-app-params__message--advanced-hidden',
+                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'input-objects-area',
@@ -338,7 +337,7 @@ define([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                class: 'kb-app-params__message--advanced-hidden',
+                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'parameters-area',
@@ -642,6 +641,10 @@ define([
                 // really unhook things here.
             });
         }
+
+        // CONSTRUCTION
+
+        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,

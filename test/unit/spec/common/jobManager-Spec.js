@@ -9,8 +9,13 @@ define([
 ], (JobManagerModule, Jobs, Props, Runtime, UI, TestUtil, JobsData) => {
     'use strict';
 
-    const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchInitMixin, JobManager } =
-        JobManagerModule;
+    const {
+        JobManagerCore,
+        DefaultHandlerMixin,
+        JobActionsMixin,
+        BatchInitMixin,
+        JobManager,
+    } = JobManagerModule;
 
     function createJobManagerInstance(context, jmClass = JobManager) {
         return new jmClass({
@@ -1140,7 +1145,8 @@ define([
                     action: 'retry',
                     statusList: ['terminated', 'error'],
                     title: 'Retry failed and cancelled jobs',
-                    body: 'Please note that jobs are rerun using the same parameters. Any jobs that failed due to issues with the input, such as misconfigured parameters or corrupted input data, are likely to throw the same errors when run again.',
+                    body:
+                        'Please note that jobs are rerun using the same parameters. Any jobs that failed due to issues with the input, such as misconfigured parameters or corrupted input data, are likely to throw the same errors when run again.',
                 },
             ];
 

@@ -47,7 +47,7 @@ define([
                             name: 'results',
                             hidden: true,
                             type: 'default',
-                            classes: ['kb-panel-results'],
+                            classes: ['kb-panel-container'],
                         }),
                         div({ dataElement: 'report' }),
                         div({ dataElement: 'next-steps' }),
@@ -55,7 +55,8 @@ define([
                 );
                 container.innerHTML = layout;
 
-                // If there's a "report_name" key in the results, load and show the report.
+                // If there's a "report_ref" key in the results, load and show the report.
+                // console.log('SHOWING RESULTS', result);
                 const result = model.getItem('exec.outputWidgetInfo');
                 if (arg.isParentJob && result && result.params && result.params.report_name) {
                     renderReportView(result.params);
@@ -74,7 +75,7 @@ define([
                     );
                 }
 
-                // Look up this app's info to get its suggested next steps.
+                // Look up this app's info to get it's suggested next steps.
                 return nms.get_method_full_info({
                     ids: [model.getItem('app.id')],
                     tag: model.getItem('app.tag'),
@@ -88,7 +89,7 @@ define([
                     if (suggestions.next_methods) {
                         return nms.get_method_spec({
                             ids: suggestions.next_methods,
-                            tag,
+                            tag: tag,
                         });
                     }
                 })
@@ -130,9 +131,6 @@ define([
 
         function renderNextApps(apps) {
             apps = apps || [];
-            if (!apps.length) {
-                return;
-            }
             const events = Events.make();
             let appList = div([
                 'No suggestions available! ',
@@ -184,8 +182,8 @@ define([
         function stop() {}
 
         return {
-            start,
-            stop,
+            start: start,
+            stop: stop,
         };
     }
 

@@ -32,7 +32,8 @@ define([
     const t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
         const runtime = Runtime.make(),
@@ -99,12 +100,12 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
+                    appSpec,
+                    parameterSpec,
                     workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
-                    closeParameters: closeParameters,
+                    closeParameters,
                 });
 
                 // Forward all changed parameters to the controller. That is our main job!
@@ -306,13 +307,14 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
                 showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -326,13 +328,14 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
                 showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -347,79 +350,75 @@ define([
         function renderBatchModeMessage() {
             return ui.buildPanel({
                 title: span('Batch Mode'),
+                classes: ['kb-panel-batch'],
                 name: 'batch-mode-doc',
-                body: div(
-                    {
-                        style: 'margin-left: 3ex',
-                    },
-                    [
-                        div(
-                            "This App is set to Batch mode. To configure this app, you'll need to set the list of parameters manually."
-                        ),
-                        div(
-                            'The easiest way to do this is to configure a single run app, toggle into Batch mode, then use the "Show code" menu option to review currently set inputs for this app.'
-                        ),
-                        div(
-                            'Then, just add another parameter dictionary to the batch_params list for each App run you want to do.<br>'
-                        ),
-                        div('Once your batch is configured, press the "Run" button as usual.'),
-                        div({ style: 'margin-top: 1ex' }, [
-                            'Tutorials, documentation, and API details to help you craft a set of App parameters can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.',
-                        ]),
-                    ]
-                ),
-                classes: ['kb-panel-light'],
+                body: div({}, [
+                    p(
+                        "This App is set to Batch mode. To configure this app, you'll need to set the list of parameters manually."
+                    ),
+                    p(
+                        'The easiest way to do this is to configure a single run app, toggle into Batch mode, then use the "Show code" menu option to review currently set inputs for this app. Add another parameter dictionary to the batch_params list for each app run you want to do.'
+                    ),
+                    p('Once your batch is configured, press the "Run" button as usual.'),
+                    p(
+                        'Tutorials, documentation, and API details to help you craft a set of App parameters can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.'
+                    ),
+                ]),
             });
         }
 
         function renderLayout(batchMode) {
             const events = Events.make();
-            let formContent = [];
             if (batchMode) {
-                formContent.push(renderBatchModeMessage());
-            } else {
-                formContent = formContent.concat([
+                return {
+                    events,
+                    content: renderBatchModeMessage(),
+                };
+            }
+
+            const classes = ['kb-panel-params'];
+            const content = form(
+                {
+                    dataElement: 'input-widget-form',
+                    class: 'kb-panel-params__container',
+                },
+                [
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: {
-                                    marginLeft: '6px',
-                                    fontStyle: 'italic',
-                                },
+                                class: 'kb-app-params__message--advanced-hidden',
                             }),
                         ]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-params__message--advanced-hidden',
                             }),
                         ]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
+                        classes,
                         title: 'Output Objects',
                         name: 'output-objects-area',
                         body: div({ dataElement: 'output-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Output Report', 'output-report')
-                ]);
-            }
-            const content = form({ dataElement: 'input-widget-form' }, formContent);
+                ]
+            );
+
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -429,7 +428,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
@@ -453,13 +452,6 @@ define([
                 });
             });
             bus.on('toggle-advanced', () => {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced('input-objects');
                 renderAdvanced('parameters');
@@ -486,11 +478,11 @@ define([
                 .map((parameterId) => {
                     const id = html.genId();
                     view[parameterId] = {
-                        id: id,
+                        id,
                     };
 
                     return div({
-                        id: id,
+                        id,
                         dataParameter: parameterId,
                     });
                 })
@@ -499,9 +491,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
-                view: view,
-                paramMap: paramMap,
+                params,
+                view,
+                paramMap,
             };
         }
 
@@ -547,11 +539,6 @@ define([
                     .then(() => {
                         if (inputParams.layout.length === 0) {
                             ui.getElement('input-objects-area').classList.add('hidden');
-                            // places.inputFields.innerHTML = span({
-                            //     style: {
-                            //         fontStyle: 'italic'
-                            //     }
-                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(
@@ -592,7 +579,6 @@ define([
                     .then(() => {
                         if (outputParams.layout.length === 0) {
                             ui.getElement('output-objects-area').classList.add('hidden');
-                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(
@@ -631,7 +617,6 @@ define([
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
                             ui.getElement('parameters-area').classList.add('hidden');
-                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
@@ -694,7 +679,6 @@ define([
                                     parameter: message.parameter,
                                 },
                             });
-                            // bus.emit('parameter-changed', message);
                         });
                     });
 
@@ -724,8 +708,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
             bus: function () {
                 return bus;
             },

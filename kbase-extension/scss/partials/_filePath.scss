@@ -5,7 +5,6 @@
     list-style-position: outside;
     list-style-type: none;
     padding: 0;
-    margin-left: -1.5rem;
   }
 
   // .kb-file-path__list_item
@@ -13,7 +12,7 @@
     align-items: center;
     display: flex;
     font: normal 400 14px/18px $typeface-page-text;
-    padding: 0 1.5rem;
+    padding: 0 1.5rem 0.5rem;
 
     &:nth-child(2n) {
       background-color: use_color('base-lightest');
@@ -71,6 +70,6 @@
   }
 
   &__params {
-    width: 95%;
+    margin-left: 0.5rem;
   }
 }

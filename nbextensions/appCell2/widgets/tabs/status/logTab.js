@@ -21,8 +21,6 @@ define([
 
         // The handy UI module interface to this container.
         let ui;
-
-        // A cheap widget collection.
         const widgets = {},
             { model } = config;
         let queueListener,

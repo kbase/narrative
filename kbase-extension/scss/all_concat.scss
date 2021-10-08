@@ -32,6 +32,7 @@
 @import "partials/editorCell";
 
 // order should not be important for the following files
+@import "partials/appParams";
 @import "partials/bulkImportCell";
 @import "partials/cellToolbar";
 @import "partials/dataStaging";
@@ -45,9 +46,10 @@
 @import "partials/jobStatus";
 @import "partials/kb-icon";
 @import "partials/loadingBlocker";
+@import "partials/narrativeOutline";
 @import "partials/rcp";
 @import "partials/reportViewer";
 @import "partials/select2";
 @import "partials/stagingTable";
 @import "partials/ui";
-@import "partials/narrativeOutline";
+@import "partials/userMenu";

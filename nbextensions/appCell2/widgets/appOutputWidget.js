@@ -30,7 +30,6 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
 
         function findCellForId(id) {
             const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
-                // console.log('REMOVING', JSON.parse(JSON.stringify(cell.metadata)));
                 if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
                     return cell.metadata.kbase.attributes.id === id;
                 }
@@ -137,7 +136,6 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                             padding: '3px',
                         };
                         let message = '';
-                        // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (
                             model.currentJobState &&
                             output.jobId === model.currentJobState.job_id
@@ -188,7 +186,6 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
             if (outputs.byJob) {
                 model.outputs = Object.keys(outputs.byJob).map((jobId) => {
                     output = outputs.byJob[jobId];
-                    // console.log(output);
                     return {
                         jobId: jobId,
                         cellId: output.cell.id,

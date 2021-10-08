@@ -29,6 +29,13 @@
     width: 100%;
   }
 
+  &-tab-pane__container-- {
+    &jobStatus,
+    &results {
+      @include default-container-padding;
+    }
+  }
+
   .kb-app-warning {
     font-family: $typeface-page-text;
     text-align: center;
@@ -160,11 +167,7 @@
     border-top: 2px solid use_color('mid-blue');
 
     > div {
-      padding: 4px;
-
-      &:empty {
-        padding: 0;
-      }
+      padding: 0;
     }
   }
 }
@@ -273,12 +276,12 @@ Buttons
 
 .btn {
   &.batch-active {
-    background-color: rgb(238 238 238);
+    background-color: use_color('base-lightest');
     border-color: rgb(173 173 173);
     box-shadow: inset 0 3px 7px rgb(0 0 0 / 0.125);
 
     &:hover {
-      background-color: rgb(204 204 204);
+      background-color: use_color('base-lighter');
     }
   }
 

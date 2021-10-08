@@ -31,6 +31,7 @@ requirejs.config({
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
         testUtil: '../../test/unit/testUtil',
         narrativeMocks: '../../test/unit/mocks',
+        test: '../../test',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
         custom: 'kbase/custom',

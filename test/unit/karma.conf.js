@@ -42,6 +42,7 @@ module.exports = function (config) {
             'test/unit/testUtil.js',
             'test/unit/mocks.js',
             'test/unit/test-main.js',
+            { pattern: 'test/unit/utils/**/*.js', included: false },
             { pattern: 'test/unit/spec/**/*.js', included: false },
             { pattern: 'test/unit/spec/**/*.json', included: false },
             { pattern: 'test/testConfig.json', included: false, nocache: true },

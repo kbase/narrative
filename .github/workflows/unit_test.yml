@@ -64,4 +64,7 @@ jobs:
 
     - name: outcome
       if: steps.test_backend.outcome != 'success' || steps.test_frontend.outcome != 'success'
-      run: exit 1
+      run: |
+        echo "backend tests: ${{ steps.test_backend.outcome }}"
+        echo "frontend tests: ${{ steps.test_frontend.outcome }}"
+        exit 1

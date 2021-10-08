@@ -22,11 +22,11 @@ define([
             commSemaphore.set('comm', 'ready');
             jasmine.Ajax.install();
             Jupyter.notebook = {
-                writable: true
+                writable: true,
             };
             Jupyter.narrative = {
                 readonly: false,
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -41,32 +41,34 @@ define([
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
                     body: /get_method_spec/,
-                    response: [TestAppSpec]
+                    response: [TestAppSpec],
                 });
 
                 // mock NMS.get_method_full_info,
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
                     body: /get_method_full_info/,
-                    response: [Object.assign({}, TestAppSpec.info, {
-                        description: 'test app',
-                        suggestions: {
-                            next_methods: [],
-                            related_apps: [],
-                            next_apps: [],
-                            related_methods: []
-                        },
-                        screenshots: [],
-                        publications: [],
-                        namespace: 'NarrativeTest'
-                    })]
+                    response: [
+                        Object.assign({}, TestAppSpec.info, {
+                            description: 'test app',
+                            suggestions: {
+                                next_methods: [],
+                                related_apps: [],
+                                next_apps: [],
+                                related_methods: [],
+                            },
+                            screenshots: [],
+                            publications: [],
+                            namespace: 'NarrativeTest',
+                        }),
+                    ],
                 });
 
                 // mock Catalog.get_exec_aggr_stats (not used here)
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('catalog'),
                     body: /get_exec_aggr_stats/,
-                    response: [{}]
+                    response: [{}],
                 });
             });
 
@@ -83,13 +85,34 @@ define([
                 const appCell = AppCell.make({ cell: fakeCell });
                 const appTag = 'release';
                 const appType = 'app';
+                expect(fakeCell.metadata).toBeDefined();
 
+                const expectedMetadata = {
+                    app: {
+                        id: TestAppSpec.info.id,
+                        gitCommitHash: TestAppSpec.info.git_commit_hash,
+                        version: TestAppSpec.info.ver,
+                        tag: appTag,
+                        spec: TestAppSpec,
+                    },
+                    params: {
+                        simple_string: '',
+                    },
+                    output: {
+                        byJob: {},
+                    },
+                    'user-settings': {
+                        showCodeInputArea: false,
+                    },
+                    executionStats: {},
+                };
 
-                return appCell.upgradeToAppCell(TestAppSpec, appTag, appType)
-                    .then(() => {
-                        expect(fakeCell.metadata.kbase.type).toEqual('app');
-                        expect(fakeCell.metadata.kbase.appCell).toEqual(jasmine.any(Object));
-                    });
+                return appCell.upgradeToAppCell(TestAppSpec, appTag, appType).then(() => {
+                    expect(fakeCell.metadata.kbase.type).toEqual('app');
+                    const appCellMeta = fakeCell.metadata.kbase.appCell;
+                    expect(appCellMeta).toBeDefined();
+                    expect(appCellMeta).toEqual(expectedMetadata);
+                });
             });
 
             it('restores an existing AppCell', () => {
@@ -99,30 +122,29 @@ define([
                         id: TestAppSpec.info.id,
                         spec: TestAppSpec,
                         tag: 'dev',
-                        version: '0.0.0'
+                        version: '0.0.0',
                     },
                     executionStats: {}, // provided from Catalog, not needed for mock
                     fsm: {
                         currentState: {
                             mode: 'editing',
-                            params: 'incomplete'
-                        }
+                            params: 'incomplete',
+                        },
                     },
                     output: {
-                        byJob: {}
+                        byJob: {},
                     },
                     params: {
-                        simple_string: null
+                        simple_string: null,
                     },
                     'user-settings': {
-                        showCodeInputArea: false
-                    }
+                        showCodeInputArea: false,
+                    },
                 };
                 const appCell = AppCell.make({ cell: fakeAppCell });
-                return appCell.setupCell()
-                    .then(() => {
-                        expect(appCell).toBeDefined();
-                    });
+                return appCell.setupCell().then(() => {
+                    expect(appCell).toBeDefined();
+                });
             });
         });
 

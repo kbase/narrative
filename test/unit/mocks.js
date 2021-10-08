@@ -49,7 +49,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             : {};
         const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
-            metadata: { kbase: metadata },
+            metadata: {},
             cell_type: cellType,
             renderMinMax: () => {},
             set_text: () => {},
@@ -66,6 +66,10 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
                 rebuild: () => {},
             },
         };
+        // only add the 'kbase' metadata key if it's a KBase cell and not a base Jupyter cell.
+        if (kbaseCellType) {
+            mockCell.metadata.kbase = metadata;
+        }
 
         $cellContainer.append($toolbar).append(mockCell.input).append(mockCell.output);
         return mockCell;

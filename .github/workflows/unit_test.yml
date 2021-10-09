@@ -54,6 +54,7 @@ jobs:
       continue-on-error: true
 
     - name: Send to Codecov
+      id: send_to_codecov
       uses: codecov/codecov-action@v1.5.2
       continue-on-error: true
       with:
@@ -63,8 +64,9 @@ jobs:
         fail_ci_if_error: true
 
     - name: outcome
-      if: steps.test_backend.outcome != 'success' || steps.test_frontend.outcome != 'success'
+      if: steps.test_backend.outcome != 'success' || steps.test_frontend.outcome != 'success' || steps.send_to_codecov.outcome != 'success'
       run: |
         echo "backend tests: ${{ steps.test_backend.outcome }}"
         echo "frontend tests: ${{ steps.test_frontend.outcome }}"
+        echo "upload coverage: ${{ steps.send_to_codecov.outcome }}"
         exit 1

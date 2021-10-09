@@ -784,10 +784,10 @@ define([
                     doRunCellAction();
                     break;
                 case 'cancel':
-                    doCellAction('cancel');
+                    doCellAction('cancelBulkImport');
                     break;
                 case 'resetApp':
-                    doCellAction('reset');
+                    doCellAction('appReset');
                     break;
                 case 'offline':
                     // TODO implement / test better
@@ -822,13 +822,12 @@ define([
          * If a job run has been triggered, the batch job will be terminated, which
          * will also terminate all the child jobs.
          *
-         * @param {string} actionType - either 'cancel' or 'reset'; defaults to 'reset'
+         * @param {string} action - either 'cancelBulkImport' or 'appReset'; defaults to 'appReset'
          */
-        async function doCellAction(actionType) {
-            if (!actionType) {
-                actionType = 'reset';
+        async function doCellAction(action) {
+            if (!action || (action !== 'cancelBulkImport' && action !== 'appReset')) {
+                action = 'appReset';
             }
-            const action = actionType === 'cancel' ? 'cancelBulkImport' : 'appReset';
             const confirmed = await DialogMessages.showDialog({ action });
 
             if (confirmed) {
@@ -837,7 +836,7 @@ define([
                 // handleRunStatus will cancel the batch job when it receives that message
                 cancelBatch = true;
                 controlPanel.setExecMessage(
-                    actionType === 'cancel' ? 'Canceling...' : 'Resetting app...'
+                    action === 'cancelBulkImport' ? 'Canceling...' : 'Resetting app...'
                 );
 
                 // if runStatusListener is null, the batch job data is available and

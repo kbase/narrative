@@ -74,10 +74,10 @@ define([
     'react',
     'kb_common/jsonRpc/genericClient',
     'kb_service/utils',
-    'widgets/function_output/KBaseSets/types/ReadsAlignmentSet',
-    'widgets/function_output/KBaseSets/types/AssemblySet',
+    'widgets/function_output/KBaseSets/types/ReadsAlignmentSetViewer',
+    'widgets/function_output/KBaseSets/types/AssemblySetViewer',
     'react_components/ErrorMessage',
-    'widgets/function_output/KBaseSets/SetLoader',
+    'widgets/function_output/KBaseSets/Loader',
 
     // For effect
     'bootstrap'
@@ -85,10 +85,10 @@ define([
     React,
     ServiceClient,
     ServiceUtils,
-    ReadsAlignmentSet,
-    AssemblySet,
+    ReadsAlignmentSetViewer,
+    AssemblySetViewer,
     ErrorMessage,
-    SetLoader
+    Loader
 ) => {
     'use strict';
 
@@ -98,11 +98,11 @@ define([
     // must be components implemented as defined in `react_components/genericSets`.
     const SET_TYPE_TO_MODULE_MAPPING = {
         'KBaseSets.ReadsAlignmentSet': {
-            module: ReadsAlignmentSet,
+            module: ReadsAlignmentSetViewer,
             method: 'get_reads_alignment_set_v1'
         },
         'KBaseSets.AssemblySet': {
-            module: AssemblySet,
+            module: AssemblySetViewer,
             method: 'get_assembly_set_v1'
         }
     };
@@ -116,8 +116,6 @@ define([
             super(props);
             this.state = {
                 status: null,
-                // setType: null,
-                // error: null
             };
         }
 
@@ -177,7 +175,7 @@ define([
         }
 
         renderLoaded() {
-            return e(SetLoader, {
+            return e(Loader, {
                 token: this.props.token,
                 workspaceURL: this.props.workspaceURL,
                 serviceWizardURL: this.props.serviceWizardURL,
@@ -185,19 +183,13 @@ define([
                 method: this.state.method,
                 module: this.state.module
             });
-
-            // return e(this.state.module, {
-            //     token: this.props.token,
-            //     workspaceURL: this.props.workspaceURL,
-            //     serviceWizardURL: this.props.serviceWizardURL,
-            //     objectRef: this.props.objectRef
-            // });
         }
 
         render() {
             switch (this.state.status) {
                 case null:
                 case 'loading':
+                    // TODO: Loading comonent
                     return e('div', null, 'Loading...');
                 case 'error':
                     return this.renderError();

@@ -4,7 +4,7 @@ define([
 
     // For effect
     'bootstrap',
-    'css!./SetBrowser.css'
+    'css!./Viewer.css'
 ], (
     React,
     ErrorMessage
@@ -23,7 +23,7 @@ define([
      * 
      */
 
-    class SetBrowser extends Component {
+    class Viewer extends Component {
         // Abstract
 
         /**
@@ -32,8 +32,8 @@ define([
          * @abstract
          * @returns {void} nothing useful
          */
-        renderItemTable() {
-            throw new Error('renderItemTable not implemented in subclass');
+        renderSetElement() {
+            throw new Error('renderSetElement not implemented in subclass');
         }
 
         // Implementation
@@ -114,23 +114,6 @@ define([
             ]);
         }
 
-
-
-        renderOverview() {
-            const isLoading = [null, 'loading'].includes(this.props.set.selectedItem.status);
-            // const isLoading = true;
-            return e('div', { key: 'overview', className: 'Overview' }, ...[
-                this.renderHeader(),
-                // The item area
-                e('div', {
-                    className: 'OverlayWrapper'
-                }, ...[
-                    this.renderItemTable(),
-                    isLoading ? this.renderLoading(3) : null
-                ])
-            ]);
-        }
-
         renderNoItems() {
             return e('div', null, 'Sorry, no items');
         }
@@ -150,7 +133,18 @@ define([
         }
 
         renderViewer() {
-            return this.renderOverview();
+            const isLoading = [null, 'loading'].includes(this.props.set.selectedItem.status);
+            return e('div', { key: 'overview', className: 'Overview' }, ...[
+                this.renderHeader(),
+                // A classic display-relative overlay area, in which the loading spinner 
+                // may be temporarily rendered.
+                e('div', {
+                    className: 'OverlayWrapper'
+                }, ...[
+                    this.renderSetElement(),
+                    isLoading ? this.renderLoading(3) : null
+                ])
+            ]);
         }
 
         renderState() {
@@ -171,10 +165,10 @@ define([
 
         render() {
             return e('div', {
-                className: 'SetBrowser'
+                className: 'KBaseSets'
             }, this.renderState());
         }
     }
 
-    return SetBrowser;
+    return Viewer;
 });

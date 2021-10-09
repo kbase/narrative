@@ -1,9 +1,9 @@
-define(['widgets/function_output/KBaseSets/SetBrowser'], (SetBrowser) => {
+define(['widgets/function_output/KBaseSets/Loader'], (Loader) => {
     'use strict';
 
     describe('The Loader class', () => {
         it('should be defined', () => {
-            expect(SetBrowser).toBeDefined();
+            expect(Loader).toBeDefined();
         });
     });
 });

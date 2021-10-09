@@ -1,10 +1,10 @@
-.SetBrowser .Table {
+.KBaseSets .Table {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
 }
 
-.SetBrowser .Table > .Row {
+.KBaseSets .Table > .Row {
   flex: 0 0 auto;
   display: flex;
   flex-direction: row;
@@ -13,28 +13,28 @@
   height: 1.5em;
 }
 
-.SetBrowser .Table > .Row > .Col:nth-child(1) {
+.KBaseSets .Table > .Row > .Col:nth-child(1) {
   font-weight: bold;
   color: rgba(100, 100, 100);
   flex: 0 0 13em;
 }
 
-.SetBrowser .Table > .Row > .Col:nth-child(2) {
+.KBaseSets .Table > .Row > .Col:nth-child(2) {
   flex: 1 1 0;
 }
 
 /* tweak bootstrap styling here */
-.SetBrowser select.form-control {
+.KBaseSets select.form-control {
   margin-left: 0;
   margin-right: 0;
   padding: 4px;
 }
 
-.SetBrowser .Overview .OverlayWrapper {
+.KBaseSets .Overview .OverlayWrapper {
   position: relative;
 }
 
-.SetBrowser .Overview .OverlayWrapper .LoadingOverlay {
+.KBaseSets .Overview .OverlayWrapper .LoadingOverlay {
   position: absolute;
   left: 0;
   right: 0;
@@ -48,7 +48,7 @@
   color: rgba(150, 150, 150, 1);
 }
 
-.SetBrowser .Overview table th {
+.KBaseSets .Overview table th {
   width: 20%;
   font-weight: bold;
   text-align: left;

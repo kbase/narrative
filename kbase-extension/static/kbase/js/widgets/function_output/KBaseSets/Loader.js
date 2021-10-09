@@ -19,7 +19,7 @@ define([
      * A class implementing a component which essentially forms the data backbone for
      * the set component
      */
-    class SetLoader extends Component {
+    class Loader extends Component {
         constructor(props) {
             super(props);
             if (!props.method) {
@@ -254,5 +254,5 @@ define([
         }
     }
 
-    return SetLoader;
+    return Loader;
 });

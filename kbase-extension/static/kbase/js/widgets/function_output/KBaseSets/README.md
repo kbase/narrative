@@ -4,9 +4,9 @@ THe KBaseSets [data module](https://narrative.kbase.us/#spec/module/KBaseSets) p
 
 Inspecting [KBaseSets](https://narrative.kbase.us/#spec/module/KBaseSets) can give you a guide to which sets are implemented, and the general data design, but does not give you an accurate picture of the data you will actually deal with through the SetAPI.
 
-It is also notable, on the subject of caveats, that KBase types do not support inheritance, so the implementation of commonality for types in KBaseSets is purely by convention (copy and paste, if you will). That is, there is no actual "Generic Set" object, if you will, but rather a collection of types which, by convention, implement the same interface.
+It is also notable, on the subject of caveats, that KBase types do not support inheritance, so the implementation of commonality for types in KBaseSets is purely by convention (copy and paste, if you will). That is, there is no actual "Generic Set" object definition, but rather a collection of types which, by convention, implement the same interface.
 
-The basic design of a set that a set implements a wrapper around an array of objects of the same type.
+The basic design of a Set that a Set is a container for array of objects of the same type.
 
 The wrapper consists of a string description and an array of objects, each object being of the same type.
 
@@ -19,9 +19,15 @@ interface KBaseSet<T> {
 }
 ```
 
-Pretty basic, huh?
+## Viewer Design
 
-So clearly the meat is in the `T`, I dare say.
+The viewer is implemented by a one set of components providing generic support for all KBaseSet types, and a specific viewer for each type.
+
+1. The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types
+2. The kbaseGenericSetViewer is just a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/Dispatcher.js`, responsible for determining the object type, and finding a configuration for that type
+3. the Dispatcher then calls the `unction_output/KBaseSets/Loader.js` with this information. The loader is responsible for providing data services, which are exposed as prop functions, and loading the type-specific viewer
+4. An abstract class `function_output/KBaseSets/Viewer.js` implements viewer aspects of the Set, but not the set elements.
+5. The specific viewer is a superclass which implements the renderSetElement method, will be found in `function_output/KBaseSets/types`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
 
 ## Dispatcher
 

@@ -1,17 +1,17 @@
 define([
     'react',
-    '../SetBrowser',
+    'widgets/function_output/KBaseSets/Viewer',
     'bootstrap'
 ], (
     React,
-    SetBrowser,
+    Viewer,
 ) => {
     'use strict';
 
     const { createElement: e } = React;
 
-    class ReadsAlignmentSet extends SetBrowser {
-        renderItemTable() {
+    class ReadsAlignmentSetViewer extends Viewer {
+        renderSetElement() {
             const selectedItem = this.props.set.selectedItem;
             if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
                 return null;
@@ -106,16 +106,5 @@ define([
         }
     }
 
-    // class ReadsAlignmentSetLoader extends Component {
-    //     render() {
-    //         return e(SetLoader, {
-    //             ...this.props,
-    //             method: 'get_reads_alignment_set_v1',
-    //             module: ReadsAlignmentSet
-    //         });
-    //     }
-    // }
-
-    // return ReadsAlignmentSetLoader;
-    return ReadsAlignmentSet;
+    return ReadsAlignmentSetViewer;
 });

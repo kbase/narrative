@@ -1,17 +1,17 @@
 define([
     'react',
-    '../SetBrowser',
+    'widgets/function_output/KBaseSets/Viewer',
     'bootstrap'
 ], (
     React,
-    SetBrowser,
+    Viewer,
 ) => {
     'use strict';
 
     const { createElement: e } = React;
 
-    class AssemblySet extends SetBrowser {
-        renderItemTable() {
+    class AssemblySetViewer extends Viewer {
+        renderSetElement() {
             const selectedItem = this.props.set.selectedItem;
             if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
                 return null;
@@ -51,16 +51,5 @@ define([
         }
     }
 
-    // class AssemblySetLoader extends Component {
-    //     render() {
-    //         return e(SetLoader, {
-    //             ...this.props,
-    //             method: 'get_assembly_set_v1',
-    //             module: AssemblySet
-    //         });
-    //     }
-    // }
-
-    // return AssemblySetLoader;
-    return AssemblySet;
+    return AssemblySetViewer;
 });

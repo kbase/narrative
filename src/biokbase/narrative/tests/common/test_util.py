@@ -1,6 +1,5 @@
 """
-Tests for Mixin class that handles IO between the
-Narrative and workspace service.
+Standalone utility methods for Python tests
 """
 import unittest
 from biokbase.narrative.common.util import make_ranges

@@ -19,7 +19,7 @@ define([
             const node = document.createElement('div');
 
             // install our component there
-            const el = createElement(AssemblySetViewer, { set: testData1, setItem: () => { } }, null);
+            const el = createElement(AssemblySetViewer, { set: testData1 }, null);
             render(el, node);
 
             await domUtils.waitFor(() => {

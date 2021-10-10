@@ -12,9 +12,7 @@ from biokbase.workspace.baseclient import ServerError
 from tornado.web import HTTPError
 from notebook.utils import to_api_path, to_os_path
 from biokbase.narrative.common.exceptions import WorkspaceError
-from traitlets import Unicode, Dict, Bool, List, TraitError
 from biokbase.narrative.common.kblogging import get_logger, log_event
-import re
 import json
 from collections import Counter
 from .updater import update_narrative
@@ -24,7 +22,7 @@ from biokbase.narrative.common.narrative_ref import NarrativeRef
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
 # objects, and has a different field list
-list_objects_fields = [
+LIST_OBJECTS_FIELDS = [
     "objid",
     "name",
     "type",
@@ -37,14 +35,12 @@ list_objects_fields = [
     "size",
     "meta",
 ]
-obj_field = dict(zip(list_objects_fields, range(len(list_objects_fields))))
-
-obj_ref_regex = re.compile(r"^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
 
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
 WORKSPACE_TIMEOUT = 30  # seconds
 NARRATIVE_TYPE = "KBaseNarrative.Narrative"
+MAX_LIST_OBJECT_WORKSPACE_COUNT = 1000
 
 g_log = get_logger("biokbase.narrative")
 
@@ -509,10 +505,13 @@ class KBaseWSManagerMixin(object):
         current token has read access to. Works anonymously as well.
 
         If the ws_id field is not None, it will only look up Narratives in that
-        particular workspace (by its numerical id).
+        particular workspace (by its numerical id). Otherwise, the set of all
+        Narratives accessible to the current user (or public narratives if no token
+        is present) is fetched and used in batches of MAX_LIST_OBJECT_WORKSPACE_COUNT
+        or smaller.
 
         Returns a list of dictionaries of object descriptions, one for each Narrative.
-        The keys in each dictionary are those from the list_objects_fields list above.
+        The keys in each dictionary are those from the LIST_OBJECTS_FIELDS list above.
 
         This is just a wrapper around the Workspace list_objects command.
 
@@ -521,25 +520,39 @@ class KBaseWSManagerMixin(object):
         """
         log_event(g_log, "list_narratives start", {"ws_id": ws_id})
         list_obj_params = {"type": self.nar_type, "includeMetadata": 1}
+        ws = self.ws_client()
         if ws_id:
-            try:
-                int(ws_id)  # will throw an exception if ws_id isn't an int
-                list_obj_params["ids"] = [ws_id]
-            except ValueError:
-                raise
+            ws_ids = [int(ws_id)]  # will throw an exception if ws_id isn't an int
 
+        else:
+            # Fetch all the workspaces the Workspace will give us.
+            # Not that this is necessary due to a change in list_objects, used below,
+            # which now requires the "ids" parameter, and that it contain
+            # between 1 and 1000 workspaces.
+            ws_ids = [ws_info[6] for ws_info in ws.list_workspaces({})]
+
+        if len(ws_ids) == 0:
+            return []
+
+        my_narratives = []
         try:
-            ws = self.ws_client()
-            res = ws.list_objects(list_obj_params)
+            batch_ranges = util.make_ranges(
+                len(ws_ids), MAX_LIST_OBJECT_WORKSPACE_COUNT
+            )
+
+            for [batch_start, batch_end] in batch_ranges:
+                list_obj_params["ids"] = ws_ids[batch_start:batch_end]
+                res = ws.list_objects(list_obj_params)
+                for obj in res:
+                    nar = dict(zip(LIST_OBJECTS_FIELDS, obj))
+                    # Look first for the name in the object metadata. if it's not there, use
+                    # the object's name. If THAT'S not there, use Untitled.
+                    # This gives support for some rather old narratives that don't
+                    # have their name stashed in the metadata.
+                    nar["name"] = nar["meta"].get("name", nar.get("name", "Untitled"))
+                    my_narratives.append(nar)
         except ServerError as err:
             raise WorkspaceError(err, ws_id)
-        my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
-        for nar in my_narratives:
-            # Look first for the name in the object metadata. if it's not there, use
-            # the object's name. If THAT'S not there, use Untitled.
-            # This gives support for some rather old narratives that don't
-            # have their name stashed in the metadata.
-            nar["name"] = nar["meta"].get("name", nar.get("name", "Untitled"))
 
         return my_narratives
 

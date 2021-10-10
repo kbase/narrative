@@ -62,11 +62,13 @@ define([
         }
 
         async getSet() {
-            this.setState({
-                ...this.state,
-                set: {
-                    status: 'loading'
-                }
+            this.setState((state) => {
+                return {
+                    ...state,
+                    set: {
+                        status: 'loading'
+                    }
+                };
             });
             try {
                 const { description, items } = await this.fetchSet();
@@ -91,48 +93,54 @@ define([
                     //     }
 
                     // }));
-                    this.setState({
-                        ...this.state,
-                        set: {
-                            status: 'loaded',
-                            value: {
-                                description,
-                                type: selectedItem.objectInfo.type,
-                                items,
-                            },
-                            selectedItem: {
+                    this.setState((state) => {
+                        return {
+                            ...state,
+                            set: {
                                 status: 'loaded',
-                                value: selectedItem
-                            }
+                                value: {
+                                    description,
+                                    type: selectedItem.objectInfo.type,
+                                    items,
+                                },
+                                selectedItem: {
+                                    status: 'loaded',
+                                    value: selectedItem
+                                }
 
-                        }
+                            }
+                        };
                     });
                 } else {
-                    this.setState({
-                        ...this.state,
-                        set: {
-                            status: 'loaded',
-                            value: {
-                                description,
-                                type: null,
-                                items,
-                            },
-                            selectedItem: {
-                                status: null
-                            }
+                    this.setState((state) => {
+                        return {
+                            ...state,
+                            set: {
+                                status: 'loaded',
+                                value: {
+                                    description,
+                                    type: null,
+                                    items,
+                                },
+                                selectedItem: {
+                                    status: null
+                                }
 
-                        }
+                            }
+                        };
                     });
                 }
 
             } catch (error) {
                 console.error('Error fetching the set', error);
-                this.setState({
-                    ...this.state,
-                    set: {
-                        status: 'error',
-                        error
-                    }
+                this.setState((state) => {
+                    return {
+                        ...state,
+                        set: {
+                            status: 'error',
+                            error
+                        }
+                    };
                 });
                 return;
             }
@@ -160,40 +168,46 @@ define([
             if (!this.selectedItemRef) {
                 return;
             }
-            this.setState({
-                ...this.state,
-                set: {
-                    ...this.state.set,
-                    selectedItem: {
-                        // note that we keep the selected item even if we are
-                        // (re)loading.
-                        ...this.state.set.selectedItem,
-                        status: 'loading'
+            this.setState((state) => {
+                return {
+                    ...state,
+                    set: {
+                        ...this.state.set,
+                        selectedItem: {
+                            // note that we keep the selected item even if we are
+                            // (re)loading.
+                            ...this.state.set.selectedItem,
+                            status: 'loading'
+                        }
                     }
-                }
+                };
             });
             try {
                 const item = await this.fetchSetElement(this.selectedItemRef);
-                this.setState({
-                    ...this.state,
-                    set: {
-                        ...this.state.set,
-                        selectedItem: {
-                            status: 'loaded',
-                            value: item
+                this.setState((state) => {
+                    return {
+                        ...state,
+                        set: {
+                            ...this.state.set,
+                            selectedItem: {
+                                status: 'loaded',
+                                value: item
+                            }
                         }
-                    }
+                    };
                 });
             } catch (error) {
-                this.setState({
-                    ...this.state,
-                    set: {
-                        ...this.state.set,
-                        selectedItem: {
-                            status: 'error',
-                            error
+                this.setState((state) => {
+                    return {
+                        ...state,
+                        set: {
+                            ...this.state.set,
+                            selectedItem: {
+                                status: 'error',
+                                error
+                            }
                         }
-                    }
+                    };
                 });
             }
         }

@@ -23,11 +23,15 @@ interface KBaseSet<T> {
 
 The viewer is implemented by a one set of components providing generic support for all KBaseSet types, and a specific viewer for each type.
 
-1. The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types
-2. The kbaseGenericSetViewer is just a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/Dispatcher.js`, responsible for determining the object type, and finding a configuration for that type
-3. the Dispatcher then calls the `unction_output/KBaseSets/Loader.js` with this information. The loader is responsible for providing data services, which are exposed as prop functions, and loading the type-specific viewer
-4. An abstract class `function_output/KBaseSets/Viewer.js` implements viewer aspects of the Set, but not the set elements.
-5. The specific viewer is a superclass which implements the renderSetElement method, will be found in `function_output/KBaseSets/types`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
+1.  The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types
+
+2.  The kbaseGenericSetViewer is just a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/Dispatcher.js`, responsible for determining the object type, and finding a configuration for that type
+
+3.  the Dispatcher then calls the `unction_output/KBaseSets/Loader.js` with this information. The loader is responsible for providing data services, which are exposed as prop functions, and loading the type-specific viewer
+
+4.  An abstract class `function_output/KBaseSets/Viewer.js` implements viewer aspects of the Set, but not the set elements.
+
+5.  The specific viewer is a superclass which implements the renderSetElement method, will be found in `function_output/KBaseSets/types`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
 
 ## Dispatcher
 
@@ -47,7 +51,7 @@ UI supported herein is the loading indicator and an error message, if necessary.
 The original intention of this viewer was to support all of the types implemented in KBaseSets,
 but that work has not yet been completed:
 
-Also, see: https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_generic_set/spec.json#L21
+Also, see: <https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_generic_set/spec.json#L21>
 
 Below is the status of each KBaseSet type:
 
@@ -64,25 +68,25 @@ Implemented in other viewers:
 KBaseSets.DifferentialExpressionMatrixSet
 SetAPI.get_differential_expression_matrix_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_differential_expression_matrix_set
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_differential_expression_matrix_set>
 and this viewer does not work
 
 KBaseSets.ExpressionSet
 SetAPI.get_expression_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_rnaseq_sample_expression
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_rnaseq_sample_expression>
 and that viewer doesn't work
 
 KBaseSets.ReadsSet
 SetAPI.get_reads_set_v1
 Implemented by:
-https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_reads_set
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_reads_set>
 and the current viewer works
 
 KBaseSets.SampleSet
 SetAPI.sample_set_to_samples_info (I think)
 Implemented by:
-https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_sample_set
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_sample_set>
 but not that this viewer does not utilize the SetAPI, which was implemented against the search, which
 has never been fully implemented for search. Also Samples and RNASeqSamples seem to be conflated
 a bit in SetAPI.

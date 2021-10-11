@@ -24,13 +24,9 @@ interface KBaseSet<T> {
 The viewer is implemented by a one set of components providing generic support for all KBaseSet types, and a specific viewer for each type.
 
 1.  The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types
-
 2.  The kbaseGenericSetViewer is just a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/Dispatcher.js`, responsible for determining the object type, and finding a configuration for that type
-
 3.  the Dispatcher then calls the `unction_output/KBaseSets/Loader.js` with this information. The loader is responsible for providing data services, which are exposed as prop functions, and loading the type-specific viewer
-
 4.  An abstract class `function_output/KBaseSets/Viewer.js` implements viewer aspects of the Set, but not the set elements.
-
 5.  The specific viewer is a superclass which implements the renderSetElement method, will be found in `function_output/KBaseSets/types`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
 
 ## Dispatcher

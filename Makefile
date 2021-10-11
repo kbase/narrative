@@ -27,7 +27,7 @@ install:
 	bash $(INSTALLER)
 
 install-node-modules:
-	sh scripts/install-node-modules.sh
+	npm run install-node-modules
 
 # runs the installer to locally build the Narrative in a
 # local venv.

@@ -37,9 +37,7 @@ requirejs.config({
         custom: 'kbase/custom',
         // Note that this is only provided in the testing amd module configuration;
         // Mock Service Worker (MSW) is not active in the actual Narrative web app.
-        msw: 'ext_modules/msw/index',
-        // React: 'ext_modules/react/react.development',
-        // ReactDOM: 'ext_modules/react/react-dom.development',
+        msw: 'ext_modules/msw/index'
     },
     map: {
         '*': {

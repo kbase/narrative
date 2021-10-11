@@ -13,7 +13,8 @@ define([
     const tag = html.tag,
         form = tag('form'),
         span = tag('span'),
-        div = tag('div');
+        div = tag('div'),
+        cssBaseClass = 'kb-app-params';
 
     function factory(config) {
         const viewOnly = config.viewOnly || false;
@@ -245,7 +246,7 @@ define([
 
             //remove or add the hidden field class
             for (const [, entry] of Object.entries(advancedInputs)) {
-                entry.classList.toggle('kb-app-params__fields--parameters__hidden_field');
+                entry.classList.toggle(`${cssBaseClass}__fields--parameters-hidden`);
             }
 
             return advancedInputs;
@@ -279,13 +280,14 @@ define([
                 }
 
                 showAdvancedButton = ui.buildButton({
-                    label: label,
+                    class: `${cssBaseClass}__toggle--advanced-hidden`,
+                    label,
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -306,16 +308,16 @@ define([
                     title: span([
                         'Parameters',
                         span({
-                            class: 'kb-app-params__advanced-message--parameters',
+                            class: `${cssBaseClass}__message--advanced-hidden`,
                             dataElement: 'advanced-hidden-message',
                         }),
                     ]),
                     name: 'parameters-area',
                     body: div({
-                        class: 'kb-app-params__fields--parameters',
+                        class: `${cssBaseClass}__fields--parameters`,
                         dataElement: 'parameter-fields',
                     }),
-                    classes: ['kb-panel-light'],
+                    classes: ['kb-panel-bulk-params'],
                 }),
             ]);
 
@@ -429,9 +431,8 @@ define([
                         },
                         [ex.message]
                     );
-                    container.querySelector(
-                        '#' + parameterInfo.view[paramSpec.id].id
-                    ).innerHTML = errorDisplay;
+                    container.querySelector('#' + parameterInfo.view[paramSpec.id].id).innerHTML =
+                        errorDisplay;
 
                     throw new Error(`Error making input field widget: ${ex}`);
                 });

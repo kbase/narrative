@@ -139,27 +139,7 @@ $tab-widget-padding: 0.4rem;
     }
 
     &__inputs {
-      @include default-container-padding;
-
       flex: 1;
-    }
-
-    &__advanced_hidden_message {
-      font-style: italic;
-      margin-left: 6px;
-    }
-  }
-}
-
-.kb-app-params {
-  &__advanced-message--parameters {
-    margin-left: 6px;
-  }
-
-  &__fields--parameters {
-    // kb-app-params__fields--parameters__hidden_field
-    &__hidden_field {
-      display: none;
     }
   }
 }

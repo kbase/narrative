@@ -1,7 +1,9 @@
 define([
     '/narrative/nbextensions/bulkImportCell/bulkImportCell',
+    'util/appCellUtil',
     'base/js/namespace',
     'common/dialogMessages',
+    'common/jobs',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -11,8 +13,10 @@ define([
     'narrativeConfig',
 ], (
     BulkImportCell,
+    BulkImportUtil,
     Jupyter,
     DialogMessages,
+    Jobs,
     Runtime,
     Mocks,
     TestUtil,
@@ -62,7 +66,7 @@ define([
         });
     }
 
-    xdescribe('The bulk import cell module', () => {
+    describe('The bulk import cell module', () => {
         let runtime;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -95,7 +99,6 @@ define([
         describe('construction', () => {
             it('should construct a bulk import cell class', () => {
                 const cell = Mocks.buildMockCell('code');
-                expect(cell.getIcon).not.toBeDefined();
                 expect(cell.renderIcon).not.toBeDefined();
                 const cellWidget = BulkImportCell.make({
                     cell,
@@ -306,6 +309,10 @@ define([
                     };
                     // remove job data
                     delete cell.metadata.kbase.bulkImportCell.exec;
+                    spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
+                    spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
+                        fastq_reads: 'complete',
+                    });
                     BulkImportCell.make({ cell, devMode });
                     const testElem = cell.element[0].querySelector(testCase.testSelector);
                     // wait for the actionButton to get initialized as hidden
@@ -320,7 +327,6 @@ define([
                             cancelButton.classList.contains('hidden')
                         );
                     });
-
                     runButton.click();
                     await TestUtil.waitForElementState(
                         testElem,
@@ -394,13 +400,39 @@ define([
             });
         });
 
-        describe('cancel', () => {
-            ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {
-                it(`should cancel the ${testCase} state and return to a previous state`, () => {
+        describe('cancel and reset', () => {
+            const tests = [
+                {
+                    state: 'inProgressResultsAvailable',
+                    action: 'cancel',
+                },
+                {
+                    state: 'inProgress',
+                    action: 'cancel',
+                },
+                {
+                    state: 'launching',
+                    action: 'cancel',
+                },
+                {
+                    state: 'jobsFinished',
+                    action: 'reset',
+                },
+                {
+                    state: 'jobsFinishedResultsAvailable',
+                    action: 'reset',
+                },
+                {
+                    state: 'error',
+                    action: 'reset',
+                },
+            ];
+            tests.forEach((testCase) => {
+                it(`should ${testCase.action} the ${testCase.state} state and return to a previous state`, () => {
                     // init cell with the test case state and jobs (they're all run-related)
-                    // wait for the cancel button to appear and be ready, and for the run button to disappear
+                    // wait for the cancel/reset button to appear and be ready, and for the run button to disappear
                     // click it
-                    // wait for it to reset so the run button is visible
+                    // wait for the cell to reset so the run button is visible
                     // expect the state to be editingComplete
                     const cell = Mocks.buildMockCell('code');
                     // mock the Jupyter execute function.
@@ -410,12 +442,13 @@ define([
                     // I'm guessing it's a jquery fadeIn event thing.
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                     spyOn(Jupyter.notebook, 'save_checkpoint');
+                    spyOn(Jobs, 'getFsmStateFromJobs').and.returnValue(testCase.state);
                     // add dummy metadata so we can make a cell that's in the ready-to-run state.
                     const state = {
                         state: {
-                            state: testCase,
+                            state: testCase.state,
                             selectedFileType: 'fastq_reads',
-                            selectedTab: 'configure',
+                            selectedTab: 'viewConfigure',
                             params: {
                                 fastq_reads: 'complete',
                             },
@@ -430,25 +463,24 @@ define([
                             ),
                             type: 'app-bulk-import',
                             attributes: {
-                                id: `${testCase}-state-test-cell`,
+                                id: `${testCase.state}-state-test-cell`,
                             },
                         },
                     };
                     const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
-                    const cancelButton = cell.element[0].querySelector(selectors.cancel);
+                    const actionButton = cell.element[0].querySelector(selectors[testCase.action]);
                     const runButton = cell.element[0].querySelector(selectors.run);
-                    // wait for the cancel button to appear and the run button to disappear
-                    return TestUtil.waitForElementState(cancelButton, () => {
+                    // wait for the cancel/reset button to appear and the run button to disappear
+                    return TestUtil.waitForElementState(actionButton, () => {
                         return (
-                            !cancelButton.classList.contains('hidden') &&
-                            !cancelButton.classList.contains('disabled') &&
+                            !actionButton.classList.contains('hidden') &&
+                            !actionButton.classList.contains('disabled') &&
                             runButton.classList.contains('hidden')
                         );
                     })
                         .then(() => {
-                            const jobsById = bulkImportCellInstance.jobManager.model.getItem(
-                                'exec.jobs.byId'
-                            );
+                            const jobsById =
+                                bulkImportCellInstance.jobManager.model.getItem('exec.jobs.byId');
                             expect(Object.keys(jobsById).length).toEqual(
                                 JobsData.allJobsWithBatchParent.length
                             );
@@ -461,7 +493,7 @@ define([
                                     );
                                 },
                                 () => {
-                                    cancelButton.click();
+                                    actionButton.click();
                                 }
                             );
                         })
@@ -512,6 +544,10 @@ define([
                 };
                 // remove job data
                 delete cell.metadata.kbase.bulkImportCell.exec;
+                spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
+                spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
+                    fastq_reads: 'complete',
+                });
                 const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
                 spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                 spyOn(bulkImportCellInstance.jobManager, 'initBatchJob').and.callThrough();
@@ -593,21 +629,12 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 const batchId = JobsData.batchParentJob.job_id;
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
-                const callArgs = JobsData.allJobsWithBatchParent
-                    .map((jobState) => {
-                        return ['request-job-updates-start', { jobId: jobState.job_id }];
-                    })
-                    .concat(
-                        [['request-job-status', { batchId }]],
-                        [['request-job-info', { batchId }]],
-                        [['request-job-cancel', { jobIdList: [batchId] }]]
-                    )
-                    .concat(
-                        JobsData.allJobsWithBatchParent.map((jobState) => {
-                            return ['request-job-updates-stop', { jobId: jobState.job_id }];
-                        })
-                    );
-
+                const callArgs = [
+                    ['request-job-updates-start', { batchId }],
+                    ['request-job-info', { batchId }],
+                    ['request-job-cancel', { jobIdList: [batchId] }],
+                    ['request-job-updates-stop', { batchId }],
+                ];
                 expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(
                     jasmine.arrayWithExactContents(callArgs)

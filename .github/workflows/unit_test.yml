@@ -42,24 +42,31 @@ jobs:
         echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
 
     - name: Run Narrative Backend Tests
+      id: test_backend
       shell: bash -l {0}
       run: make test-backend
+      continue-on-error: true
 
     - name: Run Narrative Frontend Unit Tests
+      id: test_frontend
       shell: bash -l {0}
       run: make test-frontend-unit
-
-    - name: make test output available as artifact in case of failure
-      if: ${{ failure() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: karma-result.json
-        path: karma-result.json
+      continue-on-error: true
 
     - name: Send to Codecov
+      id: send_to_codecov
       uses: codecov/codecov-action@v1.5.2
+      continue-on-error: true
       with:
         file: |
           ./python-coverage/coverage.xml
           ./js-coverage/lcov/lcov.info
         fail_ci_if_error: true
+
+    - name: outcome
+      if: steps.test_backend.outcome != 'success' || steps.test_frontend.outcome != 'success' || steps.send_to_codecov.outcome != 'success'
+      run: |
+        echo "backend tests: ${{ steps.test_backend.outcome }}"
+        echo "frontend tests: ${{ steps.test_frontend.outcome }}"
+        echo "upload coverage: ${{ steps.send_to_codecov.outcome }}"
+        exit 1

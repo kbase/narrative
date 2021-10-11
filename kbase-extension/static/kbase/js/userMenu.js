@@ -3,7 +3,7 @@ define([
     'narrativeConfig',
     'kb_service/client/userProfile',
     'kb_common/gravatar',
-    'kb_common/html',
+    'common/html',
     'util/bootstrapDialog',
     'util/string',
 ], ($, NarrativeConfig, UserProfile, Gravatar, html, BootstrapDialog, StringUtil) => {
@@ -22,10 +22,9 @@ define([
             span = html.tag('span'),
             ul = html.tag('ul'),
             li = html.tag('li'),
-            br = html.tag('br', { close: false }),
-            i = html.tag('i'),
             img = html.tag('img'),
-            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), { token: token });
+            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), { token: token }),
+            cssBaseClass = 'kb-user-menu';
         let gravatarDefault = 'identicon';
 
         function start() {
@@ -50,72 +49,94 @@ define([
         function renderAvatar() {
             return img({
                 src: gravatar.makeGravatarUrl(email, 100, 'pg', gravatarDefault),
-                style: 'width: 40px;',
-                class: 'login-button-avatar',
+                class: `login-button-avatar ${cssBaseClass}__icon--gravatar`,
                 'data-element': 'avatar',
             });
         }
 
         function render() {
-            const menu = div({ class: 'dropdown', style: 'display:inline-block' }, [
-                button(
-                    {
-                        type: 'button',
-                        class: 'btn btn-default dropdown-toggle',
-                        'data-toggle': 'dropdown',
-                        'aria-expanded': 'false',
-                    },
-                    [renderAvatar(), span({ class: 'caret', style: 'margin-left: 5px;' })]
-                ),
-                ul({ class: 'dropdown-menu', role: 'menu' }, [
-                    li({}, [
-                        a(
-                            {
-                                href: '/#people/' + userName,
-                                target: '_blank',
-                                'data-menu-item': 'userlabel',
-                            },
-                            [
+            const menu = div(
+                {
+                    class: `dropdown ${cssBaseClass}__menu`,
+                },
+                [
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default dropdown-toggle',
+                            'data-toggle': 'dropdown',
+                            'aria-expanded': 'false',
+                        },
+                        [
+                            renderAvatar(),
+                            span({
+                                class: `caret ${cssBaseClass}__menu_caret`,
+                            }),
+                        ]
+                    ),
+                    ul({ class: 'dropdown-menu', role: 'menu' }, [
+                        li({}, [
+                            a(
+                                {
+                                    href: '/#people/' + userName,
+                                    target: '_blank',
+                                    'data-menu-item': 'userlabel',
+                                },
+                                [
+                                    div(
+                                        {
+                                            class: `${cssBaseClass}__block--user-icon`,
+                                        },
+                                        [
+                                            span({
+                                                class: `fa fa-user ${cssBaseClass}__icon--user`,
+                                            }),
+                                        ]
+                                    ),
+                                    div(
+                                        {
+                                            class: `${cssBaseClass}__block--name`,
+                                            'data-element': 'user-label',
+                                        },
+                                        [
+                                            span(
+                                                {
+                                                    class: `${cssBaseClass}__block--userName`,
+                                                    'data-element': 'realname',
+                                                },
+                                                displayName
+                                            ),
+                                            span(
+                                                {
+                                                    class: `${cssBaseClass}__block--displayName`,
+                                                    'data-element': 'username',
+                                                },
+                                                userName
+                                            ),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                        ]),
+                        li({ class: 'divider' }),
+                        li({}, [
+                            a({ href: '#', 'data-menu-item': 'logout', id: 'signout-button' }, [
                                 div(
                                     {
-                                        style:
-                                            'display:inline-block; width: 34px; vertical-align: top;',
+                                        class: `${cssBaseClass}__block--signout-icon`,
                                     },
                                     [
                                         span({
-                                            class: 'fa fa-user',
-                                            style: 'font-size: 150%; margin-right: 10px;',
+                                            class: `fa fa-sign-out ${cssBaseClass}__icon--signout`,
                                         }),
                                     ]
                                 ),
-                                div(
-                                    {
-                                        style: 'display: inline-block',
-                                        'data-element': 'user-label',
-                                    },
-                                    [
-                                        span({ 'data-element': 'realname' }, displayName),
-                                        br(),
-                                        i({ 'data-element': 'username' }, userName),
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ]),
-                    li({ class: 'divider' }),
-                    li({}, [
-                        a({ href: '#', 'data-menu-item': 'logout', id: 'signout-button' }, [
-                            div({ style: 'display: inline-block; width: 34px;' }, [
-                                span({
-                                    class: 'fa fa-sign-out',
-                                    style: 'font-size: 150%; margin-right: 10px;',
-                                }),
+                                'Sign Out',
                             ]),
-                            'Sign Out',
                         ]),
                     ]),
-                ]),
-            ]);
+                ]
+            );
             target.append(menu);
             target.find('#signout-button').click(logout);
         }
@@ -159,9 +180,9 @@ define([
         }
 
         return {
-            render: render,
-            logout: logout,
-            start: start,
+            render,
+            logout,
+            start,
         };
     }
 

@@ -528,8 +528,8 @@ define([
          */
         function requestLatestJobLog() {
             scrollToEndOnNext = true;
-            awaitingLog = true;
             ui.showElement('spinner');
+            awaitingLog = true;
             bus.emit('request-job-log', {
                 jobId,
                 options: {
@@ -711,7 +711,6 @@ define([
                 events = Events.make();
             let content = div(
                 {
-                    dataElement: 'kb-log',
                     class: `${cssBaseClass}__container`,
                 },
                 [
@@ -907,7 +906,7 @@ define([
             }
 
             ui.setContent(
-                'kb-log.status-line',
+                'status-line',
                 [
                     div(
                         {
@@ -934,12 +933,12 @@ define([
                 });
                 runClock
                     .start({
-                        node: ui.getElement('kb-log.status-line.clock'),
+                        node: ui.getElement('status-line.clock'),
                         startTime: jobState.running,
                     })
                     .catch((err) => {
                         console.warn('Clock problem:', err);
-                        ui.setContent('kb-log.status-line.clock', '');
+                        ui.setContent('status-line.clock', '');
                     });
                 return;
             }
@@ -956,7 +955,7 @@ define([
                     model: errorModel,
                 });
                 errorContent.start({
-                    node: ui.getElement('kb-log.status-line.error-container'),
+                    node: ui.getElement('status-line.error-container'),
                 });
             }
         }

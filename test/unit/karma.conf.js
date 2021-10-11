@@ -30,7 +30,7 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
                 ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
-            'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
+            'nbextensions/appCell2/**/*.js': ['coverage'],
             'nbextensions/bulkImportCell/**/*.js': ['coverage'],
             'nbextensions/codeCell/**/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage'],

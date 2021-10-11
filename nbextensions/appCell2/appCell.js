@@ -31,28 +31,33 @@ define([
         div = t('div');
 
     function isAppCell(cell) {
-        if (cell.cell_type !== 'code') {
+        if (cell.cell_type !== 'code' || !cell.metadata.kbase) {
             return false;
         }
-        if (!cell.metadata.kbase) {
-            return false;
-        }
-        if (
-            cell.metadata.kbase.type === 'app2' ||
-            cell.metadata.kbase.type === 'app' ||
-            cell.metadata.kbase.type === 'devapp'
-        ) {
-            return true;
-        }
-        return false;
+        return ['app2', 'app', 'devapp'].includes(cell.metadata.kbase.type);
     }
 
+    /**
+     * Builds an App Cell without starting it.
+     * @param {Object} config - has keys:
+     *    cell {Object} - the Jupyter cell to upgrade to an App Cell
+     * @returns
+     */
     function factory(config) {
         const cell = config.cell,
             runtime = Runtime.make();
 
         let spec, appCellWidget, cellBus;
 
+        /**
+         * Adds functions to the base cell objects. These are:
+         * - minimize: minimize the cell
+         * - maximize: restore / maxmize the cell
+         * - getIcon: figure out what Icon the cell should have
+         * - renderIcon: put the fetched icon into the cell's view
+         * - showInfo: opens a dialog that shows the cell's info
+         * - toggleBatch: toggles the alpha version of the batch mode (deprecated)
+         */
         function specializeCell() {
             cell.minimize = function () {
                 const inputArea = this.input.find('.input_area').get(0),
@@ -113,98 +118,103 @@ define([
             };
         }
 
+        /**
+         * This sets up and starts an AppCell by instantiating and starting up its AppCellWidget.
+         * It also specializes the Cell object by adding extra functions to it that are relevant for
+         * KBase user needs.
+         * @returns a Promise that resolves into an object with the generated AppCellWidget and
+         *   top level cell Bus (as `widget` and `bus` keys, respectively).
+         */
         function setupCell() {
-            return Promise.try(() => {
-                // Only handle kbase cells.
-                if (!isAppCell(cell)) {
-                    return;
-                }
+            // Only handle kbase cells.
+            if (!isAppCell(cell)) {
+                return;
+            }
 
-                const cellElement = cell.element;
-                cellElement.addClass('kb-cell').addClass('kb-app-cell');
+            cell.element.addClass('kb-cell').addClass('kb-app-cell');
 
-                // Just hide the code area. If it is to be displayed due to the cell
-                // settings, that will be handled by the app cell widget.
-                specializeCell();
+            // Hide the code area. If it is to be displayed due to the cell
+            // settings, that will be handled by the app cell widget.
 
-                // The kbase property is only used for managing runtime state of the cell
-                // for kbase. Anything to be persistent should be on the metadata.
-                cell.kbase = {};
+            specializeCell();
 
-                // Update metadata.
-                utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', new Date().toUTCString());
+            // The kbase property is only used for managing runtime state of the cell
+            // for kbase. Anything to be persistent should be on the metadata.
+            cell.kbase = {};
 
-                // TODO: the code cell input widget should instantiate its state
-                // from the cell!!!!
-                cellBus = runtime.bus().makeChannelBus({
-                    description: 'Parent comm for The Cell Bus',
-                });
-                const ui = Ui.make({ node: cell.input[0] }),
-                    kbaseNode = ui.createNode(div({ dataSubareaType: 'app-cell-input' }));
-                appCellWidget = AppCellWidget.make({
-                    bus: cellBus,
-                    cell: cell,
-                    runtime: runtime,
-                });
-                // inserting after, with raw dom, means telling the parent node
-                // to insert a node before the node following the one we are
-                // referencing. If there is no next sibling, the null value
-                // causes insertBefore to actually ... insert at the end!
-                kbaseNode.classList.add('hidden');
-                cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
+            // Update metadata.
+            utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', new Date().toUTCString());
 
-                /*
-                 * This is required for all KBase cells in order to disable the
-                 * Jupyter keyboard management. Although a app startup code remaps
-                 * some of the more dangerous Jupyter keys (change cell type, delete cel,
-                 * etc.), there are keys that we need to keep enabled because
-                 * they are part of the standard Jupyter functionality, such as
-                 * shift-enter, ctrl-enter for code cells,
-                 */
-                jupyter.disableKeyListenersForCell(cell);
-
-                cell.kbase.node = kbaseNode;
-
-                return appCellWidget
-                    .init()
-                    .then(() => {
-                        return appCellWidget.attach(kbaseNode);
-                    })
-                    .then(() => {
-                        return appCellWidget.start();
-                    })
-                    .then(() => {
-                        return appCellWidget.run({
-                            authToken: runtime.authToken(),
-                        });
-                    })
-                    .then(() => {
-                        cell.renderMinMax();
-
-                        return {
-                            widget: appCellWidget,
-                            bus: cellBus,
-                        };
-                    })
-                    .catch((err) => {
-                        console.error('ERROR starting app cell', err);
-                        return appCellWidget
-                            .stop()
-                            .then(() => {
-                                return appCellWidget.detach();
-                            })
-                            .catch((_err) => {
-                                console.warn('ERR in ERR', _err);
-                            })
-                            .finally(() => {
-                                Error.reportCellError(
-                                    'Error starting app cell',
-                                    'There was an error starting the app cell:',
-                                    err
-                                );
-                            });
-                    });
+            // TODO: the code cell input widget should instantiate its state
+            // from the cell!!!!
+            cellBus = runtime.bus().makeChannelBus({
+                description: 'Parent comm for The Cell Bus',
             });
+            const ui = Ui.make({ node: cell.input[0] }),
+                kbaseNode = ui.createNode(div({ dataSubareaType: 'app-cell-input' }));
+            appCellWidget = AppCellWidget.make({
+                bus: cellBus,
+                cell: cell,
+                runtime: runtime,
+            });
+            // inserting after, with raw dom, means telling the parent node
+            // to insert a node before the node following the one we are
+            // referencing. If there is no next sibling, the null value
+            // causes insertBefore to actually ... insert at the end!
+            kbaseNode.classList.add('hidden');
+            cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
+
+            /*
+             * This is required for all KBase cells in order to disable the
+             * Jupyter keyboard management. Although a app startup code remaps
+             * some of the more dangerous Jupyter keys (change cell type, delete cel,
+             * etc.), there are keys that we need to keep enabled because
+             * they are part of the standard Jupyter functionality, such as
+             * shift-enter, ctrl-enter for code cells,
+             */
+            jupyter.disableKeyListenersForCell(cell);
+
+            cell.kbase.node = kbaseNode;
+
+            return appCellWidget
+                .init()
+                .then(() => {
+                    return appCellWidget.attach(kbaseNode);
+                })
+                .then(() => {
+                    return appCellWidget.start();
+                })
+                .then(() => {
+                    return appCellWidget.run({
+                        authToken: runtime.authToken(),
+                    });
+                })
+                .then(() => {
+                    cell.renderMinMax();
+
+                    return {
+                        widget: appCellWidget,
+                        bus: cellBus,
+                    };
+                })
+                .catch((err) => {
+                    console.error('ERROR starting app cell', err);
+                    return appCellWidget
+                        .stop()
+                        .then(() => {
+                            return appCellWidget.detach();
+                        })
+                        .catch((_err) => {
+                            console.warn('ERR in ERR', _err);
+                        })
+                        .finally(() => {
+                            Error.reportCellError(
+                                'Error starting app cell',
+                                'There was an error starting the app cell:',
+                                err
+                            );
+                        });
+                });
         }
 
         /**
@@ -236,7 +246,6 @@ define([
                                 gitCommitHash: appSpec.info.git_commit_hash,
                                 version: appSpec.info.ver,
                                 tag: appTag,
-                                // TODO: remove the spec from the cell metadata
                                 spec: appSpec,
                             },
                             params: null,

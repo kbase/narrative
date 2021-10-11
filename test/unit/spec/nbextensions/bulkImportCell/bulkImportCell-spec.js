@@ -479,9 +479,8 @@ define([
                         );
                     })
                         .then(() => {
-                            const jobsById = bulkImportCellInstance.jobManager.model.getItem(
-                                'exec.jobs.byId'
-                            );
+                            const jobsById =
+                                bulkImportCellInstance.jobManager.model.getItem('exec.jobs.byId');
                             expect(Object.keys(jobsById).length).toEqual(
                                 JobsData.allJobsWithBatchParent.length
                             );

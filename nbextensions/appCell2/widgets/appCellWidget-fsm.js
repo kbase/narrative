@@ -656,6 +656,44 @@ define([], () => {
                 },
                 {
                     mode: 'error',
+                    stage: 'running',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'running',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'launched',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'queued',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'running',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'partial-complete',
+                },
+                {
+                    mode: 'canceled',
+                },
+                {
+                    mode: 'canceling',
+                },
+                {
+                    mode: 'success',
+                },
+                {
+                    mode: 'error',
                     stage: 'launching',
                 },
                 {

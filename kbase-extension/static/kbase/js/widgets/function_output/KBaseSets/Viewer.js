@@ -40,7 +40,7 @@ define([
 
         renderError() {
             return e(ErrorMessage, {
-                error: this.state.error
+                error: this.props.set.error
             });
         }
 
@@ -127,7 +127,7 @@ define([
             })();
             return e('div', {
                 className: 'LoadingOverlay'
-            }, e('i', {
+            }, "Loading...", e('i', {
                 className: `fa fa-spinner fa-pulse fa-fw ${sizeClass}`
             }));
         }

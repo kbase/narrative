@@ -1,0 +1,32 @@
+.KBaseSets .HeaderTable {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.KBaseSets .HeaderTable > .Row {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  margin: 4px 0;
+  align-items: center;
+  height: 1.5em;
+}
+
+.KBaseSets .HeaderTable > .Row > .Col:nth-child(1) {
+  font-weight: bold;
+  color: rgba(100, 100, 100);
+  flex: 0 0 13em;
+}
+
+.KBaseSets .HeaderTable > .Row > .Col:nth-child(2) {
+  flex: 1 1 0;
+}
+
+/* tweak bootstrap styling here */
+.KBaseSets select.form-control {
+  margin-left: 0;
+  margin-right: 0;
+  padding: 4px;
+  width: 100%;
+}

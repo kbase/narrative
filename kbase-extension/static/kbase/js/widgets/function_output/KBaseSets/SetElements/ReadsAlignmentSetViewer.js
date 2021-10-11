@@ -1,22 +1,17 @@
 define([
     'react',
-    'widgets/function_output/KBaseSets/Viewer',
+    'prop-types',
     'bootstrap'
 ], (
     React,
-    Viewer,
+    PropTypes,
 ) => {
     'use strict';
 
-    const { createElement: e } = React;
+    const { Component, createElement: e } = React;
 
-    class ReadsAlignmentSetViewer extends Viewer {
-        renderSetElement() {
-            const selectedItem = this.props.set.selectedItem;
-            if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
-                return null;
-            }
-
+    class ReadsAlignmentSetViewer extends Component {
+        render() {
             const {
                 aligned_using,
                 aligner_version,
@@ -25,7 +20,7 @@ define([
                     total_reads, unmapped_reads, mapped_reads, multiple_alignments,
                     singletons
                 }
-            } = selectedItem.value;
+            } = this.props.object;
 
             const rows = [
                 {
@@ -105,6 +100,22 @@ define([
             );
         }
     }
+
+    ReadsAlignmentSetViewer.propTypes = {
+        object: PropTypes.shape({
+            aligned_using: PropTypes.string.isRequired,
+            aligner_version: PropTypes.string.isRequired,
+            library_type: PropTypes.string.isRequired,
+            alignment_stats: PropTypes.shape({
+                total_reads: PropTypes.number.isRequired,
+                unmapped_reads: PropTypes.number.isRequired,
+                mapped_reads: PropTypes.number.isRequired,
+                multiple_alignments: PropTypes.number.isRequired,
+                singletons: PropTypes.number.isRequired
+            }).isRequired
+        }).isRequired,
+        objectInfo: PropTypes.object.isRequired
+    };
 
     return ReadsAlignmentSetViewer;
 });

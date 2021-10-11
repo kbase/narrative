@@ -13,7 +13,7 @@ define([
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'react_components/ErrorMessage',
-    'widgets/function_output/KBaseSets/Dispatcher'
+    'widgets/function_output/KBaseSets/SetLoader'
 ], (
     React,
     ReactDOM,
@@ -21,7 +21,7 @@ define([
     kbaseAuthenticatedWidget,
     Config,
     ErrorMessage,
-    Dispatcher
+    KBaseSets
 ) => {
     'use strict';
 
@@ -40,7 +40,7 @@ define([
             try {
                 this._super(options);
 
-                ReactDOM.render(e(Dispatcher, {
+                ReactDOM.render(e(KBaseSets, {
                     workspaceURL: Config.url('workspace'),
                     serviceWizardURL: Config.url('service_wizard'),
                     token: this.authToken(),

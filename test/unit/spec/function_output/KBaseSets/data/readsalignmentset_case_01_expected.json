@@ -1,6 +1,4 @@
 {
-    "Description": "Alignments using HISAT2, v.2.1.0",
-    "Alignment type": "KBaseRNASeq.RNASeqAlignment-9.1",
     "Aligned Using": "hisat2",
     "Aligner Version": "2.1.0",
     "Library Type": "KBaseFile.SingleEndLibrary-2.2",

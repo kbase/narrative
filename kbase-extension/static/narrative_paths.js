@@ -385,6 +385,7 @@ require.config({
 
         react: 'ext_modules/react/react.development',
         'react-dom': 'ext_modules/react-dom/react-dom.development',
+        'prop-types': 'ext_modules/prop-types/prop-types',
         react_components: 'kbase/js/react_components',
 
         /***

@@ -1,25 +1,20 @@
 define([
     'react',
-    'widgets/function_output/KBaseSets/Viewer',
+    'prop-types',
     'bootstrap'
 ], (
     React,
-    Viewer,
+    PropTypes,
 ) => {
     'use strict';
 
-    const { createElement: e } = React;
+    const { Component, createElement: e } = React;
 
-    class AssemblySetViewer extends Viewer {
-        renderSetElement() {
-            const selectedItem = this.props.set.selectedItem;
-            if (selectedItem.status !== 'loaded' && typeof selectedItem.value === 'undefined') {
-                return null;
-            }
-
+    class AssemblySetViewer extends Component {
+        render() {
             const {
                 dna_size, gc_content, num_contigs,
-            } = selectedItem.value;
+            } = this.props.object;
 
             const rows = [
                 {
@@ -50,6 +45,15 @@ define([
             );
         }
     }
+
+    AssemblySetViewer.propTypes = {
+        object: PropTypes.shape({
+            dna_size: PropTypes.number.isRequired,
+            gc_content: PropTypes.number.isRequired,
+            num_contigs: PropTypes.number.isRequired
+        }).isRequired,
+        objectInfo: PropTypes.object.isRequired
+    };
 
     return AssemblySetViewer;
 });

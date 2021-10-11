@@ -1,9 +1,9 @@
-define(['widgets/function_output/KBaseSets/Viewer'], (Viewer) => {
+define(['widgets/function_output/KBaseSets/SetLoader'], (SetLoader) => {
     'use strict';
 
     describe('The Loader class', () => {
         it('should be defined', () => {
-            expect(Viewer).toBeDefined();
+            expect(SetLoader).toBeDefined();
         });
     });
 });

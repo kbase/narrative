@@ -1,0 +1,8 @@
+{
+    "set": {
+        "status": "error",
+        "error": {
+            "message": "This is an Error"
+        }
+    }
+}

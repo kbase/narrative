@@ -1,7 +1,9 @@
 define([], () => {
     'use strict';
 
-    function waitFor(fun, timeout) {
+    const WAIT_FOR_LOOP_WAIT = 100;
+
+    function waitFor(fun, description, timeout) {
         const started = Date.now();
         return new Promise((resolve, reject) => {
             function loop() {
@@ -12,10 +14,11 @@ define([], () => {
                     }
                     const elapsed = Date.now() - started;
                     if (elapsed > timeout) {
-                        reject(new Error(`condition not detected within timeout period after ${elapsed}ms`));
+                        reject(new Error(`Condition not detected within timeout period after ${elapsed}ms: ${description}`));
+                    } else {
+                        loop();
                     }
-                    loop();
-                }, 0.1);
+                }, WAIT_FOR_LOOP_WAIT);
             }
             if (fun()) {
                 resolve(true);
@@ -25,5 +28,33 @@ define([], () => {
         });
     }
 
-    return { waitFor };
+    function waitForText({ node, text, label, timeout }) {
+        const started = Date.now();
+        const test = () => {
+            return node.innerText.includes(text);
+        };
+        return new Promise((resolve, reject) => {
+            function loop() {
+                setTimeout(() => {
+                    if (test()) {
+                        resolve(true);
+                        return;
+                    }
+                    const elapsed = Date.now() - started;
+                    if (elapsed > timeout) {
+                        reject(new Error(`Text not detected within timeout period after ${elapsed}ms: expected "${text}" for the value "${label}"`));
+                    } else {
+                        loop();
+                    }
+                }, WAIT_FOR_LOOP_WAIT);
+            }
+            if (test()) {
+                resolve(true);
+                return;
+            }
+            loop();
+        });
+    }
+
+    return { waitFor, waitForText };
 });

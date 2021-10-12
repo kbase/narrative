@@ -408,7 +408,6 @@ define([
             const events = Events.make({ node: container }),
                 content = input({
                     class: 'form-contol',
-                    style: { xwidth: '100%' },
                     placeholder: 'search',
                     value: model.getItem('filter') || '',
                     id: events.addEvents({
@@ -425,13 +424,6 @@ define([
                                     Jupyter.narrative.disableKeyboardManager();
                                 },
                             },
-                            // {
-                            //     type: 'blur',
-                            //     handler: function () {
-                            //         // console.log('SingleSubData Search BLUR');
-                            //         // Jupyter.narrative.enableKeyboardManager();
-                            //     },
-                            // },
                             {
                                 type: 'click',
                                 handler: function () {
@@ -494,7 +486,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -508,7 +499,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '50%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -522,7 +512,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -536,7 +525,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -1120,8 +1108,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

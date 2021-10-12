@@ -398,7 +398,6 @@ define([
             const events = Events.make({ node: container });
             const content = input({
                 class: 'form-contol',
-                style: { xwidth: '100%' },
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
                 id: events.addEvents({

@@ -5,6 +5,10 @@
     Customize bootstrap styles
 */
 
+.text-silver {
+  color: use_color('silver');
+}
+
 .modal {
   .modal-title {
     font: normal 700 18px/24px $typeface-page-text;

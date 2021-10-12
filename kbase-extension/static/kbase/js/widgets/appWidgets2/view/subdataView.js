@@ -293,8 +293,6 @@ define([
                                     {
                                         class: 'col-md-2',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '20%',
                                             verticalAlign: 'middle',
                                             borderRadius: '3px',
                                             padding: '2px',
@@ -311,8 +309,6 @@ define([
                                     {
                                         class: 'col-md-8',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '90%',
                                             padding: '2px',
                                         },
                                     },
@@ -322,8 +318,6 @@ define([
                                     {
                                         class: 'col-md-2',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '10%',
                                             padding: '2px',
                                             textAlign: 'right',
                                             verticalAlign: 'top',
@@ -373,13 +367,6 @@ define([
                                     Jupyter.narrative.disableKeyboardManager();
                                 },
                             },
-                            // {
-                            //     type: 'blur',
-                            //     handler: function () {
-                            //         // console.log('SingleSubData Search BLUR');
-                            //         // Jupyter.narrative.enableKeyboardManager();
-                            //     },
-                            // },
                             {
                                 type: 'click',
                                 handler: function () {
@@ -442,7 +429,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -456,7 +442,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '50%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -470,7 +455,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -484,7 +468,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {

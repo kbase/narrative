@@ -167,7 +167,3 @@ $palette: map-merge($kbase-palette, $job_status_colours);
 @function use_rgba_color($key, $opacity) {
   @return rgba(use_color($key), $opacity);
 }
-
-.text-silver {
-  color: use_color('silver');
-}

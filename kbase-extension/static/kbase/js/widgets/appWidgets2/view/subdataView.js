@@ -215,7 +215,7 @@ define([
                                                 },
                                                 [
                                                     span({
-                                                        class: 'fa 2x fa-minus-circle text-danger',
+                                                        class: 'fa fa-2x fa-minus-circle text-danger',
                                                     }),
                                                 ]
                                             );

@@ -9,7 +9,6 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
     'use strict';
 

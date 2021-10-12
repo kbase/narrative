@@ -6,7 +6,6 @@ define([
     'common/runtime',
     'common/ui',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Validation, Events, Runtime, UI) => {
     'use strict';
 

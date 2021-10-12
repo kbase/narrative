@@ -4,7 +4,7 @@ define([
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'util/string',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
 ], (PR, html, Runtime, ErrorControlFactory, StringUtil) => {
     'use strict';
 

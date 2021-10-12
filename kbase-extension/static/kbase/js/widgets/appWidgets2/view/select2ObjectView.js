@@ -14,7 +14,6 @@ define([
     'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], (
     Promise,
     $,

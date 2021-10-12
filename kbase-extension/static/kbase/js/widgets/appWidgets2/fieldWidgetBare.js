@@ -16,7 +16,7 @@ define([
     'common/props',
     'common/runtime',
     './errorControl',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
 ], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
     'use strict';
 

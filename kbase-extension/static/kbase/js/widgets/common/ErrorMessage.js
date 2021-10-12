@@ -6,7 +6,7 @@ define([
 
     // for effect
     'bootstrap',
-    'css!./ErrorMessage.css',
+    'css!./ErrorMessage',
 ], ($, errors, jsonrpcErrors, RenderJSON) => {
     'use strict';
 

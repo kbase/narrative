@@ -16,7 +16,7 @@ define([
     'common/props',
     'common/runtime',
     './errorControl',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
 ], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
     'use strict';
 
@@ -388,8 +388,7 @@ define([
                                     div(
                                         {
                                             id: ids.feedback,
-                                            class:
-                                                'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
                                             dataElement: 'feedback',
                                             style: {
                                                 width: '3px',

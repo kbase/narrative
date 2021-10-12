@@ -16,7 +16,6 @@ define([
     'common/props',
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], (
     Promise,
     $,

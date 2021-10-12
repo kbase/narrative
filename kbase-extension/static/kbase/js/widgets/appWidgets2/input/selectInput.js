@@ -9,7 +9,6 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], ($, Promise, html, UI, Runtime, Validation, inputUtils) => {
     'use strict';
 

@@ -6,7 +6,7 @@ define([
     'base/js/namespace',
     './runtime',
     'google-code-prettify/prettify',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
     'bootstrap',
 ], ($, Promise, html, Jupyter, Runtime, PR) => {
     'use strict';

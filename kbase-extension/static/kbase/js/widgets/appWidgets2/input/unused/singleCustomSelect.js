@@ -1,12 +1,10 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validation',
-    'common/events',
-    'common/ui',
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, UI) => {
+define(['bluebird', 'kb_common/html', '../validation', 'common/events', 'common/ui', 'bootstrap'], (
+    Promise,
+    html,
+    Validation,
+    Events,
+    UI
+) => {
     'use strict';
 
     // Constants

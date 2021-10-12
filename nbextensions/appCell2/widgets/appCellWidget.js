@@ -33,8 +33,7 @@ define(
         'common/cellComponents/fsmBar',
         './appParamsWidget',
         './appParamsViewWidget',
-        'css!google-code-prettify/prettify.css',
-        'css!font-awesome.css',
+        'css!google-code-prettify/prettify',
     ],
     (
         require,

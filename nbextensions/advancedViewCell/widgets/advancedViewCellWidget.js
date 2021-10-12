@@ -19,8 +19,7 @@ define(
         'common/spec',
         'google-code-prettify/prettify',
         './advancedViewCellWidget-fsm',
-        'css!google-code-prettify/prettify.css',
-        'css!font-awesome.css',
+        'css!google-code-prettify/prettify',
     ],
     (
         $,

@@ -6,7 +6,6 @@ define([
     'common/runtime',
     'common/props',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Workspace, serviceUtils, Runtime, Props) => {
     'use strict';
 

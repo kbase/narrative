@@ -12,7 +12,6 @@ define([
     '../validators/text',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, $, Jupyter, html, Events, UI, Runtime, Props, UJS, Shock, Validation) => {
     'use strict';
 

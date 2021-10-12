@@ -15,7 +15,6 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], (
     Promise,
     $,

@@ -46,7 +46,6 @@ define([
 
         selectItem(event) {
             const selectControl = event.target;
-            // this.props.selectItem(selectControl.value);
             this.setState((state) => {
                 return {
                     ...state,

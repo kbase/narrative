@@ -6,6 +6,7 @@ define([
     'kb_service/utils',
     'react_components/ErrorMessage',
     'widgets/function_output/KBaseSets/SetViewer',
+    'widgets/function_output/KBaseSets/SetElementResolver',
 
 ], (
     React,
@@ -15,19 +16,11 @@ define([
     ServiceUtils,
     ErrorMessage,
     Viewer,
+    ElementResolver
 ) => {
     'use strict';
 
     const { createElement: e, Component } = React;
-
-    const SET_TYPE_TO_MODULE_MAPPING = {
-        'KBaseSets.ReadsAlignmentSet': {
-            method: 'get_reads_alignment_set_v1'
-        },
-        'KBaseSets.AssemblySet': {
-            method: 'get_assembly_set_v1'
-        }
-    };
 
     /**
      * A class implementing a component which essentially forms the data backbone for
@@ -95,7 +88,7 @@ define([
             // set types defined above.
             const setType = [objectInfo.typeModule, objectInfo.typeName].join('.');
 
-            const mapping = SET_TYPE_TO_MODULE_MAPPING[setType];
+            const mapping = ElementResolver.resolve(setType);
             if (!mapping) {
                 throw new Error(`Unsupported set type: ${setType}`);
             }

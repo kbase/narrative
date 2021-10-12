@@ -1,14 +1,14 @@
 # Viewers for sets implemented in the KBaseSets type module
 
-THe KBaseSets [data module](https://narrative.kbase.us/#spec/module/KBaseSets) provides a generic interface for sets of various types. A partner to KBaseSets, the [Set API](https://github.com/kbaseapps/SetAPI) provides an api for accessing such sets.
+The [`KBaseSets` workspace type module](https://narrative.kbase.us/#spec/module/KBaseSets) provides a generic interface for sets of various types. A partner to KBaseSets, the [Set API](https://github.com/kbaseapps/SetAPI) provides an api for accessing such sets. The "generic set viewer", implied by the module name `kbaseGenericSetViewer`, is designed to display sets provided by the `KBaseSets` and supported by `SetAPI`.
 
 Inspecting [KBaseSets](https://narrative.kbase.us/#spec/module/KBaseSets) can give you a guide to which sets are implemented, and the general data design, but does not give you an accurate picture of the data you will actually deal with through the SetAPI.
 
 It is also notable, on the subject of caveats, that KBase types do not support inheritance, so the implementation of commonality for types in KBaseSets is purely by convention (copy and paste, if you will). That is, there is no actual "Generic Set" object definition, but rather a collection of types which, by convention, implement the same interface.
 
-The basic design of a Set that a Set is a container for array of objects of the same type.
+## KBaseSets Design
 
-The wrapper consists of a string description and an array of objects, each object being of the same type.
+The basic design of a set defined in KBaseSets, is that a set is a container for array of objects of the same type. A set consists of a string description and an array of objects, each object being of the same type.
 
 In TypeScript terms, this could be defined like:
 
@@ -19,15 +19,23 @@ interface KBaseSet<T> {
 }
 ```
 
+### Type Confusion
+
+It may be a bit confusing, but there are multiple definitions of `T` in the above, considering the type conceptually (not as a concrete TS type definition).
+
+`KBaseSets` has one definition, `SetAPI` provides another, and the concrete type held by the set provides yet another.
+
+The viewer uses the Workspace to resolve a reference (UPA) to a set object, the SetAPI to get the set definition and list of set elements, and the Workspace again to fetch each set element object when viewing it in detail.
+
 ## Viewer Design
 
 The viewer is implemented by a one set of components providing generic support for all KBaseSet types, and a specific viewer for each type.
 
-1.  The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types
-2.  The kbaseGenericSetViewer is just a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/Dispatcher.js`, responsible for determining the object type, and finding a configuration for that type
-3.  the Dispatcher then calls the `unction_output/KBaseSets/Loader.js` with this information. The loader is responsible for providing data services, which are exposed as prop functions, and loading the type-specific viewer
-4.  An abstract class `function_output/KBaseSets/Viewer.js` implements viewer aspects of the Set, but not the set elements.
-5.  The specific viewer is a superclass which implements the renderSetElement method, will be found in `function_output/KBaseSets/types`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
+1.  The initial entrypoint from the Narrative point of view is `kbase-extension/static/kbase/js/widgets/function_output/kbaseGenericSetViewer.js`, a standard "kbwidget" style component which is registered as the viewer for several KBaseSets types (but not all, see comments below.)
+2.  The kbaseGenericSetViewer is a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/SetLoader.js`, responsible for determining the object type and fetching the set
+3.  the SetLoader then calls the `function_output/KBaseSets/SetViewer.js` with this information. The viewer is responsible for displaying the set overview and a list of elements for selection.
+4.  When an element is selected (defaulting to the first element when the viewer is initially loaded) `function_output/KBaseSets/SetElementLoader.js` fetches the object for a given set element, and subsequently invokes the viewer for the object.
+5.  The type-specific element viewer are provided in `function_output/KBaseSets/SetElements`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
 
 ## Dispatcher
 

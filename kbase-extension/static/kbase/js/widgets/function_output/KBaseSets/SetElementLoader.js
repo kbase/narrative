@@ -22,8 +22,7 @@ define([
     'prop-types',
     'kb_common/jsonRpc/genericClient',
     'kb_service/utils',
-    'widgets/function_output/KBaseSets/SetElements/ReadsAlignmentSetViewer',
-    'widgets/function_output/KBaseSets/SetElements/AssemblySetViewer',
+    'widgets/function_output/KBaseSets/SetElementResolver',
     'react_components/ErrorMessage',
     'narrativeConfig',
     'base/js/namespace',
@@ -36,8 +35,7 @@ define([
     PropTypes,
     ServiceClient,
     ServiceUtils,
-    ReadsAlignmentSetViewer,
-    AssemblySetViewer,
+    ElementResolver,
     ErrorMessage,
     Config,
     Jupyter
@@ -45,19 +43,6 @@ define([
     'use strict';
 
     const { createElement: e, Component } = React;
-
-    // Note that any modules referenced must be imported above, and that such modules
-    // must be components implemented as defined in `react_components/genericSets`.
-    const SET_TYPE_TO_MODULE_MAPPING = {
-        'KBaseSets.ReadsAlignmentSet': {
-            module: ReadsAlignmentSetViewer,
-            method: 'get_reads_alignment_set_v1'
-        },
-        'KBaseSets.AssemblySet': {
-            module: AssemblySetViewer,
-            method: 'get_assembly_set_v1'
-        }
-    };
 
     /*
     Implements a React component which primarily dispatches to the component which
@@ -89,15 +74,7 @@ define([
 
             try {
                 const { object, objectInfo } = await this.fetchSetElement(this.props.item.ref);
-                const mapping = SET_TYPE_TO_MODULE_MAPPING[this.props.setType];
-                if (!mapping) {
-                    this.setState({
-                        status: 'error',
-                        error: new Error(`Unsupported set type: ${this.state.setType}`)
-                    });
-                    return;
-                }
-
+                const mapping = ElementResolver.resolve(this.props.setType);
                 this.setState({
                     status: 'loaded',
                     module: mapping.module,
@@ -162,10 +139,6 @@ define([
         }
 
         renderLoaded() {
-            // console.log('ELEMENT', JSON.stringify({
-            //     object: this.state.object.data,
-            //     objectInfo: this.state.objectInfo
-            // }, null, 4));
             return e(this.state.module, {
                 object: this.state.object.data,
                 objectInfo: this.state.objectInfo

@@ -24,7 +24,7 @@ from biokbase.narrative.common.narrative_ref import NarrativeRef
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
 # objects, and has a different field list
-list_objects_fields = [
+LIST_OBJECTS_FIELDS = [
     "objid",
     "name",
     "type",
@@ -37,10 +37,11 @@ list_objects_fields = [
     "size",
     "meta",
 ]
-obj_field = dict(zip(list_objects_fields, range(len(list_objects_fields))))
+obj_field = dict(zip(LIST_OBJECTS_FIELDS, range(len(LIST_OBJECTS_FIELDS))))
 
 obj_ref_regex = re.compile(r"^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
 
+MAX_WORKSPACES = 10000  # from ws.list_objects
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
 WORKSPACE_TIMEOUT = 30  # seconds
@@ -55,7 +56,6 @@ class KBaseWSManagerMixin(object):
     """
 
     ws_uri = URLS.workspace
-    nar_type = "KBaseNarrative.Narrative"
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
@@ -201,7 +201,7 @@ class KBaseWSManagerMixin(object):
             if "creator" not in meta:
                 meta["creator"] = cur_user
             if "type" not in meta:
-                meta["type"] = self.nar_type
+                meta["type"] = NARRATIVE_TYPE
             if "description" not in meta:
                 meta["description"] = ""
             if "data_dependencies" not in meta:
@@ -253,7 +253,7 @@ class KBaseWSManagerMixin(object):
         # Now we can save the Narrative object.
         try:
             ws_save_obj = {
-                "type": self.nar_type,
+                "type": NARRATIVE_TYPE,
                 "data": nb,
                 "objid": obj_id,
                 "meta": nb["metadata"].copy(),
@@ -520,20 +520,30 @@ class KBaseWSManagerMixin(object):
         numeric.
         """
         log_event(g_log, "list_narratives start", {"ws_id": ws_id})
-        list_obj_params = {"type": self.nar_type, "includeMetadata": 1}
+
+        ws = self.ws_client()
         if ws_id:
-            try:
-                int(ws_id)  # will throw an exception if ws_id isn't an int
-                list_obj_params["ids"] = [ws_id]
-            except ValueError:
-                raise
+            ws_ids = [int(ws_id)]  # will throw an exception if ws_id isn't an int
+        else:
+            ret = ws.list_workspace_ids(
+                {"perm": "r", "onlyGlobal": 0, "excludeGlobal": 0}
+            )
+            ws_ids = ret.get("workspaces", []) + ret.get("pub", [])
 
         try:
-            ws = self.ws_client()
-            res = ws.list_objects(list_obj_params)
+            res = []
+            for i in range(0, len(ws_ids), MAX_WORKSPACES):
+                res += ws.list_objects(
+                    {
+                        "ids": ws_ids[i:i + MAX_WORKSPACES],
+                        "type": NARRATIVE_TYPE,
+                        "includeMetadata": 1
+                    }
+                )
         except ServerError as err:
-            raise WorkspaceError(err, ws_id)
-        my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
+            raise WorkspaceError(err, ws_ids)
+
+        my_narratives = [dict(zip(LIST_OBJECTS_FIELDS, obj)) for obj in res]
         for nar in my_narratives:
             # Look first for the name in the object metadata. if it's not there, use
             # the object's name. If THAT'S not there, use Untitled.

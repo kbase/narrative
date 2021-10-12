@@ -3078,3 +3078,8 @@ button.kb-data-obj {
   padding: $padding-large-vertical;
   text-align: center;
 }
+
+// specific font awesome size hack
+.fa.fa-14-pt {
+  font-size: 19px;
+}

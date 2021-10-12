@@ -3,7 +3,7 @@ define([
     'widgets/loadingWidget',
     'testUtil',
     'text!/kbase_templates/loading.html',
-    'css!/narrative/static/kbase/css/all_concat.css',
+    'css!/narrative/static/kbase/css/all_concat',
 ], ($, LoadingWidget, TestUtil, LoadingTemplate) => {
     'use strict';
 

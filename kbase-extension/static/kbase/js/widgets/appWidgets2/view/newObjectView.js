@@ -1,8 +1,4 @@
-define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome'], (
-    Promise,
-    html,
-    UI
-) => {
+define(['bluebird', 'common/html', 'common/ui', 'bootstrap'], (Promise, html, UI) => {
     'use strict';
 
     const div = html.tag('div'),

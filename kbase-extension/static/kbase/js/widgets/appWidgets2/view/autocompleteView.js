@@ -14,7 +14,6 @@ define([
 
     'typeahead',
     'bootstrap',
-    'css!font-awesome',
 ], (
     $,
     Promise,

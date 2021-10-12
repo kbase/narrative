@@ -10,7 +10,6 @@ define([
     'common/runtime',
     'common/ui',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, UI) => {
     'use strict';
 

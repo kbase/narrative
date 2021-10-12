@@ -6,7 +6,6 @@ require(['./narrative_paths'], () => {
         'kb_common/jsonRpc/dynamicServiceClient',
         'narrativeConfig',
         'narrativeLogin',
-        'css!font-awesome',
     ], ($, Promise, DynamicServiceClient, Config, Login) => {
         Config.updateConfig()
             .then(() => {

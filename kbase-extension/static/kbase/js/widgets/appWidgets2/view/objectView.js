@@ -11,7 +11,6 @@ define([
     'common/runtime',
     'common/ui',
     'bootstrap',
-    'css!font-awesome',
 ], (
     $,
     Promise,

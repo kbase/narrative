@@ -12,7 +12,6 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-    'css!font-awesome',
 ], (
     require,
     Promise,

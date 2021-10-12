@@ -8,8 +8,6 @@ define([
     'common/runtime',
     './singleCustomSelect',
     'bootstrap',
-
-    'css!font-awesome',
 ], (Promise, Jupyter, html, Validation, Events, Ui, Runtime, SingleSelectInputWidget) => {
     'use strict';
 

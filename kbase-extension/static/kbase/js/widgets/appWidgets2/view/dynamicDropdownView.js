@@ -1,4 +1,4 @@
-define(['bluebird', 'common/html', 'common/ui', 'common/props', 'bootstrap', 'css!font-awesome'], (
+define(['bluebird', 'common/html', 'common/ui', 'common/props', 'bootstrap'], (
     Promise,
     html,
     UI,

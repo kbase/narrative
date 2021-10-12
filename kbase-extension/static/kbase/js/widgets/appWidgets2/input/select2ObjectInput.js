@@ -13,7 +13,6 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, $, _, html, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
     'use strict';
 

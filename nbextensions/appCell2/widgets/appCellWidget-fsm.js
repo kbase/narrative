@@ -648,24 +648,9 @@ define([], () => {
             },
             next: [
                 {
-                    mode: 'processing',
-                    stage: 'launched',
-                },
-                {
-                    mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
-                },
-                {
                     mode: 'editing',
                     params: 'complete',
                     code: 'built',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
                 },
                 {
                     mode: 'processing',
@@ -694,12 +679,14 @@ define([], () => {
                 },
                 {
                     mode: 'error',
+                },
+                {
+                    mode: 'error',
                     stage: 'launching',
                 },
                 {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
+                    mode: 'error',
+                    stage: 'running',
                 },
                 {
                     mode: 'internal-error',

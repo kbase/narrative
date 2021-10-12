@@ -10,7 +10,6 @@ define([
     'base/js/namespace',
     '../subdataMethods/manager',
     'bootstrap',
-    'css!font-awesome',
 ], ($, Promise, html, Validation, Events, Runtime, UI, Props, Jupyter, SubdataMethods) => {
     'use strict';
 
@@ -251,11 +250,7 @@ define([
                                                 },
                                                 [
                                                     span({
-                                                        class: 'fa fa-minus-circle',
-                                                        style: {
-                                                            color: 'red',
-                                                            fontSize: '200%',
-                                                        },
+                                                        class: 'fa fa-2x fa-minus-circle text-danger',
                                                     }),
                                                 ]
                                             );
@@ -277,11 +272,7 @@ define([
                                                 },
                                                 [
                                                     span({
-                                                        class: 'fa fa-plus-circle',
-                                                        style: {
-                                                            color: 'green',
-                                                            fontSize: '200%',
-                                                        },
+                                                        class: 'fa fa-2x fa-plus-circle text-success',
                                                     }),
                                                 ]
                                             );
@@ -295,8 +286,7 @@ define([
                                                 dataItemId: item.id,
                                             },
                                             span({
-                                                class: 'fa fa-ban',
-                                                style: { color: 'silver', fontSize: '200%' },
+                                                class: 'fa fa-2x fa-ban text-silver',
                                             })
                                         );
                                     })(),
@@ -344,8 +334,6 @@ define([
                                     {
                                         class: 'col-md-2',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '20%',
                                             verticalAlign: 'middle',
                                             borderRadius: '3px',
                                             padding: '2px',
@@ -362,8 +350,6 @@ define([
                                     {
                                         class: 'col-md-8',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '90%',
                                             padding: '2px',
                                         },
                                     },
@@ -373,8 +359,6 @@ define([
                                     {
                                         class: 'col-md-2',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '10%',
                                             padding: '2px',
                                             textAlign: 'right',
                                             verticalAlign: 'top',
@@ -395,8 +379,7 @@ define([
                                                 }),
                                             },
                                             span({
-                                                class: 'fa fa-minus-circle',
-                                                style: { color: 'red', fontSize: '200%' },
+                                                class: 'fa fa-2x fa-minus-circle text-danger',
                                             })
                                         ),
                                     ]
@@ -476,7 +459,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -490,7 +472,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '50%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -504,7 +485,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -518,7 +498,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -953,7 +932,7 @@ define([
                             updateParam(paramId, message.value);
                         })
                         .catch((err) => {
-                            console.log('ERROR getting parameter', err);
+                            console.warn('ERROR getting parameter', err);
                         });
                 });
             }
@@ -1041,8 +1020,8 @@ define([
         // MAIN
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

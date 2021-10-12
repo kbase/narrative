@@ -29,7 +29,7 @@ define([
             const $deleteBtn = $(
                 '<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">'
             )
-                .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
+                .append($('<span class="fa fa-trash-o fa-14-pt">'))
                 .click(() => {
                     this.trigger(
                         'deleteCell.Narrative',
@@ -39,10 +39,10 @@ define([
 
             const $menuBtn = $(
                 '<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">'
-            ).append($('<span class="fa fa-cog" style="font-size:14pt">'));
+            ).append($('<span class="fa fa-cog fa-14-pt">'));
 
             this.$collapseBtn = $(
-                '<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down" style="color: silver;"></button>'
+                '<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down text-silver"></button>'
             ).on('click', (e) => {
                 this.$elem.trigger('toggle.toolbar');
                 e.preventDefault();
@@ -66,6 +66,7 @@ define([
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
+                        // eslint-disable-next-line no-console
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
                             newCell.set_text(
@@ -127,6 +128,7 @@ define([
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
                             const newCell = Jupyter.notebook.get_selected_cell();
+                            // eslint-disable-next-line no-undef
                             const newWidget = new kbaseNarrativeMethodCell(
                                 $('#' + $(newCell.get_text())[0].id)
                             );
@@ -164,8 +166,7 @@ define([
 
             // this shows whether the app is running
             this.$runningIcon = $('<span>')
-                .addClass('fa fa-circle-o-notch fa-spin')
-                .css({ color: 'rgb(42, 121, 191)' })
+                .addClass('fa fa-circle-o-notch fa-spin text-primary')
                 .hide();
             this.$elem.data('runningIcon', this.$runningIcon);
 
@@ -176,22 +177,6 @@ define([
             this.$elem.on('stop-running', () => {
                 self.$runningIcon.hide();
             });
-
-            // this.$elem.on('runningIndicator.toolbar', (e, data) => {
-            //     if (data.enabled) {
-            //         self.$runningIcon.show();
-            //     } else {
-            //         self.$runningIcon.hide();
-            //     }
-            //     if (data.enabled) {
-            //         self.$jobStateIcon.html(makeIcon({
-            //             class: 'wifi',
-            //             color: 'orange',
-            //             spin: true,
-            //             label: 'Sending'
-            //         }));
-            //     }
-            // });
 
             this.$elem.on('show-title.toolbar', () => {
                 this.$elem.find('div.title').css('display', 'inline-block');
@@ -331,8 +316,7 @@ define([
 
             // this shows on error
             this.$errorIcon = $('<span>')
-                .addClass('fa fa-exclamation-triangle')
-                .css({ color: 'red', 'font-size': '14pt' })
+                .addClass('fa fa-exclamation-triangle fa-14-pt text-danger')
                 .hide();
             this.$elem.data('errorIcon', this.$errorIcon);
             this.$elem.on('show-error', () => {
@@ -426,7 +410,6 @@ define([
 
             // but maybe have the title already.
             const title = $cell.data('title');
-            // var title = cell.metadata.kbstate.title;
             if (title) {
                 this.$elem.trigger('set-title.toolbar', [title]);
             }
@@ -467,7 +450,6 @@ define([
                             this.$subtitle.html('An error has occurred in this cell!');
                             break;
                         case 'function_output':
-                            // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
                             break;
                         case 'function_input':
                             // doing this more declarative causes some funky rendering issues.

@@ -607,6 +607,7 @@ define([
             // initialise the job manager
             jobManager = new JobManager({
                 model,
+                cell,
                 bus: runtime.bus(),
             });
 

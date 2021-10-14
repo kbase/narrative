@@ -264,7 +264,6 @@ define([
             const row = this.row;
             const job = this.job;
             const input = this.input || job;
-
             _checkRowStructure(row, job, input);
         });
     }
@@ -316,9 +315,49 @@ define([
             }
         }
 
+        // is the error marker showing?
+        const errorEl = row.querySelector(`.${cssBaseClass}__icon--action_warning`);
+        if (input.meta.error) {
+            expect(errorEl).toBeDefined();
+            expect(errorEl.getAttribute('data-content')).toEqual(input.meta.error);
+        } else {
+            expect(errorEl).toEqual(null);
+        }
+
         // status
         const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
         expect(statusEl.textContent).toContain(input.meta.jobLabel);
+    }
+
+    /**
+     *
+     * @param {DOM} container DOM element containing the table
+     * @param {array[string]} expectedIdList array of IDs of jobs expected to be in the table
+     *                        if expectedIdList is null, we expect the table to be empty
+     */
+    function _checkTableStructure(container, expectedIdList) {
+        if (expectedIdList === null) {
+            // empty
+            // table displays a single row with content
+            // <td colspan="4" class="dataTables_empty" valign="top">No data available in table</td>
+            const allRows = container.querySelectorAll('tbody tr');
+            expect(allRows.length).toEqual(1);
+            const emptyCell = allRows[0].querySelector('.dataTables_empty');
+            expect(emptyCell.textContent).toEqual('No data available in table');
+            return;
+        }
+        const tableRowIds = Array.from(
+            container.querySelectorAll('tbody tr.odd, tbody tr.even')
+        ).map((row) => {
+            return row.id;
+        });
+        expect(tableRowIds).toEqual(
+            jasmine.arrayWithExactContents(
+                expectedIdList.map((id) => {
+                    return `job_${id}`;
+                })
+            )
+        );
     }
 
     /**
@@ -328,43 +367,34 @@ define([
      *      {object} input - the jobState object to be sent
      */
     function updateState(ctx) {
-        const bus = ctx.bus || ctx.jobManager.bus;
-        bus.send(
+        const { jobId } = ctx;
+        sendBusMessage(
+            ctx,
             {
-                jobId: ctx.jobId,
+                jobId,
                 jobState: ctx.input,
             },
-            {
-                channel: {
-                    jobId: ctx.jobId,
-                },
-                key: {
-                    type: 'job-status',
-                },
-            }
+            { jobId },
+            'job-status'
         );
     }
 
     /**
      *
-     * @param {object} ctx - `this` context, containing key jobId
-     * @param {object} infoObj - the message to be sent
+     * @param {object} ctx - `this` context, containing keys
+     *      {string} jobId
+     *      {object} jobInfo
      */
-    function updateInfo(ctx, infoObj) {
-        const bus = ctx.bus || ctx.jobManager.bus;
-        bus.send(
+    function updateInfo(ctx) {
+        const { jobId, jobInfo } = ctx;
+        sendBusMessage(
+            ctx,
             {
-                jobId: ctx.jobId,
-                jobInfo: infoObj,
+                jobId,
+                jobInfo,
             },
-            {
-                channel: {
-                    jobId: ctx.jobId,
-                },
-                key: {
-                    type: 'job-info',
-                },
-            }
+            { jobId },
+            'job-info'
         );
     }
 
@@ -373,13 +403,12 @@ define([
      *      {object} retryParent    - the parent of the retried job
      *      {object} retry          - the new job
      *      {object} bus            - the bus to send the message on
-     *      {string} channelId      - the channel ID; defaults to retryParent ID if not supplied
      */
     function retryResponse(ctx) {
         const { retryParent, retry } = ctx;
         // send the retry response and the update for the batch parent
-        const bus = ctx.bus || ctx.jobManager.bus;
-        bus.send(
+        sendBusMessage(
+            ctx,
             {
                 job: {
                     jobState: retryParent,
@@ -388,15 +417,14 @@ define([
                     jobState: retry,
                 },
             },
-            {
-                channel: {
-                    jobId: ctx.channelId || retryParent.job_id,
-                },
-                key: {
-                    type: 'job-retry-response',
-                },
-            }
+            { jobId: retryParent.job_id },
+            'job-retry-response'
         );
+    }
+
+    function sendBusMessage(ctx, message, channel, type) {
+        const bus = ctx.bus || ctx.jobManager.bus;
+        bus.send(message, { channel, key: { type } });
     }
 
     describe('The JobStatusTable module', () => {
@@ -665,7 +693,7 @@ define([
 
             // ensure the table structure is correct for a batch job with retries
             describe('batch job with retries', () => {
-                const batchJob = JobsData.batchJob;
+                const batchJobData = JobsData.batchJob;
                 let allRows;
 
                 describe('table init', () => {
@@ -683,30 +711,32 @@ define([
                     it('has the correct number of rows', () => {
                         allRows = container.querySelectorAll('tbody tr');
                         // data sanity check
-                        expect(Object.keys(batchJob.currentJobs).length).toEqual(
-                            Object.keys(batchJob.originalJobs).length
+                        expect(Object.keys(batchJobData.currentJobs).length).toEqual(
+                            Object.keys(batchJobData.originalJobs).length
                         );
-                        expect(Object.keys(batchJob.currentJobs).length).toEqual(allRows.length);
+                        expect(Object.keys(batchJobData.currentJobs).length).toEqual(
+                            allRows.length
+                        );
                     });
 
                     it('has the correct original rows', () => {
                         allRows = Array.from(container.querySelectorAll('tbody tr'));
-                        // make sure all rows are present in batchJob.originalJobs
+                        // make sure all rows are present in batchJobData.originalJobs
                         const allIds = allRows.map((row) => {
                             return row.id;
                         });
-                        const expectedIds = Object.keys(batchJob.originalJobs).map((job_id) => {
+                        const expectedIds = Object.keys(batchJobData.originalJobs).map((job_id) => {
                             return `job_${job_id}`;
                         });
                         expect(allIds).toEqual(jasmine.arrayWithExactContents(expectedIds));
                     });
 
-                    Object.keys(batchJob.currentJobs).forEach((job_id) => {
+                    Object.keys(batchJobData.currentJobs).forEach((job_id) => {
                         it(`has the correct row content for job ${job_id}`, function () {
-                            this.input = batchJob.jobsById[job_id];
+                            this.input = batchJobData.jobsById[job_id];
                             this.job = this.input.retry_parent
-                                ? batchJob.jobsById[this.input.retry_parent]
-                                : batchJob.jobsById[job_id];
+                                ? batchJobData.jobsById[this.input.retry_parent]
+                                : batchJobData.jobsById[job_id];
                             this.row = container.querySelector(`#job_${this.job.job_id}`);
                             // check the row content
                             _checkRowStructure(this.row, this.job, this.input);
@@ -860,8 +890,8 @@ define([
                 });
             });
 
-            describe('table buttons', () => {
-                describe('results button', () => {
+            describe('buttons,', () => {
+                describe('results:', () => {
                     beforeEach(async function () {
                         this.toggleTab = () => {
                             console.warn('running toggle tab!');
@@ -889,7 +919,7 @@ define([
                 };
 
                 Object.keys(cancelRetryArgs).forEach((action) => {
-                    describe(`${action} button`, () => {
+                    describe(`${action}:`, () => {
                         it('clicking should trigger a job action', async function () {
                             await createJobStatusTableWithContext(
                                 this,
@@ -1042,19 +1072,18 @@ define([
                 });
 
                 describe('batch with retries', () => {
-                    const batchJob = JobsData.batchJob,
-                        batchParentJob = batchJob.jobsById[batchJob.batchId];
-                    let allRows;
+                    const batchJobData = JobsData.batchJob,
+                        batchParentJob = batchJobData.jobsById[batchJobData.batchId];
                     beforeEach(async function () {
                         container = document.createElement('div');
                         // update the child jobs in the batch parent
-                        batchParentJob.child_jobs = Object.keys(batchJob.originalJobs);
+                        batchParentJob.child_jobs = Object.keys(batchJobData.originalJobs);
                         // create a table from the original jobs and the batch container
-                        const originalJobsIds = Object.keys(batchJob.originalJobs).concat(
-                            batchJob.batchId
+                        const originalJobsIds = Object.keys(batchJobData.originalJobs).concat(
+                            batchJobData.batchId
                         );
                         const originalJobsData = originalJobsIds.map((jobId) => {
-                            return batchJob.jobsById[jobId];
+                            return batchJobData.jobsById[jobId];
                         });
                         this.jobManager = new JobManager({
                             model: makeModel(originalJobsData),
@@ -1069,25 +1098,27 @@ define([
 
                     it('sets up a table correctly', function () {
                         // check initial table structure
-                        allRows = container.querySelectorAll('tbody tr');
+                        const allRows = container.querySelectorAll('tbody tr');
                         // data sanity check
-                        expect(Object.keys(batchJob.originalJobs).length).toEqual(allRows.length);
+                        expect(Object.keys(batchJobData.originalJobs).length).toEqual(
+                            allRows.length
+                        );
 
-                        // make sure all rows are present in batchJob.originalJobs
+                        // make sure all rows are present in batchJobData.originalJobs
                         const allIds = Array.from(allRows)
                             .map((row) => {
                                 return row.id;
                             })
                             .sort();
-                        const expectedIds = Object.keys(batchJob.originalJobs)
+                        const expectedIds = Object.keys(batchJobData.originalJobs)
                             .map((job_id) => {
                                 return `job_${job_id}`;
                             })
                             .sort();
                         expect(allIds).toEqual(expectedIds);
 
-                        Object.keys(batchJob.originalJobs).forEach((job_id) => {
-                            this.job = batchJob.jobsById[job_id];
+                        Object.keys(batchJobData.originalJobs).forEach((job_id) => {
+                            this.job = batchJobData.jobsById[job_id];
                             this.row = container.querySelector(`#job_${job_id}`);
                             // check the row content
                             _checkRowStructure(this.row, this.job);
@@ -1095,17 +1126,27 @@ define([
 
                         const modelIds = Object.keys(
                             this.jobManager.model.getItem('exec.jobs.byId')
-                        )
-                            .map((job_id) => {
-                                return `job_${job_id}`;
-                            })
-                            .sort();
+                        ).map((job_id) => {
+                            return `job_${job_id}`;
+                        });
                         // ensure that we have all the IDs plus the batch stored in the model
                         expect(modelIds).toEqual(
-                            jasmine.arrayWithExactContents(allIds.concat(`job_${batchJob.batchId}`))
+                            jasmine.arrayWithExactContents(
+                                allIds.concat(`job_${batchJobData.batchId}`)
+                            )
                         );
                     });
 
+                    /**
+                     * This test mimics creating a table and tracking the changes to the table contents
+                     * as a series of batch job updates and job retries take place. Each job update or
+                     * retry is accompanied by an update to the parent batch job.
+                     *
+                     * Because it is not always possible to tell from the job status table when new job
+                     * data has been received (e.g. if the job status data is not for the most recent
+                     * job), a span element is added to the table container every time the batch job
+                     * gets updated.
+                     */
                     it('performs a series of updates correctly', async function () {
                         const indicator = document.createElement('div');
                         indicator.id = 'indicatorDiv';
@@ -1125,39 +1166,45 @@ define([
                         });
 
                         const estimatingUpdate = TestUtil.JSONcopy(
-                            batchJob.jobsById['job-estimating']
+                            batchJobData.jobsById['job-estimating']
                         );
                         estimatingUpdate.updated += 10;
                         estimatingUpdate.status = 'queued';
 
                         const jobDiedWithErrorUpdate = TestUtil.JSONcopy(
-                            batchJob.jobsById['job-died-with-error']
+                            batchJobData.jobsById['job-died-with-error']
                         );
                         jobDiedWithErrorUpdate.updated += 15;
+                        const rowIds = [
+                            'job-cancelled-whilst-in-the-queue',
+                            'job-died-whilst-queueing',
+                            'job-in-the-queue',
+                            'job-cancelled-during-run',
+                        ];
 
                         const updates = [
                             {
                                 // retry of 'job-cancelled-whilst-in-the-queue'
-                                retry: batchJob.jobsById['job-running'],
+                                retry: batchJobData.jobsById['job-running'],
                             },
                             {
                                 // retry 1 of 'job-died-whilst-queueing'
-                                retry: batchJob.jobsById['job-died-with-error'],
+                                retry: batchJobData.jobsById['job-died-with-error'],
                             },
                             {
                                 // retry of 'job-cancelled-during-run'
-                                retry: batchJob.jobsById['job-finished-with-success'],
+                                retry: batchJobData.jobsById['job-finished-with-success'],
                             },
                             {
                                 // retry 2 of 'job-died-whilst-queueing'
-                                retry: batchJob.jobsById['job-estimating'],
+                                retry: batchJobData.jobsById['job-estimating'],
                             },
                             {
                                 // update of 'job-died-with-error'
                                 // this job started before job-estimating
                                 // so the table row will continue to show the job-estimating info
                                 update: jobDiedWithErrorUpdate,
-                                expectedRow: batchJob.jobsById['job-estimating'],
+                                expectedRow: batchJobData.jobsById['job-estimating'],
                             },
                             {
                                 // update of 'job-estimating'
@@ -1173,8 +1220,9 @@ define([
                             updatedBatchJob.updated += 5 * index + 1;
 
                             const input = TestUtil.JSONcopy(update.retry || update.update);
-                            const retryParent = batchJob.jobsById[input.retry_parent];
-                            if (update.retry) {
+                            const retryParent = batchJobData.jobsById[input.retry_parent];
+                            // ensure that the batch parent has the correct child jobs
+                            if (!updatedBatchJob.child_jobs.includes(input.job_id)) {
                                 updatedBatchJob.child_jobs.push(input.job_id);
                             }
 
@@ -1217,6 +1265,7 @@ define([
                                 retryParent,
                                 update.expectedRow || input
                             );
+                            _checkTableStructure(container, rowIds);
                             // ensure that the job has been saved
                             expect(ctx.jobManager.updateModel).toHaveBeenCalled();
                             expect(
@@ -1238,6 +1287,31 @@ define([
 
                         await doUpdates(0, context);
                     });
+
+                    describe('empty table', () => {
+                        beforeEach(async function () {
+                            container = document.createElement('div');
+                            // start with no child jobs
+                            batchParentJob.child_jobs = [];
+                            this.jobManager = new JobManager({
+                                model: makeModel([batchParentJob]),
+                                bus: Runtime.make().bus(),
+                            });
+                            this.jobStatusTableInstance = await createStartedInstance(container, {
+                                jobManager: this.jobManager,
+                            });
+                        });
+
+                        it('sets up a table correctly', function () {
+                            // check initial table structure
+                            _checkTableStructure(container, null);
+                            const modelIds = Object.keys(
+                                this.jobManager.model.getItem('exec.jobs.byId')
+                            );
+                            // ensure that we have all the IDs plus the batch stored in the model
+                            expect(modelIds).toEqual([batchJobData.batchId]);
+                        });
+                    });
                 });
             });
 
@@ -1258,7 +1332,7 @@ define([
                             spyOn(this.jobManager, 'removeListener').and.callThrough();
                             spyOn(this.jobManager, 'runHandler').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateInfo(this, test.input);
+                                updateInfo({ ...this, jobInfo: test.input });
                             });
                             expect(this.jobManager.removeListener).toHaveBeenCalledTimes(1);
                             expect(this.jobManager.removeListener.calls.allArgs()).toEqual([
@@ -1311,9 +1385,12 @@ define([
                                 this.row.classList.add('BOOP!');
                             });
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateInfo(this, {
-                                    job_id: this.job.job_id,
-                                    job_params: invalidInfo,
+                                updateInfo({
+                                    ...this,
+                                    jobInfo: {
+                                        job_id: this.job.job_id,
+                                        job_params: invalidInfo,
+                                    },
                                 });
                             });
                             expect(this.jobManager._isValidMessage).toHaveBeenCalled();
@@ -1374,7 +1451,7 @@ define([
                             async function () {
                                 prepareForUpdate(this, test);
                                 await TestUtil.waitForElementChange(this.indicatorDiv, () => {
-                                    updateInfo(this, test.input);
+                                    updateInfo({ ...this, jobInfo: test.input });
                                 });
                                 const expectedCallArgs = [
                                     'job-info',

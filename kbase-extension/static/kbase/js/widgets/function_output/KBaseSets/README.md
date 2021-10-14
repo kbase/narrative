@@ -35,25 +35,40 @@ The viewer is implemented by a one set of components providing generic support f
 2.  The kbaseGenericSetViewer is a wrapper around the main entrypoint for the viewer, `function_output/KBaseSets/SetLoader.js`, responsible for determining the object type and fetching the set
 3.  the SetLoader then calls the `function_output/KBaseSets/SetViewer.js` with this information. The viewer is responsible for displaying the set overview and a list of elements for selection.
 4.  When an element is selected (defaulting to the first element when the viewer is initially loaded) `function_output/KBaseSets/SetElementLoader.js` fetches the object for a given set element, and subsequently invokes the viewer for the object.
-5.  The type-specific element viewer are provided in `function_output/KBaseSets/SetElements`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
+5.  The type-specific element viewer are provided in`function_output/KBaseSets/SetElements`, and will be named after the type with `Viewer` suffixed. E.g. `/types/AssemblySetViewer.js`.
 
-## Dispatcher
+Note that this "viewer" is decomposed into multiple components, arranged as layers, each of which (hopefully) has a primary responsibility.
 
-The primary task of this viewer is to look up the object type it is provided, and, based
-on the type of the object, either dispatch to the set viewer if it is supported, or
-display a warning that the type is not supported if it isn't.
+## SetLoader
 
-Support is indicated in the module-level `SET_TYPE_TO_MODULE_MAPPING`.
+The primary task of the SetLoader is to fetch the requested set object, as provided in it's props, and pass that set object to the SetViewer.
 
-At present just ReadsAlignmentSet and AssemblySet are supported; others should display
+It accomplishes this by first fetching the set objects "info" from the workspace, which allows it to determine the type, and then using the SetELementResolver
+
+A secondary task is to display a loading spinner while the set is being fetched, and an error message in the case of an error.
+
+This design allows the viewer (below) to focus on the task of displaying the set.
+
+## SetViewer
+
+The primary task of the SetViewer is to display the overall set information, which is fairly minimal, to handle selection of set elements for inspection, and to invoke the set element inspector with the selected element.
+
+## SetElementLoader
+
+The primary task of the SetElementLoader component is to look up the object type it is provided, and, if supported, fetch the object and pass that object to the element-specific viewer.
+
+Element viewers are located in the SetElements directory.
+
+An error message is displayed if the requested type is not supported.
+
+Support is specified in the module-level `SET_TYPE_TO_MODULE_MAPPING`.
+
+At present ReadsAlignmentSet and AssemblySet are supported; others should display
 an error message, or are handled by other viewers.
 
-Note that this widget is a wrapper dispatching to the specific viewer, most of the
-implementation is in the React components referred two in the AMD dependencies. The only
-UI supported herein is the loading indicator and an error message, if necessary.
+## Regarding viewer coverage of KBaseSets
 
-The original intention of this viewer was to support all of the types implemented in KBaseSets,
-but that work has not yet been completed:
+The original intention of this viewer was to support all of the types implemented in KBaseSets. That work has not yet been completed:
 
 Also, see: <https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_generic_set/spec.json#L21>
 
@@ -61,46 +76,46 @@ Below is the status of each KBaseSet type:
 
 Implemented in this viewer:
 
-KBaseSets.ReadsAlignmentSet
-SetAPI.get_reads_alignment_set_v1
+type: KBaseSets.ReadsAlignmentSet  
+SetAPI method: SetAPI.get_reads_alignment_set_v1
 
-KBaseSets.AssemblySet
-SetAPI.get_assembly_set_v1
+type: KBaseSets.AssemblySet  
+SetAPI method: SetAPI.get_assembly_set_v1
 
 Implemented in other viewers:
 
-KBaseSets.DifferentialExpressionMatrixSet
-SetAPI.get_differential_expression_matrix_set_v1
+type: KBaseSets.DifferentialExpressionMatrixSet  
+SetAPI method: SetAPI.get_differential_expression_matrix_set_v1  
 Implemented by:
-<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_differential_expression_matrix_set>
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_differential_expression_matrix_set>  
 and this viewer does not work
 
-KBaseSets.ExpressionSet
-SetAPI.get_expression_set_v1
+type: KBaseSets.ExpressionSet  
+SetAPI method: SetAPI.get_expression_set_v1  
 Implemented by:
-<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_rnaseq_sample_expression>
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_rnaseq_sample_expression>  
 and that viewer doesn't work
 
-KBaseSets.ReadsSet
-SetAPI.get_reads_set_v1
+type: KBaseSets.ReadsSet  
+SetAPI method: SetAPI.get_reads_set_v1  
 Implemented by:
-<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_reads_set>
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_reads_set>  
 and the current viewer works
 
-KBaseSets.SampleSet
-SetAPI.sample_set_to_samples_info (I think)
+type: KBaseSets.SampleSet  
+SetAPI method: SetAPI.sample_set_to_samples_info (I think)  
 Implemented by:
-<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_sample_set>
+<https://github.com/kbase/NarrativeViewers/tree/master/ui/narrative/methods/view_sample_set>  
 but not that this viewer does not utilize the SetAPI, which was implemented against the search, which
 has never been fully implemented for search. Also Samples and RNASeqSamples seem to be conflated
 a bit in SetAPI.
 
 Not implemented anywhere:
 
-KBaseSets.FeatureSetSet
-SetAPI.get_feature_set_set_v1
+type: KBaseSets.FeatureSetSet  
+SetAPI method: SetAPI.get_feature_set_set_v1  
 can't find any data, or any app which outputs this type, or accepts as input (according to the app browser)
 
-KBaseSets.GenomeSet
-SetAPI.get_genome_set_v1
+type: KBaseSets.GenomeSet  
+SetAPI.get_genome_set_v1  
 Can't find a way to get ahold of a KBaseSets.GenomeSet to play with.

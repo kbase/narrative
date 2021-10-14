@@ -109,7 +109,7 @@ define([
                 const reportElem = ui.getElement('report-widget');
                 // Once scrolling stops...
                 if (!reportRendered && DisplayUtil.verticalInViewport(reportElem)) {
-                    new KBaseReportView($(reportElem), reportParams);
+                    new KBaseReportView($(reportElem), reportParams).loadAndRender();
                     reportRendered = true;
                 }
                 if (reportRendered) {

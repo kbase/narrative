@@ -446,3 +446,8 @@ Buttons
   font-style: italic;
   padding-left: 5px;
 }
+
+.kb-app-results-tab {
+  overflow-x: auto;
+  max-width: inherit;
+}

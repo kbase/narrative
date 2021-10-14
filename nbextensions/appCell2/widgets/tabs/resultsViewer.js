@@ -31,103 +31,122 @@ define([
             runtime = Runtime.make();
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
 
-            const { jobState } = arg;
+            const layout = div(
+                {
+                    class: 'kb-app-results-tab',
+                },
+                [
+                    ui.buildCollapsiblePanel({
+                        title: 'Results',
+                        name: 'results',
+                        hidden: true,
+                        type: 'default',
+                        classes: ['kb-panel-results'],
+                    }),
+                    div({ dataElement: 'report' }),
+                    div({ dataElement: 'next-steps' }),
+                ]
+            );
+            container.innerHTML = layout;
 
-            return Promise.try(() => {
-                const layout = div(
-                    {
-                        style: {
-                            overflowX: 'auto',
-                            maxWidth: 'inherit',
-                        },
-                    },
-                    [
-                        ui.buildCollapsiblePanel({
-                            title: 'Results',
-                            name: 'results',
-                            hidden: true,
-                            type: 'default',
-                            classes: ['kb-panel-results'],
-                        }),
-                        div({ dataElement: 'report' }),
-                        div({ dataElement: 'next-steps' }),
-                    ]
-                );
-                container.innerHTML = layout;
+            return Promise.all([showResults(arg.jobState, arg.isParentJob), showNextApps()]);
+        }
 
-                // If there's a "report_name" key in the results, load and show the report.
-                const result = model.getItem('exec.outputWidgetInfo');
-                if (arg.isParentJob && result && result.params && result.params.report_name) {
-                    renderReportView(result.params);
-                } else if (
-                    jobState.widget_info &&
-                    jobState.widget_info.params &&
-                    jobState.widget_info.params.report_name
-                ) {
-                    // do report widget.
-                    renderReportView(jobState.widget_info.params);
-                } else {
+        function showResults(jobState, isParentJob) {
+            // If there's a "report_name" key in the results, load and show the report.
+            const result = model.getItem('exec.outputWidgetInfo');
+            let reportParams = null;
+
+            if (isParentJob && result && result.params && result.params.report_name) {
+                reportParams = result.params;
+                // renderReportView(result.params);
+            } else if (
+                jobState.widget_info &&
+                jobState.widget_info.params &&
+                jobState.widget_info.params.report_name
+            ) {
+                // do report widget.
+                reportParams = jobState.widget_info.params;
+                // renderReportView(jobState.widget_info.params);
+            }
+
+            if (!reportParams) {
+                return Promise.try(() => {
                     ui.getElement('results').classList.remove('hidden');
                     ui.setContent(
                         'results.body',
                         ui.buildPresentableJson(jobState.job_output.result)
                     );
-                }
-
-                // Look up this app's info to get its suggested next steps.
-                return nms.get_method_full_info({
-                    ids: [model.getItem('app.id')],
-                    tag: model.getItem('app.tag'),
                 });
-            })
-                .then((appInfo) => {
-                    // If there are suggested next apps (er, methods), they'll be listed
-                    // by app id. Look them up!
-                    const suggestions = appInfo[0].suggestions || {};
-                    const tag = model.getItem('app.tag');
-                    if (suggestions.next_methods) {
-                        return nms.get_method_spec({
-                            ids: suggestions.next_methods,
-                            tag,
-                        });
-                    }
-                })
-                .then((nextApps) => {
-                    renderNextApps(nextApps);
-                });
+            }
+            return renderReportView(reportParams);
         }
 
         function lazyRenderReport() {
-            const nbContainer = document.querySelector('#notebook-container');
-            // Add scroll event listener to the notebook container on first call.
-            if (!reportRenderTimeout) {
-                nbContainer.addEventListener('scroll', lazyRenderReport);
-            }
-            // Use a debounce timeout to avoid rendering the report _while_ the user is scrolling.
-            clearTimeout(reportRenderTimeout);
-            reportRenderTimeout = setTimeout(() => {
-                const reportElem = ui.getElement('report-widget');
-                // Once scrolling stops...
-                if (!reportRendered && DisplayUtil.verticalInViewport(reportElem)) {
-                    new KBaseReportView($(reportElem), reportParams).loadAndRender();
-                    reportRendered = true;
+            return Promise.try(() => {
+                const nbContainer = document.querySelector('#notebook-container');
+                // Add scroll event listener to the notebook container on first call.
+                if (!reportRenderTimeout) {
+                    nbContainer.addEventListener('scroll', lazyRenderReport);
                 }
-                if (reportRendered) {
-                    // Remove the scroll event listener if the report has been rendered.
-                    nbContainer.removeEventListener('scroll', lazyRenderReport);
-                }
-            }, 200);
+                // Use a debounce timeout to avoid rendering the report _while_ the user is scrolling.
+                clearTimeout(reportRenderTimeout);
+                reportRenderTimeout = setTimeout(() => {
+                    const reportElem = ui.getElement('report-widget');
+                    // Once scrolling stops...
+                    if (!reportRendered && DisplayUtil.verticalInViewport(reportElem)) {
+                        new KBaseReportView($(reportElem), reportParams).loadAndRender();
+                        reportRendered = true;
+                    }
+                    if (reportRendered) {
+                        // Remove the scroll event listener if the report has been rendered.
+                        nbContainer.removeEventListener('scroll', lazyRenderReport);
+                    }
+                }, 200);
+            });
         }
 
+        /**
+         *
+         * @param {Object} params - parameters for the report view
+         */
         function renderReportView(params) {
             reportParams = JSON.parse(JSON.stringify(params));
             // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
             reportParams.showCreatedObjects = true;
             ui.setContent('report', div({ dataElement: 'report-widget' }));
-            lazyRenderReport();
+            return lazyRenderReport();
         }
 
+        /**
+         *
+         * @returns a Promise that resolves when the next apps element is rendered
+         */
+        function showNextApps() {
+            const appFullInfo = model.getItem('app.spec.full_info') || {};
+            // If there are suggested next apps (er, methods), they'll be listed
+            // by app id. Look them up!
+            const suggestions = appFullInfo.suggestions || {};
+            const tag = model.getItem('app.tag');
+            const nextMethods = suggestions.next_methods;
+            if (!nextMethods || !nextMethods.length) {
+                return Promise.resolve();
+            }
+            return nms
+                .get_method_spec({
+                    ids: nextMethods,
+                    tag,
+                })
+                .then((nextApps) => {
+                    renderNextApps(nextApps);
+                });
+        }
+
+        /**
+         *
+         * @param {*} apps
+         */
         function renderNextApps(apps) {
             apps = apps || [];
             if (!apps.length) {

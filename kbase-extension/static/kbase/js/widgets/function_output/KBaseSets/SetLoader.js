@@ -6,7 +6,7 @@ define([
     'kb_service/utils',
     'react_components/ErrorMessage',
     'widgets/function_output/KBaseSets/SetViewer',
-    'widgets/function_output/KBaseSets/SetElementResolver',
+    'widgets/function_output/KBaseSets/SetTypeResolver',
 
 ], (
     React,
@@ -16,7 +16,7 @@ define([
     ServiceUtils,
     ErrorMessage,
     Viewer,
-    ElementResolver
+    SetTypeResolver
 ) => {
     'use strict';
 
@@ -88,7 +88,7 @@ define([
             // set types defined above.
             const setType = [objectInfo.typeModule, objectInfo.typeName].join('.');
 
-            const mapping = ElementResolver.resolve(setType);
+            const mapping = SetTypeResolver.resolve(setType);
             if (!mapping) {
                 throw new Error(`Unsupported set type: ${setType}`);
             }

@@ -22,7 +22,7 @@ define([
     'prop-types',
     'kb_common/jsonRpc/genericClient',
     'kb_service/utils',
-    'widgets/function_output/KBaseSets/SetElementResolver',
+    'widgets/function_output/KBaseSets/SetTypeResolver',
     'react_components/ErrorMessage',
     'narrativeConfig',
     'base/js/namespace',
@@ -139,10 +139,12 @@ define([
         }
 
         renderLoaded() {
-            return e(this.state.module, {
-                object: this.state.object.data,
-                objectInfo: this.state.objectInfo
-            });
+            return e(React.Fragment, null,
+                e('div', null, e('a', { href: `/#dataview/${this.state.objectInfo.ref}`, target: '_blank' }, this.state.objectInfo.ref)),
+                e(this.state.module, {
+                    object: this.state.object.data,
+                    objectInfo: this.state.objectInfo
+                }));
         }
 
         renderState() {

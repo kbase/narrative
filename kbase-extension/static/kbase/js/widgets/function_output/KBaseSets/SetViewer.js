@@ -9,7 +9,7 @@ define([
 ], (
     React,
     PropTypes,
-    SetElement
+    SetElementLoader
 ) => {
     'use strict';
 
@@ -38,7 +38,7 @@ define([
          * @returns {void} nothing useful
          */
         renderSetElement() {
-            return e(SetElement, {
+            return e(SetElementLoader, {
                 setType: this.props.setType,
                 item: this.state.selectedItem
             });

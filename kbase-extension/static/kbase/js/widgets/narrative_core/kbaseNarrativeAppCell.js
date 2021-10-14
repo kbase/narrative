@@ -807,9 +807,8 @@
                             this.inputSteps[i].outputWidget &&
                             this.inputSteps[i].outputWidget.getState
                         ) {
-                            this.state.step[id].outputState.widgetState = this.inputSteps[
-                                i
-                            ].outputWidget.getState();
+                            this.state.step[id].outputState.widgetState =
+                                this.inputSteps[i].outputWidget.getState();
                         }
                     }
                 }

@@ -15,8 +15,7 @@ define([
         direct_html_link_index: 0,
         file_links: [
             {
-                URL:
-                    'https://ci.kbase.us/services/shock-api/node/203c54b4-d348-4ad2-a7a3-91139f0c7ae2',
+                URL: 'https://ci.kbase.us/services/shock-api/node/203c54b4-d348-4ad2-a7a3-91139f0c7ae2',
                 description: 'Simple test file 1',
                 handle: 'KBH_658368',
                 label: '',
@@ -25,16 +24,14 @@ define([
         ],
         html_links: [
             {
-                URL:
-                    'https://ci.kbase.us/services/shock-api/node/bf67e724-2025-477a-9cc9-868e71e89cbf',
+                URL: 'https://ci.kbase.us/services/shock-api/node/bf67e724-2025-477a-9cc9-868e71e89cbf',
                 description: 'Report page 1',
                 handle: 'KBH_658369',
                 label: '',
                 name: 'page1.html',
             },
             {
-                URL:
-                    'https://ci.kbase.us/services/shock-api/node/5caa6be0-0e71-4fab-92a0-8ede347b4a5b',
+                URL: 'https://ci.kbase.us/services/shock-api/node/5caa6be0-0e71-4fab-92a0-8ede347b4a5b',
                 description: 'Report page 2',
                 handle: 'KBH_658370',
                 label: '',

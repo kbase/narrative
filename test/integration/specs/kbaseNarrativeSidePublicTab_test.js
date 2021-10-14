@@ -25,8 +25,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Lactobacillales > Aerococcaceae > Abiotrophia > Abiotrophia defectiva',
+                    value: 'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Lactobacillales > Aerococcaceae > Abiotrophia > Abiotrophia defectiva',
                 },
                 {
                     id: 'kbase_id',
@@ -58,8 +57,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > Candidatus Phytoplasma asteris',
+                    value: 'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > Candidatus Phytoplasma asteris',
                 },
                 {
                     id: 'kbase_id',
@@ -94,8 +92,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
                 },
                 {
                     id: 'kbase_id',
@@ -136,8 +133,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
+                    value: 'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -172,8 +168,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
+                    value: 'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -208,8 +203,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -244,8 +238,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -280,8 +273,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -316,8 +308,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris',
                 },
                 {
                     id: 'kbase_id',
@@ -351,8 +342,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > unclassified phytoplasmas',
+                    value: 'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > unclassified phytoplasmas',
                 },
                 {
                     id: 'kbase_id',
@@ -384,8 +374,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Erysipelotrichia > Erysipelotrichales > Erysipelotrichaceae > unclassified Erysipelotrichaceae > unclassified Erysipelotrichaceae (miscellaneous)',
+                    value: 'Bacteria > Terrabacteria group > Firmicutes > Erysipelotrichia > Erysipelotrichales > Erysipelotrichaceae > unclassified Erysipelotrichaceae > unclassified Erysipelotrichaceae (miscellaneous)',
                 },
                 {
                     id: 'kbase_id',
@@ -420,8 +409,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus > unclassified Prochlorococcus',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus > unclassified Prochlorococcus',
                 },
                 {
                     id: 'kbase_id',
@@ -462,8 +450,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -498,8 +485,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -534,8 +520,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -570,8 +555,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -606,8 +590,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -642,8 +625,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris > unclassified Acaryochloris',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris > unclassified Acaryochloris',
                 },
                 {
                     id: 'kbase_id',

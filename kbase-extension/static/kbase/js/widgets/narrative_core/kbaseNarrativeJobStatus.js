@@ -339,8 +339,7 @@ define([
                                                         new Alert({
                                                             type: 'warning',
                                                             title: 'Warning: Read-only Narrative',
-                                                            body:
-                                                                'You cannot insert a data viewer cell into this Narrative because it is read-only',
+                                                            body: 'You cannot insert a data viewer cell into this Narrative because it is read-only',
                                                         });
                                                         return;
                                                     }

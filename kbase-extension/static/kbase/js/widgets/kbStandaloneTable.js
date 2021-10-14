@@ -621,9 +621,8 @@
                                             } else {
                                                 this.childNodes[x + 1].style.display = '';
                                                 x++;
-                                                renderer.settings.filter[
-                                                    this.i
-                                                ].active_operator = x;
+                                                renderer.settings.filter[this.i].active_operator =
+                                                    x;
                                             }
                                         }
                                     }
@@ -689,9 +688,8 @@
                             filter_elem.onchange = function () {
                                 const index = this.index;
                                 const renderer = rendererTable[index];
-                                renderer.settings.filter[this.i].searchword = this.options[
-                                    this.selectedIndex
-                                ].value;
+                                renderer.settings.filter[this.i].searchword =
+                                    this.options[this.selectedIndex].value;
                                 renderer.settings.filter_changed = true;
                                 renderer.render(index);
                             };
@@ -736,9 +734,8 @@
                             filter_elem.onchange = function () {
                                 const index = this.index;
                                 const renderer = rendererTable[index];
-                                renderer.settings.filter[this.i].searchword = this.options[
-                                    this.selectedIndex
-                                ].value;
+                                renderer.settings.filter[this.i].searchword =
+                                    this.options[this.selectedIndex].value;
                                 if (typeof renderer.settings.navigation_callback == 'function') {
                                     const query = [];
                                     for (const x in renderer.settings.filter) {

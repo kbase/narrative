@@ -8,11 +8,7 @@
         var panel =  new kbasePanel(this.$elem, {title: 'Model Details',
                                            rightLabel: 'Super Workspace,
                                            subText: 'kb|g.super.genome '});
-*/ define([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-], (KBWidget, bootstrap, $) => {
+*/ define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
     return KBWidget({
         name: 'kbasePanel',
         version: '1.0.0',

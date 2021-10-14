@@ -147,8 +147,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                             next_apps: [],
                         },
                         icon: {
-                            url:
-                                'img?method_id=kb_uploadmethods/import_fastq_sra_as_reads_from_staging&image_name=data-pink.png&tag=release',
+                            url: 'img?method_id=kb_uploadmethods/import_fastq_sra_as_reads_from_staging&image_name=data-pink.png&tag=release',
                         },
                         categories: ['inactive', 'reads', 'upload'],
                         screenshots: [],
@@ -161,8 +160,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                         categories: ['inactive', 'reads', 'upload'],
                         git_commit_hash: '25e7a896377f5ec50bd15a27ade9f279cb16cd0b',
                         icon: {
-                            url:
-                                'img?method_id=kb_uploadmethods/import_fastq_sra_as_reads_from_staging&image_name=data-pink.png&tag=release',
+                            url: 'img?method_id=kb_uploadmethods/import_fastq_sra_as_reads_from_staging&image_name=data-pink.png&tag=release',
                         },
                         id: 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
                         input_types: [],

@@ -500,8 +500,9 @@
                     renderer.settings.colClicked({
                         col: row,
                         rendererIndex: index,
-                        label:
-                            renderer.settings.data.cols[renderer.settings.data.colindex[row] - 1],
+                        label: renderer.settings.data.cols[
+                            renderer.settings.data.colindex[row] - 1
+                        ],
                     });
                 } else {
                     if (renderer.settings.selectedColumns[row]) {
@@ -515,8 +516,9 @@
                     renderer.settings.rowClicked({
                         row: row,
                         rendererIndex: index,
-                        label:
-                            renderer.settings.data.rows[renderer.settings.data.rowindex[row] - 1],
+                        label: renderer.settings.data.rows[
+                            renderer.settings.data.rowindex[row] - 1
+                        ],
                     });
                 } else {
                     if (renderer.settings.selectedRows[row]) {
@@ -783,10 +785,9 @@
                 clusterdata[level].push({
                     a: clusters[clusters[i].points[0]].data.length,
                     b: clusters[clusters[i].points[1]].data.length,
-                    amin:
-                        roworder[
-                            Math.min.apply(null, clusters[clusters[i].points[0]].basepoints) + 1
-                        ],
+                    amin: roworder[
+                        Math.min.apply(null, clusters[clusters[i].points[0]].basepoints) + 1
+                    ],
                 });
 
                 // draw single lines until we reach the next root
@@ -802,13 +803,9 @@
                     ) {
                         clusterdata[level - (h + 1)].push({
                             a: clusters[clusters[i].points[n]].data.length,
-                            amin:
-                                roworder[
-                                    Math.min.apply(
-                                        null,
-                                        clusters[clusters[i].points[n]].basepoints
-                                    ) + 1
-                                ],
+                            amin: roworder[
+                                Math.min.apply(null, clusters[clusters[i].points[n]].basepoints) + 1
+                            ],
                         });
                     }
                 }

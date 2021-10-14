@@ -443,6 +443,7 @@ define([
                                 job_id: 'ping',
                             },
                             widget_info: 'ping',
+                            cell_id: 12345,
                         },
                         retry: {},
                     },
@@ -451,6 +452,7 @@ define([
                     [
                         {
                             job: {
+                                jobId: testJobId,
                                 jobState: {
                                     job_id: testJobId,
                                     status: 'wherever',
@@ -458,6 +460,7 @@ define([
                                 outputWidgetInfo: {},
                             },
                             retry: {
+                                jobId: '1234567890abcdef',
                                 jobState: {
                                     job_id: '1234567890abcdef',
                                     status: 'whenever',
@@ -473,10 +476,12 @@ define([
                     [
                         {
                             job: {
+                                jobId: 'ping',
                                 jobState: {
                                     job_id: 'ping',
                                 },
                                 outputWidgetInfo: 'ping',
+                                cellId: 12345,
                             },
                             retry: {},
                         },

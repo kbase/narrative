@@ -4,6 +4,7 @@ from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_st
 from biokbase.narrative.exception_util import transform_job_exception, NotBatchException
 import copy
 import json
+import time
 import uuid
 from jinja2 import Template
 from pprint import pprint
@@ -75,14 +76,6 @@ JOB_INPUT_ATTRS = [
     "params",
 ]
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
-
-
-def _attr_to_ee2(attr):
-    mapping = {"app_version": "service_ver"}
-    if attr in mapping:
-        return mapping[attr]
-    else:
-        return attr
 
 
 def get_dne_job_state(job_id, output_state=True):
@@ -225,11 +218,7 @@ class Job(object):
 
     @property
     def app_name(self):
-        return (
-            "batch"
-            if self.batch_job else
-            self.app_spec()["info"]["name"]
-        )
+        return "batch" if self.batch_job else self.app_spec()["info"]["name"]
 
     def was_terminal(self):
         """
@@ -457,24 +446,25 @@ class Job(object):
             except Exception as e:
                 # Can't get viewer params
                 new_e = transform_job_exception(e)
-                state.update(
-                    {
-                        "status": "error",
-                        "errormsg": "Unable to build output viewer parameters!",
-                        "error": {
-                            "code": getattr(new_e, "code", -1),
-                            "source": getattr(new_e, "source", "JobManager"),
-                            "name": "App Error",
-                            "message": "Unable to build output viewer parameters",
-                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
-                        },
-                    }
-                )
+                widget_info = {
+                    "status": "error",
+                    "errormsg": "Unable to build output viewer parameters!",
+                    "error": {
+                        "code": getattr(new_e, "code", -1),
+                        "source": getattr(new_e, "source", "JobManager"),
+                        "name": "App Error",
+                        "message": "Unable to build output viewer parameters",
+                        "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
+                    },
+                }
+                # update timestamp if there was an error
+                state.update({"updated": int(time.time())})
 
         job_state = {
             "state": state,
             "widget_info": widget_info,
             "user": self.user,
+            "cell_id": self.cell_id,
         }
         return job_state
 

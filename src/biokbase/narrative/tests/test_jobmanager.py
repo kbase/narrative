@@ -86,16 +86,14 @@ def get_retry_job_state(orig_id, status="unmocked"):
             "run_id": None,
             "child_jobs": [],
         },
+        "cell_id": None,
         "widget_info": None,
         "user": None,
     }
 
 
 def get_test_job_infos(job_ids):
-    return {
-        job_id: get_test_job_info(job_id)
-        for job_id in job_ids
-    }
+    return {job_id: get_test_job_info(job_id) for job_id in job_ids}
 
 
 def get_test_job_info(job_id):
@@ -109,9 +107,7 @@ def get_test_job_info(job_id):
     )
     params = test_job.get("job_input", {}).get("params", JOB_ATTR_DEFAULTS["params"])
     batch_job = test_job.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
-    app_name = (
-        "batch" if batch_job else get_test_spec(tag, app_id)["info"]["name"]
-    )
+    app_name = "batch" if batch_job else get_test_spec(tag, app_id)["info"]["name"]
     batch_id = (
         job_id if batch_job else test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
     )
@@ -221,7 +217,7 @@ class JobManagerTest(unittest.TestCase):
 
                     self.assertEqual(
                         int(job_id in exp_job_ids and not JOBS_TERMINALITY[job_id]),
-                        refresh
+                        refresh,
                     )
 
     def test__check_job_list_fail(self):
@@ -793,10 +789,7 @@ class JobManagerTest(unittest.TestCase):
         infos = self.jm.lookup_job_info(ALL_JOBS)
 
         self.assertCountEqual(ALL_JOBS, infos.keys())
-        self.assertEqual(
-            get_test_job_infos(ALL_JOBS),
-            infos
-        )
+        self.assertEqual(get_test_job_infos(ALL_JOBS), infos)
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ from .test_jobmanager import get_test_job_info, get_test_job_infos
 
 
 APP_NAME = "The Best App in the World"
-EXP_ALL_STATE_IDS = ALL_JOBS   # or ACTIVE_JOBS
+EXP_ALL_STATE_IDS = ALL_JOBS  # or ACTIVE_JOBS
 
 
 def make_comm_msg(
@@ -157,9 +157,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(EXP_ALL_STATE_IDS)
+                "content": get_test_job_states(EXP_ALL_STATE_IDS),
             },
-            msg["data"]
+            msg["data"],
         )
         self.assertTrue(self.jc._running_lookup_loop)
         self.assertIsNotNone(self.jc._lookup_timer)
@@ -188,9 +188,11 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertEqual(
                     {
                         "msg_type": "job_status_all",
-                        "content": get_test_job_states(EXP_ALL_STATE_IDS)  # consult version history for when this was exp_job_ids
+                        "content": get_test_job_states(
+                            EXP_ALL_STATE_IDS
+                        ),  # consult version history for when this was exp_job_ids
                     },
-                    msg["data"]
+                    msg["data"],
                 )
 
                 self.assertTrue(self.jc._running_lookup_loop)
@@ -213,9 +215,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(EXP_ALL_STATE_IDS)
+                "content": get_test_job_states(EXP_ALL_STATE_IDS),
             },
-            msg["data"]
+            msg["data"],
         )
         for job_id, state in states.items():
             self.assertIsInstance(job_id, str)

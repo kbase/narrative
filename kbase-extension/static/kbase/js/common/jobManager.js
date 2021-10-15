@@ -1,13 +1,13 @@
 define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
     DialogMessages,
     Jobs,
-    JobCommChannel
+    JobComms
 ) => {
     'use strict';
 
-    const jcc = new JobCommChannel();
+    const jcm = JobComms.JobCommMessages;
 
-    const validOutgoingMessageTypes = jcc.validOutgoingMessageTypes();
+    const validOutgoingMessageTypes = jcm.validOutgoingMessageTypes();
 
     const jobCommand = {
         cancel: {

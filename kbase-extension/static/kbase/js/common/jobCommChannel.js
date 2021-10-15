@@ -123,6 +123,15 @@ define([
         'request-job-updates-stop': JOB_REQUESTS.STOP_UPDATE,
     };
 
+    const JobCommMessages = {
+        validIncomingMessageTypes: function () {
+            return Object.keys(requestTranslation);
+        },
+        validOutgoingMessageTypes: function () {
+            return Object.values(RESPONSES).concat(['job-error']);
+        },
+    };
+
     class JobCommChannel {
         /**
          * Grabs the runtime, inits the set of job states, and registers callbacks against the
@@ -140,14 +149,6 @@ define([
                 : () => {
                       /* no op */
                   };
-        }
-
-        validIncomingMessageTypes() {
-            return Object.keys(requestTranslation);
-        }
-
-        validOutgoingMessageTypes() {
-            return Object.values(RESPONSES).concat(['job-error']);
         }
 
         /**
@@ -196,9 +197,14 @@ define([
          */
         sendCommMessage(msgType, message) {
             return new Promise((resolve, reject) => {
-                // TODO: send specific error so that client can retry.
+                // TODO: send specific error so that client can retry
+                // or try to init comm channel here
                 if (!this.comm) {
-                    console.error('Comm channel not initialized, not sending message.');
+                    console.error(
+                        'Comm channel not initialized, not sending message.',
+                        msgType,
+                        message
+                    );
                     reject(new Error('Comm channel not initialized, not sending message.'));
                 }
 
@@ -238,7 +244,7 @@ define([
                 throw new Error(
                     'ERROR sending comm message: ' +
                         JSON.stringify({
-                            error: err,
+                            error: err.toString(),
                             msgType: msgType,
                             message: message,
                         })
@@ -593,5 +599,5 @@ define([
         }
     }
 
-    return JobCommChannel;
+    return { JobCommChannel, JobCommMessages };
 });

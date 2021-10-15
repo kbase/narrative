@@ -5,7 +5,7 @@ define([
 
     // For effect
     'bootstrap',
-    'css!./SetViewer.css'
+    'css!styles/widgets/function_output/KBaseSetsSetViewer.css'
 ], (
     React,
     PropTypes,
@@ -124,7 +124,7 @@ define([
         }
         render() {
             return e('div', {
-                className: 'KBaseSets'
+                className: 'KBaseSets-SetViewer'
             }, ...[
                 this.renderHeader(),
                 this.renderSetElement()

@@ -29,13 +29,13 @@ define([
 
     // For effect
     'bootstrap',
-    'css!./SetElementLoader.css'
+    'css!styles/widgets/function_output/KBaseSets/SetElementLoader.css'
 ], (
     React,
     PropTypes,
     ServiceClient,
     ServiceUtils,
-    ElementResolver,
+    SetTypeResolver,
     ErrorMessage,
     Config,
     Jupyter
@@ -74,11 +74,10 @@ define([
 
             try {
                 const { object, objectInfo } = await this.fetchSetElement(this.props.item.ref);
-                const mapping = ElementResolver.resolve(this.props.setType);
+                const { module } = SetTypeResolver.resolve(this.props.setType);
                 this.setState({
                     status: 'loaded',
-                    module: mapping.module,
-                    object, objectInfo
+                    module, object, objectInfo
                 });
             } catch (error) {
                 console.error('Error getting object info', error);

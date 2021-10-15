@@ -15,21 +15,37 @@ define([
         a = t('a'),
         span = t('span');
 
+    /**
+     *
+     * @param {Object} config should just have a single object - the model from the App Cell
+     * @returns an object representing the widget with `start`, `stop`, and `reportRenderingPromise`
+     *   keys. The `start` and `stop` function both return Promises, and are used as the lifecycle
+     *   functions. `reportRenderingPromise`, if not null, is the Promise that resolves when the
+     *   viewed report is done rendering. It's not generally used in practice, but useful for testing.
+     */
     function factory(config) {
         const { model } = config;
         let container,
             ui,
             runtime,
-            nms,
             reportRendered = false,
             reportRenderTimeout = null,
-            reportParams;
+            reportParams,
+            reportWidget = null,
+            reportRenderingPromise = null;
 
+        /**
+         *
+         * @param {Object} arg initial startup argument object, with keys:
+         *   - node {DOMElement} the node to attach this viewer
+         *   - jobState {Object} the state of the job in this app cell
+         *   - isParentJob {boolean} if true, this is a batch job
+         * @returns
+         */
         function start(arg) {
             container = arg.node;
             ui = UI.make({ node: container });
             runtime = Runtime.make();
-            nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
 
             const layout = div(
                 {
@@ -52,33 +68,44 @@ define([
             return Promise.all([showResults(arg.jobState, arg.isParentJob), showNextApps()]);
         }
 
+        /**
+         * Shows the results of a job run. This returns a Promise that resolves when
+         * the rendering is done.
+         * @param {Object} jobState - object describing the state of a job
+         * @param {boolean} isParentJob - true if this job is a parent of a batch job
+         * @returns
+         */
         function showResults(jobState, isParentJob) {
-            // If there's a "report_name" key in the results, load and show the report.
-            const result = model.getItem('exec.outputWidgetInfo');
+            // there's a couple of ways to find report parameters.
             let reportParams = null;
+            const result = model.getItem('exec.outputWidgetInfo');
 
+            // this way first - if this is a parent job of a batch, and we have
+            // a report_name in the result, then show the batch result
             if (isParentJob && result && result.params && result.params.report_name) {
                 reportParams = result.params;
-                // renderReportView(result.params);
             } else if (
                 jobState.widget_info &&
                 jobState.widget_info.params &&
                 jobState.widget_info.params.report_name
             ) {
-                // do report widget.
+                // otherwise, if there's some report info in the jobState, show that
+                // report
                 reportParams = jobState.widget_info.params;
-                // renderReportView(jobState.widget_info.params);
             }
 
+            // if there are no report parameters, then just dump the info given in
+            // the job output
             if (!reportParams) {
                 return Promise.try(() => {
+                    const jobOutput = jobState.job_output
+                        ? jobState.job_output.result
+                        : 'no output found';
                     ui.getElement('results').classList.remove('hidden');
-                    ui.setContent(
-                        'results.body',
-                        ui.buildPresentableJson(jobState.job_output.result)
-                    );
+                    ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
                 });
             }
+            // otherwise, render the report
             return renderReportView(reportParams);
         }
 
@@ -94,13 +121,16 @@ define([
                 reportRenderTimeout = setTimeout(() => {
                     const reportElem = ui.getElement('report-widget');
                     // Once scrolling stops...
-                    if (!reportRendered && DisplayUtil.verticalInViewport(reportElem)) {
-                        new KBaseReportView($(reportElem), reportParams).loadAndRender();
-                        reportRendered = true;
-                    }
-                    if (reportRendered) {
-                        // Remove the scroll event listener if the report has been rendered.
-                        nbContainer.removeEventListener('scroll', lazyRenderReport);
+                    if (
+                        !reportRendered &&
+                        reportWidget === null &&
+                        DisplayUtil.verticalInViewport(reportElem)
+                    ) {
+                        reportWidget = new KBaseReportView($(reportElem), reportParams);
+                        reportRenderingPromise = reportWidget.loadAndRender().then(() => {
+                            reportRendered = true;
+                            nbContainer.removeEventListener('scroll', lazyRenderReport);
+                        });
                     }
                 }, 200);
             });
@@ -133,6 +163,9 @@ define([
             if (!nextMethods || !nextMethods.length) {
                 return Promise.resolve();
             }
+            const nms = new NarrativeMethodStore(
+                runtime.config('services.narrative_method_store.url')
+            );
             return nms
                 .get_method_spec({
                     ids: nextMethods,
@@ -200,11 +233,16 @@ define([
             }
         }
 
-        function stop() {}
+        function stop() {
+            return Promise.try(() => {
+                clearTimeout(reportRenderTimeout);
+            });
+        }
 
         return {
             start,
             stop,
+            reportRenderingPromise,
         };
     }
 

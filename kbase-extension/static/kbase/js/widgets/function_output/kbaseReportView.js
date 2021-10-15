@@ -51,6 +51,21 @@ define([
         ws: null,
         reportData: null,
         baseCssClass: 'kb-report-view',
+
+        /**
+         *
+         * @param {Object} options - options for running the report widget, including:
+         *   workspace_name {string} name of the workspace to reference
+         *   report_name {string} name of the report object in the given workspace
+         *   report_ref {string} a report object reference of the format x/y/z. If present, overrides
+         *     the workspace_name and report_name options
+         *   showReportText {boolean} (default true) true if the report text should be shown
+         *   showCreatedObjects {boolean} (default false) if true, show the created objects section
+         *   showFiles {boolean} (default true) if true, show the list of files in the report
+         *   showHTML {boolean} (default true) if true, show raw HTML from the report, if it exists
+         *
+         * @returns the instantiated widget
+         */
         init: function (options) {
             this._super(options);
             this.runtime = Runtime.make();

@@ -12,9 +12,7 @@ from biokbase.workspace.baseclient import ServerError
 from tornado.web import HTTPError
 from notebook.utils import to_api_path, to_os_path
 from biokbase.narrative.common.exceptions import WorkspaceError
-from traitlets import Unicode, Dict, Bool, List, TraitError
 from biokbase.narrative.common.kblogging import get_logger, log_event
-import re
 import json
 from collections import Counter
 from .updater import update_narrative
@@ -37,10 +35,6 @@ LIST_OBJECTS_FIELDS = [
     "size",
     "meta",
 ]
-obj_field = dict(zip(LIST_OBJECTS_FIELDS, range(len(LIST_OBJECTS_FIELDS))))
-
-obj_ref_regex = re.compile(r"^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
-
 MAX_WORKSPACES = 10000  # from ws.list_objects
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
@@ -56,6 +50,7 @@ class KBaseWSManagerMixin(object):
     """
 
     ws_uri = URLS.workspace
+    nar_type = "KBaseNarrative.Narrative"
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
@@ -201,7 +196,7 @@ class KBaseWSManagerMixin(object):
             if "creator" not in meta:
                 meta["creator"] = cur_user
             if "type" not in meta:
-                meta["type"] = NARRATIVE_TYPE
+                meta["type"] = self.nar_type
             if "description" not in meta:
                 meta["description"] = ""
             if "data_dependencies" not in meta:
@@ -253,7 +248,7 @@ class KBaseWSManagerMixin(object):
         # Now we can save the Narrative object.
         try:
             ws_save_obj = {
-                "type": NARRATIVE_TYPE,
+                "type": self.nar_type,
                 "data": nb,
                 "objid": obj_id,
                 "meta": nb["metadata"].copy(),

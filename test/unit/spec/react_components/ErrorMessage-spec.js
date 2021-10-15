@@ -50,7 +50,7 @@ define(['react_components/ErrorMessage', 'react', 'react-dom'], (ErrorMessage, R
             expect(node.innerText).toContain('buzz');
         });
 
-        it('should display a default error message if it is an unsupported type', () => {
+        it('should display a default error message if it is an unsupported scalar type', () => {
             // create a dom node.
             const node = document.createElement('div');
 
@@ -62,15 +62,34 @@ define(['react_components/ErrorMessage', 'react', 'react-dom'], (ErrorMessage, R
                 1,
                 0,
                 -1,
-                {},
-                { foo: 'bar' },
-                [],
-                [1, 2, 3]
+                undefined
             ];
             for (const unsupported of unsupportedTypes) {
                 const el = createElement(ErrorMessage, { error: unsupported });
                 render(el, node);
-                expect(node.innerText).toContain('Unknown Error');
+                expect(node.innerText).toContain('Unknown Error (incompatible type)');
+            }
+        });
+
+        it('should display a default error message if it is an unsupported object', () => {
+            // create a dom node.
+            const node = document.createElement('div');
+
+            // install our component there
+            const unsupportedTypes = [
+                {},
+                { foo: 'bar' },
+                [],
+                [1, 2, 3],
+                new Date(),
+                new URL('https://example.com'),
+                new Number(1),
+                new String('foo') // yes, _could_ be supported...
+            ];
+            for (const unsupported of unsupportedTypes) {
+                const el = createElement(ErrorMessage, { error: unsupported });
+                render(el, node);
+                expect(node.innerText).toContain('Unknown Error (incompatible object)');
             }
         });
     });

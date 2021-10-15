@@ -27,12 +27,12 @@ define([
                     // Standard Error objects or descendants, or those which act like one in this regard.
                     message = error.message;
                 } else {
-                    message = 'Unknown Error';
+                    message = 'Unknown Error (incompatible object)';
                 }
             } else if (typeof error === 'string') {
                 message = error;
             } else {
-                message = 'Unknown Error';
+                message = 'Unknown Error (incompatible type)';
             }
 
             return e('div', {

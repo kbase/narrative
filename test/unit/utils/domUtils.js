@@ -1,4 +1,4 @@
-define([], () => {
+define(['react', 'react-dom'], (React, ReactDOM) => {
     'use strict';
 
     const WAIT_FOR_LOOP_WAIT = 100;
@@ -56,5 +56,13 @@ define([], () => {
         });
     }
 
-    return { waitFor, waitForText };
+    function renderComponent(component, props) {
+        const node = document.createElement('div');
+
+        const element = React.createElement(component, props, null);
+        ReactDOM.render(element, node);
+        return { node, element };
+    }
+
+    return { waitFor, waitForText, renderComponent };
 });

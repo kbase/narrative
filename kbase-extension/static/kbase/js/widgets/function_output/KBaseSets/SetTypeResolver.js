@@ -21,10 +21,13 @@ define([
     };
 
     function resolve(workspaceType) {
+        if (typeof workspaceType !== 'string') {
+            throw new Error(`type "${typeof workspaceType}" not supported as a workspace type value for KBaseSets`);
+        }
         if (workspaceType in SET_TYPE_MAPPING) {
             return SET_TYPE_MAPPING[workspaceType];
         }
-        throw new Error(`workspace type ${workspaceType} not supported for KBaseSets`);
+        throw new Error(`workspace type "${workspaceType}" not supported for KBaseSets`);
     }
 
     return { resolve };

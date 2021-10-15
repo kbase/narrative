@@ -114,29 +114,3 @@ class BuildDocumentation(Command):
         doc = top + self.doc_dir
         os.chdir(doc)
         os.system("make html")
-
-
-#
-# Makes a set of 0-based ranges, given a total length and a the desired length
-# of the range.
-#
-def make_ranges(total_count, range_size):
-    if total_count < 0:
-        raise ValueError("total_count must be 0 or greater")
-
-    if range_size <= 0:
-        raise ValueError("range_size must be 1 or greater")
-
-    if total_count == 0:
-        return []
-
-    batch_count = int(total_count / range_size) + (
-        1 if total_count % range_size > 0 else 0
-    )
-    ranges = []
-    for batch in range(0, batch_count):
-        range_start = batch * range_size
-        range_length = min(range_size, total_count - range_start)
-        range_end = range_start + range_length
-        ranges.append([range_start, range_end])
-    return ranges

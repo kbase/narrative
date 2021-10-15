@@ -3,11 +3,16 @@ Tests for Mixin class that handles IO between the
 Narrative and workspace service.
 """
 import unittest
-from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin
+from unittest.mock import patch
+from biokbase.narrative.contents.narrativeio import (
+    KBaseWSManagerMixin,
+    LIST_OBJECTS_FIELDS,
+)
 from biokbase.narrative.common.exceptions import WorkspaceError
 import biokbase.auth
 from tornado.web import HTTPError
 from . import util
+from .narrative_mock.mockclients import get_mock_client, MockClients, get_nar_obj
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 import biokbase.narrative.clients as clients
@@ -32,6 +37,10 @@ metadata_fields = set(
 HAS_TEST_TOKEN = False
 
 
+def get_exp_nar(i):
+    return dict(zip(LIST_OBJECTS_FIELDS, get_nar_obj(i)))
+
+
 def skipUnlessToken():
     global HAS_TEST_TOKEN
     if not HAS_TEST_TOKEN:
@@ -39,7 +48,7 @@ def skipUnlessToken():
 
 
 def str_to_ref(s):
-    """ Takes a ref string, returns a NarrativeRef object """
+    """Takes a ref string, returns a NarrativeRef object"""
     vals = s.split("/")
     ref = {"wsid": vals[0], "objid": vals[1]}
     if len(vals) == 3:
@@ -71,9 +80,10 @@ class NarrIOTestCase(unittest.TestCase):
         if self.test_token is None or self.private_token is None:
             print("Skipping most narrativeio.py tests due to missing tokens.")
             print(
-                "To enable these, place a valid auth token in files\n{}\nand\n{}".format(
-                    config.get_path("token_files", "test_user"),
-                    config.get_path("token_files", "private_user"),
+                "To enable these, update {} and place a valid auth token in files\n{}\nand\n{}".format(
+                    config.config_file_path,
+                    config.get_path("token_files", "test_user", from_root=True),
+                    config.get_path("token_files", "private_user", from_root=True),
                 )
             )
             print("Note that these should belong to different users.")
@@ -511,6 +521,54 @@ class NarrIOTestCase(unittest.TestCase):
         res = self.mixin.list_narratives(ws_id=self.private_nar["ws"])
         self.validate_narrative_list(res)
         self.logout()
+
+    @patch("biokbase.narrative.clients.get", get_mock_client)
+    def test_list_narratives__no_ws_id__0_ws_ids(self):
+        ws_ids = {"workspaces": [], "pub": []}
+
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
+            nar_l = self.mixin.list_narratives()
+
+        self.assertEqual([], nar_l)
+        self.validate_narrative_list(nar_l)
+
+    @patch("biokbase.narrative.clients.get", get_mock_client)
+    def test_list_narratives__no_ws_id__9999_ws_ids(self):
+        ws_ids = {"workspaces": list(range(9999)), "pub": []}
+
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
+            nar_l = self.mixin.list_narratives()
+
+        self.assertEqual([get_exp_nar(i) for i in range(9999)], nar_l)
+        self.validate_narrative_list(nar_l)
+
+    @patch("biokbase.narrative.clients.get", get_mock_client)
+    def test_list_narratives__no_ws_id__10000_ws_ids(self):
+        ws_ids = {"workspaces": list(range(10000)), "pub": []}
+
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
+            nar_l = self.mixin.list_narratives()
+
+        self.assertEqual([get_exp_nar(i) for i in range(10000)], nar_l)
+        self.validate_narrative_list(nar_l)
+
+    @patch("biokbase.narrative.clients.get", get_mock_client)
+    def test_list_narratives__no_ws_id__10001_ws_ids(self):
+        ws_ids = {"workspaces": list(range(10000)), "pub": [10000]}
+
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
+            nar_l = self.mixin.list_narratives()
+
+        self.assertEqual([get_exp_nar(i) for i in range(10001)], nar_l)
+        self.validate_narrative_list(nar_l)
 
     def test_list_narrative_ws_invalid(self):
         with self.assertRaises(WorkspaceError) as err:

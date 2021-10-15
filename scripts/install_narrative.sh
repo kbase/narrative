@@ -98,7 +98,7 @@ then
     cd $NARRATIVE_ROOT_DIR
     log "Installing front end build components with npm"
     npm install 2>&1 | tee -a ${logfile}
-    npm run install-node-modules
+    npm run copy-node-modules-to-ext-modules
     log "Installing front end components with bower"
     npx bower install -V --allow-root --config.interactive=false 2>&1 | tee -a "${logfile}"
 

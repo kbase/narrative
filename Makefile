@@ -26,8 +26,8 @@ run-dev-image:
 install:
 	bash $(INSTALLER)
 
-install-node-modules:
-	npm run install-node-modules
+copy-node-modules-to-ext-modules:
+	npm run copy-node-modules-to-ext-modules
 
 # runs the installer to locally build the Narrative in a
 # local venv.

@@ -88,7 +88,7 @@
         "test": "karma start test/unit/karma.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
         "prepare": "husky install",
-        "install-node-modules": "node scripts/install-node-modules.js"
+        "copy-node-modules-to-ext-modules": "node scripts/copy-node-modules-to-ext-modules.js"
     },
     "lint-staged": {
         "*.js": [

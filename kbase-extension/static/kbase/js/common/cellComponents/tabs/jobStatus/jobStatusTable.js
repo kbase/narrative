@@ -83,7 +83,10 @@ define([
      *      {Object} jobInfo: job data from the backend, including app ID and params
      *      {Object} fileTypesDisplay: display text for each import type
      *      {Object} typesToFiles: mapping of import type to app ID
-     * @returns
+     * @returns {Object} with keys
+     *      analysisType:   abbreviated name for the app
+     *      outputParams:   any output files or objects
+     *      params:         all user-specified job params, output-friendly format
      */
 
     function generateJobDisplayData(args) {
@@ -135,6 +138,7 @@ define([
         return div(
             {
                 class: `${cssBaseClass}__app_type`,
+                title: typeName,
             },
             typeName
         );
@@ -186,7 +190,8 @@ define([
             showHistory = true,
             { jobManager, toggleTab } = config,
             jobsByRetryParent = {},
-            fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles);
+            fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles),
+            errors = {};
 
         if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
             throw new Error('Cannot start JobStatusTable without a jobs object in the config');
@@ -202,103 +207,134 @@ define([
         function renderTable(rows) {
             // group jobs by their retry parents
             const jobsByOriginalId = Jobs.getCurrentJobs(rows, jobsByRetryParent);
-            const rowCount = Object.keys(jobsByOriginalId).length;
-
-            dataTable = $(container)
-                .find('table')
-                .dataTable({
-                    autoWidth: false,
-                    data: Object.values(jobsByOriginalId),
-                    rowId: (row) => {
-                        return `job_${row.retry_parent || row.job_id}`;
-                    },
-                    lengthChange: false,
-                    pageLength: dataTablePageLength,
-                    searching: false,
-                    columns: [
-                        {
-                            className: `${cssBaseClass}__cell--import-type`,
-                            render: (data, type, row) => {
-                                const jobParams =
-                                    jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
-                                const relevantJobId =
-                                    row.retry_parent && jobParams[row.retry_parent]
-                                        ? row.retry_parent
-                                        : row.job_id;
-
-                                if (jobParams[relevantJobId]) {
-                                    return displayAppType(jobParams[relevantJobId].analysisType);
-                                }
-                                return `Job ID: ${row.job_id}`;
-                            },
-                        },
-                        {
-                            className: `${cssBaseClass}__cell--output`,
-                            render: (data, type, row) => {
-                                const jobParams =
-                                    jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
-                                const relevantJobId =
-                                    row.retry_parent && jobParams[row.retry_parent]
-                                        ? row.retry_parent
-                                        : row.job_id;
-
-                                if (jobParams[relevantJobId]) {
-                                    return displayParamList(jobParams[relevantJobId].outputParams);
-                                }
-                                return '';
-                            },
-                        },
-                        {
-                            className: `${cssBaseClass}__cell--status`,
-                            render: (data, type, row) => {
-                                const statusLabel = Jobs.jobLabel(row, true);
-                                return div(
-                                    {
-                                        dataToggle: 'tooltip',
-                                        dataPlacement: 'bottom',
-                                        title: statusLabel,
-                                    },
-                                    [
-                                        span({
-                                            class: `fa fa-circle ${cssBaseClass}__icon--${row.status}`,
-                                        }),
-                                        statusLabel,
-                                    ]
-                                );
-                            },
-                        },
-                        {
-                            className: `${cssBaseClass}__cell--action`,
-                            render: (data, type, row) => {
-                                const jobAction = Jobs.jobAction(row);
-                                if (!jobAction) {
-                                    return '';
-                                }
-                                const jsActionString = jobAction.replace(/ /g, '-');
-                                const dataTarget =
-                                    jobAction === 'retry' && row.retry_parent
-                                        ? row.retry_parent
-                                        : row.job_id;
-                                return button(
-                                    {
-                                        role: 'button',
-                                        dataTarget,
-                                        dataAction: jsActionString,
-                                        dataElement: 'job-action-button',
-                                        class: `${cssBaseClass}__cell_action--${jsActionString}`,
-                                    },
-                                    jobAction
-                                );
-                            },
-                        },
-                    ],
-                    drawCallback: () => {
-                        // Hide pagination controls if length is less than or equal to table length
-                        if (rowCount <= dataTablePageLength) {
-                            $(container).find('.dataTables_paginate').hide();
-                        }
-                    },
+            const allJobInfo = jobManager.model.getItem('exec.jobs.info');
+            const appData = jobManager.model.getItem('app');
+            if (allJobInfo) {
+                Object.keys(jobsByOriginalId).forEach((jobId) => {
+                    if (allJobInfo[jobId]) {
+                        const jobDisplayData = generateJobDisplayData({
+                            jobInfo: allJobInfo[jobId],
+                            fileTypesDisplay,
+                            appData,
+                            typesToFiles: config.typesToFiles,
+                        });
+                        jobManager.model.setItem(
+                            `exec.jobs.paramDisplayData.${jobId}`,
+                            jobDisplayData
+                        );
+                    }
                 });
+            }
+
+            dataTable = $(container.querySelector('table')).dataTable({
+                autoWidth: false,
+                data: Object.values(jobsByOriginalId),
+                rowId: (row) => {
+                    return `job_${row.retry_parent || row.job_id}`;
+                },
+                lengthChange: false,
+                pageLength: dataTablePageLength,
+                searching: false,
+                columns: [
+                    {
+                        className: `${cssBaseClass}__cell--import-type`,
+                        render: (data, type, row) => {
+                            const jobParams =
+                                jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                            const relevantJobId =
+                                row.retry_parent && jobParams[row.retry_parent]
+                                    ? row.retry_parent
+                                    : row.job_id;
+
+                            if (jobParams[relevantJobId]) {
+                                return displayAppType(jobParams[relevantJobId].analysisType);
+                            }
+                            return `Job ID: ${row.job_id}`;
+                        },
+                    },
+                    {
+                        className: `${cssBaseClass}__cell--output`,
+                        render: (data, type, row) => {
+                            const jobParams =
+                                jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                            const relevantJobId =
+                                row.retry_parent && jobParams[row.retry_parent]
+                                    ? row.retry_parent
+                                    : row.job_id;
+
+                            if (jobParams[relevantJobId]) {
+                                return displayParamList(jobParams[relevantJobId].outputParams);
+                            }
+                            return '';
+                        },
+                    },
+                    {
+                        className: `${cssBaseClass}__cell--status`,
+                        render: (data, type, row) => {
+                            const statusLabel = Jobs.jobLabel(row, true);
+                            return div(
+                                {
+                                    dataToggle: 'tooltip',
+                                    dataPlacement: 'bottom',
+                                    title: statusLabel,
+                                },
+                                [
+                                    span({
+                                        class: `fa fa-circle ${cssBaseClass}__icon--${row.status}`,
+                                        title: statusLabel,
+                                    }),
+                                    statusLabel,
+                                ]
+                            );
+                        },
+                    },
+                    {
+                        className: `${cssBaseClass}__cell--action`,
+                        render: (data, type, row) => {
+                            const jobAction = Jobs.jobAction(row);
+                            if (!jobAction) {
+                                return '';
+                            }
+                            const jsActionString = jobAction.replace(/ /g, '-');
+                            const dataTarget =
+                                jobAction === 'retry' && row.retry_parent
+                                    ? row.retry_parent
+                                    : row.job_id;
+
+                            const buttonArgs = {
+                                role: 'button',
+                                dataTarget,
+                                dataAction: jsActionString,
+                                dataElement: 'job-action-button',
+                                class: `${cssBaseClass}__cell_action--${jsActionString}`,
+                            };
+
+                            const buttonHtml = button(buttonArgs, jobAction);
+
+                            if (['cancel', 'retry'].includes(jobAction) && errors[row.job_id]) {
+                                // delete errors[row.job_id];
+                                return (
+                                    buttonHtml +
+                                    span({
+                                        class: `fa fa-exclamation-triangle ${cssBaseClass}__icon--action_warning`,
+                                        ariaHidden: 'true',
+                                        dataToggle: 'popover',
+                                        dataContainer: 'body',
+                                        dataContent: 'Could not ' + jobAction + ' job.',
+                                    })
+                                );
+                            }
+                            return buttonHtml;
+                        },
+                    },
+                ],
+                drawCallback: function () {
+                    // Hide pagination controls if length is less than or equal to table length
+                    if (this.api().data().length <= dataTablePageLength) {
+                        $(container).find('.dataTables_paginate').hide();
+                    }
+                },
+            });
         }
 
         /**
@@ -347,6 +383,7 @@ define([
                     node: $currentRow.next().find('[data-element="job-log-container"]')[0],
                     jobId: dtRow.data().job_id,
                     jobState,
+                    config,
                 });
             })
                 .then(() => {
@@ -355,6 +392,12 @@ define([
                 .catch((err) => {
                     console.error(err);
                 });
+        }
+
+        function closeRow(e) {
+            if ($(e.target).closest('tr')[0].classList.contains('vertical_collapse--open')) {
+                showHideChildRow(e);
+            }
         }
 
         /**
@@ -391,22 +434,56 @@ define([
                 e.target.disabled = true;
                 return false;
             }
+            // make sure any errors associated with the row ID are deleted
+            if (errors[target]) {
+                delete errors[target];
+            }
             jobManager.doJobAction(action, [target]);
 
             // if the job is being retried and the log viewer is open, close it
             // TODO: a better fix!
-            if (
-                action === 'retry' &&
-                $(e.target).closest('tr')[0].classList.contains('vertical_collapse--open')
-            ) {
-                showHideChildRow(e);
+            if (action === 'retry') {
+                closeRow(e);
             }
 
             // disable the button to prevent further clicks
             e.target.disabled = true;
+            e.target.textContent = action + 'ing';
+            // remove any error indicator from the DOM
+            $(e.target).closest('td').find('.kb-job-status__icon--action_warning').remove();
             return true;
         }
 
+        /**
+         * add the listeners to the table that allow row expansion
+         */
+        function addTableClickListeners() {
+            container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const $currentButton = $(e.target).closest(
+                        '[data-element="job-action-button"]'
+                    );
+                    const $currentRow = $(e.target).closest('tr.odd, tr.even');
+                    // not an expandable row or a job action button
+                    if (!$currentRow[0] && !$currentButton[0]) {
+                        return Promise.resolve();
+                    }
+                    // job action button
+                    if ($currentButton[0]) {
+                        return Promise.resolve(doSingleJobAction(e));
+                    }
+                    // expandable row
+                    return showHideChildRow(e);
+                };
+            });
+        }
+
+        /**
+         * Set up job listeners
+         *
+         * @param {array} jobs
+         */
         function setUpListeners(jobs) {
             jobManager.addEventHandler('modelUpdate', {
                 dropdown: () => {
@@ -432,6 +509,9 @@ define([
                 }
             });
             jobManager.addListener('job-status', [batchId].concat(jobIdList));
+            jobManager.addListener('job-error', [batchId].concat(jobIdList), {
+                jobStatusTable_error: handleJobError,
+            });
 
             if (paramsRequired.length) {
                 jobManager.addListener('job-info', paramsRequired, {
@@ -447,6 +527,48 @@ define([
         }
 
         /**
+         * Add a new row to the table (if applicable)
+         * @param {object} jobState
+         */
+        function addTableRow(jobState) {
+            // check whether this job is part of the same batch as the other jobs;
+            // if so, it should be added to the table
+            const expectedBatchId = jobManager.model.getItem('exec.jobState.batch_id');
+            if (
+                // no batch job
+                !expectedBatchId ||
+                // incoming job has no batch ID
+                !jobState.batch_id ||
+                // incoming job is in a different batch
+                jobState.batch_id !== expectedBatchId ||
+                // this is the batch job
+                jobState.job_id === expectedBatchId
+            ) {
+                return;
+            }
+            const rowIx = jobState.retry_parent || jobState.job_id;
+            const currentJobIx = `${jobState.created || 0}__${jobState.job_id}`;
+
+            jobsByRetryParent[rowIx] = {
+                job_id: rowIx,
+                jobs: {},
+            };
+            jobsByRetryParent[rowIx].jobs[currentJobIx] = jobState;
+            // do we have job info for it?
+            if (!jobManager.model.getItem(`exec.jobs.info.${rowIx}`)) {
+                jobManager.requestJobInfo([rowIx]);
+            }
+
+            // is this a job that has been retried?
+            if (jobState.retry_ids && jobState.retry_ids.length) {
+                return;
+            }
+            // this is a new job that is part of the same batch
+            dataTable.DataTable().row.add(jobState).draw();
+            addTableClickListeners();
+        }
+
+        /**
          * Update the table with a new jobState object
          * @param {object} jobState
          */
@@ -454,8 +576,7 @@ define([
             const rowIx = jobState.retry_parent || jobState.job_id;
 
             if (!jobsByRetryParent[rowIx]) {
-                // irrelevant
-                return;
+                return addTableRow(jobState);
             }
 
             const jobIx = `${jobState.created || 0}__${jobState.job_id}`;
@@ -502,6 +623,24 @@ define([
             dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
         }
 
+        function handleJobError(_, message) {
+            const { jobId, error } = message;
+            if (!error) {
+                return;
+            }
+            const jobState = jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+            const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
+
+            errors[rowIx] = error;
+
+            // update the table
+            dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
+            $('.' + `${cssBaseClass}__icon--action_warning`).popover({
+                placement: 'auto',
+                trigger: 'hover focus',
+            });
+        }
+
         /**
          *
          * @param {object} args  -- with key
@@ -543,28 +682,8 @@ define([
                 });
             }).then(() => {
                 renderTable(jobs);
-
-                container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
-                    el.onclick = (e) => {
-                        e.stopPropagation();
-                        const $currentButton = $(e.target).closest(
-                            '[data-element="job-action-button"]'
-                        );
-                        const $currentRow = $(e.target).closest('tr.odd, tr.even');
-                        // not an expandable row or a job action button
-                        if (!$currentRow[0] && !$currentButton[0]) {
-                            return Promise.resolve();
-                        }
-                        // job action button
-                        if ($currentButton[0]) {
-                            return Promise.resolve(doSingleJobAction(e));
-                        }
-                        // expandable row
-                        return showHideChildRow(e);
-                    };
-                });
-
                 setUpListeners(jobs);
+                addTableClickListeners();
             });
         }
 
@@ -573,7 +692,11 @@ define([
             jobManager.removeEventHandler('modelUpdate', 'table');
             jobManager.removeEventHandler('modelUpdate', 'dropdown');
             jobManager.removeEventHandler('job-info', 'jobStatusTable_info');
-            return dropdownWidget.stop();
+            jobManager.removeEventHandler('job-error', 'jobStateTable_error');
+            container.innerHTML = '';
+            if (dropdownWidget) {
+                return dropdownWidget.stop();
+            }
         }
 
         return {

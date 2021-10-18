@@ -573,7 +573,6 @@ define([
                             source: 'cancel_job',
                             code: 'RED',
                         },
-                        message: 'cancel error',
                         request: 'cancel_job',
                     },
                     {
@@ -599,6 +598,7 @@ define([
                             source: 'job_logs',
                             code: -32000,
                         },
+                        request: 'job_logs',
                     },
                     {
                         channel: { jobId: 'jobLogWithErrors' },
@@ -624,13 +624,87 @@ define([
                             message: 'some random error',
                             code: 404,
                         },
-                        message: 'some random error',
                         request: 'some-unknown-error',
                     },
                     {
                         channel: { jobId: 'unknownJobErrors' },
                         key: { type: 'job-error' },
                     },
+                ],
+            },
+            {
+                type: 'job_comm_error',
+                message: {
+                    job_id_list: [
+                        'job_1_RetryWithErrors',
+                        'job_2_RetryWithErrors',
+                        'job_3_RetryWithErrors',
+                    ],
+                    message: 'multiple job error message',
+                    source: 'retry_job',
+                    code: 'RED',
+                },
+                expectedMultiple: [
+                    [
+                        {
+                            jobId: 'job_1_RetryWithErrors',
+                            error: {
+                                job_id_list: [
+                                    'job_1_RetryWithErrors',
+                                    'job_2_RetryWithErrors',
+                                    'job_3_RetryWithErrors',
+                                ],
+                                message: 'multiple job error message',
+                                source: 'retry_job',
+                                code: 'RED',
+                            },
+                            request: 'retry_job',
+                        },
+                        {
+                            channel: { jobId: 'job_1_RetryWithErrors' },
+                            key: { type: 'job-error' },
+                        },
+                    ],
+                    [
+                        {
+                            jobId: 'job_2_RetryWithErrors',
+                            error: {
+                                job_id_list: [
+                                    'job_1_RetryWithErrors',
+                                    'job_2_RetryWithErrors',
+                                    'job_3_RetryWithErrors',
+                                ],
+                                message: 'multiple job error message',
+                                source: 'retry_job',
+                                code: 'RED',
+                            },
+                            request: 'retry_job',
+                        },
+                        {
+                            channel: { jobId: 'job_2_RetryWithErrors' },
+                            key: { type: 'job-error' },
+                        },
+                    ],
+                    [
+                        {
+                            jobId: 'job_3_RetryWithErrors',
+                            error: {
+                                job_id_list: [
+                                    'job_1_RetryWithErrors',
+                                    'job_2_RetryWithErrors',
+                                    'job_3_RetryWithErrors',
+                                ],
+                                message: 'multiple job error message',
+                                source: 'retry_job',
+                                code: 'RED',
+                            },
+                            request: 'retry_job',
+                        },
+                        {
+                            channel: { jobId: 'job_3_RetryWithErrors' },
+                            key: { type: 'job-error' },
+                        },
+                    ],
                 ],
             },
         ];

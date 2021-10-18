@@ -1390,7 +1390,7 @@ define([
                 check_initJobs(this, {
                     batchId,
                     allJobIds: childIds.concat([batchId]),
-                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info'],
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info', 'job-error'],
                 });
             });
 
@@ -1423,7 +1423,7 @@ define([
                 check_initJobs(this, {
                     batchId,
                     allJobIds: childIds.concat([batchId]),
-                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info'],
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info', 'job-error'],
                 });
             });
         });
@@ -1462,7 +1462,7 @@ define([
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: ['job-status', 'job-does-not-exist'],
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-error'],
                 });
             });
 
@@ -1479,7 +1479,7 @@ define([
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: ['job-status', 'job-does-not-exist'],
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-error'],
                 });
             });
         });

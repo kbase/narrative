@@ -293,7 +293,8 @@ define([
         handleCommMessages(msg) {
             const msgType = msg.content.data.msg_type;
             const msgData = msg.content.data.content;
-            let jobId = null;
+            let jobId = null,
+                msgTypeToSend = null;
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case 'start':
@@ -320,36 +321,29 @@ define([
                 // If there is a need for a generic broadcast message, we
                 // can either send a second message or implement key
                 // filtering.
-
+                //
                 // errors
                 case 'job_comm_error':
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
                         break;
                     }
-                    jobId = msgData.job_id;
-                    switch (msgData.source) {
-                        case JOB_REQUESTS.LOGS:
-                            this.sendBusMessage(JOB, jobId, RESPONSES.LOGS, {
-                                jobId,
-                                error: msgData,
-                            });
-                            break;
-                        case JOB_REQUESTS.RETRY:
-                            this.sendBusMessage(JOB, jobId, RESPONSES.RETRY, {
-                                jobId,
-                                error: msgData,
-                            });
-                            break;
-                        default:
-                            this.sendBusMessage(JOB, jobId, 'job-error', {
-                                jobId,
-                                error: msgData,
-                                message: msgData.message,
-                                request: msgData.source,
-                            });
-                            break;
+                    // treat messages relating to single jobs as if they were for a job list
+                    // eslint-disable-next-line no-case-declarations
+                    const jobIdList = msgData.job_id ? [msgData.job_id] : msgData.job_id_list;
+                    if (msgData.source === JOB_REQUESTS.LOGS) {
+                        msgTypeToSend = RESPONSES.LOGS;
+                    } else {
+                        msgTypeToSend = 'job-error';
                     }
+
+                    jobIdList.forEach((_jobId) => {
+                        this.sendBusMessage(JOB, _jobId, msgTypeToSend, {
+                            jobId: _jobId,
+                            error: msgData,
+                            request: msgData.source,
+                        });
+                    });
                     break;
 
                 case 'job_init_err':

@@ -30,7 +30,6 @@ define([
             runtime,
             reportRendered = false,
             reportRenderTimeout = null,
-            reportParams,
             reportWidget = null,
             reportRenderingPromise = null;
 
@@ -105,11 +104,11 @@ define([
                     ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
                 });
             }
-            // otherwise, render the report
+            // otherwise, render the report;lp
             return renderReportView(reportParams);
         }
 
-        function lazyRenderReport() {
+        function lazyRenderReport(reportParams) {
             return Promise.try(() => {
                 const nbContainer = document.querySelector('#notebook-container');
                 // Add scroll event listener to the notebook container on first call.
@@ -141,12 +140,12 @@ define([
          * @param {Object} params - parameters for the report view
          */
         function renderReportView(params) {
-            reportParams = JSON.parse(JSON.stringify(params));
+            const reportParams = JSON.parse(JSON.stringify(params));
             // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
             reportParams.showCreatedObjects = true;
             ui.setContent('report', div({ dataElement: 'report-widget' }));
-            return lazyRenderReport();
+            return lazyRenderReport(reportParams);
         }
 
         /**
@@ -236,13 +235,18 @@ define([
         function stop() {
             return Promise.try(() => {
                 clearTimeout(reportRenderTimeout);
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 
         return {
             start,
             stop,
-            reportRenderingPromise,
+            get reportRenderingPromise() {
+                return reportRenderingPromise;
+            },
         };
     }
 

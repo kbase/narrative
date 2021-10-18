@@ -4,6 +4,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Unreleased
+
+- SCT-1315 - Fix KBaseSets generic set viewer; ported to preact initial, then React
+- The above is the first utilization of React in the Narrative, and of npm-installed modules into the Narrative runtime
+  - added npm dependencies: react, react-dom, prop-types
+  - added support to copy umd-packaged modules from node_modules into the kbase extension static content during build
+
 ### Version 4.5.1
 - Python dependency updates
   - pillow 8.3.1 -> 8.3.2

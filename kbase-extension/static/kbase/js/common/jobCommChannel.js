@@ -79,6 +79,7 @@ define([
             STATUS: JOB_REQUESTS.STATUS,
         },
         RESPONSES = {
+            CELL_JOB_STATUS: 'cell-job-status',
             DOES_NOT_EXIST: 'job-does-not-exist',
             INFO: 'job-info',
             LOGS: 'job-logs',
@@ -122,6 +123,15 @@ define([
         'request-job-updates-stop': JOB_REQUESTS.STOP_UPDATE,
     };
 
+    const JobCommMessages = {
+        validIncomingMessageTypes: function () {
+            return Object.keys(requestTranslation);
+        },
+        validOutgoingMessageTypes: function () {
+            return Object.values(RESPONSES).concat(['job-error']);
+        },
+    };
+
     class JobCommChannel {
         /**
          * Grabs the runtime, inits the set of job states, and registers callbacks against the
@@ -139,14 +149,6 @@ define([
                 : () => {
                       /* no op */
                   };
-        }
-
-        validIncomingMessageTypes() {
-            return Object.keys(requestTranslation);
-        }
-
-        validOutgoingMessageTypes() {
-            return Object.values(RESPONSES).concat(['job-error']);
         }
 
         /**
@@ -195,9 +197,14 @@ define([
          */
         sendCommMessage(msgType, message) {
             return new Promise((resolve, reject) => {
-                // TODO: send specific error so that client can retry.
+                // TODO: send specific error so that client can retry
+                // or try to init comm channel here
                 if (!this.comm) {
-                    console.error('Comm channel not initialized, not sending message.');
+                    console.error(
+                        'Comm channel not initialized, not sending message.',
+                        msgType,
+                        message
+                    );
                     reject(new Error('Comm channel not initialized, not sending message.'));
                 }
 
@@ -237,12 +244,32 @@ define([
                 throw new Error(
                     'ERROR sending comm message: ' +
                         JSON.stringify({
-                            error: err,
+                            error: err.toString(),
                             msgType: msgType,
                             message: message,
                         })
                 );
             });
+        }
+
+        convertJobState(backendJobState) {
+            const output = {};
+            const translateBEtoFE = {
+                state: 'jobState',
+                widget_info: 'outputWidgetInfo',
+                cell_id: 'cellId',
+            };
+
+            for (const key in translateBEtoFE) {
+                if (backendJobState[key]) {
+                    output[translateBEtoFE[key]] = backendJobState[key];
+                }
+            }
+
+            if (output.jobState) {
+                output.jobId = output.jobState.job_id;
+            }
+            return output;
         }
 
         /**
@@ -267,6 +294,7 @@ define([
             const msgType = msg.content.data.msg_type;
             const msgData = msg.content.data.content;
             let jobId = null;
+            this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case 'start':
                     break;
@@ -369,16 +397,22 @@ define([
 
                 case BACKEND_RESPONSES.RETRY:
                     msgData.forEach((jobRetried) => {
-                        this.sendBusMessage(JOB, jobRetried.job.state.job_id, RESPONSES.RETRY, {
-                            job: {
-                                jobState: jobRetried.job.state,
-                                outputWidgetInfo: jobRetried.job.widget_info,
-                            },
-                            retry: {
-                                jobState: jobRetried.retry.state,
-                                outputWidgetInfo: jobRetried.retry.widget_info,
-                            },
-                        });
+                        const output = {
+                            job: this.convertJobState(jobRetried.job),
+                        };
+                        if (jobRetried.error) {
+                            output.error = jobRetried.error;
+                        }
+                        if (jobRetried.retry) {
+                            output.retry = this.convertJobState(jobRetried.retry);
+                        }
+
+                        this.sendBusMessage(
+                            JOB,
+                            jobRetried.job.state.job_id,
+                            RESPONSES.RETRY,
+                            output
+                        );
                     });
                     break;
 
@@ -391,11 +425,12 @@ define([
                 case BACKEND_RESPONSES.STATUS:
                 case 'job_status_all':
                     Object.keys(msgData).forEach((_jobId) => {
-                        this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, {
-                            jobId: _jobId,
-                            jobState: msgData[_jobId].state,
-                            outputWidgetInfo: msgData[_jobId].widget_info,
-                        });
+                        this.sendBusMessage(
+                            JOB,
+                            _jobId,
+                            RESPONSES.STATUS,
+                            this.convertJobState(msgData[_jobId])
+                        );
                     });
                     break;
 
@@ -564,5 +599,5 @@ define([
         }
     }
 
-    return JobCommChannel;
+    return { JobCommChannel, JobCommMessages };
 });

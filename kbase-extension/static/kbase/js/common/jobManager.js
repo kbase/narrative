@@ -1,16 +1,13 @@
-define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
+define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
+    DialogMessages,
+    Jobs,
+    JobComms
+) => {
     'use strict';
 
-    const validOutgoingMessageTypes = [
-        'job-does-not-exist',
-        'job-error',
-        'job-info',
-        'job-logs',
-        'job-retry-response',
-        'job-status',
-        'result',
-        'run-status',
-    ];
+    const jcm = JobComms.JobCommMessages;
+
+    const validOutgoingMessageTypes = jcm.validOutgoingMessageTypes();
 
     const jobCommand = {
         cancel: {
@@ -37,11 +34,22 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
             ['bus', 'model'].forEach((key) => {
                 if (!config[key]) {
                     throw new Error(
-                        'cannot initialise job manager widget without params "bus" and "model"'
+                        'cannot initialise Job Manager without params "bus" and "model"'
                     );
                 }
                 this[key] = config[key];
             });
+            // kbase cell ID
+            this.cellId = null;
+            if (config.cell) {
+                try {
+                    this.cellId = config.cell.metadata.kbase.attributes.id;
+                } catch (error) {
+                    throw new Error('cannot initialise Job Manager with invalid cell metadata');
+                }
+            }
+            // handler function store
+            this.__handlerFns = {};
             // an object containing event handlers, categorised by event name
             this.handlers = {};
             // bus listeners, indexed by job ID then message type
@@ -93,18 +101,16 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 );
             }
 
-            const errors = [];
             if (!this.handlers[event]) {
                 this.handlers[event] = {};
             }
-
-            for (const [name, handlerFn] of Object.entries(handlerObject)) {
-                if (typeof handlerFn !== 'function') {
-                    errors.push(name);
-                } else if (this.handlers[event][name]) {
-                    console.warn(`A handler with the name ${name} already exists`);
+            const errors = [];
+            for (const [handlerName, handlerFn] of Object.entries(handlerObject)) {
+                const typeError = this.addHandlerFunction({ handlerName, handlerFn });
+                if (typeError) {
+                    errors.push(typeError);
                 } else {
-                    this.handlers[event][name] = handlerFn;
+                    this.handlers[event][handlerName] = this.__handlerFns[handlerName];
                 }
             }
             if (errors.length) {
@@ -114,6 +120,25 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                         .join(', ')}`
                 );
             }
+        }
+
+        /**
+         * Add one or more handler functions
+         * @param {object} handlerObject - object with keys
+         *  {string}    handlerName - the name of the handler to add
+         *  {function}  handlerFn - the function to be performed
+         */
+        addHandlerFunction(handlerArgs) {
+            const { handlerName, handlerFn } = handlerArgs;
+
+            if (typeof handlerName !== 'string' || typeof handlerFn !== 'function') {
+                return handlerName;
+            } else if (this.__handlerFns[handlerName]) {
+                console.warn(`A handler with the name ${handlerName} already exists`);
+                return;
+            }
+
+            this.__handlerFns[handlerName] = handlerFn;
         }
 
         /**
@@ -129,6 +154,19 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 delete this.handlers[event][handlerName];
                 return handlerFunction;
             }
+        }
+
+        /**
+         * Remove a handler function completely
+         * @param {string} handlerName
+         */
+        removeHandlerFunction(handlerName) {
+            const handlerFunction = this.__handlerFns[handlerName];
+            Object.keys(this.handlers).forEach((event) => {
+                delete this.handlers[event][handlerName];
+            });
+            delete this.__handlerFns[handlerName];
+            return handlerFunction;
         }
 
         /**
@@ -152,47 +190,49 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
 
             Object.keys(this.handlers[event])
                 .sort()
-                .forEach((name) => {
+                .forEach((handlerName) => {
                     try {
-                        this.handlers[event][name](this, ...args);
+                        this.handlers[event][handlerName](this, ...args);
                     } catch (err) {
-                        console.warn(`Error executing handler ${name}:`, err);
+                        console.warn(`Error executing handler ${handlerName}:`, err);
                     }
                 });
         }
 
-        /* JOB LISTENERS */
+        /* LISTENERS */
 
         /**
          * Add a bus listener for ${event} messages
          *
          * @param {string} type - a valid message type to listen for (see validOutgoingMessageTypes)
-         * @param {array} jobIdList - array of job IDs to apply the listener to
+         * @param {array}  channelList - array of channels (job or cell IDs) to apply the listener to
          * @param {object} handlerObject (optional) - object with key(s) handler name and value(s) function to execute on receiving a message
          */
-        addListener(type, jobIdList, handlerObject) {
+        addListener(type, channelList, handlerObject) {
             if (!validOutgoingMessageTypes.includes(type)) {
                 throw new Error(`addListener: invalid listener ${type} supplied`);
             }
 
-            if (Object.prototype.toString.call(jobIdList) !== '[object Array]') {
-                jobIdList = [jobIdList];
+            if (Object.prototype.toString.call(channelList) !== '[object Array]') {
+                channelList = [channelList];
             }
 
-            jobIdList
-                .filter((jobId) => {
-                    return jobId && jobId.length > 0 ? 1 : 0;
+            channelList
+                .filter((channel) => {
+                    return channel && channel.length > 0 ? 1 : 0;
                 })
-                .forEach((jobId) => {
-                    if (!this.listeners[jobId]) {
-                        this.listeners[jobId] = {};
+                .forEach((channel) => {
+                    if (!this.listeners[channel]) {
+                        this.listeners[channel] = {};
                     }
+                    if (!this.listeners[channel][type]) {
+                        let channelObject = { jobId: channel };
+                        if (type === 'cell-job-status') {
+                            channelObject = { cell: channel };
+                        }
 
-                    if (!this.listeners[jobId][type]) {
-                        this.listeners[jobId][type] = this.bus.listen({
-                            channel: {
-                                jobId,
-                            },
+                        this.listeners[channel][type] = this.bus.listen({
+                            channel: channelObject,
                             key: {
                                 type,
                             },
@@ -200,7 +240,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                                 if (!this._isValidMessage(type, message)) {
                                     return;
                                 }
-                                this.runHandler(type, message, jobId);
+                                this.runHandler(type, message, channel);
                             },
                         });
                     }
@@ -213,30 +253,30 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
         }
 
         /**
-         * Remove the listener for ${type} messages for a job ID
+         * Remove the listener for ${type} messages for a channel
          *
-         * @param {string} jobId
+         * @param {string} channel
          * @param {string} type - the type of the listener
          */
-        removeListener(jobId, type) {
+        removeListener(channel, type) {
             try {
-                this.bus.removeListener(this.listeners[jobId][type]);
-                delete this.listeners[jobId][type];
+                this.bus.removeListener(this.listeners[channel][type]);
+                delete this.listeners[channel][type];
             } catch (err) {
                 // do nothing
             }
         }
 
         /**
-         * Remove all listeners associated with a certain job ID
-         * @param {string} jobId
+         * Remove all listeners associated with a certain channel ID
+         * @param {string} channel
          */
-        removeJobListeners(jobId) {
-            if (this.listeners[jobId] && Object.keys(this.listeners[jobId]).length) {
-                Object.keys(this.listeners[jobId]).forEach((type) => {
-                    this.removeListener(jobId, type);
+        removeJobListeners(channel) {
+            if (this.listeners[channel] && Object.keys(this.listeners[channel]).length) {
+                Object.keys(this.listeners[channel]).forEach((type) => {
+                    this.removeListener(channel, type);
                 });
-                delete this.listeners[jobId];
+                delete this.listeners[channel];
             }
         }
 
@@ -348,9 +388,9 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 };
 
                 Object.keys(defaultHandlers).forEach((event) => {
-                    this.addEventHandler(event, {
-                        __default: defaultHandlers[event],
-                    });
+                    const toAdd = {};
+                    toAdd[`__default_${event}`] = defaultHandlers[event];
+                    this.addEventHandler(event, toAdd);
                 }, this);
             }
 
@@ -444,6 +484,29 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
 
                 // otherwise, update the state
                 self.updateModel([jobState]);
+            }
+        };
+
+    const JobShortcutsMixin = (Base) =>
+        class extends Base {
+            /* JOB SHORTCUTS */
+
+            /**
+             * Request job info and add message listeners
+             * @param {array[string]} jobIdList
+             */
+            requestJobInfo(jobIdList) {
+                this.addListener('job-info', jobIdList);
+                this.bus.emit('request-job-info', { jobIdList });
+            }
+
+            /**
+             * Request job status and add message listeners
+             * @param {array[string]} jobIdList
+             */
+            requestJobStatus(jobIdList) {
+                this.addListener('job-status', jobIdList);
+                this.bus.emit('request-job-status', { jobIdList });
             }
         };
 
@@ -557,7 +620,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
             cancelJobsByStatus(statusList) {
                 return this.executeActionByJobStatus({
                     action: 'cancel',
-                    statusList: statusList,
+                    statusList,
                     validStatuses: Jobs.validStatusesForAction.cancel,
                 });
             }
@@ -573,7 +636,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
             retryJobsByStatus(statusList) {
                 return this.executeActionByJobStatus({
                     action: 'retry',
-                    statusList: statusList,
+                    statusList,
                     validStatuses: Jobs.validStatusesForAction.retry,
                 });
             }
@@ -656,6 +719,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                     job_id: batch_id,
                     batch_id: batch_id,
                     batch_job: true,
+                    child_jobs: [],
                     status: 'created',
                     created: 0,
                 });
@@ -684,10 +748,21 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 if (!batchJob || !allJobs) {
                     return;
                 }
+
+                // make sure that all the child jobs of batchJob are in allJobs
+                if (batchJob.child_jobs && batchJob.child_jobs.length) {
+                    batchJob.child_jobs.forEach((job_id) => {
+                        if (!allJobs[job_id]) {
+                            allJobs[job_id] = { job_id };
+                        }
+                    });
+                }
+
                 this._initJobs({
                     batchId: batchJob.job_id,
                     allJobIds: Object.keys(allJobs),
                 });
+
                 return this.getFsmStateFromJobs();
             }
 
@@ -700,11 +775,14 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
             }
         };
 
-    class JobManager extends BatchInitMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
+    class JobManager extends BatchInitMixin(
+        JobActionsMixin(JobShortcutsMixin(DefaultHandlerMixin(JobManagerCore)))
+    ) {}
 
     return {
         JobManagerCore,
         DefaultHandlerMixin,
+        JobShortcutsMixin,
         JobActionsMixin,
         BatchInitMixin,
         JobManager,

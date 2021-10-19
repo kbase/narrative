@@ -9,13 +9,8 @@ define([
 ], (JobManagerModule, Jobs, Props, Runtime, UI, TestUtil, JobsData) => {
     'use strict';
 
-    const {
-        JobManagerCore,
-        DefaultHandlerMixin,
-        JobActionsMixin,
-        BatchInitMixin,
-        JobManager,
-    } = JobManagerModule;
+    const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchInitMixin, JobManager } =
+        JobManagerModule;
 
     function createJobManagerInstance(context, jmClass = JobManager) {
         return new jmClass({
@@ -55,7 +50,7 @@ define([
         });
         const batchParent = JobsData.batchParentJob;
         // duplicate the allJobs array and give each job a retry parent
-        const allDupeJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+        const allDupeJobs = TestUtil.JSONcopy(JobsData.allJobs).map((job) => {
             job.retry_parent = job.job_id;
             job.job_id = job.job_id + '-retry';
             job.batch_id = batchParent.job_id;
@@ -63,12 +58,12 @@ define([
             return job;
         });
         // retry parent jobs -- all in state 'terminated'
-        const retryParentJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+        const retryParentJobs = TestUtil.JSONcopy(JobsData.allJobs).map((job) => {
             job.status = 'terminated';
             return job;
         });
         // a second set of jobs that have not been retried
-        const allOriginalJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+        const allOriginalJobs = TestUtil.JSONcopy(JobsData.allJobs).map((job) => {
             job.job_id += '-v2';
             return job;
         });
@@ -126,19 +121,63 @@ define([
                 jobManagerInstance = new jobManagerClass({
                     model: null,
                 });
-            }).toThrowError(
-                /cannot initialise job manager widget without params "bus" and "model"/
-            );
+            }).toThrowError(/cannot initialise Job Manager without params "bus" and "model"/);
 
             expect(() => {
                 jobManagerInstance = new jobManagerClass({
                     bus: null,
                 });
-            }).toThrowError(
-                /cannot initialise job manager widget without params "bus" and "model"/
-            );
+            }).toThrowError(/cannot initialise Job Manager without params "bus" and "model"/);
 
             expect(jobManagerInstance).not.toBeDefined();
+        });
+
+        describe('cell ID', () => {
+            it('can store a cell ID', () => {
+                const cellId = 'my-fave-cell';
+                const jobManagerInstance = new jobManagerClass({
+                    model: {},
+                    bus: {},
+                    cell: {
+                        metadata: {
+                            kbase: {
+                                attributes: {
+                                    id: cellId,
+                                },
+                            },
+                        },
+                    },
+                });
+
+                expect(jobManagerInstance.cellId).toEqual(cellId);
+            });
+
+            it('can be instantiated without a cell ID', () => {
+                const jobManagerInstance = new jobManagerClass({
+                    model: {},
+                    bus: {},
+                    cell: null,
+                });
+                expect(jobManagerInstance.cellId).toEqual(null);
+            });
+
+            it('throws an error if cell data is supplied but it is invalid', () => {
+                expect(() => {
+                    new jobManagerClass({
+                        bus: {},
+                        model: {},
+                        cell: {},
+                    });
+                }).toThrowError(/cannot initialise Job Manager with invalid cell metadata/);
+
+                expect(() => {
+                    new jobManagerClass({
+                        bus: {},
+                        model: {},
+                        cell: { this: 'that' },
+                    });
+                }).toThrowError(/cannot initialise Job Manager with invalid cell metadata/);
+            });
         });
     });
 
@@ -586,7 +625,7 @@ define([
         function setUpHandlerTest(context, event) {
             context.jobManagerInstance.addEventHandler(event, { handler_1: scream });
             expect(Object.keys(context.jobManagerInstance.handlers[event]).sort()).toEqual([
-                '__default',
+                `__default_${event}`,
                 'handler_1',
             ]);
             context.jobManagerInstance.addListener(event, [context.jobId]);
@@ -600,8 +639,10 @@ define([
                 'job-retry-response',
                 'job-status',
             ]);
-            Object.values(currentHandlers).forEach((handler) => {
-                expect(handler).toEqual({ __default: jasmine.any(Function) });
+            Object.keys(currentHandlers).forEach((handlerName) => {
+                const expected = {};
+                expected[`__default_${handlerName}`] = jasmine.any(Function);
+                expect(currentHandlers[handlerName]).toEqual(expected);
             });
         }
 
@@ -789,7 +830,7 @@ define([
 
                 it('can update the model if a job has been updated', function () {
                     // job to test
-                    const jobState = JSON.parse(JSON.stringify(JobsData.allJobsWithBatchParent))[0],
+                    const jobState = TestUtil.JSONcopy(JobsData.allJobsWithBatchParent)[0],
                         jobId = jobState.job_id;
                     this.jobId = jobId;
                     setUpHandlerTest(this, event);
@@ -877,8 +918,8 @@ define([
 
                 it('adds missing child IDs as required', function () {
                     // this will be the updated job
-                    const batchParent = JSON.parse(JSON.stringify(JobsData.batchParentJob)),
-                        batchParentUpdate = JSON.parse(JSON.stringify(JobsData.batchParentJob)),
+                    const batchParent = TestUtil.JSONcopy(JobsData.batchParentJob),
+                        batchParentUpdate = TestUtil.JSONcopy(JobsData.batchParentJob),
                         jobId = batchParent.job_id;
 
                     // remove the child jobs from the original batch parent
@@ -1145,8 +1186,7 @@ define([
                     action: 'retry',
                     statusList: ['terminated', 'error'],
                     title: 'Retry failed and cancelled jobs',
-                    body:
-                        'Please note that jobs are rerun using the same parameters. Any jobs that failed due to issues with the input, such as misconfigured parameters or corrupted input data, are likely to throw the same errors when run again.',
+                    body: 'Please note that jobs are rerun using the same parameters. Any jobs that failed due to issues with the input, such as misconfigured parameters or corrupted input data, are likely to throw the same errors when run again.',
                 },
             ];
 
@@ -1411,6 +1451,23 @@ define([
 
             it('sets up the appropriate listeners if there is data saved', function () {
                 Jobs.populateModelFromJobArray(this.model, JobsData.allJobsWithBatchParent);
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchInitMixin(JobManagerCore)
+                );
+                expect(this.jobManagerInstance.listeners).toEqual({});
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.restoreFromSaved();
+
+                check_initJobs(this, {
+                    batchId: JobsData.batchParentJob.job_id,
+                    allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
+                    listenerArray: ['job-status', 'job-does-not-exist'],
+                });
+            });
+
+            it('sets up the appropriate listeners even if child jobs are missing', function () {
+                Jobs.populateModelFromJobArray(this.model, [JobsData.batchParentJob]);
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
                     BatchInitMixin(JobManagerCore)

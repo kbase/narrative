@@ -5,8 +5,10 @@ define([
     '/test/data/jobsData',
     'testUtil',
     'narrativeMocks',
-], (JobCommChannel, Jupyter, Runtime, JobsData, TestUtil, Mocks) => {
+], (JobComms, Jupyter, Runtime, JobsData, TestUtil, Mocks) => {
     'use strict';
+
+    const JobCommChannel = JobComms.JobCommChannel;
 
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
@@ -126,7 +128,7 @@ define([
             ]);
         });
 
-        it('Should fail to initialize with a failed reply from the JobManager startup', async () => {
+        it('Should fail to initialize with a failed reply from the backend JobManager startup', async () => {
             const comm = new JobCommChannel();
             Jupyter.notebook = makeMockNotebook(null, null, {
                 name: 'Failed to start',
@@ -135,6 +137,13 @@ define([
             });
             await expectAsync(comm.initCommChannel()).toBeRejectedWith(
                 new Error('Failed to start:Some error')
+            );
+        });
+
+        it('Should error properly when trying to send a comm with an uninited channel', async () => {
+            const comm = new JobCommChannel();
+            await expectAsync(comm.sendCommMessage('some_msg', {})).toBeRejectedWithError(
+                /ERROR sending comm message: /
             );
         });
 
@@ -249,11 +258,6 @@ define([
                         );
                     });
             });
-        });
-
-        it('Should error properly when trying to send a comm with an uninited channel', async () => {
-            const comm = new JobCommChannel();
-            await expectAsync(comm.sendCommMessage('some_msg', 'foo', {})).toBeRejected();
         });
 
         /* Mocking out comm messages coming back over the channel is gruesome. Just
@@ -443,6 +447,7 @@ define([
                                 job_id: 'ping',
                             },
                             widget_info: 'ping',
+                            cell_id: 12345,
                         },
                         retry: {},
                     },
@@ -451,6 +456,7 @@ define([
                     [
                         {
                             job: {
+                                jobId: testJobId,
                                 jobState: {
                                     job_id: testJobId,
                                     status: 'wherever',
@@ -458,6 +464,7 @@ define([
                                 outputWidgetInfo: {},
                             },
                             retry: {
+                                jobId: '1234567890abcdef',
                                 jobState: {
                                     job_id: '1234567890abcdef',
                                     status: 'whenever',
@@ -473,10 +480,12 @@ define([
                     [
                         {
                             job: {
+                                jobId: 'ping',
                                 jobState: {
                                     job_id: 'ping',
                                 },
                                 outputWidgetInfo: 'ping',
+                                cellId: 12345,
                             },
                             retry: {},
                         },

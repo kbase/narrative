@@ -200,8 +200,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
                                                 .append(
                                                     $('<a>')
                                                         .attr({
-                                                            href:
-                                                                'http://www.refreshyourcache.com/en/home/',
+                                                            href: 'https://www.refreshyourcache.com/en/home/',
                                                             target: '_blank',
                                                         })
                                                         .text('This page')
@@ -248,8 +247,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
                                             $('<div>')
                                                 .append(
                                                     $('<span>')
-                                                        .css({ float: 'left' })
-                                                        .addClass('kb-err-warn')
+                                                        .addClass('kb-err-warn pull-left')
                                                         .text(
                                                             'Note: the Narrative may not work properly until this error is fixed'
                                                         )

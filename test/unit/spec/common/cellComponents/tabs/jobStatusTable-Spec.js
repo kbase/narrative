@@ -422,8 +422,29 @@ define([
         );
     }
 
+    /**
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} jobId          - the job in question
+     *      {object} error          - error object from the backend
+     *      {object} bus            - the bus to send the message on
+     */
+    function jobError(ctx) {
+        const { jobId, error } = ctx;
+        sendBusMessage(
+            ctx,
+            {
+                jobId,
+                error,
+                request: error.source,
+            },
+            { jobId },
+            'job-error'
+        );
+    }
+
     function sendBusMessage(ctx, message, channel, type) {
         const bus = ctx.bus || ctx.jobManager.bus;
+
         bus.send(message, { channel, key: { type } });
     }
 
@@ -1066,6 +1087,67 @@ define([
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             updateState(this);
                             _checkRowStructure(this.row, this.job);
+                            expect(this.jobManager.updateModel).not.toHaveBeenCalled();
+                        });
+                    });
+                });
+
+                describe('errors', () => {
+                    // cannot contact server
+                    const errorTests = [
+                        {
+                            errorText: 'Could not cancel job.',
+                            message: {
+                                source: 'cancel_job',
+                                job_id_list: ['job_update_test', 'job_1', 'job_2', 'job_3'],
+                                error: 'Unable to cancel job',
+                                message:
+                                    "HTTPSConnectionPool(host='ci.kbase.us', port=443): Max retries exceeded with url: /services/ee2 (Caused by NewConnectionError('<urllib3.connection.VerifiedHTTPSConnection object at 0x7fca286681f0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))",
+                                code: -1,
+                                name: 'Exception',
+                            },
+                            job: 'job-in-the-queue',
+                        },
+                        {
+                            errorText: 'Could not retry job.',
+                            message: {
+                                source: 'retry_job',
+                                job_id_list: ['job_update_test'],
+                                error: 'Unable to retry job(s)',
+                                message:
+                                    "HTTPSConnectionPool(host='ci.kbase.us', port=443): Max retries exceeded with url: /services/ee2 (Caused by NewConnectionError('<urllib3.connection.VerifiedHTTPSConnection object at 0x7fca28668940>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))",
+                                code: -1,
+                                name: 'Exception',
+                            },
+                            job: 'job-died-whilst-queueing',
+                        },
+                    ];
+
+                    errorTests.forEach((errorTest) => {
+                        it(`with error ${errorTest.message.source}`, async function () {
+                            // should not be any errors
+                            await createJobStatusTableWithContext(
+                                this,
+                                JobsData.jobsById[errorTest.job]
+                            );
+                            const nErrors = this.container.querySelectorAll(
+                                `${cssBaseClass}__icon--action_warning`
+                            );
+                            expect(nErrors.length).toEqual(0);
+                            _checkRowStructure(this.row, this.job);
+
+                            this.input = TestUtil.JSONcopy(this.job);
+                            this.input.meta.error = errorTest.errorText;
+                            spyOn(this.jobManager, 'updateModel').and.callThrough();
+                            // fake error response
+                            await TestUtil.waitForElementChange(this.row, () => {
+                                jobError({
+                                    bus: this.jobManager.bus,
+                                    jobId: this.job.job_id,
+                                    error: errorTest.message,
+                                });
+                            });
+                            _checkRowStructure(this.row, this.job, this.input);
                             expect(this.jobManager.updateModel).not.toHaveBeenCalled();
                         });
                     });

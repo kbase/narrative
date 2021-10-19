@@ -415,7 +415,9 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 }
 
                 // request job updates for the new job
-                self.addListener('job-status', [retry.jobState.job_id]);
+                ['status', 'error', 'does-not-exist'].forEach((type) => {
+                    self.addListener(`job-${type}`, [retry.jobState.job_id]);
+                });
                 self.bus.emit('request-job-updates-start', {
                     jobId: retry.jobState.job_id,
                 });
@@ -474,8 +476,9 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                         }
                     });
                     if (missingJobIds.length) {
-                        self.addListener('job-status', missingJobIds);
-                        self.addListener('job-info', missingJobIds);
+                        ['status', 'error', 'info'].forEach((type) => {
+                            self.addListener(`job-${type}`, missingJobIds);
+                        });
                         self.bus.emit('request-job-updates-start', {
                             jobIdList: missingJobIds,
                         });
@@ -736,8 +739,9 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
-                this.addListener('job-status', allJobIds);
-                this.addListener('job-does-not-exist', allJobIds);
+                ['status', 'error', 'does-not-exist'].forEach((type) => {
+                    this.addListener(`job-${type}`, allJobIds);
+                });
                 // request job updates
                 this.bus.emit('request-job-updates-start', { batchId });
             }

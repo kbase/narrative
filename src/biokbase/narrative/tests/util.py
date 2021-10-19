@@ -43,9 +43,9 @@ class ConfigTests(object):
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"
         )
         self._path_root = os.path.join(os.environ["NARRATIVE_DIR"])
-        config_file_path = self.file_path(_config_file)
+        self.config_file_path = self.file_path(_config_file)
         self._config = configparser.ConfigParser()
-        self._config.read(config_file_path)
+        self._config.read(self.config_file_path)
 
     def get(self, *args, **kwargs):
         return self._config.get(*args, **kwargs)

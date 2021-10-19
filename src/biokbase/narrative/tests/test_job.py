@@ -195,9 +195,11 @@ def get_test_job_state(job_id):
     for f in EXCLUDED_JOB_STATE_FIELDS:
         if f in state:
             del state[f]
+
     output_state = {
         "state": state,
         "widget_info": get_widget_info(job_id),
+        "cell_id": state.get("cell_id"),
         "user": state.get("user"),
     }
     return output_state
@@ -833,10 +835,7 @@ class JobTest(unittest.TestCase):
         all_jobs = get_all_jobs()
 
         for job_id, job in all_jobs.items():
-            self.assertEqual(
-                JOBS_TERMINALITY[job_id],
-                job.was_terminal()
-            )
+            self.assertEqual(JOBS_TERMINALITY[job_id], job.was_terminal())
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_was_terminal__batch(self):
@@ -871,10 +870,7 @@ class JobTest(unittest.TestCase):
                     if cell_id in combo
                 ]
                 for job_id, job in all_jobs.items():
-                    self.assertEqual(
-                        job_id in exp_job_ids,
-                        job.in_cells(combo)
-                    )
+                    self.assertEqual(job_id in exp_job_ids, job.in_cells(combo))
 
     def test_in_cells__none(self):
         job = create_job_from_ee2(JOB_COMPLETED)
@@ -888,23 +884,16 @@ class JobTest(unittest.TestCase):
         for job in child_jobs:
             job.cell_id = "hello"
 
-        self.assertTrue(
-            batch_job.in_cells(["hi", "hello"])
-        )
+        self.assertTrue(batch_job.in_cells(["hi", "hello"]))
 
-        self.assertFalse(
-            batch_job.in_cells(["goodbye", "hasta manana"])
-        )
+        self.assertFalse(batch_job.in_cells(["goodbye", "hasta manana"]))
 
     def test_in_cells__batch__diff_cells(self):
         batch_fam = get_batch_family_jobs(return_list=True)
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
 
         children_cell_ids = ["hi", "hello", "greetings"]
-        for job, cell_id in zip(
-            child_jobs,
-            itertools.cycle(children_cell_ids)
-        ):
+        for job, cell_id in zip(child_jobs, itertools.cycle(children_cell_ids)):
             job.cell_id = cell_id
 
         for cell_id in children_cell_ids:
@@ -913,9 +902,7 @@ class JobTest(unittest.TestCase):
             self.assertTrue(batch_job.in_cells([cell_id, "B", "A"]))
             self.assertTrue(batch_job.in_cells(["B", "A", cell_id]))
 
-        self.assertFalse(
-            batch_job.in_cells(["goodbye", "hasta manana"])
-        )
+        self.assertFalse(batch_job.in_cells(["goodbye", "hasta manana"]))
 
     def test_app_name(self):
         for job in get_all_jobs().values():

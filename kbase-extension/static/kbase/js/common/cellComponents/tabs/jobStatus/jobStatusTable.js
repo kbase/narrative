@@ -301,18 +301,18 @@ define([
                                     ? row.retry_parent
                                     : row.job_id;
 
-                            const buttonArgs = {
-                                role: 'button',
-                                dataTarget,
-                                dataAction: jsActionString,
-                                dataElement: 'job-action-button',
-                                class: `${cssBaseClass}__cell_action--${jsActionString}`,
-                            };
-
-                            const buttonHtml = button(buttonArgs, jobAction);
+                            const buttonHtml = button(
+                                {
+                                    role: 'button',
+                                    dataTarget,
+                                    dataAction: jsActionString,
+                                    dataElement: 'job-action-button',
+                                    class: `${cssBaseClass}__cell_action--${jsActionString}`,
+                                },
+                                jobAction
+                            );
 
                             if (['cancel', 'retry'].includes(jobAction) && errors[row.job_id]) {
-                                // delete errors[row.job_id];
                                 return (
                                     buttonHtml +
                                     span({

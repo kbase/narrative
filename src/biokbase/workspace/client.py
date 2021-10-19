@@ -2968,9 +2968,8 @@ class Workspace(object):
            globally readable.) -> structure: parameter "workspaces" of list
            of Long, parameter "pub" of list of Long
         """
-        return self._client.call_method(
-            "Workspace.list_workspace_ids", [params], self._service_ver, context
-        )
+        return self._client.call_method('Workspace.list_workspace_ids',
+                                        [params], self._service_ver, context)
 
     def list_workspace_objects(self, params, context=None):
         """

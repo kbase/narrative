@@ -8,7 +8,7 @@ define([
 ], (Promise, JobLogViewer, Runtime, Jobs, JobsData, TestUtil) => {
     'use strict';
 
-    const cssBaseClass = JobLogViewer.cssBaseClass;
+    const { cssBaseClass, stateCssBaseClass } = JobLogViewer;
 
     const jobsByStatus = JobsData.jobsByStatus;
 
@@ -99,8 +99,8 @@ define([
      */
 
     function testJobStatus(context, includeHistory = false) {
-        const statusNode = context.node.querySelector(`.${cssBaseClass}__status_container`);
-        const errorNode = context.node.querySelector(`.${cssBaseClass}__error_container`);
+        const statusNode = context.node.querySelector(`.${stateCssBaseClass}__container`);
+        const errorNode = context.node.querySelector(`.${stateCssBaseClass}__error_container`);
 
         const statusLine = context.jobState
             ? context.jobState.meta.createJobStatusLines.line
@@ -351,7 +351,7 @@ define([
                             return (
                                 domEl.classList &&
                                 domEl.classList.contains(
-                                    `${cssBaseClass}__job_status_detail_container`
+                                    `${stateCssBaseClass}__job_status_detail_container`
                                 )
                             );
                         });

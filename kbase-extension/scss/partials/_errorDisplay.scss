@@ -1,4 +1,14 @@
 .kb-error-display {
+  // .kb-error-display__container
+  &__container {
+    @include default-container-padding;
+    // .kb-error-display__container.kb-log__error_container
+    // see _jobLog for styling as part of job status
+    &.kb-log__error_container {
+      padding: 0;
+    }
+  }
+
   &__summary,
   &__detail_title,
   &__stacktrace_title {
@@ -12,23 +22,14 @@
       margin-top: 0;
     }
   }
-
+  // .kb-error-display__stacktrace_code
   &__stacktrace_code {
     @include code-block;
   }
-
+  // .kb-error-display__advice_list
   &__advice_list {
     list-style: none;
     padding-left: 0;
-  }
-
-  // .kb-error-display__container
-  &__container {
-    @include default-container-padding;
-
-    &.kb-log__error_container {
-      padding: 0;
-    }
   }
 }
 

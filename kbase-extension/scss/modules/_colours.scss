@@ -136,7 +136,7 @@ $icons: (
 $kbase-palette: map-merge($kbase-palette, $icons);
 
 // Job status colours
-$job_status_colours: (
+$job_status_colors: (
   "created": map-get($kbase-palette, 'info'),
   "estimating": map-get($kbase-palette, 'info'),
   "queued": map-get($kbase-palette, 'info'),
@@ -148,7 +148,7 @@ $job_status_colours: (
   "does_not_exist": map-get($kbase-palette, 'error'),
 );
 
-$palette: map-merge($kbase-palette, $job_status_colours);
+$palette: map-merge($kbase-palette, $job_status_colors);
 
 // use a colour from the palettes above
 @function use_color($key) {

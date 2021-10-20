@@ -18,24 +18,21 @@ $counter-name: code-list-counter;
   white-space: normal;
 }
 
-.kb-log,
-.kb-job-status {
+.kb-log {
   // .kb-log__container
   &__container {
     @include body-text;
   }
+  // .kb-log__dev_container
+  &__dev_container {
+    @include body-text;
 
-  &__job_status_detail_container {
-    div:first-of-type {
-      font-weight: 700;
-    }
+    padding-bottom: 2rem;
   }
-
   // .kb-log__controls
   &__controls {
     margin: 1rem 0;
   }
-
   // .kb-log__content,
   // .kb-log__content--expanded
   &__content,
@@ -46,21 +43,17 @@ $counter-name: code-list-counter;
     overflow: scroll;
     transition: height 0.5s;
   }
-
   // .kb-log__content
   &__content {
     max-height: 200px;
-
     // .kb-log__content--expanded
     &--expanded {
       max-height: 600px;
     }
   }
-
   // .kb-log__log_line_container
   &__log_line_container {
     @extend %line_container;
-
     // .kb-log__log_line_container--error
     &--error {
       @extend %line_container;
@@ -68,7 +61,6 @@ $counter-name: code-list-counter;
       background-color: use-color('error-lightest');
     }
   }
-
   // .kb-log__line_text
   // .kb-log__line_text--error
   &__line_text,
@@ -81,26 +73,22 @@ $counter-name: code-list-counter;
       position: absolute;
     }
   }
-
   // .kb-log__line_text
   &__line_text {
     background-color: use-color('base-lightest');
     color: use-color('ink');
-
     // .kb-log__line_text--error
     &--error {
       background-color: use-color('error-lightest');
       color: use-color('error-darker');
     }
   }
-
   // .kb-log__logs_title
   &__logs_title {
     @include font-h4;
 
     margin-top: 1rem;
   }
-
   // .kb-log__spinner
   &__spinner {
     @include base-text;
@@ -112,22 +100,40 @@ $counter-name: code-list-counter;
 
 .kb-job-params {
   &__params {
+    // .kb-job-params__params_container
     &_container {
       @include body-text;
     }
-
+    // .kb-job-params__params_title
     &_title {
       @include font-h4;
 
       margin-top: 1rem;
     }
   }
-
+  // .kb-job-params__param_list
   &__param_list {
     @include body-text;
 
     list-style-type: none;
     margin: 1rem 0;
+    padding: 0;
+  }
+}
+
+.kb-job-state-viewer {
+  // .kb-job-state-viewer__container
+  &__container {
+    @include body-text;
+  }
+  // .kb-job-state-viewer__job_status_detail_container
+  &__job_status_detail_container {
+    div:first-of-type {
+      font-weight: 700;
+    }
+  }
+  // .kb-job-state-viewer__error_container
+  &__error_container.kb-error-display__container {
     padding: 0;
   }
 }

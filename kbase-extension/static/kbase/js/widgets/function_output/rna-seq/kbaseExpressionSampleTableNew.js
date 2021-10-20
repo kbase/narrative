@@ -1,25 +1,31 @@
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseHistogram',
-    'kbase-client-api',
-    'kbaseTable',
-    'jquery-dataTables',
+    'kb_common/jsonRpc/genericClient',
+    'narrativeConfig',
+    'base/js/namespace',
+    'widgets/common/jqueryUtils',
+
+    // For effect
+    'bootstrap',
+    'jquery-dataTables'
 ], (
     KBWidget,
-    bootstrap,
     $,
     kbaseAuthenticatedWidget,
     kbaseTabs,
     kbaseHistogram,
-    kbase_client_api,
-    kbaseTable,
-    jquery_dataTables
+    ServiceClient,
+    Config,
+    Jupyter,
+    jqueryUtils
 ) => {
     'use strict';
+
+    const { $el } = jqueryUtils;
 
     return KBWidget({
         name: 'kbaseExpressionSampleTableNew',
@@ -33,7 +39,6 @@ define([
 
         _accessors: [
             { name: 'dataset', setter: 'setDataset' },
-            //{name: 'barchartDataset', setter: 'setBarchartDataset'},
         ],
 
         getState: function () {
@@ -75,13 +80,6 @@ define([
                         max = val;
                     }
                     barData.push(val);
-
-                    /*var bin = Math.floor(newDataset.expression_levels[k]);
-
-                      if (barData[bin] == undefined) {
-                          barData[bin] = 0;
-                      }
-                      barData[bin]++;*/
                 });
 
                 if (newDataset.tpm_expression_levels != undefined) {
@@ -101,8 +99,6 @@ define([
                     $.each(exprKeys, (i, k) => {
                         const val = Math.round(newDataset.tpm_expression_levels[k] * 1000) / 1000;
 
-                        //rows.push( [k, val] );
-
                         if (val < tpm_min) {
                             tpm_min = val;
                         }
@@ -114,23 +110,29 @@ define([
                     this.data('tpmHistogram').setDataset(tpmBarData);
                 }
 
-                //this.setBarchartDataset(barData);
                 this.data('histogram').setDataset(barData);
-                //this.renderHistogram(this.options.numBins);
 
                 let $dt = this.data('$dt');
                 if ($dt == undefined) {
-                    const columns = [
-                        { title: 'Feature ID' },
-                        { title: 'Feature Value : log2(FPKM + 1)' },
-                    ];
-                    if (newDataset.tpm_expression_levels != undefined) {
-                        this.data('tableElem').find('th').css('display', '');
-                        columns.push({ title: 'Feature Value : log2(TPM + 1)' });
-                    }
+
+                    const columns = (() => {
+                        if (typeof newDataset.tpm_expression_levels !== 'undefined') {
+                            return [
+                                { title: 'Feature ID', width: '33.33%' },
+                                { title: 'Feature Value : log2(FPKM + 1)', width: '33.33%' },
+                                { title: 'Feature Value : log2(TPM + 1)', width: '33.33%' }
+                            ];
+                        } else {
+                            return [
+                                { title: 'Feature ID', width: '50%' },
+                                { title: 'Feature Value : log2(FPKM + 1)', width: '50%' },
+                            ];
+                        }
+                    })();
 
                     $dt = this.data('tableElem').DataTable({
-                        columns: columns,
+                        autoWidth: false,
+                        columns,
                     });
 
                     this.data('$dt', $dt);
@@ -145,182 +147,171 @@ define([
                 this.loadExpression(newDataset.sample_expression_ids[0]);
                 this.data('loader').hide();
                 this.$elem.append(
-                    $.jqElem('div')
+                    $el('div')
                         .addClass('alert alert-danger')
-                        .html('No expression levels available')
+                        .text('No expression levels available')
                 );
             }
         },
 
         loadExpression: function (ref) {
-            const $sam = this;
             this.data('containerElem').hide();
             this.data('loader').show();
-            const ws = new Workspace(window.kbconfig.urls.workspace, { token: $sam.authToken() });
 
-            const ws_params = {
-                ref: ref,
-            };
+            const ws = new ServiceClient({
+                url: Config.url('workspace'),
+                module: 'Workspace',
+                token: Jupyter.narrative.getAuthToken()
+            });
 
-            ws.get_objects([ws_params])
-                .then((d) => {
-                    $sam.setDataset(d[0].data);
-                })
-                .fail((d) => {
-                    $sam.$elem.empty();
-                    $sam.$elem
-                        .addClass('alert alert-danger')
-                        .html('Could not load object : ' + d.error.message);
+            return ws.callFunc('get_objects2', [{
+                objects: [{
+                    ref: ref,
+                }]
+            }])
+                .then(([result]) => {
+                    this.setDataset(result.data[0].data);
                 });
         },
 
         init: function init(options) {
             this._super(options);
 
-            this._super(options);
+            const ws = new ServiceClient({
+                url: Config.url('workspace'),
+                module: 'Workspace',
+                token: Jupyter.narrative.getAuthToken()
+            });
 
-            const $self = this;
+            ws.callFunc('get_objects2', [{
+                objects: [{
+                    ref: this.options.upas.output
+                }]
+            }])
+                .then(([results]) => {
+                    const dataObject = results.data[0].data;
 
-            const ws = new Workspace(window.kbconfig.urls.workspace, { token: $self.authToken() });
-            //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
+                    if (dataObject.sample_expression_ids) {
+                        this.options.output = dataObject;
 
-            const ws_params = {
-                workspace: this.options.workspace,
-                wsid: this.options.wsid,
-                name: this.options.output,
-            };
+                        if (this.options.output.sample_expression_ids.length === 0) {
+                            // This should never occur, but handle it.
+                            throw new Error('This set has no elements');
+                        }
 
-            ws.get_objects([ws_params])
-                .then((d) => {
-                    const thing = d[0].data;
-                    if (thing.sample_expression_ids) {
-                        $self.options.output = thing;
-
-                        var promises = [];
-                        $.each($self.options.output.sample_expression_ids, (i, v) => {
-                            promises.push(ws.get_object_info([{ ref: v }]));
+                        const objects = this.options.output.sample_expression_ids.map((ref) => {
+                            return { ref };
                         });
 
-                        $.when
-                            .apply($, promises)
-                            .then(function () {
-                                const args = arguments;
-                                $self.options.output.sample_expression_names = [];
-                                $.each(arguments, (i, v) => {
-                                    $self.options.output.sample_expression_names.push(v[0][1]);
-                                });
-
-                                $self.appendUI($self.$elem);
-
-                                if ($self.options.output.sample_expression_ids.length) {
-                                    $self.loadExpression(
-                                        $self.options.output.sample_expression_ids[0]
-                                    );
+                        return ws.callFunc('get_object_info3', [{ objects }])
+                            .then((results) => {
+                                this.options.output.sample_expression_names = [];
+                                for (const objectInfo of results.infos) {
+                                    this.options.output.sample_expression_names.push(objectInfo[1]);
                                 }
-                            })
-                            .fail((d) => {
-                                $self.$elem.empty();
-                                $self.$elem
-                                    .addClass('alert alert-danger')
-                                    .html('Could not load object : ' + d.error.message);
+
+                                // Preload the first one. 
+                                return this.loadExpression(
+                                    this.options.output.sample_expression_ids[0]
+                                );
                             });
-                    } else if (thing.items) {
-                        $self.options.output = thing;
-                        thing.sample_expression_ids = [];
+                    } else if (dataObject.items) {
+                        this.options.output = dataObject;
+                        dataObject.sample_expression_ids = [];
 
-                        var promises = [];
-                        $.each($self.options.output.items, (i, v) => {
-                            thing.sample_expression_ids.push(v.ref);
-                            promises.push(ws.get_object_info([{ ref: v.ref }]));
+                        if (this.options.output.items.length === 0) {
+                            throw new Error('This set has no elements');
+                        }
+
+                        const objects = this.options.output.items.map(({ ref }) => {
+                            return { ref };
                         });
 
-                        $.when
-                            .apply($, promises)
-                            .then(function () {
-                                const args = arguments;
-                                $self.options.output.sample_expression_names = [];
-                                $.each(arguments, (i, v) => {
-                                    $self.options.output.sample_expression_names.push(v[0][1]);
+                        dataObject.sample_expression_ids = objects.map(({ ref }) => {
+                            return ref;
+                        });
+
+                        return ws.callFunc('get_object_info3', [{ objects }])
+                            .then(([results]) => {
+                                this.options.output.sample_expression_names = results.infos.map((objectInfo) => {
+                                    return objectInfo[1];
                                 });
 
-                                $self.appendUI($self.$elem);
+                                this.appendUI(this.$elem);
 
-                                if ($self.options.output.sample_expression_ids.length) {
-                                    $self.loadExpression(
-                                        $self.options.output.sample_expression_ids[0]
+                                if (this.options.output.sample_expression_ids.length) {
+                                    return this.loadExpression(
+                                        this.options.output.sample_expression_ids[0]
                                     );
                                 }
-                            })
-                            .fail((d) => {
-                                $self.$elem.empty();
-                                $self.$elem
-                                    .addClass('alert alert-danger')
-                                    .html('Could not load object : ' + d.error.message);
                             });
                     } else {
-                        $self.appendUI($self.$elem);
-                        $self.setDataset(d[0].data);
+                        // TODO: what case does this handle???
+                        this.appendUI(this.$elem);
+                        this.setDataset(results.data[0].data);
                     }
                 })
-                .fail((d) => {
-                    $self.$elem.empty();
-                    $self.$elem
+                .catch((err) => {
+                    this.$elem.empty();
+                    const message = (() => {
+                        if (err instanceof Error) {
+                            return err.message;
+                        } else if (err.error && err.error.message) {
+                            return err.error.message;
+                        } else {
+                            return 'Unknown error';
+                        }
+                    })();
+                    this.$elem
                         .addClass('alert alert-danger')
-                        .html('Could not load object : ' + d.error.message);
+                        .text(`Could not load object ${message}`);
                 });
 
             return this;
         },
 
         appendUI: function appendUI($elem) {
-            const $me = this;
-
             if (this.options.output.sample_expression_ids) {
-                var $selector = $.jqElem('select')
-                    .css('width', '500px')
-                    .on('change', (e) => {
-                        $me.loadExpression($selector.val());
+                const $selector = $el('select')
+                    .addClass('form-control')
+                    .css('max-width', '500px')
+                    .on('change', () => {
+                        this.loadExpression($selector.val());
                     });
 
                 $.each(this.options.output.sample_expression_ids, (i, v) => {
                     $selector.append(
-                        $.jqElem('option')
+                        $el('option')
                             .attr('value', v)
-                            .append($me.options.output.sample_expression_names[i])
+                            .append(this.options.output.sample_expression_names[i])
                     );
                 });
 
                 this.$elem
-                    .append('<br>Please select expression level: ')
-                    .append($selector)
-                    .append('<br><br>');
+                    .append($el('div').addClass('form form-inline').css('margin-bottom', '1em')
+                        .append($el('div').addClass('form-group')
+                            .append($el('label').text('Please select expression level: '))
+                            .append($selector)));
             }
 
-            const $tableElem = $.jqElem('table')
-                .css('width', '95%')
-                .append(
-                    $.jqElem('thead').append(
-                        $.jqElem('tr')
-                            .append($.jqElem('th').append('Feature ID'))
-                            .append($.jqElem('th').append('Feature Value : log2(FPKM + 1)'))
-                            .append(
-                                $.jqElem('th')
-                                    .css('display', 'none')
-                                    .append('Feature Value : log2(TPM + 1)')
-                            )
-                    )
-                );
-            const $histElem = $.jqElem('div').css({ width: 800, height: 500 });
+            const $tableElem = $el('table').addClass('table');
 
-            const $containerElem = $.jqElem('div')
+            const $overviewPanel = $el('div')
+                .css('margin-top', '10px')
+                .append($tableElem);
+
+            const $histElem = $el('div').css({ width: 800, height: 500 }).css('margin-top', '10px');
+
+            const $containerElem = $el('div')
                 .attr('id', 'containerElem')
                 .css('display', 'none');
 
-            const $container = new kbaseTabs($containerElem, {
+            const tabs = new kbaseTabs($containerElem, {
                 tabs: [
                     {
                         tab: 'Overview',
-                        content: $tableElem,
+                        content: $overviewPanel,
+                        show: true
                     },
                     {
                         tab: 'FPKM Histogram',
@@ -334,9 +325,9 @@ define([
                 },
             });
 
-            const $tpmHistElem = $.jqElem('div').css({ width: 800, height: 500 });
+            const $tpmHistElem = $el('div').css({ width: 800, height: 500 }).css('margin-top', '10px');
 
-            $container.$elem.find('[data-tab=Histogram]').on('click', (e) => {
+            tabs.$elem.find('[data-tab=Histogram]').on('click', () => {
                 $histogram.renderXAxis();
                 setTimeout(() => {
                     $histogram.renderHistogram();
@@ -344,15 +335,15 @@ define([
             });
 
             $elem.append($containerElem).append(
-                $.jqElem('div')
+                $el('div')
                     .attr('id', 'loader')
                     .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...')
-                    .append($.jqElem('br'))
+                    .append($el('br'))
                     .append(
-                        $.jqElem('div')
+                        $el('div')
                             .attr('align', 'center')
                             .append(
-                                $.jqElem('i')
+                                $el('i')
                                     .addClass('fa fa-spinner')
                                     .addClass('fa fa-spin fa fa-4x')
                             )
@@ -361,7 +352,7 @@ define([
 
             this._rewireIds($elem, this);
 
-            var $histogram = new kbaseHistogram($histElem, {
+            const $histogram = new kbaseHistogram($histElem, {
                 scaleAxes: true,
                 xPadding: 60,
                 yPadding: 120,
@@ -396,7 +387,7 @@ define([
             this.data('tableElem', $tableElem);
             this.data('histElem', $histElem);
             this.data('tpmHistElem', $tpmHistElem);
-            this.data('container', $container);
+            this.data('container', tabs);
             this.data('histogram', $histogram);
             this.data('tpmHistogram', $tpmHistogram);
         },

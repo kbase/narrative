@@ -1,49 +1,62 @@
 define([
     'kbwidget',
-    'jquery',
     'd3',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
-    'kbaseTabs',
     'underscore',
-    'kbase-generic-client-api',
-    'common/runtime',
-    'kb_service/client/workspace',
     'base/js/namespace',
+    'kb_common/jsonRpc/genericClient',
+    'widgets/common/LoadingMessage',
+    'widgets/common/ErrorMessage',
+    'widgets/common/jQueryUtils',
+    'kbaseTabs',
+
+    // For effect
     'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
-    'css!ext_components/bootstrap-slider/slider.css',
     'bootstrap',
     'bootstrap-slider',
     'tipsy',
+    'css!./kbaseExpressionVolcanoPlot.css'
 ], (
     KBWidget,
-    $,
     d3,
     Config,
     KBaseAuthenticatedWidget,
-    KBaseTabs,
     _,
-    GenericClient,
-    Runtime,
-    Workspace,
-    Jupyter
+    Jupyter,
+    ServiceClient,
+    $LoadingMessage,
+    $ErrorMessage,
+    jqueryUtils,
+    KBaseTabs
 ) => {
+    'use strict';
+
+    const { $el } = jqueryUtils;
+
+    const DEBOUNCE_INTERVAL = 25;
+    const DEFAULT_LOG_Q_VALUE = 1;
+    const DEFAULT_FOLD_CHANGE_VALUE = 0;
+    const EXPORT_PRECISION = 4;
+
     return KBWidget({
         name: 'kbaseExpressionVolcanoPlot',
         parent: KBaseAuthenticatedWidget,
         version: '1.0.0',
-        ws_id: null,
-        ws_name: null,
         token: null,
         width: 800,
-        wsUrl: Config.url('workspace'),
-        loading_image: Config.get('loading_gif'),
 
         init: function (options) {
             this._super(options);
-            this.ws_id = options.volcano_plot_object;
-            this.ws_name = options.workspace;
-            this.redRows = [];
+
+            // Holds table rows, aka genes, selected by the q-value and fold-change min/max and cutoffs
+            this.selectedRows = [];
+
+            // Constants
+            this.svgWidth = 800;
+            this.svgHeight = 350;
+            this.padding = 100;
+
             return this;
         },
 
@@ -53,378 +66,585 @@ define([
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;
         },
 
-        render: function () {
-            const self = this;
-            //login related error
-            const $container = this.$elem;
-            $container.empty();
-            if (!self.token) {
-                $container.append("<div>[Error] You're not logged in</div>");
-                return;
-            }
-
-            const kbws = new Workspace(self.wsUrl, { token: self.token });
-
-            $container.empty();
-            $container.append(
-                $.jqElem('div')
-                    .append($.jqElem('img').attr('src', this.loading_image))
-                    .append('&nbsp;&nbsp;loading data...')
-            );
-
-            if (this.options.diffExprMatrixSet_ref) {
-                // we need to hand in a name to create feature set, not a ref. Fun times.
-                kbws.get_object_info_new(
-                    { objects: [{ ref: this.options.diffExprMatrixSet_ref }], includeMetadata: 1 },
-                    (info) => {
-                        self.diffExprMatrixSet_name = info[0][1];
-                    }
-                );
-
-                this.genericClient = new GenericClient(Config.url('service_wizard'), {
-                    token: Runtime.make().authToken(),
-                });
-                this.genericClient
-                    .sync_call('ExpressionAPI.get_differentialExpressionMatrixSet', [
-                        {
-                            diffExprMatrixSet_ref: this.options.diffExprMatrixSet_ref,
-                        },
-                    ])
-                    .then((results) => {
-                        const volcano_data = results[0].volcano_plot_data[0];
-
-                        self.renderPlot({
-                            unique_conditions: [volcano_data.condition_1, volcano_data.condition_2],
-                            condition_pairs: [
-                                {
-                                    condition_1: volcano_data.condition_1,
-                                    condition_2: volcano_data.condition_2,
-                                    voldata: volcano_data.voldata,
-                                },
-                            ],
-                        });
-                    })
-                    .catch((e) => {
-                        self.$elem.empty();
-                        self.$elem.append('ERROR : ' + e);
-                    });
-            } else {
-                kbws.get_objects(
-                    [{ ref: self.ws_name + '/' + self.ws_id }],
-                    (text) => {
-                        self.renderPlot(text[0].data);
-                    },
-                    (text) => {
-                        $container.empty();
-                        $container.append('<p>[Error] ' + data.error.message + '</p>');
-                    }
-                );
-            }
-
-            return this;
+        renderLoading() {
+            return $el('div')
+                .css('margin', '20px auto')
+                .append($LoadingMessage('Loading Differential Expression Matrix...'));
         },
 
-        colorx: function (d, pv, fc) {
+        render: async function () {
+            try {
+                this.$elem.addClass('KBaseExpressionVolcanoPlot');
+                this.$elem.html(this.renderLoading());
+                this.renderData = await this.loadInitialData();
+                this.renderLayout();
+                this._rewireIds(this.$elem, this);
+                this.renderSVG();
+                this.dataId('geneCountTotal').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
+                this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
+            } catch (err) {
+                this.$elem.html($ErrorMessage(err));
+            }
+        },
+
+        renderLayout: function () {
+            // The major pieces
+            const $plotControls = this.$renderPlotControls();
+            const $plotInfo = this.$renderPlotInfo();
+            const $plot = this.$renderPlot();
+            const $geneTable = this.$renderGeneTable();
+
+            // this.$volcanoPlotTab = 
+
+            const $tabs = $el('div');
+            new KBaseTabs($tabs, {
+                tabs: [{
+                    tab: 'Volcano Plot',
+                    content: $el('div').css('margin-top', '10px').append($plotControls).append($plot),
+                    show: true
+                }, {
+                    tab: 'Gene Table',
+                    content: $el('div').css('margin-top', '10px').html($geneTable),
+                    onShown: () => {
+                        this.updateGeneTable();
+                    }
+                }]
+            });
+
+            const $layout = $el('div').addClass('PlotGrid')
+                // NB: width of this column should match that of the plot
+                .append($el('div').addClass('PlotColumn').append($tabs))
+                .append($el('div').addClass('InfoColumn').append($plotInfo));
+            this.$elem.html($layout);
+        },
+
+        loadInitialData: async function () {
+            const workspaceClient = new ServiceClient({
+                module: 'Workspace',
+                url: Config.url('workspace'),
+                token: this.token
+            });
+
+            const [result] = await workspaceClient
+                .callFunc('get_objects2', [{
+                    objects: [{
+                        ref: this.options.ref
+                    }]
+                }]);
+
+            const differentialExpressionMatrix = result.data[0].data;
+
+            this.objectName = result.data[0].info[0][1];
+
+            // TODO - fix; relies on ordering of object k-v pairs
+            const [condition_1, condition_2] = Object.entries(differentialExpressionMatrix.condition_mapping)[0];
+
+            let min_log_q = null;
+
+            const voldata = differentialExpressionMatrix.data.row_ids.map((gene, index) => {
+                const [log2fc_f, p_value_f, q_value] = differentialExpressionMatrix.data.values[index];
+                return {
+                    gene, log2fc_f, p_value_f, q_value
+                };
+            })
+                .filter(({ gene, log2fc_f, p_value_f, q_value }) => {
+                    return gene && log2fc_f && p_value_f && q_value;
+                })
+                .map((voldatum) => {
+                    const log_q_value = (() => {
+                        if (voldatum.q_value === 0) {
+                            return min_log_q;
+                        } else {
+                            const value = -Math.log10(voldatum.q_value);
+                            min_log_q = Math.min(min_log_q, value);
+                            return value;
+                        }
+                    })();
+                    return {
+                        ...voldatum,
+                        log_q_value
+                    };
+                });
+
+            if (min_log_q === null) {
+                throw new Error('no q_values available');
+            }
+
+            return { condition_1, condition_2, voldata };
+        },
+
+        colorx: function (d, logQValue, foldChangeValue) {
             const x = d.log2fc_f;
             const y = d.log_q_value;
 
-            if (Math.abs(x) > fc && Math.abs(y) > pv) {
-                if (true || d.significant === 'yes') {
+            if (Math.abs(x) >= foldChangeValue && y >= logQValue) {
+                if (x > 0) {
                     return 'red';
+                } else {
+                    return 'blue';
                 }
+                // this condition is always true; leaving it here because
+                // the intention seems to have been to use red if significant is 'yes'
+                // if (true || d.significant === 'yes') {
+                // return 'red';
             }
             return 'grey';
         },
 
-        renderPlot: function (text) {
-            const self = this;
+        updateGeneTable: function () {
+            const $table = this.data('voltable');
+            $table.hide();
+            const dtable = $table.DataTable();
+            dtable.clear().draw();
+            $table.show();
+            dtable.rows.add(this.selectedRows).draw();
+        },
 
-            const $container = this.$elem;
+        $renderGeneTable: function () {
+            const $geneTable = $el('div');
 
-            $container.empty();
+            // Then the table
+            const $table = $el('table')
+                .attr('id', 'voltable')
+                .addClass('table table-striped table-bordered');
+            $geneTable.append($table);
 
-            const $tabPane = $.jqElem('div');
-            $container.append($tabPane);
+            $table.DataTable({
+                autoWidth: false,
+                columns: [
+                    {
+                        title: 'Gene',
+                        width: '14%'
+                    },
+                    {
+                        title: 'p-value',
+                        width: '20%',
+                        render: (value) => {
+                            return `
+                                <div style="font-family: monospace;">
+                                    ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                                </div>
+                              `;
+                        }
+                    },
+                    {
+                        title: 'q-value',
+                        width: '20%',
+                        render: (value) => {
+                            return `
+                            <div style="font-family: monospace;">
+                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
+                        title: 'Significance (-Log10)',
+                        width: '23%',
+                        render: (value) => {
+                            return `
+                            <div style="font-family: monospace;">
+                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
+                        title: 'Fold Change (Log2)',
+                        width: '23%',
+                        render: (value) => {
+                            return `
+                            <div style="font-family: monospace;">
+                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                            </div>
+                          `;
+                        }
+                    }
+                ]
+            });
 
-            const overviewTable = self.data('overview-table');
+            return $geneTable;
+        },
 
-            self.counter = 0;
-            for (i = 0; i < text.condition_pairs.length; i++) {
-                c1 = text.condition_pairs[i].condition_1;
-                c2 = text.condition_pairs[i].condition_2;
-                if (
-                    (c1 === this.options.sample1 && c2 === this.options.sample2) ||
-                    (c1 === this.options.sample2 && c2 === this.options.sample1)
-                ) {
-                    self.counter = i;
-                }
-            }
+        $renderPlotControls: function () {
+            return $el('table').addClass('PlotControls')
+                .append($el('thead').append(
+                    $el('tr').append(
+                        $el('th').css('text-align', 'center').text('Significance (-Log10)'),
+                        $el('th').css('text-align', 'center').text('Fold Change (Log2)')
+                    )
+                ))
+                .append($el('tbody')
+                    .append(
+                        $el('tr')
+                            .append(
+                                $el('td')
+                                    .append(
+                                        $el('div')
+                                            .addClass('-slider-control')
+                                            .append(
+                                                $el('div')
+                                                    .addClass('-before')
+                                                    .attr('id', 'pv1')
+                                                    .append('0.0')
 
-            $tabPane
-                .append(
-                    $.jqElem('table')
-                        .css({ margin: 'auto' })
-                        .append(
-                            $.jqElem('tr')
-                                .append(
-                                    $.jqElem('td')
-                                        .append('- Log10(q-value)')
-                                        .append('<br>')
-                                        .append($.jqElem('b').attr('id', 'pv1').append('0'))
-                                        .append(
-                                            $.jqElem('input')
-                                                .attr('type', 'text')
-                                                .addClass('span2')
-                                                .attr('data-slider-step', '0.01')
-                                                .attr('id', 'log_q_value')
-                                        )
-                                        .append($.jqElem('b').attr('id', 'pv2').append('1.0'))
-                                )
-                                .append(
-                                    $.jqElem('td')
-                                        .append('Log2(Fold Change)')
-                                        .append('<br>')
-                                        .append($.jqElem('b').attr('id', 'fc1').append('0'))
-                                        .append(
-                                            $.jqElem('input')
-                                                .attr('type', 'text')
-                                                .addClass('span2')
-                                                .attr('data-slider-step', '0.01')
-                                                .attr('id', 'fc')
-                                        )
-                                        .append($.jqElem('b').attr('id', 'fc2').append('1.0'))
-                                )
-                                .append(
-                                    $.jqElem('td').append(
-                                        $.jqElem('button')
-                                            .addClass('btn btn-block btn-primary')
-                                            .append('Show Selected Genes')
-                                            .attr('id', 'showselectedgenes')
+                                            )
+                                            .append(
+                                                $el('input')
+                                                    .attr('type', 'text')
+                                                    .addClass('span2 -slider')
+                                                    .attr('id', 'log_q_value')
+                                            )
+                                            .append(
+                                                $el('div')
+                                                    .addClass('-after')
+                                                    .attr('id', 'pv2')
+                                                    .append('1.0')
+                                            )
                                     )
-                                )
-                        )
-                )
-                .append(
-                    $.jqElem('table')
-                        .css({ margin: 'auto' })
-                        .append(
-                            $.jqElem('tr')
-                                .append(
-                                    $.jqElem('td')
-                                        .append('Min -Log10(q-value)')
-                                        .append(
-                                            $.jqElem('input')
-                                                .attr('id', 'minY')
-                                                .addClass('form-control')
-                                                .on('change', (e) => {
-                                                    self.options.ymin = parseFloat(e.target.value);
-                                                    self.renderSVG();
-                                                })
-                                        )
-                                )
-                                .append(
-                                    $.jqElem('td')
-                                        .append('Max -Log10(q-value)')
-                                        .append(
-                                            $.jqElem('input')
-                                                .addClass('form-control')
-                                                .attr('id', 'maxY')
-                                                .on('change', (e) => {
-                                                    self.options.ymax = parseFloat(e.target.value);
-                                                    self.renderSVG();
-                                                })
-                                        )
-                                )
-                                .append(
-                                    $.jqElem('td')
-                                        .append('Min Log2(Fold Change)')
-                                        .append(
-                                            $.jqElem('input')
-                                                .attr('id', 'minX')
-                                                .addClass('form-control')
-                                                .on('change', (e) => {
-                                                    self.options.xmin = parseFloat(e.target.value);
-                                                    self.renderSVG();
-                                                })
-                                        )
-                                )
-                                .append(
-                                    $.jqElem('td')
-                                        .append('Max Log2(Fold Change)')
-                                        .append(
-                                            $.jqElem('input')
-                                                .attr('id', 'maxX')
-                                                .addClass('form-control')
-                                                .on('change', (e) => {
-                                                    self.options.xmax = parseFloat(e.target.value);
-                                                    self.renderSVG();
-                                                })
-                                        )
-                                )
-                        )
-                )
-                .append(
-                    $.jqElem('table')
-                        .css({ margin: 'auto', marginTop: '10px' })
-                        .append(
-                            $.jqElem('tr')
-                                .append($.jqElem('th').append('Condition 1:'))
-                                .append($.jqElem('td').append('1').attr('id', 'cond1'))
-                                .append($.jqElem('th').append('Condition 2:'))
-                                .append($.jqElem('td').append('2').attr('id', 'cond2'))
-                        )
-                )
-                .append(
-                    $.jqElem('div').attr('id', 'chart').css({
-                        width: '100%',
-                        borderBottom: '1px solid #ccc',
-                        marginBottom: '30px',
-                        textAlign: 'center',
-                    })
-                )
-                .append('<br>')
-                .append(
-                    $.jqElem('div')
-                        .css('display', self.options.diffExprMatrixSet_ref ? '' : 'none')
-                        .css('text-align', 'right')
-                        .append(
-                            $.jqElem('button')
-                                .addClass('btn btn-primary')
-                                .on('click', (e) => {
-                                    const fc = self.data('fc').val() || 0;
-                                    const log_q_value = self.data('log_q_value').val() || 0;
+                            )
+                            .append(
+                                $el('td')
+                                    .append(
+                                        $el('div')
+                                            .addClass('-slider-control')
+                                            .append(
+                                                $el('div')
+                                                    .addClass('-before')
+                                                    .attr('id', 'fc1')
+                                                    .append('0.0')
 
-                                    Jupyter.narrative.addAndPopulateApp(
-                                        'FeatureSetUtils/upload_featureset_from_diff_expr',
-                                        'dev',
-                                        {
-                                            diff_expression_ref: self.diffExprMatrixSet_name,
-                                            q_cutoff: parseFloat(
-                                                parseFloat(log_q_value, 10).toPrecision(4),
-                                                10
-                                            ),
-                                            fold_change_cutoff: parseFloat(
-                                                parseFloat(fc, 10).toPrecision(4),
-                                                10
-                                            ),
-                                        }
-                                    );
-                                })
-                                .append('Export as feature set')
+                                            )
+                                            .append(
+                                                $el('input')
+                                                    .attr('type', 'text')
+                                                    .addClass('span2 -slider')
+                                                    .attr('id', 'fc')
+                                            )
+                                            .append(
+                                                $el('div')
+                                                    .addClass('-after')
+                                                    .attr('id', 'fc2')
+                                                    .append('1.0')
+                                            )
+                                    )
+                            )
+                    )
+                    .append(
+                        $el('tr')
+                            .append(
+                                $el('td')
+                                    .append(
+                                        $el('table')
+                                            .append($el('thead')
+                                                .append(
+                                                    $el('tr')
+                                                        .append(
+                                                            $el('th').text('min')
+                                                        )
+                                                        .append(
+                                                            $el('th').text('current')
+                                                        )
+                                                        .append(
+                                                            $el('th')
+                                                                .text('max')
+                                                        )
+                                                )
+                                            )
+                                            .append($el('tbody')
+                                                .append(
+                                                    $el('tr')
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .attr('id', 'minY')
+                                                                        .addClass('form-control')
+                                                                        .on('change', (e) => {
+                                                                            this.options.ymin = parseFloat(e.target.value);
+                                                                            this.renderSVG();
+                                                                        })
+                                                                )
+                                                        )
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .attr('id', 'currentLogQValue')
+                                                                        .addClass('form-control')
+                                                                        .on('change', (e) => {
+                                                                            this.setLogQValueSlider(parseFloat(e.target.value));
+                                                                        })
+                                                                )
+                                                        )
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .addClass('form-control')
+                                                                        .attr('id', 'maxY')
+                                                                        .on('change', (e) => {
+                                                                            this.options.ymax = parseFloat(e.target.value);
+                                                                            this.renderSVG();
+                                                                        })
+                                                                )
+                                                        )
+                                                )
+                                            )
+                                    )
+                            )
+                            .append(
+                                $el('td')
+                                    .append(
+                                        $el('table')
+                                            .append($el('thead')
+                                                .append(
+                                                    $el('tr')
+                                                        .append(
+                                                            $el('th').text('min')
+                                                        )
+                                                        .append(
+                                                            $el('th').text('current')
+                                                        )
+                                                        .append(
+                                                            $el('th')
+                                                                .text('max')
+                                                        )
+                                                )
+                                            )
+                                            .append($el('tbody')
+                                                .append(
+                                                    $el('tr')
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .attr('id', 'minX')
+                                                                        .addClass('form-control')
+                                                                        .on('change', (e) => {
+                                                                            this.options.xmin = parseFloat(e.target.value);
+                                                                            this.renderSVG();
+                                                                        })
+                                                                )
+                                                        )
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .attr('id', 'currentFoldChangeValue')
+                                                                        .addClass('form-control')
+                                                                        .on('change', (e) => {
+                                                                            this.setFoldChangeSlider(parseFloat(e.target.value));
+                                                                        })
+                                                                )
+                                                        )
+                                                        .append(
+                                                            $el('td')
+                                                                .append(
+                                                                    $el('input')
+                                                                        .attr('id', 'maxX')
+                                                                        .addClass('form-control')
+                                                                        .on('change', (e) => {
+                                                                            this.options.xmax = parseFloat(e.target.value);
+                                                                            this.renderSVG();
+                                                                        })
+                                                                )
+                                                        )
+                                                )
+                                            )
+                                    )
+                            )
+                    ));
+        },
+
+        $renderPlotInfo: function () {
+            const $plotInfo = $el('table')
+                .addClass('table PropTable')
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Condition 1')
+                        )
+                        .append(
+                            $el('td').attr('id', 'cond1')
                         )
                 )
                 .append(
-                    $.jqElem('div')
-                        .css({ fontWeight: 'bold', textAlign: 'center' })
-                        .append('-Log10(q-value) = ')
-                        .append($.jqElem('span').attr('id', 'selpval'))
-                        .append('&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;')
-                        .append('Log2(Fold Change) = ')
-                        .append($.jqElem('span').attr('id', 'selfc'))
-                )
-                .append(
-                    $.jqElem('table')
-                        .attr('id', 'voltable')
-                        .addClass('table table-striped table-bordered')
+                    $el('tr')
                         .append(
-                            $.jqElem('thead').append(
-                                $.jqElem('tr')
-                                    .append($.jqElem('th').append('Gene'))
-                                    .append($.jqElem('th').append('p-value'))
-                                    .append($.jqElem('th').append('q-value'))
-                                    .append($.jqElem('th').append('Log2(Fold Change) '))
-                                    .append($.jqElem('th').append('-Log10(q-value)'))
-                            )
+                            $el('th').text('Condition 2')
                         )
                         .append(
-                            $.jqElem('tfoot').append(
-                                $.jqElem('tr')
-                                    .append($.jqElem('th').append('Gene'))
-                                    .append($.jqElem('th').append('p-value'))
-                                    .append($.jqElem('th').append('q-value'))
-                                    .append($.jqElem('th').append('Log2(Fold Change) '))
-                                    .append($.jqElem('th').append('-Log10(q-value)'))
-                            )
+                            $el('td').attr('id', 'cond2')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Total Genes')
+                        )
+                        .append(
+                            $el('td').attr('id', 'geneCountTotal')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Genes within range')
+                        )
+                        .append(
+                            $el('td').attr('id', 'geneCountInRange')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Significance (-Log10)')
+                        )
+                        .append(
+                            $el('td').attr('id', 'currentLogQValue2')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Fold Change (Log2)')
+                        )
+                        .append(
+                            $el('td').attr('id', 'currentFoldChangeValue2')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Selected Genes')
+                        )
+                        .append(
+                            $el('td').attr('id', 'geneCountSelected')
+                        )
+                )
+                .append(
+                    $el('tr')
+                        .append(
+                            $el('th').text('Export')
+                        )
+                        .append(
+                            $el('td').append(this.$renderExportButton())
                         )
                 );
 
-            this._rewireIds($tabPane, this);
-
-            let pv, fc;
-
-            const dtable = self.data('voltable').DataTable();
-
-            this.data('voltable').hide();
-
-            // Function to show selected genes, trigger for button
-            self.data('showselectedgenes').click(() => {
-                dtable.clear().draw();
-                self.data('voltable').show();
-                dtable.rows.add(self.redRows).draw();
+            const $tabs = $el('div');
+            new KBaseTabs($tabs, {
+                tabs: [{
+                    tab: 'Stats',
+                    content: $plotInfo,
+                    show: true
+                }]
             });
+            return $tabs;
+        },
 
-            self.text = text;
+        $renderExportButton: function () {
+            return $el('button')
+                .addClass('btn btn-primary')
+                .on('click', () => {
+                    const fc = this.data('fc').bootstrapSlider('getValue');
+                    const log_q_value = this.data('log_q_value').bootstrapSlider('getValue');
 
-            self.svgWidth = 800;
-            self.svgHeight = 350;
-            self.padding = 100;
+                    const params = {
+                        diff_expression_ref: this.options.setObjectName,
+                        q_cutoff: parseFloat(log_q_value.toPrecision(EXPORT_PRECISION)),
+                        fold_change_cutoff: parseFloat(fc.toPrecision(EXPORT_PRECISION)),
+                    };
 
-            const svg = (self.svg = d3
-                .select(self.data('chart')[0])
+                    Jupyter.narrative.addAndPopulateApp(
+                        'FeatureSetUtils/upload_featureset_from_diff_expr',
+                        null,
+                        params
+                    );
+                })
+                .append('Export as Feature Set');
+        },
+
+        $renderPlot: function () {
+            const $chart = $el('div');
+
+            this.svg = d3
+                .select($chart[0])
                 .append('svg')
-                .attr('width', self.svgWidth)
-                .attr('height', self.svgHeight));
+                .attr('width', this.svgWidth)
+                .attr('height', this.svgHeight);
 
-            self.svg
+            this.svg
                 .append('text')
                 .attr('class', 'xlabel')
                 .attr('text-anchor', 'end')
-                .attr('x', self.svgWidth / 2)
-                .attr('y', self.svgHeight - 40)
-                .text('Log2(Fold change)');
+                .attr('x', this.svgWidth / 2)
+                .attr('y', this.svgHeight - 40)
+                .text('Fold Change (Log2)');
 
-            self.svg
+            this.svg
                 .append('text')
                 .attr('class', 'ylabel')
                 .attr('text-anchor', 'end')
                 .attr('y', 40)
-                .attr('x', -self.svgHeight / 2 + 50)
+                .attr('x', -this.svgHeight / 2 + 50)
                 .attr('transform', 'rotate(-90)')
-                .text('-Log10(q-value)');
+                .text('Significance (-Log10)');
 
-            self.svg
+            this.svg
                 .append('g')
                 .attr('class', 'xaxis axis')
-                .attr('transform', 'translate(0,' + (self.svgHeight - self.padding + 20) + ')');
+                .attr('transform', 'translate(0,' + (this.svgHeight - this.padding + 20) + ')');
 
-            self.svg
+            this.svg
                 .append('g')
                 .attr('class', 'yaxis axis')
-                .attr('transform', 'translate(' + (self.padding - 10) + ',0)');
+                .attr('transform', 'translate(' + (this.padding - 10) + ',0)');
 
-            self.renderSVG();
+            return $chart;
+        },
+
+        dataId: function (idValue) {
+            return this.$elem.find(`[data-id="${idValue}"]`);
+        },
+
+        setFoldChangeSlider: function (newValue) {
+            this.dataId('fc')
+                .bootstrapSlider('setValue', newValue, false, true);
+        },
+
+        setLogQValueSlider: function (newValue) {
+            this.dataId('log_q_value')
+                .bootstrapSlider('setValue', newValue, false, true);
+        },
+
+        updateCurrentFoldChangeValue: function (newValue) {
+            this.data('currentFoldChangeValue').val(newValue.toFixed(2));
+            this.data('currentFoldChangeValue2').text(newValue.toFixed(2));
+        },
+
+        updateCurrentLogQValue: function (newValue) {
+            this.data('currentLogQValue').val(newValue.toFixed(2));
+            this.data('currentLogQValue2').text(newValue.toFixed(2));
         },
 
         renderSVG: function () {
-            const self = this;
-            const text = self.text;
-            const counter = self.counter;
-            const padding = self.padding;
+            const renderData = this.renderData;
+            const padding = this.padding;
+            const svg = this.svg;
 
-            const svg = self.svg;
-
+            // TODO: see if we can stamp these out.
             let highlightElement = null;
 
             // function to show info callouts
-            const info = function (d) {
-                //self.data("gene_name").html(d.gene);
-
+            const info = function () {
                 const element = d3.select(this);
                 element
                     .transition()
@@ -439,32 +659,9 @@ define([
                 highlightElement = element;
             };
 
-            let data = text.condition_pairs[counter].voldata;
 
-            // add in the -log_q_values.
-            let min_log_q_value = Number.MAX_VALUE;
-            data.forEach((d) => {
-                if (d.q_value === 0) {
-                    d.log_q_value = 'MIN';
-                } else {
-                    d.log_q_value = -Math.log10(parseFloat(d.q_value)).toFixed(2);
-                    if (d.log_q_value < min_log_q_value) {
-                        min_log_q_value = d.log_q_value;
-                    }
-                }
-
-                if (d.log2fc_f) {
-                    d.log2fc_f = d.log2fc_f.toFixed(2);
-                }
-            });
-
-            data.forEach((d) => {
-                if (d.log_q_value === 'MIN') {
-                    d.log_q_value = min_log_q_value;
-                }
-            });
-            self.data('cond1').text(text.condition_pairs[counter].condition_1);
-            self.data('cond2').text(text.condition_pairs[counter].condition_2);
+            this.data('cond1').text(renderData.condition_1);
+            this.data('cond2').text(renderData.condition_2);
 
             // Filter NO_TEST data
 
@@ -482,39 +679,32 @@ define([
             // Pvalue
             // Qvalue
 
-            // Range slider
+            const rawData = renderData.voldata;
 
-            const xmin =
-                this.options.xmin ||
-                d3.min(data, (d) => {
-                    return parseFloat(d.log2fc_f);
-                });
-            const xmax =
-                this.options.xmax ||
-                d3.max(data, (d) => {
-                    return parseFloat(d.log2fc_f);
-                });
+            const xmin = this.options.xmin || d3.min(rawData, (d) => {
+                return d.log2fc_f;
+            });
+            const xmax = this.options.xmax || d3.max(rawData, (d) => {
+                return d.log2fc_f;
+            });
 
-            const ymin =
-                this.options.ymin ||
-                d3.min(data, (d) => {
-                    return parseFloat(d.log_q_value);
-                });
-            const ymax =
-                this.options.ymax ||
-                d3.max(data, (d) => {
-                    return parseFloat(d.log_q_value);
-                });
+            const ymin = this.options.ymin || d3.min(rawData, (d) => {
+                return d.log_q_value;
+            });
+            const ymax = this.options.ymax || d3.max(rawData, (d) => {
+                return d.log_q_value;
+            });
 
-            self.data('minX').val(xmin);
-            self.data('maxX').val(xmax);
-            self.data('minY').val(ymin);
-            self.data('maxY').val(ymax);
+            // Set the min/max labels for the slider
+            this.data('minX').val(xmin.toFixed(2));
+            this.data('maxX').val(xmax.toFixed(2));
+            this.data('minY').val(ymin.toFixed(2));
+            this.data('maxY').val(ymax.toFixed(2));
 
-            data = data.filter((d) => {
+            const filteredData = rawData.filter((d) => {
                 if (
-                    !Number.isNaN(parseFloat(d.log2fc_f)) &&
-                    !Number.isNaN(parseFloat(d.log_q_value)) &&
+                    !Number.isNaN(d.log2fc_f) &&
+                    !Number.isNaN(d.log_q_value) &&
                     d.log2fc_f >= xmin &&
                     d.log2fc_f <= xmax &&
                     d.log_q_value >= ymin &&
@@ -526,140 +716,141 @@ define([
                 }
             });
 
-            //$("#fc").slider({tooltip_position:'bottom', step: 0.01, min :xmin, max:xmax, value: [xmin.toFixed(2),xmax.toFixed(2)]});
-            //$("#pvalue").slider({tooltip_position:'bottom', step:0.01, min :ymin, max:ymax, value: [ymin.toFixed(2),ymax.toFixed(2)]});
-            //
-            let fcmax = xmax;
-            if (Math.abs(xmin) > xmax) {
-                fcmax = Math.abs(xmin);
-            }
+            const sliderXMin = 0;
+            const sliderXMax = Math.max(xmax, Math.abs(xmin));
 
-            self.data('fc1').text('0.0');
-            self.data('fc2').text(fcmax.toFixed(2));
-            self.data('pv1').text(ymin.toFixed(2));
-            self.data('pv2').text(ymax.toFixed(2));
+            this.data('fc1').text(sliderXMin.toFixed(2));
+            this.data('fc2').text(sliderXMax.toFixed(2));
+            this.data('pv1').text(ymin.toFixed(2));
+            this.data('pv2').text(ymax.toFixed(2));
 
-            const sliderUpdate = _.debounce(() => {
-                fc = self.data('fc').val();
+            const fcSliderChange = _.debounce((ev) => {
+                const { newValue } = ev.value;
+                const foldChangeValue = newValue;
+                const logQValue = loqQValueSlider.bootstrapSlider('getValue');
 
-                self.data('selfc').text(parseFloat(fc).toFixed(2));
-                const numCircles = svg.selectAll('circle').size();
-                let seenCircles = 0;
-                self.redRows = [];
-                svg.selectAll('circle')
+                this.updateCurrentFoldChangeValue(foldChangeValue);
+
+                const circles = svg.selectAll('circle');
+                this.selectedRows = [];
+
+                circles
                     .transition()
                     .attr('fill', (d) => {
-                        const cc = self.colorx(d, pv, fc);
-                        if (cc === 'red') {
-                            cnt = cnt + 1;
-                            self.redRows.push([
-                                d.gene || '',
-                                //d.gene_function  || '',
-                                d.p_value_f || '',
-                                d.q_value || '',
-                                d.log2fc_f || '',
-                                d.log_q_value || '',
+                        const cc = this.colorx(d, logQValue, foldChangeValue);
+                        if (cc !== 'grey') {
+                            this.selectedRows.push([
+                                d.gene,
+                                d.p_value_f,
+                                d.q_value,
+                                d.log2fc_f,
+                                d.log_q_value,
                             ]);
                         }
                         return cc;
-                    })
-                    .each('end', () => {
-                        seenCircles++;
-                        if (numCircles === seenCircles) {
-                            updateCnt();
-                        }
                     });
-            }, 300);
 
-            self.data('fc')
-                .slider({
+                this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(circles.size()));
+                this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+            }, DEBOUNCE_INTERVAL);
+
+            const fcSlider = this.dataId('fc')
+                .bootstrapSlider({
                     tooltip_position: 'bottom',
                     step: 0.01,
-                    min: 0.0,
+                    min: sliderXMin,
                     precision: 2,
-                    max: fcmax.toFixed(2),
-                })
-                .on('slide', sliderUpdate);
+                    max: sliderXMax,
+                    formatter: (value) => {
+                        return value.toFixed(2);
+                    }
+                });
 
-            var cnt = 0;
-            var updateCnt = function () {
-                self.data('showselectedgenes').text('Show Selected (' + cnt + ' Genes)');
-                cnt = 0;
-            };
+            fcSlider.on('change', fcSliderChange);
 
-            const slider2Update = _.debounce(() => {
-                pv = self.data('log_q_value').val();
-                self.data('selpval').text(parseFloat(pv).toFixed(2));
+            const logQValueSliderChange = _.debounce(({ value: { newValue } }) => {
+                const pValue = newValue;
+                const foldChangeValue = fcSlider.bootstrapSlider('getValue');
 
-                const numCircles = svg.selectAll('circle').size();
-                let seenCircles = 0;
-                self.redRows = [];
-                svg.selectAll('circle')
+                this.updateCurrentLogQValue(pValue);
+
+                const circles = svg.selectAll('circle');
+                this.selectedRows = [];
+                circles
                     .transition()
                     .attr('fill', (d) => {
-                        const cc = self.colorx(d, pv, fc);
-                        if (cc === 'red') {
-                            cnt = cnt + 1;
-                            self.redRows.push([
-                                d.gene || '',
-                                //d.gene_function  || '',
-                                d.p_value_f || '',
-                                d.q_value || '',
-                                d.log2fc_f || '',
-                                d.log_q_value || '',
+                        const cc = this.colorx(d, pValue, foldChangeValue);
+                        if (cc !== 'grey') {
+                            this.selectedRows.push([
+                                d.gene,
+                                d.p_value_f,
+                                d.q_value,
+                                d.log2fc_f,
+                                d.log_q_value,
                             ]);
                         }
                         return cc;
-                    })
-                    .each('end', () => {
-                        seenCircles++;
-                        if (numCircles === seenCircles) {
-                            updateCnt();
-                        }
                     });
-            });
 
-            self.data('log_q_value')
-                .slider({
+                this.dataId('gene-count-in-range').text(String(circles.size()));
+                this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+            }, DEBOUNCE_INTERVAL);
+
+            const loqQValueSlider = this.dataId('log_q_value')
+                .bootstrapSlider({
                     tooltip_position: 'bottom',
                     step: 0.01,
                     precision: 2,
                     min: ymin,
-                    max: ymax.toFixed(2),
+                    max: ymax,
                 })
-                .on('slide', slider2Update);
+                .on('change', logQValueSliderChange);
 
-            self.data('fc').slider('setValue', fcmax.toFixed(2));
-            self.data('log_q_value').slider('setValue', ymax.toFixed(2));
-            self.data('selpval').text(ymax.toFixed(2));
-            self.data('selfc').text(fcmax.toFixed(2));
+            fcSlider.bootstrapSlider('setValue', DEFAULT_FOLD_CHANGE_VALUE);
+            loqQValueSlider.bootstrapSlider('setValue', DEFAULT_LOG_Q_VALUE);
 
-            pv = self.data('log_q_value').slider('getValue');
-            fc = self.data('fc').slider('getValue');
+            this.updateCurrentFoldChangeValue(fcSlider.bootstrapSlider('getValue'));
+            this.updateCurrentLogQValue(loqQValueSlider.bootstrapSlider('getValue'));
+
+            const pv = this.dataId('log_q_value').bootstrapSlider('getValue');
+            const fc = this.dataId('fc').bootstrapSlider('getValue');
 
             const xScale = d3.scale
                 .linear()
                 .domain([xmin, xmax])
-                .range([padding, self.svgWidth - padding]);
+                .range([padding, this.svgWidth - padding]);
 
             const yScale = d3.scale
                 .linear()
                 .domain([ymin, ymax])
-                .range([self.svgHeight - padding, 10]);
+                .range([this.svgHeight - padding, 10]);
 
-            svg.selectAll('circle').data(data).enter().append('svg:circle');
+            svg.selectAll('circle').data(filteredData).enter().append('svg:circle');
             svg.selectAll('circle')
-                .data(data)
+                .data(filteredData)
                 .attr('cx', (d) => {
-                    return xScale(parseFloat(d.log2fc_f));
+                    return xScale(d.log2fc_f);
                 })
                 .attr('cy', (d) => {
-                    return yScale(parseFloat(d.log_q_value));
+                    return yScale(d.log_q_value);
                 })
                 .attr('r', 3)
                 .attr('fill', (d) => {
-                    return self.colorx(d, pv, fc);
+                    const cc = this.colorx(d, pv, fc);
+                    if (cc !== 'grey') {
+                        this.selectedRows.push([
+                            d.gene,
+                            d.p_value_f,
+                            d.q_value,
+                            d.log2fc_f,
+                            d.log_q_value,
+                        ]);
+                    }
+                    return cc;
                 })
+                // NB: this and other d3 event handlers which operate on the selected element
+                // need to use the "function" form rather than fat-arrow "=>" in order for this
+                // version of d3 to set "this" for it.
                 .on('mouseover', function () {
                     d3.select(this).transition().duration(100).attr('r', 7);
                 })
@@ -671,23 +862,15 @@ define([
                     return d.significant;
                 });
 
-            svg.selectAll('circle').data(data).exit().remove();
+            const circles = svg.selectAll('circle');
 
-            // tipsy ain't working, and it's not yet clear what goes in there
-            // this may be a library issue with tipsy or a local problem.
-            /*$('svg circle').tipsy({
-          gravity: 'w',
-          Xtitle: function() {
-            return this.__data__.gene;
-          },
-        });*/
+            this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(filteredData.length));
+            this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
 
+            circles.data(filteredData).exit().remove();
             const xAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(10); //Set rough # of ticks
-
             const yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(10);
-
             svg.selectAll('.xaxis').call(xAxis);
-
             svg.selectAll('.yaxis').call(yAxis);
         },
     });

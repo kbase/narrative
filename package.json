@@ -18,6 +18,7 @@
         "commander": "8.1.0",
         "eslint": "7.32.0",
         "eslint-config-prettier": "8.3.0",
+        "expect-webdriverio": "3.1.4",
         "glob": "7.1.7",
         "grunt": "1.4.1",
         "grunt-cli": "1.4.3",

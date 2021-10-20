@@ -109,3 +109,33 @@
   background-color: #eee;
   padding: 6px;
 }
+
+
+/* 
+
+PropTable 
+
+Overrides bootstrap and jupyter table styles and some of its own, to display a set of 
+pairs of content where the first of the pair is a label, the second is a value to display.
+
+*/
+
+
+table.table.PropTable.table th {
+  text-align: left;
+  color: rgba(100, 100, 100, 1);
+}
+
+table.table.PropTable.table th, 
+table.table.PropTable.table td {
+  vertical-align: middle;
+  border: none;
+}
+
+table.table.PropTable.table tr {
+  background-color: white;
+}
+
+table.table.PropTable.table tr:hover {
+  background-color: white;
+}

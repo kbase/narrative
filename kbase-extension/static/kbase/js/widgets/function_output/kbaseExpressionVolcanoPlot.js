@@ -215,8 +215,12 @@ define([
                 .addClass('table table-striped table-bordered');
             $geneTable.append($table);
 
-            function formatNumber(value) {
-                return Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value);
+            function renderNumber(value) {
+                return `
+                    <div style="font-family: monospace;">
+                        ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                    </div>
+                `;
             }
 
             $table.DataTable({
@@ -229,46 +233,22 @@ define([
                     {
                         title: 'p-value',
                         width: '20%',
-                        render: (value) => {
-                            return `
-                                <div style="font-family: monospace;">
-                                    ${formatNumber(value)}
-                                </div>
-                              `;
-                        }
+                        render: renderNumber
                     },
                     {
                         title: 'q-value',
                         width: '20%',
-                        render: (value) => {
-                            return `
-                            <div style="font-family: monospace;">
-                                ${formatNumber(value)}
-                            </div>
-                          `;
-                        }
+                        render: renderNumber
                     },
                     {
                         title: 'Significance (-Log10)',
                         width: '23%',
-                        render: (value) => {
-                            return `
-                            <div style="font-family: monospace;">
-                                ${formatNumber(value)}
-                            </div>
-                          `;
-                        }
+                        render: renderNumber
                     },
                     {
                         title: 'Fold Change (Log2)',
                         width: '23%',
-                        render: (value) => {
-                            return `
-                            <div style="font-family: monospace;">
-                                ${formatNumber(value)}
-                            </div>
-                          `;
-                        }
+                        render: renderNumber
                     }
                 ]
             });

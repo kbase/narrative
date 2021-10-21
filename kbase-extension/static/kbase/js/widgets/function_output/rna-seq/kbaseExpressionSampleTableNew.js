@@ -7,7 +7,7 @@ define([
     'kb_common/jsonRpc/genericClient',
     'narrativeConfig',
     'base/js/namespace',
-    'widgets/common/jqueryUtils',
+    'widgets/common/jQueryUtils',
 
     // For effect
     'bootstrap',
@@ -21,11 +21,11 @@ define([
     ServiceClient,
     Config,
     Jupyter,
-    jqueryUtils
+    jQueryUtils
 ) => {
     'use strict';
 
-    const { $el } = jqueryUtils;
+    const { $el } = jQueryUtils;
 
     return KBWidget({
         name: 'kbaseExpressionSampleTableNew',

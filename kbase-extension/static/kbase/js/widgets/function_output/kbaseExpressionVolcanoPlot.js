@@ -27,12 +27,12 @@ define([
     ServiceClient,
     $LoadingMessage,
     $ErrorMessage,
-    jqueryUtils,
+    jQueryUtils,
     KBaseTabs
 ) => {
     'use strict';
 
-    const { $el } = jqueryUtils;
+    const { $el } = jQueryUtils;
 
     const DEBOUNCE_INTERVAL = 25;
     const DEFAULT_LOG_Q_VALUE = 1;

@@ -4,6 +4,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Unreleased
+
+- PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+
+
 ### Version 4.5.1
 - Python dependency updates
   - pillow 8.3.1 -> 8.3.2

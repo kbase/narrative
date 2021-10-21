@@ -2,7 +2,6 @@ import unittest
 from unittest import mock
 import os
 import itertools
-from typing import Union
 import re
 
 from biokbase.narrative.exception_util import transform_job_exception
@@ -14,17 +13,19 @@ from biokbase.narrative.jobs.jobmanager import (
     JOB_FALSY_ERR,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
+    JOBS_TYPE_ERR,
     JOBS_FALSY_NOT_REG_ERR,
 )
 from biokbase.narrative.jobs.jobcomm import (
     JobRequest,
     JobComm,
+    JOB_NOT_PROVIDED_ERR,
+    JOBS_NOT_PROVIDED_ERR,
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
     JobIDException,
 )
-from biokbase.execution_engine2.baseclient import ServerError as EE2ServerError
 
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
@@ -110,7 +111,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.stop_job_status_loop()
         self.job_states = get_test_job_states()
 
-    def check_error_message(self, source, input, err):
+    def check_error_message(self, source, input_, err):
         """
         response when no input was submitted with a query
         args:
@@ -125,7 +126,7 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_comm_error",
                 "content": {
                     "source": source,
-                    **input,
+                    **input_,
                     "name": type(err).__name__,
                     "message": str(err),
                 },
@@ -205,6 +206,19 @@ class JobCommTestCase(unittest.TestCase):
             },
             msg["data"]
         )
+
+    def test_methods__req_no_inputs(self):
+        msg = {
+            "msg_id": "some_id",
+            "content": {"data": {
+                "request_type": "job_status",
+            }},
+        }
+        req = JobRequest(msg)
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            self.jc._lookup_job_states_batch(req)
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            self.jc._retry_jobs(req)
 
     # ---------------------
     # Start job status loop
@@ -580,7 +594,7 @@ class JobCommTestCase(unittest.TestCase):
             "msg_id": "some_id",
             "content": {"data": {"request_type": "cancel_job", "job_id_list": job_id_list}},
         }
-        err = TypeError("List expected for job_id_list")
+        err = TypeError(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
 
@@ -1238,8 +1252,10 @@ class JobRequestTestCase(unittest.TestCase):
         rq = JobRequest(rq_msg)
         self.assertEqual(rq.msg_id, "some_id")
         self.assertEqual(rq.request, "a_request")
-        self.assertFalse(hasattr(rq, "job_id"))
-        self.assertFalse(hasattr(rq, "job_id_list"))
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            rq.job_id
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            rq.job_id_list
 
     def test_request_no_data(self):
         rq_msg = {"msg_id": "some_id", "content": {}}
@@ -1261,13 +1277,27 @@ class JobRequestTestCase(unittest.TestCase):
         msg = {
             "msg_id": "some_id",
             "content": {"data": {
-                "request_type": "job_status", 
+                "request_type": "job_status",
                 "job_id": "ababab",
                 "job_id_list": []
             }},
         }
         with self.assertRaisesRegex(ValueError, "Both job_id and job_id_list present"):
             JobRequest(msg)
+
+    def test_request__no_input(self):
+        msg = {
+            "msg_id": "some_id",
+            "content": {"data": {
+                "request_type": "job_status",
+            }},
+        }
+        req = JobRequest(msg)
+
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            req.job_id
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            req.job_id_list
 
     def _check_rq_equal(self, rq0, rq1):
         self.assertEqual(rq0.msg_id, rq1.msg_id)
@@ -1279,7 +1309,8 @@ class JobRequestTestCase(unittest.TestCase):
         rq_msg = make_comm_msg("a_request", "a", False)
         rq = JobRequest._convert_to_using_job_id_list(rq_msg)
         self.assertEqual(rq.request, "a_request")
-        self.assertFalse(hasattr(rq, "job_id"))
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            rq.job_id
         self.assertEqual(rq.job_id_list, ["a"])
 
     def test_split_request_by_job_id(self):
@@ -1297,27 +1328,32 @@ class JobRequestTestCase(unittest.TestCase):
         rqs = JobRequest.translate(rq_msg)
         self.assertEqual(len(rqs), 1)
         self.assertEqual(rqs[0].job_id, "a")
-        self.assertFalse(hasattr(rqs[0], "job_id_list"))
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            rqs[0].job_id_list
 
         rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID[0], ["a", "b"], False)
         rqs = JobRequest.translate(rq_msg)
         self.assertEqual(len(rqs), 2)
         self.assertEqual(rqs[0].job_id, "a")
-        self.assertFalse(hasattr(rqs[0], "job_id_list"))
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            rqs[0].job_id_list
         self.assertEqual(rqs[1].job_id, "b")
-        self.assertFalse(hasattr(rqs[1], "job_id_list"))
+        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+            rqs[1].job_id_list
 
     def test_translate_require_job_id_list(self):
         rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], "a", False)
         rqs = JobRequest.translate(rq_msg)
         self.assertEqual(len(rqs), 1)
-        self.assertFalse(hasattr(rqs[0], "job_id"))
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            rqs[0].job_id
         self.assertEqual(rqs[0].job_id_list, ["a"])
 
         rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], ["a", "b"], False)
         rqs = JobRequest.translate(rq_msg)
         self.assertEqual(len(rqs), 1)
-        self.assertFalse(hasattr(rqs[0], "job_id"))
+        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+            rqs[0].job_id
         self.assertEqual(rqs[0].job_id_list, ["a", "b"])
 
     def test_translate_doesnt_require_any_job_ids(self):
@@ -1329,7 +1365,7 @@ class JobRequestTestCase(unittest.TestCase):
         msg = {
             "msg_id": "some_id",
             "content": {"data": {
-                "request_type": "job_status", 
+                "request_type": "job_status",
                 "job_id": "ababab",
                 "job_id_list": []
             }},

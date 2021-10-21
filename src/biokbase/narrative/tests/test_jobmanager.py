@@ -18,7 +18,6 @@ from biokbase.narrative.jobs.jobmanager import (
 )
 from biokbase.narrative.jobs.job import (
     Job,
-    COMPLETED_STATUS,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTR_DEFAULTS,
@@ -28,6 +27,8 @@ from biokbase.narrative.exception_util import (
     NarrativeException,
     JobIDException,
 )
+
+from src.biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
 from .util import ConfigTests
 from .test_job import (
     JOB_COMPLETED,
@@ -229,7 +230,21 @@ class JobManagerTest(unittest.TestCase):
                         refresh
                     )
 
+    def test__check_job(self):
+        for job_id in ALL_JOBS:
+            self.jm._check_job(job_id)
+
+    def test__check_job_fail(self):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_FALSY_ERR}: {None}"):
+            self.jm._check_job(None)
+
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"):
+            self.jm._check_job(JOB_NOT_FOUND)
+
     def test__check_job_list_fail(self):
+        with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
+            self.jm._check_job_list(None)
+
         with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[]}")):
             self.jm._check_job_list([])
 

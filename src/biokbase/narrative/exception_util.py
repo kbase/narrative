@@ -5,14 +5,16 @@ from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 class JobIDException(ValueError):
     """
-    Raised when a job ID is invalid (e.g., None, "", not provided ...)
-    not registered in JobManager._running_jobs,
+    Raised when a job ID is not provided, invalid (e.g., None, ""),
+    not registered in JobManager._running_jobs, or
     not a batch ID as intended.
     Subclasses ValueError for except-clause backwards compatibility
     """
 
-    def __init__(self, msg, input):
-        super().__init__(f"{msg}: {input}")
+    def __init__(self, msg, *a):
+        if a:
+            msg = f"{msg}: {a[0]}"
+        super().__init__(msg)
 
 
 class NarrativeException(Exception):

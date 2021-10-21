@@ -3,10 +3,15 @@ import threading
 from typing import List, Union
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
+from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
 from biokbase.narrative.exception_util import NarrativeException, JobIDException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
+
+JOB_NOT_PROVIDED_ERR = "job_id not provided"
+JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
+
 LOOKUP_TIMER_INTERVAL = 5
 
 
@@ -77,15 +82,24 @@ class JobRequest:
         if "job_id" in self.rq_data and "job_id_list" in self.rq_data:
             raise ValueError("Both job_id and job_id_list present")
 
+    @property
+    def job_id(self):
         if "job_id" in self.rq_data:
-            self.job_id = self.rq_data.get("job_id")
-        elif "job_id_list" in self.rq_data:
-            self.job_id_list = self.rq_data.get("job_id_list")
+            return self.rq_data["job_id"]
+        else:
+            raise JobIDException(JOB_NOT_PROVIDED_ERR)
+
+    @property
+    def job_id_list(self):
+        if "job_id_list" in self.rq_data:
+            return self.rq_data["job_id_list"]
+        else:
+            raise JobIDException(JOBS_NOT_PROVIDED_ERR)
 
     def input(self):
-        if hasattr(self, "job_id"):
+        if "job_id" in self.rq_data:
             return ("job_id", self.job_id)
-        elif hasattr(self, "job_id_list"):
+        elif "job_id_list" in self.rq_data:
             return ("job_id_list", self.job_id_list)
         else:
             return None
@@ -108,7 +122,7 @@ class JobRequest:
         """
         job_id_list = msg["content"]["data"]["job_id_list"]
         if not isinstance(job_id_list, list):
-            raise TypeError("List expected for job_id_list")
+            raise TypeError(JOBS_TYPE_ERR)
         insts = []
         for job_id in job_id_list:
             msg_ = copy.deepcopy(msg)
@@ -463,9 +477,9 @@ class JobComm:
         error_content = dict()
         if isinstance(req, JobRequest):
             error_content["source"] = req.request
-            input = req.input()
-            if input:
-                error_content[input[0]] = input[1]
+            input_ = req.input()
+            if input_:
+                error_content[input_[0]] = input_[1]
         elif isinstance(req, dict):
             data = req.get("content", {}).get("data", {})
             error_content["source"] = data.get("request_type")
@@ -492,7 +506,7 @@ class exc_to_msg:
         self.req = req
 
     def __enter__(self):
-        pass
+        pass  # nothing to do here
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         """

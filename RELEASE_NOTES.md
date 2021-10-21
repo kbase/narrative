@@ -10,6 +10,10 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 
 ### Version 4.5.1
+Code changes
+- DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
+
+Dependency Changes
 - Python dependency updates
   - pillow 8.3.1 -> 8.3.2
   - plotly 5.1.0 -> 5.3.1

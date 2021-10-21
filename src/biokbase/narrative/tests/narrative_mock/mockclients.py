@@ -2,6 +2,22 @@ from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 
 
+def get_nar_obj(i):
+    return [
+        i,
+        "My_Test_Narrative",
+        "KBaseNarrative.Narrative",
+        "2017-03-31T23:42:59+0000",
+        1,
+        "wjriehl",
+        18836,
+        "wjriehl:1490995018528",
+        "278abf8f0dbf8ab5ce349598a8674a6e",
+        109180038,
+        {},
+    ]
+
+
 class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.
@@ -215,6 +231,10 @@ class MockClients:
         paths = [["18836/5/1"]]
         num_objects = len(params.get("objects", [0]))
         return {"infos": infos * num_objects, "paths": paths * num_objects}
+
+    def list_objects(self, params):
+        ws_ids = params["ids"]
+        return [get_nar_obj(int(id)) for id in ws_ids]  # assert int
 
     # ----- Narrative Job Service functions -----
 

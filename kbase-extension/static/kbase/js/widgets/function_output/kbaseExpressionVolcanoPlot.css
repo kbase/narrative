@@ -2,13 +2,21 @@
   margin-top: 10px;
 }
 
+/* Overrides the slider lout so it stretches */
+
 .KBaseExpressionVolcanoPlot .slider.slider-horizontal {
   flex: 1 1 0;
 }
 
+/* Helps bootstrap with column gutter */
+
 .KBaseExpressionVolcanoPlot .col + .col {
   padding-left: 10px;
 }
+
+/*
+Remove styling added by jupyter 
+*/
 
 .KBaseExpressionVolcanoPlot .table tr {
   background-color: white;
@@ -17,6 +25,10 @@
 .KBaseExpressionVolcanoPlot .table tr:hover {
   background-color: white;
 }
+
+/*
+PlotGrid is a simple flexbox grid for laying out the plot and plot info side by side
+*/
 
 .KBaseExpressionVolcanoPlot .PlotGrid {
   display: flex;
@@ -31,6 +43,10 @@
   flex: 1 1 0;
   margin-left: 10px;
 }
+
+/*
+PlotControls is an area above the plot with inputs and sliders for controlling plot parameters
+*/
 
 .KBaseExpressionVolcanoPlot .PlotControls .-title {
   text-align: center;
@@ -55,7 +71,10 @@
   flex: 1 1 0;
 }
 
-/* Remove styling added by jupyter */
+/* 
+Override some bootstrap table styling since we're using this for layout.
+Maybe should just not use bootstrap table as a base class.
+*/
 
 .KBaseExpressionVolcanoPlot table.PlotControls th {
   text-align: left;
@@ -66,14 +85,6 @@
   border: none;
 }
   
-.KBaseExpressionVolcanoPlot table.PlotControls tr {
-  background-color: white;
-}
-  
-.KBaseExpressionVolcanoPlot table.PlotControls tr:hover {
-  background-color: white;
-}
-
 .KBaseExpressionVolcanoPlot table.PlotControls thead {
   border: none;
 }

@@ -1,7 +1,7 @@
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
-from biokbase.narrative.exception_util import transform_job_exception, NotBatchException
+from biokbase.narrative.exception_util import transform_job_exception
 import copy
 import json
 import uuid
@@ -28,7 +28,7 @@ JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
     f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
 ]
 
-EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id"]
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "child_jobs"]
 
 
 # The app_id and app_version should both align with what's available in
@@ -75,14 +75,6 @@ JOB_INPUT_ATTRS = [
     "params",
 ]
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
-
-
-def _attr_to_ee2(attr):
-    mapping = {"app_version": "service_ver"}
-    if attr in mapping:
-        return mapping[attr]
-    else:
-        return attr
 
 
 def get_dne_job_state(job_id, output_state=True):
@@ -183,7 +175,7 @@ class Job(object):
                 )
             ),
             retry_ids=lambda: copy.deepcopy(
-                # Batch container and retry parent jobs don't have a
+                # Batch container and retry jobs don't have a
                 # retry_ids field so skip the state refresh
                 self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
                 if self.batch_job or self.retry_parent
@@ -317,7 +309,7 @@ class Job(object):
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def update_state(self, state: dict) -> dict:
+    def _update_state(self, state: dict) -> None:
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
@@ -325,7 +317,7 @@ class Job(object):
 
             if "job_id" in state and state["job_id"] != self.job_id:
                 raise ValueError(
-                    f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+                    f"Job ID mismatch in _update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
                 )
 
             state = copy.deepcopy(state)
@@ -334,34 +326,28 @@ class Job(object):
             else:
                 self._acc_state.update(state)
 
-        return copy.deepcopy(self._acc_state)
-
-    def _augment_ee2_state(self, state: dict) -> dict:
-        output_state = copy.deepcopy(state)
-        for field in EXCLUDED_JOB_STATE_FIELDS:
-            if field in output_state:
-                del output_state[field]
-        if "job_output" not in output_state:
-            output_state["job_output"] = {}
-        for arg in EXTRA_JOB_STATE_FIELDS:
-            output_state[arg] = getattr(self, arg)
-        return output_state
+    @staticmethod
+    def _trim_ee2_state(state: dict, exclude: list) -> None:
+        if exclude:
+            for field in exclude:
+                if field in state:
+                    del state[field]
 
     def state(self, force_refresh=False):
         """
         Queries the job service to see the state of the current job.
         """
 
-        if not force_refresh and self.was_terminal():
-            state = copy.deepcopy(self._acc_state)
-        else:
+        if force_refresh or not self.was_terminal():
             state = self.query_ee2_state(self.job_id, init=False)
-            state = self.update_state(state)
+            self._update_state(state)
 
-        for field in JOB_INIT_EXCLUDED_JOB_STATE_FIELDS:
-            if field in state:
-                del state[field]
+        return self._internal_state(JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
 
+    def _internal_state(self, exclude=None):
+        """Wrapper for self._acc_state"""
+        state = copy.deepcopy(self._acc_state)
+        self._trim_ee2_state(state, exclude)
         return state
 
     @staticmethod
@@ -436,7 +422,8 @@ class Job(object):
         if not state:
             state = self.state()
         else:
-            state = self.update_state(state)
+            self._update_state(state)
+            state = self._internal_state()
 
         if state is None:
             return self._create_error_state(
@@ -445,10 +432,11 @@ class Job(object):
                 -1,
             )
 
-        state = self._augment_ee2_state(state)
-
-        if "child_jobs" not in state:
-            state["child_jobs"] = []
+        self._trim_ee2_state(state, EXCLUDED_JOB_STATE_FIELDS)
+        if "job_output" not in state:
+            state["job_output"] = {}
+        for arg in EXTRA_JOB_STATE_FIELDS:
+            state[arg] = getattr(self, arg)
 
         widget_info = None
         if state.get("finished"):
@@ -485,10 +473,12 @@ class Job(object):
         """
         from biokbase.narrative.widgetmanager import WidgetManager
 
-        if state is None:
+        if not state:
             state = self.state()
+        else:
+            self._update_state(state)
+            state = self._internal_state()
 
-        state = self._augment_ee2_state(state)
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(
@@ -580,7 +570,7 @@ class Job(object):
         """
         output_widget_info = None
         try:
-            state = self._augment_ee2_state(self.state())
+            state = self.state()
             spec = self.app_spec()
             if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)
@@ -644,7 +634,7 @@ class Job(object):
 
     def _verify_children(self, children: List["Job"]) -> None:
         if not self.batch_job:
-            raise NotBatchException("Not a batch container job")
+            raise ValueError("Not a batch container job")
         if children is None:
             raise ValueError(
                 "Must supply children when setting children of batch job parent"

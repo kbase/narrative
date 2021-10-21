@@ -10,7 +10,7 @@ import requests
 
 
 class ExceptionUtilTestCase(unittest.TestCase):
-    def test_transform_njs_err(self):
+    def test_transform_ee2_err(self):
         code = 1000
         message = "some error message"
         name = "EEError"
@@ -19,7 +19,21 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, "njs")
+        self.assertEqual(nar_err.source, "ee2")
+        self.assertIsNone(nar_err.error)
+
+    def test_transform_ee2_err__with_error(self):
+        code = 1000
+        message = "some error message"
+        name = "EEError"
+        error = "Unable to perform some request"
+        njs_err = EEServerError(name, code, message)
+        nar_err = transform_job_exception(njs_err, error)
+        self.assertEqual(nar_err.code, code)
+        self.assertEqual(nar_err.message, message)
+        self.assertEqual(nar_err.name, name)
+        self.assertEqual(nar_err.source, "ee2")
+        self.assertEqual(nar_err.error, error)
 
     def test_transform_ujs_err(self):
         code = 1000
@@ -31,6 +45,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
         self.assertEqual(nar_err.source, "ujs")
+        self.assertIsNone(nar_err.error)
 
     def test_transform_http_err_unavailable(self):
         codes = [404, 502, 503]
@@ -45,6 +60,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
             self.assertEqual(nar_err.message, message)
             self.assertEqual(nar_err.name, name)
             self.assertEqual(nar_err.source, "network")
+            self.assertIsNone(nar_err.error)
 
     def test_transform_http_err_timeout(self):
         codes = [504, 598, 599]
@@ -59,6 +75,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
             self.assertEqual(nar_err.message, message)
             self.assertEqual(nar_err.name, name)
             self.assertEqual(nar_err.source, "network")
+            self.assertIsNone(nar_err.error)
 
     def test_transform_http_err_internal(self):
         code = 500
@@ -72,6 +89,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
         self.assertEqual(nar_err.source, "network")
+        self.assertIsNone(nar_err.error)
 
     def test_transform_http_err_unknown(self):
         code = 666
@@ -85,3 +103,4 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
         self.assertEqual(nar_err.source, "network")
+        self.assertIsNone(nar_err.error)

@@ -1,3 +1,8 @@
+from IPython.display import HTML
+from jinja2 import Template
+from datetime import datetime, timezone, timedelta
+import copy
+from typing import List, Tuple
 import biokbase.narrative.clients as clients
 from .job import (
     Job,
@@ -6,17 +11,11 @@ from .job import (
     get_dne_job_state,
 )
 from biokbase.narrative.common import kblogging
-from IPython.display import HTML
-from jinja2 import Template
-from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception,
-    NoJobException,
-    NotBatchException,
+    JobIDException,
 )
-import copy
-from typing import List, Tuple
 
 """
 KBase Job Manager
@@ -30,6 +29,13 @@ instance in its current state.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
+
+JOB_FALSY_ERR = "Job ID is not provided or falsy"
+JOB_NOT_REG_ERR = "Job ID not registered"
+JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
+
+JOBS_TYPE_ERR = "List expected for job_id_list"
+JOBS_FALSY_NOT_REG_ERR = "Job ID(s) are not provided, falsy, or not registered"
 
 
 class JobManager(object):
@@ -86,7 +92,7 @@ class JobManager(object):
             )
         except Exception as e:
             kblogging.log_event(self._log, "init_error", {"err": str(e)})
-            new_e = transform_job_exception(e)
+            new_e = transform_job_exception(e, "Unable to initialize jobs")
             raise new_e
 
         self._running_jobs = dict()
@@ -132,7 +138,13 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+    def _check_job(self, input_id: str) -> None:
+        if not input_id:
+            raise JobIDException(JOB_FALSY_ERR, input_id)
+        elif input_id not in self._running_jobs:
+            raise JobIDException(JOB_NOT_REG_ERR, input_id)
+
+    def _check_job_list(self, input_ids: List[str]) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order
         Any jobs not present in self._running_jobs are added to an error list
@@ -141,6 +153,9 @@ class JobManager(object):
         :return results: tuple with items "job_ids", containing valid IDs;
         and "error_ids", for jobs that the narrative backend does not know about
         """
+        if not isinstance(input_ids, list):
+            raise TypeError(f"{JOBS_TYPE_ERR}: {input_ids}")
+
         job_ids = []
         for job_id in input_ids:
             if job_id and job_id not in job_ids:
@@ -152,7 +167,7 @@ class JobManager(object):
                 error_ids.insert(0, job_ids.pop(i))
 
         if not len(job_ids) + len(error_ids):
-            raise NoJobException("No job id(s) supplied")
+            raise JobIDException(JOBS_FALSY_NOT_REG_ERR, input_ids)
 
         return job_ids, error_ids
 
@@ -343,11 +358,10 @@ class JobManager(object):
     def get_job(self, job_id):
         """
         Returns a Job with the given job_id.
-        Raises a NoJobException if not found.
+        Raises a JobIDException if not found.
         """
-        if job_id in self._running_jobs:
-            return self._running_jobs[job_id]["job"]
-        raise NoJobException(f"No job present with id {job_id}")
+        self._check_job(job_id)
+        return self._running_jobs[job_id]["job"]
 
     def get_job_logs(
         self,
@@ -403,9 +417,9 @@ class JobManager(object):
                 "lines": logs,
             }
         except Exception as e:
-            raise transform_job_exception(e)
+            raise transform_job_exception(e, "Unable to retrieve job logs")
 
-    def cancel_jobs(self, job_id_list: List[str] = []) -> dict:
+    def cancel_jobs(self, job_id_list: List[str]) -> dict:
         """
         Cancel a list of running jobs, placing them in a canceled state
         Does NOT delete the jobs.
@@ -443,7 +457,7 @@ class JobManager(object):
         try:
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
-            raise transform_job_exception(e)
+            raise transform_job_exception(e, "Unable to cancel job")
         finally:
             self._running_jobs[job_id]["refresh"] = is_refreshing
             del self._running_jobs[job_id]["canceling"]
@@ -475,7 +489,7 @@ class JobManager(object):
                 {"job_ids": job_ids}
             )
         except Exception as e:
-            raise transform_job_exception(e)
+            raise transform_job_exception(e, "Unable to retry job(s)")
         # for each retry result, refresh the state of the retried and new jobs
         orig_ids = [result["job_id"] for result in retry_results]
         retry_ids = [
@@ -529,7 +543,7 @@ class JobManager(object):
         """
         batch_job = self.get_job(batch_id)
         if not batch_job.batch_job:
-            raise NotBatchException("Not a batch job")
+            raise JobIDException(JOB_NOT_BATCH_ERR, batch_id)
 
         child_ids = batch_job.child_jobs
 

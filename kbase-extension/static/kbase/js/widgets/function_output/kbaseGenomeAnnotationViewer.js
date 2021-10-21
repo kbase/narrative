@@ -465,9 +465,8 @@ define([
 
                                 let dataArray = $self.genomeAnnotationData[feature.feature_type];
                                 if (dataArray == undefined) {
-                                    dataArray = $self.genomeAnnotationData[
-                                        feature.feature_type
-                                    ] = [];
+                                    dataArray = $self.genomeAnnotationData[feature.feature_type] =
+                                        [];
                                 }
 
                                 dataArray.push({

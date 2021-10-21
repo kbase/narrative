@@ -77,9 +77,8 @@ define([
                                     if (!data.elements.hasOwnProperty(key)) continue;
                                     let newKey = key;
                                     if (regenerate) newKey = 'param' + i;
-                                    state[newKey] = refhash[data.elements[key]['ref']].split(
-                                        '/'
-                                    )[1];
+                                    state[newKey] =
+                                        refhash[data.elements[key]['ref']].split('/')[1];
                                     i++;
                                 }
                                 self.renderState(state);

@@ -21,7 +21,9 @@ document.nbjs_translations = {
 };
 
 // hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
-window.createReactClass = () => { /* no op */ };
+window.createReactClass = () => {
+    /* no op */
+};
 
 requirejs.config({
     baseUrl: '/narrative/static/',

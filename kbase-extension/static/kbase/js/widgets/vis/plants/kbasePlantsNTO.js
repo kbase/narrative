@@ -414,14 +414,12 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseIrisWidget', 'kbaseTable'], (
                             {
                                 value: 'num_genes',
                                 label: 'No. of genes',
-                                style:
-                                    'min-width : 130px; width : 130px; background-color : black; color : white',
+                                style: 'min-width : 130px; width : 130px; background-color : black; color : white',
                             },
                             {
                                 value: 'num_edges',
                                 label: 'No. of edges',
-                                style:
-                                    'min-width : 130px; width : 130px; background-color : black; color : white',
+                                style: 'min-width : 130px; width : 130px; background-color : black; color : white',
                             },
                             {
                                 value: 'go_id',
@@ -436,8 +434,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseIrisWidget', 'kbaseTable'], (
                             {
                                 value: 'p_value',
                                 label: 'p-value',
-                                style:
-                                    'min-width : 90px; width : 90px; background-color : black; color : white',
+                                style: 'min-width : 90px; width : 90px; background-color : black; color : white',
                             },
                             /*{
                 value : 'go_enrichment',

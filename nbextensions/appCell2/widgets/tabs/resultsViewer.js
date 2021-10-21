@@ -31,7 +31,8 @@ define([
             reportRendered = false,
             reportRenderTimeout = null,
             reportWidget = null,
-            reportRenderingPromise = null;
+            reportRenderingPromise = null,
+            reportParams = null;
 
         /**
          *
@@ -76,13 +77,13 @@ define([
          */
         function showResults(jobState, isParentJob) {
             // there's a couple of ways to find report parameters.
-            let reportParams = null;
             const result = model.getItem('exec.outputWidgetInfo');
+            let reportInputs = null;
 
             // this way first - if this is a parent job of a batch, and we have
             // a report_name in the result, then show the batch result
             if (isParentJob && result && result.params && result.params.report_name) {
-                reportParams = result.params;
+                reportInputs = result.params;
             } else if (
                 jobState.widget_info &&
                 jobState.widget_info.params &&
@@ -90,12 +91,12 @@ define([
             ) {
                 // otherwise, if there's some report info in the jobState, show that
                 // report
-                reportParams = jobState.widget_info.params;
+                reportInputs = jobState.widget_info.params;
             }
 
             // if there are no report parameters, then just dump the info given in
             // the job output
-            if (!reportParams) {
+            if (!reportInputs) {
                 return Promise.try(() => {
                     const jobOutput = jobState.job_output
                         ? jobState.job_output.result
@@ -105,10 +106,10 @@ define([
                 });
             }
             // otherwise, render the report;lp
-            return renderReportView(reportParams);
+            return renderReportView(reportInputs);
         }
 
-        function lazyRenderReport(reportParams) {
+        function lazyRenderReport() {
             return Promise.try(() => {
                 const nbContainer = document.querySelector('#notebook-container');
                 // Add scroll event listener to the notebook container on first call.
@@ -140,12 +141,11 @@ define([
          * @param {Object} params - parameters for the report view
          */
         function renderReportView(params) {
-            const reportParams = JSON.parse(JSON.stringify(params));
             // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
-            reportParams.showCreatedObjects = true;
+            reportParams = Object.assign({}, params, { showCreatedObjects: true });
             ui.setContent('report', div({ dataElement: 'report-widget' }));
-            return lazyRenderReport(reportParams);
+            return lazyRenderReport();
         }
 
         /**
@@ -172,12 +172,17 @@ define([
                 })
                 .then((nextApps) => {
                     renderNextApps(nextApps);
+                })
+                .catch((error) => {
+                    console.error('unable to find next suggested apps:', error);
+                    renderNextApps();
                 });
         }
 
         /**
-         *
-         * @param {*} apps
+         * Renders the NextApps section of the results tab
+         * @param {Array[AppInfo]} apps -
+         *  each array element should have an info, with a module_name and name (both strings)
          */
         function renderNextApps(apps) {
             apps = apps || [];

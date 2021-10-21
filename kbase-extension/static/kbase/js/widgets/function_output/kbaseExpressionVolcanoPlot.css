@@ -48,55 +48,56 @@ PlotControls is an area above the plot with inputs and sliders for controlling p
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-before {
   flex: 0 0 auto;
-  margin-right: 10px;
+  margin-right: 12px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-after {
   flex: 0 0 auto;
-  margin-left: 10px;
+  margin-left: 12px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-slider {
   flex: 1 1 0;
 }
 
-/*
-Remove styling added by jupyter 
-*/
-
-.table.-no-jupyter tr,
-.table.-no-jupyter tbody tr,
-.table.-no-jupyter thead tr  {
-  background-color: white;
-}
-
-.table.-no-jupyter tr:hover,
-.table.-no-jupyter thead tr:hover,
-.table.-no-jupyter tbody tr:hover  {
-  background-color: white;
-}
-
 /* A simple flex grid, since we're stuck on bootstrap 3 */
 
-.flex-row {
+.KBaseExpressionVolcanoPlot .flex-row {
   flex: 1 1 0;
   display: flex;
   flex-direction: row;
 }
 
-.flex-col {
+.KBaseExpressionVolcanoPlot .flex-col {
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
 }
 
-.flex-col.title {
+.KBaseExpressionVolcanoPlot .flex-col.title {
   text-align: center;
   font-weight: bold;
   color: rgb(100 100 100);
 
 }
 
-.flex-col + .flex-col {
+.KBaseExpressionVolcanoPlot .flex-col + .flex-col {
   margin-left: 10px;
+}
+
+
+.KBaseExpressionVolcanoPlot .prop-table .flex-col {
+  padding: 4px;
+  justify-content: center;
+}
+
+.KBaseExpressionVolcanoPlot .prop-table .flex-col:nth-child(1) {
+  flex: 0 0 10em;
+  font-weight: bold;
+  color: rgb(100 100 100);
+}
+
+.KBaseExpressionVolcanoPlot .tab-pane,
+.KBaseExpressionVolcanoPlot .tab-pane .content-section {
+  padding-top: 10px;
 }

@@ -7,5 +7,12 @@ define([
         return $(document.createElement(tagName));
     }
 
-    return { $el };
+    function $row() {
+        return $el('div').addClass('flex-row');
+    };
+    function $col() {
+        return $el('div').addClass('flex-col');
+    };
+
+    return { $el, $row, $col };
 });

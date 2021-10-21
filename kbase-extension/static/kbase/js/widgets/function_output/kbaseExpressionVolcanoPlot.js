@@ -32,7 +32,7 @@ define([
 ) => {
     'use strict';
 
-    const { $el } = jQueryUtils;
+    const { $el, $row, $col } = jQueryUtils;
 
     const DEBOUNCE_INTERVAL = 25;
     const DEFAULT_LOG_Q_VALUE = 1;
@@ -106,11 +106,15 @@ define([
             new KBaseTabs($tabs, {
                 tabs: [{
                     tab: 'Volcano Plot',
-                    content: $el('div').css('margin-top', '10px').append($el('div').css('margin-bottom', '10px').html($plotControls)).append($plot),
+                    content: $el('div')
+                        .append($plotControls)
+                        .append($el('div')
+                            .addClass('content-section')
+                            .html($plot)),
                     show: true
                 }, {
                     tab: 'Gene Table',
-                    content: $el('div').css('margin-top', '10px').html($geneTable),
+                    content: $el('div').html($geneTable),
                     onShown: () => {
                         this.updateGeneTable();
                     }
@@ -257,12 +261,7 @@ define([
         },
 
         $renderPlotControls: function () {
-            const $row = () => {
-                return $el('div').addClass('flex-row');
-            };
-            const $col = () => {
-                return $el('div').addClass('flex-col');
-            };
+
             return $el('div').addClass('container-fluid PlotControls')
                 // header row
                 .append($row().append(
@@ -407,78 +406,78 @@ define([
         },
 
         $renderPlotInfo: function () {
-            const $plotInfo = $el('table')
-                .addClass('table prop-table no-jupyter')
+            const $plotInfo = $el('div').addClass('prop-table')
                 .append(
-                    $el('tr')
+                    $row()
                         .append(
-                            $el('th').text('Condition 1')
+                            $col().text('Condition 1')
                         )
                         .append(
-                            $el('td').attr('id', 'cond1')
+                            $col().attr('id', 'cond1')
                         )
                 )
                 .append(
-                    $el('tr')
+                    $row()
                         .append(
-                            $el('th').text('Condition 2')
+                            $col().text('Condition 2')
                         )
                         .append(
-                            $el('td').attr('id', 'cond2')
-                        )
-                )
-                .append(
-                    $el('tr')
-                        .append(
-                            $el('th').text('Total Genes')
-                        )
-                        .append(
-                            $el('td').attr('id', 'geneCountTotal')
+                            $col().attr('id', 'cond2')
                         )
                 )
                 .append(
-                    $el('tr')
+                    $row()
                         .append(
-                            $el('th').text('Genes within range')
+                            $col().text('Total Genes')
                         )
                         .append(
-                            $el('td').attr('id', 'geneCountInRange')
-                        )
-                )
-                .append(
-                    $el('tr')
-                        .append(
-                            $el('th').text('Significance (-Log10)')
-                        )
-                        .append(
-                            $el('td').attr('id', 'currentLogQValue2')
+                            $col().attr('id', 'geneCountTotal')
                         )
                 )
                 .append(
-                    $el('tr')
+                    $row()
                         .append(
-                            $el('th').text('Fold Change (Log2)')
+                            $col().text('Genes within range')
                         )
                         .append(
-                            $el('td').attr('id', 'currentFoldChangeValue2')
-                        )
-                )
-                .append(
-                    $el('tr')
-                        .append(
-                            $el('th').text('Selected Genes')
-                        )
-                        .append(
-                            $el('td').attr('id', 'geneCountSelected')
+                            $col().attr('id', 'geneCountInRange')
                         )
                 )
                 .append(
-                    $el('tr')
+                    $row()
                         .append(
-                            $el('th').text('Export')
+                            $col().text('Significance (-Log10)')
                         )
                         .append(
-                            $el('td').append(this.$renderExportButton())
+                            $col().attr('id', 'currentLogQValue2')
+                        )
+                )
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Fold Change (Log2)')
+                        )
+                        .append(
+                            $col().attr('id', 'currentFoldChangeValue2')
+                        )
+                )
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Selected Genes')
+                        )
+                        .append(
+                            $col().attr('id', 'geneCountSelected')
+                        )
+                )
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Export')
+                        )
+                        // Wrap button in a div to remove the flexbox.
+                        .append(
+                            $col().html($el('div').html(this.$renderExportButton()))
                         )
                 );
 

@@ -76,19 +76,21 @@ $job_status_table_cols: 'action', 'import-type', 'output', 'status';
       &--#{$col} {
         @include table-cell;
 
-        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
+    // .kb-job-status__cell--status
     &--status {
       text-transform: capitalize;
       width: 10rem;
     }
-
+    // .kb-job-status__cell--action
     &--action {
-      width: 15rem;
+      width: 11rem;
     }
-
+    // .kb-job-status_cell--import-type
     &--import-type {
       width: 18rem;
     }
@@ -103,7 +105,6 @@ $job_status_table_cols: 'action', 'import-type', 'output', 'status';
 
         @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
       }
-
       // .kb-job-status__cell_action--cell
       &--cancel {
         @extend %kbase-button;
@@ -122,20 +123,22 @@ $job_status_table_cols: 'action', 'import-type', 'output', 'status';
     padding: 0;
   }
 
-  // .kb-job-status__log_container
-  &__log_container {
+  // .kb-job-status__detail_container
+  &__detail_container {
     background-color: use-color('info-lighter');
     border-bottom: 1px solid use-color('base-lightest');
     padding: 1rem;
   }
 
-  // .kb-job-status__summary
-  &__summary {
-    color: use-color('ink');
-    font-weight: 700;
+  // .kb-job-status__icon--action_warning
+  &__icon--action_warning {
+    color: use_color('error');
+    font-size: 1.5em;
+    padding: 0.5rem 1rem;
+    vertical-align: middle;
   }
 
-  @each $key, $value in $job_status_colours {
+  @each $key, $value in $job_status_colors {
     // .kb-job-status__icon--${status}
     &__icon--#{$key} {
       color: use-color($key);

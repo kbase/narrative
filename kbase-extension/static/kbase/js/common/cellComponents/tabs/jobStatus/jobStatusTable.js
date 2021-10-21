@@ -6,8 +6,9 @@ define([
     './jobActionDropdown',
     'util/jobLogViewer',
     'util/appCellUtil',
+    'util/string',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer, Util) => {
+], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer, Util, String) => {
     'use strict';
 
     const t = html.tag,
@@ -271,7 +272,7 @@ define([
                     {
                         className: `${cssBaseClass}__cell--status`,
                         render: (data, type, row) => {
-                            const statusLabel = Jobs.jobLabel(row, true);
+                            const statusLabel = String.capitalize(Jobs.jobLabel(row));
                             return div(
                                 {
                                     dataToggle: 'tooltip',
@@ -371,8 +372,8 @@ define([
 
             // create the child row contents, add to the child row, and show it
             const str = div({
-                class: `${cssBaseClass}__log_container`,
-                dataElement: 'job-log-container',
+                class: `${cssBaseClass}__detail_container`,
+                dataElement: 'job-detail-container',
             });
             dtRow.child(str).show();
 
@@ -380,7 +381,7 @@ define([
             widgetsById[jobState.job_id] = JobLogViewer.make({ jobManager, showHistory });
             return Promise.try(() => {
                 widgetsById[jobState.job_id].start({
-                    node: $currentRow.next().find('[data-element="job-log-container"]')[0],
+                    node: $currentRow.next().find('[data-element="job-detail-container"]')[0],
                     jobId: dtRow.data().job_id,
                     jobState,
                     config,
@@ -450,7 +451,7 @@ define([
             e.target.disabled = true;
             e.target.textContent = action + 'ing';
             // remove any error indicator from the DOM
-            $(e.target).closest('td').find('.kb-job-status__icon--action_warning').remove();
+            $(e.target).closest('td').find(`.${cssBaseClass}__icon--action_warning`).remove();
             return true;
         }
 

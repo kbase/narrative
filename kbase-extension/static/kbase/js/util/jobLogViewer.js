@@ -31,6 +31,7 @@ define([
         span = t('span'),
         p = t('p'),
         cssBaseClass = 'kb-log',
+        stateCssBaseClass = 'kb-job-state-viewer',
         logContentStandardClass = `${cssBaseClass}__content`,
         logContentExpandedClass = `${logContentStandardClass}--expanded`,
         LOG_CONTAINER = 'log-container',
@@ -716,11 +717,11 @@ define([
                 [
                     div(
                         {
-                            class: `${cssBaseClass}__status_container`,
+                            class: `${stateCssBaseClass}__container`,
                         },
                         [
                             div({
-                                class: `${cssBaseClass}__status_line`,
+                                class: `${stateCssBaseClass}__status_line`,
                                 dataElement: 'status-line',
                             }),
                         ]
@@ -891,7 +892,7 @@ define([
             return lines.map((line) =>
                 div(
                     {
-                        class: `${cssBaseClass}__job_status_detail`,
+                        class: `${stateCssBaseClass}__job_status_detail`,
                     },
                     line
                 )
@@ -910,12 +911,12 @@ define([
                 [
                     div(
                         {
-                            class: `${cssBaseClass}__job_status_detail_container`,
+                            class: `${stateCssBaseClass}__job_status_detail_container`,
                         },
                         renderJobStatusLines(jobState)
                     ),
                     div({
-                        class: `${cssBaseClass}__error_container`,
+                        class: `${stateCssBaseClass}__error_container`,
                         dataElement: 'error-container',
                     }),
                 ].join('\n')
@@ -1357,6 +1358,7 @@ define([
         make: function (config) {
             return factory(config);
         },
-        cssBaseClass: cssBaseClass,
+        cssBaseClass,
+        stateCssBaseClass,
     };
 });

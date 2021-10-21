@@ -326,7 +326,7 @@ define([
 
         // status
         const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
-        expect(statusEl.textContent).toContain(input.meta.jobLabel);
+        expect(statusEl.textContent.toLowerCase()).toContain(input.meta.jobLabel);
     }
 
     /**

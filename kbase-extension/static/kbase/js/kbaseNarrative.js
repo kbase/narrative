@@ -1132,6 +1132,7 @@ define([
                     duration: delay,
                 }
             );
+            $('#content-column')[0].classList.add('kb-content-column--expanded');
         } else {
             $('#kb-side-toggle-in').hide(0, () => {
                 $('#left-column').show(
@@ -1147,6 +1148,7 @@ define([
                     { easing: 'swing', duration: delay }
                 );
             });
+            $('#content-column')[0].classList.remove('kb-content-column--expanded');
         }
     };
 

@@ -1,87 +1,87 @@
 .KBaseExpressionVolcanoPlot {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .KBaseExpressionVolcanoPlot .slider.slider-horizontal {
-    flex: 1 1 0;
+  flex: 1 1 0;
 }
 
 .KBaseExpressionVolcanoPlot .col + .col {
-    padding-left: 10px;
+  padding-left: 10px;
 }
 
 .KBaseExpressionVolcanoPlot .table tr {
-    background-color: white;
+  background-color: white;
 }
 
 .KBaseExpressionVolcanoPlot .table tr:hover {
-    background-color: white;
+  background-color: white;
 }
 
 .KBaseExpressionVolcanoPlot .PlotGrid {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
 }
 
 .KBaseExpressionVolcanoPlot .PlotGrid .PlotColumn {
-    flex: 0 0 800px;
+  flex: 0 0 800px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotGrid .InfoColumn {
-    flex: 1 1 0;
-    margin-left: 10px;
+  flex: 1 1 0;
+  margin-left: 10px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-title {
-    text-align: center;
+  text-align: center;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-before {
-    flex: 0 0 auto;
-    margin-right: 10px;
+  flex: 0 0 auto;
+  margin-right: 10px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-after {
-    flex: 0 0 auto;
-    margin-left: 10px;
+  flex: 0 0 auto;
+  margin-left: 10px;
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-slider {
-    flex: 1 1 0;
+  flex: 1 1 0;
 }
 
 /* Remove styling added by jupyter */
 
 .KBaseExpressionVolcanoPlot table.PlotControls th {
-    text-align: left;
-    color: rgba(100, 100, 100, 1);
+  text-align: left;
+  color: rgba(100, 100, 100, 1);
 }
   
 .KBaseExpressionVolcanoPlot table.PlotControls th {
-    border: none;
+  border: none;
 }
   
 .KBaseExpressionVolcanoPlot table.PlotControls tr {
-    background-color: white;
+  background-color: white;
 }
   
 .KBaseExpressionVolcanoPlot table.PlotControls tr:hover {
-    background-color: white;
+  background-color: white;
 }
 
 .KBaseExpressionVolcanoPlot table.PlotControls thead {
-    border: none;
+  border: none;
 }
 
 .KBaseExpressionVolcanoPlot table.PlotControls thead tr {
-    padding: none;
+  padding: none;
 }
 
 .KBaseExpressionVolcanoPlot table.PlotControls thead tr th {
-    padding: 0 0 0 20px;
+  padding: 0 0 0 20px;
 }

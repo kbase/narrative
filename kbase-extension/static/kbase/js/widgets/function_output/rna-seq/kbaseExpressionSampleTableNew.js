@@ -188,8 +188,8 @@ define([
                     ref: this.options.upas.output
                 }]
             }])
-                .then(([results]) => {
-                    const dataObject = results.data[0].data;
+                .then(([result]) => {
+                    const dataObject = result.data[0].data;
 
                     if (dataObject.sample_expression_ids) {
                         this.options.output = dataObject;
@@ -204,9 +204,9 @@ define([
                         });
 
                         return ws.callFunc('get_object_info3', [{ objects }])
-                            .then((results) => {
+                            .then((result) => {
                                 this.options.output.sample_expression_names = [];
-                                for (const objectInfo of results.infos) {
+                                for (const objectInfo of result.infos) {
                                     this.options.output.sample_expression_names.push(objectInfo[1]);
                                 }
 
@@ -232,8 +232,8 @@ define([
                         });
 
                         return ws.callFunc('get_object_info3', [{ objects }])
-                            .then(([results]) => {
-                                this.options.output.sample_expression_names = results.infos.map((objectInfo) => {
+                            .then(([result]) => {
+                                this.options.output.sample_expression_names = result.infos.map((objectInfo) => {
                                     return objectInfo[1];
                                 });
 
@@ -248,7 +248,7 @@ define([
                     } else {
                         // TODO: what case does this handle???
                         this.appendUI(this.$elem);
-                        this.setDataset(results.data[0].data);
+                        this.setDataset(result.data[0].data);
                     }
                 })
                 .catch((err) => {

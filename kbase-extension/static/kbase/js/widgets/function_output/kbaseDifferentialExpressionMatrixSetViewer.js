@@ -74,14 +74,13 @@ define([
         },
 
         renderLayout: function () {
-            const $header = this.renderHeader();
             this.$elem
                 .empty()
                 .append(
                     $el('div')
                         .css('margin-bottom', '10px')
                         .append(
-                            $header
+                            this.$renderHeader()
                         ))
                 .append(
                     $el('div').append(
@@ -89,8 +88,8 @@ define([
                     ));
         },
 
-        renderHeader: function () {
-            const $header = $el('table').addClass('table PropTable')
+        $renderHeader: function () {
+            return $el('table').addClass('table PropTable')
                 .append($el('tbody')
                     .append(
                         $el('tr')
@@ -119,7 +118,6 @@ define([
                             )
                     )
                 );
-            return $header;
         },
 
         changeSelectElement: function (ev) {

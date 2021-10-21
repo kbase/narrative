@@ -215,6 +215,10 @@ define([
                 .addClass('table table-striped table-bordered');
             $geneTable.append($table);
 
+            function formatNumber(value) {
+                return Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value);
+            }
+
             $table.DataTable({
                 autoWidth: false,
                 columns: [
@@ -228,7 +232,7 @@ define([
                         render: (value) => {
                             return `
                                 <div style="font-family: monospace;">
-                                    ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                                    ${formatNumber(value)}
                                 </div>
                               `;
                         }
@@ -239,7 +243,7 @@ define([
                         render: (value) => {
                             return `
                             <div style="font-family: monospace;">
-                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                                ${formatNumber(value)}
                             </div>
                           `;
                         }
@@ -250,7 +254,7 @@ define([
                         render: (value) => {
                             return `
                             <div style="font-family: monospace;">
-                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                                ${formatNumber(value)}
                             </div>
                           `;
                         }
@@ -261,7 +265,7 @@ define([
                         render: (value) => {
                             return `
                             <div style="font-family: monospace;">
-                                ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                                ${formatNumber(value)}
                             </div>
                           `;
                         }
@@ -862,12 +866,12 @@ define([
                     return d.significant;
                 });
 
-            const circles = svg.selectAll('circle');
+            const allCircles = svg.selectAll('circle');
 
             this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(filteredData.length));
             this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
 
-            circles.data(filteredData).exit().remove();
+            allCircles.data(filteredData).exit().remove();
             const xAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(10); //Set rough # of ticks
             const yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(10);
             svg.selectAll('.xaxis').call(xAxis);

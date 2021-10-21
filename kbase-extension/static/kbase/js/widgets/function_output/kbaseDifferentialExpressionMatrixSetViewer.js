@@ -39,6 +39,8 @@ define([
             this.objectRef = this.options.upas.obj_ref;
 
             this.render();
+
+            return this;
         },
 
         render: async function () {

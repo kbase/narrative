@@ -449,7 +449,7 @@ define([
 
         $renderPlotInfo: function () {
             const $plotInfo = $el('table')
-                .addClass('table PropTable')
+                .addClass('table prop-table')
                 .append(
                     $el('tr')
                         .append(

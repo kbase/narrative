@@ -89,7 +89,7 @@ define([
         },
 
         $renderHeader: function () {
-            return $el('table').addClass('table PropTable')
+            return $el('table').addClass('table prop-table')
                 .append($el('tbody')
                     .append(
                         $el('tr')

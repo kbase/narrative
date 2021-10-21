@@ -3,14 +3,12 @@
 }
 
 .KBaseExpressionVolcanoPlot .slider.slider-horizontal {
-    flex: 1 1 0px;
+    flex: 1 1 0;
 }
 
 .KBaseExpressionVolcanoPlot .col + .col {
     padding-left: 10px;
 }
-
-
 
 .KBaseExpressionVolcanoPlot .table tr {
     background-color: white;
@@ -54,9 +52,8 @@
 }
 
 .KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-slider {
-    flex: 1 1 0px;
+    flex: 1 1 0;
 }
-
 
 /* Remove styling added by jupyter */
 
@@ -64,11 +61,8 @@
     text-align: left;
     color: rgba(100, 100, 100, 1);
 }
-
-
   
-.KBaseExpressionVolcanoPlot table.PlotControls th, 
-table.table.RemoveJupyterStyling.table td {
+.KBaseExpressionVolcanoPlot table.PlotControls th {
     border: none;
 }
   
@@ -89,7 +83,5 @@ table.table.RemoveJupyterStyling.table td {
 }
 
 .KBaseExpressionVolcanoPlot table.PlotControls thead tr th {
-    /* font-weight: normal;
-    font-style: italic; */
     padding: 0 0 0 20px;
 }

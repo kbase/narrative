@@ -86,8 +86,8 @@ define([
                 this.renderLayout();
                 this._rewireIds(this.$elem, this);
                 this.renderSVG();
-                this.dataId('geneCountTotal').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
-                this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
+                this.$el('geneCountTotal').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
+                this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
             } catch (err) {
                 this.$elem.html($ErrorMessage(err));
             }
@@ -106,7 +106,7 @@ define([
             new KBaseTabs($tabs, {
                 tabs: [{
                     tab: 'Volcano Plot',
-                    content: $el('div').css('margin-top', '10px').append($plotControls).append($plot),
+                    content: $el('div').css('margin-top', '10px').append($el('div').css('margin-bottom', '10px').html($plotControls)).append($plot),
                     show: true
                 }, {
                     tab: 'Gene Table',
@@ -198,7 +198,7 @@ define([
         },
 
         updateGeneTable: function () {
-            const $table = this.data('voltable');
+            const $table = this.$el('voltable');
             $table.hide();
             const dtable = $table.DataTable();
             dtable.clear().draw();
@@ -257,199 +257,158 @@ define([
         },
 
         $renderPlotControls: function () {
-            return $el('table').addClass('PlotControls')
-                .append($el('thead').append(
-                    $el('tr').append(
-                        $el('th').css('text-align', 'center').text('Significance (-Log10)'),
-                        $el('th').css('text-align', 'center').text('Fold Change (Log2)')
-                    )
+            const $row = () => {
+                return $el('div').addClass('flex-row');
+            };
+            const $col = () => {
+                return $el('div').addClass('flex-col');
+            };
+            return $el('div').addClass('container-fluid PlotControls')
+                // header row
+                .append($row().append(
+                    $col().addClass('title').text('Significance (-Log10)'),
+                    $col().addClass('title').text('Fold Change (Log2)')
                 ))
-                .append($el('tbody')
-                    .append(
-                        $el('tr')
+                // slider row
+                .append($row()
+                    .append($col()
+                        .append($row()
+                            .addClass('-slider-control')
                             .append(
-                                $el('td')
-                                    .append(
-                                        $el('div')
-                                            .addClass('-slider-control')
-                                            .append(
-                                                $el('div')
-                                                    .addClass('-before')
-                                                    .attr('id', 'pv1')
-                                                    .append('0.0')
+                                $el('div')
+                                    .addClass('-before')
+                                    .attr('id', 'pv1')
+                                    .append('0.0')
 
-                                            )
-                                            .append(
-                                                $el('input')
-                                                    .attr('type', 'text')
-                                                    .addClass('span2 -slider')
-                                                    .attr('id', 'log_q_value')
-                                            )
-                                            .append(
-                                                $el('div')
-                                                    .addClass('-after')
-                                                    .attr('id', 'pv2')
-                                                    .append('1.0')
-                                            )
-                                    )
                             )
                             .append(
-                                $el('td')
-                                    .append(
-                                        $el('div')
-                                            .addClass('-slider-control')
-                                            .append(
-                                                $el('div')
-                                                    .addClass('-before')
-                                                    .attr('id', 'fc1')
-                                                    .append('0.0')
-
-                                            )
-                                            .append(
-                                                $el('input')
-                                                    .attr('type', 'text')
-                                                    .addClass('span2 -slider')
-                                                    .attr('id', 'fc')
-                                            )
-                                            .append(
-                                                $el('div')
-                                                    .addClass('-after')
-                                                    .attr('id', 'fc2')
-                                                    .append('1.0')
-                                            )
-                                    )
+                                $el('input')
+                                    .attr('type', 'text')
+                                    .addClass('-slider')
+                                    .attr('id', 'log_q_value')
                             )
+                            .append(
+                                $el('div')
+                                    .addClass('-after')
+                                    .attr('id', 'pv2')
+                                    .append('1.0')
+                            )
+                        ))
+                    .append($col()
+                        .append($row()
+                            .addClass('-slider-control')
+                            .append(
+                                $el('div')
+                                    .addClass('-before')
+                                    .attr('id', 'fc1')
+                                    .append('0.0')
+
+                            )
+                            .append(
+                                $el('input')
+                                    .attr('type', 'text')
+                                    .addClass('span2 -slider')
+                                    .attr('id', 'fc')
+                            )
+                            .append(
+                                $el('div')
+                                    .addClass('-after')
+                                    .attr('id', 'fc2')
+                                    .append('1.0')
+                            )
+
+                        )
+                    ))
+                // inputs row
+                .append($row()
+                    // significance column
+                    .append($col()
+                        // input title row
+                        .append(
+                            $row()
+                                .append($col().addClass('title').text('min'))
+                                .append($col().addClass('title').text('current'))
+                                .append($col().addClass('title').text('max')))
+                        // input control row
+                        .append($row()
+                            .append($col()
+                                .append($el('input')
+                                    .attr('id', 'minY')
+                                    .addClass('form-control')
+                                    .on('change', (e) => {
+                                        this.options.ymin = parseFloat(e.target.value);
+                                        this.renderSVG();
+                                    })
+                                )
+                            )
+                            .append($col()
+                                .append($el('input')
+                                    .attr('id', 'currentLogQValue')
+                                    .addClass('form-control')
+                                    .on('change', (e) => {
+                                        this.setLogQValueSlider(parseFloat(e.target.value));
+                                    })
+                                )
+                            )
+                            .append($col()
+                                .append($el('input')
+                                    .addClass('form-control')
+                                    .attr('id', 'maxY')
+                                    .on('change', (e) => {
+                                        this.options.ymax = parseFloat(e.target.value);
+                                        this.renderSVG();
+                                    })
+                                )
+                            )
+                        ))
+                    // fold col
+                    .append($col()
+                        // title col
+                        .append(
+                            $row()
+                                .append($col().addClass('title').text('min'))
+                                .append($col().addClass('title').text('current'))
+                                .append($col().addClass('title').text('max')))
+                        // inputs row
+                        .append($row()
+                            .append($col()
+                                .append($el('input')
+                                    .attr('id', 'minX')
+                                    .addClass('form-control')
+                                    .on('change', (e) => {
+                                        this.options.xmin = parseFloat(e.target.value);
+                                        this.renderSVG();
+                                    })
+                                )
+                            )
+                            .append($col()
+                                .append(
+                                    $el('input')
+                                        .attr('id', 'currentFoldChangeValue')
+                                        .addClass('form-control')
+                                        .on('change', (e) => {
+                                            this.setFoldChangeSlider(parseFloat(e.target.value));
+                                        })
+                                )
+                            )
+                            .append($col()
+                                .append($el('input')
+                                    .attr('id', 'maxX')
+                                    .addClass('form-control')
+                                    .on('change', (e) => {
+                                        this.options.xmax = parseFloat(e.target.value);
+                                        this.renderSVG();
+                                    })
+                                )
+                            )
+                        )
                     )
-                    .append(
-                        $el('tr')
-                            .append(
-                                $el('td')
-                                    .append(
-                                        $el('table')
-                                            .append($el('thead')
-                                                .append(
-                                                    $el('tr')
-                                                        .append(
-                                                            $el('th').text('min')
-                                                        )
-                                                        .append(
-                                                            $el('th').text('current')
-                                                        )
-                                                        .append(
-                                                            $el('th')
-                                                                .text('max')
-                                                        )
-                                                )
-                                            )
-                                            .append($el('tbody')
-                                                .append(
-                                                    $el('tr')
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .attr('id', 'minY')
-                                                                        .addClass('form-control')
-                                                                        .on('change', (e) => {
-                                                                            this.options.ymin = parseFloat(e.target.value);
-                                                                            this.renderSVG();
-                                                                        })
-                                                                )
-                                                        )
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .attr('id', 'currentLogQValue')
-                                                                        .addClass('form-control')
-                                                                        .on('change', (e) => {
-                                                                            this.setLogQValueSlider(parseFloat(e.target.value));
-                                                                        })
-                                                                )
-                                                        )
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .addClass('form-control')
-                                                                        .attr('id', 'maxY')
-                                                                        .on('change', (e) => {
-                                                                            this.options.ymax = parseFloat(e.target.value);
-                                                                            this.renderSVG();
-                                                                        })
-                                                                )
-                                                        )
-                                                )
-                                            )
-                                    )
-                            )
-                            .append(
-                                $el('td')
-                                    .append(
-                                        $el('table')
-                                            .append($el('thead')
-                                                .append(
-                                                    $el('tr')
-                                                        .append(
-                                                            $el('th').text('min')
-                                                        )
-                                                        .append(
-                                                            $el('th').text('current')
-                                                        )
-                                                        .append(
-                                                            $el('th')
-                                                                .text('max')
-                                                        )
-                                                )
-                                            )
-                                            .append($el('tbody')
-                                                .append(
-                                                    $el('tr')
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .attr('id', 'minX')
-                                                                        .addClass('form-control')
-                                                                        .on('change', (e) => {
-                                                                            this.options.xmin = parseFloat(e.target.value);
-                                                                            this.renderSVG();
-                                                                        })
-                                                                )
-                                                        )
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .attr('id', 'currentFoldChangeValue')
-                                                                        .addClass('form-control')
-                                                                        .on('change', (e) => {
-                                                                            this.setFoldChangeSlider(parseFloat(e.target.value));
-                                                                        })
-                                                                )
-                                                        )
-                                                        .append(
-                                                            $el('td')
-                                                                .append(
-                                                                    $el('input')
-                                                                        .attr('id', 'maxX')
-                                                                        .addClass('form-control')
-                                                                        .on('change', (e) => {
-                                                                            this.options.xmax = parseFloat(e.target.value);
-                                                                            this.renderSVG();
-                                                                        })
-                                                                )
-                                                        )
-                                                )
-                                            )
-                                    )
-                            )
-                    ));
+                );
         },
 
         $renderPlotInfo: function () {
             const $plotInfo = $el('table')
-                .addClass('table prop-table')
+                .addClass('table prop-table no-jupyter')
                 .append(
                     $el('tr')
                         .append(
@@ -538,8 +497,8 @@ define([
             return $el('button')
                 .addClass('btn btn-primary')
                 .on('click', () => {
-                    const fc = this.data('fc').bootstrapSlider('getValue');
-                    const log_q_value = this.data('log_q_value').bootstrapSlider('getValue');
+                    const fc = this.$el('fc').bootstrapSlider('getValue');
+                    const log_q_value = this.$el('log_q_value').bootstrapSlider('getValue');
 
                     const params = {
                         diff_expression_ref: this.options.setObjectName,
@@ -595,28 +554,28 @@ define([
             return $chart;
         },
 
-        dataId: function (idValue) {
+        $el: function (idValue) {
             return this.$elem.find(`[data-id="${idValue}"]`);
         },
 
         setFoldChangeSlider: function (newValue) {
-            this.dataId('fc')
+            this.$el('fc')
                 .bootstrapSlider('setValue', newValue, false, true);
         },
 
         setLogQValueSlider: function (newValue) {
-            this.dataId('log_q_value')
+            this.$el('log_q_value')
                 .bootstrapSlider('setValue', newValue, false, true);
         },
 
         updateCurrentFoldChangeValue: function (newValue) {
-            this.data('currentFoldChangeValue').val(newValue.toFixed(2));
-            this.data('currentFoldChangeValue2').text(newValue.toFixed(2));
+            this.$el('currentFoldChangeValue').val(newValue.toFixed(2));
+            this.$el('currentFoldChangeValue2').text(newValue.toFixed(2));
         },
 
         updateCurrentLogQValue: function (newValue) {
-            this.data('currentLogQValue').val(newValue.toFixed(2));
-            this.data('currentLogQValue2').text(newValue.toFixed(2));
+            this.$el('currentLogQValue').val(newValue.toFixed(2));
+            this.$el('currentLogQValue2').text(newValue.toFixed(2));
         },
 
         renderSVG: function () {
@@ -644,8 +603,8 @@ define([
             };
 
 
-            this.data('cond1').text(renderData.condition_1);
-            this.data('cond2').text(renderData.condition_2);
+            this.$el('cond1').text(renderData.condition_1);
+            this.$el('cond2').text(renderData.condition_2);
 
             // Filter NO_TEST data
 
@@ -680,10 +639,10 @@ define([
             });
 
             // Set the min/max labels for the slider
-            this.data('minX').val(xmin.toFixed(2));
-            this.data('maxX').val(xmax.toFixed(2));
-            this.data('minY').val(ymin.toFixed(2));
-            this.data('maxY').val(ymax.toFixed(2));
+            this.$el('minX').val(xmin.toFixed(2));
+            this.$el('maxX').val(xmax.toFixed(2));
+            this.$el('minY').val(ymin.toFixed(2));
+            this.$el('maxY').val(ymax.toFixed(2));
 
             const filteredData = rawData.filter((d) => {
                 if (
@@ -703,10 +662,10 @@ define([
             const sliderXMin = 0;
             const sliderXMax = Math.max(xmax, Math.abs(xmin));
 
-            this.data('fc1').text(sliderXMin.toFixed(2));
-            this.data('fc2').text(sliderXMax.toFixed(2));
-            this.data('pv1').text(ymin.toFixed(2));
-            this.data('pv2').text(ymax.toFixed(2));
+            this.$el('fc1').text(sliderXMin.toFixed(2));
+            this.$el('fc2').text(sliderXMax.toFixed(2));
+            this.$el('pv1').text(ymin.toFixed(2));
+            this.$el('pv2').text(ymax.toFixed(2));
 
             const fcSliderChange = _.debounce((ev) => {
                 const { newValue } = ev.value;
@@ -734,11 +693,11 @@ define([
                         return cc;
                     });
 
-                this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(circles.size()));
-                this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+                this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(circles.size()));
+                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
             }, DEBOUNCE_INTERVAL);
 
-            const fcSlider = this.dataId('fc')
+            const fcSlider = this.$el('fc')
                 .bootstrapSlider({
                     tooltip_position: 'bottom',
                     step: 0.01,
@@ -776,11 +735,11 @@ define([
                         return cc;
                     });
 
-                this.dataId('gene-count-in-range').text(String(circles.size()));
-                this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+                this.$el('gene-count-in-range').text(String(circles.size()));
+                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
             }, DEBOUNCE_INTERVAL);
 
-            const loqQValueSlider = this.dataId('log_q_value')
+            const loqQValueSlider = this.$el('log_q_value')
                 .bootstrapSlider({
                     tooltip_position: 'bottom',
                     step: 0.01,
@@ -796,8 +755,8 @@ define([
             this.updateCurrentFoldChangeValue(fcSlider.bootstrapSlider('getValue'));
             this.updateCurrentLogQValue(loqQValueSlider.bootstrapSlider('getValue'));
 
-            const pv = this.dataId('log_q_value').bootstrapSlider('getValue');
-            const fc = this.dataId('fc').bootstrapSlider('getValue');
+            const pv = this.$el('log_q_value').bootstrapSlider('getValue');
+            const fc = this.$el('fc').bootstrapSlider('getValue');
 
             const xScale = d3.scale
                 .linear()
@@ -848,8 +807,8 @@ define([
 
             const allCircles = svg.selectAll('circle');
 
-            this.dataId('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(filteredData.length));
-            this.data('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+            this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(filteredData.length));
+            this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
 
             allCircles.data(filteredData).exit().remove();
             const xAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(10); //Set rough # of ticks

@@ -14,17 +14,6 @@
   padding-left: 10px;
 }
 
-/*
-Remove styling added by jupyter 
-*/
-
-.KBaseExpressionVolcanoPlot .table tr {
-  background-color: white;
-}
-
-.KBaseExpressionVolcanoPlot .table tr:hover {
-  background-color: white;
-}
 
 /*
 PlotGrid is a simple flexbox grid for laying out the plot and plot info side by side
@@ -71,28 +60,43 @@ PlotControls is an area above the plot with inputs and sliders for controlling p
   flex: 1 1 0;
 }
 
-/* 
-Override some bootstrap table styling since we're using this for layout.
-Maybe should just not use bootstrap table as a base class.
+/*
+Remove styling added by jupyter 
 */
 
-.KBaseExpressionVolcanoPlot table.PlotControls th {
-  text-align: left;
-  color: rgba(100, 100, 100, 1);
-}
-  
-.KBaseExpressionVolcanoPlot table.PlotControls th {
-  border: none;
-}
-  
-.KBaseExpressionVolcanoPlot table.PlotControls thead {
-  border: none;
+.table.-no-jupyter tr,
+.table.-no-jupyter tbody tr,
+.table.-no-jupyter thead tr  {
+  background-color: white;
 }
 
-.KBaseExpressionVolcanoPlot table.PlotControls thead tr {
-  padding: none;
+.table.-no-jupyter tr:hover,
+.table.-no-jupyter thead tr:hover,
+.table.-no-jupyter tbody tr:hover  {
+  background-color: white;
 }
 
-.KBaseExpressionVolcanoPlot table.PlotControls thead tr th {
-  padding: 0 0 0 20px;
+/* A simple flex grid, since we're stuck on bootstrap 3 */
+
+.flex-row {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-col.title {
+  text-align: center;
+  font-weight: bold;
+  color: rgb(100 100 100);
+
+}
+
+.flex-col + .flex-col {
+  margin-left: 10px;
 }

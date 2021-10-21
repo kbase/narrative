@@ -6,15 +6,12 @@ define([
 ], ($) => {
     'use strict';
 
-    /**
-     *
-     * @param {message} message - The plain text message to display
-     * @param {Options} - Optional configuration
-     * @returns {jQuery} A jQuery object representing an error object
-     */
     function $AlertMessage(message, { type } = {}) {
+        if (typeof type === 'string' && !['info', 'warning', 'danger', 'success'].includes(type)) {
+            throw new Error(`Alert type "${type}" not recognized`);
+        }
         return $('<div>')
-            .addClass(`alert alert-${type || 'info'}`)
+            .addClass(`alert alert-${type}`)
             .text(message);
     }
 

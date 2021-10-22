@@ -15,6 +15,7 @@ define([
     'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
     'bootstrap',
     'bootstrap-slider',
+    'jquery-dataTables',
     'tipsy',
     'css!./kbaseExpressionVolcanoPlot.css'
 ], (
@@ -196,12 +197,8 @@ define([
         },
 
         updateGeneTable: function () {
-            const $table = this.$el('voltable');
-            $table.hide();
-            const dtable = $table.DataTable();
-            dtable.clear().draw();
-            $table.show();
-            dtable.rows.add(this.selectedRows).draw();
+            const geneTable = this.$el('voltable').DataTable();
+            geneTable.rows.add(this.selectedRows).draw();
         },
 
         $renderGeneTable: function () {
@@ -211,7 +208,7 @@ define([
             const $table = $el('table')
                 .attr('id', 'voltable')
                 .addClass('table table-striped table-bordered');
-            $geneTable.append($table);
+            $geneTable.html($table);
 
             function renderNumber(value) {
                 return `

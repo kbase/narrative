@@ -81,16 +81,20 @@ define([
         }
 
         renderHeader() {
-            const selector = e('select', {
-                onChange: this.selectItem.bind(this),
-                className: 'form-control'
-            }, this.props.items.map(({ label, ref, objectInfo }, index) => {
-                if (label) {
-                    return e('option', { value: String(index), key: ref }, objectInfo.name, ' (', label, ')');
-                } else {
-                    return e('option', { value: String(index), key: ref }, objectInfo.name);
-                }
-            }));
+            // All this boilerplate to is to get the select to auto-width in the official bootstrap way
+            // (rather than overriding styles)
+            const selector = e('form', { className: 'form-inline' },
+                e('div', { className: 'form-group' },
+                    e('select', {
+                        onChange: this.selectItem.bind(this),
+                        className: 'form-control'
+                    }, this.props.items.map(({ label, ref, objectInfo }, index) => {
+                        if (label) {
+                            return e('option', { value: String(index), key: ref }, objectInfo.name, ' (', label, ')');
+                        } else {
+                            return e('option', { value: String(index), key: ref }, objectInfo.name);
+                        }
+                    }))));
 
             // NB the ...[] syntax is just to make eslint happier.
             return e('div', {

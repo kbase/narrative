@@ -1,0 +1,19 @@
+.KBaseDifferentialExpressionMatrixSetViewer .KBaseDifferentialExpressionMatrixSetViewer-header {
+    margin-bottom: 10px;
+}
+
+.KBaseDifferentialExpressionMatrixSetViewer .header-table .flex-col {
+    padding: 4px;
+    justify-content: center;
+}
+
+.KBaseDifferentialExpressionMatrixSetViewer .header-table .flex-col:nth-child(1) {
+    flex: 0 0 9em;
+    font-weight: bold;
+    color: rgb(100 100 100);
+}
+
+/* We want bootstrap styling, but not the margin */
+.KBaseDifferentialExpressionMatrixSetViewer .header-table select.form-control {
+    margin-left: 0;
+}

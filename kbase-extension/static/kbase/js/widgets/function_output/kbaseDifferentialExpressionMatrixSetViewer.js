@@ -9,6 +9,7 @@ define([
     'widgets/common/ErrorMessage',
     'widgets/common/AlertMessage',
     'widgets/common/jQueryUtils',
+    'css!widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer.css',
 
     // For effect
     'bootstrap'
@@ -26,7 +27,7 @@ define([
 ) => {
     'use strict';
 
-    const { $el } = jQueryUtils;
+    const { $el, $row, $col } = jQueryUtils;
 
     return KBWidget({
         name: 'kbaseDifferentialExpressionMatrixSetViewer',
@@ -37,6 +38,8 @@ define([
         init: function init(options) {
             this._super(options);
             this.objectRef = this.options.upas.obj_ref;
+
+            this.$elem.addClass('KBaseDifferentialExpressionMatrixSetViewer');
 
             this.render();
 
@@ -80,7 +83,7 @@ define([
                 .empty()
                 .append(
                     $el('div')
-                        .css('margin-bottom', '10px')
+                        .addClass('KBaseDifferentialExpressionMatrixSetViewer-header')
                         .append(
                             this.$renderHeader()
                         ))
@@ -91,34 +94,31 @@ define([
         },
 
         $renderHeader: function () {
-            return $el('table').addClass('table prop-table')
-                .append($el('tbody')
-                    .append(
-                        $el('tr')
-                            .append(
-                                $el('th').css('width', '9em').text('Description')
-                            )
-                            .append(
-                                $el('td').attr('data-id', 'set-description')
-                            )
-                    )
-                    .append(
-                        $el('tr')
-                            .append(
-                                $el('th').text('Condition Pair')
-                            )
-                            .append(
-                                $el('td').append(
-                                    $el('div').addClass('form-inline').append(
-                                        $el('select')
-                                            .addClass('form-control')
-                                            .css('margin-left', '0')
-                                            .attr('data-id', 'set-elements')
-                                            .on('change', this.changeSelectElement.bind(this))
-                                    )
+            return $el('div').addClass('header-table')
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Description')
+                        )
+                        .append(
+                            $col().attr('data-id', 'set-description')
+                        )
+                )
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Condition Pair')
+                        )
+                        .append(
+                            $col().append(
+                                $el('div').addClass('form-inline').append(
+                                    $el('select')
+                                        .addClass('form-control')
+                                        .attr('data-id', 'set-elements')
+                                        .on('change', this.changeSelectElement.bind(this))
                                 )
                             )
-                    )
+                        )
                 );
         },
 

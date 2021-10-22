@@ -35,7 +35,7 @@ define([
 
         version: '1.0.0',
 
-        init: function init(options) {
+        init: function (options) {
             this._super(options);
             this.objectRef = this.options.upas.obj_ref;
 

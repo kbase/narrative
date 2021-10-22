@@ -507,6 +507,11 @@ define([
                             );
                             expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
+                            if (testCase.action === 'reset') {
+                                expect(cell.metadata.kbase.attributes.id).not.toEqual(
+                                    `${testCase.state}-state-test-cell`
+                                );
+                            }
                         });
                 });
             });

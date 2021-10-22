@@ -859,8 +859,10 @@ define([
             jobManager.resetJobs();
             cancelBatch = null;
             updateEditingState();
-            Jupyter.notebook.save_checkpoint();
             switchToTab('configure');
+            // set a new KBase cell ID
+            cell.metadata.kbase.attributes.id = new Uuid(4).format();
+            Jupyter.notebook.save_checkpoint();
         }
 
         function resetRunStatusListener() {

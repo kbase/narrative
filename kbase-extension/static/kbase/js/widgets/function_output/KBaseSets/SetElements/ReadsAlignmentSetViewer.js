@@ -1,7 +1,9 @@
 define([
     'react',
     'prop-types',
-    'bootstrap'
+    'bootstrap',
+
+    'css!styles/widgets/function_output/KBaseSets/SetElements/SetElement.css'
 ], (
     React,
     PropTypes,
@@ -89,7 +91,7 @@ define([
                 }
             ];
             return e('table', {
-                className: 'table table-bordered table-striped'
+                className: 'table table-bordered SetElement'
             }, e('tbody', null,
                 rows.map(({ label, value }) => {
                     return e('tr', { key: label },

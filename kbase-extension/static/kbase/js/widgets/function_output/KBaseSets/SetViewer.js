@@ -5,7 +5,7 @@ define([
 
     // For effect
     'bootstrap',
-    'css!styles/widgets/function_output/KBaseSetsSetViewer.css'
+    'css!styles/widgets/function_output/KBaseSets/SetViewer.css'
 ], (
     React,
     PropTypes,
@@ -28,7 +28,6 @@ define([
                 // NB assumes always have items.
                 selectedItem: this.props.items[0]
             };
-
         }
 
         /**
@@ -68,60 +67,45 @@ define([
             }
         }
 
-        renderSelector() {
-            return [
+        renderRow(label, content) {
+            return e('div', {
+                className: 'Row',
+            }, ...[
                 e('div', {
                     className: 'Col',
-                }, 'Select alignment to view:'),
+                }, label),
                 e('div', {
-                    className: 'form-inline Col',
-                }, e('div', { className: 'form-group' }, e('select', {
-                    onChange: this.selectItem.bind(this),
-                    className: 'form-control'
-                }, this.props.items.map(({ label, ref, objectInfo }, index) => {
-                    if (label) {
-                        return e('option', { value: String(index), key: ref }, objectInfo.name, ' (', label, ')');
-                    } else {
-                        return e('option', { value: String(index), key: ref }, objectInfo.name);
-                    }
-                }))
-                ))
-            ];
+                    className: 'Col',
+                }, content)
+            ]);
         }
 
         renderHeader() {
+            const selector = e('select', {
+                onChange: this.selectItem.bind(this),
+                className: 'form-control'
+            }, this.props.items.map(({ label, ref, objectInfo }, index) => {
+                if (label) {
+                    return e('option', { value: String(index), key: ref }, objectInfo.name, ' (', label, ')');
+                } else {
+                    return e('option', { value: String(index), key: ref }, objectInfo.name);
+                }
+            }));
+
+            // NB the ...[] syntax is just to make eslint happier.
             return e('div', {
                 className: 'HeaderTable',
             }, ...[
-                e('div', {
-                    className: 'Row',
-                }, ...[
-                    e('div', {
-                        className: 'Col',
-                    }, 'Description:'),
-                    e('div', {
-                        className: 'Col',
-                    }, this.props.description)
-                ]),
-                e('div', {
-                    className: 'Row',
-                }, ...[
-                    e('div', {
-                        className: 'Col',
-                    }, 'Alignment type:'),
-                    e('div', {
-                        className: 'Col',
-                    }, this.renderItemType())
-                ]),
-                e('div', {
-                    className: 'Row',
-                }, ...this.renderSelector()),
+                this.renderRow('Description', this.props.description),
+                this.renderRow('Alignment Type', this.renderItemType()),
+                this.renderRow('Alignment', selector)
             ]);
         }
 
         renderNoItems() {
             return e('div', null, 'Sorry, no items');
         }
+
         render() {
             return e('div', {
                 className: 'KBaseSets-SetViewer'

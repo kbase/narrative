@@ -1,0 +1,15 @@
+table.SetElement tbody tr {
+  background: none;
+}
+
+table.SetElement tbody tr th {
+  color: rgb(100 100 100);
+}
+
+table.SetElement tbody tr:nth-child(odd) {
+  background: none;
+}
+
+table.SetElement tbody tr:hover {
+  background: none;
+}

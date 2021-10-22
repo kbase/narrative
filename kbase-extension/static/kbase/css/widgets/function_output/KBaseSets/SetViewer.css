@@ -16,7 +16,7 @@
 .KBaseSets-SetViewer .HeaderTable > .Row > .Col:nth-child(1) {
   font-weight: bold;
   color: rgba(100, 100, 100);
-  flex: 0 0 13em;
+  flex: 0 0 8em;
 }
 
 .KBaseSets-SetViewer .HeaderTable > .Row > .Col:nth-child(2) {

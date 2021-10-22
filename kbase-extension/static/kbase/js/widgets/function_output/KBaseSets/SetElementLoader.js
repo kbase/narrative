@@ -139,11 +139,16 @@ define([
 
         renderLoaded() {
             return e(React.Fragment, null,
-                e('div', null, e('a', { href: `/#dataview/${this.state.objectInfo.ref}`, target: '_blank' }, this.state.objectInfo.ref)),
                 e(this.state.module, {
                     object: this.state.object.data,
                     objectInfo: this.state.objectInfo
-                }));
+                }),
+                e('div', null,
+                    e('a', { className: 'btn btn-default', href: `/#dataview/${this.state.objectInfo.ref}`, target: '_blank' },
+                        'View this ',
+                        e('i', null, this.state.objectInfo.typeName),
+                        ' object'))
+            );
         }
 
         renderState() {

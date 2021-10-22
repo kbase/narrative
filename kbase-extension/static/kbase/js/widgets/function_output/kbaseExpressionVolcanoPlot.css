@@ -75,3 +75,7 @@ PlotControls is an area above the plot with inputs and sliders for controlling p
 .KBaseExpressionVolcanoPlot .tab-pane .content-section {
   padding-top: 10px;
 }
+
+.KBaseExpressionVolcanoPlot .LoadingMessage {
+  margin: 20px auto;
+}

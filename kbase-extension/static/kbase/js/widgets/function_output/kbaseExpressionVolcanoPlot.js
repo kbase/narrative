@@ -72,16 +72,10 @@ define([
             return this;
         },
 
-        renderLoading() {
-            return $el('div')
-                .css('margin', '20px auto')
-                .append($LoadingMessage('Loading Differential Expression Matrix...'));
-        },
-
         render: async function () {
             try {
                 this.$elem.addClass('KBaseExpressionVolcanoPlot');
-                this.$elem.html(this.renderLoading());
+                this.$elem.html($LoadingMessage('Loading Differential Expression Matrix...'));
                 this.renderData = await this.loadInitialData();
                 this.renderLayout();
                 this._rewireIds(this.$elem, this);

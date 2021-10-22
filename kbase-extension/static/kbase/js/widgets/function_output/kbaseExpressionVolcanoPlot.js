@@ -188,10 +188,6 @@ define([
                 } else {
                     return 'blue';
                 }
-                // this condition is always true; leaving it here because
-                // the intention seems to have been to use red if significant is 'yes'
-                // if (true || d.significant === 'yes') {
-                // return 'red';
             }
             return 'grey';
         },
@@ -397,70 +393,23 @@ define([
         },
 
         $renderPlotInfo: function () {
+            function $plotInfoRow(label, id) {
+                return $row()
+                    .append(
+                        $col().text(label)
+                    )
+                    .append(
+                        $col().attr('id', id)
+                    );
+            }
             const $plotInfo = $el('div').addClass('prop-table')
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Condition 1')
-                        )
-                        .append(
-                            $col().attr('id', 'cond1')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Condition 2')
-                        )
-                        .append(
-                            $col().attr('id', 'cond2')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Total Genes')
-                        )
-                        .append(
-                            $col().attr('id', 'geneCountTotal')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Genes within range')
-                        )
-                        .append(
-                            $col().attr('id', 'geneCountInRange')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Significance (-Log10)')
-                        )
-                        .append(
-                            $col().attr('id', 'currentLogQValue2')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Fold Change (Log2)')
-                        )
-                        .append(
-                            $col().attr('id', 'currentFoldChangeValue2')
-                        )
-                )
-                .append(
-                    $row()
-                        .append(
-                            $col().text('Selected Genes')
-                        )
-                        .append(
-                            $col().attr('id', 'geneCountSelected')
-                        )
-                )
+                .append($plotInfoRow('Condition 1', 'cond1'))
+                .append($plotInfoRow('Condition 2', 'cond2'))
+                .append($plotInfoRow('Total Genes', 'geneCountTotal'))
+                .append($plotInfoRow('Genes within range', 'geneCountInRange'))
+                .append($plotInfoRow('Significance (-Log10)', 'currentLogQValue2'))
+                .append($plotInfoRow('Fold Change (Log2)', 'currentFoldChangeValue2'))
+                .append($plotInfoRow('Selected Genes', 'geneCountSelected'))
                 .append(
                     $row()
                         .append(

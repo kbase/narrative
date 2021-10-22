@@ -123,11 +123,7 @@ define([
         },
 
         changeSelectElement: function (ev) {
-            try {
-                this.renderVolcanoPlot(ev.target.value);
-            } catch (ex) {
-                console.error('ERROR', ex);
-            }
+            this.renderVolcanoPlot(ev.target.value);
         },
 
         renderVolcanoPlot: function (ref) {

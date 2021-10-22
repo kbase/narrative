@@ -1,18 +1,18 @@
 .KBaseExpressionSampleTableNew .KBaseExpressionSampleTableNew-header {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 
 .KBaseExpressionSampleTableNew .KBaseExpressionSampleTableNew-header .flex-col {
-    justify-content: center;
-    padding: 4px;
+  justify-content: center;
+  padding: 4px;
 }
 
 .KBaseExpressionSampleTableNew .KBaseExpressionSampleTableNew-header .flex-col:nth-child(1) {
-    flex: 0 0 9em;
-    font-weight: bold;
-    color: rgb(100 100 100);
+  flex: 0 0 9em;
+  font-weight: bold;
+  color: rgb(100 100 100);
 }
 
 .KBaseExpressionSampleTableNew .KBaseExpressionSampleTableNew-header select.form-control {
-    margin: 0;
+  margin: 0;
 }

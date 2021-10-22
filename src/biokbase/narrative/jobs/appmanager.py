@@ -74,15 +74,15 @@ def _app_error_wrapper(app_func: Callable) -> any:
                 if key in kwargs:
                     msg_info[key] = kwargs[key]
             self._send_comm_message("run_status", msg_info)
-            print(
-                f"Error while trying to start your app ({app_func.__name__})!\n"
-                + "-----------------------------------------------------\n"
-                + str(e)
-                + "\n"
-                + "-----------------------------------------------------\n"
-                + e_trace
-            )
-
+            if "cell_id" not in kwargs:
+                print(
+                    f"Error while trying to start your app ({app_func.__name__})!\n"
+                    + "-----------------------------------------------------\n"
+                    + str(e)
+                    + "\n"
+                    + "-----------------------------------------------------\n"
+                    + e_trace
+                )
     return wrapper
 
 

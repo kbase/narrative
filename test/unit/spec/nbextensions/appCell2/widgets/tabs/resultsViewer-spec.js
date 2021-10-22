@@ -50,9 +50,9 @@ define([
 
     function buildModel(options) {
         const { isParentJob, jobComplete, hasReport } = options;
-        const data = Object.assign({}, mockModelData);
+        const data = TestUtil.JSONcopy(mockModelData);
         if (isParentJob && jobComplete && hasReport) {
-            data.exec.outputWidgetInfo = mockOutputWidgetInfo;
+            data.exec.outputWidgetInfo = TestUtil.JSONcopy(mockOutputWidgetInfo);
         }
         return Props.make({ data });
     }
@@ -111,7 +111,7 @@ define([
             const viewer = ResultsViewer.make({ model });
             await viewer.start({
                 node,
-                jobState: mockFinalJobState,
+                jobState: TestUtil.JSONcopy(mockFinalJobState),
                 isParentJob: false,
             });
             expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
@@ -128,7 +128,7 @@ define([
             const viewer = ResultsViewer.make({ model });
             await viewer.start({
                 node,
-                jobState: mockFinalJobState,
+                jobState: TestUtil.JSONcopy(mockFinalJobState),
                 isParentJob: true,
             });
             await TestUtil.wait(500);
@@ -139,11 +139,33 @@ define([
             expect(node.innerHTML).toBe('');
         });
 
+        it('starts and stops a viewer with a report that scrolls into view', async () => {
+            const model = buildModel({ hasReport: true, isParentJob: true, jobComplete: true });
+            const viewer = ResultsViewer.make({ model });
+            const viewerNode = document.createElement('div');
+            await viewer.start({
+                node: viewerNode,
+                jobState: TestUtil.JSONcopy(mockFinalJobState),
+                isParentJob: true,
+            });
+            await TestUtil.wait(500);
+            expect(viewer.reportRenderingPromise).toBeNull();
+            outerNode.appendChild(viewerNode);
+            outerNode.dispatchEvent(new CustomEvent('scroll'));
+            await TestUtil.wait(500);
+            expect(viewer.reportRenderingPromise).not.toBeNull();
+            await viewer.reportRenderingPromise;
+            expect(viewerNode.innerHTML).toContain(reportData.text_message);
+            await viewer.stop();
+            expect(viewerNode.innerHTML).toBe('');
+            viewerNode.remove();
+        });
+
         it('starts and stops a viewer with a report from a non-batch job', async () => {
             const model = buildModel({ hasReport: true, isParentJob: false, jobComplete: true });
             const viewer = ResultsViewer.make({ model });
-            const jobState = Object.assign({}, mockFinalJobState);
-            jobState.widget_info = mockOutputWidgetInfo;
+            const jobState = TestUtil.JSONcopy(mockFinalJobState);
+            jobState.widget_info = TestUtil.JSONcopy(mockOutputWidgetInfo);
             await viewer.start({
                 node,
                 jobState,
@@ -153,6 +175,8 @@ define([
             expect(viewer.reportRenderingPromise).not.toBeNull();
             await viewer.reportRenderingPromise;
             expect(node.innerHTML).toContain(reportData.text_message);
+            await viewer.stop();
+            expect(node.innerHTML).toBe('');
         });
 
         it('renders suggested next apps', async () => {
@@ -167,17 +191,22 @@ define([
 
             Mocks.mockJsonRpc1Call({
                 url: Config.url('narrative_method_store'),
-                body: /get_method_spec/,
                 response: [nextMethodSpec],
             });
             model.setItem('app.spec.full_info.suggestions.next_methods', nextMethods);
             const viewer = ResultsViewer.make({ model });
             await viewer.start({
                 node,
-                jobState: mockFinalJobState,
+                jobState: {
+                    job_output: {
+                        result: ['foo'],
+                    },
+                },
                 isParentJob: false,
             });
+            expect(viewer.reportRenderingPromise).toBeNull();
             expect(node.innerHTML).toContain(nextMethodSpec.info.name);
+            await viewer.stop();
         });
     });
 });

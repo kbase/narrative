@@ -60,32 +60,6 @@ PlotControls is an area above the plot with inputs and sliders for controlling p
   flex: 1 1 0;
 }
 
-/* A simple flex grid, since we're stuck on bootstrap 3 */
-
-.KBaseExpressionVolcanoPlot .flex-row {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: row;
-}
-
-.KBaseExpressionVolcanoPlot .flex-col {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.KBaseExpressionVolcanoPlot .flex-col.title {
-  text-align: center;
-  font-weight: bold;
-  color: rgb(100 100 100);
-
-}
-
-.KBaseExpressionVolcanoPlot .flex-col + .flex-col {
-  margin-left: 10px;
-}
-
-
 .KBaseExpressionVolcanoPlot .prop-table .flex-col {
   padding: 4px;
   justify-content: center;

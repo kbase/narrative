@@ -1,5 +1,7 @@
 define([
-    'jquery'
+    'jquery',
+
+    'css!./jQueryUtils.css'
 ], ($) => {
     'use strict';
 

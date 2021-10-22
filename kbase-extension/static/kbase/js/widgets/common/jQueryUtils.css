@@ -1,0 +1,23 @@
+/* A simple flex grid, since we're stuck on bootstrap 3 */
+
+.flex-row {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-col.title {
+  text-align: center;
+  font-weight: bold;
+  color: rgb(100 100 100);
+}
+
+.flex-col + .flex-col {
+  margin-left: 10px;
+}

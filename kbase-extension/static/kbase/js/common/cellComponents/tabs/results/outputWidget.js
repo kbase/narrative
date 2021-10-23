@@ -51,22 +51,31 @@ define([
                     thead(tr([th('Created Object Name'), th('Type'), th('Description')])),
                     tbody([
                         ...objectData.map((obj) => {
-                            const parsedType = APIUtil.parseWorkspaceType(obj.type);
-                            const objLink = a(
-                                {
-                                    class: 'kb-output-widget__object_link',
-                                    dataObjRef: obj.ref,
-                                    type: 'button',
-                                    ariaLabel: 'show viewer for ' + obj.name,
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: () => {
-                                            Jupyter.narrative.addViewerCell(obj.wsInfo);
-                                        },
-                                    }),
-                                },
-                                [obj.name]
-                            );
+                            const parsedType = APIUtil.parseWorkspaceType(obj.type) || {
+                                type: 'Unknown type',
+                            };
+                            let objLink = '';
+                            if (obj.wsInfo) {
+                                objLink = a(
+                                    {
+                                        class: 'kb-output-widget__object_link',
+                                        dataObjRef: obj.ref,
+                                        type: 'button',
+                                        ariaLabel: 'show viewer for ' + obj.name,
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: () => {
+                                                if (obj.wsInfo) {
+                                                    Jupyter.narrative.addViewerCell(obj.wsInfo);
+                                                }
+                                            },
+                                        }),
+                                    },
+                                    [obj.name]
+                                );
+                            } else {
+                                objLink = obj.name;
+                            }
                             return tr([td(objLink), td(parsedType.type), td(obj.description)]);
                         }),
                     ]),
@@ -145,8 +154,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

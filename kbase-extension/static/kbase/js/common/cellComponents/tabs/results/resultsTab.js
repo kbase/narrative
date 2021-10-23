@@ -118,10 +118,10 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             const createdObjects = {};
             let objectKeys = [];
             return workspaceClient
-                .get_objects2({ objects: reportLookupParam })
+                .get_objects2({ objects: reportLookupParam, ignoreErrors: 1 })
                 .then((reportData) => {
                     reportData.data.forEach((report, idx) => {
-                        if ('objects_created' in report.data) {
+                        if (report !== null && 'objects_created' in report.data) {
                             report.data.objects_created.forEach((obj) => {
                                 createdObjects[obj.ref] = obj;
                                 createdObjects[obj.ref].reportRef = reportLookupParam[idx].ref;
@@ -133,14 +133,25 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                     objectKeys = Object.keys(createdObjects);
                     // turn the refs into an array: [{"ref": ref}]
                     const infoLookupParam = objectKeys.map((ref) => ({ ref: ref }));
-                    return workspaceClient.get_object_info_new({ objects: infoLookupParam });
+                    return workspaceClient.get_object_info_new({
+                        objects: infoLookupParam,
+                        ignoreErrors: 1,
+                    });
                 })
                 .then((objectInfo) => {
                     objectInfo.forEach((info, idx) => {
                         const ref = objectKeys[idx];
-                        createdObjects[ref].name = info[1];
-                        createdObjects[ref].type = info[2];
-                        createdObjects[ref].wsInfo = info;
+                        if (info) {
+                            createdObjects[ref].name = info[1];
+                            createdObjects[ref].type = info[2];
+                            createdObjects[ref].wsInfo = info;
+                        } else {
+                            createdObjects[
+                                ref
+                            ].name = `Object ${ref} not found, may have been deleted`;
+                            createdObjects[ref].type = null;
+                            createdObjects[ref].wsInfo = null;
+                        }
                     });
                     return Object.values(createdObjects);
                 });
@@ -180,6 +191,9 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                     events.attachEvents(container);
                     containerNode.classList.remove('hidden');
                 })
+                .catch((error) => {
+                    console.error('errors, yo', error);
+                })
                 .finally(() => {
                     container.removeChild(spinnerNode);
                 });
@@ -192,8 +206,8 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -28,12 +28,15 @@ define([
         let container, ui;
 
         /**
-         *
+         * Renders the table of created output objects. Each row will have 3 elements:
+         * - name - the name of the created object. This will be a link that, when clicked, will spawn a
+         *    viewer cell for that object
+         * - type - a string for the object's type
+         * - description - a string for the object's description
+         * - wsInfo - the object info array from the Workspace service,
+         * - ref - string - the object's workspace reference
          * @param {Array} objectData an array of object data. Each element is expected
-         *  to have these properties:
-         *  - type - the workspace object type
-         *  - name - the name of the object
-         *  - description - a description of the object
+         *  to have the properties detailed above. If any are missing, they'll get placeholder values instead.
          */
         function renderOutput(objectData) {
             if (objectData.length === 0) {
@@ -51,9 +54,18 @@ define([
                     thead(tr([th('Created Object Name'), th('Type'), th('Description')])),
                     tbody([
                         ...objectData.map((obj) => {
-                            const parsedType = APIUtil.parseWorkspaceType(obj.type) || {
-                                type: 'Unknown type',
-                            };
+                            const name = obj.name
+                                ? obj.name
+                                : obj.wsInfo
+                                ? obj.wsInfo[1]
+                                : 'Unknown object name';
+                            const type = obj.type
+                                ? obj.type
+                                : obj.wsInfo
+                                ? obj.wsInfo[2]
+                                : 'Missing type';
+                            const parsedType = APIUtil.parseWorkspaceType(type) || { type };
+                            const description = obj.description || 'Missing description';
                             let objLink = '';
                             if (obj.wsInfo) {
                                 objLink = a(
@@ -61,22 +73,20 @@ define([
                                         class: 'kb-output-widget__object_link',
                                         dataObjRef: obj.ref,
                                         type: 'button',
-                                        ariaLabel: 'show viewer for ' + obj.name,
+                                        ariaLabel: 'show viewer for ' + name,
                                         id: events.addEvent({
                                             type: 'click',
                                             handler: () => {
-                                                if (obj.wsInfo) {
-                                                    Jupyter.narrative.addViewerCell(obj.wsInfo);
-                                                }
+                                                Jupyter.narrative.addViewerCell(obj.wsInfo);
                                             },
                                         }),
                                     },
-                                    [obj.name]
+                                    [name]
                                 );
                             } else {
-                                objLink = obj.name;
+                                objLink = name;
                             }
-                            return tr([td(objLink), td(parsedType.type), td(obj.description)]);
+                            return tr([td(objLink), td(parsedType.type), td(description)]);
                         }),
                     ]),
                 ]

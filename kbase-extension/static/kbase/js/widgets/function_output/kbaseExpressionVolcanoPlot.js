@@ -617,6 +617,9 @@ define([
                     precision: 17,
                     min: ymin,
                     max: ymax,
+                    formatter: (value) => {
+                        return value.toFixed(2);
+                    }
                 });
 
             const logQValueSliderChange = _.debounce(({ value: { newValue } }) => {

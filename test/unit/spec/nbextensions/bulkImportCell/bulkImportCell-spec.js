@@ -180,12 +180,15 @@ define([
 
                 const cellWidget = BulkImportCell.make({
                     cell,
+                    devMode,
                     importData: fakeInputs,
                     specs: fakeSpecs,
                     initialize: true,
                 });
+                spyOn(cellWidget.jobManager, 'cancelBatchJob');
                 await cellWidget.deleteCell();
                 expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                expect(cellWidget.jobManager.cancelBatchJob).toHaveBeenCalled();
             });
 
             it('will not delete its cell if the user says no', async () => {
@@ -197,12 +200,15 @@ define([
 
                 const cellWidget = BulkImportCell.make({
                     cell,
+                    devMode,
                     importData: fakeInputs,
                     specs: fakeSpecs,
                     initialize: true,
                 });
+                spyOn(cellWidget.jobManager, 'cancelBatchJob');
                 await cellWidget.deleteCell();
                 expect(Jupyter.notebook.delete_cell).not.toHaveBeenCalled();
+                expect(cellWidget.jobManager.cancelBatchJob).not.toHaveBeenCalled();
             });
 
             it('responds to a delete-cell bus message', () => {
@@ -211,17 +217,20 @@ define([
                     Jupyter.notebook = Mocks.buildMockNotebook({
                         deleteCallback: () => {
                             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                            expect(cellWidget.jobManager.cancelBatchJob).toHaveBeenCalled();
                             resolve();
                         },
                     });
                     spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
                     spyOn(DialogMessages, 'showDialog').and.resolveTo(true);
-                    BulkImportCell.make({
+                    const cellWidget = BulkImportCell.make({
                         cell,
+                        devMode,
                         importData: fakeInputs,
                         specs: fakeSpecs,
                         initialize: true,
                     });
+                    spyOn(cellWidget.jobManager, 'cancelBatchJob');
                     runtime.bus().send(
                         {},
                         {

@@ -878,6 +878,7 @@ define([
         async function deleteCell() {
             const confirmed = await DialogMessages.showDialog({ action: 'deleteCell' });
             if (confirmed) {
+                jobManager.cancelBatchJob();
                 busEventManager.removeAll();
                 stopWidget();
                 const cellIndex = Jupyter.notebook.find_cell_index(cell);

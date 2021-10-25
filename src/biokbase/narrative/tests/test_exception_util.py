@@ -14,8 +14,8 @@ class ExceptionUtilTestCase(unittest.TestCase):
         code = 1000
         message = "some error message"
         name = "EEError"
-        njs_err = EEServerError(name, code, message)
-        nar_err = transform_job_exception(njs_err)
+        ee2_err = EEServerError(name, code, message)
+        nar_err = transform_job_exception(ee2_err)
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
@@ -27,8 +27,8 @@ class ExceptionUtilTestCase(unittest.TestCase):
         message = "some error message"
         name = "EEError"
         error = "Unable to perform some request"
-        njs_err = EEServerError(name, code, message)
-        nar_err = transform_job_exception(njs_err, error)
+        ee2_err = EEServerError(name, code, message)
+        nar_err = transform_job_exception(ee2_err, error)
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)

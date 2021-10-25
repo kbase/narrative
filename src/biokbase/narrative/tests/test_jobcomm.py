@@ -10,11 +10,10 @@ from biokbase.narrative.jobs.job import get_dne_job_state
 import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobmanager import (
-    JOB_FALSY_ERR,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
     JOBS_TYPE_ERR,
-    JOBS_FALSY_NOT_REG_ERR,
+    JOBS_MISSING_FALSY_ERR,
 )
 from biokbase.narrative.jobs.jobcomm import (
     JobRequest,
@@ -134,6 +133,9 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
+    # ---------------------
+    # Send comms methods
+    # ---------------------
     def test_send_comm_msg_ok(self):
         self.jc.send_comm_message("some_msg", {"foo": "bar"})
         msg = self.jc._comm.last_message
@@ -207,18 +209,42 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"]
         )
 
-    def test_methods__req_no_inputs(self):
+    # ---------------------
+    # Requests
+    # ---------------------
+    def test_req_no_inputs__succeed(self):
         msg = {
             "msg_id": "some_id",
             "content": {"data": {
-                "request_type": "job_status",
+                "request_type": "all_status",
             }},
         }
-        req = JobRequest(msg)
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            self.jc._lookup_job_states_batch(req)
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            self.jc._retry_jobs(req)
+        self.jc._handle_comm_message(msg)
+        msg = self.jc._comm.last_message
+        self.assertEqual("job_status_all", msg["data"]["msg_type"])
+
+    def test_req_no_inputs__fail(self):
+        msg = {
+            "msg_id": "some_id",
+            "content": {"data": {
+                "request_type": "job_status_batch",
+            }},
+        }
+        err = JobIDException(JOB_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), str(err)):
+            self.jc._handle_comm_message(msg)
+        self.check_error_message("job_status_batch", {}, err)
+
+        msg = {
+            "msg_id": "some_id",
+            "content": {"data": {
+                "request_type": "retry_job",
+            }},
+        }
+        err = JobIDException(JOBS_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), str(err)):
+            self.jc._handle_comm_message(msg)
+        self.check_error_message("retry_job", {}, err)
 
     # ---------------------
     # Start job status loop
@@ -317,7 +343,7 @@ class JobCommTestCase(unittest.TestCase):
             validate_job_state(state)
 
     def test_lookup_job_state__no_job(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[None]}")):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[None]}")):
             self.jc.lookup_job_state(None)
 
     # -----------------------
@@ -361,7 +387,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states__no_job(self):
         job_id_list = [None]
         req = make_comm_msg("job_status", job_id_list, False)
-        err = JobIDException(JOBS_FALSY_NOT_REG_ERR, job_id_list)
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message(
@@ -427,7 +453,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_batch__no_job(self):
         job_id = None
         req = make_comm_msg("job_status_batch", job_id, False)
-        err = JobIDException(JOB_FALSY_ERR, job_id)
+        err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message(
@@ -463,7 +489,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info__no_job(self):
         job_id_list = [None]
         req = make_comm_msg("job_info", job_id_list, False)
-        err = JobIDException(JOBS_FALSY_NOT_REG_ERR, job_id_list)
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message(
@@ -508,7 +534,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info_batch__no_job(self):
         job_id = None
         req = make_comm_msg("job_info_batch", job_id, False)
-        err = JobIDException(JOB_FALSY_ERR, job_id)
+        err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
         self.check_error_message("job_info_batch", {"job_id": job_id}, err)
@@ -600,7 +626,7 @@ class JobCommTestCase(unittest.TestCase):
 
         job_id_list = [None, ""]
         req = make_comm_msg("cancel_job", job_id_list, False)
-        err = JobIDException(JOBS_FALSY_NOT_REG_ERR, job_id_list)
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message("cancel_job", {"job_id_list": job_id_list}, err)
@@ -701,7 +727,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_retry_jobs_no_job(self):
         job_id_list = [None, ""]
         req = make_comm_msg("retry_job", job_id_list, False)
-        err = JobIDException(JOBS_FALSY_NOT_REG_ERR, job_id_list)
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message("retry_job", {"job_id_list": job_id_list}, err)
@@ -809,7 +835,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_logs_no_job(self):
         job_id = None
         req = make_comm_msg("job_logs", job_id, False)
-        err = JobIDException(JOB_FALSY_ERR, job_id)
+        err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
         self.check_error_message("job_logs", {"job_id": job_id}, err)
@@ -875,7 +901,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_modify_job_update__no_job(self):
         job_id_list = [None]
         req = make_comm_msg("start_job_update", job_id_list, False)
-        err = JobIDException(JOBS_FALSY_NOT_REG_ERR, job_id_list)
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
         self.check_error_message("start_job_update", {"job_id_list": job_id_list}, err)
@@ -977,7 +1003,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_modify_job_update_batch__no_job(self):
         job_id = None
         req = make_comm_msg("start_job_update_batch", job_id, False)
-        err = JobIDException(JOB_FALSY_ERR, job_id)
+        err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
         self.check_error_message("start_job_update_batch", {"job_id": job_id}, err)

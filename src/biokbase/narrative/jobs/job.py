@@ -561,6 +561,9 @@ class Job(object):
         return "KBase Narrative Job - " + str(self.job_id)
 
     def _repr_javascript_(self):
+        """
+        Called by Jupyter when a Job object is entered into a code cell
+        """
         tmpl = """
         element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 

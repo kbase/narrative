@@ -12,6 +12,8 @@ UNKNOWN_REASON = "Unknown reason"
 JOB_NOT_PROVIDED_ERR = "job_id not provided"
 JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
 
+BOTH_INPUTS_PRESENT_ERR = "Both job_id and job_id_list present"
+
 LOOKUP_TIMER_INTERVAL = 5
 
 
@@ -80,7 +82,7 @@ class JobRequest:
         if self.request is None:
             raise ValueError("Missing request type in job channel message!")
         if "job_id" in self.rq_data and "job_id_list" in self.rq_data:
-            raise ValueError("Both job_id and job_id_list present")
+            raise ValueError(BOTH_INPUTS_PRESENT_ERR)
 
     @property
     def job_id(self):
@@ -135,7 +137,7 @@ class JobRequest:
     def translate(cls, msg: dict) -> List["JobRequest"]:
         data = msg.get("content", {}).get("data", {})
         if "job_id" in data and "job_id_list" in data:
-            raise ValueError("Both job_id and job_id_list present")
+            raise ValueError(BOTH_INPUTS_PRESENT_ERR)
 
         req_type = data.get("request_type")
 
@@ -456,7 +458,7 @@ class JobComm:
         self._comm.send(msg)
 
     def send_error_message(
-        self, err_type: str, req: Union[JobRequest, dict], content: dict = None
+        self, err_type: str, req: Union[JobRequest, dict, str], content: dict = None
     ) -> None:
         """
         Sends a comm message over the KBaseJobs channel as an error. This will have msg_type as
@@ -484,10 +486,9 @@ class JobComm:
             data = req.get("content", {}).get("data", {})
             error_content["source"] = data.get("request_type")
             # If req is still a dict, could have both job_id and job_id_list
-            if "job_id" in data:
-                error_content["job_id"] = data["job_id"]
-            if "job_id_list" in data:
-                error_content["job_id_list"] = data["job_id_list"]
+            for attr in ["job_id", "job_id_list"]:
+                if attr in data:
+                    error_content[attr] = data[attr]
         elif isinstance(req, str) or req is None:
             error_content["source"] = req
         if content is not None:
@@ -497,12 +498,18 @@ class JobComm:
 
 class exc_to_msg:
     """
-    This is a context manager to wrap around JM function calls
-    JC functions invoke JM functions, which check for invalid/DNE jobs
+    This is a context manager to wrap around JC code
     """
     jc = JobComm()
 
-    def __init__(self, req: Union[JobRequest, dict] = None):
+    def __init__(self, req: Union[JobRequest, dict, str] = None):
+        """
+        req can be several different things because this context manager
+        supports being used in several different places. Generally it is
+        a request dict or request object, but when used outside of a request,
+        e.g., from appmanager, req can inform of the source of the JobComm
+        call
+        """
         self.req = req
 
     def __enter__(self):
@@ -518,7 +525,9 @@ class exc_to_msg:
                 "job_id": "0123456789abcdef",  # or job_id_list. optional and mutually exclusive
                 "name": "ValueError",
                 "message": "Something happened",
-                "code": -1  # for NarrativeExceptions
+                #---------- Below, NarrativeException only -----------
+                "code": -1,
+                "error": "Unable to complete this request"
             }
         }
         Will then re-raise exception

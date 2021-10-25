@@ -30,12 +30,11 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-JOB_FALSY_ERR = "Job ID is not provided or falsy"
-JOB_NOT_REG_ERR = "Job ID not registered"
+JOB_NOT_REG_ERR = "Job ID is not registered"
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
-JOBS_FALSY_NOT_REG_ERR = "Job ID(s) are not provided, falsy, or not registered"
+JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
 
 
 class JobManager(object):
@@ -139,9 +138,7 @@ class JobManager(object):
         return job_states
 
     def _check_job(self, input_id: str) -> None:
-        if not input_id:
-            raise JobIDException(JOB_FALSY_ERR, input_id)
-        elif input_id not in self._running_jobs:
+        if input_id not in self._running_jobs:
             raise JobIDException(JOB_NOT_REG_ERR, input_id)
 
     def _check_job_list(self, input_ids: List[str]) -> Tuple[List[str], List[str]]:
@@ -157,17 +154,16 @@ class JobManager(object):
             raise TypeError(f"{JOBS_TYPE_ERR}: {input_ids}")
 
         job_ids = []
-        for job_id in input_ids:
-            if job_id and job_id not in job_ids:
-                job_ids.append(job_id)
-
         error_ids = []
-        for i, job_id in list(enumerate(job_ids))[::-1]:
-            if job_id not in self._running_jobs:
-                error_ids.insert(0, job_ids.pop(i))
+        for input_id in input_ids:
+            if input_id and input_id not in job_ids + error_ids:
+                if input_id in self._running_jobs:
+                    job_ids.append(input_id)
+                else:
+                    error_ids.append(input_id)
 
         if not len(job_ids) + len(error_ids):
-            raise JobIDException(JOBS_FALSY_NOT_REG_ERR, input_ids)
+            raise JobIDException(JOBS_MISSING_FALSY_ERR, input_ids)
 
         return job_ids, error_ids
 

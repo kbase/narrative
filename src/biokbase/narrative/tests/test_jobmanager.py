@@ -11,10 +11,9 @@ from IPython.display import HTML
 
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobmanager import (
-    JOB_FALSY_ERR,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
-    JOBS_FALSY_NOT_REG_ERR,
+    JOBS_MISSING_FALSY_ERR,
 )
 from biokbase.narrative.jobs.job import (
     Job,
@@ -28,7 +27,7 @@ from biokbase.narrative.exception_util import (
     JobIDException,
 )
 
-from src.biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
+from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
 from .util import ConfigTests
 from .test_job import (
     JOB_COMPLETED,
@@ -235,7 +234,7 @@ class JobManagerTest(unittest.TestCase):
             self.jm._check_job(job_id)
 
     def test__check_job_fail(self):
-        with self.assertRaisesRegex(JobIDException, f"{JOB_FALSY_ERR}: {None}"):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {None}"):
             self.jm._check_job(None)
 
         with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"):
@@ -245,10 +244,10 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
             self.jm._check_job_list(None)
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[]}")):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm._check_job_list([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_FALSY_NOT_REG_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm._check_job_list(["", "", None])
 
     def test__check_job_list(self):
@@ -358,10 +357,10 @@ class JobManagerTest(unittest.TestCase):
                 self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[]}")):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.cancel_jobs([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_FALSY_NOT_REG_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm.cancel_jobs(["", "", None])
 
         job_states = self.jm.cancel_jobs([JOB_NOT_FOUND])
@@ -602,10 +601,10 @@ class JobManagerTest(unittest.TestCase):
         self._check_retry_jobs(expected, retry_results)
 
     def test_retry_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[]}")):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.retry_jobs([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_FALSY_NOT_REG_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm.retry_jobs(["", "", None])
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -709,7 +708,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(exp, res)
 
     def test_get_job_states__empty(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_FALSY_NOT_REG_ERR}: {[]}")):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):

@@ -32,7 +32,7 @@ define([
             } else if (typeof error === 'string') {
                 message = error;
             } else {
-                message = 'Unknown Error (incompatible type)';
+                message = `Unknown Error (incompatible type ${typeof error})`;
             }
 
             return e('div', {

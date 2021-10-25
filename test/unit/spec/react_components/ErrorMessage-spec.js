@@ -67,7 +67,7 @@ define(['react_components/ErrorMessage', 'react', 'react-dom'], (ErrorMessage, R
             for (const unsupported of unsupportedTypes) {
                 const el = createElement(ErrorMessage, { error: unsupported });
                 render(el, node);
-                expect(node.innerText).toContain('Unknown Error (incompatible type)');
+                expect(node.innerText).toContain(`Unknown Error (incompatible type ${typeof unsupported})`);
             }
         });
 

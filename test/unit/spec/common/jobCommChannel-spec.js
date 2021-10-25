@@ -315,44 +315,6 @@ define([
                 ],
             },
             {
-                type: 'job_does_not_exist',
-                message: {
-                    job_id: testJobId,
-                    source: 'someSource',
-                },
-                expected: [
-                    {
-                        jobId: testJobId,
-                        source: 'someSource',
-                    },
-                    {
-                        channel: { jobId: testJobId },
-                        key: { type: 'job-does-not-exist' },
-                    },
-                ],
-            },
-            {
-                // does_not_exist from job status call => convert to job_status
-                type: 'job_does_not_exist',
-                message: {
-                    job_id: testJobId,
-                    source: 'job_status',
-                },
-                expected: [
-                    {
-                        jobId: testJobId,
-                        jobState: {
-                            job_id: testJobId,
-                            status: 'does_not_exist',
-                        },
-                    },
-                    {
-                        channel: { jobId: testJobId },
-                        key: { type: 'job-status' },
-                    },
-                ],
-            },
-            {
                 // info for a single job
                 type: 'job_info',
                 message: (() => {
@@ -516,6 +478,34 @@ define([
                     {
                         channel: { jobId: JobsData.allJobs[0].job_id },
                         key: { type: 'job-status' },
+                    },
+                ],
+            },
+            {
+                // single job status message, ee2 error
+                type: 'job_status',
+                message: {
+                    ee2_error_job: {
+                        job_id: 'ee2_error_job',
+                        state: {
+                            job_id: 'ee2_error_job',
+                            status: 'ee2_error',
+                        },
+                    },
+                },
+                expected: [
+                    {
+                        jobId: 'ee2_error_job',
+                        error: {
+                            job_id: 'ee2_error_job',
+                            message: 'ee2 connection error',
+                            code: 'ee2_error',
+                        },
+                        request: 'job-status',
+                    },
+                    {
+                        channel: { jobId: 'ee2_error_job' },
+                        key: { type: 'job-error' },
                     },
                 ],
             },

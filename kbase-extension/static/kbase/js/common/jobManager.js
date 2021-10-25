@@ -84,28 +84,44 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          *
          * @param {string} event - event that triggers the handler
          * @param {object} handlerObject with the handler name as keys and the handler function as values
+         *              if the handler function is already installed on the job manager,
+         *              'null' can be supplied in place of the function
+         *
          */
 
-        addEventHandler(event, handlerObject) {
+        addEventHandler(event, handlers) {
             if (!this._isValidEvent(event)) {
                 throw new Error(`addEventHandler: invalid event ${event} supplied`);
             }
 
+            const handlersType = Object.prototype.toString.call(handlers) || null;
+
             if (
-                !handlerObject ||
-                Object.prototype.toString.call(handlerObject) !== '[object Object]' ||
-                Object.keys(handlerObject).length === 0
+                !handlers ||
+                (handlersType !== '[object Array]' && handlersType !== '[object Object]')
             ) {
                 throw new Error(
-                    'addEventHandler: invalid handlerObject supplied (must be of type object)'
+                    'addEventHandler: invalid handlers supplied (must be of type array or object)'
                 );
+            }
+
+            if (handlersType === '[object Array]') {
+                const handlerObj = {};
+                handlers.forEach((h) => {
+                    handlerObj[h] = null;
+                });
+                handlers = handlerObj;
+            }
+
+            if (!Object.keys(handlers).length) {
+                throw new Error('addEventHandler: no handlers supplied');
             }
 
             if (!this.handlers[event]) {
                 this.handlers[event] = {};
             }
             const errors = [];
-            for (const [handlerName, handlerFn] of Object.entries(handlerObject)) {
+            for (const [handlerName, handlerFn] of Object.entries(handlers)) {
                 const typeError = this.addHandlerFunction({ handlerName, handlerFn });
                 if (typeError) {
                     errors.push(typeError);
@@ -113,9 +129,10 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     this.handlers[event][handlerName] = this.__handlerFns[handlerName];
                 }
             }
+
             if (errors.length) {
                 throw new Error(
-                    `Handlers must be of type function. Recheck these handlers: ${errors
+                    `addEventHandler: handlers must be of type function. Recheck these handlers: ${errors
                         .sort()
                         .join(', ')}`
                 );
@@ -127,15 +144,34 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          * @param {object} handlerObject - object with keys
          *  {string}    handlerName - the name of the handler to add
          *  {function}  handlerFn - the function to be performed
+         *              if the handler function is already installed on the job manager,
+         *              'null' can be supplied in place of the function
+         *
+         * Example:
+         *
+         * jm.addEventListener('job-status', {
+         *      handlerA: () => {}, // this function gets added to the job manager
+         *      handlerB: null,     // this handler function is expected to exist
+         * })
+         *
          */
         addHandlerFunction(handlerArgs) {
             const { handlerName, handlerFn } = handlerArgs;
 
-            if (typeof handlerName !== 'string' || typeof handlerFn !== 'function') {
+            if (typeof handlerName !== 'string') {
                 return handlerName;
             } else if (this.__handlerFns[handlerName]) {
-                console.warn(`A handler with the name ${handlerName} already exists`);
+                // a function with this name already exists
+                if (handlerFn !== null) {
+                    console.warn(`A handler with the name ${handlerName} already exists`);
+                }
                 return;
+            } else if (handlerFn === null && !this.__handlerFns[handlerName]) {
+                // expected the handler to exist already, but it does not
+                console.error(`No handler function supplied for ${handlerName}`);
+                return handlerName;
+            } else if (typeof handlerFn !== 'function') {
+                return handlerName;
             }
 
             this.__handlerFns[handlerName] = handlerFn;
@@ -381,7 +417,6 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
 
             addDefaultHandlers() {
                 const defaultHandlers = {
-                    'job-does-not-exist': this.handleJobDoesNotExist,
                     'job-info': this.handleJobInfo,
                     'job-retry-response': this.handleJobRetry,
                     'job-status': this.handleJobStatus,
@@ -415,7 +450,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 }
 
                 // request job updates for the new job
-                ['status', 'error', 'does-not-exist'].forEach((type) => {
+                ['status', 'error'].forEach((type) => {
                     self.addListener(`job-${type}`, [retry.jobState.job_id]);
                 });
                 self.bus.emit('request-job-updates-start', {
@@ -427,17 +462,6 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                         return j.jobState;
                     })
                 );
-            }
-
-            handleJobDoesNotExist(self, message) {
-                const { jobId } = message;
-                self.handleJobStatus(self, {
-                    jobId,
-                    jobState: {
-                        job_id: jobId,
-                        status: 'does_not_exist',
-                    },
-                });
             }
 
             /**
@@ -584,8 +608,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     if (confirmed) {
                         const jobIdList =
                             action === 'retry'
-                                ? // return the retry_parent (if available)
-                                  jobList.map((job) => {
+                                ? jobList.map((job) => {
+                                      // return the retry_parent (if available)
                                       return job.retry_parent || job.job_id;
                                   })
                                 : jobList.map((job) => {
@@ -739,7 +763,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
-                ['status', 'error', 'does-not-exist'].forEach((type) => {
+                ['status', 'error'].forEach((type) => {
                     this.addListener(`job-${type}`, allJobIds);
                 });
                 // request job updates

@@ -82,6 +82,7 @@ define([
                 this._rewireIds(this.$elem, this);
                 this.renderSVG();
                 this.$el('geneCountTotal').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
+                this.$el('originalCount').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.originalCount));
                 this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.renderData.voldata.length));
             } catch (err) {
                 this.$elem.html($ErrorMessage(err));
@@ -146,6 +147,13 @@ define([
 
             let min_log_q = null;
 
+            const missing = {
+                gene: 0,
+                log2fc_f: 0,
+                p_value_f: 0,
+                q_value: 0
+            };
+
             const voldata = differentialExpressionMatrix.data.row_ids.map((gene, index) => {
                 const [log2fc_f, p_value_f, q_value] = differentialExpressionMatrix.data.values[index];
                 return {
@@ -153,7 +161,22 @@ define([
                 };
             })
                 .filter(({ gene, log2fc_f, p_value_f, q_value }) => {
-                    return gene && log2fc_f && p_value_f && q_value;
+                    const somethingIsMissing = (gene === null || log2fc_f === null || p_value_f === null || q_value === null);
+                    if (somethingIsMissing) {
+                        if (gene === null) {
+                            missing.gene += 1;
+                        }
+                        if (log2fc_f === null) {
+                            missing.log2fc_f += 1;
+                        }
+                        if (p_value_f === null) {
+                            missing.p_value_f += 1;
+                        }
+                        if (q_value === null) {
+                            missing.q_value += 1;
+                        }
+                    }
+                    return !somethingIsMissing;
                 })
                 .map((voldatum) => {
                     const log_q_value = (() => {
@@ -175,7 +198,7 @@ define([
                 throw new Error('no q_values available');
             }
 
-            return { condition_1, condition_2, voldata };
+            return { condition_1, condition_2, voldata, originalCount: differentialExpressionMatrix.data.row_ids.length, missing };
         },
 
         colorx: function (d, logQValue, foldChangeValue) {
@@ -405,8 +428,9 @@ define([
             const $plotInfo = $el('div').addClass('prop-table')
                 .append($plotInfoRow('Condition 1', 'cond1'))
                 .append($plotInfoRow('Condition 2', 'cond2'))
-                .append($plotInfoRow('Total Genes', 'geneCountTotal'))
-                .append($plotInfoRow('Genes within range', 'geneCountInRange'))
+                .append($plotInfoRow('Total Genes', 'originalCount'))
+                .append($plotInfoRow('w/ missing values removed', 'geneCountTotal'))
+                .append($plotInfoRow('w/ min/max applied', 'geneCountInRange'))
                 .append($plotInfoRow('Significance (-Log10)', 'currentLogQValue2'))
                 .append($plotInfoRow('Fold Change (Log2)', 'currentFoldChangeValue2'))
                 .append($plotInfoRow('Selected Genes', 'geneCountSelected'))
@@ -625,8 +649,8 @@ define([
                                 d.gene,
                                 d.p_value_f,
                                 d.q_value,
-                                d.log2fc_f,
                                 d.log_q_value,
+                                d.log2fc_f,
                             ]);
                         }
                         return cc;
@@ -667,8 +691,8 @@ define([
                                 d.gene,
                                 d.p_value_f,
                                 d.q_value,
-                                d.log2fc_f,
                                 d.log_q_value,
+                                d.log2fc_f,
                             ]);
                         }
                         return cc;
@@ -724,8 +748,8 @@ define([
                             d.gene,
                             d.p_value_f,
                             d.q_value,
-                            d.log2fc_f,
                             d.log_q_value,
+                            d.log2fc_f,
                         ]);
                     }
                     return cc;

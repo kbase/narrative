@@ -11,7 +11,7 @@
         "@wdio/local-runner": "7.11.1",
         "@wdio/mocha-framework": "7.11.1",
         "@wdio/selenium-standalone-service": "7.10.1",
-        "@wdio/spec-reporter": "7.10.1",
+        "@wdio/spec-reporter": "7.16.1",
         "bower": "1.8.12",
         "chrome-launcher": "0.14.1",
         "chromedriver": "93.0.1",

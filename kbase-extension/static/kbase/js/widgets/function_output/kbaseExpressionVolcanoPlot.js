@@ -146,7 +146,6 @@ define([
             const [condition_1, condition_2] = Object.entries(differentialExpressionMatrix.condition_mapping)[0];
 
             let min_log_q = null;
-            let total_zero_q = 0;
 
             const missing = {
                 gene: 0,
@@ -182,7 +181,6 @@ define([
                 .map((voldatum) => {
                     const log10_q_value = (() => {
                         if (voldatum.q_value === 0) {
-                            total_zero_q += 1;
                             return min_log_q;
                         } else {
                             const value = -Math.log10(voldatum.q_value);

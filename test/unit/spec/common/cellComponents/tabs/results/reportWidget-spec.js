@@ -143,5 +143,9 @@ define([
             expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
         });
+
+        it('should start with deleted data objects', async () => {});
+
+        it('should start with objects with missing data', async () => {});
     });
 });

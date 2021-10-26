@@ -132,7 +132,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                     // the same order.
                     objectKeys = Object.keys(createdObjects);
                     // turn the refs into an array: [{"ref": ref}]
-                    const infoLookupParam = objectKeys.map((ref) => ({ ref: ref }));
+                    const infoLookupParam = objectKeys.map((ref) => ({ ref }));
                     return workspaceClient.get_object_info_new({
                         objects: infoLookupParam,
                         ignoreErrors: 1,
@@ -192,7 +192,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                     containerNode.classList.remove('hidden');
                 })
                 .catch((error) => {
-                    console.error('errors, yo', error);
+                    console.error('An error occurred while starting the report tab', error);
                 })
                 .finally(() => {
                     container.removeChild(spinnerNode);

@@ -569,6 +569,7 @@ class assert_obj_method_called(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        # raises the error
         if exc_value:
             return
 

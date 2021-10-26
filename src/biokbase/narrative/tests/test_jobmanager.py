@@ -1,20 +1,33 @@
 """
 Tests for job management
 """
-from src.biokbase.narrative.jobs.job import (
-    COMPLETED_STATUS,
-    EXCLUDED_JOB_STATE_FIELDS,
-    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
-    JOB_ATTR_DEFAULTS,
-    get_dne_job_state,
-)
 import unittest
 import copy
 import itertools
 from unittest import mock
 import re
+import os
+from IPython.display import HTML
+
 import biokbase.narrative.jobs.jobmanager
-from biokbase.narrative.jobs.job import Job
+from biokbase.narrative.jobs.jobmanager import (
+    JOB_NOT_REG_ERR,
+    JOB_NOT_BATCH_ERR,
+    JOBS_MISSING_FALSY_ERR,
+)
+from biokbase.narrative.jobs.job import (
+    Job,
+    EXCLUDED_JOB_STATE_FIELDS,
+    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+    JOB_ATTR_DEFAULTS,
+    get_dne_job_state,
+)
+from biokbase.narrative.exception_util import (
+    NarrativeException,
+    JobIDException,
+)
+
+from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
 from .util import ConfigTests
 from .test_job import (
     JOB_COMPLETED,
@@ -42,18 +55,11 @@ from .test_job import (
     get_test_job_states,
     get_cell_2_jobs,
 )
-import os
-from IPython.display import HTML
 from .narrative_mock.mockclients import (
     get_mock_client,
     get_failing_mock_client,
     assert_obj_method_called,
     MockClients,
-)
-from biokbase.narrative.exception_util import (
-    NarrativeException,
-    NoJobException,
-    NotBatchException,
 )
 
 
@@ -63,7 +69,6 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
-NO_ID_ERR_STR = r"No job id\(s\) supplied"
 ERR_STR = "Some error occurred"
 
 
@@ -220,14 +225,25 @@ class JobManagerTest(unittest.TestCase):
                         refresh,
                     )
 
-    def test__check_job_list_fail(self):
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
-            self.jm._check_job_list()
+    def test__check_job(self):
+        for job_id in ALL_JOBS:
+            self.jm._check_job(job_id)
 
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+    def test__check_job_fail(self):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {None}"):
+            self.jm._check_job(None)
+
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"):
+            self.jm._check_job(JOB_NOT_FOUND)
+
+    def test__check_job_list_fail(self):
+        with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
+            self.jm._check_job_list(None)
+
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm._check_job_list([])
 
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm._check_job_list(["", "", None])
 
     def test__check_job_list(self):
@@ -293,7 +309,7 @@ class JobManagerTest(unittest.TestCase):
 
     def test_get_job_bad(self):
         with self.assertRaisesRegex(
-            NoJobException, "No job present with id not_a_job_id"
+            JobIDException, f"{JOB_NOT_REG_ERR}: not_a_job_id"
         ):
             self.jm.get_job("not_a_job_id")
 
@@ -337,13 +353,10 @@ class JobManagerTest(unittest.TestCase):
                 self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
-            self.jm.cancel_jobs()
-
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.cancel_jobs([])
 
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm.cancel_jobs(["", "", None])
 
         job_states = self.jm.cancel_jobs([JOB_NOT_FOUND])
@@ -584,10 +597,10 @@ class JobManagerTest(unittest.TestCase):
         self._check_retry_jobs(expected, retry_results)
 
     def test_retry_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.retry_jobs([])
 
-        with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
+        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
             self.jm.retry_jobs(["", "", None])
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -691,20 +704,20 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(exp, res)
 
     def test_get_job_states__empty(self):
-        with self.assertRaisesRegex(NoJobException, r"No job id\(s\) supplied"):
+        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):
         with self.assertRaisesRegex(
-            NoJobException, f"No job present with id {JOB_NOT_FOUND}"
+            JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
         ):
             self.jm.update_batch_job(JOB_NOT_FOUND)
 
     def test_update_batch_job__not_batch(self):
-        with self.assertRaisesRegex(NotBatchException, "Not a batch job"):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_BATCH_ERR}: {JOB_CREATED}"):
             self.jm.update_batch_job(JOB_CREATED)
 
-        with self.assertRaisesRegex(NotBatchException, "Not a batch job"):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_BATCH_ERR}: {BATCH_TERMINATED}"):
             self.jm.update_batch_job(BATCH_TERMINATED)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)

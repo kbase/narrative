@@ -152,7 +152,7 @@
     {
         "info": {
             "ver": "0.0.2",
-            "name": "Assemble Contigs from Reads",
+            "name": "Assemble with ARAST",
             "subtitle": "Assemble DNA reads into a set of contigs.",
             "output_types": [
                 "KBaseGenomeAnnotations.Assembly"

@@ -509,7 +509,7 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        job.update_state(None)
+        job._update_state(None)
         self.assertFalse(job.was_terminal())
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
@@ -522,8 +522,8 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.state(), expected)
 
         # try to update it with the job state from a different job
-        with self.assertRaisesRegex(ValueError, "Job ID mismatch in update_state"):
-            job.update_state(get_test_job(JOB_COMPLETED))
+        with self.assertRaisesRegex(ValueError, "Job ID mismatch in _update_state"):
+            job._update_state(get_test_job(JOB_COMPLETED))
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):

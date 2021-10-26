@@ -275,15 +275,6 @@ These are described below. The name (`msg_type`) is given, followed by the keys 
 
 By design, these should only be seen by the `JobCommChannel` instance, then sent into bus messages that get sent on specific channels. That information is also given in each block.
 
-### `job_does_not_exist`
-This is an error message triggered when trying to get info/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
-
-**content**
-  * `job_id` - string OR `job_id_list` - array of strings, the job id(s)
-  * `source` - string, the source of the error
-
-**bus** `job-does-not-exist`
-
 ### `job_comm_error`
 A general job comm error, capturing most errors that get thrown by the kernel
 

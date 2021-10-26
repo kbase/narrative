@@ -381,12 +381,19 @@ require.config({
         'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
         /*
-            React components
-        */
-
+           To support React components
+       */
         react: 'ext_modules/react/react.development',
         'react-dom': 'ext_modules/react-dom/react-dom.development',
         'prop-types': 'ext_modules/prop-types/prop-types',
+
+        /* 
+            A home for shared React components 
+            Note that we do not map individual react component modules;
+            by rooting at a directory when loading a module, that module
+            may use relative path module references, which is very handy
+            for loading isolated subcomponents, css files, and the like.
+        */
         react_components: 'kbase/js/react_components',
 
         /***

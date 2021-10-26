@@ -6,7 +6,8 @@ require.config({
     paths: {
         fileSaver: 'ext_components/file-saver/FileSaver.min',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
-        'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
+        'bootstrap-slider': 'ext_components/seiyria-bootstrap-slider/dist/bootstrap-slider',
+        'bootstrap-slider-css': 'ext_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider',
         'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',
         'jquery-dataTables': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
         'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',
@@ -531,18 +532,8 @@ require.config({
         bootstrap: {
             deps: ['jquery', 'jqueryui'],
         },
-        // React: {
-        //     init: () => {
-        //         'use strict';
-        //         alert('hello?');
-        //         return window.React;
-        //     }
-        // },
-        // ReactDOM: {
-        //     init: () => {
-        //         'use strict';
-        //         return window.ReactDOM;
-        //     }
-        // }
+        'bootstrap-slider': {
+            deps: ['jquery', 'css!bootstrap-slider-css']
+        }
     },
 });

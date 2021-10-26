@@ -4,7 +4,7 @@
   "homepage": "https://kbase.us",
   "dependencies": {
     "bluebird": "3.7.2",
-    "bootstrap-slider": "*",
+    "seiyria-bootstrap-slider": "10.6.2",
     "bowser": "1.0.0",
     "corejs-typeahead": "1.0.1",
     "d3": "3.5.6",

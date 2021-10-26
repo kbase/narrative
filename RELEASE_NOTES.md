@@ -10,6 +10,8 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 -   The above is the first utilization of React in the Narrative, and of npm-installed modules into the Narrative runtime
     -   added npm dependencies: react, react-dom, prop-types
     -   added support to copy umd-packaged modules from node_modules into the kbase extension static content during build
+- PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+
 
 ### Version 4.5.1
 

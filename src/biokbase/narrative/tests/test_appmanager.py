@@ -147,24 +147,29 @@ class AppManagerTestCase(unittest.TestCase):
         except Exception:
             pass
 
-    def run_app_expect_error(self, comm_mock, run_func, func_name, print_error):
+    def run_app_expect_error(self, comm_mock, run_func, func_name, print_error, cell_id=None):
         """
         A wrapper for various versions of run_app* that'll test and verify that errors get
         1. printed to stdout and
         2. sent over the (mocked) comm channel as expected
         The stdout prints and the comm channel responses are both side effects that get
         captured by re-routing stdout, and by capturing mock calls, respectively.
+
+        If print_error is None, assume that there should be no output to stdout
         """
         output = io.StringIO()
         sys.stdout = output
         self.assertIsNone(run_func())
-        sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__  # reset to normal
         output_str = output.getvalue()
-        self.assertIn(
-            f"Error while trying to start your app ({func_name})!", output_str
-        )
-        self.assertIn(print_error, output_str)
-        self._verify_comm_error(comm_mock)
+        if print_error is not None and len(print_error):
+            self.assertIn(
+                f"Error while trying to start your app ({func_name})!", output_str
+            )
+            self.assertIn(print_error, output_str)
+        else:
+            self.assertEqual('', output_str)  # if nothing gets written to a StringIO, getvalue returns an empty string
+        self._verify_comm_error(comm_mock, cell_id=cell_id)
 
     def test_reload(self):
         self.am.reload()
@@ -318,6 +323,33 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = MagicMock()
         self.assertIsNotNone(self.am.run_app(self.good_app_id, None, tag=self.good_tag))
         self._verify_comm_success(c.return_value.send_comm_message, False)
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    def test_run_app__print_error(self, c):
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
+
+        # should print an error if there is no cell id
+        self.run_app_expect_error(
+            comm_mock,
+            lambda: self.am.run_app(self.bad_app_id, self.test_app_params, tag=self.test_tag),
+            "run_app",
+            "Unknown app id"
+        )
+
+        comm_mock2 = MagicMock()
+        c.return_value.send_comm_message = comm_mock2
+
+        # should not print an error if there is a cell id
+        cell_id = "some_app_cell"
+        self.run_app_expect_error(
+            comm_mock2,
+            lambda: self.am.run_app(self.bad_app_id, self.test_app_params, tag=self.test_tag, cell_id=cell_id),
+            "run_app",
+            None,
+            cell_id=cell_id
+        )
 
     ############# End tests for run_app #############
 
@@ -480,6 +512,33 @@ class AppManagerTestCase(unittest.TestCase):
         )
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    def test_run_app_batch__print_error(self, c):
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
+
+        # should print an error if there is no cell id
+        self.run_app_expect_error(
+            comm_mock,
+            lambda: self.am.run_app_batch(self.bad_app_id, [self.test_app_params], tag=self.test_tag),
+            "run_app_batch",
+            "Unknown app id"
+        )
+
+        comm_mock2 = MagicMock()
+        c.return_value.send_comm_message = comm_mock2
+
+        # should not print an error if there is a cell id
+        cell_id = "some_batch_cell"
+        self.run_app_expect_error(
+            comm_mock2,
+            lambda: self.am.run_app_batch(self.bad_app_id, [self.test_app_params], tag=self.test_tag, cell_id=cell_id),
+            "run_app_batch",
+            None,
+            cell_id=cell_id
+        )
+
     ############# End tests for run_app_batch #############
 
     ############# Test run_local_app #############
@@ -548,6 +607,33 @@ class AppManagerTestCase(unittest.TestCase):
                 "run_local_app",
                 test_case["expected_error"],
             )
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    def test_run_local_app__print_error(self, c):
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
+
+        # should print an error if there is no cell id
+        self.run_app_expect_error(
+            comm_mock,
+            lambda: self.am.run_local_app(self.bad_app_id, self.test_app_params, tag=self.test_tag),
+            "run_local_app",
+            "Unknown app id"
+        )
+
+        comm_mock2 = MagicMock()
+        c.return_value.send_comm_message = comm_mock2
+
+        # should not print an error if there is a cell id
+        cell_id = "some_local_app_cell"
+        self.run_app_expect_error(
+            comm_mock2,
+            lambda: self.am.run_local_app(self.bad_app_id, self.test_app_params, tag=self.test_tag, cell_id=cell_id),
+            "run_local_app",
+            None,
+            cell_id=cell_id
+        )
 
     ############# End tests for run_local_app #############
 
@@ -737,6 +823,36 @@ class AppManagerTestCase(unittest.TestCase):
                 "run_app_bulk",
                 test_case["expected_error"],
             )
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    def test_run_app_bulk__print_error(self, c):
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
+
+        test_case = copy.deepcopy(self.bulk_run_good_inputs)
+        test_case[0]["app_id"] = self.bad_app_id
+
+        # should print an error if there is no cell id
+        self.run_app_expect_error(
+            comm_mock,
+            lambda: self.am.run_app_bulk(test_case),
+            "run_app_bulk",
+            "an app_id must be of the format module_name/app_name"
+        )
+
+        comm_mock2 = MagicMock()
+        c.return_value.send_comm_message = comm_mock2
+
+        # should not print an error if there is a cell id
+        cell_id = "some_cell_or_another"
+        self.run_app_expect_error(
+            comm_mock2,
+            lambda: self.am.run_app_bulk(test_case, cell_id=cell_id),
+            "run_app_bulk",
+            None,
+            cell_id=cell_id
+        )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")

@@ -8,7 +8,6 @@ from .job import (
     Job,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
-    get_dne_job_state,
 )
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.app_util import system_variable
@@ -35,6 +34,12 @@ JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
+
+
+def get_error_output_state(job_id, error="does_not_exist"):
+    if error not in ["does_not_exist", "ee2_error"]:
+        raise ValueError(f"Unknown error type: {error}")
+    return {"state": {"job_id": job_id, "status": error}}
 
 
 class JobManager(object):
@@ -237,7 +242,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
             raise
 
-    def _construct_job_state_set(self, job_ids: list, states: dict = None) -> dict:
+    def _construct_job_output_state_set(self, job_ids: list, states: dict = None) -> dict:
         """
         Builds a set of job states for the list of job ids.
         :param states: dict, where each value is a state is from EE2
@@ -253,7 +258,7 @@ class JobManager(object):
         if not len(job_ids):
             return {}
 
-        job_states = dict()
+        output_states = dict()
         jobs_to_lookup = list()
 
         # Fetch from cache of terminated jobs, where available.
@@ -261,10 +266,10 @@ class JobManager(object):
         for job_id in job_ids:
             job = self.get_job(job_id)
             if job.was_terminal():
-                job_states[job_id] = job.output_state()
+                output_states[job_id] = job.output_state()
             elif states and job_id in states:
                 state = states[job_id]
-                job_states[job_id] = job.output_state(state)
+                output_states[job_id] = job.output_state(state)
             else:
                 jobs_to_lookup.append(job_id)
 
@@ -281,12 +286,14 @@ class JobManager(object):
                 )
             except Exception as e:
                 kblogging.log_event(
-                    self._log, "construct_job_state_set", {"err": str(e)}
+                    self._log, "_construct_job_output_state_set", {"err": str(e)}
                 )
+                for job_id in jobs_to_lookup:
+                    output_states[job_id] = get_error_output_state(job_id, "ee2_error")
 
         for job_id, state in fetched_states.items():
-            job_states[job_id] = self.get_job(job_id).output_state(state)
-        return job_states
+            output_states[job_id] = self.get_job(job_id).output_state(state)
+        return output_states
 
     def lookup_job_info(self, job_ids: List[str]) -> dict:
         """
@@ -332,7 +339,7 @@ class JobManager(object):
             if self._running_jobs[job_id]["refresh"] > 0 or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
         if len(jobs_to_lookup) > 0:
-            return self._construct_job_state_set(jobs_to_lookup)
+            return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
 
     def register_new_job(self, job: Job, refresh: int = None) -> None:
@@ -434,7 +441,7 @@ class JobManager(object):
             if not self.get_job(job_id).was_terminal():
                 self._cancel_job(job_id)
 
-        job_states = self._construct_job_state_set(job_ids)
+        job_states = self._construct_job_output_state_set(job_ids)
 
         for job_id in error_ids:
             job_states[job_id] = {
@@ -491,8 +498,8 @@ class JobManager(object):
         retry_ids = [
             result["retry_id"] for result in retry_results if "retry_id" in result
         ]
-        orig_states = self._construct_job_state_set(orig_ids)
-        retry_states = self._construct_job_state_set(
+        orig_states = self._construct_job_output_state_set(orig_ids)
+        retry_states = self._construct_job_output_state_set(
             retry_ids, self._create_jobs(retry_ids)  # add to self._running_jobs index
         )
         job_states = {**orig_states, **retry_states}
@@ -515,9 +522,9 @@ class JobManager(object):
 
     def get_job_states(self, job_ids: List[str]) -> dict:
         job_ids, error_ids = self._check_job_list(job_ids)
-        output_states = self._construct_job_state_set(job_ids)
+        output_states = self._construct_job_output_state_set(job_ids)
         for error_id in error_ids:
-            output_states[error_id] = get_dne_job_state(error_id)
+            output_states[error_id] = get_error_output_state(error_id)
         return output_states
 
     def modify_job_refresh(self, job_ids: List[str], update_adjust: int) -> None:

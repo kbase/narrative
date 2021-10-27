@@ -317,7 +317,7 @@ The current job state. This one is probably most common.
 
 **content**
 Dictionary with key(s) job ID and value dictionaries with the following structure:
-  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Non-existent jobs have the status `does_not_exist`
+  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Regarding error states: non-existent jobs have the status `does_not_exist`, and when the job state cannot be retrieved from EE2 the status `ee2_error` is used
   * `widget_info` - the parameters to send to output widgets, only available for a completed job
   * `user` - string, username of user who submitted the job
 
@@ -564,5 +564,18 @@ As sent to browser, includes cell info and run info
         retry_ids: array,
         retry_parent: str
     }
+}
+```
+
+When an error occurs while preparing the job state, the output states will have the formats
+```json
+{
+  "job_id_0": {
+    "state": {"job_id": "job_id_0", "status": "does_not_exist"}
+  },
+  "job_id_1": {
+    "state": {"job_id": "job_id_1", "status": "ee2_error"}
+  },
+  ...
 }
 ```

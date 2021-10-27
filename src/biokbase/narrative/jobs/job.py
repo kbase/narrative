@@ -78,17 +78,6 @@ JOB_INPUT_ATTRS = [
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
 
 
-def get_dne_job_state(job_id, output_state=True):
-    state = {"job_id": job_id, "status": "does_not_exist"}
-    if output_state:
-        state = {"state": state}
-    return state
-
-
-def get_dne_job_states(job_ids, output_state=True):
-    return {job_id: get_dne_job_state(job_id, output_state) for job_id in job_ids}
-
-
 class Job(object):
     _job_logs = list()
     _acc_state = None  # accumulates state

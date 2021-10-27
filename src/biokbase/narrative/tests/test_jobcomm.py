@@ -6,7 +6,6 @@ import re
 
 from biokbase.narrative.exception_util import transform_job_exception
 from biokbase.narrative.jobs.jobcomm import exc_to_msg
-from biokbase.narrative.jobs.job import get_dne_job_state
 import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobmanager import (
@@ -14,6 +13,7 @@ from biokbase.narrative.jobs.jobmanager import (
     JOB_NOT_BATCH_ERR,
     JOBS_TYPE_ERR,
     JOBS_MISSING_FALSY_ERR,
+    get_error_output_state,
 )
 from biokbase.narrative.jobs.jobcomm import (
     JobRequest,
@@ -28,7 +28,11 @@ from biokbase.narrative.exception_util import (
 
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
-from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
+from .narrative_mock.mockclients import (
+    get_mock_client,
+    get_failing_mock_client,
+    MockClients,
+)
 from .test_job import (
     JOB_COMPLETED,
     JOB_CREATED,
@@ -410,7 +414,33 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertEqual(self.job_states[job_id], state)
                 validate_job_state(state)
             else:
-                self.assertEqual(get_dne_job_state(job_id), state)
+                self.assertEqual(get_error_output_state(job_id), state)
+
+    @mock.patch(
+        "biokbase.narrative.clients.get", get_mock_client
+    )
+    def test_lookup_job_states__ee2_error(self):
+        def mock_check_jobs(self, params):
+            raise Exception("Test exception")
+
+        job_id_list = ALL_JOBS
+        req = make_comm_msg("job_status", job_id_list, True)
+        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
+            self.jc._lookup_job_states(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_status",
+                "content": {
+                    **get_test_job_states(TERMINAL_JOBS),
+                    **{
+                        job_id: get_error_output_state(job_id, "ee2_error")
+                        for job_id in ACTIVE_JOBS
+                    }
+                }
+            },
+            msg["data"]
+        )
 
     # -----------------------
     # Lookup batch job states
@@ -444,7 +474,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status",
-                "content": {JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)},
+                "content": {JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND)},
             },
             msg["data"],
         )
@@ -656,8 +686,8 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     JOB_RUNNING: self.job_states[JOB_RUNNING],
                     JOB_CREATED: self.job_states[JOB_CREATED],
-                    JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND),
-                    FAKE_JOB: get_dne_job_state(FAKE_JOB),
+                    JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND),
+                    FAKE_JOB: get_error_output_state(FAKE_JOB),
                 },
             },
             msg["data"],
@@ -673,8 +703,8 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": "job_status",
                 "content": {
-                    JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND),
-                    FAKE_JOB: get_dne_job_state(FAKE_JOB),
+                    JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND),
+                    FAKE_JOB: get_error_output_state(FAKE_JOB),
                 },
             },
             msg["data"],
@@ -1049,6 +1079,7 @@ class JobCommTestCase(unittest.TestCase):
     # deal with the various types of messages that will get passed to it. While
     # the majority of the tests above are sent directly to the function to be
     # tested, these just craft the message and pass it to the message handler.
+    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
     def test_handle_all_states_msg(self):
         req = make_comm_msg("all_status", None, False)
         self.jc._handle_comm_message(req)

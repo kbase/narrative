@@ -4,10 +4,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Version 4.5.1
+### Version 4.6.0
 Code changes
 - DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
 - PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly. 
 
 Dependency Changes
 - Python dependency updates

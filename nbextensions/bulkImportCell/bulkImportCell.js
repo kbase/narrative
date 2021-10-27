@@ -484,6 +484,7 @@ define([
                         break;
                     }
                     updateState('inProgress');
+                    switchToTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -903,9 +904,13 @@ define([
             if (!currentState || !(currentState in States)) {
                 currentState = defaultState;
             }
-            const uiState = States[currentState].ui;
-            // FIXME: check if 'configure' tab is active in the current uiState
-            uiState.tab.selected = model.getItem('state.selectedTab', 'configure');
+            const uiState = JSON.parse(JSON.stringify(States[currentState].ui));
+            let savedState = model.getItem('state.selectedTab');
+            if (!savedState || !uiState.tab.tabs[savedState].enabled) {
+                savedState = uiState.defaultTab;
+                model.setItem('state.selectedTab', savedState);
+            }
+            uiState.tab.selected = savedState;
             return uiState;
         }
 
@@ -916,13 +921,20 @@ define([
          */
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
-                // FIXME: this alters the States object
-                const stateDiff = Object.assign({}, States[newUiState].ui);
+                let newTab;
                 model.setItem('state.state', newUiState);
-                // update selections
-                stateDiff.tab.selected = state.tab.selected;
+                const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
                 stateDiff.selectedFileType = state.selectedFileType;
+                // update selections
+                if (stateDiff.tab.tabs[state.tab.selected].enabled) {
+                    stateDiff.tab.selected = state.tab.selected;
+                } else {
+                    newTab = stateDiff.defaultTab;
+                }
                 state = stateDiff;
+                if (newTab) {
+                    switchToTab(newTab);
+                }
             }
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);

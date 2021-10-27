@@ -923,10 +923,7 @@ define([
             if (newUiState && newUiState in States) {
                 let newTab;
                 model.setItem('state.state', newUiState);
-                const stateDiff = Object.assign(
-                    {},
-                    JSON.parse(JSON.stringify(States[newUiState].ui))
-                );
+                const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
                 stateDiff.selectedFileType = state.selectedFileType;
                 // update selections
                 if (stateDiff.tab.tabs[state.tab.selected].enabled) {

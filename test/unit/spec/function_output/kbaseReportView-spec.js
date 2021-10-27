@@ -147,12 +147,15 @@ define([
 
         it('should build a report view without object info or file links from a report object', async function () {
             // copy the base report here so we don't modify it for future tests
-            const reportData = Object.assign({}, REPORT_OBJ);
+            const reportData = TestUtil.JSONcopy(REPORT_OBJ);
             reportData.file_links = [];
             reportData.objects_created = [];
             mockReportLookup(reportData);
             mockCreatedObjectInfo([]);
-            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                autoRender: false,
+            });
             await reportWidget.loadAndRender();
             verifyPanelPresence(
                 {
@@ -177,13 +180,14 @@ define([
         });
 
         it('should build a report view with object info and no file links', async function () {
-            const reportData = Object.assign({}, REPORT_OBJ);
+            const reportData = TestUtil.JSONcopy(REPORT_OBJ);
             reportData.file_links = [];
             mockReportLookup(reportData);
             mockCreatedObjectInfo(CREATED_OBJECTS_INFO);
             const reportWidget = new ReportView(this.$node, {
                 report_ref: REPORT_REF,
                 showCreatedObjects: true,
+                autoRender: false,
             });
             await reportWidget.loadAndRender();
             verifyPanelPresence(
@@ -207,6 +211,7 @@ define([
             const reportWidget = new ReportView(this.$node, {
                 report_ref: REPORT_REF,
                 showCreatedObjects: true,
+                autoRender: false,
             });
             await reportWidget.loadAndRender();
             verifyPanelPresence(
@@ -228,11 +233,12 @@ define([
         });
 
         it('should build a report view with direct HTML content, not in an HTML tag', async function () {
-            const reportData = Object.assign({}, REPORT_OBJ);
+            const reportData = TestUtil.JSONcopy(REPORT_OBJ);
             delete reportData.direct_html_link_index; // the link index takes precedence, so take it out.
             mockReportLookup(reportData);
             const reportWidget = new ReportView(this.$node, {
                 report_ref: REPORT_REF,
+                autoRender: false,
             });
             await reportWidget.loadAndRender();
             // get the iframe node
@@ -245,6 +251,7 @@ define([
             mockReportLookup(REPORT_OBJ);
             const reportWidget = new ReportView(this.$node, {
                 report_ref: REPORT_REF,
+                autoRender: false,
             });
             await reportWidget.loadAndRender();
             const $iframe = this.$node.find('iframe.kb-report-view__report_iframe');
@@ -264,11 +271,14 @@ define([
 
         it('should build a report view with direct HTML content, in an HTML tag, and warn the console', async function () {
             const fakeReportHtml = '<html><body>This is a dummy report. BEHOLD!</body></html>';
-            const reportData = Object.assign({}, REPORT_OBJ);
+            const reportData = TestUtil.JSONcopy(REPORT_OBJ);
             reportData.direct_html = fakeReportHtml;
             delete reportData.direct_html_link_index;
             mockReportLookup(reportData);
-            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                autoRender: false,
+            });
             spyOn(console, 'warn');
             await reportWidget.loadAndRender();
             const $iframe = this.$node.find('iframe.kb-report-view__report_iframe');
@@ -284,13 +294,16 @@ define([
             it(`should make a list of warnings ${
                 withCounter ? 'with a counter ' : ''
             }for ${count} html report(s)`, async function () {
-                const reportData = Object.assign({}, REPORT_OBJ);
+                const reportData = TestUtil.JSONcopy(REPORT_OBJ);
                 reportData.warnings = [];
                 for (let i = 0; i < count; i++) {
                     reportData.warnings.push(`warning #${i}`);
                 }
                 mockReportLookup(reportData);
-                const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+                const reportWidget = new ReportView(this.$node, {
+                    report_ref: REPORT_REF,
+                    autoRender: false,
+                });
                 await reportWidget.loadAndRender();
                 const $reportWarnings = this.$node.find('div.kb-report-view__warning__container');
                 expect($reportWarnings.length).toEqual(1);
@@ -337,7 +350,10 @@ define([
                 statusText: 'HTTP 1.1 / 500 internal service error',
                 isError: true,
             });
-            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                autoRender: false,
+            });
             await reportWidget.loadAndRender();
             verifyPanelPresence(
                 {
@@ -352,6 +368,24 @@ define([
             const $errorNode = this.$node.find('div.alert.alert-danger');
             expect($errorNode.html()).toContain('Error:');
             expect($errorNode.html()).toContain(errorMessage);
+        });
+
+        it('should render automatically by default', async function () {
+            mockReportLookup(REPORT_OBJ);
+            mockCreatedObjectInfo(CREATED_OBJECTS_INFO);
+            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            expect(reportWidget.options.autoRender).toBeTrue();
+            expect(reportWidget.loadRenderPromise).not.toBeNull();
+            await reportWidget.loadRenderPromise; // test control flow - finish after Promise resolves
+        });
+
+        it('should not autorender when given the right option', function () {
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                autoRender: false,
+            });
+            expect(reportWidget.options.autoRender).toBeFalse();
+            expect(reportWidget.loadRenderPromise).toBeNull();
         });
     });
 });

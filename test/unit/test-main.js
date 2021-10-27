@@ -19,7 +19,7 @@ document.nbjs_translations = {
 };
 
 // hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
-window.createReactClass = () => {};
+window.createReactClass = () => { };
 
 requirejs.config({
     baseUrl: '/narrative/static/',
@@ -31,12 +31,13 @@ requirejs.config({
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
         testUtil: '../../test/unit/testUtil',
         narrativeMocks: '../../test/unit/mocks',
+        test: '../../test',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
         custom: 'kbase/custom',
         // Note that this is only provided in the testing amd module configuration;
         // Mock Service Worker (MSW) is not active in the actual Narrative web app.
-        msw: 'ext_modules/msw/index',
+        msw: 'ext_modules/msw/index'
     },
     map: {
         '*': {

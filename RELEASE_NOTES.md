@@ -6,69 +6,78 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 
+-   SCT-1315 - Fix KBaseSets generic set viewer; ported to preact initial, then React
+-   The above is the first utilization of React in the Narrative, and of npm-installed modules into the Narrative runtime
+    -   added npm dependencies: react, react-dom, prop-types
+    -   added support to copy umd-packaged modules from node_modules into the kbase extension static content during build
 - PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
 
 
 ### Version 4.5.1
+
 Code changes
-- DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
+
+-   DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
 
 Dependency Changes
-- Python dependency updates
-  - pillow 8.3.1 -> 8.3.2
-  - plotly 5.1.0 -> 5.3.1
-  - pygments 2.9.0 -> 2.10.0
-  - pytest 6.2.4 -> 6.2.5
-  - terminado 0.10.1 -> 0.11.1
-- Javascript dependency updates
-  - @wdio/browserstack-service 7.9.1 -> 7.11.1
-  - @wdio/cli 7.9.1 -> 7.11.1
-  - @wdio/local-runner 7.9.1 -> 7.11.1 
-  - @wdio/mocha-framework 7.9.1 -> 7.11.1
-  - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
-  - @wdio/spec-reporter 7.9.0 -> 7.10.1
-  - chromedriver 92.0.1 -> 92.0.2
-  - husky 7.0.1 -> 7.0.2
-  - jasmine-core 3.8.0 -> 3.9.0
-  - msw 0.34.0 -> 0.35.0
-  - puppeteer 10.1.0 -> 10.2.0
-  - terser 5.7.1 -> 5.7.2
-  - webdriverio 7.9.1 -> 7.11.1
+
+-   Python dependency updates
+    -   pillow 8.3.1 -> 8.3.2
+    -   plotly 5.1.0 -> 5.3.1
+    -   pygments 2.9.0 -> 2.10.0
+    -   pytest 6.2.4 -> 6.2.5
+    -   terminado 0.10.1 -> 0.11.1
+-   Javascript dependency updates
+    -   @wdio/browserstack-service 7.9.1 -> 7.11.1
+    -   @wdio/cli 7.9.1 -> 7.11.1
+    -   @wdio/local-runner 7.9.1 -> 7.11.1
+    -   @wdio/mocha-framework 7.9.1 -> 7.11.1
+    -   @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
+    -   @wdio/spec-reporter 7.9.0 -> 7.10.1
+    -   chromedriver 92.0.1 -> 92.0.2
+    -   husky 7.0.1 -> 7.0.2
+    -   jasmine-core 3.8.0 -> 3.9.0
+    -   msw 0.34.0 -> 0.35.0
+    -   puppeteer 10.1.0 -> 10.2.0
+    -   terser 5.7.1 -> 5.7.2
+    -   webdriverio 7.9.1 -> 7.11.1
 
 ### Version 4.5.0
-- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
-- SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
-- SCT-3084 - Fixed broken (non-functional) search in the data panel
-- SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
-- No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
-- Python dependency updates
-  - bokeh 2.3.2 -> 2.3.3
-  - pillow 8.2.0 -> 8.3.1
-  - plotly 4.14.3 -> 5.1.0
-  - pymongo 3.11.4 -> 3.12.0
-  - pytest 6.2.3. -> 6.2.4
-  - pytest-cov 2.11.1 -> 2.12.1
-  - requests 2.25.1 -> 2.26.0
-  - setuptools 57.0.0 -> 57.4.0
-- Javascript dependency updates
-  - @types/puppeteer 5.0.0 -> 5.4.4
-  - @wdio/browserstack-service 7.7.3 -> 7.9.0
-  - @wdio/cli 7.7.3 -> 7.9.0
-  - @wdio/local-runner 7.7.3 -> 7.9.0
-  - @wdio/mocha-framework 7.7.3 -> 7.9.0
-  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
-  - @wdio/spec-reporter 7.7.7 -> 7.9.0
-  - chromedriver 91.0.0 -> 91.0.1
-  - eslint 7.28.0 -> 7.32.0
-  - husky 6.0.0 -> 7.0.1
-  - karma 6.3.3. -> 6.3.4
-  - puppeteer 10.0.0 -> 10.1.0
-  - selenium-standalone 6.23.0 -> 7.1.0
-  - terser 5.7.0 -> 5.7.1
-  - wdio-chromedriver-service 7.1.0 -> 7.1.1
-  - webdriverio 7.7.3 -> 7.9.1
+
+-   PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+-   SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
+-   SCT-3084 - Fixed broken (non-functional) search in the data panel
+-   SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
+-   No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+-   Python dependency updates
+    -   bokeh 2.3.2 -> 2.3.3
+    -   pillow 8.2.0 -> 8.3.1
+    -   plotly 4.14.3 -> 5.1.0
+    -   pymongo 3.11.4 -> 3.12.0
+    -   pytest 6.2.3. -> 6.2.4
+    -   pytest-cov 2.11.1 -> 2.12.1
+    -   requests 2.25.1 -> 2.26.0
+    -   setuptools 57.0.0 -> 57.4.0
+-   Javascript dependency updates
+    -   @types/puppeteer 5.0.0 -> 5.4.4
+    -   @wdio/browserstack-service 7.7.3 -> 7.9.0
+    -   @wdio/cli 7.7.3 -> 7.9.0
+    -   @wdio/local-runner 7.7.3 -> 7.9.0
+    -   @wdio/mocha-framework 7.7.3 -> 7.9.0
+    -   @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+    -   @wdio/spec-reporter 7.7.7 -> 7.9.0
+    -   chromedriver 91.0.0 -> 91.0.1
+    -   eslint 7.28.0 -> 7.32.0
+    -   husky 6.0.0 -> 7.0.1
+    -   karma 6.3.3. -> 6.3.4
+    -   puppeteer 10.0.0 -> 10.1.0
+    -   selenium-standalone 6.23.0 -> 7.1.0
+    -   terser 5.7.0 -> 5.7.1
+    -   wdio-chromedriver-service 7.1.0 -> 7.1.1
+    -   webdriverio 7.7.3 -> 7.9.1
 
 ### Version 4.4.0
+
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
@@ -77,11 +86,13 @@ Dependency Changes
 -   SCT-3038 - refseq public data search now includes genome_id and source_id
 
 ### Version 4.3.2
+
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
 ### Version 4.3.1
+
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.
@@ -100,11 +111,12 @@ Dependency Changes
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
 ### Version 4.3.0
-- SCT-2664 - Show the app cell status when in a collapsed state.
-- Added an "Info" tab to all app cells with app information.
-- Updated links to new KBase home page and docs site.
-- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
-- (Trigger release via labels)
+
+-   SCT-2664 - Show the app cell status when in a collapsed state.
+-   Added an "Info" tab to all app cells with app information.
+-   Updated links to new KBase home page and docs site.
+-   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+-   (Trigger release via labels)
 
 ### Version 4.2.1
 

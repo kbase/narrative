@@ -26,6 +26,9 @@ run-dev-image:
 install:
 	bash $(INSTALLER)
 
+copy-node-modules-to-ext-modules:
+	npm run copy-node-modules-to-ext-modules
+
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-travis-narrative:

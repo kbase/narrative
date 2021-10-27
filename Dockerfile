@@ -41,6 +41,7 @@ RUN \
     # install JS deps
     npm install -g grunt-cli && \
     npm install && \
+    npm run copy-node-modules-to-ext-modules && \
     ./node_modules/.bin/bower install --allow-root --config.interactive=false && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \

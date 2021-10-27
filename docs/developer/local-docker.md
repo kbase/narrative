@@ -40,6 +40,7 @@ KBASE_TEST_TOKEN=YOUR_TOKEN_HERE BASE_URL=https://ci.kbase.us make test-integrat
 ```
 
 E.g.
+
 ```bash
 SERVICE=selenium-standalone BROWSER=chrome HEADLESS=f BASE_URL=https://ci.kbase.us KBASE_TEST_TOKEN=TOKEN_HERE make test-integration
 ```
@@ -83,7 +84,6 @@ All of the testing options may be used
 #### ci local container
 
 #### narrative-dev local container
-
 
 #### next local container
 

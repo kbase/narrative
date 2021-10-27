@@ -111,6 +111,11 @@ require.config({
         narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
+        /**
+         * Unit test support
+         */
+        testUtils: 'kbase/js/testUtils',
+
         common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
         appWidgets: 'kbase/js/widgets/appWidgets2',
@@ -379,6 +384,22 @@ require.config({
         GenomeClassifierTrainingSet: 'kbase/js/widgets/function_output/GenomeClassifierTrainingSet',
         GenomeCategorizer: 'kbase/js/widgets/function_output/GenomeCategorizer',
         'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
+
+        /*
+           To support React components
+       */
+        react: 'ext_modules/react/react.development',
+        'react-dom': 'ext_modules/react-dom/react-dom.development',
+        'prop-types': 'ext_modules/prop-types/prop-types',
+
+        /* 
+            A home for shared React components 
+            Note that we do not map individual react component modules;
+            by rooting at a directory when loading a module, that module
+            may use relative path module references, which is very handy
+            for loading isolated subcomponents, css files, and the like.
+        */
+        react_components: 'kbase/js/react_components',
 
         /***
          * END CUSTOM OUTPUT WIDGETS

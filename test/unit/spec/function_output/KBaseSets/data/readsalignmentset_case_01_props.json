@@ -1,0 +1,79 @@
+{
+    "object": {
+        "aligned_using": "hisat2",
+        "aligner_opts": {
+            "alignment_suffix": "_alignment",
+            "alignmentset_suffix": "_alignment_set",
+            "build_report": "0",
+            "condition": "Ecoli_WT",
+            "genome_ref": "30957/3/1",
+            "max_intron_length": "500000",
+            "min_intron_length": "20",
+            "no_spliced_alignment": "0",
+            "np": "1",
+            "num_threads": "2",
+            "orientation": "fr",
+            "quality_score": "phred33",
+            "sampleset_ref": "30957/12/1;30957/4/1",
+            "skip": "0",
+            "tailor_alignments": "dta-cufflinks",
+            "trim3": "0",
+            "trim5": "0",
+            "ws_name": "jjeffryes:narrative_1522765762916"
+        },
+        "aligner_version": "2.1.0",
+        "alignment_stats": {
+            "alignment_rate": 97.248,
+            "mapped_reads": 1337324,
+            "multiple_alignments": 13935,
+            "properly_paired": 0,
+            "singletons": 1323389,
+            "total_reads": 1375163,
+            "unmapped_reads": 37839
+        },
+        "condition": "Ecoli_WT",
+        "file": {
+            "file_name": "accepted_hits.bam",
+            "hid": "KBH_455294",
+            "id": "43250943-1bfa-4c24-aa4e-0a5fe4eb424a",
+            "remote_md5": "54655741213ef6d991c0537f2c4eb33c",
+            "type": "shock",
+            "url": "https://ci.kbase.us/services/shock-api"
+        },
+        "genome_id": "30957/3/1",
+        "library_type": "KBaseFile.SingleEndLibrary-2.2",
+        "read_sample_id": "30957/12/1;30957/4/1",
+        "size": 45448911
+    },
+    "objectInfo": {
+        "id": 13,
+        "name": "Ecoli_WT_R1_alignment",
+        "type": "KBaseRNASeq.RNASeqAlignment-9.1",
+        "save_date": "2019-01-17T22:09:16+0000",
+        "version": 4,
+        "saved_by": "jjeffryes",
+        "wsid": 30957,
+        "ws": "jjeffryes:narrative_1522765762916",
+        "checksum": "576de411da27b159dee0579fd65cba7e",
+        "size": 1062,
+        "metadata": {
+            "condition": "Ecoli_WT",
+            "aligner_version": "2.1.0",
+            "alignment_stats.total_reads": "1375163",
+            "size": "45448911",
+            "genome_id": "30957/3/1",
+            "read_sample_id": "30957/12/1;30957/4/1",
+            "library_type": "KBaseFile.SingleEndLibrary-2.2",
+            "aligned_using": "hisat2",
+            "alignment_stats.alignment_rate": "97.248",
+            "alignment_stats.mapped_reads": "1337324"
+        },
+        "ref": "30957/13/4",
+        "obj_id": "ws.30957.obj.13",
+        "typeModule": "KBaseRNASeq",
+        "typeName": "RNASeqAlignment",
+        "typeMajorVersion": "9",
+        "typeMinorVersion": "1",
+        "saveDate": "2019-01-17T22:09:16.000Z"
+    }
+}

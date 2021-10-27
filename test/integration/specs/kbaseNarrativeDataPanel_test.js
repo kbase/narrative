@@ -1,6 +1,6 @@
 'use strict';
 
-const { login, openNarrative, clickWhenReady, waitForClass } = require('../wdioUtils.js');
+const { login, openNarrative, clickWhenReady, waitForClass, waitForText } = require('../wdioUtils.js');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -174,8 +174,7 @@ async function selectTabByLabel(slideoutPanel, name, label) {
     const tabLabelElement = await slideoutPanel.$(
         `[data-test-id="tab-${name}"] [data-test-id="label"]`
     );
-    const tabLabel = await tabLabelElement.getText();
-    expect(tabLabel).toEqual(label);
+    await waitForText(tabLabelElement, label);
     await clickWhenReady(tabLabelElement);
     return ensureTabIsActive(slideoutPanel, name);
 }

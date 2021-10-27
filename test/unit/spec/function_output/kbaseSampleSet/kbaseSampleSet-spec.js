@@ -1,7 +1,7 @@
 define([
     'jquery',
     'kbaseSampleSetView',
-    '../../util/mswUtils',
+    'testUtils/mswUtils',
     'require',
     'jsonrpc/1.1/ServiceClient',
     'narrativeConfig',

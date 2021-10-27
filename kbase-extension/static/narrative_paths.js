@@ -111,6 +111,11 @@ require.config({
         narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
+        /**
+         * Unit test support
+         */
+        testUtils: 'kbase/js/testUtils',
+
         common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
         appWidgets: 'kbase/js/widgets/appWidgets2',

@@ -1,5 +1,5 @@
 define([
-    'test/unit/utils/domUtils',
+    'testUtils/domUtils',
     'widgets/function_output/KBaseSets/SetElements/AssemblySetViewer',
     'json!../data/assemblyset_case_01_props.json',
     'json!../data/assemblyset_case_01_expected.json',

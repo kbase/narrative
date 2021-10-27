@@ -1,5 +1,5 @@
 define([
-    'test/unit/utils/domUtils',
+    'testUtils/domUtils',
     'widgets/function_output/KBaseSets/SetElements/ReadsAlignmentSetViewer',
     'json!../data/readsalignmentset_case_01_props.json',
     'json!../data/readsalignmentset_case_01_expected.json',

@@ -1,4 +1,4 @@
-define(['test/unit/utils/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
+define(['testUtils/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
     mswUtils,
     ServiceClient,
     helpers

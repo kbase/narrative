@@ -36,8 +36,8 @@ define([
     const { $el, $row, $col } = jQueryUtils;
 
     const DEBOUNCE_INTERVAL = 25;
-    const DEFAULT_LOG_Q_VALUE = 1;
-    const DEFAULT_FOLD_CHANGE_VALUE = 0;
+    const DEFAULT_LOG10_Q_VALUE = -Math.log10(0.05);
+    const DEFAULT_FOLD_CHANGE_VALUE = 1;
     const EXPORT_PRECISION = 4;
 
     return KBWidget({
@@ -179,7 +179,7 @@ define([
                     return !somethingIsMissing;
                 })
                 .map((voldatum) => {
-                    const log_q_value = (() => {
+                    const log10_q_value = (() => {
                         if (voldatum.q_value === 0) {
                             return min_log_q;
                         } else {
@@ -188,9 +188,10 @@ define([
                             return value;
                         }
                     })();
+
                     return {
                         ...voldatum,
-                        log_q_value
+                        log10_q_value
                     };
                 });
 
@@ -203,7 +204,7 @@ define([
 
         colorx: function (d, logQValue, foldChangeValue) {
             const x = d.log2fc_f;
-            const y = d.log_q_value;
+            const y = d.log10_q_value;
 
             if (Math.abs(x) >= foldChangeValue && y >= logQValue) {
                 if (x > 0) {
@@ -216,8 +217,7 @@ define([
         },
 
         updateGeneTable: function () {
-            const geneTable = this.$el('voltable').DataTable();
-            geneTable.rows.add(this.selectedRows).draw();
+            this.$el('voltable').DataTable().draw();
         },
 
         $renderGeneTable: function () {
@@ -232,13 +232,21 @@ define([
             function renderNumber(value) {
                 return `
                     <div style="font-family: monospace;">
-                        ${Intl.NumberFormat('en-US', { maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
+                        ${Intl.NumberFormat('en-US', { notation: 'scientific', maximumSignificantDigits: 6, minimumSignificantDigits: 6 }).format(value)}
                     </div>
                 `;
             }
 
+            const cachedTableData = {
+                search: null,
+                orderColumn: null,
+                orderDirection: null,
+                data: null
+            };
+
             $table.DataTable({
                 autoWidth: false,
+                deferRender: true,
                 columns: [
                     {
                         title: 'Gene',
@@ -264,7 +272,65 @@ define([
                         width: '23%',
                         render: renderNumber
                     }
-                ]
+                ],
+                serverSide: true,
+                ajax: (data, callback) => {
+                    const { start, length, draw, search: { value: searchValue }, order } = data;
+                    let cachedDataUsed = false;
+                    const rows = (() => {
+                        if (cachedTableData.searchValue !== null) {
+                            if (cachedTableData.searchValue === searchValue && cachedTableData.data !== null) {
+                                cachedDataUsed = true;
+                                return cachedTableData.data;
+                            }
+                        }
+                        cachedTableData.searchValue = searchValue;
+                        if (searchValue) {
+                            const searchRegex = new RegExp(searchValue, 'i');
+                            return this.selectedRows.filter((row) => {
+                                return searchRegex.test(row[0]);
+                            });
+                        } else {
+                            return this.selectedRows;
+                        }
+                    })();
+
+                    if (order.length > 0) {
+                        const orderColumn = order[0].column;
+                        const orderDirection = order[0].dir;
+
+                        if (cachedTableData.orderColumn !== null) {
+                            if (cachedTableData.orderColumn === orderColumn && cachedTableData.orderDirection === orderDirection && cachedDataUsed) {
+                                return rows;
+                            }
+                        }
+                        cachedTableData.orderColumn = orderColumn;
+                        cachedTableData.orderDirection = orderDirection;
+
+                        rows.sort((a, b) => {
+                            let v1 = a[orderColumn];
+                            let v2 = b[orderColumn];
+
+                            if (orderDirection === 'desc') {
+                                const t = v2;
+                                v2 = v1;
+                                v1 = t;
+                            }
+
+                            if (typeof v1 === 'string') {
+                                return v1.localeCompare(v2);
+                            } else {
+                                return v1 - v2;
+                            }
+                        });
+                    }
+                    callback({
+                        draw,
+                        data: rows.slice(start, start + length),
+                        recordsTotal: rows.length,
+                        recordsFiltered: rows.length
+                    });
+                }
             });
 
             return $geneTable;
@@ -294,7 +360,7 @@ define([
                                 $el('input')
                                     .attr('type', 'text')
                                     .addClass('-slider')
-                                    .attr('id', 'log_q_value')
+                                    .attr('id', 'log10_q_value-slider')
                             )
                             .append(
                                 $el('div')
@@ -317,7 +383,7 @@ define([
                                 $el('input')
                                     .attr('type', 'text')
                                     .addClass('span2 -slider')
-                                    .attr('id', 'fc')
+                                    .attr('id', 'fc-slider')
                             )
                             .append(
                                 $el('div')
@@ -352,7 +418,7 @@ define([
                             )
                             .append($col()
                                 .append($el('input')
-                                    .attr('id', 'currentLogQValue')
+                                    .attr('id', 'input-currentLogQValue')
                                     .addClass('form-control')
                                     .on('change', (e) => {
                                         this.setLogQValueSlider(parseFloat(e.target.value));
@@ -393,7 +459,7 @@ define([
                             .append($col()
                                 .append(
                                     $el('input')
-                                        .attr('id', 'currentFoldChangeValue')
+                                        .attr('id', 'input-currentFoldChangeValue')
                                         .addClass('form-control')
                                         .on('change', (e) => {
                                             this.setFoldChangeSlider(parseFloat(e.target.value));
@@ -431,8 +497,8 @@ define([
                 .append($plotInfoRow('Total Genes', 'originalCount'))
                 .append($plotInfoRow('w/ missing values removed', 'geneCountTotal'))
                 .append($plotInfoRow('w/ min/max applied', 'geneCountInRange'))
-                .append($plotInfoRow('Significance (-Log10)', 'currentLogQValue2'))
-                .append($plotInfoRow('Fold Change (Log2)', 'currentFoldChangeValue2'))
+                .append($plotInfoRow('Significance (-Log10)', 'statsDisplay-currentLogQValue'))
+                .append($plotInfoRow('Fold Change (Log2)', 'statsDisplay-currentFoldChangeValue'))
                 .append($plotInfoRow('Selected Genes', 'geneCountSelected'))
                 .append(
                     $row()
@@ -460,12 +526,14 @@ define([
             return $el('button')
                 .addClass('btn btn-primary')
                 .on('click', () => {
-                    const fc = this.$el('fc').bootstrapSlider('getValue');
-                    const log_q_value = this.$el('log_q_value').bootstrapSlider('getValue');
+                    const fc = this.$el('fc-slider').bootstrapSlider('getValue');
+                    const log10_q_value = this.$el('log10_q_value-slider').bootstrapSlider('getValue');
+
+                    const q_value = Math.pow(10, -log10_q_value, 10);
 
                     const params = {
                         diff_expression_ref: this.options.setObjectName,
-                        q_cutoff: parseFloat(log_q_value.toPrecision(EXPORT_PRECISION)),
+                        q_cutoff: parseFloat(q_value.toPrecision(EXPORT_PRECISION)),
                         fold_change_cutoff: parseFloat(fc.toPrecision(EXPORT_PRECISION)),
                     };
 
@@ -522,23 +590,117 @@ define([
         },
 
         setFoldChangeSlider: function (newValue) {
-            this.$el('fc')
+            this.$el('fc-slider')
                 .bootstrapSlider('setValue', newValue, false, true);
         },
 
         setLogQValueSlider: function (newValue) {
-            this.$el('log_q_value')
+            this.$el('log10_q_value-slider')
                 .bootstrapSlider('setValue', newValue, false, true);
         },
 
         updateCurrentFoldChangeValue: function (newValue) {
-            this.$el('currentFoldChangeValue').val(newValue.toFixed(2));
-            this.$el('currentFoldChangeValue2').text(newValue.toFixed(2));
+            this.$el('input-currentFoldChangeValue').val(newValue.toFixed(6));
+            this.$el('statsDisplay-currentFoldChangeValue').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(newValue));
         },
 
         updateCurrentLogQValue: function (newValue) {
-            this.$el('currentLogQValue').val(newValue.toFixed(2));
-            this.$el('currentLogQValue2').text(newValue.toFixed(2));
+            this.$el('input-currentLogQValue').val(newValue.toFixed(6));
+            this.$el('statsDisplay-currentLogQValue').text(newValue.toFixed(6));
+        },
+
+        setupLogQSlider: function (svg, ymin, ymax) {
+            const slider = this.$el('log10_q_value-slider')
+                .bootstrapSlider({
+                    tooltip_position: 'bottom',
+                    step: 0.01,
+                    precision: 17,
+                    min: ymin,
+                    max: ymax,
+                    formatter: (value) => {
+                        return value.toFixed(2);
+                    }
+                });
+
+            const logQValueSliderChange = _.debounce(({ value: { newValue } }) => {
+                this.updateCurrentLogQValue(newValue);
+
+                const fcValue = this.$el('fc-slider').bootstrapSlider('getValue');
+
+                this.selectedRows = [];
+                const circles = svg.selectAll('circle');
+                circles
+                    .transition()
+                    .attr('fill', (d) => {
+                        const cc = this.colorx(d, newValue, fcValue);
+                        if (cc !== 'grey') {
+                            this.selectedRows.push([
+                                d.gene,
+                                d.p_value_f,
+                                d.q_value,
+                                d.log10_q_value,
+                                d.log2fc_f,
+                            ]);
+                        }
+                        return cc;
+                    });
+
+                this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(circles.size()));
+                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+            }, DEBOUNCE_INTERVAL);
+
+            slider.on('change', logQValueSliderChange);
+
+            slider.bootstrapSlider('setValue', DEFAULT_LOG10_Q_VALUE);
+            this.updateCurrentLogQValue(DEFAULT_LOG10_Q_VALUE);
+        },
+
+        setupFoldChangeSlider: function (svg, xmin, xmax) {
+            const slider = this.$el('fc-slider')
+                .bootstrapSlider({
+                    tooltip_position: 'bottom',
+                    step: 0.01,
+                    min: xmin,
+                    precision: 17,
+                    max: xmax,
+                    formatter: (value) => {
+                        return value.toFixed(2);
+                    }
+                });
+
+            const fcSliderChange = _.debounce(({ value: { newValue } }) => {
+                // const foldChangeValue = slider.bootstrapSlider('getValue');
+
+                const log10QValue = this.$el('log10_q_value-slider').bootstrapSlider('getValue');
+
+                this.updateCurrentFoldChangeValue(newValue);
+
+                this.selectedRows = [];
+                const circles = svg.selectAll('circle');
+                circles
+                    .transition()
+                    .attr('fill', (d) => {
+                        const cc = this.colorx(d, log10QValue, newValue);
+                        if (cc !== 'grey') {
+                            this.selectedRows.push([
+                                d.gene,
+                                d.p_value_f,
+                                d.q_value,
+                                d.log10_q_value,
+                                d.log2fc_f,
+                            ]);
+                        }
+                        return cc;
+                    });
+
+                this.$el('geneCountInRange').text(String(circles.size()));
+                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
+            }, DEBOUNCE_INTERVAL);
+
+            slider.on('change', fcSliderChange);
+
+            slider.bootstrapSlider('setValue', DEFAULT_FOLD_CHANGE_VALUE);
+            this.updateCurrentFoldChangeValue(DEFAULT_FOLD_CHANGE_VALUE);
         },
 
         renderSVG: function () {
@@ -565,7 +727,6 @@ define([
                 highlightElement = element;
             };
 
-
             this.$el('cond1').text(renderData.condition_1);
             this.$el('cond2').text(renderData.condition_2);
 
@@ -574,7 +735,7 @@ define([
             // name = gene
             // f = significant
             // x = log2fc_fa
-            // y = log_q_value
+            // y = log10_q_value
 
             // tables contents
             // Gene
@@ -595,10 +756,10 @@ define([
             });
 
             const ymin = this.options.ymin || d3.min(rawData, (d) => {
-                return d.log_q_value;
+                return d.log10_q_value;
             });
             const ymax = this.options.ymax || d3.max(rawData, (d) => {
-                return d.log_q_value;
+                return d.log10_q_value;
             });
 
             // Set the min/max labels for the slider
@@ -610,11 +771,11 @@ define([
             const filteredData = rawData.filter((d) => {
                 if (
                     !Number.isNaN(d.log2fc_f) &&
-                    !Number.isNaN(d.log_q_value) &&
+                    !Number.isNaN(d.log10_q_value) &&
                     d.log2fc_f >= xmin &&
                     d.log2fc_f <= xmax &&
-                    d.log_q_value >= ymin &&
-                    d.log_q_value <= ymax
+                    d.log10_q_value >= ymin &&
+                    d.log10_q_value <= ymax
                 ) {
                     return true;
                 } else {
@@ -630,96 +791,14 @@ define([
             this.$el('pv1').text(ymin.toFixed(2));
             this.$el('pv2').text(ymax.toFixed(2));
 
-            const fcSliderChange = _.debounce((ev) => {
-                const { newValue } = ev.value;
-                const foldChangeValue = newValue;
-                const logQValue = loqQValueSlider.bootstrapSlider('getValue');
+            // Log q slider
+            this.setupLogQSlider(svg, ymin, ymax);
 
-                this.updateCurrentFoldChangeValue(foldChangeValue);
+            // Fold change slider
+            this.setupFoldChangeSlider(svg, sliderXMin, sliderXMax);
 
-                const circles = svg.selectAll('circle');
-                this.selectedRows = [];
-
-                circles
-                    .transition()
-                    .attr('fill', (d) => {
-                        const cc = this.colorx(d, logQValue, foldChangeValue);
-                        if (cc !== 'grey') {
-                            this.selectedRows.push([
-                                d.gene,
-                                d.p_value_f,
-                                d.q_value,
-                                d.log_q_value,
-                                d.log2fc_f,
-                            ]);
-                        }
-                        return cc;
-                    });
-
-                this.$el('geneCountInRange').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(circles.size()));
-                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
-            }, DEBOUNCE_INTERVAL);
-
-            const fcSlider = this.$el('fc')
-                .bootstrapSlider({
-                    tooltip_position: 'bottom',
-                    step: 0.01,
-                    min: sliderXMin,
-                    precision: 2,
-                    max: sliderXMax,
-                    formatter: (value) => {
-                        return value.toFixed(2);
-                    }
-                });
-
-            fcSlider.on('change', fcSliderChange);
-
-            const logQValueSliderChange = _.debounce(({ value: { newValue } }) => {
-                const pValue = newValue;
-                const foldChangeValue = fcSlider.bootstrapSlider('getValue');
-
-                this.updateCurrentLogQValue(pValue);
-
-                const circles = svg.selectAll('circle');
-                this.selectedRows = [];
-                circles
-                    .transition()
-                    .attr('fill', (d) => {
-                        const cc = this.colorx(d, pValue, foldChangeValue);
-                        if (cc !== 'grey') {
-                            this.selectedRows.push([
-                                d.gene,
-                                d.p_value_f,
-                                d.q_value,
-                                d.log_q_value,
-                                d.log2fc_f,
-                            ]);
-                        }
-                        return cc;
-                    });
-
-                this.$el('gene-count-in-range').text(String(circles.size()));
-                this.$el('geneCountSelected').text(Intl.NumberFormat('en-US', { useGrouping: true }).format(this.selectedRows.length));
-            }, DEBOUNCE_INTERVAL);
-
-            const loqQValueSlider = this.$el('log_q_value')
-                .bootstrapSlider({
-                    tooltip_position: 'bottom',
-                    step: 0.01,
-                    precision: 2,
-                    min: ymin,
-                    max: ymax,
-                })
-                .on('change', logQValueSliderChange);
-
-            fcSlider.bootstrapSlider('setValue', DEFAULT_FOLD_CHANGE_VALUE);
-            loqQValueSlider.bootstrapSlider('setValue', DEFAULT_LOG_Q_VALUE);
-
-            this.updateCurrentFoldChangeValue(fcSlider.bootstrapSlider('getValue'));
-            this.updateCurrentLogQValue(loqQValueSlider.bootstrapSlider('getValue'));
-
-            const pv = this.$el('log_q_value').bootstrapSlider('getValue');
-            const fc = this.$el('fc').bootstrapSlider('getValue');
+            const pv = this.$el('log10_q_value-slider').bootstrapSlider('getValue');
+            const fc = this.$el('fc-slider').bootstrapSlider('getValue');
 
             const xScale = d3.scale
                 .linear()
@@ -731,6 +810,7 @@ define([
                 .domain([ymin, ymax])
                 .range([this.svgHeight - padding, 10]);
 
+            this.selectedRows = [];
             svg.selectAll('circle').data(filteredData).enter().append('svg:circle');
             svg.selectAll('circle')
                 .data(filteredData)
@@ -738,7 +818,7 @@ define([
                     return xScale(d.log2fc_f);
                 })
                 .attr('cy', (d) => {
-                    return yScale(d.log_q_value);
+                    return yScale(d.log10_q_value);
                 })
                 .attr('r', 3)
                 .attr('fill', (d) => {
@@ -748,7 +828,7 @@ define([
                             d.gene,
                             d.p_value_f,
                             d.q_value,
-                            d.log_q_value,
+                            d.log10_q_value,
                             d.log2fc_f,
                         ]);
                     }

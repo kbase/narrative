@@ -1,0 +1,80 @@
+.KBaseExpressionVolcanoPlot {
+    margin-top: 10px;
+}
+
+/* Overrides the slider lout so it stretches */
+
+.KBaseExpressionVolcanoPlot .slider.slider-horizontal {
+    flex: 1 1 0;
+}
+
+/* Helps bootstrap with column gutter */
+
+.KBaseExpressionVolcanoPlot .col + .col {
+    padding-left: 10px;
+}
+
+/*
+PlotGrid is a simple flexbox grid for laying out the plot and plot info side by side
+*/
+
+.KBaseExpressionVolcanoPlot .PlotGrid {
+    display: flex;
+    flex-direction: row;
+}
+
+.KBaseExpressionVolcanoPlot .PlotGrid .PlotColumn {
+    flex: 0 0 800px;
+}
+
+.KBaseExpressionVolcanoPlot .PlotGrid .InfoColumn {
+    flex: 1 1 0;
+    margin-left: 10px;
+}
+
+/*
+PlotControls is an area above the plot with inputs and sliders for controlling plot parameters
+*/
+
+.KBaseExpressionVolcanoPlot .PlotControls .-title {
+    text-align: center;
+}
+
+.KBaseExpressionVolcanoPlot .PlotControls .-slider-control {
+    display: flex;
+    flex-direction: row;
+}
+
+.KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-before {
+    flex: 0 0 auto;
+    margin-right: 12px;
+}
+
+.KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-after {
+    flex: 0 0 auto;
+    margin-left: 12px;
+}
+
+.KBaseExpressionVolcanoPlot .PlotControls .-slider-control .-slider {
+    flex: 1 1 0;
+}
+
+.KBaseExpressionVolcanoPlot .prop-table .flex-col {
+    padding: 4px;
+    justify-content: center;
+}
+
+.KBaseExpressionVolcanoPlot .prop-table .flex-col:nth-child(1) {
+    flex: 0 0 14em;
+    font-weight: bold;
+    color: rgb(100 100 100);
+}
+
+.KBaseExpressionVolcanoPlot .tab-pane,
+.KBaseExpressionVolcanoPlot .tab-pane .content-section {
+    padding-top: 10px;
+}
+
+.KBaseExpressionVolcanoPlot .LoadingMessage {
+    margin: 20px auto;
+}

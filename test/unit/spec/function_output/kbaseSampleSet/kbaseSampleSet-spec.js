@@ -286,6 +286,7 @@ define([
             // Tests first sample in the set.
             [
                 '1',
+                'altamaha_2018_pw_15hr_WHONDRS-PP48-000107',
                 'SESAR',
                 'HRV003M16',
                 'Other',
@@ -312,7 +313,7 @@ define([
                 expectCell($samplesTabContent, 2, 1, index + 1, text);
             });
 
-            // Check second column.
+            // Check 4th column.
             [
                 'HRV003M16',
                 'WHO000BC7',
@@ -323,12 +324,12 @@ define([
                 'IECUR0002Y',
                 'IECUR0002Z',
             ].forEach((text, rowIndex) => {
-                expectCell($samplesTabContent, 2, rowIndex + 1, 3, text);
+                expectCell($samplesTabContent, 2, rowIndex + 1, 4, text);
             });
         });
     });
 
-    describe('The kbaseSampleSet viewer widget with an ENIGMA sample set', () => {
+    fdescribe('The kbaseSampleSet viewer widget with an ENIGMA sample set', () => {
         let mock = null;
         beforeAll(async () => {
             mock = new MockWorker();
@@ -471,6 +472,7 @@ define([
             // Tests first sample in the set.
             [
                 '1',
+                '0408-FW021.46.11.27.12.02',
                 'ENIGMA',
                 'filtered groundwater',
                 '100 Well',
@@ -490,7 +492,7 @@ define([
                 expectCell($samplesTabContent, 2, 1, index + 1, text);
             });
 
-            // Check 6th column, Well Name
+            // Check 7th column, Well Name
             [
                 'FW021',
                 'FW021',
@@ -503,7 +505,7 @@ define([
                 'FW303',
                 'FW303',
             ].forEach((text, rowIndex) => {
-                expectCell($samplesTabContent, 2, rowIndex + 1, 6, text);
+                expectCell($samplesTabContent, 2, rowIndex + 1, 7, text);
             });
         });
     });

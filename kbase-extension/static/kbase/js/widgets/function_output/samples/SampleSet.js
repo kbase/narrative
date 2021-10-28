@@ -156,11 +156,14 @@ define([
 
             const columnGroups = [];
             const headerFields = [];
+
+            // Here we dynamiclly create an group to hold non-metadata columns.
             columnGroups.push({
                 name: 'rowInfo',
-                title: '',
-                columnCount: 1,
+                title: 'Sample',
+                columnCount: 2,
             });
+
             headerFields.push({
                 id: 'rowNumber',
                 title: '#',
@@ -169,6 +172,16 @@ define([
                 group: 'rowInfo',
                 schema: null,
             });
+            headerFields.push({
+                id: 'userSampleName',
+                title: 'Name/ID',
+                isSortable: true,
+                type: 'sample',
+                key: 'name',
+                group: 'rowInfo',
+                schema: null,
+            });
+
             for (const group of this.groups) {
                 const groupFields = [];
                 for (const field of group.fields) {
@@ -237,21 +250,22 @@ define([
             return this.samples.map((sample, index) => {
                 const controlled = sample.node_tree[0].meta_controlled;
                 const user = sample.node_tree[0].meta_user;
-                const row = this.headerFields.map(({ id, type }) => {
+                const row = this.headerFields.map(({ id, type, key }) => {
                     // NB: id is the field key.
-                    if (type === 'controlled') {
-                        return controlled[id] ? controlled[id].value : EMPTY_CHAR;
-                    } else if (type === 'user') {
-                        return user[id] ? user[id].value : EMPTY_CHAR;
-                    } else if (type === 'rowInfo') {
-                        switch (id) {
-                            case 'rowNumber':
-                                return index + 1;
-                            default:
-                                return EMPTY_CHAR;
-                        }
-                    } else {
-                        return EMPTY_CHAR;
+
+                    switch (type) {
+                        case 'controlled': return controlled[id] ? controlled[id].value : EMPTY_CHAR;
+                        case 'user': return user[id] ? user[id].value : EMPTY_CHAR;
+                        case 'rowInfo': 
+                            switch (id) {
+                                case 'rowNumber':
+                                    return index + 1;
+                                default:
+                                    return EMPTY_CHAR;
+                            }
+                        case 'sample': return sample[key];
+                        case 'sample-node': return sample.node_tree[0][key];
+                        default: return EMPTY_CHAR;
                     }
                 });
                 return {

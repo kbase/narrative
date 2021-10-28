@@ -293,7 +293,7 @@ define([
                             params.showReportText = false;
                             params.showCreatedObjects = true;
                             const $newObjDiv = $('<div>');
-                            new KBaseReportView($newObjDiv, params).loadAndRender();
+                            new KBaseReportView($newObjDiv, params);
                             return $newObjDiv;
                         }.bind(this),
                     });

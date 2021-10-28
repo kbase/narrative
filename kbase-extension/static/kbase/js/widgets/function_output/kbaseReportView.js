@@ -46,11 +46,13 @@ define([
             showFiles: true,
             showHTML: true,
             report_ref: null,
+            autoRender: true,
         },
         // workspace client
         ws: null,
         reportData: null,
         baseCssClass: 'kb-report-view',
+        loadRenderPromise: null, // make available for testing / control purposes
 
         /**
          *
@@ -77,6 +79,9 @@ define([
             this.$mainPanel = $('<div>').addClass(this.baseCssClass + '__container');
             this.$elem.append(this.$mainPanel);
             this.ws = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
+            if (this.options.autoRender) {
+                return this.loadAndRender();
+            }
             return this;
         },
 
@@ -119,7 +124,7 @@ define([
                 this.options.report_ref
             );
 
-            return this.ws
+            this.loadRenderPromise = this.ws
                 .get_objects2({ objects: [this.objIdentity] })
                 .then((result) => {
                     this.reportData = result.data[0].data;
@@ -136,6 +141,7 @@ define([
                 .catch((err) => {
                     this.showClientError(err);
                 });
+            return this.loadRenderPromise;
         },
 
         /**
@@ -733,7 +739,9 @@ define([
             }
             events.attachEvents();
             this.loading(false);
-            return Promise.all(renderPromises);
+            return Promise.all(renderPromises).then(() => {
+                return this;
+            });
         },
         loading: function (isLoading) {
             if (isLoading) {

@@ -5,10 +5,10 @@ define([
     'common/jobs',
     '/test/data/jobsData',
     'testUtil',
-], (Promise, JobLogViewer, Runtime, Jobs, JobsData, TestUtil) => {
+], (Promise, JobLogViewerModule, Runtime, Jobs, JobsData, TestUtil) => {
     'use strict';
 
-    const { cssBaseClass, stateCssBaseClass } = JobLogViewer;
+    const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule;
 
     const jobsByStatus = JobsData.jobsByStatus;
 
@@ -27,13 +27,13 @@ define([
         if (logPollInterval) {
             args.logPollInterval = logPollInterval;
         }
-        context.jobLogViewerInstance = JobLogViewer.make(args);
+        context.jobLogViewerInstance = new JobLogViewer(args);
     }
 
     /**
      * Format a jobs message
      * @param {string} jobId
-     * @param {string} type - one of 'status', 'logs', 'log-deleted', 'does-not-exist'
+     * @param {string} type - one of 'status' or 'logs'
      * @param {object} messageData - optional; extra data to add to the message
      * @returns {array} containing message data and channel data
      */
@@ -174,16 +174,12 @@ define([
 
     describe('The job log viewer module', () => {
         it('Should load the module code successfully', () => {
-            expect(JobLogViewer).toEqual(jasmine.any(Object));
-        });
-
-        it('Should have the factory method', () => {
-            expect(JobLogViewer.make).toEqual(jasmine.any(Function));
+            expect(JobLogViewer).toEqual(jasmine.any(Function));
         });
 
         it('Should have a css base class', () => {
-            expect(JobLogViewer.cssBaseClass).toEqual(jasmine.any(String));
-            expect(JobLogViewer.cssBaseClass).toEqual('kb-log');
+            expect(cssBaseClass).toEqual(jasmine.any(String));
+            expect(cssBaseClass).toEqual('kb-log');
         });
     });
 
@@ -197,38 +193,38 @@ define([
         });
 
         afterEach(function () {
-            this.jobLogViewerInstance.detach();
+            this.jobLogViewerInstance.stop();
             TestUtil.clearRuntime();
         });
 
         it('should have methods defined', function () {
-            ['start', 'stop', 'detach'].forEach((fn) => {
+            ['start', 'stop'].forEach((fn) => {
                 expect(this.jobLogViewerInstance[fn]).toEqual(jasmine.any(Function));
             });
         });
 
         it('Should fail to start without a node', async () => {
-            const jobLogViewerInstance = JobLogViewer.make();
+            const jobLogViewerInstance = new JobLogViewer();
             await expectAsync(
                 jobLogViewerInstance.start({ jobId: 'fakeJob' })
             ).toBeRejectedWithError(/Requires a node to start/);
         });
 
         it('Should fail to start without a jobId', async function () {
-            const jobLogViewerInstance = JobLogViewer.make();
+            const jobLogViewerInstance = new JobLogViewer();
             await expectAsync(
                 jobLogViewerInstance.start({ node: this.node })
             ).toBeRejectedWithError(/Requires a job id to start/);
         });
 
-        it('Should start as expected with inputs, and be stoppable and detachable', async function () {
+        it('Should start as expected with inputs, and be stoppable', async function () {
             const arg = {
                 node: this.node,
                 jobId: 'test_job_start',
             };
             await this.jobLogViewerInstance.start(arg);
             expect(this.node.querySelector('div[data-element="status-line"]')).toBeDefined();
-            this.jobLogViewerInstance.detach();
+            this.jobLogViewerInstance.stop();
             expect(this.node.innerHTML).toBe('');
         });
 
@@ -371,7 +367,7 @@ define([
             [true, false].forEach((mode) => {
                 beforeEach(function () {
                     if (mode) {
-                        this.jobLogViewerInstance = JobLogViewer.make({
+                        this.jobLogViewerInstance = new JobLogViewer({
                             showHistory: mode,
                             devMode: true,
                         });
@@ -416,10 +412,7 @@ define([
                     jobId: jobState.job_id,
                 });
 
-                return createStatusObserver(
-                    this,
-                    formatMessage(jobState.job_id, 'does-not-exist')
-                ).then(() => {
+                return createStatusObserver(this, formatStatusMessage(jobState)).then(() => {
                     this.jobState = jobState;
                     testJobStatus(this);
                     // the job log container should be empty
@@ -502,7 +495,7 @@ define([
                 this.runtimeBus.on('request-job-status', (msg) => {
                     expect(msg).toEqual({ jobId: jobState.job_id });
                     // send the job message
-                    this.runtimeBus.send(...formatMessage(jobState.job_id, 'does-not-exist'));
+                    this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
                 await this.jobLogViewerInstance.start({

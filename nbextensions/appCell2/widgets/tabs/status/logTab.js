@@ -9,8 +9,10 @@ define([
     'util/jobLogViewer',
     './jobStateList',
     './jobInputParams',
-], (Promise, html, UI, Runtime, JobLogViewer, JobStateList, JobInputParams) => {
+], (Promise, html, UI, Runtime, JobLogViewerModule, JobStateList, JobInputParams) => {
     'use strict';
+
+    const { JobLogViewer } = JobLogViewerModule;
 
     const t = html.tag,
         div = t('div');
@@ -97,7 +99,7 @@ define([
                 widgets.params = JobInputParams.make({
                     model: model,
                 });
-                widgets.log = JobLogViewer.make({ showHistory: true });
+                widgets.log = new JobLogViewer({ showHistory: true });
 
                 //rows as widgets to get live update
                 widgets.stateList = JobStateList.make({
@@ -193,7 +195,7 @@ define([
                 container.innerHTML = div({
                     dataElement: 'log',
                 });
-                widgets.log = JobLogViewer.make({ showHistory: true });
+                widgets.log = new JobLogViewer({ showHistory: true });
                 return widgets.log.start({
                     node: ui.getElement('log'),
                     jobId: model.getItem('exec.jobState.job_id'),

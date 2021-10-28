@@ -1,15 +1,24 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
+    'common/jobManager',
     'common/props',
     'testUtil',
     '/test/data/testBulkImportObj',
-], (JobStatusTab, JobStatusTable, Props, TestUtil, TestBulkImportObject) => {
+], (
+    JobStatusTab,
+    JobStatusTableModule,
+    JobManagerModule,
+    Props,
+    TestUtil,
+    TestBulkImportObject
+) => {
     'use strict';
 
+    const { JobManager } = JobManagerModule;
+    const { JobStatusTable } = JobStatusTableModule;
     const model = Props.make({
         data: TestBulkImportObject,
-        onUpdate: () => {},
     });
 
     describe('The job status tab module', () => {
@@ -31,14 +40,16 @@ define([
         let container;
         beforeEach(function () {
             container = document.createElement('div');
-            this.stateList = jasmine.createSpyObj('jobStatusTableInstance', ['start', 'stop']);
-            spyOn(JobStatusTable, 'make').and.callFake(() => {
-                return this.stateList;
-            });
+            // spy on starting/stopping the job status table, which is part of the job status tab
+            spyOn(JobStatusTable.prototype, 'start');
+            spyOn(JobStatusTable.prototype, 'stop');
 
             this.jobStatusTabInstance = JobStatusTab.make({
-                model: model,
-                jobManager: {},
+                model,
+                jobManager: new JobManager({
+                    bus: {},
+                    model,
+                }),
             });
         });
 
@@ -67,9 +78,9 @@ define([
             const [firstChild] = container.childNodes;
             expect(firstChild).toHaveClass('kb-job-status-tab__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
-            expect(JobStatusTable.make).toHaveBeenCalled();
-            expect(this.stateList.start).toHaveBeenCalledTimes(1);
-            const callArgs = this.stateList.start.calls.allArgs();
+
+            expect(JobStatusTable.prototype.start).toHaveBeenCalledTimes(1);
+            const callArgs = JobStatusTable.prototype.start.calls.allArgs();
             expect(callArgs[0].length).toEqual(1);
             const node = callArgs[0][0].node;
             // should be the same as firstChild above
@@ -80,11 +91,10 @@ define([
             expect(container.classList.length).toBe(0);
 
             await this.jobStatusTabInstance.start({ node: container });
-            expect(JobStatusTable.make).toHaveBeenCalled();
-            expect(this.stateList.start).toHaveBeenCalled();
+            expect(JobStatusTable.prototype.start).toHaveBeenCalled();
 
             await this.jobStatusTabInstance.stop();
-            expect(this.stateList.stop).toHaveBeenCalled();
+            expect(JobStatusTable.prototype.stop).toHaveBeenCalled();
             expect(container.innerHTML).toBe('');
         });
     });

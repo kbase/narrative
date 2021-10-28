@@ -13,7 +13,7 @@ define([
     $,
     Promise,
     AppCellUtil,
-    JobStatusTable,
+    JobStatusTableModule,
     Jobs,
     JobManagerModule,
     Props,
@@ -22,9 +22,9 @@ define([
     JobsData
 ) => {
     'use strict';
-    const { JobManager } = JobManagerModule;
+    const { JobManager } = JobManagerModule,
+        { cssBaseClass, JobStatusTable } = JobStatusTableModule;
 
-    const cssBaseClass = JobStatusTable.cssBaseClass;
     const allJobsWithBatchParent = JobsData.allJobsWithBatchParent;
     const allJobsNoBatchParent = JobsData.allJobs;
     const batchId = JobsData.batchParentJob.job_id;
@@ -197,7 +197,7 @@ define([
 
     function createInstance(config = {}) {
         // add in typesToFiles
-        return JobStatusTable.make(
+        return new JobStatusTable(
             Object.assign(
                 {},
                 {
@@ -458,22 +458,22 @@ define([
         });
 
         it('has expected functions', () => {
-            expect(JobStatusTable.make).toEqual(jasmine.any(Function));
+            expect(JobStatusTable).toEqual(jasmine.any(Function));
         });
 
         it('has a cssBaseClass variable', () => {
-            expect(JobStatusTable.cssBaseClass).toEqual(jasmine.any(String));
-            expect(JobStatusTable.cssBaseClass).toContain('kb-job-status');
+            expect(cssBaseClass).toEqual(jasmine.any(String));
+            expect(cssBaseClass).toContain('kb-job-status');
         });
 
         describe('function generateJobDisplayData', () => {
             it('exists and is a function', () => {
-                expect(JobStatusTable.generateJobDisplayData).toEqual(jasmine.any(Function));
+                expect(JobStatusTableModule.generateJobDisplayData).toEqual(jasmine.any(Function));
             });
             it('can pull out the relevant info for displaying a job in a table', () => {
                 const fileTypesDisplay = AppCellUtil.generateFileTypeMappings(typesToFiles);
                 paramTests.forEach((test) => {
-                    const result = JobStatusTable.generateJobDisplayData({
+                    const result = JobStatusTableModule.generateJobDisplayData({
                         jobInfo: test.input,
                         appData,
                         fileTypesDisplay,
@@ -535,7 +535,7 @@ define([
 
         describe('job manager', () => {
             const handlers = [
-                { event: 'modelUpdate', name: 'table' },
+                { event: 'modelUpdate', name: 'jobStatusTable_status' },
                 { event: 'modelUpdate', name: 'dropdown' },
                 { event: 'job-info', name: 'jobStatusTable_info' },
             ];
@@ -695,20 +695,44 @@ define([
             // make sure that the row contents are correct
             JobsData.allJobs.forEach((job) => {
                 describe(`${job.job_id} row content`, () => {
-                    beforeEach(async function () {
-                        container = document.createElement('div');
-                        this.job = job;
-                        this.jobManager = new JobManager({
-                            model: makeModel([job]),
-                            bus: Runtime.make().bus(),
+                    describe('in a batch table', () => {
+                        beforeEach(async function () {
+                            container = document.createElement('div');
+                            this.job = TestUtil.JSONcopy(job);
+                            const batchParent = {
+                                batch_id: this.job.batch_id,
+                                job_id: this.job.batch_id,
+                                batch_job: true,
+                                child_jobs: [this.job.job_id],
+                            };
+                            this.jobManager = new JobManager({
+                                model: makeModel([this.job, batchParent]),
+                                bus: Runtime.make().bus(),
+                            });
+                            this.jobStatusTableInstance = await createStartedInstance(container, {
+                                jobManager: this.jobManager,
+                            });
+                            this.row = container.querySelector('tbody tr');
                         });
-                        this.jobStatusTableInstance = await createStartedInstance(container, {
-                            jobManager: this.jobManager,
-                        });
-                        this.row = container.querySelector('tbody tr');
+                        itHasRowStructure();
                     });
 
-                    itHasRowStructure();
+                    describe('base table', () => {
+                        beforeEach(async function () {
+                            container = document.createElement('div');
+                            this.job = job;
+                            this.jobManager = new JobManager({
+                                model: makeModel([job]),
+                                bus: Runtime.make().bus(),
+                            });
+                            this.jobStatusTableInstance = await createStartedInstance(container, {
+                                jobManager: this.jobManager,
+                            });
+                            this.row = container.querySelector('tbody tr');
+                        });
+
+                        itHasRowStructure();
+                    });
                 });
             });
 

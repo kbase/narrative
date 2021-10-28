@@ -275,15 +275,6 @@ These are described below. The name (`msg_type`) is given, followed by the keys 
 
 By design, these should only be seen by the `JobCommChannel` instance, then sent into bus messages that get sent on specific channels. That information is also given in each block.
 
-### `job_does_not_exist`
-This is an error message triggered when trying to get info/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
-
-**content**
-  * `job_id` - string OR `job_id_list` - array of strings, the job id(s)
-  * `source` - string, the source of the error
-
-**bus** `job-does-not-exist`
-
 ### `job_comm_error`
 A general job comm error, capturing most errors that get thrown by the kernel
 
@@ -326,7 +317,7 @@ The current job state. This one is probably most common.
 
 **content**
 Dictionary with key(s) job ID and value dictionaries with the following structure:
-  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Non-existent jobs have the status `does_not_exist`
+  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Regarding error states: non-existent jobs have the status `does_not_exist`, and when the job state cannot be retrieved from EE2 the status `ee2_error` is used
   * `widget_info` - the parameters to send to output widgets, only available for a completed job
   * `user` - string, username of user who submitted the job
 
@@ -573,5 +564,18 @@ As sent to browser, includes cell info and run info
         retry_ids: array,
         retry_parent: str
     }
+}
+```
+
+When an error occurs while preparing the job state, the output states will have the formats
+```json
+{
+  "job_id_0": {
+    "state": {"job_id": "job_id_0", "status": "does_not_exist"}
+  },
+  "job_id_1": {
+    "state": {"job_id": "job_id_1", "status": "ee2_error"}
+  },
+  ...
 }
 ```

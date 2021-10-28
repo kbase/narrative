@@ -143,7 +143,10 @@ define([
         function renderReportView(params) {
             // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
-            reportParams = Object.assign({}, params, { showCreatedObjects: true });
+            reportParams = Object.assign({}, params, {
+                showCreatedObjects: true,
+                autoRender: false,
+            });
             ui.setContent('report', div({ dataElement: 'report-widget' }));
             return lazyRenderReport();
         }

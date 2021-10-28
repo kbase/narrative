@@ -4,7 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
-from .jobcomm import JobComm
+from .jobcomm import JobComm, exc_to_msg
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -74,15 +74,15 @@ def _app_error_wrapper(app_func: Callable) -> any:
                 if key in kwargs:
                     msg_info[key] = kwargs[key]
             self._send_comm_message("run_status", msg_info)
-            print(
-                f"Error while trying to start your app ({app_func.__name__})!\n"
-                + "-----------------------------------------------------\n"
-                + str(e)
-                + "\n"
-                + "-----------------------------------------------------\n"
-                + e_trace
-            )
-
+            if "cell_id" not in kwargs:
+                print(
+                    f"Error while trying to start your app ({app_func.__name__})!\n"
+                    + "-----------------------------------------------------\n"
+                    + str(e)
+                    + "\n"
+                    + "-----------------------------------------------------\n"
+                    + e_trace
+                )
     return wrapper
 
 
@@ -1093,5 +1093,6 @@ class AppManager(object):
     def register_new_job(self, job: Job) -> None:
         JobManager().register_new_job(job)
         self._send_comm_message("new_job", {"job_id": job.job_id})
-        JobComm().lookup_job_state(job.job_id)
-        JobComm().start_job_status_loop()
+        with exc_to_msg("appmanager"):
+            JobComm().lookup_job_state(job.job_id)
+            JobComm().start_job_status_loop()

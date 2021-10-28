@@ -47,14 +47,66 @@ define([
     };
 
     /**
+     * Initialise a fake bulk import cell
+     * @param {object} args with keys
+     *      {string} state          -- FSM state (cell metadata)
+     *      {string} selectedTab    -- selected tab (cell metadata)
+     *      {string} cellId         -- the KBase cell ID (cell metadata); `state` is used if not present
+     *      {bool}   deleteJobData  -- if true, will remove the `exec` key from the cell metadata
+     * @returns {object} with keys `cell` and `bulkImportCellInstance`
+     */
+    function initCell(args) {
+        if (!args.cellId) {
+            args.cellId = args.state;
+        }
+        const cell = Mocks.buildMockCell('code');
+        cell.execute = () => {
+            console.error('running execute!');
+        };
+        // add dummy metadata so we can make a cell that's in the ready-to-run state.
+        const state = {
+            state: {
+                state: args.state,
+                selectedFileType: 'fastq_reads',
+                selectedTab: args.selectedTab,
+                params: {
+                    fastq_reads: 'complete',
+                },
+            },
+        };
+        cell.metadata = {
+            kbase: {
+                bulkImportCell: Object.assign({}, state, TestUtil.JSONcopy(TestBulkImportObject)),
+                type: 'app-bulk-import',
+                attributes: {
+                    id: `${args.cellId}-test-cell`,
+                },
+            },
+        };
+        if (args.deleteJobData) {
+            // remove job data
+            delete cell.metadata.kbase.bulkImportCell.exec;
+            spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
+            spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
+                fastq_reads: 'complete',
+            });
+        }
+
+        const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
+        return { cell, bulkImportCellInstance };
+    }
+
+    /**
      *
      * @param {object} cell - cell object to be queried for tab structures
      * @param {object} tabStatus - object with keys
-     *          {array} enabledTabs - names of enabled tabs
-     *          {array} visibleTabs - names of visible tabs
+     *          {array} enabledTabs -  names of enabled tabs
+     *          {array} visibleTabs -  names of visible tabs
+     *          {string} selectedTab - the active tab
      */
     function checkTabState(cell, tabStatus) {
-        const { enabledTabs, visibleTabs } = tabStatus;
+        const { enabledTabs, visibleTabs, selectedTab } = tabStatus;
+        expect(cell.metadata.kbase.bulkImportCell.state.selectedTab).toBe(selectedTab);
         const allTabs = cell.element[0].querySelectorAll('.kb-rcp__tab-button');
         allTabs.forEach((tab) => {
             const dataButton = tab.getAttribute('data-button');
@@ -63,6 +115,8 @@ define([
             const hidden = !visibleTabs.includes(dataButton);
             expect(tab.classList.contains('disabled')).toBe(disabled);
             expect(tab.classList.contains('hidden')).toBe(hidden);
+            // whether or not this is the selected tab
+            expect(tab.classList.contains('active')).toBe(dataButton === selectedTab);
         });
     }
 
@@ -171,6 +225,12 @@ define([
         });
 
         describe('deletion', () => {
+            const cellInitArgs = {
+                devMode,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true,
+            };
             it('should be able to delete its cell', async () => {
                 const cell = Mocks.buildMockCell('code');
                 Jupyter.notebook = Mocks.buildMockNotebook();
@@ -178,14 +238,11 @@ define([
                 // when the dialog comes up, mimic a "yes" response
                 spyOn(DialogMessages, 'showDialog').and.resolveTo(true);
 
-                const cellWidget = BulkImportCell.make({
-                    cell,
-                    importData: fakeInputs,
-                    specs: fakeSpecs,
-                    initialize: true,
-                });
+                const cellWidget = BulkImportCell.make({ cell, ...cellInitArgs });
+                spyOn(cellWidget.jobManager, 'cancelBatchJob');
                 await cellWidget.deleteCell();
                 expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                expect(cellWidget.jobManager.cancelBatchJob).toHaveBeenCalled();
             });
 
             it('will not delete its cell if the user says no', async () => {
@@ -195,14 +252,11 @@ define([
                 // mimic a "no" response
                 spyOn(DialogMessages, 'showDialog').and.resolveTo(false);
 
-                const cellWidget = BulkImportCell.make({
-                    cell,
-                    importData: fakeInputs,
-                    specs: fakeSpecs,
-                    initialize: true,
-                });
+                const cellWidget = BulkImportCell.make({ cell, ...cellInitArgs });
+                spyOn(cellWidget.jobManager, 'cancelBatchJob');
                 await cellWidget.deleteCell();
                 expect(Jupyter.notebook.delete_cell).not.toHaveBeenCalled();
+                expect(cellWidget.jobManager.cancelBatchJob).not.toHaveBeenCalled();
             });
 
             it('responds to a delete-cell bus message', () => {
@@ -211,17 +265,15 @@ define([
                     Jupyter.notebook = Mocks.buildMockNotebook({
                         deleteCallback: () => {
                             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                            expect(cellWidget.jobManager.cancelBatchJob).toHaveBeenCalled();
                             resolve();
                         },
                     });
                     spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
                     spyOn(DialogMessages, 'showDialog').and.resolveTo(true);
-                    BulkImportCell.make({
-                        cell,
-                        importData: fakeInputs,
-                        specs: fakeSpecs,
-                        initialize: true,
-                    });
+
+                    const cellWidget = BulkImportCell.make({ cell, ...cellInitArgs });
+                    spyOn(cellWidget.jobManager, 'cancelBatchJob');
                     runtime.bus().send(
                         {},
                         {
@@ -267,6 +319,7 @@ define([
                     testState: (elem) => !elem.classList.contains('disabled'),
                     enabledTabs: ['viewConfigure', 'info', 'jobStatus'],
                     visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    selectedTab: 'jobStatus',
                 },
                 {
                     msgEvent: 'some-unknown-event',
@@ -279,41 +332,13 @@ define([
                 },
             ].forEach((testCase) => {
                 it(`responds to run-status bus messages with ${testCase.msgEvent} event`, async () => {
-                    const cell = Mocks.buildMockCell('code');
-                    cell.execute = () => {
-                        console.error('running execute!');
-                    };
-                    // add dummy metadata so we can make a cell that's in the ready-to-run state.
-                    const state = {
-                        state: {
-                            state: 'editingComplete',
-                            selectedFileType: 'fastq_reads',
-                            selectedTab: 'configure',
-                            param: {
-                                fastq_reads: 'complete',
-                            },
-                        },
-                    };
-                    cell.metadata = {
-                        kbase: {
-                            bulkImportCell: Object.assign(
-                                {},
-                                state,
-                                TestUtil.JSONcopy(TestBulkImportObject)
-                            ),
-                            type: 'app-bulk-import',
-                            attributes: {
-                                id: `${testCase.msgEvent}-test-cell`,
-                            },
-                        },
-                    };
-                    // remove job data
-                    delete cell.metadata.kbase.bulkImportCell.exec;
-                    spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
-                    spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
-                        fastq_reads: 'complete',
+                    // start the cell in the editing complete state -- ready to run
+                    const { cell } = initCell({
+                        state: 'editingComplete',
+                        selectedTab: 'configure',
+                        deleteJobData: true,
                     });
-                    BulkImportCell.make({ cell, devMode });
+
                     const testElem = cell.element[0].querySelector(testCase.testSelector);
                     // wait for the actionButton to get initialized as hidden
                     // send the message to put it in the run state, and wait for the button to show,
@@ -328,18 +353,25 @@ define([
                         );
                     });
                     runButton.click();
+
+                    // once the cell is in the 'launching' state, the cancel button will be shown
+                    await TestUtil.waitForElementState(runButton, () => {
+                        return !cancelButton.classList.contains('hidden');
+                    });
+                    checkTabState(cell, {
+                        selectedTab: 'viewConfigure',
+                        enabledTabs: ['viewConfigure', 'info'],
+                        visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    });
+
+                    // wait for the cell to receive the run status message and transition
+                    // to the next state
                     await TestUtil.waitForElementState(
                         testElem,
                         () => {
                             return testCase.testState(testElem);
                         },
                         () => {
-                            // make sure the cell is in the 'launching' state
-                            // TODO: uncomment this test once tab states are fixed
-                            // checkTabState(cell, {
-                            //     enabledTabs: ['viewConfigure', 'info'],
-                            //     visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
-                            // });
                             const message = Object.assign(
                                 {
                                     event: testCase.msgEvent,
@@ -360,15 +392,6 @@ define([
                     expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                         testCase.updatedState
                     );
-                    if (testCase.selectedTab) {
-                        expect(cell.metadata.kbase.bulkImportCell.state.selectedTab).toBe(
-                            testCase.selectedTab
-                        );
-                        const tab = cell.element[0].querySelector(
-                            `.kb-rcp__tab-button[data-button="${testCase.selectedTab}"]`
-                        );
-                        expect(tab.classList.contains('active')).toBeTrue();
-                    }
                     checkTabState(cell, testCase);
                 });
             });
@@ -398,6 +421,29 @@ define([
                 });
                 expect(cell.metadata.kbase.bulkImportCell.state.state).toBe('editingComplete');
             });
+
+            it('corrects the active tab if started with an invalid selection', async () => {
+                const { cell } = initCell({
+                    state: 'editingComplete',
+                    selectedTab: 'jobStatus',
+                    deleteJobData: true,
+                });
+
+                // the cell is ready to run, so wait for the appropriate buttons to appear
+                const runButton = cell.element[0].querySelector(selectors.run);
+                const cancelButton = cell.element[0].querySelector(selectors.cancel);
+                await TestUtil.waitForElementState(cancelButton, () => {
+                    return (
+                        !runButton.classList.contains('disabled') &&
+                        cancelButton.classList.contains('hidden')
+                    );
+                });
+                checkTabState(cell, {
+                    selectedTab: 'configure',
+                    enabledTabs: ['configure', 'info'],
+                    visibleTabs: ['configure', 'info', 'jobStatus', 'results'],
+                });
+            });
         });
 
         describe('cancel and reset', () => {
@@ -405,69 +451,51 @@ define([
                 {
                     state: 'inProgressResultsAvailable',
                     action: 'cancel',
+                    selectedTab: 'jobStatus',
                 },
                 {
                     state: 'inProgress',
                     action: 'cancel',
+                    selectedTab: 'jobStatus',
                 },
                 {
                     state: 'launching',
                     action: 'cancel',
+                    selectedTab: 'viewConfigure',
                 },
                 {
                     state: 'jobsFinished',
                     action: 'reset',
+                    selectedTab: 'jobStatus',
                 },
                 {
                     state: 'jobsFinishedResultsAvailable',
                     action: 'reset',
+                    selectedTab: 'results',
                 },
                 {
                     state: 'error',
                     action: 'reset',
+                    selectedTab: 'error',
                 },
             ];
             tests.forEach((testCase) => {
                 it(`should ${testCase.action} the ${testCase.state} state and return to a previous state`, () => {
                     // init cell with the test case state and jobs (they're all run-related)
-                    // wait for the cancel/reset button to appear and be ready, and for the run button to disappear
+                    // wait for the cancel/reset button to appear and be ready for clicking
                     // click it
                     // wait for the cell to reset so the run button is visible
                     // expect the state to be editingComplete
-                    const cell = Mocks.buildMockCell('code');
-                    // mock the Jupyter execute function.
-                    cell.execute = () => {};
                     Jupyter.notebook = Mocks.buildMockNotebook();
+                    spyOn(Jupyter.notebook, 'save_checkpoint');
+                    testCase.cellId = `${testCase.state}-${testCase.action}`;
+                    const { cell, bulkImportCellInstance } = initCell(testCase);
+
                     // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.
                     // I'm guessing it's a jquery fadeIn event thing.
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
-                    spyOn(Jupyter.notebook, 'save_checkpoint');
                     spyOn(Jobs, 'getFsmStateFromJobs').and.returnValue(testCase.state);
-                    // add dummy metadata so we can make a cell that's in the ready-to-run state.
-                    const state = {
-                        state: {
-                            state: testCase.state,
-                            selectedFileType: 'fastq_reads',
-                            selectedTab: 'viewConfigure',
-                            params: {
-                                fastq_reads: 'complete',
-                            },
-                        },
-                    };
-                    cell.metadata = {
-                        kbase: {
-                            bulkImportCell: Object.assign(
-                                {},
-                                state,
-                                TestUtil.JSONcopy(TestBulkImportObject)
-                            ),
-                            type: 'app-bulk-import',
-                            attributes: {
-                                id: `${testCase.state}-state-test-cell`,
-                            },
-                        },
-                    };
-                    const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
+
                     const actionButton = cell.element[0].querySelector(selectors[testCase.action]);
                     const runButton = cell.element[0].querySelector(selectors.run);
                     // wait for the cancel/reset button to appear and the run button to disappear
@@ -501,6 +529,13 @@ define([
                             expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                                 'editingComplete'
                             );
+                            // check the tab state: all should have reverted to the 'configure' tab on reset
+                            checkTabState(cell, {
+                                selectedTab: 'configure',
+                                enabledTabs: ['configure', 'info'],
+                                visibleTabs: ['configure', 'info', 'jobStatus', 'results'],
+                            });
+
                             // jobs should have been reset and listeners removed
                             expect(bulkImportCellInstance.jobManager.model.getItem('exec')).toEqual(
                                 undefined
@@ -509,7 +544,7 @@ define([
                             expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {
                                 expect(cell.metadata.kbase.attributes.id).not.toEqual(
-                                    `${testCase.state}-state-test-cell`
+                                    `${testCase.cellId}-test-cell`
                                 );
                             }
                         });
@@ -517,43 +552,14 @@ define([
             });
 
             it('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
-                const cell = Mocks.buildMockCell('code');
                 Jupyter.notebook = Mocks.buildMockNotebook();
                 spyOn(Jupyter.notebook, 'save_checkpoint');
-                cell.execute = () => {
-                    // do nothing
-                };
-                // add dummy metadata so we can make a cell that's in the ready-to-run state.
-                const state = {
-                    state: {
-                        state: 'editingComplete',
-                        selectedFileType: 'fastq_reads',
-                        selectedTab: 'configure',
-                        param: {
-                            fastq_reads: 'complete',
-                        },
-                    },
-                };
-                cell.metadata = {
-                    kbase: {
-                        bulkImportCell: Object.assign(
-                            {},
-                            state,
-                            TestUtil.JSONcopy(TestBulkImportObject)
-                        ),
-                        type: 'app-bulk-import',
-                        attributes: {
-                            id: `cancel-no-run-status-test-cell`,
-                        },
-                    },
-                };
-                // remove job data
-                delete cell.metadata.kbase.bulkImportCell.exec;
-                spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
-                spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
-                    fastq_reads: 'complete',
+                const { cell, bulkImportCellInstance } = initCell({
+                    state: 'editingComplete',
+                    selectedTab: 'configure',
+                    deleteJobData: true,
                 });
-                const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
+
                 spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                 spyOn(bulkImportCellInstance.jobManager, 'initBatchJob').and.callThrough();
                 spyOn(bulkImportCellInstance.jobManager.bus, 'emit');
@@ -650,6 +656,7 @@ define([
                 expect(bulkImportCellInstance.jobManager.model.getItem('exec')).toEqual(undefined);
                 expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                 checkTabState(cell, {
+                    selectedTab: 'configure',
                     enabledTabs: ['configure', 'info'],
                     visibleTabs: ['configure', 'info', 'jobStatus', 'results'],
                 });

@@ -246,9 +246,8 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
     /**
      * Initializes this state viewer widget.
      * Inits the internal viewModel as well.
-     * @param {object} config - the config passed to this widget (not used, but in the format)
      */
-    function factory(config) {
+    function factory() {
         const runtime = Runtime.make(),
             listeners = [];
         let container,
@@ -338,17 +337,6 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
         }
 
         /**
-         * If the job doesn't exist, then we need to set a different job state.
-         * We don't care what the message is, but it's passed here anyway.
-         * @param {object} message
-         */
-        function handleJobDoesNotExistUpdate(message) {
-            jobState = {
-                job_state: 'does_not_exist',
-            };
-        }
-
-        /**
          * Called when the job-status message is received.
          * This parses the job status message. Takes into account both NJS and EE2 style messages.
          * @param {object} message
@@ -365,6 +353,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                 case 'completed':
                 case 'error':
                 case 'terminated':
+                case 'does_not_exist':
                     stopJobUpdates();
                     break;
                 default:
@@ -378,42 +367,19 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
          * Sets up handlers and listeners for job status updates.
          * Listens on the jobId channel for these messages:
          *  - job-status -> respond to job update
-         *  - job-canceled -> no-op
-         *  - job-does-not-exist -> respond to the not found exception
          */
         function listenForJobStatus() {
-            let ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-status',
-                },
-                handle: handleJobStatusUpdate,
-            });
-            listeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-canceled',
-                },
-                handle: () => {},
-            });
-            listeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-does-not-exist',
-                },
-                handle: handleJobDoesNotExistUpdate,
-            });
-            listeners.push(ev);
+            listeners.push(
+                runtime.bus().listen({
+                    channel: {
+                        jobId: jobId,
+                    },
+                    key: {
+                        type: 'job-status',
+                    },
+                    handle: handleJobStatusUpdate,
+                })
+            );
         }
 
         /**
@@ -480,15 +446,15 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
         }
 
         return {
-            start: start,
-            stop: stop,
-            detach: detach,
+            start,
+            stop,
+            detach,
         };
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: () => {
+            return factory();
         },
     };
 });

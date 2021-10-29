@@ -70,7 +70,6 @@ define([
             STOP_UPDATE: 'stop_job_update',
         },
         BACKEND_RESPONSES = {
-            DOES_NOT_EXIST: 'job_does_not_exist',
             INFO: JOB_REQUESTS.INFO,
             LOGS: JOB_REQUESTS.LOGS,
             RESULT: RESULT,
@@ -80,7 +79,7 @@ define([
         },
         RESPONSES = {
             CELL_JOB_STATUS: 'cell-job-status',
-            DOES_NOT_EXIST: 'job-does-not-exist',
+            ERROR: 'job-error',
             INFO: 'job-info',
             LOGS: 'job-logs',
             RESULT: RESULT,
@@ -128,7 +127,7 @@ define([
             return Object.keys(requestTranslation);
         },
         validOutgoingMessageTypes: function () {
-            return Object.values(RESPONSES).concat(['job-error']);
+            return Object.values(RESPONSES);
         },
     };
 
@@ -163,7 +162,7 @@ define([
             const channel = {};
             channel[channelName] = channelId;
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: channel,
+                channel,
                 key: {
                     type: msgType,
                 },
@@ -244,9 +243,9 @@ define([
                 throw new Error(
                     'ERROR sending comm message: ' +
                         JSON.stringify({
-                            error: err.toString(),
-                            msgType: msgType,
-                            message: message,
+                            error: err,
+                            msgType,
+                            message,
                         })
                 );
             });
@@ -293,8 +292,7 @@ define([
         handleCommMessages(msg) {
             const msgType = msg.content.data.msg_type;
             const msgData = msg.content.data.content;
-            let jobId = null,
-                msgTypeToSend = null;
+            let msgTypeToSend = null;
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case 'start':
@@ -352,24 +350,6 @@ define([
                     console.error('Error from job comm:', msg);
                     break;
 
-                case BACKEND_RESPONSES.DOES_NOT_EXIST:
-                    jobId = msgData.job_id;
-                    if (msgData.source === 'job_status') {
-                        this.sendBusMessage(JOB, jobId, RESPONSES.STATUS, {
-                            jobId,
-                            jobState: {
-                                job_id: msgData.job_id,
-                                status: 'does_not_exist',
-                            },
-                        });
-                        break;
-                    }
-                    this.sendBusMessage(JOB, jobId, RESPONSES.DOES_NOT_EXIST, {
-                        jobId,
-                        source: msgData.source,
-                    });
-                    break;
-
                 // job information for one or more jobs
                 // Object with keys jobId and values { jobId: jobId, jobInfo: { ...job params... } }
                 case BACKEND_RESPONSES.INFO:
@@ -414,17 +394,31 @@ define([
                  * The job status for one or more jobs.
                  * The job_status_all message covers all active jobs.
                  *
-                 * data structure: object with key jobId and value { jobState: job.state, outputWidgetInfo: job.widget_info }
+                 * data structure: object with key jobId and value
+                 * { jobState: job.state, outputWidgetInfo: job.widget_info }
                  */
                 case BACKEND_RESPONSES.STATUS:
                 case 'job_status_all':
                     Object.keys(msgData).forEach((_jobId) => {
-                        this.sendBusMessage(
-                            JOB,
-                            _jobId,
-                            RESPONSES.STATUS,
-                            this.convertJobState(msgData[_jobId])
-                        );
+                        // check whether or not this is an ee2 error
+                        if (msgData[_jobId].state.status === 'ee2_error') {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.ERROR, {
+                                jobId: _jobId,
+                                error: {
+                                    job_id: _jobId,
+                                    message: 'ee2 connection error',
+                                    code: msgData[_jobId].state.status,
+                                },
+                                request: 'job-status',
+                            });
+                        } else {
+                            this.sendBusMessage(
+                                JOB,
+                                _jobId,
+                                RESPONSES.STATUS,
+                                this.convertJobState(msgData[_jobId])
+                            );
+                        }
                     });
                     break;
 

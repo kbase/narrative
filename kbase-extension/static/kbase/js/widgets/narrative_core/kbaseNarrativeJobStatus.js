@@ -41,13 +41,15 @@ define([
     Runtime,
     Semaphore,
     utils,
-    JobLogViewer,
+    JobLogViewerModule,
     JobStatusTableTemplate,
     HeaderTemplate,
     NewObjectsTemplate,
     Alert
 ) => {
     'use strict';
+
+    const { JobLogViewer } = JobLogViewerModule;
 
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
@@ -67,7 +69,7 @@ define([
             this.state = this.options.state;
             this.outputWidgetInfo = this.options.outputWidgetInfo;
             this.widgets = {
-                JobLogViewer: JobLogViewer.make({ showHistory: true }),
+                JobLogViewer: new JobLogViewer({ showHistory: true }),
             };
 
             // expects:
@@ -161,19 +163,6 @@ define([
                         },
                         handle: function (message) {
                             this.handleJobStatus(message);
-                        }.bind(this),
-                    });
-
-                    this.busConnection.listen({
-                        channel: {
-                            jobId: this.jobId,
-                        },
-                        key: {
-                            type: 'job-does-not-exist',
-                        },
-                        handle: function (message) {
-                            // this.handleJobStatus(message);
-                            console.warn('job does not exist? ', message);
                         }.bind(this),
                     });
 

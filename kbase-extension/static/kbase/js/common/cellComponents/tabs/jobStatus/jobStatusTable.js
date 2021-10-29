@@ -8,9 +8,10 @@ define([
     'util/appCellUtil',
     'util/string',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer, Util, String) => {
+], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewerModule, Util, String) => {
     'use strict';
 
+    const { JobLogViewer } = JobLogViewerModule;
     const t = html.tag,
         table = t('table'),
         thead = t('thead'),
@@ -186,40 +187,111 @@ define([
      * @param {object} config
      * @returns jobStatusTable instance
      */
-    function factory(config) {
-        const widgetsById = {},
-            showHistory = true,
-            { jobManager, toggleTab } = config,
-            jobsByRetryParent = {},
-            fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles),
-            errors = {};
-
-        if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
-            throw new Error('Cannot start JobStatusTable without a jobs object in the config');
+    class JobStatusTable {
+        constructor(config = {}) {
+            this._init(config);
         }
 
-        let container, dropdownWidget, dataTable;
+        /**
+         * Set up the Job Status Table class
+         * @param {object} config
+         */
+        _init(config) {
+            this.config = config;
+            this.showHistory = true; // whether or not the embedded widgets should show job history
+
+            const { jobManager, toggleTab } = config;
+            if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
+                throw new Error('Cannot start JobStatusTable without a jobs object in the config');
+            }
+            this.jobManager = jobManager;
+            this.toggleTab = toggleTab;
+
+            this.fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles);
+            this.jobsByRetryParent = {};
+            this.widgetsById = {};
+            this.errors = {};
+        }
+
+        /**
+         *
+         * @param {object} args  -- with key
+         *      node:     DOM node to attach to
+         *
+         * @returns {Promise} started JobStatusTable widget
+         */
+        start(args) {
+            const requiredArgs = ['node'];
+            if (!requiredArgs.every((arg) => arg in args && args[arg])) {
+                throw new Error('start argument must have these keys: ' + requiredArgs.join(', '));
+            }
+
+            const indexedJobs = this.jobManager.model.getItem('exec.jobs.byId');
+            if (!indexedJobs || !Object.keys(indexedJobs).length) {
+                throw new Error('Must provide at least one job to show the job status table');
+            }
+            const jobs = Object.values(indexedJobs);
+
+            this.container = args.node;
+            this.container.innerHTML = [
+                div({
+                    class: `${cssBaseClass}__dropdown_container pull-right`,
+                }),
+                div(
+                    {
+                        class: `${cssBaseClass}__table_instructions`,
+                    },
+                    'Click on a row to view the job details and logs.'
+                ),
+                createTable(),
+            ].join('\n');
+
+            return Promise.try(() => {
+                // start the dropdown widget
+                this.dropdownWidget = JobActionDropdown.make(this.config);
+                return this.dropdownWidget.start({
+                    node: this.container.querySelector(`.${cssBaseClass}__dropdown_container`),
+                });
+            }).then(() => {
+                this.renderTable(jobs);
+                this.setUpEventHandlers();
+                this.setUpJobListeners(jobs);
+                this.addTableClickListeners();
+            });
+        }
+
+        stop() {
+            Object.values(this.widgetsById).map((widget) => widget.stop());
+            this.jobManager.removeEventHandler('modelUpdate', 'jobStatusTable_status');
+            this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
+            this.jobManager.removeEventHandler('job-info', 'jobStatusTable_info');
+            this.jobManager.removeEventHandler('job-error', 'jobStateTable_error');
+            this.container.innerHTML = '';
+            if (this.dropdownWidget) {
+                return this.dropdownWidget.stop();
+            }
+        }
 
         /**
          * convert the table to a DataTable object to get sorting/paging functionality
          * @param {array} rows - table rows
          * @returns {DataTable} datatable object
          */
-        function renderTable(rows) {
+        renderTable(rows) {
             // group jobs by their retry parents
-            const jobsByOriginalId = Jobs.getCurrentJobs(rows, jobsByRetryParent);
-            const allJobInfo = jobManager.model.getItem('exec.jobs.info');
-            const appData = jobManager.model.getItem('app');
+            const jobsByOriginalId = Jobs.getCurrentJobs(rows, this.jobsByRetryParent);
+            const allJobInfo = this.jobManager.model.getItem('exec.jobs.info');
+            const appData = this.jobManager.model.getItem('app');
             if (allJobInfo) {
                 Object.keys(jobsByOriginalId).forEach((jobId) => {
                     if (allJobInfo[jobId]) {
                         const jobDisplayData = generateJobDisplayData({
                             jobInfo: allJobInfo[jobId],
-                            fileTypesDisplay,
+                            fileTypesDisplay: this.fileTypesDisplay,
                             appData,
-                            typesToFiles: config.typesToFiles,
+                            typesToFiles: this.config.typesToFiles,
                         });
-                        jobManager.model.setItem(
+                        this.jobManager.model.setItem(
                             `exec.jobs.paramDisplayData.${jobId}`,
                             jobDisplayData
                         );
@@ -227,7 +299,7 @@ define([
                 });
             }
 
-            dataTable = $(container.querySelector('table')).dataTable({
+            this.dataTable = $(this.container.querySelector('table')).dataTable({
                 autoWidth: false,
                 data: Object.values(jobsByOriginalId),
                 rowId: (row) => {
@@ -241,7 +313,7 @@ define([
                         className: `${cssBaseClass}__cell--import-type`,
                         render: (data, type, row) => {
                             const jobParams =
-                                jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                                this.jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
                             const relevantJobId =
                                 row.retry_parent && jobParams[row.retry_parent]
                                     ? row.retry_parent
@@ -257,7 +329,7 @@ define([
                         className: `${cssBaseClass}__cell--output`,
                         render: (data, type, row) => {
                             const jobParams =
-                                jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                                this.jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
                             const relevantJobId =
                                 row.retry_parent && jobParams[row.retry_parent]
                                     ? row.retry_parent
@@ -313,7 +385,10 @@ define([
                                 jobAction
                             );
 
-                            if (['cancel', 'retry'].includes(jobAction) && errors[row.job_id]) {
+                            if (
+                                ['cancel', 'retry'].includes(jobAction) &&
+                                this.errors[row.job_id]
+                            ) {
                                 return (
                                     buttonHtml +
                                     span({
@@ -332,9 +407,76 @@ define([
                 drawCallback: function () {
                     // Hide pagination controls if length is less than or equal to table length
                     if (this.api().data().length <= dataTablePageLength) {
-                        $(container).find('.dataTables_paginate').hide();
+                        $(this.container).find('.dataTables_paginate').hide();
                     }
                 },
+            });
+        }
+
+        /**
+         * Add a new row to the table (if applicable)
+         * @param {object} jobState
+         */
+        addTableRow(jobState) {
+            // check whether this job is part of the same batch as the other jobs;
+            // if so, it should be added to the table
+            const expectedBatchId = this.jobManager.model.getItem('exec.jobState.batch_id');
+            if (
+                // no batch job
+                !expectedBatchId ||
+                // incoming job has no batch ID
+                !jobState.batch_id ||
+                // incoming job is in a different batch
+                jobState.batch_id !== expectedBatchId ||
+                // this is the batch job
+                jobState.job_id === expectedBatchId
+            ) {
+                return;
+            }
+            const rowIx = jobState.retry_parent || jobState.job_id;
+            const currentJobIx = `${jobState.created || 0}__${jobState.job_id}`;
+
+            this.jobsByRetryParent[rowIx] = {
+                job_id: rowIx,
+                jobs: {},
+            };
+            this.jobsByRetryParent[rowIx].jobs[currentJobIx] = jobState;
+            // do we have job info for it?
+            if (!this.jobManager.model.getItem(`exec.jobs.info.${rowIx}`)) {
+                this.jobManager.requestJobInfo([rowIx]);
+            }
+
+            // is this a job that has been retried?
+            if (jobState.retry_ids && jobState.retry_ids.length) {
+                return;
+            }
+            // this is a new job that is part of the same batch
+            this.dataTable.DataTable().row.add(jobState).draw();
+            this.addTableClickListeners();
+        }
+
+        /**
+         * add the listeners to the table that allow row expansion
+         */
+        addTableClickListeners() {
+            this.container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const $currentButton = $(e.target).closest(
+                        '[data-element="job-action-button"]'
+                    );
+                    const $currentRow = $(e.target).closest('tr.odd, tr.even');
+                    // not an expandable row or a job action button
+                    if (!$currentRow[0] && !$currentButton[0]) {
+                        return Promise.resolve();
+                    }
+                    // job action button
+                    if ($currentButton[0]) {
+                        return Promise.resolve(this.doSingleJobAction(e));
+                    }
+                    // expandable row
+                    return this.showHideChildRow(e);
+                };
             });
         }
 
@@ -345,7 +487,7 @@ define([
          * @param {Event} e - row click event
          * @returns {Promise} that resolves when the appropriate row action completes
          */
-        function showHideChildRow(e) {
+        showHideChildRow(e) {
             const $currentRow = $(e.target).closest('tr');
             const $table = $(e.target).closest('table');
             const $dtTable = $table.DataTable();
@@ -363,28 +505,38 @@ define([
                 // This row is already open - close it
                 dtRow.child.hide();
                 $currentRow.removeClass('vertical_collapse--open');
-                if (widgetsById[jobState.job_id]) {
-                    widgetsById[jobState.job_id].stop();
+                if (this.widgetsById[`${jobState.job_id}_LOG`]) {
+                    this.widgetsById[`${jobState.job_id}_LOG`].stop();
                 }
                 dtRow.child.remove();
                 return Promise.resolve();
             }
 
             // create the child row contents, add to the child row, and show it
-            const str = div({
-                class: `${cssBaseClass}__detail_container`,
-                dataElement: 'job-detail-container',
-            });
+            const str = div(
+                {
+                    class: `${cssBaseClass}__detail_container`,
+                    dataElement: 'job-detail-container',
+                },
+                [
+                    div({
+                        dataElement: `job-logs-div`,
+                    }),
+                ]
+            );
             dtRow.child(str).show();
 
             // add the log widget to the next `tr` element
-            widgetsById[jobState.job_id] = JobLogViewer.make({ jobManager, showHistory });
+            this.widgetsById[`${jobState.job_id}_LOG`] = new JobLogViewer({
+                jobManager: this.jobManager,
+                showHistory: this.showHistory,
+            });
             return Promise.try(() => {
-                widgetsById[jobState.job_id].start({
-                    node: $currentRow.next().find('[data-element="job-detail-container"]')[0],
+                this.widgetsById[`${jobState.job_id}_LOG`].start({
                     jobId: dtRow.data().job_id,
                     jobState,
-                    config,
+                    config: this.config,
+                    node: $currentRow.next().find('[data-element="job-logs-div"]')[0],
                 });
             })
                 .then(() => {
@@ -395,9 +547,9 @@ define([
                 });
         }
 
-        function closeRow(e) {
+        closeRow(e) {
             if ($(e.target).closest('tr')[0].classList.contains('vertical_collapse--open')) {
-                showHideChildRow(e);
+                this.showHideChildRow(e);
             }
         }
 
@@ -411,7 +563,7 @@ define([
          * - data-action - "cancel", "retry", or "go-to-results"
          * - data-target - the job ID of the job to perform the action on
          */
-        function doSingleJobAction(e) {
+        doSingleJobAction(e) {
             const el = e.target;
             e.stopPropagation();
             const action = el.getAttribute('data-action'),
@@ -421,14 +573,14 @@ define([
                 return false;
             }
 
-            const jobState = jobManager.model.getItem(`exec.jobs.byId.${target}`);
+            const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${target}`);
             if (!jobState) {
                 return false;
             }
 
             if (action === 'go-to-results') {
                 // switch to results tab
-                return toggleTab('results');
+                return this.toggleTab('results');
             }
             if (!Jobs.canDo(action, jobState)) {
                 // make sure that the button is disabled so it cannot be clicked again
@@ -436,15 +588,15 @@ define([
                 return false;
             }
             // make sure any errors associated with the row ID are deleted
-            if (errors[target]) {
-                delete errors[target];
+            if (this.errors[target]) {
+                delete this.errors[target];
             }
-            jobManager.doJobAction(action, [target]);
+            this.jobManager.doJobAction(action, [target]);
 
             // if the job is being retried and the log viewer is open, close it
             // TODO: a better fix!
             if (action === 'retry') {
-                closeRow(e);
+                this.closeRow(e);
             }
 
             // disable the button to prevent further clicks
@@ -456,137 +608,77 @@ define([
         }
 
         /**
-         * add the listeners to the table that allow row expansion
+         * Set up event handlers
          */
-        function addTableClickListeners() {
-            container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    const $currentButton = $(e.target).closest(
-                        '[data-element="job-action-button"]'
-                    );
-                    const $currentRow = $(e.target).closest('tr.odd, tr.even');
-                    // not an expandable row or a job action button
-                    if (!$currentRow[0] && !$currentButton[0]) {
-                        return Promise.resolve();
-                    }
-                    // job action button
-                    if ($currentButton[0]) {
-                        return Promise.resolve(doSingleJobAction(e));
-                    }
-                    // expandable row
-                    return showHideChildRow(e);
-                };
+        setUpEventHandlers() {
+            this.jobManager.addEventHandler('modelUpdate', {
+                dropdown: () => {
+                    this.dropdownWidget.updateState();
+                },
+                jobStatusTable_status: (_, jobArray) => {
+                    jobArray.forEach((jobState) => this.updateJobStatusInTable(jobState));
+                },
             });
         }
 
         /**
-         * Set up job listeners
+         * Set up job event listeners and handlers
          *
          * @param {array} jobs
          */
-        function setUpListeners(jobs) {
-            jobManager.addEventHandler('modelUpdate', {
-                dropdown: () => {
-                    dropdownWidget.updateState();
-                },
-                table: (_, jobArray) => {
-                    jobArray.forEach((jobState) => updateJobStatusInTable(jobState));
-                },
-            });
-
-            const batchId = jobManager.model.getItem('exec.jobState.job_id');
+        setUpJobListeners(jobs) {
+            const batchId = this.jobManager.model.getItem('exec.jobState.job_id');
             const paramsRequired = [];
             const jobIdList = [];
             jobs.forEach((jobState) => {
                 if (!jobState.batch_job) {
                     jobIdList.push(jobState.job_id);
                     if (
-                        !jobManager.model.getItem(`exec.jobs.info.${jobState.job_id}`) &&
+                        !this.jobManager.model.getItem(`exec.jobs.info.${jobState.job_id}`) &&
                         jobState.job_id !== batchId
                     ) {
                         paramsRequired.push(jobState.job_id);
                     }
                 }
             });
-            jobManager.addListener('job-status', [batchId].concat(jobIdList));
-            jobManager.addListener('job-error', [batchId].concat(jobIdList), {
-                jobStatusTable_error: handleJobError,
+            this.jobManager.addListener('job-status', [batchId].concat(jobIdList));
+            this.jobManager.addListener('job-error', [batchId].concat(jobIdList), {
+                jobStatusTable_error: this.handleJobError.bind(this),
             });
 
             if (paramsRequired.length) {
-                jobManager.addListener('job-info', paramsRequired, {
-                    jobStatusTable_info: handleJobInfo,
+                this.jobManager.addListener('job-info', paramsRequired, {
+                    jobStatusTable_info: this.handleJobInfo.bind(this),
                 });
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
                         ? { batchId }
                         : { jobIdList: paramsRequired };
-                jobManager.bus.emit('request-job-info', jobInfoRequestParams);
+                this.jobManager.bus.emit('request-job-info', jobInfoRequestParams);
             }
-            jobManager.bus.emit('request-job-status', { batchId });
+            this.jobManager.bus.emit('request-job-status', { batchId });
         }
 
-        /**
-         * Add a new row to the table (if applicable)
-         * @param {object} jobState
-         */
-        function addTableRow(jobState) {
-            // check whether this job is part of the same batch as the other jobs;
-            // if so, it should be added to the table
-            const expectedBatchId = jobManager.model.getItem('exec.jobState.batch_id');
-            if (
-                // no batch job
-                !expectedBatchId ||
-                // incoming job has no batch ID
-                !jobState.batch_id ||
-                // incoming job is in a different batch
-                jobState.batch_id !== expectedBatchId ||
-                // this is the batch job
-                jobState.job_id === expectedBatchId
-            ) {
-                return;
-            }
-            const rowIx = jobState.retry_parent || jobState.job_id;
-            const currentJobIx = `${jobState.created || 0}__${jobState.job_id}`;
-
-            jobsByRetryParent[rowIx] = {
-                job_id: rowIx,
-                jobs: {},
-            };
-            jobsByRetryParent[rowIx].jobs[currentJobIx] = jobState;
-            // do we have job info for it?
-            if (!jobManager.model.getItem(`exec.jobs.info.${rowIx}`)) {
-                jobManager.requestJobInfo([rowIx]);
-            }
-
-            // is this a job that has been retried?
-            if (jobState.retry_ids && jobState.retry_ids.length) {
-                return;
-            }
-            // this is a new job that is part of the same batch
-            dataTable.DataTable().row.add(jobState).draw();
-            addTableClickListeners();
-        }
+        // HANDLERS
 
         /**
          * Update the table with a new jobState object
          * @param {object} jobState
          */
-        function updateJobStatusInTable(jobState) {
+        updateJobStatusInTable(jobState) {
             const rowIx = jobState.retry_parent || jobState.job_id;
 
-            if (!jobsByRetryParent[rowIx]) {
-                return addTableRow(jobState);
+            if (!this.jobsByRetryParent[rowIx]) {
+                return this.addTableRow(jobState);
             }
 
             const jobIx = `${jobState.created || 0}__${jobState.job_id}`;
-            jobsByRetryParent[rowIx].jobs[jobIx] = jobState;
+            this.jobsByRetryParent[rowIx].jobs[jobIx] = jobState;
 
             // make sure that this job is the most recent version
-            const sortedJobs = Object.keys(jobsByRetryParent[rowIx].jobs).sort();
+            const sortedJobs = Object.keys(this.jobsByRetryParent[rowIx].jobs).sort();
             const lastJob = sortedJobs[sortedJobs.length - 1];
-            const jobUpdateData = jobsByRetryParent[rowIx].jobs[lastJob];
+            const jobUpdateData = this.jobsByRetryParent[rowIx].jobs[lastJob];
             // irrelevant update -- data is not for the most recent retry
             if (jobUpdateData.job_id !== jobState.job_id) {
                 return;
@@ -595,7 +687,7 @@ define([
             // select the appropriate row
             try {
                 // update the row
-                dataTable.DataTable().row(`#job_${rowIx}`).data(jobState);
+                this.dataTable.DataTable().row(`#job_${rowIx}`).data(jobState);
             } catch (e) {
                 console.error('Error trying to update jobs table:', e);
             }
@@ -606,110 +698,50 @@ define([
          * @param {object} _ - job manager context
          * @param {object} message
          */
-        function handleJobInfo(_, message) {
+        handleJobInfo(_, message) {
             const { jobId, jobInfo } = message;
-            const jobState = jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
-            const appData = jobManager.model.getItem('app');
+            const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+            const appData = this.jobManager.model.getItem('app');
             const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
 
             const jobDisplayData = generateJobDisplayData({
                 jobInfo,
-                fileTypesDisplay,
+                fileTypesDisplay: this.fileTypesDisplay,
                 appData,
-                typesToFiles: config.typesToFiles,
+                typesToFiles: this.config.typesToFiles,
             });
-            jobManager.model.setItem(`exec.jobs.paramDisplayData.${rowIx}`, jobDisplayData);
+            this.jobManager.model.setItem(`exec.jobs.paramDisplayData.${rowIx}`, jobDisplayData);
 
             // update the table
-            dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
+            this.dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
         }
 
-        function handleJobError(_, message) {
+        /**
+         * parse a job error message
+         * @param {object} _ - job manager context
+         * @param {object} message
+         */
+        handleJobError(_, message) {
             const { jobId, error } = message;
             if (!error) {
                 return;
             }
-            const jobState = jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+            const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
 
-            errors[rowIx] = error;
+            this.errors[rowIx] = error;
 
             // update the table
-            dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
+            this.dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
             $('.' + `${cssBaseClass}__icon--action_warning`).popover({
                 placement: 'auto',
                 trigger: 'hover focus',
             });
         }
-
-        /**
-         *
-         * @param {object} args  -- with key
-         *      node:     DOM node to attach to
-         *
-         * @returns {Promise} started JobStatusTable widget
-         */
-        function start(args) {
-            const requiredArgs = ['node'];
-            if (!requiredArgs.every((arg) => arg in args && args[arg])) {
-                throw new Error('start argument must have these keys: ' + requiredArgs.join(', '));
-            }
-
-            const indexedJobs = jobManager.model.getItem('exec.jobs.byId');
-            if (!indexedJobs || !Object.keys(indexedJobs).length) {
-                throw new Error('Must provide at least one job to show the job status table');
-            }
-            const jobs = Object.values(indexedJobs);
-
-            container = args.node;
-            container.innerHTML = [
-                div({
-                    class: `${cssBaseClass}__dropdown_container pull-right`,
-                }),
-                div(
-                    {
-                        class: `${cssBaseClass}__table_instructions`,
-                    },
-                    'Click on a row to view the job details and logs.'
-                ),
-                createTable(),
-            ].join('\n');
-
-            return Promise.try(() => {
-                // start the dropdown widget
-                dropdownWidget = JobActionDropdown.make(config);
-                return dropdownWidget.start({
-                    node: container.querySelector(`.${cssBaseClass}__dropdown_container`),
-                });
-            }).then(() => {
-                renderTable(jobs);
-                setUpListeners(jobs);
-                addTableClickListeners();
-            });
-        }
-
-        function stop() {
-            Object.values(widgetsById).map((widget) => widget.stop());
-            jobManager.removeEventHandler('modelUpdate', 'table');
-            jobManager.removeEventHandler('modelUpdate', 'dropdown');
-            jobManager.removeEventHandler('job-info', 'jobStatusTable_info');
-            jobManager.removeEventHandler('job-error', 'jobStateTable_error');
-            container.innerHTML = '';
-            if (dropdownWidget) {
-                return dropdownWidget.stop();
-            }
-        }
-
-        return {
-            start,
-            stop,
-        };
     }
 
     return {
-        make: function (config) {
-            return factory(config);
-        },
+        JobStatusTable,
         generateJobDisplayData,
         cssBaseClass,
     };

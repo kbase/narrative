@@ -325,8 +325,6 @@ define([
                     expect(() => {
                         this.jobManagerInstance.addEventHandler(event, { shout: { key: 'value' } });
                     }).toThrowError(recheckHandlersErr + 'shout');
-                    //     /addEventHandler: handlers must be of type function. Recheck these handlers: shout/
-                    // );
                     expectHandlersDefined(this.jobManagerInstance, event, false, ['shout']);
                     expect(this.jobManagerInstance.handlers[event]).toEqual({});
                 });

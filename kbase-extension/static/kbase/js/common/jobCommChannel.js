@@ -127,7 +127,7 @@ define([
             return Object.keys(requestTranslation);
         },
         validOutgoingMessageTypes: function () {
-            return Object.values(RESPONSES).concat(['job-error']);
+            return Object.values(RESPONSES);
         },
     };
 
@@ -243,10 +243,9 @@ define([
                 throw new Error(
                     'ERROR sending comm message: ' +
                         JSON.stringify({
-                            // error: err.toString(),
                             error: err,
-                            msgType: msgType,
-                            message: message,
+                            msgType,
+                            message,
                         })
                 );
             });

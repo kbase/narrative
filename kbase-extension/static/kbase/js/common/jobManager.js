@@ -83,10 +83,20 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          * (e.g. the message and job ID in the case of job listeners)
          *
          * @param {string} event - event that triggers the handler
-         * @param {object} handlerObject with the handler name as keys and the handler function as values
+         * @param {object|array} handlers
+         *              object: handlers has handler name as keys and the handler function as values
          *              if the handler function is already installed on the job manager,
          *              'null' can be supplied in place of the function
+         *              array: handlers is a list of handler names; these are assumed to be installed
+         *              on the job manager already
+         * Example:
          *
+         * jm.addEventListener('job-status', {
+         *      handlerA: () => {}, // this function gets added to the job manager
+         *      handlerB: null,     // this handler function is expected to exist
+         * })
+         * // handlers assumed to already exist:
+         * jm.addEventListener('job-error', ['handlerA', 'handlerB']);
          */
 
         addEventHandler(event, handlers) {

@@ -32,7 +32,7 @@ define([
         null,
     ];
 
-    fdescribe('test the bulk import cell results tab', () => {
+    describe('test the bulk import cell results tab', () => {
         let container;
         beforeAll(() => {
             Jupyter.narrative = {

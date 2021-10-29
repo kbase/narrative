@@ -176,9 +176,9 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             const reportNode = document.createElement('div');
             const containerNode = document.createElement('div');
             containerNode.classList.add('hidden', 'kb-result-tab__container');
+            container.appendChild(containerNode);
             return fetchReportData(reports)
                 .then((reportData) => {
-                    container.appendChild(containerNode);
                     containerNode.appendChild(objectNode);
                     containerNode.appendChild(reportNode);
 
@@ -189,13 +189,16 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                 })
                 .then(() => {
                     events.attachEvents(container);
-                    containerNode.classList.remove('hidden');
                 })
                 .catch((error) => {
-                    console.error('An error occurred while starting the report tab', error);
+                    console.error('An error occurred while starting the results tab', error);
+                    const errorNode = document.createElement('div');
+                    errorNode.innerHTML = "OMG ERROR'D!";
+                    containerNode.appendChild(errorNode);
                 })
                 .finally(() => {
                     container.removeChild(spinnerNode);
+                    containerNode.classList.remove('hidden');
                 });
         }
 

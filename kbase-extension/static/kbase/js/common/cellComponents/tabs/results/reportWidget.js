@@ -31,24 +31,45 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
          */
         function renderReports(objectData, events) {
             return objectData.map((objInfo) => {
-                return div([
-                    a(
+                // clean up objInfo before rendering / passing to toggleReportView
+                let name = objInfo.name;
+                if (!name) {
+                    if (objInfo.ref) {
+                        name = `Object ${objInfo.ref} not found, may have been deleted`;
+                    } else {
+                        name = 'Object not found';
+                    }
+                }
+
+                let reportElem = '';
+                if (objInfo.reportRef) {
+                    reportElem = a(
                         {
                             class: 'kb-report__toggle collapsed',
                             dataToggle: 'collapse',
                             ariaExpanded: false,
                             id: events.addEvent({
                                 type: 'click',
-                                handler: (e) => toggleReportView(e, objInfo),
+                                handler: (e) => toggleReportView(e, objInfo.reportRef),
                             }),
                         },
-                        objInfo.name
-                    ),
-                ]);
+                        name
+                    );
+                } else {
+                    reportElem = name + ' (report not found)';
+                }
+                return div([reportElem]);
             });
         }
 
-        function toggleReportView(e, objInfo) {
+        /**
+         * Toggles viewing of a report. If it's currently viewed, then this will remove the
+         * report view. Otherwise, it will instantiate a new report view widget.
+         * @param {Event} e - a DOM event that triggered this report.
+         * @param {String} reportRef - from the arg, same as used to render the list of reports
+         *  this is required to have the reportRef key, which is an object UPA
+         */
+        function toggleReportView(e, reportRef) {
             const toggleHeader = e.target;
             if (!toggleHeader.classList.contains('collapsed')) {
                 toggleHeader.parentElement.lastElementChild.remove();
@@ -56,14 +77,15 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                 const reportContainer = document.createElement('div');
                 toggleHeader.parentElement.appendChild(reportContainer);
                 new KBaseReportView($(reportContainer), {
-                    report_ref: objInfo.reportRef,
+                    report_ref: reportRef,
+                    autoRender: false,
                 }).loadAndRender();
             }
             toggleHeader.classList.toggle('collapsed');
         }
 
         /**
-         *
+         * Attaches the widget to its DOM node and renders the report options.
          * @param {object} arg
          * - node - the DOM node to attach to
          * - objectData - an array of report references to render from
@@ -81,17 +103,19 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                 class: 'kb-reports-view',
             });
 
-            ui.setContent(
-                'reports-view',
-                ui.buildCollapsiblePanel({
+            let content = '';
+            if (arg.objectData && arg.objectData.length) {
+                content = ui.buildCollapsiblePanel({
                     title: 'Reports',
                     name: 'reports-view-toggle',
                     hidden: false,
                     type: 'default',
                     classes: ['kb-panel-container'],
                     body: renderReports(arg.objectData, events),
-                })
-            );
+                });
+            }
+
+            ui.setContent('reports-view', content);
 
             events.attachEvents(container);
         }

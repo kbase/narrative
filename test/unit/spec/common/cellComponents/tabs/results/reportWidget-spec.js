@@ -144,8 +144,67 @@ define([
             expect(toggleNode.nextSibling).toBeNull();
         });
 
-        it('should start with deleted data objects', async () => {});
+        it('should start with empty data', async function () {
+            await this.widget.start({
+                node: container,
+                objectData: [],
+            });
+            const mainNode = container.querySelector('div.kb-reports-view');
+            expect(mainNode.innerHTML).toBe('');
+        });
 
-        it('should start with objects with missing data', async () => {});
+        [
+            {
+                label: 'missing name',
+                obj: { reportRef: '1/2/3' },
+                expect: {
+                    hasToggle: true,
+                    text: 'Object not found',
+                },
+            },
+            {
+                label: 'missing report',
+                obj: { name: 'some_object' },
+                expect: {
+                    hasToggle: false,
+                    text: 'some_object (report not found)',
+                },
+            },
+            {
+                label: 'missing name, ref, and report',
+                obj: {},
+                expect: {
+                    hasToggle: false,
+                    text: 'Object not found (report not found)',
+                },
+            },
+            {
+                label: 'missing name and report',
+                obj: { ref: '1/2/3', reportRef: '4/5/6' },
+                expect: {
+                    hasToggle: true,
+                    text: 'Object 1/2/3 not found, may have been deleted',
+                },
+            },
+        ].forEach((testCase) => {
+            it(`should show report objects with a ${testCase.label}`, async function () {
+                await this.widget.start({
+                    node: container,
+                    objectData: [testCase.obj],
+                });
+                const listParent = container.querySelector(
+                    '.kb-reports-view .panel-body[data-element="body"]'
+                );
+                expect(listParent.childElementCount).toEqual(1);
+                const reportItem = listParent.firstChild;
+                if (testCase.expect.hasToggle) {
+                    const toggleNode = reportItem.querySelector('a.kb-report__toggle');
+                    expect(toggleNode).not.toBeNull();
+                    expect(toggleNode.innerHTML).toContain(testCase.expect.text);
+                } else {
+                    expect(reportItem.innerHTML).toBe(testCase.expect.text);
+                }
+            });
+        });
     });
 });

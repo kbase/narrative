@@ -193,7 +193,8 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                 .catch((error) => {
                     console.error('An error occurred while starting the results tab', error);
                     const errorNode = document.createElement('div');
-                    errorNode.innerHTML = "OMG ERROR'D!";
+                    errorNode.innerHTML =
+                        'An error occurred preventing results from being displayed.';
                     containerNode.appendChild(errorNode);
                 })
                 .finally(() => {

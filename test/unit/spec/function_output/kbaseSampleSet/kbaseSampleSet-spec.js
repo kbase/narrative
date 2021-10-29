@@ -329,7 +329,7 @@ define([
         });
     });
 
-    fdescribe('The kbaseSampleSet viewer widget with an ENIGMA sample set', () => {
+    describe('The kbaseSampleSet viewer widget with an ENIGMA sample set', () => {
         let mock = null;
         beforeAll(async () => {
             mock = new MockWorker();

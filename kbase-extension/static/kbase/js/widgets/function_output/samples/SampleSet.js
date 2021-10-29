@@ -157,7 +157,7 @@ define([
             const columnGroups = [];
             const headerFields = [];
 
-            // Here we dynamiclly create an group to hold non-metadata columns.
+            // Here we dynamically create a group to hold non-metadata columns.
             columnGroups.push({
                 name: 'rowInfo',
                 title: 'Sample',

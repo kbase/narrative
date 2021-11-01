@@ -10,6 +10,21 @@ Code Changes
 
 - SAM-40 - Add Name/ID column to SampleSet viewer
 
+Dependency Changes
+- Python dependency updates
+  - bokeh 2.3.3 -> 2.4.1
+  - coverage 5.5. -> 6.1.1
+  - decorator 5.0.9 -> 5.1.0
+  - jinja2 3.0.1 -> 3.0.2
+  - jsonschema 3.2.0 -> 4.1.2
+  - pillow 8.3.2 -> 8.4.0
+  - pymongo 3.12.0 -> 3.12.1
+  - pyyaml 5.4.1 -> 6.0
+  - pytest-cov 2.12.1 -> 3.0.0
+  - setuptools 57.4.0 -> 58.4.0
+  - sympy 1.8 -> 1.9
+  - terminado 0.11.1 -> 0.12.1
+
 ### Version 4.6.0
 Code changes
 - DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.

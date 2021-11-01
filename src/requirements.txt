@@ -1,4 +1,4 @@
-bokeh==2.3.3
+bokeh==2.4.1
 chart_studio==1.1.0
 coverage==5.5
 decorator==5.0.9

@@ -6,7 +6,7 @@ define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscor
 
     describe('app cell states', () => {
         const uiTabs = ['info', 'configure', 'viewConfigure', 'jobStatus', 'results', 'error'];
-        const uiKeys = ['tabs', 'actionButton', 'elements', 'appStatus', 'label', 'message'];
+        const uiKeys = ['tabs', 'actionButton'];
         const stateKeys = ['next', 'state', 'ui'];
         const states = AppCellStates.appStates;
 
@@ -49,7 +49,9 @@ define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscor
                             .withContext(`duplicate next state: ${JSON.stringify(next[i])}`)
                             .toBeFalse();
                     }
-                    const matchingState = states.filter((state) => _.isEqual(next[i], state.state));
+                    const matchingState = states.filter((_state) =>
+                        _.isEqual(next[i], _state.state)
+                    );
                     expect(matchingState.length).toBe(1);
                 }
             });

@@ -7,6 +7,7 @@ define(
         'uuid',
         'base/js/namespace',
         'common/runtime',
+        'common/dialogMessages',
         'common/events',
         'common/error',
         'common/jupyter',
@@ -43,6 +44,7 @@ define(
         Uuid,
         Jupyter,
         Runtime,
+        DialogMessages,
         Events,
         ToErr,
         Narrative,
@@ -77,7 +79,6 @@ define(
             span = t('span'),
             a = t('a'),
             p = t('p'),
-            blockquote = t('blockquote'),
             cssCellType = 'kb-app-cell';
 
         function factory(config) {
@@ -123,6 +124,7 @@ define(
                             label: 'Reset',
                         },
                         resetApp: {
+                            // only occurs when there is an internal error
                             help: 'Reset the app and return to Edit mode',
                             type: 'default',
                             classes: ['-reset'],
@@ -133,6 +135,37 @@ define(
                             type: 'danger',
                             classes: ['-cancel'],
                             label: 'Offline',
+                        },
+                    },
+                },
+                controlBarTabs = {
+                    selected: 'configure',
+                    selectedTab: null,
+                    tabs: {
+                        configure: {
+                            label: 'Configure',
+                            widget: configureWidget(),
+                        },
+                        viewConfigure: {
+                            label: 'View Configure',
+                            widget: viewConfigureWidget(),
+                        },
+                        info: {
+                            label: 'Info',
+                            widget: infoTabWidget,
+                        },
+                        jobStatus: {
+                            label: 'Job Status',
+                            widget: logTabWidget,
+                        },
+                        results: {
+                            label: 'Result',
+                            widget: resultsTabWidget,
+                        },
+                        error: {
+                            label: 'Error',
+                            type: 'danger',
+                            widget: errorTabWidget,
                         },
                     },
                 },
@@ -152,7 +185,6 @@ define(
                 ui,
                 actionButtonWidget,
                 fsm,
-                controlBarTabs = {},
                 selectedJobId,
                 readOnly = false,
                 viewOnly = false;
@@ -446,27 +478,8 @@ define(
                 };
             }
 
-            function loadWidget(name) {
-                return new Promise((resolve, reject) => {
-                    require('./tabs/' + name, (Widget) => {
-                        resolve(Widget);
-                    }, (err) => {
-                        reject(err);
-                    });
-                });
-            }
-
             function startTab(tabId) {
                 const selectedTab = controlBarTabs.tabs[tabId];
-                if (selectedTab.widgetModule) {
-                    return loadWidget(selectedTab.widgetModule).then((Widget) => {
-                        controlBarTabs.selectedTab = {
-                            id: tabId,
-                            widget: Widget.make(),
-                        };
-                        return _startTab(tabId, { jobId: selectedJobId });
-                    });
-                }
 
                 controlBarTabs.selectedTab = {
                     id: tabId,
@@ -485,6 +498,7 @@ define(
                 node.classList.add(`kb-app-cell-tab-pane__container--${tabId}`, 'clearfix');
                 ui.getElement('body.widget.tab-pane.widget').appendChild(node);
                 startArgs.node = node;
+                startArgs.bus = runtime.bus();
                 return controlBarTabs.selectedTab.widget.start(startArgs);
             }
 
@@ -607,37 +621,6 @@ define(
                         userSelectedTab = true;
                     });
             }
-
-            controlBarTabs = {
-                selectedTab: null,
-                tabs: {
-                    configure: {
-                        label: 'Configure',
-                        widget: configureWidget(),
-                    },
-                    viewConfigure: {
-                        label: 'View Configure',
-                        widget: viewConfigureWidget(),
-                    },
-                    info: {
-                        label: 'Info',
-                        widget: infoTabWidget,
-                    },
-                    jobStatus: {
-                        label: 'Job Status',
-                        widget: logTabWidget,
-                    },
-                    results: {
-                        label: 'Result',
-                        widget: resultsTabWidget,
-                    },
-                    error: {
-                        label: 'Error',
-                        type: 'danger',
-                        widget: errorTabWidget,
-                    },
-                },
-            };
 
             // DATA API
 
@@ -1147,10 +1130,10 @@ define(
                     let tabState;
                     if (tab instanceof Array) {
                         tabState = tab.filter((mode) => {
-                            if (mode.selector.viewOnly && viewOnly) {
-                                return true;
-                            }
-                            if (!mode.selector.viewOnly && !viewOnly) {
+                            if (
+                                (mode.selector.viewOnly && viewOnly) ||
+                                (!mode.selector.viewOnly && !viewOnly)
+                            ) {
                                 return true;
                             }
                         })[0].settings;
@@ -1227,67 +1210,35 @@ define(
                 });
             }
 
-            function resetToEditMode() {
+            // Reset the app to edit mode; if a new state is not supplied, it is assumed that the
+            // existing app params are complete and validated.
+            function resetToEditMode(newState) {
                 // only do this if we are not editing.
                 model.deleteItem('exec');
-
-                // TODO: evaluate the params again before we do this.
-                fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
+                if (!newState) {
+                    // TODO: evaluate the params again before we do this.
+                    newState = { mode: 'editing', params: 'complete', code: 'built' };
+                }
+                fsm.newState(newState);
                 ui.setContent('run-control-panel.execMessage', '');
                 clearOutput();
                 renderUI();
             }
 
-            function resetAppAndEdit() {
-                // only do this if we are not editing.
-                model.deleteItem('exec');
-
-                // TODO: evaluate the params again before we do this.
-                fsm.newState({ mode: 'editing', params: 'incomplete' });
-                clearOutput();
-                renderUI();
-            }
-
             function doRerun() {
-                const confirmationMessage = div([
-                    p(
-                        'This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'
-                    ),
-                    p(
-                        'Any output you have already produced will be left intact in the Narrative and Data Panel'
-                    ),
-                    p('Proceed to Reset and resume editing?'),
-                ]);
-                ui.showConfirmDialog({
-                    title: 'Reset and resume editing?',
-                    body: confirmationMessage,
-                }).then((confirmed) => {
-                    if (!confirmed) {
-                        return;
+                DialogMessages.showDialog({ action: 'appRerun' }).then((confirmed) => {
+                    if (confirmed) {
+                        resetToEditMode();
                     }
-
-                    // Remove all of the execution state when we reset the app.
-                    resetToEditMode();
                 });
             }
 
             function doResetApp() {
-                const confirmationMessage = div([
-                    p(
-                        'This action will clear all parameters, run statistics, and logs and place the app into Edit mode.'
-                    ),
-                    p('Proceed to Reset the app and Resume Editing?'),
-                ]);
-                ui.showConfirmDialog({ title: 'Reset App?', body: confirmationMessage }).then(
-                    (confirmed) => {
-                        if (!confirmed) {
-                            return;
-                        }
-
-                        // Remove all of the execution state when we reset the app.
-                        resetAppAndEdit();
+                DialogMessages.showDialog({ action: 'appReset' }).then((confirmed) => {
+                    if (confirmed) {
+                        resetToEditMode({ mode: 'editing', params: 'incomplete' });
                     }
-                );
+                });
             }
 
             /*
@@ -1295,37 +1246,27 @@ define(
              *
              */
             function doCancel() {
-                const confirmationMessage = div([
-                    p([
-                        'Canceling the job will halt the job processing.',
-                        'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
-                    ]),
-                    p('Continue to Cancel the running job?'),
-                ]);
-                ui.showConfirmDialog({ title: 'Cancel Job?', body: confirmationMessage }).then(
-                    (confirmed) => {
-                        if (!confirmed) {
-                            return;
-                        }
-
-                        const jobState = model.getItem('exec.jobState');
-                        if (jobState) {
-                            cancelJob(jobState.job_id);
-
-                            fsm.newState({ mode: 'canceling' });
-                            // the job will be deleted form the notebook when the job cancellation
-                            // event is received.
-                        } else {
-                            // Hmm this is a rather odd case, but it has been seen in the wild.
-                            // E.g. it could (logically) occur during launch phase (although the cancel button should not be available.)
-                            // In erroneous conditions it could occur if a job failed or was
-                            // cancelled but the state machine got confused.
-                            model.deleteItem('exec');
-                            fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-                        }
-                        renderUI();
+                DialogMessages.showDialog({ action: 'cancelApp' }).then((confirmed) => {
+                    if (!confirmed) {
+                        return;
                     }
-                );
+
+                    const jobState = model.getItem('exec.jobState');
+                    if (jobState) {
+                        // the job status listener will continue to listen for updates
+                        // so the job status is tracked that way
+                        cancelJob(jobState.job_id);
+                        fsm.newState({ mode: 'canceling' });
+                    } else {
+                        // Hmm this is a rather odd case, but it has been seen in the wild.
+                        // E.g. it could (logically) occur during launch phase (although the cancel button should not be available.)
+                        // In erroneous conditions it could occur if a job failed or was
+                        // cancelled but the state machine got confused.
+                        model.deleteItem('exec');
+                        fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
+                    }
+                    renderUI();
+                });
             }
 
             function updateFromLaunchEvent(message) {
@@ -1379,26 +1320,12 @@ define(
                             stopListeningForJobMessages();
                             return { mode: 'canceled' };
                         case 'error':
+                        case 'does_not_exist':
                             stopListeningForJobMessages();
 
-                            // Due to the coarse granularity of job status
-                            // messages, we can't rely on the prior state
-                            // to inform us about what processing stage the
-                            // error occurred in -- we need to inspect the job state.
-                            if (jobState.running) {
-                                return {
-                                    mode: 'error',
-                                    stage: 'running',
-                                };
-                            }
-                            if (jobState.updated) {
-                                return {
-                                    mode: 'error',
-                                    stage: 'queued',
-                                };
-                            }
                             return {
                                 mode: 'error',
+                                stage: 'runtime',
                             };
                         default:
                             throw new Error('Invalid job state ' + jobState.status);
@@ -1410,6 +1337,7 @@ define(
                 }
                 renderUI();
             }
+
             function doRun() {
                 if (readOnly) {
                     console.warn('run request ignored in readOnly mode');
@@ -1478,88 +1406,52 @@ define(
             let jobListeners = [];
 
             function startListeningForJobMessages(jobId) {
-                let ev = runtime.bus().listen({
-                    channel: {
-                        jobId,
-                    },
-                    key: {
-                        type: 'job-status',
-                    },
-                    handle: function (message) {
-                        const existingState = model.getItem('exec.jobState'),
-                            newJobState = message.jobState,
-                            { outputWidgetInfo } = message,
-                            forceRender =
-                                !Jobs.isValidJobStateObject(existingState) &&
-                                Jobs.isValidJobStateObject(newJobState);
-                        if (!existingState || !_.isEqual(existingState, newJobState)) {
-                            model.setItem('exec.jobState', newJobState);
-                            if (outputWidgetInfo) {
-                                model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
-                            }
-
-                            // Now we send the job state on the cell bus, generally.
-                            // The model is that a cell can only have one job active at a time.
-                            // Thus we can just emit the state of the current job globally
-                            // on the cell bus for those widgets interested.
-                            cellBus.emit('job-state', {
-                                jobState: newJobState,
-                            });
-                        } else {
-                            cellBus.emit('job-state-updated', {
-                                jobId: newJobState.job_id,
-                            });
-                        }
-
-                        model.setItem('exec.jobStateUpdated', new Date().getTime());
-
-                        updateFromJobState(newJobState, forceRender);
-                    },
-                });
-                jobListeners.push(ev);
-
-                ev = runtime.bus().listen({
-                    channel: {
-                        jobId,
-                    },
-                    key: {
-                        type: 'job-canceled',
-                    },
-                    handle: function () {
-                        //  reset the cell into edit mode
-                        const state = fsm.getCurrentState();
-                        if (state.state.mode === 'editing') {
-                            console.warn('in edit mode, so not resetting ui');
-                            return;
-                        }
-                        resetToEditMode();
-                    },
-                });
-                jobListeners.push(ev);
-
-                ev = runtime.bus().listen({
-                    channel: {
-                        jobId,
-                    },
-                    key: {
-                        type: 'job-does-not-exist',
-                    },
-                    handle: function () {
-                        //  reset the cell into edit mode
-                        const state = fsm.getCurrentState();
-                        if (state.state.mode === 'editing') {
-                            console.warn('in edit mode, so not resetting ui');
-                            return;
-                        }
-
-                        resetToEditMode();
-                    },
-                });
-                jobListeners.push(ev);
+                jobListeners.push(
+                    runtime.bus().listen({
+                        channel: {
+                            jobId,
+                        },
+                        key: {
+                            type: 'job-status',
+                        },
+                        handle: doJobStatus,
+                    })
+                );
 
                 runtime.bus().emit('request-job-updates-start', {
                     jobId,
                 });
+            }
+
+            function doJobStatus(message) {
+                const existingState = model.getItem('exec.jobState'),
+                    newJobState = message.jobState,
+                    { outputWidgetInfo } = message,
+                    forceRender =
+                        !Jobs.isValidJobStateObject(existingState) &&
+                        Jobs.isValidJobStateObject(newJobState);
+                if (!existingState || !_.isEqual(existingState, newJobState)) {
+                    model.setItem('exec.jobState', newJobState);
+                    if (outputWidgetInfo) {
+                        model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
+                    }
+
+                    // Now we send the job state on the cell bus, generally.
+                    // The model is that a cell can only have one job active at a time.
+                    // Thus we can just emit the state of the current job globally
+                    // on the cell bus for those widgets interested.
+                    cellBus.emit('job-state', {
+                        jobState: newJobState,
+                    });
+                } else {
+                    cellBus.emit('job-state-updated', {
+                        jobId: newJobState.job_id,
+                    });
+                }
+
+                model.setItem('exec.jobStateUpdated', new Date().getTime());
+
+                updateFromJobState(newJobState, forceRender);
             }
 
             function stopListeningForJobMessages() {
@@ -1699,6 +1591,7 @@ define(
 
             function doOnError() {
                 updateJobState();
+                ui.setContent('run-control-panel.execMessage', '');
             }
 
             function doExitError() {
@@ -1739,53 +1632,36 @@ define(
             }
 
             function doDeleteCell() {
-                const content = div([
-                    p([
-                        'Deleting this cell will not remove any output cells or data objects it may have created. ',
-                        'Any input parameters or other configuration of this cell will be lost.',
-                    ]),
-                    p(
-                        'Deleting this cell will also cancel any pending jobs, but will leave generated output intact'
-                    ),
-                    blockquote([
-                        'Note: It is not possible to "undo" the deletion of a cell, ',
-                        'but if the Narrative has not been saved you can refresh the browser window ',
-                        'to load the Narrative from its previous state.',
-                    ]),
-                    p('Continue to delete this app cell?'),
-                ]);
-                ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content }).then(
-                    (confirmed) => {
-                        if (!confirmed) {
-                            return;
-                        }
-
-                        const jobState = model.getItem('exec.jobState');
-                        if (jobState) {
-                            cancelJob(jobState.job_id);
-                        }
-
-                        // tear down all the sub widgets.
-                        // TODO: make all widget behavior consistent. Either message or promise.
-                        Object.keys(widgets).forEach((widgetId) => {
-                            try {
-                                const widget = widgets[widgetId];
-                                if (widget.stop) {
-                                    widget.stop();
-                                } else {
-                                    widget.instance.bus().send('stop');
-                                }
-                            } catch (ex) {
-                                console.error('ERROR stopping widget', widgetId, ex);
-                            }
-                        });
-
-                        stop();
-
-                        const cellIndex = Jupyter.notebook.find_cell_index(cell);
-                        Jupyter.notebook.delete_cell(cellIndex);
+                DialogMessages.showDialog({ action: 'deleteCell' }).then((confirmed) => {
+                    if (!confirmed) {
+                        return;
                     }
-                );
+
+                    const jobState = model.getItem('exec.jobState');
+                    if (jobState) {
+                        cancelJob(jobState.job_id);
+                    }
+
+                    // tear down all the sub widgets.
+                    // TODO: make all widget behavior consistent. Either message or promise.
+                    Object.keys(widgets).forEach((widgetId) => {
+                        try {
+                            const widget = widgets[widgetId];
+                            if (widget.stop) {
+                                widget.stop();
+                            } else {
+                                widget.instance.bus().send('stop');
+                            }
+                        } catch (ex) {
+                            console.error('ERROR stopping widget', widgetId, ex);
+                        }
+                    });
+
+                    stop();
+
+                    const cellIndex = Jupyter.notebook.find_cell_index(cell);
+                    Jupyter.notebook.delete_cell(cellIndex);
+                });
             }
 
             function start() {
@@ -2168,14 +2044,13 @@ define(
                         // Initial job state listening.
                         switch (fsm.getCurrentState().state.mode) {
                             case 'execute-requested':
-                                // alert('started in "sending" state?');
                                 break;
                             case 'editing':
                                 break;
                             case 'processing':
                             case 'error':
-                                startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                requestJobStatus(model.getItem('exec.jobState.job_id'));
+                                startListeningForJobMessages(jobState.job_id);
+                                requestJobStatus(jobState.job_id);
                                 break;
                             case 'success':
                                 break;

@@ -67,8 +67,8 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                     [buildTabButtons(events)]
                 );
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -142,7 +142,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                 container = args.node;
                 ui = UI.make({
                     node: container,
-                    bus: bus,
+                    bus,
                 });
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
@@ -155,9 +155,9 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
         }
 
         return {
-            start: start,
-            stop: stop,
-            setState: setState,
+            start,
+            stop,
+            setState,
         };
     }
 

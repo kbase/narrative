@@ -54,19 +54,17 @@ define([
                     thead(tr([th('Created Object Name'), th('Type'), th('Description')])),
                     tbody([
                         ...objectData.map((obj) => {
-                            const name = obj.name
-                                ? obj.name
-                                : obj.wsInfo
-                                ? obj.wsInfo[1]
-                                : 'Unknown object name';
-                            const type = obj.type
-                                ? obj.type
-                                : obj.wsInfo
-                                ? obj.wsInfo[2]
-                                : 'Missing type';
+                            let name = obj.name;
+                            if (!name) {
+                                name = obj.wsInfo ? obj.wsInfo[1] : 'Unknown object name';
+                            }
+                            let type = obj.type;
+                            if (!type) {
+                                type = obj.wsInfo ? obj.wsInfo[2] : 'Missing type';
+                            }
                             const parsedType = APIUtil.parseWorkspaceType(type) || { type };
                             const description = obj.description || 'Missing description';
-                            let objLink = '';
+                            let objLink = name;
                             if (obj.wsInfo) {
                                 objLink = a(
                                     {
@@ -83,8 +81,6 @@ define([
                                     },
                                     [name]
                                 );
-                            } else {
-                                objLink = name;
                             }
                             return tr([td(objLink), td(parsedType.type), td(description)]);
                         }),

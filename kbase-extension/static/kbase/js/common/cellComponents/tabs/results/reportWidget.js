@@ -41,7 +41,7 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                     }
                 }
 
-                let reportElem = '';
+                let reportElem = name + ' (report not found)';
                 if (objInfo.reportRef) {
                     reportElem = a(
                         {
@@ -55,8 +55,6 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                         },
                         name
                     );
-                } else {
-                    reportElem = name + ' (report not found)';
                 }
                 return div([reportElem]);
             });

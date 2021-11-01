@@ -149,13 +149,13 @@ define(['underscore', 'common/runtime'], (_, Runtime) => {
         // API
 
         const api = Object.freeze({
-            start: start,
-            stop: stop,
-            newState: newState,
-            updateState: updateState,
-            getCurrentState: getCurrentState,
-            findState: findState,
-            bus: bus,
+            start,
+            stop,
+            newState,
+            updateState,
+            getCurrentState,
+            findState,
+            bus,
         });
 
         return api;

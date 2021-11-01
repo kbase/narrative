@@ -3,7 +3,7 @@
  */
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/ui',
     'common/runtime',
     'util/jobLogViewer',
@@ -18,15 +18,11 @@ define([
         div = t('div');
 
     function factory(config) {
-        // The top level node used by this widget.
-        let container;
-
-        // The handy UI module interface to this container.
-        let ui;
+        let container, // The top level node used by this widget
+            ui, // UI module interface to this container
+            selectedJobId = config.jobId;
         const widgets = {},
             { model } = config;
-        let queueListener,
-            selectedJobId = config.jobId;
 
         /**
          * Used only if we're in Batch mode.
@@ -78,15 +74,6 @@ define([
             return div({}, [list, jobStatus]);
         }
 
-        function queueLayout() {
-            return div(
-                {
-                    dataElement: 'kb-job-status-wrapper',
-                },
-                ['This job is currently queued for execution and will start running soon.']
-            );
-        }
-
         function getSelectedJobId() {
             return config.clickedId;
         }
@@ -97,13 +84,13 @@ define([
 
                 //display widgets
                 widgets.params = JobInputParams.make({
-                    model: model,
+                    model,
                 });
                 widgets.log = new JobLogViewer({ showHistory: true });
 
                 //rows as widgets to get live update
                 widgets.stateList = JobStateList.make({
-                    model: model,
+                    model,
                 });
 
                 const childJobs = model.getItem('exec.jobState.child_jobs');
@@ -121,13 +108,13 @@ define([
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
-                            jobId: jobId,
+                            jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                             isParentJob: arg.isParentJob,
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: jobId,
+                            jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                         }),
                     ]);
@@ -157,31 +144,6 @@ define([
                 node: container,
             });
 
-            if (model.getItem('exec.jobState.status') === 'queued') {
-                container.innerHTML = queueLayout();
-                queueListener = Runtime.make()
-                    .bus()
-                    .listen({
-                        channel: {
-                            jobId: model.getItem('exec.jobState.job_id'),
-                        },
-                        key: {
-                            type: 'job-status',
-                        },
-                        handle: (message) => {
-                            if (message.jobState.status !== 'queued') {
-                                container.innerHTML = '';
-                                Runtime.make().bus().removeListener(queueListener);
-                                startNonQueued();
-                            }
-                        },
-                    });
-            } else {
-                startNonQueued();
-            }
-        }
-
-        function startNonQueued() {
             const childJobs = model.getItem('exec.jobState.child_jobs');
             if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
                 startBatch();
@@ -216,9 +178,9 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
-            getSelectedJobId: getSelectedJobId,
+            start,
+            stop,
+            getSelectedJobId,
         };
     }
 

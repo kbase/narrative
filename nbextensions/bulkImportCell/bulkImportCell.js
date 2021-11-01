@@ -951,7 +951,7 @@ define([
             }
 
             FSMBar.showFsmBar({
-                ui: ui,
+                ui,
                 state: {},
                 job: model.getItem('exec.jobState'),
             });
@@ -967,7 +967,7 @@ define([
         function buildControlPanel(events) {
             controlPanel = CellControlPanel.make({
                 bus: cellBus,
-                ui: ui,
+                ui,
                 action: {
                     runAction: runAction.bind(this),
                     actions: actionButtons,
@@ -989,7 +989,7 @@ define([
             });
 
             return cellTabs.start({
-                node: node,
+                node,
             });
         }
 
@@ -1040,8 +1040,8 @@ define([
                     ]
                 );
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 

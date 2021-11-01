@@ -73,8 +73,8 @@ define([
                 })
                 .then(() => {
                     // just make sure it renders the "Objects" and "Report" headers
-                    expect(container.innerHTML).toContain('Objects');
-                    expect(container.innerHTML).toContain('Report');
+                    expect(container.querySelector('.kb-created-objects')).not.toBeNull();
+                    expect(container.querySelector('.kb-reports-view')).not.toBeNull();
                 });
         });
 
@@ -122,6 +122,43 @@ define([
                     expect(reportNode).toBeDefined();
                     expect(reportNode.innerHTML).toContain('Test_contigs');
                 });
+        });
+
+        it('should render a brief error if the workspace call fails', async function () {
+            const workspaceClient = {
+                get_objects2: () => Promise.reject(new Error('workspace not available')),
+                get_object_info_new: () => Promise.reject(new Error('workspace not available')),
+            };
+            const resultsTab = ResultsTab.make({
+                model: this.model,
+                workspaceClient,
+            });
+
+            await resultsTab.start({ node: container });
+            expect(container.textContent).toBe(
+                'An error occurred preventing results from being displayed.'
+            );
+        });
+
+        it('should recover from seeing workspace missing data', async function () {
+            const workspaceClient = {
+                get_objects2: () =>
+                    Promise.resolve({
+                        data: [reportObject],
+                    }),
+                get_object_info_new: () => Promise.resolve([null]),
+            };
+            const resultsTab = ResultsTab.make({
+                model: this.model,
+                workspaceClient,
+            });
+
+            await resultsTab.start({ node: container });
+            const objNode = container.querySelector('div.kb-created-objects');
+            expect(objNode.innerHTML).toContain('Object 11/22/33 not found');
+
+            const reportNode = container.querySelector('div.kb-reports-view');
+            expect(reportNode.innerHTML).toContain('Object 11/22/33 not found');
         });
     });
 });

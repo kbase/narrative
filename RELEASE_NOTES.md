@@ -24,6 +24,27 @@ Dependency Changes
   - setuptools 57.4.0 -> 58.4.0
   - sympy 1.8 -> 1.9
   - terminado 0.11.1 -> 0.12.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.11.1 -> 7.16.3
+  - @wdio/cli 7.11.1 -> 7.16.3
+  - @wdio/local-runner 7.11.1 -> 7.16.3
+  - @wdio/mocha-framework 7.11.1 -> 7.16.3
+  - @wdio/selenium-standalone-service 7.10.1 -> 7.16.3
+  - @wdio/spec-reporter 7.10.1 -> 7.16.3
+  - chromedriver 93.0.1 -> 95.0.0
+  - commander 8.1.0 -> 8.3.0
+  - eslint 7.32.0 -> 8.1.0
+  - glob 7.1.7 -> 7.2.0
+  - husky 7.0.2 -> 7.0.4
+  - jasmine-core 3.9.0 -> 3.10.1
+  - karma 6.3.4 -> 6.3.6
+  - lint-staged 11.1.2 -> 11.2.6
+  - prettier 2.3.2 -> 2.4.1 
+  - selenium-standalone 7.1.0 -> 8.0.4
+  - selenium-webdriver 3.6.0 -> 4.0.0
+  - terser 5.7.2. -> 5.9.0
+  - wdio-chromedriver-service 7.2.0 -> 7.2.2
+  - webdriverio 7.11.1 -> 7.16.3
 
 ### Version 4.6.0
 Code changes

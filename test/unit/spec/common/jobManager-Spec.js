@@ -1538,13 +1538,20 @@ define([
                 );
                 expect(this.jobManagerInstance.listeners).toEqual({});
                 spyOn(this.jobManagerInstance.bus, 'emit');
-                this.jobManagerInstance.restoreFromSaved();
+
+                const response = this.jobManagerInstance.restoreFromSaved();
+                expect(response).toEqual('inProgress');
 
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
                     listenerArray: ['job-status', 'job-error'],
                 });
+                const expectedJobsById = {};
+                expectedJobsById[JobsData.batchParentJob.job_id] = JobsData.batchParentJob;
+                expect(this.jobManagerInstance.model.getItem('exec.jobs.byId')).toEqual(
+                    expectedJobsById
+                );
             });
 
             it('sets up the appropriate listeners even if child jobs are missing', function () {
@@ -1555,13 +1562,20 @@ define([
                 );
                 expect(this.jobManagerInstance.listeners).toEqual({});
                 spyOn(this.jobManagerInstance.bus, 'emit');
-                this.jobManagerInstance.restoreFromSaved();
+
+                const response = this.jobManagerInstance.restoreFromSaved();
+                expect(response).toEqual('inProgress');
 
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
                     listenerArray: ['job-status', 'job-error'],
                 });
+                const expectedJobsById = {};
+                expectedJobsById[JobsData.batchParentJob.job_id] = JobsData.batchParentJob;
+                expect(this.jobManagerInstance.model.getItem('exec.jobs.byId')).toEqual(
+                    expectedJobsById
+                );
             });
         });
 

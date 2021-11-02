@@ -4,6 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
+    'common/jobManager',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -17,6 +18,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
+    JobManagerModule,
     Runtime,
     Mocks,
     TestUtil,
@@ -26,6 +28,8 @@ define([
     Config
 ) => {
     'use strict';
+
+    const { JobManager } = JobManagerModule;
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
@@ -92,6 +96,9 @@ define([
             });
         }
 
+        if (args.noDataRefresh) {
+            spyOn(JobManager.prototype, '_forceDataRefresh').and.returnValue(args.state);
+        }
         const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
         return { cell, bulkImportCellInstance };
     }
@@ -489,6 +496,7 @@ define([
                     Jupyter.notebook = Mocks.buildMockNotebook();
                     spyOn(Jupyter.notebook, 'save_checkpoint');
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
+                    testCase.noDataRefresh = true;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
 
                     // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.

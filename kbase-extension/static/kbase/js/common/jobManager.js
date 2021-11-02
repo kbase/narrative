@@ -776,6 +776,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 ['status', 'error'].forEach((type) => {
                     this.addListener(`job-${type}`, allJobIds);
                 });
+
                 // request job updates
                 this.bus.emit('request-job-updates-start', { batchId });
             }
@@ -801,7 +802,13 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     allJobIds: Object.keys(allJobs),
                 });
 
-                return this.getFsmStateFromJobs();
+                return this._forceDataRefresh(batchJob);
+            }
+
+            _forceDataRefresh(jobArray) {
+                // delete all job data apart from the batch parent term to force a data refresh
+                Jobs.populateModelFromJobArray(this.model, jobArray);
+                return 'inProgress';
             }
 
             /**

@@ -44,7 +44,6 @@ require.config({
         yaml: 'ext_components/require-yaml/yaml',  //
         'js-yaml': 'ext_components/js-yaml/dist/js-yaml', //
 
-        // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
@@ -419,13 +418,13 @@ require.config({
         'jquery-dataTables': {
             deps: ['jquery', 'jquery-dataTables-base', 'bootstrap'],
         },
-        kbaseNarrativeAppCell: {
-            deps: [
-                'kbaseNarrativeMethodCell',
-                'kbaseNarrativeOutputCell',
-                'kbaseNarrativeCellMenu',
-            ],
-        },
+        // kbaseNarrativeAppCell: {
+        //     deps: [
+        //         'kbaseNarrativeMethodCell',
+        //         'kbaseNarrativeOutputCell',
+        //         'kbaseNarrativeCellMenu',
+        //     ],
+        // },
         kbaseNarrativeMethodCell: {
             deps: ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu'],
         },

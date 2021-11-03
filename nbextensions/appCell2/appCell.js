@@ -55,7 +55,6 @@ define([
          * - maximize: restore / maxmize the cell
          * - getIcon: figure out what Icon the cell should have
          * - renderIcon: put the fetched icon into the cell's view
-         * - showInfo: opens a dialog that shows the cell's info
          * - toggleBatch: toggles the alpha version of the batch mode (deprecated)
          */
         function specializeCell() {
@@ -103,15 +102,6 @@ define([
                 if (iconNode) {
                     iconNode.innerHTML = this.getIcon();
                 }
-            };
-            cell.showInfo = function () {
-                const app = utils.getCellMeta(cell, 'kbase.appCell.app');
-                appInfoDialog.show({
-                    id: app.spec.info.id,
-                    version: app.spec.info.ver,
-                    module: app.spec.info.module_name,
-                    tag: app.tag,
-                });
             };
             cell.toggleBatch = function () {
                 cellBus.emit('toggle-batch-mode');

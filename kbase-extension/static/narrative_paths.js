@@ -5,7 +5,7 @@ require.config({
     // with this one (kbase-profile/static)
     paths: {
         fileSaver: 'ext_components/file-saver/FileSaver.min',
-        bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
+        bluebird: '../../node_modules/bluebird/js/browser/bluebird.min', //'ext_components/bluebird/js/browser/bluebird.min',
         'bootstrap-slider': 'ext_components/seiyria-bootstrap-slider/dist/bootstrap-slider',
         'bootstrap-slider-css': 'ext_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider',
         'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',
@@ -22,7 +22,6 @@ require.config({
         'datatables.net-buttons-print':
             'ext_components/datatables.net-buttons/js/buttons.print.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
-        // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
         md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',

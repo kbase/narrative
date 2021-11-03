@@ -8,10 +8,10 @@ require.config({
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',  //
         'bootstrap-slider': 'ext_components/bootstrap-slider/dist/bootstrap-slider',  // min?
         'bootstrap-slider-css': 'ext_components/bootstrap-slider/dist/css/bootstrap-slider',  //
-        'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',  //
+        // 'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables',  //
         'jquery-dataTables': 'ext_components/datatables.net-bs/js/dataTables.bootstrap', // 'ext_components/datatables/media/js/dataTables.bootstrap.min',   // xxx
         'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',  //
-        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap',  //
+        // 'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap',  //
         'datatables.net-buttons': 'ext_components/datatables.net-buttons/js/dataTables.buttons.min',  //
         'datatables.net-buttons-bs':
             'ext_components/datatables.net-buttons-bs/js/buttons.bootstrap.min',  //
@@ -161,10 +161,11 @@ require.config({
         kbaseNarrativeError: 'kbase/js/widgets/function_output/kbaseNarrativeError',
         ipythonCellMenu: 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
-        // not yet ADMs, but still load with Require
         kbaseNarrativeAppCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
         kbaseNarrativeMethodCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
         kbaseNarrativeWorkspace: 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
+
+        // not an AMD, but load with require
         kbaseLogging: 'kbase/js/kbaseLogging',
         RGBColor: 'kbase/js/rgbcolor',
         kbStandaloneTable: 'kbase/js/widgets/kbStandaloneTable',
@@ -392,7 +393,9 @@ require.config({
     map: {
         '*': {
             css: 'ext_components/require-css/css',
+            'datatables.net-bs': 'jquery-dataTables'
         },
+
     },
 
     shim: {
@@ -412,19 +415,16 @@ require.config({
         'jquery-nearest': {
             deps: ['jquery'],
         },
-        'jquery-dataTables-base': {
-            deps: ['jquery'],
-        },
-        'jquery-dataTables': {
-            deps: ['jquery', 'jquery-dataTables-base', 'bootstrap'],
-        },
-        // kbaseNarrativeAppCell: {
-        //     deps: [
-        //         'kbaseNarrativeMethodCell',
-        //         'kbaseNarrativeOutputCell',
-        //         'kbaseNarrativeCellMenu',
-        //     ],
+        // 'jquery-dataTables-base': {
+        //     deps: ['jquery'],
         // },
+        'jquery-dataTables': {
+            deps: [
+                'jquery',
+                'datatables.net', //'jquery-dataTables-base',
+                'bootstrap'
+            ],
+        },
         kbaseNarrativeMethodCell: {
             deps: ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu'],
         },
@@ -476,7 +476,6 @@ require.config({
                 'jquery',
                 'kbwidget',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'KBModeling',
                 'KBaseFBA.FBAModel',
@@ -501,7 +500,6 @@ require.config({
                 'kbwidget',
                 'KBModeling',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'msPathway',
             ],

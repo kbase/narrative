@@ -10,8 +10,16 @@ const toolsToCopy = [
     ['msw/lib/umd/mockServiceWorker.js', 'msw/mockServiceWorker.js'],
 ];
 
-const pkg = fs.readFileSync('package.json', 'utf-8');
-const componentsToCopy = Object.keys(pkg.dependencies);
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+
+const extraComponents = [
+    'datatables.net',
+    'datatables.net-buttons',
+    'requirejs',
+    'requirejs-domready'
+];
+
+const componentsToCopy = Object.keys(pkg.dependencies).concat(extraComponents);
 
 for (const [from, to] of toolsToCopy) {
     const destPath = `${extToolsDir}/${to}`;
@@ -19,7 +27,6 @@ for (const [from, to] of toolsToCopy) {
     fs.copyFileSync(`${sourceDir}/${from}`, destPath);
 }
 
-componentsToCopy.forEach((component) => {
-    'use strict';
-    console.log(component);
-});
+for (const component of componentsToCopy) {
+    fs.cpSync(`${sourceDir}/${component}`, `${extComponentsDir}/${component}`, { recursive: true });
+}

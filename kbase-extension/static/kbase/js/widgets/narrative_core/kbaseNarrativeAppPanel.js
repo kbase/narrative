@@ -16,7 +16,7 @@ define([
     'util/bootstrapDialog',
     'util/bootstrapSearch',
     'text!kbase/templates/beta_warning_body.html',
-    'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+    'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/iframe_root/modules/data/categories.yml',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
     'base/js/namespace',

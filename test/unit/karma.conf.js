@@ -70,7 +70,7 @@ module.exports = function (config) {
             },
             {
                 pattern:
-                    'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+                    'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/iframe_root/modules/data/categories.yml',
                 included: false,
             },
         ],

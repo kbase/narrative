@@ -26,8 +26,6 @@ jobs:
       run: |
         npm ci
         npm run install-npm
-        # npm install bower
-        # ./node_modules/bower/bin/bower install
 
     - name: Install Narrative Application
       shell: bash -l {0}

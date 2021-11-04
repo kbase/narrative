@@ -99,8 +99,6 @@ then
     log "Installing front end build components with npm"
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
-    # log "Installing front end components with bower"
-    # npx bower install -V --allow-root --config.interactive=false 2>&1 | tee -a "${logfile}"
 
     # Install IPython
     # ---------------

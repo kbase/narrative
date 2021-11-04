@@ -28,5 +28,10 @@ for (const [from, to] of toolsToCopy) {
 }
 
 for (const component of componentsToCopy) {
+    // blow away the old version
+    if (fs.existsSync(`${extComponentsDir}/${component}`)) {
+        fs.rmSync(`${extComponentsDir}/${component}`, {recursive: true});
+    }
+    // copy in the new one
     fs.cpSync(`${sourceDir}/${component}`, `${extComponentsDir}/${component}`, { recursive: true });
 }

@@ -9,6 +9,16 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 Code Changes
 
 - SAM-40 - Add Name/ID column to SampleSet viewer
+- Migrated from Bower -> NPM, mostly kept the same versions, though some were unavoidably changed
+  - seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
+  - plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
+  - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
+  - requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
+  - kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
+  - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
+    - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
+    - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
+
 
 ### Version 4.6.0
 Code changes

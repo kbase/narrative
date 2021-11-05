@@ -6,14 +6,16 @@ This document describes how to release and deploy the Narrative Interface app on
 
 **_Table of Contents_**
 
--   [KBase Environments](#kbase-environments)
--   [Deployment flow overview](#deployment-flow-overview)
--   [Deploying CI](#deploying-ci)
--   [Stage a Final Release](#stage-a-final-release)
--   [Deploying Next, Appdev, and Prod](#deploying-next,-appdev-&-prod)
-    -   [Create Release Image](#create-release-image)
-    -   [Tag & Deploy Image](#tag-&-deploy-image)
--   [Image URLs](#image-urls)
+- [Narrative Development & Deployment](#narrative-development--deployment)
+  - [KBase Environments](#kbase-environments)
+  - [Deployment Flow Overview](#deployment-flow-overview)
+  - [Deploying CI](#deploying-ci)
+  - [Stage a Final Release](#stage-a-final-release)
+  - [Deploying Next, Appdev, & Prod](#deploying-next-appdev--prod)
+  - [Deploying Narrative-Refactor](#deploying-narrative-refactor)
+    - [Create Release Image](#create-release-image)
+    - [Tag & Deploy Image (admins only)](#tag--deploy-image-admins-only)
+  - [Image URLs](#image-urls)
 
 ### KBase Environments
 
@@ -50,7 +52,7 @@ To see your changes once the new image is created, simply open a narrative on CI
 ### Stage a Final Release
 
 1.  Update versions following (roughly) [semantic versioning](https://semver.org). The files to be updated are:
-    -   `package.json`, `package-lock.json`, `bower.json`, `src/config.json`, `src/config.json.templ`, `src/biokbase/narrative/\_\_init\_\_.py`
+    -   `package.json`, `package-lock.json`, `src/config.json`, `src/config.json.templ`, `src/biokbase/narrative/__init__.py`
     -   Major - backward incompatible changes, like the move from Python 2 -> Python 3, or Narrative typed object changes. These are generally considered to be changes that have a strong impact on the Narrative Interface and are hard or impossible to move backward from.
     -   Minor - new features that don't affect compatibility.
     -   Patch - adjustments to existing features, bug fixes.  

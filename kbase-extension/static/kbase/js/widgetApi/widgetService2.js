@@ -113,9 +113,8 @@ define([], () => {
                     widgets: {},
                 };
                 version.widgets.forEach((widget) => {
-                    widgetDb[widgetPackage.name][version.version].widgets[
-                        widget.widgetName
-                    ] = widget;
+                    widgetDb[widgetPackage.name][version.version].widgets[widget.widgetName] =
+                        widget;
                 });
             });
         });

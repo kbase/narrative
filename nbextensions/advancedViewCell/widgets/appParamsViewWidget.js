@@ -1,14 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
-    'kb_common/html',
-    // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
@@ -26,8 +24,6 @@ define([
     FieldWidget,
     ParamResolver,
     Runtime
-
-    // Input widgets
 ) => {
     'use strict';
 
@@ -37,19 +33,17 @@ define([
         div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
-            container,
-            ui,
-            bus,
-            places,
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
+        let container, ui, places;
 
         // DATA
         /*
@@ -140,8 +134,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
-                        console.log('getting param state');
+                    handle: function () {
                         return parentBus.request(
                             { id: parameterSpec.id },
                             {
@@ -209,7 +202,6 @@ define([
 
         function renderAdvanced(area) {
             // area is either "input" or "parameter"
-
             const areaElement = area + '-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(
@@ -218,11 +210,8 @@ define([
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                // ui.disableButton('toggle-advanced');
                 return;
             }
-
-            //            ui.enableButton('toggle-advanced');
 
             const removeClass = settings.showAdvanced
                     ? 'advanced-parameter-hidden'
@@ -240,24 +229,20 @@ define([
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
-            //
-            //            // How many advanaced?
-            //
-            //            // Also update the button
-            //            var button = container.querySelector('[data-button="toggle-advanced"]');
-            //            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
 
             let message;
+            let showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -277,7 +262,8 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -302,7 +288,6 @@ define([
                     ui.buildPanel({
                         type: 'default',
                         body: [
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
                             div(
                                 {
                                     class: 'btn-toolbar pull-right',
@@ -316,7 +301,6 @@ define([
                                         },
                                         label: 'Reset',
                                     }),
-                                    // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                                 ]
                             ),
                         ],
@@ -326,21 +310,20 @@ define([
                         title: span([
                             'Input Objects',
                             span({
+                                class: 'kb-app-params__message--advanced-hidden',
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
                         title: span([
                             'Parameters',
                             span({
+                                class: 'kb-app-params__message--advanced-hidden',
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
                             }),
                         ]),
                         name: 'parameters-area',
@@ -353,7 +336,6 @@ define([
                         body: div({ dataElement: 'output-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Output Report', 'output-report')
                 ]);
 
             return {
@@ -390,13 +372,6 @@ define([
                 });
             });
             bus.on('toggle-advanced', () => {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced('input-objects');
                 renderAdvanced('parameters');
@@ -406,25 +381,6 @@ define([
                 widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
                 });
-            });
-        }
-
-        // Maybe
-        function validateParameterSpec(spec) {
-            // ensure that inputs are consistent with inputs
-
-            // and outputs with output
-
-            // and params with param
-
-            // validate type
-
-            return spec;
-        }
-
-        function validateParameterSpecs(params) {
-            return params.map((spec) => {
-                return validateParameterSpec(spec);
             });
         }
 
@@ -503,147 +459,129 @@ define([
                 // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
-                return (
-                    Promise.resolve()
-                        .then(() => {
-                            if (inputParams.layout.length === 0) {
-                                places.inputFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'This app does not have input objects'
-                                );
-                            } else {
-                                places.inputFields.innerHTML = inputParams.content;
-                                return Promise.all(
-                                    inputParams.layout.map((parameterId) => {
-                                        const spec = inputParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                return Promise.resolve()
+                    .then(() => {
+                        if (inputParams.layout.length === 0) {
+                            places.inputFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'This app does not have input objects'
+                            );
+                        } else {
+                            places.inputFields.innerHTML = inputParams.content;
+                            return Promise.all(
+                                inputParams.layout.map((parameterId) => {
+                                    const spec = inputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        inputParams.view[parameterId].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    inputParams.view[parameterId].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px red solid' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                inputParams.view[parameterId].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            if (outputParams.layout.length === 0) {
-                                places.outputFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'This app does not create any named output objects'
-                                );
-                            } else {
-                                places.outputFields.innerHTML = outputParams.content;
-                                return Promise.all(
-                                    outputParams.layout.map((parameterId) => {
-                                        const spec = outputParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            inputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        if (outputParams.layout.length === 0) {
+                            places.outputFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'This app does not create any named output objects'
+                            );
+                        } else {
+                            places.outputFields.innerHTML = outputParams.content;
+                            return Promise.all(
+                                outputParams.layout.map((parameterId) => {
+                                    const spec = outputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        outputParams.view[parameterId].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    outputParams.view[parameterId].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px red solid' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                outputParams.view[parameterId].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            if (parameterParams.layout.length === 0) {
-                                // TODO: should be own node
-                                places.parameterFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'No parameters for this app'
-                                );
-                            } else {
-                                places.parameterFields.innerHTML = parameterParams.content;
-                                return Promise.all(
-                                    parameterParams.layout.map((parameterId) => {
-                                        const spec = parameterParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            outputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        if (parameterParams.layout.length === 0) {
+                            // TODO: should be own node
+                            places.parameterFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'No parameters for this app'
+                            );
+                        } else {
+                            places.parameterFields.innerHTML = parameterParams.content;
+                            return Promise.all(
+                                parameterParams.layout.map((parameterId) => {
+                                    const spec = parameterParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        parameterParams.view[spec.id].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    parameterParams.view[spec.id].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px red solid' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                parameterParams.view[spec.id].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        // .then(function () {
-                        //     console.log('advance-ing...');
-                        //     return Promise.all(widgets.map(function (widget) {
-                        //         return widget.widget.start()
-                        //             .catch(function (err) {
-                        //                 console.error('error', err, widget);
-                        //                 throw err;
-                        //             })
-                        //     }));
-                        // })
-                        // .then(function () {
-                        //     console.log('advance-ing2...');
-                        //     return Promise.all(widgets.map(function (widget) {
-                        //         return widget.widget.run(params);
-                        //     }));
-                        // })
-                        .then(() => {
-                            renderAdvanced('input-objects');
-                            renderAdvanced('parameters');
-                        })
-                );
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            parameterParams.view[spec.id].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        renderAdvanced('input-objects');
+                        renderAdvanced('parameters');
+                    });
             });
         }
 
@@ -663,11 +601,9 @@ define([
                     // we then create our widgets
                     renderParameters()
                         .then(() => {
-                            // do something after success
                             attachEvents();
                         })
                         .catch((err) => {
-                            // do somethig with the error.
                             console.error('ERROR in start', err);
                         });
                 });
@@ -683,7 +619,6 @@ define([
                                 parameter: message.parameter,
                             },
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
             });
@@ -694,10 +629,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,

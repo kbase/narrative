@@ -155,7 +155,7 @@ define([
             }
 
             function showCopyWarningDialog() {
-                var dialog = new BootstrapDialog({
+                const dialog = new BootstrapDialog({
                     title: 'An item with this name already exists in this Narrative.',
                     body: 'Do you want to overwrite the existing copy?',
                     buttons: [

@@ -139,7 +139,18 @@ define(['jquery', 'bootstrap'], ($) => {
      * Removes this modal from the DOM and removes any associated content.
      */
     BootstrapDialog.prototype.destroy = function () {
-        this.$modal.remove();
+        try {
+            this.$modal.remove();
+        } catch (e) {
+            // eslint-disable-next-line no-empty
+        }
+
+        // clean up any backdrop items
+        if (document.querySelector('.modal-backdrop')) {
+            document.querySelector('.modal-backdrop').remove();
+        }
+        document.body.classList.remove('modal-open');
+
         this.$modal = null;
         return null;
     };

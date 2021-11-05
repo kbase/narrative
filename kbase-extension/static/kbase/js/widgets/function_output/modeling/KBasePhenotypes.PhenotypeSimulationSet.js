@@ -134,4 +134,5 @@ function KBasePhenotypes_PhenotypeSimulationSet(tabwidget) {
 }
 
 // make method of base class
-KBModeling.prototype.KBasePhenotypes_PhenotypeSimulationSet = KBasePhenotypes_PhenotypeSimulationSet;
+KBModeling.prototype.KBasePhenotypes_PhenotypeSimulationSet =
+    KBasePhenotypes_PhenotypeSimulationSet;

@@ -1,0 +1,55 @@
+// modules/variables
+
+// Typefaces
+
+$typeface-page-text: Oxygen, Arial, sans-serif;
+$typeface-display: Oxygen, Arial, sans-serif;
+$typeface-display-legacy: RobotoBlack, Arial, sans-serif;
+$typeface-fixed-width: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+$typeface-font-awesome: FontAwesome;
+$typeface-kbase-icons: kbase-icons;
+$typeface-glyphicons: "Glyphicons Halflings";
+
+// These names mimic those used in bootstrap: see https://getbootstrap.com/docs/3.4/customize/
+// and https://github.com/twbs/bootstrap-sass/blob/master/assets/stylesheets/bootstrap/_variables.scss
+
+$font-size-base:          14px !default;
+//** Unit-less `line-height` for use in components like buttons.
+$line-height-base:        1.428571429 !default; // 20/14
+//** Computed "line-height" (`font-size` * `line-height`) for use with `margin`, `padding`, etc.
+$line-height-computed:    floor(($font-size-base * $line-height-base)) !default; // ~20px
+$line-height-px:          20px;
+
+// Bootstrap spacing defaults
+$padding-xs-vertical:       0.1rem !default;
+$padding-xs-horizontal:     0.5rem !default;
+
+$padding-small-vertical:    0.5rem !default;
+$padding-small-horizontal:  1rem !default;
+
+$padding-base-vertical:     0.6rem !default;
+$padding-base-horizontal:   1.2rem !default;
+
+$padding-large-vertical:    1rem !default;
+$padding-large-horizontal:  1.5rem !default;
+
+$border-radius-small:       3px !default;
+$border-radius-base:        4px !default;
+$border-radius-large:       6px !default;
+
+$font-size-small:           ceil(($font-size-base * 0.85)) !default; // ~12px
+$line-height-small:         1.5 !default;
+
+$font-size-large:           ceil(($font-size-base * 1.25)) !default; // ~18px
+$line-height-large:         1.3333333 !default;
+
+// Button bits
+$btn-font-weight:                700;
+$btn-default-color:              use_color('primary');
+
+$btn-border-radius-small:        $border-radius-small;
+$btn-border-radius-base:         $border-radius-base;
+$btn-border-radius-large:        $border-radius-large;
+
+//** Disabled cursor for form controls and buttons.
+$cursor-disabled:                not-allowed;

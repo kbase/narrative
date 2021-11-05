@@ -1,0 +1,137 @@
+/*
+    Styles to help with bootstrap files.
+    Fix styles broken by other styles
+    Make bootstrap work better
+    Customize bootstrap styles
+*/
+
+.text-silver {
+  color: use_color('silver');
+}
+
+.modal {
+  .modal-title {
+    font: normal 700 18px/24px $typeface-page-text;
+  }
+
+  // Unset the global modal title color set above for alert modals, which
+  // may set the color style based on the alert type.
+  &.kb-modal-alert .modal-title {
+    color: unset;
+  }
+
+  input[type=checkbox] {
+    margin-top: 1px;
+  }
+}
+
+.kb-panel {
+  &-light,
+  &-batch,
+  &-bulk-params,
+  &-params,
+  &-container,
+  &-results {
+    border: 0;
+    box-shadow: none;
+
+    .panel-heading {
+      background-color: transparent;
+      color: use_color('base');
+      font-weight: 700;
+    }
+  }
+}
+
+.kb-panel-light {
+  margin-bottom: 10px;
+
+  &.panel-danger .panel-title {
+    color: rgb(169, 68, 66);
+  }
+
+  &.panel-success .panel-title {
+    color: rgb(60, 118, 61);
+  }
+
+  &.panel-warning .panel-title {
+    color: rgb(138, 109, 59);
+  }
+
+  &.panel-info .panel-title {
+    color: rgb(0, 0, 255);
+  }
+
+  .panel-heading {
+    border-bottom: 0;
+    padding-bottom: 2px;
+  }
+
+  .panel-body {
+    padding: 0;
+  }
+}
+
+// kb-panel-params is suitable for displaying parameters;
+// the header has 15px horizontal margins and 10px top margin
+// the body has 10px horiz margins as each parameter panel has 5px horiz padding
+
+// kb-panel-batch has 15px horizontal margins on both header and body
+
+.kb-panel-batch,
+.kb-panel-params,
+.kb-panel-bulk-params,
+.kb-panel-results {
+  .panel-heading {
+    border-bottom: 0;
+    margin: 15px 15px 5px;
+    padding: 0;
+  }
+
+  .panel-body {
+    border-bottom: 0;
+    margin: 0 15px 5px;
+    padding: 0;
+  }
+}
+
+.kb-panel-params {
+  .panel-body {
+    margin: 0 10px 15px;
+  }
+}
+
+.panel-title-collapse-toggle {
+  margin-left: -15px;
+}
+
+.kb-panel-container {
+  .panel-heading {
+    border-bottom: 2px solid use_color('base-lighter');
+    padding-bottom: 2px;
+  }
+}
+
+.kb-cell-error .panel-heading {
+  background-image: none;
+  padding: 5px 10px;
+}
+
+.btn {
+  box-shadow: none;
+}
+
+// The button bar in a cell widget is located at the bottom of the inputs, but
+// above any outputs.
+// These styles attempt to help the button toolbar, which represents the actions
+// the user can take, be visually distinct from the other bits surrounding it.
+
+.btn-toolbar.kb-btn-toolbar-cell-widget {
+  background-color: use_color('base-lightest');
+  margin-bottom: 20px;
+  padding: 6px;
+}
+
+.dataTables_empty {
+  padding: 0.8rem;
+}

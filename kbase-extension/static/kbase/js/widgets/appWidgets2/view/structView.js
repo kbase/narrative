@@ -9,7 +9,6 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
     'use strict';
 
@@ -226,7 +225,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },

@@ -25,8 +25,6 @@ define([
     'widgets/appWidgets2/input/floatInput',
     'widgets/appWidgets2/input/intInput',
     'widgets/appWidgets2/input/newObjectInput',
-    // 'widgets/appWidgets2/input/objectInput',
-    // 'widgets/appWidgets2/input/objectRefInput',
     'widgets/appWidgets2/input/select2ObjectInput',
     'widgets/appWidgets2/input/selectInput',
     'widgets/appWidgets2/input/sequenceInput',
@@ -73,12 +71,10 @@ define([
     'widgets/appWidgets2/view/textView',
     'widgets/appWidgets2/view/toggleButtonView',
     'widgets/appWidgets2/view/undefinedView',
-    'common/appUtils',
     'common/busEventManager',
     'common/cellUtils',
     'common/clock',
     'common/data',
-    'common/dom',
     'common/error',
     'common/events',
     'common/format',
@@ -100,9 +96,9 @@ define([
     'common/spec',
     'common/specValidation',
     'common/ui',
-    'common/unodep',
-    'common/utils',
     'common/validation',
+    'util/icon',
 ], () => {
+    'use strict';
     return;
 });

@@ -1,13 +1,12 @@
 define([
     'bluebird',
-    // CDN
-    'kb_common/html',
     // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
@@ -34,20 +33,16 @@ define([
         div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
-            container,
-            ui,
-            bus,
-            places,
             model = Props.make(),
             inputBusses = [],
             paramResolver = ParamResolver.make(),
-            settings = {
-                showAdvanced: null,
-            },
-            widgets = [];
+            widgets = [],
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
+
+        let container, ui, places;
 
         // DATA
         /*
@@ -103,6 +98,7 @@ define([
             });
 
             fieldBus.on('sync-params', (message) => {
+                // eslint-disable-next-line no-console
                 console.log('request sync params', message);
                 parentBus.emit('sync-params', {
                     parameters: message.parameters,
@@ -161,14 +157,14 @@ define([
             });
 
             return {
-                bus: bus,
+                bus,
                 widget: FieldWidget.make({
                     inputControlFactory: inputWidget,
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
+                    appSpec,
+                    parameterSpec,
                     bus: fieldBus,
                     workspaceId: workspaceInfo.id,
                     referenceType: 'ref',
@@ -183,24 +179,15 @@ define([
                     ui.buildPanel({
                         type: 'default',
                         classes: ['kb-panel-light'],
-                        body: [
-                            div('Create Set Editor'),
-                            // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
-                        ],
+                        body: [div('Create Set Editor')],
                     }),
                     // Main editor panel
                     div({ dataElement: 'field-area' }, [div({ dataElement: 'fields' })]),
-                    //                    ui.buildPanel({
-                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]),
-                    //                        name: 'field-area',
-                    //                        body: div({dataElement: 'fields'}),
-                    //                        classes: ['kb-panel-light']
-                    //                    })
                 ]);
 
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -210,7 +197,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout();
             container.innerHTML = layout.content;
@@ -224,9 +211,9 @@ define([
 
         function attachEvents() {
             bus.on('reset-to-defaults', () => {
+                // eslint-disable-next-line no-console
                 console.log('resetting...');
                 inputBusses.forEach((inputBus) => {
-                    console.log('resetting param...');
                     inputBus.emit('reset-to-defaults');
                 });
             });
@@ -267,7 +254,6 @@ define([
             return div([
                 div({ dataParameter: 'name' }),
                 div({ dataParameter: 'description' }),
-                // div({dataParameter: 'type'}),
                 div({ dataParameter: 'items' }),
             ]);
         }
@@ -302,10 +288,9 @@ define([
                                             ),
                                             rowWidget = RowWidget.make({
                                                 widget: result.widget,
-                                                spec: spec,
+                                                spec,
                                             }),
                                             rowNode = document.createElement('div');
-                                        // places.fields.appendChild(rowNode);
                                         const rowPlace = document.querySelector(
                                             '[data-parameter="' + spec.name() + '"]'
                                         );
@@ -324,7 +309,7 @@ define([
                                         // TRY Throwing up
                                         // or not: throw new Error('Error making input field widget: ' + ex.message);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         places.fields.appendChild(ui.createNode(errorDisplay));
@@ -387,7 +372,6 @@ define([
                                 parameter: message.parameter,
                             },
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
 
@@ -400,13 +384,9 @@ define([
             return Promise.resolve();
         }
 
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

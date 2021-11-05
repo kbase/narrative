@@ -118,7 +118,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
             }
         };
 
-        this.getStarCount = function (count) {
+        this.getStarCount = function () {
             if (this.starCount) return this.starCount;
             return 0;
         };
@@ -129,11 +129,11 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
                 this.starCount = null;
             }
             if (this.starCount) {
-                for (var k = 0; k < this.$divs.length; k++) {
+                for (let k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').html(count);
                 }
             } else {
-                for (var k = 0; k < this.$divs.length; k++) {
+                for (let k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').empty();
                 }
             }
@@ -166,10 +166,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
 
         /* rendering methods that are shared in multiple places */
         this._renderAppCard = function () {
-            const info = this.info;
-            const type = this.type;
-            const tag = this.tag;
-            const nms_base_url = this.nms_base_url;
+            const self = this;
 
             // Main Container
             const $appDiv = $('<div>').addClass('kbcb-app-card kbcb-hover container');
@@ -264,7 +261,6 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
                 const $star = $('<span>')
                     .addClass('kbcb-star')
                     .append('<i class="fa fa-star"></i>');
-                var self = this;
                 if (self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
                     $star.on('click', (event) => {
@@ -360,8 +356,6 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
             $moreInfoDiv.append($('<span>').append('<i class="fa fa-info"></i>'));
             $footer.append($moreInfoDiv);
             $appDiv.append($footer);
-
-            var self = this;
             $appDiv.on('click', () => {
                 if (self.clickedCallback) {
                     self.clickedCallback(self);

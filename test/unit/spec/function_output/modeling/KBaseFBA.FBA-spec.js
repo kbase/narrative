@@ -1,6 +1,9 @@
-define(['KBaseFBA.FBA', 'KBModeling'], (Widget, kbm) => {
+define(['KBaseFBA.FBA', 'KBModeling', 'testUtil'], (Widget, kbm, TestUtil) => {
     'use strict';
+
     describe('Test the KBaseFBA.FBA widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         it('Should load the module', () => {
             const api = new KBModeling('token');
             expect(api.KBaseFBA_FBA).toBeDefined();

@@ -3,36 +3,17 @@ define([
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'base/js/namespace',
     'narrativeConfig',
-], ($, FileUploadWidget, Jupyter, Config) => {
+    'testUtil',
+], ($, FileUploadWidget, Jupyter, Config, TestUtil) => {
     'use strict';
 
-    let fuWidget, $targetNode;
-    const fakeUser = 'notAUser';
-
-    const mockUploadEndpoint = (filename, username, isFolder) => {
-        jasmine.Ajax.stubRequest(Config.url('staging_api_url') + '/upload').andReturn({
-            status: 200,
-            statusText: 'HTTP/1.1 200 OK',
-            contentType: 'application/json',
-            responseText: JSON.stringify([
-                {
-                    name: filename,
-                    path: `${username}/${filename}`,
-                    mtime: 1596747139855,
-                    size: 1376,
-                    isFolder: isFolder,
-                },
-            ]),
-        });
-    };
-
-    const createMockFile = (filename) => {
-        const file = new File(['file contents'], filename, { type: 'text/html' });
-        return file;
-    };
+    const fakeUser = 'notAUser',
+        filename = 'foo.txt',
+        stagingUrl = Config.url('staging_api_url') + '/upload';
 
     describe('Test the fileUploadWidget', () => {
-        beforeEach(() => {
+        let container;
+        beforeEach(function () {
             jasmine.Ajax.install();
             Jupyter.narrative = {
                 userId: fakeUser,
@@ -46,48 +27,62 @@ define([
                 },
                 showDataOverlay: () => {},
             };
-            $targetNode = $('<div>');
-            fuWidget = new FileUploadWidget($targetNode, {
+            container = document.createElement('div');
+            this.fuWidget = new FileUploadWidget($(container), {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
                     globusLinked: false,
                 },
             });
+            this.mockFile = new File(['file contents'], filename, { type: 'text/html' });
+
+            jasmine.Ajax.stubRequest(stagingUrl).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify([
+                    {
+                        name: filename,
+                        path: `${fakeUser}/${filename}`,
+                        mtime: 1596747139855,
+                        size: 1376,
+                        isFolder: false,
+                    },
+                ]),
+            });
         });
 
         afterEach(() => {
             jasmine.Ajax.requests.reset();
             jasmine.Ajax.uninstall();
+            container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should be able to set and retrieve the path', () => {
-            const $node = $('<div>'),
-                fuw = new FileUploadWidget($node, {
-                    path: '/',
-                    userInfo: {
-                        user: fakeUser,
-                        globusLinked: true,
-                    },
-                });
+            const uploadWidget = new FileUploadWidget($('<div>'), {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true,
+                },
+            });
             const newPath = 'newPath';
-            fuw.setPath(newPath);
-            expect(fuw.getPath()).toEqual(newPath);
+            uploadWidget.setPath(newPath);
+            expect(uploadWidget.getPath()).toEqual(newPath);
         });
 
-        it('Should start and succeed on an upload when a file is given', (done) => {
-            const filename = 'foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
+        it('Should start and succeed on an upload when a file is given', function (done) {
             const adderMock = jasmine.createSpy('adderMock');
             const successMock = jasmine.createSpy('successMock');
-            fuWidget.dropzone.on('addedfile', () => {
+            this.fuWidget.dropzone.on('addedfile', () => {
                 adderMock();
             });
-            fuWidget.dropzone.on('success', () => {
+            this.fuWidget.dropzone.on('success', () => {
                 successMock();
             });
-            fuWidget.dropzone.addFile(mockFile);
+            this.fuWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
                 expect(successMock).toHaveBeenCalled();
@@ -95,48 +90,45 @@ define([
             });
         });
 
-        it('Should timeout an upload when configured', (done) => {
+        it('Should timeout an upload when configured', function (done) {
             // The default config gives an infinite timeout. Hard to test.
-            expect(fuWidget.dropzone.options.timeout).toBe(0);
+            expect(this.fuWidget.dropzone.options.timeout).toBe(0);
             // Let's set it shorter than disabled.
-            fuWidget.dropzone.options.timeout = 100; // ms
-            expect(fuWidget.dropzone.options.timeout).toBe(100);
-            const filename = 'foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
-            fuWidget.dropzone.on('error', (file, errorMessage) => {
+            this.fuWidget.dropzone.options.timeout = 100; // ms
+            expect(this.fuWidget.dropzone.options.timeout).toBe(100);
+
+            this.fuWidget.dropzone.on('error', (file, errorMessage) => {
                 expect(errorMessage).toBeDefined();
                 done();
             });
-            fuWidget.dropzone.on('success', () => {
+            this.fuWidget.dropzone.on('success', () => {
                 const req = jasmine.Ajax.requests.mostRecent();
                 expect(req.url).toMatch(/\/upload/);
                 expect(req.method).toBe('POST');
                 done();
             });
-            fuWidget.dropzone.addFile(mockFile);
+            this.fuWidget.dropzone.addFile(this.mockFile);
         });
 
-        it('Should error when too large of a file is uploaded', (done) => {
+        it('Should error when too large of a file is uploaded', function (done) {
             // Set the file max size to 0
-            fuWidget.dropzone.options.maxFilesize = 1;
+            this.fuWidget.dropzone.options.maxFilesize = 1;
 
-            // Create file
-            const filename = 'foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
+            Object.defineProperty(this.mockFile, 'size', {
+                value: Math.pow(1024, 4),
+                writable: false,
+            });
 
             // Create mock calls
             const adderMock = jasmine.createSpy('adderMock');
             const errorMock = jasmine.createSpy('errorMock');
-            fuWidget.dropzone.on('addedfile', () => {
+            this.fuWidget.dropzone.on('addedfile', () => {
                 adderMock();
             });
-            fuWidget.dropzone.on('error', () => {
+            this.fuWidget.dropzone.on('error', () => {
                 errorMock();
             });
-            fuWidget.dropzone.addFile(mockFile);
+            this.fuWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
                 expect(errorMock).toHaveBeenCalled();
@@ -144,25 +136,18 @@ define([
             });
         });
 
-        it('Should render properly when a file upload error occurs', (done) => {
+        it('Should render properly when a file upload error occurs', function (done) {
             // Set the file max size to 0
-            fuWidget.dropzone.options.maxFilesize = 1;
+            this.fuWidget.dropzone.options.maxFilesize = 1;
 
-            // Create file
-            const filename = 'foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
-
-            // Create mock calls
-            const adderMock = jasmine.createSpy('adderMock');
-            fuWidget.dropzone.on('addedfile', () => {
-                adderMock();
+            Object.defineProperty(this.mockFile, 'size', {
+                value: Math.pow(1024, 4),
+                writable: false,
             });
 
-            fuWidget.dropzone.addFile(mockFile);
+            this.fuWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
-                const $fileTemplate = fuWidget.$elem;
+                const $fileTemplate = this.fuWidget.$elem;
                 expect(document.getElementById('clear_all_button')).toBeDefined();
                 expect($fileTemplate.find('#upload_progress_and_cancel').css('display')).toEqual(
                     'none'
@@ -175,9 +160,8 @@ define([
             });
         });
 
-        it('Should provide a link to a globus accout when file upload maxfile size error occurs', (done) => {
-            $targetNode = $('<div>');
-            const uploadWidget = new FileUploadWidget($targetNode, {
+        it('Should provide a link to a globus account when file upload maxfile size error occurs', function (done) {
+            const uploadWidget = new FileUploadWidget($('<div>'), {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
@@ -187,20 +171,12 @@ define([
 
             // Set the file max size to 0
             uploadWidget.dropzone.options.maxFilesize = 1;
-
-            // Create file
-            const filename = 'foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
-
-            // Create mock calls
-            const adderMock = jasmine.createSpy('adderMock');
-            uploadWidget.dropzone.on('addedfile', () => {
-                adderMock();
+            Object.defineProperty(this.mockFile, 'size', {
+                value: Math.pow(1024, 4),
+                writable: false,
             });
 
-            uploadWidget.dropzone.addFile(mockFile);
+            uploadWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
                 const $fileTemplate = uploadWidget.$elem;
                 expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
@@ -209,6 +185,19 @@ define([
                 );
                 done();
             });
+        });
+
+        it('Should contain a cancel warning button', function (done) {
+            this.fuWidget.dropzone.on('sending', () => {
+                const $cancelButton = this.fuWidget.$elem.find('.cancel');
+                expect($cancelButton).toBeDefined();
+                expect($cancelButton.attr('data-dz-remove')).toBeDefined();
+                // prevent the XHR from being submitted -- for some reason jasmine.ajax does not catch it
+                this.fuWidget.dropzone.disable();
+                done();
+            });
+
+            this.fuWidget.dropzone.addFile(this.mockFile);
         });
     });
 });

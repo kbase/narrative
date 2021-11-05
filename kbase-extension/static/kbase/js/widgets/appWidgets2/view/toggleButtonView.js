@@ -9,7 +9,6 @@ define([
     'common/props',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, $, Jupyter, html, Validation, Events, UI, Props) => {
     'use strict';
 

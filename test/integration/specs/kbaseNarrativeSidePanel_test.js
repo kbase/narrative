@@ -36,10 +36,7 @@ async function clickSlideoutButton(slideout) {
 }
 
 async function clickAddDataButton() {
-    // Open a slideout by clicking it's toggle button
-    // const body = await $('body');
-    // console.log('*** body ***', body);
-    // const button = await body.selectByVisibleText('Add Data');
+    // Open a slideout by clicking its toggle button
     const button = await $('[data-test-id="add-data-button"]');
     await button.waitForDisplayed();
     await clickWhenReady(button);

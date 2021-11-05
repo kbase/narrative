@@ -1,4 +1,4 @@
-define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
+define(['narrativeViewers', 'narrativeConfig', 'testUtil'], (Viewers, Config, TestUtil) => {
     'use strict';
 
     /** data format taken from
@@ -100,6 +100,7 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('should load and have expected functions', () => {

@@ -1,0 +1,17 @@
+.kb-app-params {
+  // .kb-app-params__message--advanced-hidden
+  &__message--advanced-hidden {
+    @include advanced-hidden;
+  }
+  // .kb-app-params__toggle--advanced-hidden
+  // &__toggle--advanced-hidden {
+  //   .kb-ui__button_label {}
+  // }
+
+  &__fields--parameters {
+    // .kb-app-params__fields--parameters-hidden
+    &-hidden {
+      display: none;
+    }
+  }
+}

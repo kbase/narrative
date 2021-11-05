@@ -1,4 +1,4 @@
-define(['bluebird', 'kb_common/html', 'bootstrap', 'css!font-awesome'], (Promise, html) => {
+define(['bluebird', 'kb_common/html', 'bootstrap'], (Promise, html) => {
     'use strict';
 
     // Constants

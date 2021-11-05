@@ -9,7 +9,6 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils) => {
     'use strict';
 

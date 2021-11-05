@@ -39,34 +39,39 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * @param {string} options.iconContent if present, will be appended to a <span/> returned by cell.getIcon
      */
     function buildMockCell(cellType, kbaseCellType, options) {
-        const {
-            data,
-            title,
-            output,
-            selected = false,
-            iconContent = '',
-        } = options || {};
+        const { data, title, output, selected = false, iconContent = '' } = options || {};
         const $cellContainer = $(document.createElement('div'));
         const $icon = $('<div>').attr('data-element', 'icon');
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
-        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data, title) : {};
+        const metadata = kbaseCellType
+            ? buildMockExtensionCellMetadata(kbaseCellType, data, title)
+            : {};
+        const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
-            metadata: { kbase: metadata },
+            metadata: {},
             cell_type: cellType,
-            renderMinMax: () => { },
+            renderMinMax: () => {},
+            set_text: () => {},
             element: $cellContainer,
-            input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
-            output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output').append(output),
+            input: $('<div>').addClass('input').append(inputArea),
+            output: $('<div>')
+                .addClass('output_wrapper')
+                .append('<div>')
+                .addClass('output')
+                .append(output),
             selected: selected,
             getIcon: () => $('<span>').append(iconContent)[0].outerHTML,
             celltoolbar: {
-                rebuild: () => { },
+                rebuild: () => {},
             },
         };
+        // only add the 'kbase' metadata key if it's a KBase cell and not a base Jupyter cell.
+        if (kbaseCellType) {
+            mockCell.metadata.kbase = metadata;
+        }
 
         $cellContainer.append($toolbar).append(mockCell.input).append(mockCell.output);
-        $('body').append($cellContainer);
         return mockCell;
     }
 
@@ -141,14 +146,31 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * Builds a mock Jupyter notebook object with a few keys, but mostly
      * an empty object for modification for whatever testing purposes.
      * @param {object} options a set of options for the mock notebook, with the following:
-     *  - deleteCallback: function to be called when `delete_cell` is called.
-     *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
      *  - cells: a list of mocked cells (see buildMockCell)
+     *  - commInfoReturn: object - return from cell.kernel.comm_info()
+     *  - executeReply: object - response to cell.kernel.execute()
+     *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
+     *  - deleteCallback: function to be called when `delete_cell` is called.
+     *  - notebookName: string, optional; the notebook name
      *  - readOnly: boolean, true if the Narrative should be read-only
+     *  - registerTargetReturn: object, keys are function names, values are functions
      */
+
+    const DEFAULT_COMM_INFO = {
+        comms: [],
+    };
+    const DEFAULT_COMM = {
+        on_msg: () => {},
+        send: () => {},
+        send_shell_message: () => {},
+    };
+
     function buildMockNotebook(options) {
         options = options || {};
         const cells = options.cells || [];
+        const commInfoReturn = options.commInfoReturn || DEFAULT_COMM_INFO;
+        const registerTargetReturn = options.registerTargetReturn || DEFAULT_COMM;
+        const executeReply = options.executeReply || {};
 
         function insertCell(type, index, data) {
             const cell = buildMockCell(type, '', { data });
@@ -159,7 +181,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             return cell;
         }
 
-        const mockNotebook = {
+        return {
             delete_cell: () => (options.deleteCallback ? options.deleteCallback() : null),
             find_cell_index: () => 1,
             get_cells: () => cells,
@@ -174,14 +196,47 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
                 }
                 return cells[index];
             },
+            insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
+            insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
+            save_checkpoint: () => {
+                /* no op */
+            },
             _fully_loaded: options.fullyLoaded,
             cells: cells,
             writable: !options.readOnly,
-            insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
-            insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
+            keyboard_manager: {
+                edit_shortcuts: {
+                    remove_shortcut: () => {
+                        /* no op */
+                    },
+                },
+                command_shortcuts: {
+                    remove_shortcut: () => {
+                        /* no op */
+                    },
+                },
+            },
+            kernel: {
+                is_connected: () => false,
+                comm_info: (_, cb) => {
+                    cb({
+                        content: commInfoReturn,
+                    });
+                },
+                comm_manager: {
+                    register_comm: () => {
+                        /* no op */
+                    },
+                    register_target: (_, cb) => cb(registerTargetReturn, {}),
+                },
+                execute: (_, cb) => {
+                    cb.shell.reply({
+                        content: executeReply,
+                    });
+                },
+            },
+            notebook_name: options.notebookName || 'some notebook',
         };
-
-        return mockNotebook;
     }
 
     /**
@@ -229,7 +284,8 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      *  body: 'get_objects2',
      *  statusCode: 500,
      *  statusText: 'http/1.1 500 Internal Service Error',
-     *  response: {error: 'something bad happened'}
+     *  response: {error: 'something bad happened'},
+     *  isError: true
      * })
      * @param {object} args
      * - url - the url endpoint to mock
@@ -239,14 +295,19 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * - statusCode - int, default = 200 - the HTTP status code your request should return
      * - statusText - string, default = "HTTP/1.1 200 OK" - a status string your request will return
      * - response - object - the data your request should return as an object.
+     * - isError - boolean - if truthy, will format the JSON-RPC response with an error field
      */
     function mockJsonRpc1Call(args) {
         const requestBody = args.body || '';
         const jsonRpcResponse = {
             version: '1.1',
             id: '12345',
-            result: [args.response],
         };
+        if (args.isError) {
+            jsonRpcResponse.error = args.response;
+        } else {
+            jsonRpcResponse.result = [args.response];
+        }
         const serviceResponse = {
             status: args.statusCode || 200,
             statusText: args.statusText || 'HTTP/1.1 200 OK',

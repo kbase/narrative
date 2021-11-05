@@ -4,6 +4,7 @@ define(
         'bluebird',
         'uuid',
         'base/js/namespace',
+        'common/lang',
         'common/runtime',
         'common/events',
         'common/html',
@@ -13,19 +14,21 @@ define(
         'kb_service/client/narrativeMethodStore',
         'kb_service/client/workspace',
         'common/pythonInterop',
-        'common/utils',
+        'common/cellUtils',
         'common/ui',
         'common/fsm',
         'common/spec',
+        './appParamsWidget',
+        './appParamsViewWidget',
         'google-code-prettify/prettify',
-        'css!google-code-prettify/prettify.css',
-        'css!font-awesome.css',
+        'css!google-code-prettify/prettify',
     ],
     (
         $,
         Promise,
         Uuid,
         JupyterNamespace,
+        Lang,
         Runtime,
         Events,
         html,
@@ -39,6 +42,8 @@ define(
         Ui,
         Fsm,
         Spec,
+        AppParamsWidget,
+        AppParamsViewWidget,
         PR
     ) => {
         'use strict';
@@ -252,41 +257,43 @@ define(
             ];
 
         function factory(config) {
-            let container;
-            let ui;
-            const workspaceInfo = config.workspaceInfo;
-            const runtime = Runtime.make();
-            const cell = config.cell;
-            const parentBus = config.bus;
-            // TODO: the cell bus should be created and managed through main.js,
-            // that is, the extension.
-            let cellBus;
-            const bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' });
-            let paramsWidget;
-            const eventManager = BusEventManager.make({
-                bus: runtime.bus(),
-            });
-            // HMM. Sync with metadata, or just keep everything there?
-            const settings = {
-                showAdvanced: {
-                    label: 'Show advanced parameters',
-                    defaultValue: false,
-                    type: 'custom',
+            let container,
+                ui,
+                workspaceInfo = config.workspaceInfo,
+                runtime = Runtime.make(),
+                cell = config.cell,
+                parentBus = config.bus,
+                spec,
+                // TODO: the cell bus should be created and managed through main.js,
+                // that is, the extension.
+                cellBus,
+                bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
+                model,
+                paramsWidget,
+                eventManager = BusEventManager.make({
+                    bus: runtime.bus(),
+                }),
+                // HMM. Sync with metadata, or just keep everything there?
+                settings = {
+                    showAdvanced: {
+                        label: 'Show advanced parameters',
+                        defaultValue: false,
+                        type: 'custom',
+                    },
+                    showNotifications: {
+                        label: 'Show the notifications panel',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'notifications',
+                    },
+                    showAboutApp: {
+                        label: 'Show the About App panel',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'about-app',
+                    },
                 },
-                showNotifications: {
-                    label: 'Show the notifications panel',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'notifications',
-                },
-                showAboutApp: {
-                    label: 'Show the About App panel',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'about-app',
-                },
-            };
-            let fsm;
+                fsm;
 
             if (runtime.config('features.developer')) {
                 settings.showDeveloper = {
@@ -333,10 +340,6 @@ define(
                 ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
             }
 
-            // function showFatalError(arg) {
-            //     ui.showElement('fatal-error');
-            // }
-
             function showFsmBar() {
                 const currentState = fsm.getCurrentState(),
                     content = Object.keys(currentState.state)
@@ -349,7 +352,7 @@ define(
                                         style: {
                                             padding: '4px',
                                             fontWeight: 'noramal',
-                                            border: '1px silver solid',
+                                            border: '1px solid silver',
                                             backgroundColor: 'gray',
                                             color: 'white',
                                         },
@@ -408,13 +411,14 @@ define(
             }
 
             function renderSetting(settingName) {
-                const setting = settings[settingName];
+                let setting = settings[settingName],
+                    value;
 
                 if (!setting) {
                     return;
                 }
 
-                const value = model.getItem(['user-settings', settingName], setting.defaultValue);
+                value = model.getItem(['user-settings', settingName], setting.defaultValue);
                 switch (setting.type) {
                     case 'toggle':
                         if (value) {
@@ -473,13 +477,6 @@ define(
                 });
             }
 
-            function toBoolean(value) {
-                if (value && value !== null) {
-                    return true;
-                }
-                return false;
-            }
-
             function showAboutApp() {
                 const appSpec = model.getItem('app.spec');
                 ui.setContent('about-app.name', appSpec.info.name);
@@ -498,7 +495,7 @@ define(
                     })()
                 );
                 const appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id]
-                        .filter(toBoolean)
+                        .filter((v) => !!v)
                         .join('/'),
                     link = a(
                         { href: '/#appcatalog/app/' + appRef, target: '_blank' },
@@ -806,10 +803,10 @@ define(
             }
 
             function toggleSettings() {
-                const name = 'showSettings';
-                const selector = 'settings';
-                const node = ui.getElement(selector);
-                let showing = model.getItem(['user-settings', name]);
+                let name = 'showSettings',
+                    selector = 'settings',
+                    node = ui.getElement(selector),
+                    showing = model.getItem(['user-settings', name]);
                 if (showing) {
                     model.setItem(['user-settings', name], false);
                 } else {
@@ -1069,156 +1066,142 @@ define(
                 });
             }
 
-            function pRequire(ModulePath) {
-                return new Promise((resolve, reject) => {
-                    require([ModulePath], (Widget) => {
-                        resolve(Widget);
-                    }, (err) => {
-                        reject(err);
-                    });
-                });
-            }
-
             // TODO: handle raciness of the paramsWidget...
             function loadInputParamsWidget() {
-                pRequire('nbextensions/viewCell/widgets/appParamsWidget').then((Widget) => {
-                    const bus = runtime
-                        .bus()
-                        .makeChannelBus({ description: 'Parent comm bus for input widget' });
+                const bus = runtime
+                    .bus()
+                    .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
-                    paramsWidget = Widget.make({
-                        bus: bus,
-                        workspaceInfo: workspaceInfo,
-                    });
+                paramsWidget = AppParamsWidget.make({
+                    bus: bus,
+                    workspaceInfo: workspaceInfo,
+                });
 
-                    bus.on('parameter-sync', (message) => {
-                        const value = model.getItem(['params', message.parameter]);
+                bus.on('parameter-sync', (message) => {
+                    const value = model.getItem(['params', message.parameter]);
+                    bus.send(
+                        {
+                            parameter: message.parameter,
+                            value: value,
+                        },
+                        {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter,
+                            },
+                        }
+                    );
+                });
+
+                bus.on('sync-params', (message) => {
+                    message.parameters.forEach((paramId) => {
                         bus.send(
                             {
-                                parameter: message.parameter,
-                                value: value,
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter]),
                             },
                             {
-                                // This points the update back to a listener on this key
                                 key: {
-                                    type: 'update',
-                                    parameter: message.parameter,
+                                    type: 'parameter-value',
+                                    parameter: paramId,
                                 },
+                                channel: message.replyToChannel,
                             }
                         );
                     });
+                });
 
-                    bus.on('sync-params', (message) => {
-                        message.parameters.forEach((paramId) => {
-                            bus.send(
-                                {
-                                    parameter: paramId,
-                                    value: model.getItem(['params', message.parameter]),
-                                },
-                                {
-                                    key: {
-                                        type: 'parameter-value',
-                                        parameter: paramId,
-                                    },
-                                    channel: message.replyToChannel,
-                                }
-                            );
-                        });
-                    });
+                bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        return {
+                            value: model.getItem(['params', message.parameterName]),
+                        };
+                    },
+                });
 
-                    bus.respond({
-                        key: {
-                            type: 'get-parameter',
-                        },
-                        handle: function (message) {
-                            return {
-                                value: model.getItem(['params', message.parameterName]),
-                            };
-                        },
-                    });
-
-                    bus.on('parameter-changed', (message) => {
-                        // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState();
-                    });
-                    return paramsWidget.start({
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                        params: model.getItem('params'),
-                    });
+                bus.on('parameter-changed', (message) => {
+                    // We simply store the new value for the parameter.
+                    model.setItem(['params', message.parameter], message.newValue);
+                    evaluateAppState();
+                });
+                return paramsWidget.start({
+                    node: ui.getElement(['parameters-group', 'widget']),
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                    params: model.getItem('params'),
                 });
             }
 
             function loadViewParamsWidget() {
-                pRequire('nbextensions/viewCell/widgets/appParamsViewWidget').then((Widget) => {
-                    const bus = runtime
-                        .bus()
-                        .makeChannelBus({ description: 'Parent comm bus for input widget' });
+                const bus = runtime
+                    .bus()
+                    .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
-                    paramsWidget = Widget.make({
-                        bus: bus,
-                        workspaceInfo: workspaceInfo,
-                    });
+                paramsWidget = AppParamsViewWidget.make({
+                    bus: bus,
+                    workspaceInfo: workspaceInfo,
+                });
 
-                    bus.on('parameter-sync', (message) => {
-                        const value = model.getItem(['params', message.parameter]);
+                bus.on('parameter-sync', (message) => {
+                    const value = model.getItem(['params', message.parameter]);
+                    bus.send(
+                        {
+                            parameter: message.parameter,
+                            value: value,
+                        },
+                        {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter,
+                            },
+                        }
+                    );
+                });
+
+                bus.on('sync-params', (message) => {
+                    message.parameters.forEach((paramId) => {
                         bus.send(
                             {
-                                parameter: message.parameter,
-                                value: value,
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter]),
                             },
                             {
-                                // This points the update back to a listener on this key
                                 key: {
-                                    type: 'update',
-                                    parameter: message.parameter,
+                                    type: 'parameter-value',
+                                    parameter: paramId,
                                 },
+                                channel: message.replyToChannel,
                             }
                         );
                     });
+                });
 
-                    bus.on('sync-params', (message) => {
-                        message.parameters.forEach((paramId) => {
-                            bus.send(
-                                {
-                                    parameter: paramId,
-                                    value: model.getItem(['params', message.parameter]),
-                                },
-                                {
-                                    key: {
-                                        type: 'parameter-value',
-                                        parameter: paramId,
-                                    },
-                                    channel: message.replyToChannel,
-                                }
-                            );
-                        });
-                    });
+                bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        return {
+                            value: model.getItem(['params', message.parameterName]),
+                        };
+                    },
+                });
 
-                    bus.respond({
-                        key: {
-                            type: 'get-parameter',
-                        },
-                        handle: function (message) {
-                            return {
-                                value: model.getItem(['params', message.parameterName]),
-                            };
-                        },
-                    });
-
-                    bus.on('parameter-changed', (message) => {
-                        // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState();
-                    });
-                    return paramsWidget.start({
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                        params: model.getItem('params'),
-                    });
+                bus.on('parameter-changed', (message) => {
+                    // We simply store the new value for the parameter.
+                    model.setItem(['params', message.parameter], message.newValue);
+                    evaluateAppState();
+                });
+                return paramsWidget.start({
+                    node: ui.getElement(['parameters-group', 'widget']),
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                    params: model.getItem('params'),
                 });
             }
 
@@ -1248,7 +1231,6 @@ define(
                         });
                     }
                 }
-
                 harvestErrors(validationResult);
                 return messages;
             }
@@ -1276,7 +1258,7 @@ define(
                         }
                     })
                     .catch((err) => {
-                        alert('internal error'), console.error('INTERNAL ERROR', err);
+                        console.error('INTERNAL ERROR', err);
                     });
             }
 
@@ -1286,7 +1268,7 @@ define(
                 return syncAppSpec(params.appId, params.appTag)
                     .then(() => {
                         const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                                .filter(toBoolean)
+                                .filter((v) => !!v)
                                 .join('/'),
                             url = '/#appcatalog/app/' + appRef;
                         utils.setCellMeta(
@@ -1341,14 +1323,14 @@ define(
             }
 
             // INIT
-            const model = Props.make({
+            model = Props.make({
                 data: utils.getMeta(cell, 'viewCell'),
                 onUpdate: function (props) {
                     utils.setMeta(cell, 'viewCell', props.getRawObject());
                 },
             });
 
-            const spec = Spec.make({
+            spec = Spec.make({
                 appSpec: model.getItem('app.spec'),
             });
 

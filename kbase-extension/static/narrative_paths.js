@@ -65,7 +65,6 @@ require.config({
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/jquery-ui.min',
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
-        // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig: 'kbase/js/narrativeConfig',
         narrativeMain: 'narrativeMain',
@@ -104,7 +103,6 @@ require.config({
         runtimeManager: 'kbase/js/widgetApi/runtimeManager',
         messageManager: 'kbase/js/widgetApi/messageManager',
         narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
-        narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
         common: 'kbase/js/common',
@@ -121,7 +119,6 @@ require.config({
         kbaseNarrativeDataPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
         kbaseNarrativeDataList: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         kbaseNarrativeSidePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
-        jobCommChannel: 'kbase/js/widgets/narrative_core/jobCommChannel',
         kbaseNarrativeAppPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         kbaseNarrativeManagePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         kbaseNarrativeOutlinePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutlinePanel',
@@ -388,6 +385,7 @@ require.config({
         kbasePanel: 'kbase/js/widgets/kbasePanel',
         kbaseDeletePrompt: 'kbase/js/widgets/kbaseDeletePrompt',
     },
+    excludeShallow: ['common/jobCommChannel'],
     map: {
         '*': {
             css: 'ext_components/require-css/css',

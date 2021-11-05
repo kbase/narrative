@@ -1,0 +1,40 @@
+.kb-tour {
+  background-color: use_color('mid-blue');
+
+  &.popover {
+    &.top > .arrow::after {
+      border-top-color: use_color('mid-blue');
+    }
+
+    &.bottom > .arrow::after {
+      border-bottom-color: use_color('mid-blue');
+    }
+
+    &.right > .arrow::after {
+      border-right-color: use_color('mid-blue');
+    }
+
+    &.left > .arrow::after {
+      border-left-color: use_color('mid-blue');
+    }
+  }
+
+  > {
+    h3.popover-title {
+      background-color: use_color('mid-blue');
+      color: use_color('white');
+      font: 16px $typeface-page-text;
+    }
+
+    .popover-content,
+    .popover-navigation {
+      background-color: use_color('base-lightest');
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 7px;
+      top: 7px;
+    }
+  }
+}

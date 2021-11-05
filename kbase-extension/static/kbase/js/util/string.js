@@ -44,14 +44,17 @@ define([], () => {
         if (!str) {
             return str;
         }
+        const charMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;',
+        };
         return str.replace(/[&<>"']/g, (s) => {
-            const charMap = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            };
             return charMap[s];
         });
     }
@@ -100,11 +103,44 @@ define([], () => {
         return s;
     }
 
+    /**
+     * Set the first letter of a string to uppercase
+     *
+     * Returns the input unchanged if it is not a string
+     *
+     * @param {string} string
+     */
+    function capitalize(string) {
+        if (typeof string !== 'string') {
+            return string;
+        }
+        return string.charAt(0).toLocaleUpperCase() + string.slice(1);
+    }
+
+    /**
+     * Turn an array of strings into a comma-separated string
+     * @param {array} array
+     * @returns {string}
+     */
+    function arrayToEnglish(array) {
+        const cleanArray = array.filter((item) => !!item);
+        if (cleanArray.length < 3) {
+            return array.join(' and ');
+        }
+        const lastItem = cleanArray.pop();
+        return cleanArray
+            .map((item) => `${item},`)
+            .concat(`and ${lastItem}`)
+            .join(' ');
+    }
+
     return {
-        uuid: uuid,
-        safeJSONStringify: safeJSONStringify,
-        readableBytes: readableBytes,
-        prettyPrintJSON: prettyPrintJSON,
-        escape: escape,
+        uuid,
+        safeJSONStringify,
+        readableBytes,
+        prettyPrintJSON,
+        escape,
+        capitalize,
+        arrayToEnglish,
     };
 });

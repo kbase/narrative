@@ -29,6 +29,7 @@ define(['uuid'], (Uuid) => {
             return '-' + m.toLowerCase();
         });
     }
+
     function makeStyleAttribs(attribs) {
         return Object.keys(attribs)
             .map((rawKey) => {
@@ -42,9 +43,7 @@ define(['uuid'], (Uuid) => {
                         case 'number':
                             return String(rawValue);
                         case 'boolean':
-                            return false;
                         case 'undefined':
-                            return false;
                         case 'object':
                             return false;
                     }
@@ -130,7 +129,6 @@ define(['uuid'], (Uuid) => {
             case 'number':
                 return String(children);
             case 'boolean':
-                return '';
             case 'undefined':
                 return '';
             case 'object':
@@ -140,11 +138,8 @@ define(['uuid'], (Uuid) => {
                             return renderContent(item);
                         })
                         .join('');
-                } else if (children === null) {
-                    return '';
-                } else {
-                    return '';
                 }
+                return '';
         }
     }
 
@@ -212,14 +207,6 @@ define(['uuid'], (Uuid) => {
         return 'kb_html_' + new Uuid(4).format();
     }
 
-    function makePanel(arg) {
-        const klass = arg.class || 'default';
-        return div({ class: 'panel panel-' + klass }, [
-            div({ class: 'panel-heading' }, [span({ class: 'panel-title' }, arg.title)]),
-            div({ class: 'panel-body' }, [arg.content]),
-        ]);
-    }
-
     function loading(msg) {
         const prompt = msg ? `${msg} &nbsp;&nbsp;` : '';
         return span([prompt, i({ class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom' })]);
@@ -235,14 +222,6 @@ define(['uuid'], (Uuid) => {
      * @param {type} arg
      * @returns {unresolved}
      */
-    function reverse(arr) {
-        const newArray = [];
-        for (let index = arr.length - 1; index >= 0; index -= 1) {
-            newArray.push(arr[index]);
-        }
-        return newArray;
-    }
-
     function makeTabs(arg) {
         const tabsId = arg.id,
             tabsAttribs = {},
@@ -261,7 +240,7 @@ define(['uuid'], (Uuid) => {
             tab.id = genId();
         });
         if (arg.alignRight) {
-            tabTabs = reverse(tabs);
+            tabTabs = tabs.slice().reverse();
             tabStyle.float = 'right';
             activeIndex = tabs.length - 1;
         } else {
@@ -318,7 +297,6 @@ define(['uuid'], (Uuid) => {
         genId,
         isSimpleObject,
         loading,
-        makePanel,
         makeTabs,
         merge,
         tag,

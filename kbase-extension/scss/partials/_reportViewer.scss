@@ -1,0 +1,52 @@
+.kb-report-view {
+  &__warning {
+    &__count {
+      margin: 5px;
+    }
+
+    &__container {
+      margin: 0 5px 5px 10px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    &__text {
+      margin: 0 5px 5px 10px;
+    }
+  }
+
+  &__summary {
+    @include fixed-width;
+
+    color: use_color('base-dark');
+    height: auto;
+    max-height: 500px;
+    overflow: auto;
+    white-space: pre-wrap;
+    width: 100%;
+  }
+
+  &__download-iframe {
+    display: none;
+  }
+
+  &__download_button {
+    cursor: pointer;
+  }
+
+  &__report_iframe {
+    display: block;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  &__report_button {
+    margin: 4px 4px 8px 0;
+  }
+}
+
+.kb-output-widget__object_link {
+  cursor: pointer;
+}

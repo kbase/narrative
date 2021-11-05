@@ -9,7 +9,6 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
     'use strict';
 
@@ -90,8 +89,6 @@ define([
                         p('If enabled again, the values will be set to their defaults.'),
                         p('Continue to disable this parameter group?'),
                     ]),
-                    yesLabel: 'Yes',
-                    noLabel: 'No',
                 }).then((confirmed) => {
                     if (!confirmed) {
                         return;
@@ -302,7 +299,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },

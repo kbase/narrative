@@ -6,7 +6,6 @@ define([
     '../validation',
     'common/events',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, $, Jupyter, html, Validation, Events) => {
     'use strict';
 

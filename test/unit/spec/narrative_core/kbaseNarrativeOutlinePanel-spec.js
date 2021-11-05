@@ -95,7 +95,7 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace', 'narrativeM
                     /**/ buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
                     /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h4/>' }),
                     /**/ /**/ buildMockCell('code', 'app'),
-                ]
+                ],
             });
             widget.renderOutline();
             expect(getItemDepths(widget.body)).toEqual([

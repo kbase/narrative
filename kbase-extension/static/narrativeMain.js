@@ -24,11 +24,7 @@
  */
 require(['./narrative_paths'], () => {
     'use strict';
-    require(['jquery', 'narrativeConfig', 'narrativeLogin', 'css!font-awesome'], (
-        $,
-        Config,
-        Login
-    ) => {
+    require(['jquery', 'narrativeConfig', 'narrativeLogin'], ($, Config, Login) => {
         console.log('Loading KBase Narrative setup routine.');
 
         Config.updateConfig().then(() => {

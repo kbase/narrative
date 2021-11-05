@@ -14,7 +14,7 @@ define(
         'kb_service/utils',
         'kb_sdk_clients/genericClient',
         'common/pythonInterop',
-        'common/utils',
+        'common/cellUtils',
         'common/ui',
         'common/fsm',
         'common/spec',
@@ -23,8 +23,7 @@ define(
         './loading',
         './message',
 
-        'css!google-code-prettify/prettify.css',
-        'css!font-awesome.css',
+        'css!google-code-prettify/prettify',
     ],
     (
         require,

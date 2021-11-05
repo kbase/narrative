@@ -6,6 +6,7 @@ define([
     'dropzone',
     'handlebars',
     'StagingServiceClient',
+    'bluebird',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html',
 ], (
@@ -16,6 +17,7 @@ define([
     Dropzone,
     Handlebars,
     StagingServiceClient,
+    Promise,
     DropzoneAreaHtml,
     DropFileHtml
 ) => {
@@ -30,6 +32,13 @@ define([
             this.path = options.path;
             this.stagingUrl = Config.url('staging_api_url');
             this.userInfo = options.userInfo;
+
+            const runtime = Runtime.make();
+            this.stagingServiceClient = new StagingServiceClient({
+                root: Config.url('staging_api_url'),
+                token: runtime.authToken(),
+            });
+
             this.render();
             return this;
         },
@@ -71,12 +80,12 @@ define([
                         width: progress + '%',
                     });
                 })
-                .on('addedfile', (file) => {
-                    $dropzoneElem.find('#global-info').css({ display: 'inline' });
+                .on('addedfile', () => {
+                    $dropzoneElem.find('#global-info').removeClass('hide');
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     // If there is a button already in the area, it has to be removed,
-                    // and appened to the new document when additional errored files are added.
+                    // and appended to the new document when additional errored files are added.
                     if ($dropzoneElem.find('#clear-all-btn').length) {
                         this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
@@ -98,7 +107,7 @@ define([
                     });
                 })
                 .on('sending', (file, xhr, data) => {
-                    $dropzoneElem.find('#global-info').css({ display: 'inline' });
+                    $dropzoneElem.find('#global-info').removeClass('hide');
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
@@ -118,8 +127,26 @@ define([
                 .on('reset', () => {
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
-                    $dropzoneElem.find('#global-info').css({ display: 'none' });
+                    $dropzoneElem.find('#global-info').addClass('hide');
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
+                })
+                .on('canceled', (file) => {
+                    const path = file.fullPath ? file.fullPath : file.name;
+                    if (path) {
+                        Promise.resolve(
+                            this.stagingServiceClient.delete({
+                                path: path,
+                            })
+                        ).catch((xhr) => {
+                            throw new Error(
+                                xhr.responseText
+                                    ? xhr.responseText
+                                    : 'Unknown error - unable to delete file from staging area'
+                            );
+                        });
+                    } else {
+                        throw new Error('Unable to locate path for file to delete');
+                    }
                 })
                 .on('error', (erroredFile) => {
                     const $errorElem = $(erroredFile.previewElement);
@@ -159,15 +186,11 @@ define([
             e.preventDefault();
 
             if (e.target.href === globusUrlLinked) {
-                const stagingServiceClient = new StagingServiceClient({
-                    root: this.stagingUrl,
-                    token: Runtime.make().authToken(),
-                });
                 const globusWindow = window.open('', 'dz-globus');
                 globusWindow.document.write(
                     '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
                 );
-                stagingServiceClient.addAcl().done(() => {
+                this.stagingServiceClient.addAcl().done(() => {
                     window.open($(e.target).attr('href'), 'dz-globus');
                     return true;
                 });
@@ -179,7 +202,7 @@ define([
         makeClearAllButton: function () {
             const $clearAllBtn = $('<button>')
                 .text('Clear All')
-                .addClass('btn__text clear-all-dropzone')
+                .addClass('dz-clear-all__button')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
                 .click(() => {

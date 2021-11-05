@@ -16,7 +16,6 @@ define([
     'kb_service/utils',
     // LOCAL
     'common/ui',
-    'common/dom',
     'common/runtime',
     'common/events',
     'common/props',
@@ -29,7 +28,6 @@ define([
     sdkClientExceptions,
     serviceUtils,
     UI,
-    Dom,
     Runtime,
     Events,
     Props,
@@ -284,8 +282,7 @@ define([
                         original: err,
                         message: err.message,
                         reason: 'This is an unknown error connecting to a service',
-                        detail:
-                            'This is an unknown error connecting to a service. Additional details may be available in your browser log',
+                        detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
                         advice: [
                             'This problem may be temporary -- try again later',
                             'You may wish to <href="https://www.kbase.us/support">report this error to kbase</a>',

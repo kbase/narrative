@@ -1,5 +1,6 @@
-define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
+define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) => {
     'use strict';
+
     describe('Test the UPA API', () => {
         const upaApi = new UpaApi(),
             serializeTestData = [
@@ -91,6 +92,10 @@ define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
             Config.config.workspaceId = 31;
         });
 
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should properly serialize an UPA from this workspace', () => {
             serializeTestData.forEach((pair) => {
                 expect(upaApi.serialize(pair.upa)).toBe(pair.serial);
@@ -157,7 +162,7 @@ define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
         });
 
         it('Should fail if the workspace id cannot be found.', () => {
-            history.pushState(null, null, '/narrative/');
+            const prevWsId = Config.get('workspaceId');
             Config.config.workspaceId = undefined;
             try {
                 upaApi.deserialize('[1]/2/3');
@@ -167,6 +172,8 @@ define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
                 expect(error.error).toEqual(
                     'Currently loaded workspace is unknown! Unable to deserialize UPA.'
                 );
+            } finally {
+                Config.config.workspaceId = prevWsId;
             }
         });
 

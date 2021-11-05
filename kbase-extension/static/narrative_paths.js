@@ -4,43 +4,43 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths: {
-        fileSaver: 'ext_components/file-saver/dist/FileSaver.min',  //
-        bluebird: 'ext_components/bluebird/js/browser/bluebird.min',  //
-        'bootstrap-slider': 'ext_components/bootstrap-slider/dist/bootstrap-slider',  // min?
-        'bootstrap-slider-css': 'ext_components/bootstrap-slider/dist/css/bootstrap-slider',  //
-        'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',  //
-        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap',  //
-        'datatables.net-buttons': 'ext_components/datatables.net-buttons/js/dataTables.buttons.min',  //
+        fileSaver: 'ext_components/file-saver/dist/FileSaver.min',
+        bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
+        'bootstrap-slider': 'ext_components/bootstrap-slider/dist/bootstrap-slider',
+        'bootstrap-slider-css': 'ext_components/bootstrap-slider/dist/css/bootstrap-slider',
+        'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',
+        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap',
+        'datatables.net-buttons': 'ext_components/datatables.net-buttons/js/dataTables.buttons.min',
         'datatables.net-buttons-bs':
-            'ext_components/datatables.net-buttons-bs/js/buttons.bootstrap.min',  //
+            'ext_components/datatables.net-buttons-bs/js/buttons.bootstrap.min',
         'datatables.net-buttons-html5':
-            'ext_components/datatables.net-buttons/js/buttons.html5.min',  //
+            'ext_components/datatables.net-buttons/js/buttons.html5.min',
         'datatables.net-buttons-colvis':
-            'ext_components/datatables.net-buttons/js/buttons.colVis.min',  //
+            'ext_components/datatables.net-buttons/js/buttons.colVis.min',
         'datatables.net-buttons-print':
-            'ext_components/datatables.net-buttons/js/buttons.print.min',  //
-        bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',  //
-        d3: 'ext_components/d3/d3.min',  //
-        md5: 'ext_components/spark-md5/spark-md5',  // min?
-        domReady: 'ext_components/requirejs-domready/domReady',  //
-        dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',  //
-        handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',  //
-        json: 'ext_components/requirejs-plugins/src/json',  //
-        'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',  //
-        plotly: 'ext_components/plotly.js-dist-min/plotly.min', //
-        kb_common: 'ext_components/kbase-common-js/dist/kb_common/',  //
-        kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',  //
-        kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',  //
-        numeral: 'ext_components/numeral/numeral',  //
-        text: 'ext_components/requirejs-plugins/lib/text',  //
+            'ext_components/datatables.net-buttons/js/buttons.print.min',
+        bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
+        d3: 'ext_components/d3/d3.min',
+        md5: 'ext_components/spark-md5/spark-md5',
+        domReady: 'ext_components/requirejs-domready/domReady',
+        dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
+        handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',
+        json: 'ext_components/requirejs-plugins/src/json',
+        'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
+        plotly: 'ext_components/plotly.js-dist-min/plotly.min',
+        kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
+        kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
+        kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
+        numeral: 'ext_components/numeral/numeral',
+        text: 'ext_components/requirejs-plugins/lib/text',
         tipsy: 'ext_components/jquery.tipsy/src/jquery.tipsy',
-        typeahead: 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',  //
-        underscore: 'ext_components/underscore/underscore-min',  //
-        select2: 'ext_components/select2/dist/js/select2.full.min',  //
-        uuid: 'ext_components/pure-uuid/uuid',  //
-        'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',  //
-        yaml: 'ext_components/require-yaml/yaml',  //
-        'js-yaml': 'ext_components/js-yaml/dist/js-yaml', //
+        typeahead: 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
+        underscore: 'ext_components/underscore/underscore-min',
+        select2: 'ext_components/select2/dist/js/select2.full.min',
+        uuid: 'ext_components/pure-uuid/uuid',
+        'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
+        yaml: 'ext_components/require-yaml/yaml',
+        'js-yaml': 'ext_components/js-yaml/dist/js-yaml',
 
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         // copied from the cdn

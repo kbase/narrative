@@ -18,10 +18,10 @@ define([
     'base/js/namespace',
     'kb_service/client/workspace',
     './tabs/configure',
+    './tabs/multiAppInfo',
     'common/cellComponents/cellControlPanel',
     'common/cellComponents/cellTabs',
     'common/cellComponents/fsmBar',
-    'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/results/resultsTab',
     'common/errorDisplay',
@@ -47,10 +47,10 @@ define([
     Jupyter,
     Workspace,
     ConfigureWidget,
+    MultiAppInfoWidget,
     CellControlPanel,
     CellTabs,
     FSMBar,
-    InfoTabWidget,
     JobStatusTabWidget,
     ResultsWidget,
     ErrorTabWidget,
@@ -129,6 +129,7 @@ define([
                 bus: runtime.bus(),
             }),
             typesToFiles = setupFileData(options.importData),
+            { fileTypesDisplay } = BulkImportUtil.generateFileTypeMappings(typesToFiles),
             workspaceClient = getWorkspaceClient(),
             tabSet = {
                 selected: 'configure',
@@ -143,7 +144,7 @@ define([
                     },
                     info: {
                         label: 'Info',
-                        widget: InfoTabWidget,
+                        widget: MultiAppInfoWidget,
                     },
                     jobStatus: {
                         label: 'Job Status',
@@ -547,7 +548,7 @@ define([
                 const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
                 const appInfo = {
                     app_id: appSpecInfo.id,
-                    tag: 'release',
+                    tag: appSpecInfo.tag || 'release',
                     version: appSpecInfo.ver,
                     params: params[fileType].filePaths.map((filePathParams) => {
                         return Object.assign({}, filePathParams, params[fileType].params);
@@ -755,6 +756,7 @@ define([
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
+                fileTypesDisplay,
                 jobId: undefined,
                 jobManager,
                 model,

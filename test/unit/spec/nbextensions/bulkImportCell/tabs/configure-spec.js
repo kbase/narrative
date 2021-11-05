@@ -285,15 +285,11 @@ define([
                         // expect that both buttons are there, and the first is selected
                         const btn1 = ftPanel.querySelector('[data-element="dataType1"]');
                         expect(
-                            btn1.classList.contains(
-                                'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
-                            )
+                            btn1.classList.contains('kb-filetype-panel__filetype_button--selected')
                         ).toBeTruthy();
                         const btn2 = ftPanel.querySelector('[data-element="dataType2"]');
                         expect(
-                            btn2.classList.contains(
-                                'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
-                            )
+                            btn2.classList.contains('kb-filetype-panel__filetype_button--selected')
                         ).toBeFalsy();
 
                         return new Promise((resolve) => {
@@ -301,7 +297,7 @@ define([
                                 expect(message.fileType).toBe('dataType2');
                                 expect(
                                     btn2.classList.contains(
-                                        'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
+                                        'kb-filetype-panel__filetype_button--selected'
                                     )
                                 ).toBeTrue();
                                 resolve();
@@ -316,9 +312,7 @@ define([
                             '[data-element="filetype-panel"] [data-element="dataType1"]'
                         );
                         expect(
-                            btn1.classList.contains(
-                                'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
-                            )
+                            btn1.classList.contains('kb-filetype-panel__filetype_button--selected')
                         ).toBeFalsy();
                     })
                     .then(() => configure.stop());

@@ -1,47 +1,78 @@
-define(['common/format'], (format) => {
+define(['common/format', 'common/html', 'util/string'], (format, html, string) => {
     'use strict';
 
-    const cssBaseClass = 'kb-info-tab';
+    const cssBaseClass = 'kb-info-tab',
+        div = html.tag('div'),
+        span = html.tag('span'),
+        ul = html.tag('ul'),
+        li = html.tag('li'),
+        a = html.tag('a');
 
-    const DOMTagA = function (innerHTML, options) {
-        const tag = document.createElement('a');
-        if (options) {
-            if (options.class) {
-                tag.classList = options.class.split(' ');
-            }
-            tag.href = options.href;
-            tag.target = options.target;
+    function paramsList(appSpec) {
+        if (!appSpec.parameters.length) {
+            return div(
+                {
+                    class: `${cssBaseClass}__list--params`,
+                },
+                'No parameters specified'
+            );
         }
-        tag.innerHTML = innerHTML;
-        return tag;
-    };
 
-    const DOMTagLI = function (innerHTML) {
-        const item = document.createElement('li');
-        item.innerHTML = innerHTML;
-        return item;
-    };
-
-    const appendChildren = function (node, children) {
-        children.forEach((child) => {
-            node.appendChild(child);
-        });
-    };
-
-    const listLinks = function (links) {
-        const out = [];
-        const separator = document.createTextNode(', ');
-        const conjunction = document.createTextNode(' and ');
-        links.forEach((link, ix) => {
-            out.push(link);
-            if (ix < links.length - 2) {
-                out.push(separator.cloneNode());
-            } else if (ix === links.length - 2) {
-                out.push(conjunction);
+        const parameterArray = appSpec.parameters.map((param) => {
+            const textOptions = param.text_options;
+            let types = null;
+            if (textOptions && Array.isArray(textOptions.valid_ws_types)) {
+                const typesArray = textOptions.valid_ws_types.map((type) => {
+                    return a(
+                        {
+                            class: `${cssBaseClass}__link--kb-type`,
+                            href: `/#spec/type/${type}`,
+                            target: '_blank',
+                            title: `KBase type ${type}`,
+                        },
+                        type
+                    );
+                });
+                if (typesArray.length) {
+                    types = string.arrayToEnglish(typesArray);
+                }
             }
+
+            return li(
+                {
+                    class: `${cssBaseClass}__list_item--params`,
+                },
+                span({}, param.ui_name) + (types ? ': ' + types : '')
+            );
         });
-        return out;
-    };
+
+        return ul(
+            {
+                class: `${cssBaseClass}__list--params`,
+            },
+            parameterArray
+        );
+    }
+
+    function authorList(appSpec) {
+        // AUTHORS/OWNERS
+        const authors = appSpec.full_info.authors;
+        if (!authors) {
+            return undefined;
+        }
+        return string.arrayToEnglish(
+            authors.map((author) => {
+                return a(
+                    {
+                        class: `${cssBaseClass}__link--author`,
+                        href: `/#people/${author}`,
+                        target: '_blank',
+                    },
+                    author
+                );
+            })
+        );
+    }
 
     function factory(config) {
         const model = config.model;
@@ -52,112 +83,101 @@ define(['common/format'], (format) => {
             if (!appSpec && arg.currentApp) {
                 appSpec = model.getItem(`app.specs.${arg.currentApp}`); // for bulk cells
             }
-            const appRef = [appSpec.info.id, model.getItem('app').tag].filter((v) => !!v).join('/');
 
-            const methodFullInfo = appSpec.full_info;
+            containerNode = arg.node;
+            const appTag = appSpec.full_info.tag || model.getItem('app.tag');
+            const fullInfo = appSpec.full_info;
+            const appRef = [fullInfo.id, appTag].filter((v) => !!v).join('/');
+            const parameterList = paramsList(appSpec);
+            const authors = authorList(appSpec);
 
-            // DESCRIPTION
-            const description = document.createElement('div');
-            description.classList.add(`${cssBaseClass}__description`);
-            description.innerHTML = methodFullInfo.description;
-
-            // RUN COUNT AND AVERAGE RUNTIME
+            // run count and average runtime
             const execStats = model.getItem('executionStats');
-            let avgRuntime;
+            let avgRuntime, runtimeInfo;
             if (execStats && execStats.total_exec_time && execStats.number_of_calls > 0) {
                 avgRuntime = format.niceDuration(
                     1000 * (execStats.total_exec_time / execStats.number_of_calls)
                 );
-            }
-            let runtimeAvgListItem = document.createTextNode('');
-            if (avgRuntime) {
-                runtimeAvgListItem = DOMTagLI(
-                    '' +
-                        `This app has been run ${execStats.number_of_calls}` +
-                        ` times and its average execution time is ${avgRuntime}.`
+                runtimeInfo = div(
+                    {
+                        class: `${cssBaseClass}__runstats`,
+                    },
+                    `This app has been run ${execStats.number_of_calls} times` +
+                        ` and its average execution time is ${avgRuntime}.`
                 );
             }
 
-            // LIST OF PARAMETERS
-            const parametersList = document.createElement('ul');
-            appSpec.parameters.forEach((param) => {
-                const textOptions = param.text_options;
-                let types = [];
-                if (textOptions && Array.isArray(textOptions.valid_ws_types)) {
-                    const typesArray = textOptions.valid_ws_types.map((type) => {
-                        const linkType = DOMTagA(type, {
-                            class: 'cm-em',
-                            href: '/#spec/type/' + type,
-                            target: '_blank',
-                        });
-                        return linkType;
-                    });
-                    if (typesArray.length) {
-                        types = listLinks(typesArray);
-                    }
-                }
-                const li = document.createElement('li');
-                const paramUIName = document.createElement('span');
-                paramUIName.innerHTML = param.ui_name;
-                li.appendChild(paramUIName);
-                if (types.length) {
-                    li.appendChild(document.createTextNode(': '));
-                }
-                appendChildren(li, types);
-                parametersList.appendChild(li);
-            });
-            const parametersListItem = document.createElement('li');
-            parametersListItem.appendChild(document.createTextNode('Parameters: '));
-            parametersListItem.appendChild(parametersList);
-
-            // AUTHORS/OWNERS
-            const authors = appSpec.info.authors;
-            let authorsListItem = document.createTextNode('');
-            if (authors.length) {
-                const authorsArray = authors.map((author) => {
-                    return DOMTagA(author, {
-                        href: '/#people/' + author,
-                        target: '_blank',
-                    });
-                });
-                authorsListItem = document.createElement('li');
-                authorsListItem.appendChild(document.createTextNode('Authors: '));
-                appendChildren(authorsListItem, listLinks(authorsArray));
-            }
-
-            // VERSION
-            const versionListItem = DOMTagLI(`Version: ${appSpec.info.ver}`);
-
-            // CATALOG LINK
-            const linkCatalog = DOMTagA('View Full Documentation', {
-                href: '/#appcatalog/app/' + appRef,
-                target: '_blank',
-            });
-            const linkCatalogListItem = document.createElement('li');
-            linkCatalogListItem.appendChild(linkCatalog);
-
-            // Assemble list items
-            const listItems = [
-                runtimeAvgListItem,
-                parametersListItem,
-                authorsListItem,
-                versionListItem,
-                linkCatalogListItem,
-            ];
-
-            // Populate info tab
-            containerNode = arg.node;
-
-            const infoContainer = document.createElement('div');
-            infoContainer.classList.add(`${cssBaseClass}__container`);
-            infoContainer.appendChild(description);
-
-            const infoList = document.createElement('ul');
-            infoList.classList.add(`${cssBaseClass}__infoList`);
-            appendChildren(infoList, listItems);
-            infoContainer.appendChild(infoList);
-
-            containerNode.appendChild(infoContainer);
+            const infoContainer = div(
+                {
+                    class: `${cssBaseClass}__container`,
+                },
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}__title`,
+                        },
+                        [
+                            span(
+                                {
+                                    class: `${cssBaseClass}__name`,
+                                },
+                                fullInfo.name
+                            ),
+                            span(
+                                {
+                                    class: `${cssBaseClass}__version`,
+                                    title: `App version v${fullInfo.ver}`,
+                                },
+                                `v${fullInfo.ver}`
+                            ),
+                            appTag
+                                ? span(
+                                      {
+                                          class: `${cssBaseClass}__tag label label-primary`,
+                                          title: `${appTag} version of the app`,
+                                      },
+                                      appTag
+                                  )
+                                : '',
+                        ]
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__authors`,
+                        },
+                        authors ? `by ${authors}` : 'No authors specified'
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__description`,
+                        },
+                        fullInfo.description && fullInfo.description.length
+                            ? fullInfo.description
+                            : 'No description specified'
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__link--docs`,
+                        },
+                        a(
+                            {
+                                href: `/#appcatalog/app/${appRef}`,
+                                target: '_blank',
+                            },
+                            'View full documentation'
+                        )
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__list_title--params`,
+                        },
+                        'Parameters'
+                    ),
+                    parameterList,
+                    runtimeInfo,
+                ]
+            );
+            containerNode.innerHTML = infoContainer;
             return Promise.resolve(containerNode);
         }
 
@@ -167,9 +187,11 @@ define(['common/format'], (format) => {
         }
 
         return {
-            hide: () => {},
-            start: start,
-            stop: stop,
+            hide: () => {
+                /* no op */
+            },
+            start,
+            stop,
         };
     }
 
@@ -177,5 +199,6 @@ define(['common/format'], (format) => {
         make: function (config) {
             return factory(config);
         },
+        cssBaseClass,
     };
 });

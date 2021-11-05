@@ -4,7 +4,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
     const div = html.tag('div'),
         span = html.tag('span'),
         button = html.tag('button'),
-        baseCss = 'kb-bulk-import-configure__filetype_panel',
+        baseCss = 'kb-filetype-panel',
         fileTypeIcon = `${baseCss}__filetype_icon`,
         completeIcon = ['fa-check', `${fileTypeIcon}--complete`],
         incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`];
@@ -93,7 +93,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
          * @param {Events} events - an events object used to bind the DOM event
          */
         function renderFileTypes(events) {
-            const layout = Object.keys(fileTypes)
+            return Object.keys(fileTypes)
                 .sort()
                 .map((key) => {
                     return button(
@@ -125,7 +125,6 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                         ]
                     );
                 });
-            return layout;
         }
 
         /**
@@ -178,7 +177,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                 container = args.node;
                 ui = UI.make({
                     node: container,
-                    bus: bus,
+                    bus,
                 });
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
@@ -191,13 +190,15 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
          * Stop the component. Not used just yet.
          */
         function stop() {
-            return Promise.try(() => {});
+            return Promise.try(() => {
+                /* no op */
+            });
         }
 
         return {
-            start: start,
-            stop: stop,
-            updateState: updateState,
+            start,
+            stop,
+            updateState,
         };
     }
 

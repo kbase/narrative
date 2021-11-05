@@ -58,6 +58,7 @@ define([
             }),
         ]).then(([appSpecs, appFullInfos]) => {
             appFullInfos.forEach((info, idx) => {
+                info.tag = tag;
                 appSpecs[idx].full_info = info;
             });
             return appSpecs;

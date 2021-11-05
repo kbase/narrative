@@ -549,7 +549,7 @@ define([
                 const appInfo = {
                     app_id: appSpecInfo.id,
                     tag: appSpecInfo.tag || 'release',
-                    version: appSpecInfo.ver,
+                    version: appSpecInfo.git_commit_hash,
                     params: params[fileType].filePaths.map((filePathParams) => {
                         return Object.assign({}, filePathParams, params[fileType].params);
                     }),

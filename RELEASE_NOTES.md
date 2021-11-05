@@ -15,6 +15,9 @@ Code Changes
   - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
   - requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
   - kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
+  - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
+    - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
+    - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
 
 
 ### Version 4.6.0

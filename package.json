@@ -12,7 +12,6 @@
         "@wdio/mocha-framework": "7.11.1",
         "@wdio/selenium-standalone-service": "7.10.1",
         "@wdio/spec-reporter": "7.10.1",
-        "bower": "1.8.12",
         "chrome-launcher": "0.14.1",
         "chromedriver": "93.0.1",
         "commander": "8.1.0",
@@ -64,7 +63,6 @@
     },
     "scripts": {
         "black": "black -v --exclude '.+Impl.py' .",
-        "bower": "bower install",
         "eslint": "eslint --fix '**/*.js'",
         "eslint-check": "eslint '**/*.js'",
         "eslint-pre-push": "scripts/eslint-pre-push.sh",

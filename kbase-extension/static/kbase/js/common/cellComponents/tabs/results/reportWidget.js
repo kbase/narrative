@@ -12,8 +12,7 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
     'use strict';
 
     const tag = html.tag,
-        div = tag('div'),
-        a = tag('a');
+        div = tag('div');
 
     function ReportWidget() {
         let container, ui;
@@ -43,9 +42,9 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
 
                 let reportElem = name + ' (report not found)';
                 if (objInfo.reportRef) {
-                    reportElem = a(
+                    reportElem = div(
                         {
-                            class: 'kb-report__toggle collapsed',
+                            class: 'kb-report__item_toggle collapsed',
                             dataToggle: 'collapse',
                             ariaExpanded: false,
                             id: events.addEvent({
@@ -56,7 +55,12 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                         name
                     );
                 }
-                return div([reportElem]);
+                return div(
+                    {
+                        class: 'kb-report__item_container',
+                    },
+                    [reportElem]
+                );
             });
         }
 
@@ -109,7 +113,12 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
                     hidden: false,
                     type: 'default',
                     classes: ['kb-panel-container'],
-                    body: renderReports(arg.objectData, events),
+                    body: div(
+                        {
+                            class: 'kb-report__container',
+                        },
+                        renderReports(arg.objectData, events)
+                    ),
                 });
             }
 

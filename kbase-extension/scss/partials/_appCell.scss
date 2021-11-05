@@ -131,11 +131,11 @@
   }
 
   .kb-app-advanced-options-controller {
-    color: rgb(0 136 204);
+    color: use-color('blue');
     cursor: pointer;
 
     &:hover {
-      color: rgb(42 100 150);
+      color: use-color('blue-hlink');
     }
   }
 

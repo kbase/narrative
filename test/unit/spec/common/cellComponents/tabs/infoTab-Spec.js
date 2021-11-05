@@ -175,9 +175,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
             const result = this.infoTabInstance.stop();
             expect(result).toEqual(jasmine.any(Promise));
             await result;
-            // return result.then(() => {
             expect(this.container.innerHTML).toEqual('');
-            // });
         });
 
         describe('contents, app cell usage', () => {

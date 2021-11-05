@@ -52,7 +52,7 @@ To see your changes once the new image is created, simply open a narrative on CI
 ### Stage a Final Release
 
 1.  Update versions following (roughly) [semantic versioning](https://semver.org). The files to be updated are:
-    -   `package.json`, `package-lock.json`, `src/config.json`, `src/config.json.templ`, `src/biokbase/narrative/\_\_init\_\_.py`
+    -   `package.json`, `package-lock.json`, `src/config.json`, `src/config.json.templ`, `src/biokbase/narrative/__init__.py`
     -   Major - backward incompatible changes, like the move from Python 2 -> Python 3, or Narrative typed object changes. These are generally considered to be changes that have a strong impact on the Narrative Interface and are hard or impossible to move backward from.
     -   Minor - new features that don't affect compatibility.
     -   Patch - adjustments to existing features, bug fixes.  

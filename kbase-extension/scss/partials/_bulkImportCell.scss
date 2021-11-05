@@ -3,23 +3,7 @@
 */
 
 $component-border: use-color('silver');
-$filetype-icon-color: use_color('primary-vivid');
-$filetype-highlight-color: use-color('white');
-$filetype-hover-color: use-color('base-lighter');
 $panel-separator-color: use_color('mid-blue');
-$tab-widget-margin: 1rem;
-$tab-widget-padding: 0.4rem;
-
-%file_type_button {
-  background-color: inherit;
-  border: 0 solid $component-border;
-  border-top-width: 1px;
-  display: flex;
-  flex-direction: row;
-  padding: 8px;
-  text-align: left;
-  width: 100%;
-}
 
 .kb-bulk-import {
   &__base-node {
@@ -64,81 +48,25 @@ $tab-widget-padding: 0.4rem;
     width: 100%;
   }
 
-  // kb-bulk-import-configure
-  &-configure {
+  // kb-bulk-import-configure,
+  // kb-bulk-import-info
+  &-configure,
+  &-info {
     &__container {
       display: flex;
     }
 
-    // kb-bulk-import-configure__filetype_panel
-    &__filetype_panel {
+    // kb-bulk-import-configure__panel--filetype
+    // kb-bulk-import-info__panel--filetype
+    &__panel--filetype {
       background-color: use-color('base-lightest');
       width: 24rem;
-
-      &__header {
-        @include font-h4;
-
-        border-bottom: 1px solid $component-border;
-        padding: 8px;
-
-        &_icon {
-          color: rgb(0 0 0);
-          padding: 8px 6px 8px 8px;
-        }
-      }
-
-      &__filetype {
-        // .kb-bulk-import-configure__filetype_panel__filetype_button
-        &_button {
-          @extend %file_type_button;
-
-          @include base-text;
-
-          &:hover:not(&--selected) {
-            @extend %file_type_button;
-
-            background-color: $filetype-hover-color;
-            cursor: pointer;
-          }
-
-          // .kb-bulk-import-configure__filetype_panel__filetype_button--selected
-          &--selected {
-            @extend %file_type_button;
-
-            background-color: $filetype-highlight-color;
-            box-shadow: 0 3px 2px -2px use-color('base');
-          }
-
-          &--selected + .kb-bulk-import__filetype_panel__filetype_button {
-            box-shadow: inset 0 3px 2px -2px use-color('base');
-          }
-        }
-
-        // .kb-bulk-import-configure__filetype_panel__filetype_icon
-        &_icon {
-          padding: 2px 8px 0;
-          text-align: center;
-          width: 3rem;
-
-          // .kb-bulk-import-configure__filetype_panel__filetype_icon--complete
-          &--complete {
-            color: use_color('green');
-          }
-
-          // .kb-bulk-import-configure__filetype_panel__filetype_icon--incomplete
-          &--incomplete {
-            color: use_color('red');
-          }
-        }
-
-        // .kb-bulk-import-configure__filetype_panel__filetype_label
-        &_label {
-          flex: 1;
-        }
-      }
     }
 
-    &__inputs {
+    // kb-bulk-import-configure__panel--configure
+    // kb-bulk-import-info__panel--info
+    &__panel--configure,
+    &__panel--info {
       flex: 1;
     }
   }

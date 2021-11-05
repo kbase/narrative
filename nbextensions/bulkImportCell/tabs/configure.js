@@ -165,12 +165,12 @@ define([
                 },
                 [
                     div({
-                        class: `${cssBaseClass}__filetype_panel`,
+                        class: `${cssBaseClass}__panel--filetype`,
                         dataElement: 'filetype-panel',
                     }),
                     div(
                         {
-                            class: `${cssBaseClass}__inputs`,
+                            class: `${cssBaseClass}__panel--configure`,
                             dataElement: 'input-container',
                         },
                         [

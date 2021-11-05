@@ -15,7 +15,7 @@
 }
 
 @mixin font-h5 {
-  font: normal 700 15px $typeface-display;
+  font: normal 700 16px/24px $typeface-display;
 }
 
 @mixin font-h6 {
@@ -23,7 +23,7 @@
 }
 
 @mixin font-body {
-  font: normal 400 16px $typeface-page-text;
+  font: normal 400 16px/24px $typeface-page-text;
 }
 
 @mixin font-legend-title {
@@ -44,6 +44,11 @@
   line-height: 24px;
 }
 
+@mixin body-text-with-margins {
+  @include body-text;
+  margin: 1rem 0;
+}
+
 @mixin tabular-text {
   font-family: $typeface-page-text;
   font-size: $font-size-base;
@@ -56,4 +61,9 @@
   font-size: $font-size-base;
   font-weight: 400;
   line-height: $line-height-base;
+}
+
+@mixin base-text-with-margins {
+  @include base-text;
+  margin: 1rem 0;
 }

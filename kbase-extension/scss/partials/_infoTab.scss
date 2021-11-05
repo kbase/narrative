@@ -1,13 +1,42 @@
 .kb-info-tab {
-
   // .kb-info-tab__container
   &__container {
     @include default-container-padding;
   }
-
+  // .kb-info-tab__title
+  &__title {
+    line-height: 30px; // same as font-h4 line height
+  }
+  // .kb-info-tab__name
+  &__name {
+    @include font-h4;
+  }
+  // .kb-info-tab__version
+  &__version {
+    padding: 0 1rem;
+  }
+  // .kb-info-tab__tag
+  &__tag {
+    padding: 0.5rem;
+    vertical-align: middle;
+  }
+  // .kb-info-tab__authors
   // .kb-info-tab__description
-  &__description {}
+  // .kb-info-tab__list--params
+  // .kb-info-tab__link--docs
+  &__authors,
+  &__description,
+  &__list--params,
+  &__link--docs {
+    @include base-text-with-margins;
+  }
+  // .kb-info-tab__list_title--params
+  &__list_title--params {
+    @include font-h5;
+    margin: 1rem 0;
+  }
+}
 
-  // .kb-info-tab__infoList
-  &__infoList {}
+ul.kb-info-tab__list--params {
+  padding-left: 2rem;
 }

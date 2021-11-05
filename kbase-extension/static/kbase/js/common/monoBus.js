@@ -576,7 +576,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
                 message = {};
             }
             send(message, {
-                key: { type: type },
+                key: { type },
             });
         }
 
@@ -614,7 +614,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
                 }
                 return send(message, {
                     channel: channelName,
-                    key: { type: type },
+                    key: { type },
                 });
             }
 

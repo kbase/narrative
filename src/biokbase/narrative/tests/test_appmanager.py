@@ -1,7 +1,7 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_ID_KEY, BATCH_APP
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
@@ -1170,9 +1170,9 @@ class AppManagerTestCase(unittest.TestCase):
             },
         ]
         if is_batch:
-            expected_keys[0].append(BATCH_ID_KEY)
+            expected_keys[0].append("batch_id")
             expected_keys[0].append("child_job_ids")
-            expected_values[0][BATCH_ID_KEY] = self.test_job_id
+            expected_values[0]["batch_id"] = self.test_job_id
         else:
             expected_keys[0].append("job_id")
             expected_values[0]["job_id"] = self.test_job_id

@@ -43,6 +43,7 @@ define([
 ) => {
     'use strict';
     const cssBaseClass = 'kb-staging-table',
+        tableId = 'kb-staging-table',
         fileMetadataCssBaseClass = `${cssBaseClass}-file-metadata`,
         tableBodyCssBaseClass = `${cssBaseClass}-body`;
 
@@ -874,9 +875,15 @@ define([
             $.fn.DataTable.ext.search.pop();
 
             $.fn.DataTable.ext.search.push((_settings, _data, dataIndex) => {
+                if (_settings.nTable.id !== tableId) {
+                    return true;
+                }
                 const row = table.row(dataIndex);
-                const subdir = row.node().getAttribute('data-subdir');
-                return subdir === this.path;
+                if (row && row.node()) {
+                    const subdir = row.node().getAttribute('data-subdir');
+                    return subdir === this.path;
+                }
+                return true;
             });
             this.fullDataTable.draw();
         },

@@ -233,15 +233,34 @@ define([
             canonical indicator of whether a cell is collapsed or not.
             */
             const cellCollapsed =
-                    utils.getCellMeta(_cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
-                    'maximized',
-                // TODO: this needs to be updated for kbase.bulkImportCell
-                fsmMode = utils.getCellMeta(_cell, 'kbase.appCell.fsm.currentState.mode', ''),
-                fsmStage = utils.getCellMeta(_cell, 'kbase.appCell.fsm.currentState.stage', ''),
-                collapsedCellJobStatus = cellCollapsed
-                    ? Jobs.createJobStatusFromFsm(fsmMode, fsmStage)
-                    : '',
-                events = Events.make({ node: container }),
+                utils.getCellMeta(_cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
+                'maximized';
+            let collapsedCellJobStatus = '';
+
+            if (cellCollapsed) {
+                if (utils.getCellMeta(_cell, 'kbase.appCell.fsm')) {
+                    // TODO: this needs to be updated for kbase.bulkImportCell
+                    const fsmMode = utils.getCellMeta(
+                            _cell,
+                            'kbase.appCell.fsm.currentState.mode',
+                            ''
+                        ),
+                        fsmStage = utils.getCellMeta(
+                            _cell,
+                            'kbase.appCell.fsm.currentState.stage',
+                            ''
+                        );
+                    collapsedCellJobStatus = Jobs.createJobStatusFromFsm(fsmMode, fsmStage);
+                } else if (utils.getCellMeta(_cell, 'kbase.bulkImportCell.state.state')) {
+                    const currentState = utils.getCellMeta(
+                        _cell,
+                        'kbase.bulkImportCell.state.state'
+                    );
+                    collapsedCellJobStatus = Jobs.createJobStatusFromBulkCellFsm(currentState);
+                }
+            }
+
+            const events = Events.make({ node: container }),
                 title = getCellTitle(_cell),
                 subtitle = getCellSubtitle(_cell),
                 buttons = [

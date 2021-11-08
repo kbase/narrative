@@ -301,9 +301,9 @@ define([
         })();
 
         p.renderMinMax = function () {
-            let $cellNode = $(this.element),
-                metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
-                toggleMode = $cellNode.data('toggleMinMax');
+            const $cellNode = $(this.element),
+                metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax');
+            let toggleMode = $cellNode.data('toggleMinMax');
 
             if (metaToggleMode) {
                 if (!toggleMode) {
@@ -323,7 +323,7 @@ define([
             switch (toggleMode) {
                 case 'maximized':
                     if (!this.maximize) {
-                        console.log('HELP', this);
+                        console.warn('HELP', this);
                         return;
                     }
                     this.maximize();
@@ -335,8 +335,8 @@ define([
         };
 
         p.toggleMinMax = function () {
-            let $cellNode = $(this.element),
-                toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
+            const $cellNode = $(this.element);
+            let toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
             switch (toggleMode) {
                 case 'maximized':
@@ -457,12 +457,12 @@ define([
                 }
             });
 
-            $cellNode.on('hide-title.cell', (e) => {
+            $cellNode.on('hide-title.cell', () => {
                 const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('hide-title.toolbar');
             });
 
-            $cellNode.on('show-title.cell', (e) => {
+            $cellNode.on('show-title.cell', () => {
                 const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('show-title.toolbar');
             });
@@ -616,12 +616,12 @@ define([
                 }
             });
 
-            $cellNode.on('hide-title.cell', (e) => {
+            $cellNode.on('hide-title.cell', () => {
                 const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('hide-title.toolbar');
             });
 
-            $cellNode.on('show-title.cell', (e) => {
+            $cellNode.on('show-title.cell', () => {
                 const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('show-title.toolbar');
             });
@@ -663,7 +663,7 @@ define([
                 $menu.trigger('selected.toolbar');
             });
 
-            this.events.on('rendered.MarkdownCell', (e, data) => {
+            this.events.on('rendered.MarkdownCell', () => {
                 // cell.setCellState('icon', 'paragraph');
                 utils.setCellMeta(cell, 'kbase.attributes.icon', 'paragraph');
 
@@ -672,8 +672,8 @@ define([
                 // cell.renderToggleState();
 
                 // get the h1 if it exists.
-                let title,
-                    renderedContent = cell.element.find('.rendered_html'),
+                let title;
+                const renderedContent = cell.element.find('.rendered_html'),
                     h1 = renderedContent.find('h1');
                 if (h1.length > 0) {
                     title = h1[0].innerText;
@@ -743,7 +743,7 @@ define([
      */
 
     (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+        keyboardManager.KeyboardManager.prototype.register_events = function () {
             // NOOP
             return;
         };
@@ -775,9 +775,7 @@ define([
         };
 
         p.maximize = function () {
-            const inputArea = this.input.find('.input_area').get(0),
-                outputArea = this.element.find('.output_wrapper');
-
+            const outputArea = this.element.find('.output_wrapper');
             outputArea.removeClass('hidden');
         };
 
@@ -795,8 +793,7 @@ define([
 
         p.getIcon = function () {
             const iconColor = 'silver';
-            let icon;
-            icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
+            const icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
 
             return span({ style: '' }, [
                 span(
@@ -836,9 +833,9 @@ define([
             });
 
             if (this.code_mirror) {
-                this.code_mirror.on('change', (cm, change) => {
+                this.code_mirror.on('change', (cm) => {
                     const lineCount = cm.lineCount(),
-                        commentRe = /^\.*?\#\s*(.*)$/;
+                        commentRe = /^\.*?#\s*(.*)$/;
                     for (let i = 0; i < lineCount; i += 1) {
                         const line = cm.getLine(i),
                             m = commentRe.exec(line);
@@ -870,6 +867,8 @@ define([
             const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
+
+                // eslint-disable-next-line no-self-assign
                 this.metadata = this.metadata;
             }
         };
@@ -999,9 +998,8 @@ define([
         Jupyter.narrative.getUserPermissions().then((perm) => {
             const canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
             options = options || {};
-            let that = this,
-                dialogBody,
-                buttons;
+            const that = this;
+            let dialogBody, buttons;
             if (canChangeName) {
                 dialogBody = $('<div>')
                     .append(
@@ -1062,7 +1060,7 @@ define([
                     OK: {},
                 };
             }
-            var d = dialog.modal({
+            const d = dialog.modal({
                 title: 'Rename Narrative',
                 body: dialogBody,
                 notebook: options.notebook,

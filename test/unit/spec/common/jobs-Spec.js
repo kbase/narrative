@@ -15,6 +15,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         'canRetry',
         'createCombinedJobState',
         'createJobStatusFromFsm',
+        'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
         'getCurrentJobCounts',
         'getCurrentJobs',
@@ -279,7 +280,9 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
 
         const tests = [
+            // app cell states
             { mode: 'error', stage: '', text: 'error', cssClass: 'error' },
+            { mode: 'error', stage: 'runtime', text: 'error', cssClass: 'error' },
             { mode: 'internal-error', stage: '', text: 'error', cssClass: 'error' },
             { mode: 'canceling', stage: '', text: 'canceled', cssClass: 'terminated' },
             { mode: 'canceled', stage: '', text: 'canceled', cssClass: 'terminated' },
@@ -289,16 +292,42 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             // invalid input
             { mode: 'processing', stage: 'unknown', noResult: true },
             { mode: '', stage: 'running', noResult: true },
+            // bulk cell states
+            { state: 'editingIncomplete', noResult: true },
+            { state: 'editingComplete', noResult: true },
+            { state: 'launching', text: 'in progress', cssClass: 'running' },
+            { state: 'inProgress', text: 'in progress', cssClass: 'running' },
+            { state: 'inProgressResultsAvailable', text: 'in progress', cssClass: 'running' },
+            { state: 'jobsFinished', text: 'jobs finished', cssClass: 'error' },
+            { state: 'jobsFinishedResultsAvailable', text: 'jobs finished', cssClass: 'completed' },
+            { state: 'error', text: 'error', cssClass: 'error' },
+            // invalid
+            { state: 'new', noResult: true },
+            { state: null, noResult: true },
+            { state: undefined, noResult: true },
         ];
 
         tests.forEach((test) => {
+            let func, testString;
+            if (test.mode || test.stage) {
+                func = (t) => {
+                    return Jobs.createJobStatusFromFsm(t.mode, t.stage);
+                };
+                testString = `mode "${test.mode}" and stage "${test.stage}"`;
+            } else {
+                func = (t) => {
+                    return Jobs.createJobStatusFromBulkCellFsm(t.state);
+                };
+                testString = `state "${test.state}"`;
+            }
+
             if (test.noResult) {
-                it(`should not produce a status span with input mode "${test.mode}" and stage "${test.stage}"`, () => {
-                    expect(Jobs.createJobStatusFromFsm(test.mode, test.stage)).toBe('');
+                it(`should not produce a status span with ${testString}`, () => {
+                    expect(func(test)).toBe('');
                 });
             } else {
-                it(`should output "${test.text}" with input mode "${test.mode}" and stage "${test.stage}"`, () => {
-                    container.innerHTML = Jobs.createJobStatusFromFsm(test.mode, test.stage);
+                it(`should output "${test.text}" with ${testString}`, () => {
+                    container.innerHTML = func(test);
                     expect(
                         container.querySelector('[data-element="job-status"]').classList
                     ).toContain(`kb-job-status__cell_summary--${test.cssClass}`);

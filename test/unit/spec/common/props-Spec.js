@@ -43,7 +43,7 @@ define(['common/props', 'testUtil'], (Props, TestUtil) => {
             props.setItem('pet', { type: 'dog', name: 'peet' });
             expect(props.getItem('pet')).toEqual({ type: 'dog', name: 'peet' });
         });
-        it('Set two object propertyes', () => {
+        it('Set two object properties', () => {
             const props = Props.make();
             props.setItem(['pet', 'coco'], 'yellow');
             props.setItem(['pet', 'peet'], 'black');

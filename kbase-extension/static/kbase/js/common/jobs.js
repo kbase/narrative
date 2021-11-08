@@ -328,8 +328,40 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
                 }
                 break;
         }
+        return _createJobStatus({ cssClass, label });
+    }
 
-        if (!label || !cssClass) {
+    function createJobStatusFromBulkCellFsm(mode) {
+        let label, cssClass;
+        switch (mode) {
+            case 'launching':
+            case 'inProgress':
+            case 'inProgressResultsAvailable':
+                label = 'in progress';
+                cssClass = 'running';
+                break;
+            // all jobs completed, none successfully
+            case 'jobsFinished':
+                label = 'jobs finished';
+                cssClass = 'error';
+                break;
+            // all jobs complete, at least some successful
+            case 'jobsFinishedResultsAvailable':
+                label = 'jobs finished';
+                cssClass = 'completed';
+                break;
+            case 'error':
+                label = 'error';
+                cssClass = 'error';
+                break;
+        }
+        return _createJobStatus({ cssClass, label });
+    }
+
+    function _createJobStatus(args) {
+        const { cssClass, label } = args;
+
+        if (!cssClass || !label) {
             return '';
         }
 
@@ -807,6 +839,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
         canRetry,
         createCombinedJobState,
         createJobStatusFromFsm,
+        createJobStatusFromBulkCellFsm,
         createJobStatusLines,
         getCurrentJobCounts,
         getCurrentJobs,

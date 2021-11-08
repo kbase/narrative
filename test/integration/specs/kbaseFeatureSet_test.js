@@ -26,7 +26,7 @@ describe('Test kbaseFeatureSet', () => {
             const cell = await t.waitForCell(notebookContainer, cellCase.cell);
 
             // Test description display.
-            const titleEl = await cell.$('.kb-cell-toolbar__title-container [data-element="title"]');
+            const titleEl = await cell.$('.kb-cell-toolbar__title-container > [data-element="title"]');
 
             await browser.waitUntil(async () => {
                 const title = await titleEl.getText();

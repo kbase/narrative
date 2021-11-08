@@ -31,8 +31,6 @@ A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-BATCH_ID_KEY = "batch_id"
-
 BATCH_APP = {
     "APP_ID": "kb_BatchApp/run_batch",
     "METHOD": "kb_BatchApp.run_batch",
@@ -523,7 +521,7 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_job_bulk_error", log_info)
             raise transform_job_exception(e)
 
-        batch_id = batch_submission[BATCH_ID_KEY]
+        batch_id = batch_submission["batch_id"]
         child_ids = batch_submission["child_job_ids"]
 
         self._send_comm_message(
@@ -533,7 +531,7 @@ class AppManager(object):
                 "event_at": datetime.datetime.utcnow().isoformat() + "Z",
                 "cell_id": cell_id,
                 "run_id": run_id,
-                BATCH_ID_KEY: batch_id,
+                "batch_id": batch_id,
                 "child_job_ids": child_ids,
             },
         )

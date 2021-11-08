@@ -27,6 +27,22 @@ def get_nar_obj(i):
     ]
 
 
+def get_nar_obj(i):
+    return [
+        i,
+        "My_Test_Narrative",
+        "KBaseNarrative.Narrative",
+        "2017-03-31T23:42:59+0000",
+        1,
+        "wjriehl",
+        18836,
+        "wjriehl:1490995018528",
+        "278abf8f0dbf8ab5ce349598a8674a6e",
+        109180038,
+        {},
+    ]
+
+
 class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.

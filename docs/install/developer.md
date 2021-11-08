@@ -40,13 +40,9 @@ the Narrative work.
     SciPy: [http://sourceforge.net/projects/scipy/files/scipy/](http://sourceforge.net/projects/scipy/files/scipy/)  
     NumPy: [http://sourceforge.net/projects/numpy/files/NumPy/](http://sourceforge.net/projects/numpy/files/NumPy/)
 
-4.  **NodeJS and Bower**
+4.  **NodeJS**
     
-    NodeJS (especially npm) and Bower are used to manage installation and testing of front-end JavaScript code. These are critical to have installed, since they manage JavaScript dependencies. Start with Node - instructions available here https://nodejs.org/en/download/
-
-    Then, use npm (comes with node) to install bower  
-
-    `> npm install -g bower`
+    NodeJS (especially npm) is used to manage installation and testing of front-end JavaScript code. This is critical to have installed, since it manages JavaScript dependencies. Instructions are available here https://nodejs.org/en/download/
 
 
 Once this is all done successfully, you can move on to installing the Narrative itself.

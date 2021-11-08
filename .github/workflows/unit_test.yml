@@ -17,16 +17,15 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
-    - name: Use Node JS 14.x
+    - name: Use Node JS 16.x
       uses: actions/setup-node@v2.1.2
       with:
-        node-version: 14.x
+        node-version: 16.x
 
     - name: Install JS dependencies
       run: |
         npm ci
-        npm install bower
-        ./node_modules/bower/bin/bower install
+        npm run install-npm
 
     - name: Install Narrative Application
       shell: bash -l {0}

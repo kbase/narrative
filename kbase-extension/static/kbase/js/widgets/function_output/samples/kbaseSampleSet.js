@@ -282,11 +282,9 @@ define([
             // create table
             const $table = $('<table>').addClass('SampleSetTable').attr('role', 'table');
 
-            // create thead
             const $thead = $('<thead>').attr('role', 'rowgroup');
             $table.append($thead);
 
-            // create column group header
             const $columnGroupRow = $('<tr>').attr('role', 'row');
             $thead.append($columnGroupRow);
             for (const columnGroup of this.model.columnGroups) {
@@ -327,7 +325,6 @@ define([
                 );
             }
 
-            // create tbody
             const $tbody = $('<tbody>').attr('role', 'rowgroup');
             $table.append($tbody);
 

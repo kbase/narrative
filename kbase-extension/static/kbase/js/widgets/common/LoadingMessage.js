@@ -1,4 +1,4 @@
-define(['jquery', 'css!./LoadingMessage'], ($) => {
+define(['jquery', 'css!styles/widgets/common/LoadingMessage.css'], ($) => {
     'use strict';
     function $LoadingMessage(message) {
         return $('<div>')

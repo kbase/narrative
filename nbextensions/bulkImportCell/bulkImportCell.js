@@ -662,17 +662,25 @@ define([
                     const curState = model.getItem('state');
                     const curReadyState = curState.params;
                     const updatedReadyState = !_.isEqual(readyState, curReadyState);
+                    let newState;
 
                     if (updatedReadyState) {
                         model.setItem(['state', 'params'], readyState);
                     }
+                    if (curState.state === 'launching') {
+                        // TODO: if the cell has got stuck in 'launching' mode,
+                        // we should get jobs by cell_id
+                        // for now, reset the cell to 'editingComplete'
+                        newState = 'editingComplete';
+                    }
+
                     if (
                         updatedReadyState &&
                         ['editingComplete', 'editingIncomplete'].includes(curState.state)
                     ) {
                         updateEditingState();
                     } else {
-                        updateState();
+                        updateState(newState);
                     }
                     cell.renderMinMax();
                     runTab(state.tab.selected);

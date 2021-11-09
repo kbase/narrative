@@ -228,10 +228,8 @@ define([
         }
 
         function render(_cell) {
-            /*
-            The cell metadata 'kbase.cellState.toggleMinMax' is the
-            canonical indicator of whether a cell is collapsed or not.
-            */
+            // The cell metadata 'kbase.cellState.toggleMinMax' is the
+            // canonical indicator of whether a cell is collapsed or not.
             const cellCollapsed =
                 utils.getCellMeta(_cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
                 'maximized';
@@ -239,7 +237,6 @@ define([
 
             if (cellCollapsed) {
                 if (utils.getCellMeta(_cell, 'kbase.appCell.fsm')) {
-                    // TODO: this needs to be updated for kbase.bulkImportCell
                     const fsmMode = utils.getCellMeta(
                             _cell,
                             'kbase.appCell.fsm.currentState.mode',
@@ -273,13 +270,6 @@ define([
                             collapsedCellJobStatus,
                             // options dropdown
                             renderOptions(_cell, events),
-                            // what are these buttons for?
-                            span({
-                                class: `${cssBaseClass}__icon--notch-spin fa fa-circle-o-notch fa-spin hidden`,
-                            }),
-                            span({
-                                class: `${cssBaseClass}__icon--triangle fa fa-exclamation-triangle hidden`,
-                            }),
                             readOnly
                                 ? null
                                 : button(

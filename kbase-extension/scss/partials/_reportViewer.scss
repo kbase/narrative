@@ -50,3 +50,26 @@
 .kb-output-widget__object_link {
   cursor: pointer;
 }
+
+.kb-report {
+  &__container {
+    margin: -1.5rem;
+  }
+
+  &__item_container {
+    padding: 0 1.5rem;
+    border-bottom: 1px solid use-color('base-lighter');
+  }
+
+
+  &__item_toggle {
+    @include font-h4;
+    padding: 0.5rem 0;
+    margin: 0 -1rem;
+
+    color: use-color('blue');
+    &:hover {
+      color: use-color('blue-hlink');
+    }
+  }
+}

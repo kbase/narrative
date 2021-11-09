@@ -73,12 +73,12 @@ strong em {
 }
 
 a {
-  color: rgb(0 136 204);
+  color: use-color('blue');
   text-decoration: none;
 
   &:hover,
   &:visited {
-    color: rgb(42 100 150);
+    color: use-color('blue-hlink');
   }
 
   &:hover {

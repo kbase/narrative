@@ -385,14 +385,14 @@ table {
         > a {
           border-bottom: 4px solid rgb(66 139 202);
           box-sizing: border-box;
-          color: rgb(42 100 150) !important;
+          color: use-color('blue-hlink') !important;
           height: 50px;
         }
       }
     }
 
     .active:hover {
-      color: rgb(42 100 150);
+      color: use-color('blue-hlink');
     }
   }
 }

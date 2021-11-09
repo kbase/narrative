@@ -1049,7 +1049,7 @@ div#notebook_panel { /* FIXME Jupyter css */
 }
 
 .version-stamp a {
-  color: rgb(0 136 204) !important;
+  color: use-color('blue') !important;
 }
 
 .creator-stamp,
@@ -1442,7 +1442,7 @@ div#notebook_panel { /* FIXME Jupyter css */
 }
 
 .kb-function-toggle {
-  color: rgb(0 136 204);
+  color: use-color('blue');
   cursor: pointer;
   font-style: italic;
 }
@@ -1853,11 +1853,11 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-advanced-options-controller {
-  color: rgb(0 136 204);
+  color: use-color('blue');
   cursor: pointer;
 
   &:hover {
-    color: rgb(42 100 150);
+    color: use-color('blue-hlink');
   }
 }
 

@@ -60,79 +60,10 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
 
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
+                errorMessage,
+                diagnosis,
+                value,
                 parsedValue: value,
-            };
-        }
-
-        /*
-         * A workspace ref, but using names ...
-         */
-        function validateWorkspaceObjectNameRef(value, options) {
-            let parsedValue, errorMessage, diagnosis;
-
-            if (typeof value !== 'string') {
-                diagnosis = 'invalid';
-                errorMessage = 'value must be a string in workspace object name format';
-            } else {
-                parsedValue = value.trim();
-                if (!parsedValue) {
-                    if (options.required) {
-                        diagnosis = 'required-missing';
-                        errorMessage = 'value is required';
-                    } else {
-                        diagnosis = 'optional-empty';
-                    }
-                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'Invalid object reference format (#/#/#)';
-                } else {
-                    diagnosis = 'valid';
-                }
-            }
-            return {
-                isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
-            };
-        }
-
-        function validateWorkspaceDataPaletteRef(value, options) {
-            let parsedValue, errorMessage, diagnosis;
-
-            if (typeof value !== 'string') {
-                diagnosis = 'invalid';
-                errorMessage = 'value must be a string in data reference format';
-            } else {
-                parsedValue = value.trim();
-                if (parsedValue.length === 0) {
-                    parsedValue = null;
-                }
-
-                if (!parsedValue) {
-                    if (options.required) {
-                        diagnosis = 'required-missing';
-                        errorMessage = 'value is required';
-                    } else {
-                        diagnosis = 'optional-empty';
-                    }
-                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*/.test(value)) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
-                } else {
-                    diagnosis = 'valid';
-                }
-            }
-            return {
-                isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
             };
         }
 
@@ -163,10 +94,10 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             }
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
+                errorMessage,
+                diagnosis,
+                value,
+                parsedValue,
             };
         }
 
@@ -185,39 +116,6 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                         return serviceUtils.objectInfoToObject(data[0]);
                     }
                 });
-        }
-
-        function workspaceObjectExists(workspaceId, objectName, authToken, serviceUrl) {
-            const workspace = new Workspace(serviceUrl, {
-                token: authToken,
-            });
-
-            /*
-             * Crude to ignore errors, but we are checking for existence, which under
-             * normal conditions in a narrative will be the only condition under
-             * which the requested object info will be null.
-             * However, it is certainly possible that this will mask other errors.
-             * One solution is to let the failure trigger an exception, but then
-             * the user's browser log will contain scary red error messages.
-             */
-            return workspace
-                .get_object_info_new({
-                    objects: [{ wsid: workspaceId, name: objectName }],
-                    ignoreErrors: 1,
-                })
-                .then((data) => {
-                    if (data[0]) {
-                        return true;
-                    }
-                    // but should never get here
-                    return false;
-                });
-            //                .catch(function (err) {
-            //                    if (err.error.error.match(/us\.kbase\.workspace\.database\.exceptions\.NoSuchObjectException/)) {
-            //                        return false;
-            //                    }
-            //                    throw err;
-            //                });
         }
 
         function validateWorkspaceObjectName(value, options) {
@@ -250,11 +148,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                         messageId = 'obj-name-no-spaces';
                         diagnosis = 'invalid';
                         errorMessage = 'an object name may not contain a space';
-                    } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                    } else if (/^[+-]*\d+$/.test(parsedValue)) {
                         messageId = 'obj-name-not-integer';
                         diagnosis = 'invalid';
                         errorMessage = 'an object name may not be in the form of an integer';
-                    } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                    } else if (!/^[A-Za-z0-9|._-]+$/.test(parsedValue)) {
                         messageId = 'obj-name-invalid-characters';
                         diagnosis = 'invalid';
                         errorMessage =
@@ -295,12 +193,12 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             }).then(() => {
                 return {
                     isValid: errorMessage ? false : true,
-                    messageId: messageId,
-                    errorMessage: errorMessage,
-                    shortMessage: shortMessage,
-                    diagnosis: diagnosis,
-                    value: value,
-                    parsedValue: parsedValue,
+                    messageId,
+                    errorMessage,
+                    shortMessage,
+                    diagnosis,
+                    value,
+                    parsedValue,
                 };
             });
         }
@@ -333,12 +231,12 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             }).then(() => {
                 return {
                     isValid: errorMessage ? false : true,
-                    messageId: messageId,
-                    errorMessage: errorMessage,
-                    shortMessage: shortMessage,
-                    diagnosis: diagnosis,
-                    value: value,
-                    parsedValue: parsedValue,
+                    messageId,
+                    errorMessage,
+                    shortMessage,
+                    diagnosis,
+                    value,
+                    parsedValue,
                 };
             });
         }
@@ -364,8 +262,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 errorObject,
                 messageId,
                 errorMessage,
-                diagnosis = 'valid',
-                min = constraints.min,
+                diagnosis = 'valid';
+            const min = constraints.min,
                 max = constraints.max;
 
             if (isEmptyString(value)) {
@@ -402,13 +300,13 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
 
             return {
                 isValid: errorMessage ? false : true,
-                messageId: messageId,
-                errorMessage: errorMessage,
+                messageId,
+                errorMessage,
                 message: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                plainValue: plainValue,
-                parsedValue: parsedValue,
+                diagnosis,
+                value,
+                plainValue,
+                parsedValue,
             };
         }
 
@@ -428,11 +326,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
         }
 
         function validateFloatString(value, constraints) {
-            let normalizedValue,
-                parsedValue,
-                errorMessage,
-                diagnosis,
-                min = constraints.min,
+            let normalizedValue, parsedValue, errorMessage, diagnosis;
+            const min = constraints.min,
                 max = constraints.max;
 
             if (isEmptyString(value)) {
@@ -462,11 +357,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             }
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                normalizedValue: normalizedValue,
-                parsedValue: parsedValue,
+                errorMessage,
+                diagnosis,
+                value,
+                normalizedValue,
+                parsedValue,
             };
         }
 
@@ -494,11 +389,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                     messageId = 'obj-name-no-spaces';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not contain a space';
-                } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                } else if (/^[+-]*\d+$/.test(parsedValue)) {
                     messageId = 'obj-name-not-integer';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9|.|_-]+$/.test(parsedValue)) {
                     messageId = 'obj-name-invalid-characters';
                     diagnosis = 'invalid';
                     errorMessage =
@@ -511,20 +406,20 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             }
             return {
                 isValid: errorMessage ? false : true,
-                messageId: messageId,
-                errorMessage: errorMessage,
-                shortMessage: shortMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
+                messageId,
+                errorMessage,
+                shortMessage,
+                diagnosis,
+                value,
+                parsedValue,
             };
         }
 
         function validateText(value, constraints) {
             let parsedValue,
                 errorMessage,
-                diagnosis = 'valid',
-                minLength = constraints.min_length,
+                diagnosis = 'valid';
+            const minLength = constraints.min_length,
                 maxLength = constraints.max_length,
                 regexp = constraints.regexp ? new RegExp(constraints.regexp) : false;
 
@@ -567,10 +462,10 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
 
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
+                errorMessage,
+                diagnosis,
+                value,
+                parsedValue,
             };
         }
 
@@ -614,8 +509,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
 
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
+                errorMessage,
+                diagnosis,
                 value: set,
                 parsedValue: parsedSet,
             };
@@ -669,10 +564,10 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
 
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
+                errorMessage,
+                diagnosis,
+                value,
+                parsedValue,
             };
         }
 
@@ -681,27 +576,27 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 isValid: true,
                 errorMessage: null,
                 diagnosis: 'valid',
-                value: value,
+                value,
                 parsedValue: value,
             };
         }
 
         return {
-            validateWorkspaceObjectName: validateWorkspaceObjectName,
-            validateWorkspaceObjectRef: validateWorkspaceObjectRef,
-            validateWorkspaceObjectRefSet: validateWorkspaceObjectRefSet,
-            validateInteger: validateInteger,
-            validateIntString: validateIntString,
+            validateWorkspaceObjectName,
+            validateWorkspaceObjectRef,
+            validateWorkspaceObjectRefSet,
+            validateInteger,
+            validateIntString,
             validateIntegerField: validateIntString,
-            validateFloat: validateFloat,
-            validateFloatString: validateFloatString,
+            validateFloat,
+            validateFloatString,
+            validateText,
             validateTextString: validateText,
-            validateText: validateText,
-            validateSet: validateSet,
+            validateSet,
+            validateTextSet,
             validateStringSet: validateTextSet,
-            validateTextSet: validateTextSet,
-            validateBoolean: validateBoolean,
-            validateTrue: validateTrue,
+            validateBoolean,
+            validateTrue,
         };
     }
 

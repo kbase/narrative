@@ -396,6 +396,28 @@ define([
                 });
             });
 
+            it('should revert to editingComplete mode if it starts off in launching', async () => {
+                // TODO: this should find what jobs are associated with the cell
+                const { cell } = initCell({
+                    state: 'launching',
+                    selectedTab: 'info',
+                    deleteJobData: true,
+                });
+
+                const runButton = cell.element[0].querySelector(selectors.run);
+                const cancelButton = cell.element[0].querySelector(selectors.cancel);
+                const resetButton = cell.element[0].querySelector(selectors.reset);
+                await TestUtil.waitForElementState(cell.element[0], () => {
+                    return (
+                        !runButton.classList.contains('hidden') &&
+                        !runButton.classList.contains('disabled') &&
+                        cancelButton.classList.contains('hidden') &&
+                        resetButton.classList.contains('hidden')
+                    );
+                });
+                expect(cell.metadata.kbase.bulkImportCell.state.state).toBe('editingComplete');
+            });
+
             // FIXME: this test fails as the input does not validate. Fix the input to
             // pass validation and reenable this test.
             xit('Should start up in "editingComplete" state when initialized with proper data', async () => {

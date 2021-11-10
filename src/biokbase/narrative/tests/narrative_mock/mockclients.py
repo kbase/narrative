@@ -1,6 +1,5 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
-from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 import copy
 import functools
 from unittest.mock import call
@@ -258,7 +257,7 @@ class MockClients:
         child_job_ids = [
             self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))
         ]
-        return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
+        return {"batch_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
         return {}

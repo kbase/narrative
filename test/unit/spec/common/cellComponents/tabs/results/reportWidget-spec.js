@@ -75,7 +75,7 @@ define([
             });
             // we should have a div with two <a> elements, each with the
             // name of an object
-            expect(container.querySelectorAll('a').length).toBe(2);
+            expect(container.querySelectorAll('.kb-report__item_container').length).toBe(2);
             expect(container.innerHTML).toContain('Reports');
             ResultsData.objectData.forEach((obj) => {
                 expect(container.innerHTML).toContain(obj.name);
@@ -102,9 +102,9 @@ define([
                 objectData: [singleDataObject],
             });
             // there should be only one
-            expect(container.querySelectorAll('a.kb-report__toggle').length).toBe(1);
+            expect(container.querySelectorAll('.kb-report__item_toggle').length).toBe(1);
             // get a handle on it
-            const toggleNode = container.querySelector('a.kb-report__toggle');
+            const toggleNode = container.querySelector('.kb-report__item_toggle');
             // expect it to be collapsed and not to have any siblings
             expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
@@ -127,7 +127,7 @@ define([
                 node: container,
                 objectData: [singleDataObject],
             });
-            const toggleNode = container.querySelector('a.kb-report__toggle');
+            const toggleNode = container.querySelector('.kb-report__item_toggle');
             // expect it to be collapsed and not to have any siblings
             expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
@@ -193,12 +193,12 @@ define([
                     objectData: [testCase.obj],
                 });
                 const listParent = container.querySelector(
-                    '.kb-reports-view .panel-body[data-element="body"]'
+                    '.kb-reports-view .panel-body[data-element="body"] .kb-report__container'
                 );
                 expect(listParent.childElementCount).toEqual(1);
                 const reportItem = listParent.firstChild;
                 if (testCase.expect.hasToggle) {
-                    const toggleNode = reportItem.querySelector('a.kb-report__toggle');
+                    const toggleNode = reportItem.querySelector('.kb-report__item_toggle');
                     expect(toggleNode).not.toBeNull();
                     expect(toggleNode.innerHTML).toContain(testCase.expect.text);
                 } else {

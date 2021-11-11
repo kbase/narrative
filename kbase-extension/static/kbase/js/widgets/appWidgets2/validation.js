@@ -1,27 +1,12 @@
-define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
+define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/lang'], (
     Promise,
     Workspace,
-    serviceUtils
+    serviceUtils,
+    Util
 ) => {
     'use strict';
 
     function Validators() {
-        function toInteger(value) {
-            switch (typeof value) {
-                case 'number':
-                    if (value !== Math.floor(value)) {
-                        throw new Error('Integer is a non-integer number');
-                    }
-                    return value;
-                case 'string':
-                    if (value.match(/^[-+]?[\d]+$/)) {
-                        return parseInt(value, 10);
-                    }
-                    throw new Error('Invalid integer format');
-                default:
-                    throw new Error('Type ' + typeof value + ' cannot be converted to integer');
-            }
-        }
 
         function isEmptyString(value) {
             if (value === null) {
@@ -281,7 +266,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             } else {
                 plainValue = value.trim();
                 try {
-                    parsedValue = toInteger(plainValue);
+                    parsedValue = Util.toInteger(plainValue);
                     errorObject = validateInteger(parsedValue, min, max);
                     if (errorObject) {
                         messageId = errorObject.id;

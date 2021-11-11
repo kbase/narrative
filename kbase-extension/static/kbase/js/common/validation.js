@@ -1,38 +1,12 @@
-define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
+define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/lang'], (
     Promise,
     Workspace,
-    serviceUtils
+    serviceUtils,
+    Util
 ) => {
     'use strict';
 
     function Validators() {
-        /**
-         * Converts a string to an integer.
-         * If it's not a string (or an integer already), this throws an Error.
-         * Floats are not reduced into integers, unless the decimal part === 0.
-         * @param {string|number} value
-         * @returns {number} the integer version of the value.
-         * @throws {*} an error if:
-         * - the value is a non-integer number,
-         * - if the value is a non-int-parseable string,
-         * - if value is anything else (like an Array or Object)
-         */
-        function toInteger(value) {
-            switch (typeof value) {
-                case 'number':
-                    if (value !== Math.floor(value)) {
-                        throw new Error('Integer is a non-integer number');
-                    }
-                    return value;
-                case 'string':
-                    if (value.match(/^[-+]?[\d]+$/)) {
-                        return parseInt(value, 10);
-                    }
-                    throw new Error('Invalid integer format');
-                default:
-                    throw new Error('Type ' + typeof value + ' cannot be converted to integer');
-            }
-        }
 
         /**
          * Returns true if the value is an empty string (or entirely whitespace), or null.
@@ -309,7 +283,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             } else {
                 plainValue = value.trim();
                 try {
-                    parsedValue = toInteger(plainValue);
+                    parsedValue = Util.toInteger(plainValue);
                     errorObject = validateInteger(parsedValue, min, max);
                     if (errorObject) {
                         messageId = errorObject.id;
@@ -639,21 +613,21 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
         }
 
         return {
-            validateWorkspaceDataPaletteRef: validateWorkspaceDataPaletteRef,
-            validateWorkspaceObjectName: validateWorkspaceObjectName,
-            validateWorkspaceObjectRef: validateWorkspaceObjectRef,
-            validateInteger: validateInteger,
-            validateIntString: validateIntString,
+            validateWorkspaceDataPaletteRef,
+            validateWorkspaceObjectName,
+            validateWorkspaceObjectRef,
+            validateInteger,
+            validateIntString,
             validateIntegerField: validateIntString,
-            validateFloat: validateFloat,
-            validateFloatString: validateFloatString,
+            validateFloat,
+            validateFloatString,
             validateTextString: validateText,
-            validateText: validateText,
-            validateSet: validateSet,
+            validateText,
+            validateSet,
             validateStringSet: validateTextSet,
-            validateTextSet: validateTextSet,
-            validateBoolean: validateBoolean,
-            validateTrue: validateTrue,
+            validateTextSet,
+            validateBoolean,
+            validateTrue,
         };
     }
 

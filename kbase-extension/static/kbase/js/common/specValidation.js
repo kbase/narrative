@@ -5,23 +5,6 @@
 define([], () => {
     'use strict';
 
-    function toInteger(value) {
-        switch (typeof value) {
-            case 'number':
-                if (value !== Math.floor(value)) {
-                    throw new Error('Integer is a non-integer number');
-                }
-                return value;
-            case 'string':
-                if (value.match(/^[-+]?[\d]+$/)) {
-                    return parseInt(value, 10);
-                }
-                throw new Error('Invalid integer format');
-            default:
-                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
-        }
-    }
-
     function isEmptyString(value) {
         if (value === null) {
             return true;

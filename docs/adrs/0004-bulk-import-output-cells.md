@@ -8,7 +8,7 @@ This ADR details the decision to not provide output cells for those apps run by 
 
 ## Author
 
-@briehl
+@briehl, @ialarmedalien
 
 ## Status
 
@@ -22,9 +22,23 @@ Accepted
 
 ## Decision Outcome and Consequences
 
-The Bulk Import cell will not produce new Output Cells on app completion. It will, instead, ensure that there is a Report view available for each imported object. This carries the consequence that users may expect an output cell for one or two uploaded object types based on the single uploader. Extra documentation should help with that.
+The Bulk Import cell will not produce new Output Cells on app completion. It will, instead, ensure that there is a report view available for each imported object. This carries the consequence that users may expect an output cell for one or two uploaded object types based on the single uploader. Extra documentation should help with that.
 
-A workaround could be to guide the user to choose one or more generated data objects to view by clicking on them in the data panel on the left side of the Narrative.
+Bulk Import cell importer apps that employ an output cell:
+
+| Importer | Output cell |
+|---|---|
+| Import GenBank as genome from staging | Genome viewer |
+| Import GFF/FASTA as genome from staging | Genome viewer |
+
+Other importer apps with output cells:
+
+| Importer | Output cell |
+|---|---|
+| Load paired end reads from file | Reads viewer |
+| Load single end reads from file | Reads viewer |
+
+Workaround: users can click on the object name in the "Objects" section of the result panel or click on the object in the data panel on the left side of the narrative. Either action will create the appropriate viewer in their narrative.
 
 ## Pros and Cons of Alternatives
 

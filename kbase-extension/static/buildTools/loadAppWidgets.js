@@ -40,7 +40,6 @@ define([
     'widgets/appWidgets2/subdataMethods/manager',
     'widgets/appWidgets2/subdataMethods/sampleProperty',
     'widgets/appWidgets2/subdataMethods/samplePropertyHistogram',
-    'widgets/appWidgets2/validators/common',
     'widgets/appWidgets2/validators/customSubdata',
     'widgets/appWidgets2/validators/float',
     'widgets/appWidgets2/validators/int',

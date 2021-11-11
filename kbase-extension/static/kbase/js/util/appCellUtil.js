@@ -1,4 +1,8 @@
-define(['narrativeConfig', 'util/stagingFileCache'], (Config, StagingFileCache) => {
+define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
+    Config,
+    StagingFileCache,
+    Runtime
+) => {
     'use strict';
 
     /**
@@ -100,13 +104,22 @@ define(['narrativeConfig', 'util/stagingFileCache'], (Config, StagingFileCache) 
         const fpVals = model.getItem(['params', fileType, 'filePaths']) || [];
 
         // fpVals = Array of input file path rows from the importer for the current fileType
-
+        const runtime = Runtime.make();
         return fpVals.map((filePath) => {
             const fpOptions = {};
             for (const id of Object.keys(filePath)) {
                 fpOptions[id] = {};
+                // They're either file paths or output paths.
+                // File paths get the invalidValues option.
                 if (fpIds.has(id)) {
                     fpOptions[id].invalidValues = missingFiles;
+                } else {
+                    fpOptions[id] = {
+                        shouldNotExist: true,
+                        authToken: runtime.authToken(),
+                        workspaceId: runtime.workspaceId(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
+                    };
                 }
             }
             return fpOptions;

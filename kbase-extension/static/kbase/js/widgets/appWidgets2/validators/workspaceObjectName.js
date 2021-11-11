@@ -45,11 +45,11 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
                 messageId = 'obj-name-no-spaces';
                 diagnosis = 'invalid';
                 errorMessage = 'an object name may not contain a space';
-            } else if (/^[\+\-]*\d+$/.test(value)) {
+            } else if (/^[+-]*\d+$/.test(value)) {
                 messageId = 'obj-name-not-integer';
                 diagnosis = 'invalid';
                 errorMessage = 'an object name may not be in the form of an integer';
-            } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(value)) {
+            } else if (!/^[A-Za-z0-9|._-]+$/.test(value)) {
                 messageId = 'obj-name-invalid-characters';
                 diagnosis = 'invalid';
                 errorMessage =
@@ -58,7 +58,7 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
                 messageId = 'obj-name-too-long';
                 diagnosis = 'invalid';
                 errorMessage = 'an object name may not exceed 255 characters in length';
-            } else if (constraints.shouldNotExist) {
+            } else if (constraints.shouldNotExist || options.shouldNotExist) {
                 return getObjectInfo(
                     options.workspaceId,
                     value,

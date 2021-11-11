@@ -83,7 +83,7 @@ define([
      * @param {Object} args with keys
      *      {Object} appData: specs and outputParamIds from the cell config
      *      {Object} jobInfo: job data from the backend, including app ID and params
-     *      {Object} fileTypesDisplay: display text for each import type
+     *      {Object} fileTypeMapping: display text for each import type
      *      {Object} typesToFiles: mapping of import type to app ID
      * @returns {Object} with keys
      *      analysisType:   abbreviated name for the app
@@ -92,7 +92,7 @@ define([
      */
 
     function generateJobDisplayData(args) {
-        const { appData, jobInfo, fileTypesDisplay, typesToFiles } = args;
+        const { appData, jobInfo, fileTypeMapping, typesToFiles } = args;
         let analysisType = '';
         const params = {};
         const outputParams = {};
@@ -100,7 +100,7 @@ define([
         Object.keys(typesToFiles).forEach((type) => {
             // match app_id to get the abbreviated name for the analysis
             if (typesToFiles[type].appId === jobInfo.app_id) {
-                analysisType = fileTypesDisplay.fileTypeMapping[type];
+                analysisType = fileTypeMapping[type];
                 Object.keys(jobInfo.job_params[0]).forEach((param) => {
                     // find each parameter in job_params in the app specs
                     appData.specs[jobInfo.app_id].parameters.forEach((appParam) => {
@@ -207,7 +207,7 @@ define([
             this.jobManager = jobManager;
             this.toggleTab = toggleTab;
 
-            this.fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles);
+            this.fileTypeMapping = config.fileTypeMapping;
             this.jobsByRetryParent = {};
             this.widgetsById = {};
             this.errors = {};
@@ -287,7 +287,7 @@ define([
                     if (allJobInfo[jobId]) {
                         const jobDisplayData = generateJobDisplayData({
                             jobInfo: allJobInfo[jobId],
-                            fileTypesDisplay: this.fileTypesDisplay,
+                            fileTypeMapping: this.fileTypeMapping,
                             appData,
                             typesToFiles: this.config.typesToFiles,
                         });
@@ -706,7 +706,7 @@ define([
 
             const jobDisplayData = generateJobDisplayData({
                 jobInfo,
-                fileTypesDisplay: this.fileTypesDisplay,
+                fileTypeMapping: this.fileTypeMapping,
                 appData,
                 typesToFiles: this.config.typesToFiles,
             });

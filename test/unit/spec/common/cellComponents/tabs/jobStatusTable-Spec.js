@@ -42,6 +42,7 @@ define([
             files: ['SRR976988.1'],
         },
     };
+    const { fileTypeMapping } = AppCellUtil.generateFileTypeMappings(typesToFiles);
 
     const appData = {
         outputParamIds: {
@@ -196,7 +197,7 @@ define([
     }
 
     function createInstance(config = {}) {
-        // add in typesToFiles
+        // add in typesToFiles and fileTypeMapping
         return new JobStatusTable(
             Object.assign(
                 {},
@@ -206,6 +207,7 @@ define([
                         bus: Runtime.make().bus(),
                     }),
                     typesToFiles,
+                    fileTypeMapping,
                 },
                 config
             )
@@ -471,12 +473,11 @@ define([
                 expect(JobStatusTableModule.generateJobDisplayData).toEqual(jasmine.any(Function));
             });
             it('can pull out the relevant info for displaying a job in a table', () => {
-                const fileTypesDisplay = AppCellUtil.generateFileTypeMappings(typesToFiles);
                 paramTests.forEach((test) => {
                     const result = JobStatusTableModule.generateJobDisplayData({
                         jobInfo: test.input,
                         appData,
-                        fileTypesDisplay,
+                        fileTypeMapping,
                         typesToFiles,
                     });
                     expect(result).toEqual(test.displayData);

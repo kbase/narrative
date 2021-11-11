@@ -17,6 +17,11 @@ define([
                     files: ['file1', 'file2'],
                 },
             },
+            fileTypesDisplay = {
+                fastq_reads: 'FASTQ Reads Interleaved',
+                dataType1: 'Data Type One',
+                dataType2: 'Data Type II',
+            },
             appSpec = Spec.make({
                 appSpec: TestBulkImportObject.app.specs[appId],
             }),
@@ -114,6 +119,7 @@ define([
                     model,
                     specs,
                     typesToFiles,
+                    fileTypesDisplay,
                 });
 
                 return configure
@@ -145,6 +151,7 @@ define([
                 model,
                 specs,
                 typesToFiles,
+                fileTypesDisplay,
             });
 
             return configure
@@ -185,6 +192,7 @@ define([
                     model,
                     specs,
                     typesToFiles,
+                    fileTypesDisplay,
                 });
 
                 const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
@@ -218,6 +226,7 @@ define([
                     model,
                     specs,
                     typesToFiles,
+                    fileTypesDisplay,
                 });
 
                 const paramErrorSelector =
@@ -274,6 +283,7 @@ define([
                     model: this._model,
                     specs,
                     typesToFiles: this._typesToFiles,
+                    fileTypesDisplay,
                 });
 
                 return configure
@@ -340,6 +350,7 @@ define([
                     model: this._model,
                     specs,
                     typesToFiles: this._typesToFiles,
+                    fileTypesDisplay,
                 });
 
                 await configure.start({ node: container });

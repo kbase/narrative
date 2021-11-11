@@ -7,7 +7,6 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
     'use strict';
 
     function Validators() {
-
         /**
          * Returns true if the value is an empty string (or entirely whitespace), or null.
          * Returns false otherwise.
@@ -264,8 +263,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
                 errorObject,
                 messageId,
                 errorMessage,
-                diagnosis = 'valid',
-                min = options.min_int,
+                diagnosis = 'valid';
+            const min = options.min_int,
                 max = options.max_int;
 
             if (isEmptyString(value)) {
@@ -328,11 +327,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
         }
 
         function validateFloatString(value, options) {
-            let normalizedValue,
-                parsedValue,
-                errorMessage,
-                diagnosis,
-                min = options.min_float,
+            let normalizedValue, parsedValue, errorMessage, diagnosis;
+            const min = options.min_float,
                 max = options.max_float;
 
             if (isEmptyString(value)) {
@@ -390,11 +386,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
                     messageId = 'obj-name-no-spaces';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not contain a space';
-                } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                } else if (/^[+-]*\d+$/.test(parsedValue)) {
                     messageId = 'obj-name-not-integer';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9|._-]+$/.test(parsedValue)) {
                     messageId = 'obj-name-invalid-characters';
                     diagnosis = 'invalid';
                     errorMessage =
@@ -438,8 +434,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
         function validateText(value, options) {
             let parsedValue,
                 errorMessage,
-                diagnosis = 'valid',
-                minLength = options.min_length,
+                diagnosis = 'valid';
+            const minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(options.regexp_constraint) : false;
 

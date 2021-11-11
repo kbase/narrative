@@ -94,7 +94,6 @@ define([
     'common/sdk',
     'common/semaphore',
     'common/spec',
-    'common/specValidation',
     'common/ui',
     'common/validation',
     'util/icon',

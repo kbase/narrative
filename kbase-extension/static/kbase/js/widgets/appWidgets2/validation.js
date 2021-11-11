@@ -7,17 +7,6 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
     'use strict';
 
     function Validators() {
-
-        function isEmptyString(value) {
-            if (value === null) {
-                return true;
-            }
-            if (typeof value === 'string' && value.trim() === '') {
-                return true;
-            }
-            return false;
-        }
-
         function validateSet(value, options) {
             let errorMessage, diagnosis;
             // values are raw, no parsing.
@@ -251,7 +240,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
             const min = constraints.min,
                 max = constraints.max;
 
-            if (isEmptyString(value)) {
+            if (Util.isEmptyString(value)) {
                 if (constraints.required) {
                     diagnosis = 'required-missing';
                     messageId = 'required-missing';
@@ -315,7 +304,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
             const min = constraints.min,
                 max = constraints.max;
 
-            if (isEmptyString(value)) {
+            if (Util.isEmptyString(value)) {
                 if (constraints.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
@@ -415,7 +404,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
                 }
             }
 
-            if (isEmptyString(value)) {
+            if (Util.isEmptyString(value)) {
                 parsedValue = '';
                 if (constraints.required) {
                     diagnosis = 'required-missing';
@@ -467,7 +456,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
                 }
             } else {
                 parsedSet = set.filter((setValue) => {
-                    return !isEmptyString(setValue);
+                    return !Util.isEmptyString(setValue);
                 });
                 if (parsedSet.length === 0) {
                     if (options.required) {
@@ -528,7 +517,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils', 'common/l
                 errorMessage,
                 diagnosis = 'valid';
 
-            if (isEmptyString(value)) {
+            if (Util.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';

@@ -20,6 +20,7 @@ from biokbase.narrative.jobs.jobcomm import (
     JobComm,
     JOB_NOT_PROVIDED_ERR,
     JOBS_NOT_PROVIDED_ERR,
+    CELLS_NOT_PROVIDED_ERR,
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
@@ -48,6 +49,8 @@ from .test_job import (
     BATCH_RETRY_COMPLETED,
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
+    CELL_ID_LIST,
+    CELL_IDs,
     ALL_JOBS,
     JOBS_TERMINALITY,
     TERMINAL_JOBS,
@@ -56,6 +59,7 @@ from .test_job import (
     get_test_job,
     get_test_spec,
     TEST_SPECS,
+    TEST_JOBS,
     get_test_job_states,
     get_cell_2_jobs,
 )
@@ -64,6 +68,7 @@ from .test_jobmanager import get_test_job_info, get_test_job_infos
 
 APP_NAME = "The Best App in the World"
 EXP_ALL_STATE_IDS = ALL_JOBS  # or ACTIVE_JOBS
+CLIENTS = "biokbase.narrative.clients.get"
 
 
 def make_comm_msg(
@@ -80,9 +85,15 @@ def make_comm_msg(
     if content is not None:
         msg["content"]["data"].update(content)
     if as_job_request:
-        return JobRequest(msg)
+        return make_request(msg)
     else:
         return msg
+
+
+def make_request(args):
+    print("args to make request")
+    print(args)
+    return JobRequest(args)
 
 
 def get_app_data(*args):
@@ -94,9 +105,7 @@ class JobCommTestCase(unittest.TestCase):
 
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobcomm.Comm", MockComm)
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def setUpClass(cls):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         config = ConfigTests()
@@ -105,9 +114,7 @@ class JobCommTestCase(unittest.TestCase):
         cls.jc = biokbase.narrative.jobs.jobcomm.JobComm()
         cls.jc._comm = MockComm()
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def setUp(self):
         self.jc._comm.clear_message_cache()
         self.jc._jm.initialize_jobs()
@@ -159,13 +166,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "foo",
-                "content": {
-                    "source": "bar",
-                    "job_id": "aeaeae",
-                    "extra": "field"
-                }
+                "content": {"source": "bar", "job_id": "aeaeae", "extra": "field"},
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_send_error_msg__dict(self):
@@ -175,27 +178,17 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "foo",
-                "content": {
-                    "source": "bar",
-                    "job_id": "aeaeae",
-                    "extra": "field"
-                }
+                "content": {"source": "bar", "job_id": "aeaeae", "extra": "field"},
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_send_error_msg__None(self):
         self.jc.send_error_message("foo", None, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "foo",
-                "content": {
-                    "source": None,
-                    "extra": "field"
-                }
-            },
-            msg["data"]
+            {"msg_type": "foo", "content": {"source": None, "extra": "field"}},
+            msg["data"],
         )
 
     def test_send_error_msg__str(self):
@@ -203,14 +196,8 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.send_error_message("foo", source, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "foo",
-                "content": {
-                    "source": source,
-                    "extra": "field"
-                }
-            },
-            msg["data"]
+            {"msg_type": "foo", "content": {"source": source, "extra": "field"}},
+            msg["data"],
         )
 
     # ---------------------
@@ -219,9 +206,11 @@ class JobCommTestCase(unittest.TestCase):
     def test_req_no_inputs__succeed(self):
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "all_status",
-            }},
+            "content": {
+                "data": {
+                    "request_type": "all_status",
+                }
+            },
         }
         self.jc._handle_comm_message(msg)
         msg = self.jc._comm.last_message
@@ -230,9 +219,11 @@ class JobCommTestCase(unittest.TestCase):
     def test_req_no_inputs__fail(self):
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "job_status_batch",
-            }},
+            "content": {
+                "data": {
+                    "request_type": "job_status_batch",
+                }
+            },
         }
         err = JobIDException(JOB_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
@@ -241,9 +232,11 @@ class JobCommTestCase(unittest.TestCase):
 
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "retry_job",
-            }},
+            "content": {
+                "data": {
+                    "request_type": "retry_job",
+                }
+            },
         }
         err = JobIDException(JOBS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
@@ -253,9 +246,7 @@ class JobCommTestCase(unittest.TestCase):
     # ---------------------
     # Start job status loop
     # ---------------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_start_stop_job_status_loop(self):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
@@ -276,9 +267,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_start_job_status_loop__cell_ids(self):
         cell_2_jobs = get_cell_2_jobs()
         cell_ids = list(cell_2_jobs.keys())
@@ -313,9 +302,7 @@ class JobCommTestCase(unittest.TestCase):
     # ---------------------
     # Lookup all job states
     # ---------------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_all_job_states__ok(self):
         req = make_comm_msg("all_status", None, True)
         states = self.jc._lookup_all_job_states(req)
@@ -349,7 +336,9 @@ class JobCommTestCase(unittest.TestCase):
             validate_job_state(state)
 
     def test_lookup_job_state__no_job(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[None]}")):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[None]}")
+        ):
             self.jc.lookup_job_state(None)
 
     # -----------------------
@@ -371,9 +360,7 @@ class JobCommTestCase(unittest.TestCase):
             self.assertEqual(self.job_states[job_id], state)
             validate_job_state(state)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states__2_ok(self):
         job_id_list = [JOB_COMPLETED, BATCH_PARENT]
         req = make_comm_msg("job_status", job_id_list, True)
@@ -396,9 +383,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(
-            "job_status", {"job_id_list": job_id_list}, err
-        )
+        self.check_error_message("job_status", {"job_id_list": job_id_list}, err)
 
     def test_lookup_job_states__ok_bad(self):
         job_id_list = ["nope", JOB_COMPLETED]
@@ -416,9 +401,7 @@ class JobCommTestCase(unittest.TestCase):
             else:
                 self.assertEqual(get_error_output_state(job_id), state)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states__ee2_error(self):
         def mock_check_jobs(self, params):
             raise Exception("Test exception")
@@ -436,18 +419,153 @@ class JobCommTestCase(unittest.TestCase):
                     **{
                         job_id: get_error_output_state(job_id, "ee2_error")
                         for job_id in ACTIVE_JOBS
-                    }
+                    },
+                },
+            },
+            msg["data"],
+        )
+
+    # -----------------------
+    # lookup cell job states
+    # -----------------------
+
+    def test_lookup_job_states_by_cell_id__job_req_none(self):
+        cell_id_list = None
+        msg = {
+            "msg_id": "some_id",
+            "content": {
+                "data": {
+                    "request_type": "cell_job_status",
+                    "cell_id_list": cell_id_list,
                 }
             },
-            msg["data"]
+        }
+        err = ValueError(CELLS_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(msg)
+        self.check_error_message("cell_job_status", {"cell_id_list": cell_id_list}, err)
+
+    def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
+        cell_id_list = []
+        msg = {
+            "msg_id": "some_id",
+            "content": {
+                "data": {
+                    "request_type": "cell_job_status",
+                    "cell_id_list": cell_id_list,
+                }
+            },
+        }
+        err = ValueError(CELLS_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(msg)
+        self.check_error_message("cell_job_status", {"cell_id_list": cell_id_list}, err)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_lookup_job_states_by_cell_id__invalid_cell_id_list(self):
+        cell_id_list = ["a", "b", "c"]
+        msg = {
+            "msg_id": "some_id",
+            "content": {
+                "data": {
+                    "request_type": "cell_job_status",
+                    "cell_id_list": cell_id_list,
+                }
+            },
+        }
+        self.jc._handle_comm_message(msg)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "cell_job_status",
+                "content": {
+                    "jobs": {},
+                    "mapping": {
+                        "a": set(),
+                        "b": set(),
+                        "c": set(),
+                    },
+                },
+            },
+            msg["data"],
         )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_lookup_job_states_by_cell_id__invalid_cell_id_list_req(self):
+        cell_id_list = ["a", "b", "c"]
+        msg = {
+            "msg_id": "some_id",
+            "content": {
+                "data": {
+                    "request_type": "cell_job_status",
+                    "cell_id_list": cell_id_list,
+                }
+            },
+        }
+        req = JobRequest(msg)
+        result = self.jc._lookup_job_states_by_cell_id(req)
+        self.assertEqual(
+            {
+                "jobs": {},
+                "mapping": {
+                    "a": set(),
+                    "b": set(),
+                    "c": set(),
+                },
+            },
+            result,
+        )
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "cell_job_status",
+                "content": {
+                    "jobs": {},
+                    "mapping": {
+                        "a": set(),
+                        "b": set(),
+                        "c": set(),
+                    },
+                },
+            },
+            msg["data"],
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_lookup_job_states_by_cell_id__all_results(self):
+        cell_id_list = CELL_ID_LIST
+        expected_ids = list(TEST_JOBS.keys())
+        job_states = get_test_job_states()
+        expected_states = {
+            id: job_states[id] for id in job_states.keys() if id in expected_ids
+        }
+
+        request = {
+            "msg_id": "some_id",
+            "content": {
+                "data": {
+                    "request_type": "cell_job_status",
+                    "cell_id_list": cell_id_list,
+                }
+            },
+        }
+        self.jc._handle_comm_message(request)
+        msg = self.jc._comm.last_message
+        self.assertEqual(set(msg["data"].keys()), set(["msg_type", "content"]))
+        self.assertEqual(msg["data"]["msg_type"], "cell_job_status")
+        self.assertEqual(msg["data"]["content"]["jobs"], expected_states)
+        self.assertEqual(
+            set(cell_id_list), set(msg["data"]["content"]["mapping"].keys())
+        )
+        for key in msg["data"]["content"]["mapping"].keys():
+            self.assertEqual(
+                set(CELL_IDs[key]), set(msg["data"]["content"]["mapping"][key])
+            )
 
     # -----------------------
     # Lookup batch job states
     # -----------------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_batch__ok(self):
         job_id = BATCH_PARENT
         req = make_comm_msg("job_status_batch", job_id, False)
@@ -478,9 +596,7 @@ class JobCommTestCase(unittest.TestCase):
             },
             msg["data"],
         )
-        self.check_error_message(
-            "job_status_batch", {"job_id": job_id}, err
-        )
+        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
 
     def test_lookup_job_states_batch__no_job(self):
         job_id = None
@@ -488,9 +604,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(
-            "job_status_batch", {"job_id": job_id}, err
-        )
+        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
 
     def test_lookup_job_states_batch__not_batch(self):
         job_id = JOB_CREATED
@@ -498,9 +612,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOB_NOT_BATCH_ERR, job_id)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(
-            "job_status_batch", {"job_id": job_id}, err
-        )
+        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
 
     # -----------------------
     # Lookup job info
@@ -524,9 +636,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(
-            "job_info", {"job_id_list": job_id_list}, err
-        )
+        self.check_error_message("job_info", {"job_id_list": job_id_list}, err)
 
     def test_lookup_job_info__ok_bad(self):
         job_id_list = [JOB_COMPLETED, JOB_NOT_FOUND]
@@ -547,9 +657,7 @@ class JobCommTestCase(unittest.TestCase):
     # ------------
     # Lookup batch job infos
     # ------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_info_batch__ok(self):
         job_id = BATCH_PARENT
         req = make_comm_msg("job_info_batch", job_id, True)
@@ -590,9 +698,7 @@ class JobCommTestCase(unittest.TestCase):
     # ------------
     # Cancel list of jobs
     # ------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_cancel_jobs__single_job_id_in(self):
         job_id = JOB_RUNNING
         req = make_comm_msg("cancel_job", job_id, False)
@@ -608,9 +714,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_cancel_jobs__1_ok(self):
         job_id_list = [JOB_RUNNING]
         req = make_comm_msg("cancel_job", job_id_list, True)
@@ -626,9 +730,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_cancel_jobs__2_ok(self):
         job_id_list = [JOB_CREATED, JOB_RUNNING, None]
         req = make_comm_msg("cancel_job", job_id_list, True)
@@ -650,7 +752,9 @@ class JobCommTestCase(unittest.TestCase):
         # Create req manually because want job_id_list to be not list
         req = {
             "msg_id": "some_id",
-            "content": {"data": {"request_type": "cancel_job", "job_id_list": job_id_list}},
+            "content": {
+                "data": {"request_type": "cancel_job", "job_id_list": job_id_list}
+            },
         }
         err = TypeError(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
@@ -663,9 +767,7 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message(req)
         self.check_error_message("cancel_job", {"job_id_list": job_id_list}, err)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_cancel_jobs__some_bad_jobs(self):
         FAKE_JOB = "fake_job_id"
         job_id_list = [
@@ -710,10 +812,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
+    @mock.patch(CLIENTS, get_failing_mock_client)
     def test_cancel_jobs__failure(self):
         job_id_list = [JOB_RUNNING]
         req = make_comm_msg("cancel_job", job_id_list, False)
@@ -729,9 +828,7 @@ class JobCommTestCase(unittest.TestCase):
     # ------------
     # Retry list of jobs
     # ------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs_1_ok(self):
         job_id_list = [JOB_TERMINATED]
         req = make_comm_msg("retry_job", job_id_list, True)
@@ -742,9 +839,7 @@ class JobCommTestCase(unittest.TestCase):
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs_2_ok(self):
         job_id_list = [JOB_TERMINATED, JOB_ERROR, None]
         req = make_comm_msg("retry_job", job_id_list, True)
@@ -764,9 +859,7 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message(req)
         self.check_error_message("retry_job", {"job_id_list": job_id_list}, err)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs_some_bad_jobs(self):
         job_id_list = [JOB_TERMINATED, "nope", "no"]
         req = make_comm_msg("retry_job", job_id_list, True)
@@ -777,9 +870,7 @@ class JobCommTestCase(unittest.TestCase):
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs_all_bad_jobs(self):
         job_id_list = ["nope", "no"]
         req = make_comm_msg("retry_job", job_id_list, True)
@@ -788,10 +879,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual({"job_id_list": []}, msg["data"]["content"])
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
+    @mock.patch(CLIENTS, get_failing_mock_client)
     def test_retry_jobs_failure(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
         req = make_comm_msg("retry_job", job_id_list, False)
@@ -806,9 +894,7 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------
     # Fetching job logs
     # -----------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs_ok(self):
         job_id = JOB_COMPLETED
         lines_available = 100  # just for convenience if the mock changes
@@ -850,10 +936,7 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertIn(str(first + idx), line["line"])
                 self.assertEqual(0, line["is_error"])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
+    @mock.patch(CLIENTS, get_failing_mock_client)
     def test_get_job_logs_failure(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg("job_logs", job_id, False)
@@ -883,9 +966,7 @@ class JobCommTestCase(unittest.TestCase):
     # ------------------------
     # Modify job update
     # ------------------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_modify_job_update__start__ok(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
         req = make_comm_msg("start_job_update", job_id_list, True)
@@ -909,9 +990,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_modify_job_update__stop__ok(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
         req = make_comm_msg("stop_job_update", job_id_list, True)
@@ -956,9 +1035,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_modify_job_update__stop__loop_still_running(self):
         """Lookup loop should not get stopped"""
         self.jc.start_job_status_loop()
@@ -983,9 +1060,7 @@ class JobCommTestCase(unittest.TestCase):
     # ------------------------
     # Modify job update batch
     # ------------------------
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_modify_job_update_batch__start__ok(self):
         job_id = BATCH_PARENT
         job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
@@ -1010,9 +1085,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_modify_job_update_batch__stop__ok(self):
         job_id = BATCH_PARENT
         job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
@@ -1079,7 +1152,7 @@ class JobCommTestCase(unittest.TestCase):
     # deal with the various types of messages that will get passed to it. While
     # the majority of the tests above are sent directly to the function to be
     # tested, these just craft the message and pass it to the message handler.
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_all_states_msg(self):
         req = make_comm_msg("all_status", None, False)
         self.jc._handle_comm_message(req)
@@ -1100,9 +1173,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(msg["data"]["msg_type"], "job_status")
         validate_job_state(msg["data"]["content"][JOB_COMPLETED])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_job_info_msg(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg("job_info", job_id, False)
@@ -1113,9 +1184,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_job_status_batch_msg(self):
         job_id = BATCH_PARENT
         req = make_comm_msg("job_status_batch", job_id, False)
@@ -1129,9 +1198,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_job_info_batch_msg(self):
         job_id = BATCH_PARENT
         req = make_comm_msg("job_info_batch", job_id, False)
@@ -1145,9 +1212,7 @@ class JobCommTestCase(unittest.TestCase):
             msg["data"],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_cancel_job_msg(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg("cancel_job", job_id, False)
@@ -1155,9 +1220,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_start_job_update_msg(self):
         job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
         req = make_comm_msg("start_job_update", job_id_list, False)
@@ -1181,9 +1244,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_stop_job_update_msg(self):
         job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
         req = make_comm_msg("stop_job_update", job_id_list, False)
@@ -1202,9 +1263,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_start_job_update_batch_msg(self):
         job_id = BATCH_PARENT
         job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
@@ -1229,9 +1288,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_stop_job_update_batch_msg(self):
         job_id = BATCH_PARENT
         job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
@@ -1251,9 +1308,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_latest_job_logs_msg(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg(
@@ -1268,9 +1323,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(msg["data"]["content"]["max_lines"], 100)
         self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_job_logs_msg(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg(
@@ -1285,9 +1338,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(msg["data"]["content"]["max_lines"], 100)
         self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS, get_mock_client)
     def test_handle_cancel_job_msg_with_job_id_list(self):
         job_id_list = [JOB_COMPLETED]
         req = make_comm_msg("cancel_job", job_id_list, False)
@@ -1335,11 +1386,13 @@ class JobRequestTestCase(unittest.TestCase):
     def test_request_both_inputs(self):
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "job_status",
-                "job_id": "ababab",
-                "job_id_list": []
-            }},
+            "content": {
+                "data": {
+                    "request_type": "job_status",
+                    "job_id": "ababab",
+                    "job_id_list": [],
+                }
+            },
         }
         with self.assertRaisesRegex(ValueError, "Both job_id and job_id_list present"):
             JobRequest(msg)
@@ -1347,9 +1400,11 @@ class JobRequestTestCase(unittest.TestCase):
     def test_request__no_input(self):
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "job_status",
-            }},
+            "content": {
+                "data": {
+                    "request_type": "job_status",
+                }
+            },
         }
         req = JobRequest(msg)
 
@@ -1423,18 +1478,19 @@ class JobRequestTestCase(unittest.TestCase):
     def test_translate_both_inputs(self):
         msg = {
             "msg_id": "some_id",
-            "content": {"data": {
-                "request_type": "job_status",
-                "job_id": "ababab",
-                "job_id_list": []
-            }},
+            "content": {
+                "data": {
+                    "request_type": "job_status",
+                    "job_id": "ababab",
+                    "job_id_list": [],
+                }
+            },
         }
         with self.assertRaisesRegex(ValueError, "Both job_id and job_id_list present"):
             JobRequest.translate(msg)
 
 
 class exc_to_msgTestCase(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
@@ -1487,9 +1543,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "job_id_list": job_id_list,
                     "name": "RuntimeError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_with_nested_try__succeed(self):
@@ -1540,9 +1596,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "message": message,
                     "error": error,
                     "code": -1,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_JobIDException(self):
@@ -1570,9 +1626,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "job_id": job_id,
                     "name": "JobIDException",
                     "message": f"{message}: a0a0a0",
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_ValueError(self):
@@ -1600,9 +1656,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "job_id_list": job_id_list,
                     "name": "ValueError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_dict_req__no_err(self):
@@ -1653,9 +1709,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "job_id": job_id,
                     "name": "ValueError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_dict_req__both_inputs(self):
@@ -1686,9 +1742,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "job_id_list": job_id_list,
                     "name": "ValueError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_None_req(self):
@@ -1709,9 +1765,9 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_str_req(self):
@@ -1732,7 +1788,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
-                }
+                },
             },
-            msg["data"]
+            msg["data"],
         )

@@ -8,6 +8,9 @@ RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
 WSID_STANDARD = 12345
+NARR_DATE = "2017-03-31T23:42:59+0000"
+NARR_WS = "wjriehl:1490995018528"
+NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
 def get_nar_obj(i):
@@ -15,28 +18,12 @@ def get_nar_obj(i):
         i,
         "My_Test_Narrative",
         "KBaseNarrative.Narrative",
-        "2017-03-31T23:42:59+0000",
+        NARR_DATE,
         1,
         "wjriehl",
         18836,
-        "wjriehl:1490995018528",
-        "278abf8f0dbf8ab5ce349598a8674a6e",
-        109180038,
-        {},
-    ]
-
-
-def get_nar_obj(i):
-    return [
-        i,
-        "My_Test_Narrative",
-        "KBaseNarrative.Narrative",
-        "2017-03-31T23:42:59+0000",
-        1,
-        "wjriehl",
-        18836,
-        "wjriehl:1490995018528",
-        "278abf8f0dbf8ab5ce349598a8674a6e",
+        NARR_WS,
+        NARR_HASH,
         109180038,
         {},
     ]
@@ -174,12 +161,12 @@ class MockClients:
             5,
             "Sbicolor2",
             "KBaseGenomes.Genome-12.3",
-            "2017-03-31T23:42:59+0000",
+            NARR_DATE,
             1,
             "wjriehl",
             18836,
-            "wjriehl:1490995018528",
-            "278abf8f0dbf8ab5ce349598a8674a6e",
+            NARR_WS,
+            NARR_HASH,
             109180038,
             None,
         ]
@@ -230,12 +217,12 @@ class MockClients:
                 5,
                 "Sbicolor2",
                 "KBaseGenomes.Genome-12.3",
-                "2017-03-31T23:42:59+0000",
+                NARR_DATE,
                 1,
                 "wjriehl",
                 18836,
-                "wjriehl:1490995018528",
-                "278abf8f0dbf8ab5ce349598a8674a6e",
+                NARR_WS,
+                NARR_HASH,
                 109180038,
                 None,
             ]
@@ -246,7 +233,7 @@ class MockClients:
 
     def list_objects(self, params):
         ws_ids = params["ids"]
-        return [get_nar_obj(int(id)) for id in ws_ids]  # assert int
+        return [get_nar_obj(int(id)) for id in ws_ids]
 
     # ----- Narrative Job Service functions -----
 

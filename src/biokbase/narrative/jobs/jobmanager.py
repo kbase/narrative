@@ -35,6 +35,8 @@ JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
 
+CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
+
 
 def get_error_output_state(job_id, error="does_not_exist"):
     if error not in ["does_not_exist", "ee2_error"]:
@@ -242,7 +244,9 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
             raise
 
-    def _construct_job_output_state_set(self, job_ids: list, states: dict = None) -> dict:
+    def _construct_job_output_state_set(
+        self, job_ids: list, states: dict = None
+    ) -> dict:
         """
         Builds a set of job states for the list of job ids.
         :param states: dict, where each value is a state is from EE2
@@ -323,6 +327,38 @@ class JobManager(object):
             infos[error_id] = "does_not_exist"
         return infos
 
+    def lookup_jobs_by_cell_id(self, cell_id_list=None):
+        """
+        Fetch job states for jobs with a cell_id in cell_id_list
+        Batch job cell IDs are calculated using the `batch_cell_ids` method
+        Returns a dictionary of job states keyed by job ID and a mapping of
+        cell IDs to the list of job IDs associated with the cell.
+        """
+        if not cell_id_list:
+            raise ValueError(CELLS_NOT_PROVIDED_ERR)
+
+        jobs_to_lookup = list()
+        cell_to_job_mapping = {id: set() for id in cell_id_list}
+
+        for job_id in self._running_jobs.keys():
+            job = self._running_jobs[job_id]["job"]
+            if not job.in_cells(cell_id_list):
+                continue
+
+            jobs_to_lookup.append(job_id)
+            if job.cell_id:
+                cell_to_job_mapping[job.cell_id].add(job_id)
+            elif job.batch_cell_ids():
+                for cell_id in job.batch_cell_ids():
+                    if cell_id in cell_id_list:
+                        cell_to_job_mapping[cell_id].add(job_id)
+
+        job_states = {}
+        if len(jobs_to_lookup) > 0:
+            job_states = self._construct_job_output_state_set(jobs_to_lookup)
+
+        return {"jobs": job_states, "mapping": cell_to_job_mapping}
+
     def lookup_all_job_states(self, ignore_refresh_flag=False):
         """
         Fetches states for all running jobs.
@@ -334,6 +370,7 @@ class JobManager(object):
             Even if the job is stopped, or completed, fetch and return its state from the service.
         """
         jobs_to_lookup = list()
+
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
             if self._running_jobs[job_id]["refresh"] > 0 or ignore_refresh_flag:

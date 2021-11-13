@@ -129,7 +129,8 @@ define([
                 bus: runtime.bus(),
             }),
             typesToFiles = setupFileData(options.importData),
-            { fileTypesDisplay } = BulkImportUtil.generateFileTypeMappings(typesToFiles),
+            { fileTypesDisplay, fileTypeMapping } =
+                BulkImportUtil.generateFileTypeMappings(typesToFiles),
             workspaceClient = getWorkspaceClient(),
             tabSet = {
                 selected: 'configure',
@@ -765,6 +766,7 @@ define([
                 bus: controllerBus,
                 cell,
                 fileTypesDisplay,
+                fileTypeMapping,
                 jobId: undefined,
                 jobManager,
                 model,

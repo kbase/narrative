@@ -25,13 +25,14 @@ define([
      *     bus: message bus
      *     model: cell metadata, contains such fun items as the app parameters and state
      *     specs: app specs, keyed by their app id
+     *     fileTypesDisplay: mapping of file type to display label
      *     typesToFiles: map from object type to appId and list of input files,
      *     viewOnly: boolean - if true, then will start child widgets in view only mode
      * @returns
      */
     function ConfigureWidget(options) {
         const viewOnly = options.viewOnly || false;
-        const { model, specs, typesToFiles } = options;
+        const { model, specs, fileTypesDisplay, typesToFiles } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
@@ -44,8 +45,6 @@ define([
             selectedFileType = model.getItem('state.selectedFileType'),
             unavailableFiles,
             ui;
-
-        const { fileTypesDisplay } = Util.generateFileTypeMappings(typesToFiles);
 
         /**
          * args includes:

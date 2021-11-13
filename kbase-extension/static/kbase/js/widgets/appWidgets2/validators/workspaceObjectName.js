@@ -89,10 +89,10 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
         }).then(() => {
             return {
                 isValid: errorMessage ? false : true,
-                messageId: messageId,
-                errorMessage: errorMessage,
-                shortMessage: shortMessage,
-                diagnosis: diagnosis,
+                messageId,
+                errorMessage,
+                shortMessage,
+                diagnosis,
             };
         });
     }
@@ -102,7 +102,7 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
     }
 
     return {
-        importString: importString,
-        validate: validate,
+        importString,
+        validate,
     };
 });

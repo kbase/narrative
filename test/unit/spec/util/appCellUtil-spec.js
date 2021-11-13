@@ -5,8 +5,9 @@ define([
     'testUtil',
     'base/js/namespace',
     'narrativeConfig',
+    'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (Util, Props, Spec, TestUtil, Jupyter, Config, TestBulkImportObject) => {
+], (Util, Props, Spec, TestUtil, Jupyter, Config, Mocks, TestBulkImportObject) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -91,8 +92,18 @@ define([
             spec = Spec.make({ appSpec: TestBulkImportObject.app.specs[testAppId] });
         });
 
+        beforeEach(() => {
+            jasmine.Ajax.install();
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /get_object_info_new/,
+                response: [null],
+            });
+        });
+
         afterEach(() => {
             TestUtil.clearRuntime();
+            jasmine.Ajax.uninstall();
         });
 
         describe('evaluateAppConfig tests', () => {
@@ -287,7 +298,6 @@ define([
             const stagingUrl = Config.url('staging_api_url');
 
             beforeEach(() => {
-                jasmine.Ajax.install();
                 const fakeStagingResponse = ['file1', 'file2', 'file3'].map((fileName) => {
                     return {
                         name: fileName,
@@ -305,10 +315,6 @@ define([
                     responseHeaders: '',
                     responseText: JSON.stringify(fakeStagingResponse),
                 });
-            });
-
-            afterEach(() => {
-                jasmine.Ajax.uninstall();
             });
 
             [

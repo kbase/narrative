@@ -83,7 +83,7 @@ define([
         });
     }
 
-    describe('BulkImportCell Utility tests', () => {
+    fdescribe('BulkImportCell Utility tests', () => {
         let spec;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -215,6 +215,49 @@ define([
                         spec
                     );
                     expect(status).toEqual('incomplete');
+                });
+            });
+
+            const testObjName = 'some_file';
+            [
+                {
+                    label: 'complete, with same',
+                    mockResponse: [1, testObjName, 'KBaseFile.PairedEndLibrary'],
+                    result: 'complete',
+                },
+                {
+                    label: 'incomplete, with different',
+                    mockResponse: [1, testObjName, 'SomeModule.SomeType'],
+                    result: 'incomplete',
+                },
+            ].forEach((testCase) => {
+                it(`should return ${testCase.label} object type in the workspace with the same name`, async () => {
+                    Mocks.mockJsonRpc1Call({
+                        url: Config.url('workspace'),
+                        body: /get_object_info_new/,
+                        response: [testCase.mockResponse],
+                    });
+                    const fileInputs = {};
+                    fileInputs[testFileType] = [testObjName];
+                    const model = buildModel(fileInputs);
+                    const outputNameOptions = {
+                        shouldNotExist: true,
+                        workspaceServiceUrl: Config.url('workspace'),
+                        authToken: 'fakeToken',
+                        workspaceId: 123,
+                    };
+
+                    const status = await Util.evaluateAppConfig(
+                        paramIds,
+                        model.getItem(['params', testFileType, 'params']),
+                        {},
+                        filePathIds,
+                        model.getItem(['params', testFileType, 'filePaths']),
+                        [{ name: outputNameOptions }],
+                        spec
+                    );
+                    expect(status).toEqual(testCase.result);
+                    expect(jasmine.Ajax.requests.count()).toBe(1);
                 });
             });
         });

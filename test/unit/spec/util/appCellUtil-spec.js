@@ -263,7 +263,6 @@ define([
         });
 
         describe('evaluateConfigReadyState tests', () => {
-            // happy path test
             let specs;
             beforeAll(() => {
                 specs = {};
@@ -293,25 +292,21 @@ define([
 
             [
                 {
-                    label: 'complete',
                     fileTypeCount: 2,
                     fileCounts: [2, 2],
                     result: ['complete', 'complete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [0, 2],
                     result: ['incomplete', 'complete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [2, 0],
                     result: ['complete', 'incomplete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [0, 0],
                     result: ['incomplete', 'incomplete'],
@@ -333,6 +328,27 @@ define([
 
                     const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
                     expect(readyState).toEqual(expected);
+                });
+            });
+
+            it('should return partial incomplete with some bad matching of file types in workspace objects', async () => {
+                const fileInputs = {
+                    fileType1: ['file1'],
+                    fileType2: ['file2'],
+                };
+                const model = buildModel(fileInputs);
+
+                // mock should only activate when we're looking up file1, otherwise use the default mock
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /^(?=.*get_object_info_new.*)(?=.*file1.*).*$/, // look for both get_object_info_new and file1 in the body of the request, in any order
+                    response: [[1, 'file1', 'SomeModule.SomeType']],
+                });
+
+                const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
+                expect(readyState).toEqual({
+                    fileType1: 'incomplete',
+                    fileType2: 'complete',
                 });
             });
         });

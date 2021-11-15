@@ -83,7 +83,7 @@ define([
         });
     }
 
-    fdescribe('BulkImportCell Utility tests', () => {
+    describe('BulkImportCell Utility tests', () => {
         let spec;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -350,6 +350,7 @@ define([
                     fileType1: 'incomplete',
                     fileType2: 'complete',
                 });
+                expect(jasmine.Ajax.requests.count()).toBe(2);
             });
         });
 

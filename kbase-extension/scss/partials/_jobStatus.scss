@@ -10,6 +10,10 @@ $job_status_table_cols: 'action', 'import-type', 'output', 'status';
     table-layout: fixed;
     width: 100%;
 
+    &.dataTable {
+      border-collapse: collapse !important;
+    }
+
     // .kb-job-status__table_body
     &_body {
       border-bottom: 2px solid use-color('base-light');

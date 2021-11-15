@@ -29,7 +29,7 @@ define([
     function createTable() {
         return table(
             {
-                class: `${cssBaseClass}__table`,
+                class: `${cssBaseClass}__table table-striped`,
                 caption: 'Job Status',
             },
             [

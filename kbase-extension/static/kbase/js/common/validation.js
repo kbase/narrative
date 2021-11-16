@@ -1,54 +1,13 @@
-define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
-    Promise,
-    Workspace,
-    serviceUtils
-) => {
+define([
+    'bluebird',
+    'kb_service/client/workspace',
+    'kb_service/utils',
+    'common/lang',
+    'util/string',
+], (Promise, Workspace, serviceUtils, Util, StringUtil) => {
     'use strict';
 
     function Validators() {
-        /**
-         * Converts a string to an integer.
-         * If it's not a string (or an integer already), this throws an Error.
-         * Floats are not reduced into integers, unless the decimal part === 0.
-         * @param {string|number} value
-         * @returns {number} the integer version of the value.
-         * @throws {*} an error if:
-         * - the value is a non-integer number,
-         * - if the value is a non-int-parseable string,
-         * - if value is anything else (like an Array or Object)
-         */
-        function toInteger(value) {
-            switch (typeof value) {
-                case 'number':
-                    if (value !== Math.floor(value)) {
-                        throw new Error('Integer is a non-integer number');
-                    }
-                    return value;
-                case 'string':
-                    if (value.match(/^[-+]?[\d]+$/)) {
-                        return parseInt(value, 10);
-                    }
-                    throw new Error('Invalid integer format');
-                default:
-                    throw new Error('Type ' + typeof value + ' cannot be converted to integer');
-            }
-        }
-
-        /**
-         * Returns true if the value is an empty string (or entirely whitespace), or null.
-         * Returns false otherwise.
-         * @param {*} value
-         */
-        function isEmptyString(value) {
-            if (value === null) {
-                return true;
-            }
-            if (typeof value === 'string' && value.trim() === '') {
-                return true;
-            }
-            return false;
-        }
-
         /**
          * This validates a single value against a set of acceptable values. For example, if
          * value = 'a', and and options.values = ['a', 'b', 'c'], this will return
@@ -290,11 +249,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 errorObject,
                 messageId,
                 errorMessage,
-                diagnosis = 'valid',
-                min = options.min_int,
+                diagnosis = 'valid';
+            const min = options.min_int,
                 max = options.max_int;
 
-            if (isEmptyString(value)) {
+            if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     messageId = 'required-missing';
@@ -309,7 +268,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
             } else {
                 plainValue = value.trim();
                 try {
-                    parsedValue = toInteger(plainValue);
+                    parsedValue = Util.toInteger(plainValue);
                     errorObject = validateInteger(parsedValue, min, max);
                     if (errorObject) {
                         messageId = errorObject.id;
@@ -354,14 +313,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
         }
 
         function validateFloatString(value, options) {
-            let normalizedValue,
-                parsedValue,
-                errorMessage,
-                diagnosis,
-                min = options.min_float,
+            let normalizedValue, parsedValue, errorMessage, diagnosis;
+            const min = options.min_float,
                 max = options.max_float;
 
-            if (isEmptyString(value)) {
+            if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
@@ -416,11 +372,11 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                     messageId = 'obj-name-no-spaces';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not contain a space';
-                } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                } else if (/^[+-]*\d+$/.test(parsedValue)) {
                     messageId = 'obj-name-not-integer';
                     diagnosis = 'invalid';
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9|._-]+$/.test(parsedValue)) {
                     messageId = 'obj-name-invalid-characters';
                     diagnosis = 'invalid';
                     errorMessage =
@@ -464,8 +420,8 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
         function validateText(value, options) {
             let parsedValue,
                 errorMessage,
-                diagnosis = 'valid',
-                minLength = options.min_length,
+                diagnosis = 'valid';
+            const minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(options.regexp_constraint) : false;
 
@@ -476,7 +432,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 }
             }
 
-            if (isEmptyString(value)) {
+            if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
@@ -534,7 +490,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 errorMessage = 'value must be an array';
             } else {
                 parsedSet = value.filter((setValue) => {
-                    return !isEmptyString(setValue);
+                    return !StringUtil.isEmptyString(setValue);
                 });
                 if (parsedSet.length === 0) {
                     if (options.required) {
@@ -600,7 +556,7 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
                 errorMessage,
                 diagnosis = 'valid';
 
-            if (isEmptyString(value)) {
+            if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
@@ -639,21 +595,21 @@ define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
         }
 
         return {
-            validateWorkspaceDataPaletteRef: validateWorkspaceDataPaletteRef,
-            validateWorkspaceObjectName: validateWorkspaceObjectName,
-            validateWorkspaceObjectRef: validateWorkspaceObjectRef,
-            validateInteger: validateInteger,
-            validateIntString: validateIntString,
+            validateWorkspaceDataPaletteRef,
+            validateWorkspaceObjectName,
+            validateWorkspaceObjectRef,
+            validateInteger,
+            validateIntString,
             validateIntegerField: validateIntString,
-            validateFloat: validateFloat,
-            validateFloatString: validateFloatString,
+            validateFloat,
+            validateFloatString,
             validateTextString: validateText,
-            validateText: validateText,
-            validateSet: validateSet,
+            validateText,
+            validateSet,
             validateStringSet: validateTextSet,
-            validateTextSet: validateTextSet,
-            validateBoolean: validateBoolean,
-            validateTrue: validateTrue,
+            validateTextSet,
+            validateBoolean,
+            validateTrue,
         };
     }
 

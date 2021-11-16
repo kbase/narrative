@@ -128,5 +128,19 @@ define(['util/string'], (StringUtil) => {
                 expect(StringUtil.arrayToEnglish(t[0])).toEqual(t[1]);
             });
         });
+
+        const emptyCases = [null, ' ', '\n', '\t', ' \n \t '];
+        emptyCases.forEach((testCase) => {
+            it(`should see "${testCase}" as an empty string`, () => {
+                expect(StringUtil.isEmptyString(testCase)).toBeTrue();
+            });
+        });
+
+        const nonEmptyCases = [undefined, 'a', 'b    ', '    c'];
+        nonEmptyCases.forEach((testCase) => {
+            it(`should not see "${testCase}" as an empty string`, () => {
+                expect(StringUtil.isEmptyString(testCase)).toBeFalse();
+            });
+        });
     });
 });

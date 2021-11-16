@@ -5,8 +5,9 @@ define([
     'common/props',
     'common/spec',
     'testUtil',
+    'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestBulkImportObject) => {
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, Mocks, TestBulkImportObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -66,6 +67,12 @@ define([
                 contentType: 'text/plain',
                 responseHeaders: '',
                 responseText: JSON.stringify(fakeStagingResponse),
+            });
+
+            Mocks.mockJsonRpc1Call({
+                url: runtime.config('services.workspace.url'),
+                body: /get_object_info_new/,
+                response: [null],
             });
 
             bus = runtime.bus();

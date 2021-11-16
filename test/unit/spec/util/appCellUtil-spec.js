@@ -5,8 +5,9 @@ define([
     'testUtil',
     'base/js/namespace',
     'narrativeConfig',
+    'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (Util, Props, Spec, TestUtil, Jupyter, Config, TestBulkImportObject) => {
+], (Util, Props, Spec, TestUtil, Jupyter, Config, Mocks, TestBulkImportObject) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -91,8 +92,18 @@ define([
             spec = Spec.make({ appSpec: TestBulkImportObject.app.specs[testAppId] });
         });
 
+        beforeEach(() => {
+            jasmine.Ajax.install();
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /get_object_info_new/,
+                response: [null],
+            });
+        });
+
         afterEach(() => {
             TestUtil.clearRuntime();
+            jasmine.Ajax.uninstall();
         });
 
         describe('evaluateAppConfig tests', () => {
@@ -206,10 +217,52 @@ define([
                     expect(status).toEqual('incomplete');
                 });
             });
+
+            const testObjName = 'some_file';
+            [
+                {
+                    label: 'complete, with same',
+                    mockResponse: [1, testObjName, 'KBaseFile.PairedEndLibrary'],
+                    result: 'complete',
+                },
+                {
+                    label: 'incomplete, with different',
+                    mockResponse: [1, testObjName, 'SomeModule.SomeType'],
+                    result: 'incomplete',
+                },
+            ].forEach((testCase) => {
+                it(`should return ${testCase.label} object type in the workspace with the same name`, async () => {
+                    Mocks.mockJsonRpc1Call({
+                        url: Config.url('workspace'),
+                        body: /get_object_info_new/,
+                        response: [testCase.mockResponse],
+                    });
+                    const fileInputs = {};
+                    fileInputs[testFileType] = [testObjName];
+                    const model = buildModel(fileInputs);
+                    const outputNameOptions = {
+                        shouldNotExist: true,
+                        workspaceServiceUrl: Config.url('workspace'),
+                        authToken: 'fakeToken',
+                        workspaceId: 123,
+                    };
+
+                    const status = await Util.evaluateAppConfig(
+                        paramIds,
+                        model.getItem(['params', testFileType, 'params']),
+                        {},
+                        filePathIds,
+                        model.getItem(['params', testFileType, 'filePaths']),
+                        [{ name: outputNameOptions }],
+                        spec
+                    );
+                    expect(status).toEqual(testCase.result);
+                    expect(jasmine.Ajax.requests.count()).toBe(1);
+                });
+            });
         });
 
         describe('evaluateConfigReadyState tests', () => {
-            // happy path test
             let specs;
             beforeAll(() => {
                 specs = {};
@@ -239,25 +292,21 @@ define([
 
             [
                 {
-                    label: 'complete',
                     fileTypeCount: 2,
                     fileCounts: [2, 2],
                     result: ['complete', 'complete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [0, 2],
                     result: ['incomplete', 'complete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [2, 0],
                     result: ['complete', 'incomplete'],
                 },
                 {
-                    label: 'incomplete',
                     fileTypeCount: 2,
                     fileCounts: [0, 0],
                     result: ['incomplete', 'incomplete'],
@@ -281,13 +330,34 @@ define([
                     expect(readyState).toEqual(expected);
                 });
             });
+
+            it('should return partial incomplete with some bad matching of file types in workspace objects', async () => {
+                const fileInputs = {
+                    fileType1: ['file1'],
+                    fileType2: ['file2'],
+                };
+                const model = buildModel(fileInputs);
+
+                // mock should only activate when we're looking up file1, otherwise use the default mock
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /^(?=.*get_object_info_new.*)(?=.*file1.*).*$/, // look for both get_object_info_new and file1 in the body of the request, in any order
+                    response: [[1, 'file1', 'SomeModule.SomeType']],
+                });
+
+                const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
+                expect(readyState).toEqual({
+                    fileType1: 'incomplete',
+                    fileType2: 'complete',
+                });
+                expect(jasmine.Ajax.requests.count()).toBe(2);
+            });
         });
 
         describe('getMissingFiles tests', () => {
             const stagingUrl = Config.url('staging_api_url');
 
             beforeEach(() => {
-                jasmine.Ajax.install();
                 const fakeStagingResponse = ['file1', 'file2', 'file3'].map((fileName) => {
                     return {
                         name: fileName,
@@ -305,10 +375,6 @@ define([
                     responseHeaders: '',
                     responseText: JSON.stringify(fakeStagingResponse),
                 });
-            });
-
-            afterEach(() => {
-                jasmine.Ajax.uninstall();
             });
 
             [

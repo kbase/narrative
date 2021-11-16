@@ -90,7 +90,7 @@ def run_narrative():
 
 
 resp = {
-    "bulk_import": -1,
+    "unit_isolated": -1,
     "unit": -1,
     "integration": -1,
 }
@@ -103,14 +103,14 @@ try:
         nb_server = run_narrative()
         print("narrative started")
         try:
-            print("running bulk import tests")
-            resp["bulk_import"] = subprocess.check_call(
-                ["npm", "run", "test_bulk_import"],
+            print("running isolated unit tests")
+            resp["unit_isolated"] = subprocess.check_call(
+                ["npm", "run", "test_isolated"],
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec
         except subprocess.CalledProcessError as e:
-            resp["bulk_import"] = e.returncode
+            resp["unit_isolated"] = e.returncode
         try:
             print("running main unit tests")
             resp["unit"] = subprocess.check_call(

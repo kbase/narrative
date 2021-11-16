@@ -83,6 +83,7 @@ module.exports = function (config) {
             'kbase-extension/static/ext_modules/**/test/**/*.js',
             'kbase-extension/static/kbase/js/patched-components/**/*',
             'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
+            'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
         ],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter

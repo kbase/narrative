@@ -1,22 +1,5 @@
-define(['bluebird'], (Promise) => {
+define(['bluebird', 'common/lang'], (Promise, Util) => {
     'use strict';
-
-    function toInteger(value) {
-        switch (typeof value) {
-            case 'number':
-                if (value !== Math.floor(value)) {
-                    throw new Error('Integer is a non-integer number');
-                }
-                return value;
-            case 'string':
-                if (value.match(/^[-+]?[\d]+$/)) {
-                    return parseInt(value, 10);
-                }
-                throw new Error('Invalid integer format');
-            default:
-                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
-        }
-    }
 
     function importString(value) {
         if (value === undefined || value === null) {
@@ -31,13 +14,13 @@ define(['bluebird'], (Promise) => {
         if (plainValue === '') {
             return null;
         }
-        return toInteger(plainValue);
+        return Util.toInteger(plainValue);
     }
 
     function validateInt(value, min, max) {
         if (typeof value !== 'number') {
             try {
-                value = toInteger(value);
+                value = Util.toInteger(value);
             } catch (error) {
                 return {
                     id: 'non-numeric',

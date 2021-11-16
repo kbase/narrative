@@ -152,15 +152,33 @@ define([
             );
         });
 
+        const pingArgs = [
+            ['ping-comm-channel', { pingId: 0 }],
+            ['ping-comm-channel', { pingId: 1 }],
+            ['ping-comm-channel', { pingId: 2 }],
+        ];
+        const messageQueuePings = pingArgs.map((arg) => {
+            return {
+                msgType: arg[0],
+                msgData: arg[1],
+            };
+        });
+        const sentPings = [0, 1, 2].map((num) => {
+            return [
+                {
+                    target_name: 'KBaseJobs',
+                    request_type: 'ping',
+                    ping_id: num,
+                },
+            ];
+        });
+
         it('should not lose messages if the comm channel is not inited', () => {
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
-            let pingId = 0;
-            const pingArgs = [
-                ['ping-comm-channel', { pingId: pingId++ }], // pingId = 0
-                ['ping-comm-channel', { pingId: pingId++ }],
-                ['ping-comm-channel', { pingId: pingId++ }],
-            ];
+
+            // send three pings over the channel
+            // expect all three to be stored in comm.messageQueue
             return new Promise((resolve) => {
                 spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
                     // expect sendCommMessage to throw an error
@@ -180,26 +198,63 @@ define([
             }).then(() => {
                 expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length);
                 expect(comm.sendCommMessage.calls.allArgs()).toEqual(pingArgs);
-                expect(comm.messageQueue).toEqual(
-                    pingArgs.map((arg) => {
-                        return {
-                            msgType: arg[0],
-                            msgData: arg[1],
-                        };
-                    })
-                );
+                expect(comm.messageQueue).toEqual(messageQueuePings);
             });
         });
 
-        it('should send any stored messages after the comm channel has been inited', () => {
+        it('should send any stored messages on initing the comm channel', () => {
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
-            let pingId = 0;
-            const pingArgs = [
-                ['ping-comm-channel', { pingId: pingId++ }], // pingId = 0
-                ['ping-comm-channel', { pingId: pingId++ }],
-                ['ping-comm-channel', { pingId: pingId++ }],
-            ];
+            // send three pings over the bus
+            // init the comm channel after the last ping
+            // all pings should generate an error and be stored
+            // when the channel is initialised, the stored pings will be sent
+            return new Promise((resolve) => {
+                spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
+                    // after initialising the comm channel,
+                    // sendCommMessage is called with no args
+                    // install a spy on comm.comm.send to monitor the output
+                    if (!args.length) {
+                        if (comm.comm) {
+                            spyOn(comm.comm, 'send');
+                        }
+                        return comm.sendCommMessage.and.originalFn.call(comm, ...args);
+                    }
+                    const { pingId } = args[1];
+                    // original function should throw an error
+                    await expectAsync(
+                        comm.sendCommMessage.and.originalFn.call(comm, ...args)
+                    ).toBeRejectedWithError(
+                        'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
+                    );
+                    // resolve the promise on receiving the last ping
+                    if (pingId === 2) {
+                        resolve();
+                    }
+                });
+                // emit the pings
+                pingArgs.forEach((ping) => {
+                    testBus.emit(...ping);
+                });
+            }).then(() => {
+                // all pings will be stored
+                expect(comm.messageQueue).toEqual(messageQueuePings);
+                // init the comm channel, which will send everything in the message queue
+                return comm.initCommChannel().then(() => {
+                    expect(comm.comm).not.toBeNull();
+                    expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length + 1);
+                    // the last call comes from comm.initCommChannel, and has no args
+                    expect(comm.sendCommMessage.calls.allArgs()).toEqual(pingArgs.concat([[]]));
+
+                    expect(comm.comm.send).toHaveBeenCalled();
+                    expect(comm.comm.send.calls.allArgs()).toEqual(sentPings);
+                });
+            });
+        });
+
+        it('should send new and stored messages after initing the channel', () => {
+            const comm = new JobCommChannel();
+            expect(comm.comm).toBeUndefined();
             // send three pings over the bus
             // init the comm channel after the second ping
             // the first two pings should generate an error and be stored
@@ -225,6 +280,7 @@ define([
                         await comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
                     // resolve the promise on receiving the second ping
+                    // this allows the test to progress to the next "then"
                     if (pingId === 1) {
                         resolve();
                     }
@@ -235,15 +291,7 @@ define([
                 });
             }).then(() => {
                 // first two pings will be stored
-                const expectedQueue = pingArgs
-                    .map((arg) => {
-                        return {
-                            msgType: arg[0],
-                            msgData: arg[1],
-                        };
-                    })
-                    .slice(0, 2);
-                expect(comm.messageQueue).toEqual(expectedQueue);
+                expect(comm.messageQueue).toEqual(messageQueuePings.slice(0, 2));
                 // init the comm channel and send the last ping
                 return comm.initCommChannel().then(() => {
                     expect(comm.comm).not.toBeNull();
@@ -264,89 +312,8 @@ define([
                         ]);
 
                         expect(comm.comm.send).toHaveBeenCalled();
-                        expect(comm.comm.send.calls.allArgs()).toEqual(
-                            [0, 1, 2].map((num) => {
-                                return [
-                                    {
-                                        target_name: 'KBaseJobs',
-                                        request_type: 'ping',
-                                        ping_id: num,
-                                    },
-                                ];
-                            })
-                        );
+                        expect(comm.comm.send.calls.allArgs()).toEqual(sentPings);
                     });
-                });
-            });
-        });
-
-        it('should send any stored messages on initing the comm channel', () => {
-            const comm = new JobCommChannel();
-            expect(comm.comm).toBeUndefined();
-            let pingId = 0;
-            const pingArgs = [
-                ['ping-comm-channel', { pingId: pingId++ }], // pingId = 0
-                ['ping-comm-channel', { pingId: pingId++ }],
-            ];
-            // send two pings over the bus
-            // init the comm channel after the second ping
-            // the first two pings should generate an error and be stored
-            // when the channel is initialised, the first two pings will be sent
-            return new Promise((resolve) => {
-                spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
-                    // after initialising the comm channel,
-                    // sendCommMessage is called with no args
-                    // install a spy on comm.comm.send to monitor the output
-                    if (!args.length) {
-                        if (comm.comm) {
-                            spyOn(comm.comm, 'send');
-                        }
-                        return comm.sendCommMessage.and.originalFn.call(comm, ...args);
-                    }
-                    const { pingId } = args[1];
-                    // original function should throw an error
-                    await expectAsync(
-                        comm.sendCommMessage.and.originalFn.call(comm, ...args)
-                    ).toBeRejectedWithError(
-                        'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
-                    );
-                    // resolve the promise on receiving the second ping
-                    if (pingId === 1) {
-                        resolve();
-                    }
-                });
-                // emit the first two pings
-                pingArgs.forEach((ping) => {
-                    testBus.emit(...ping);
-                });
-            }).then(() => {
-                // first two pings will be stored
-                const expectedQueue = pingArgs.map((arg) => {
-                    return {
-                        msgType: arg[0],
-                        msgData: arg[1],
-                    };
-                });
-                expect(comm.messageQueue).toEqual(expectedQueue);
-                // init the comm channel and send the last ping
-                return comm.initCommChannel().then(() => {
-                    expect(comm.comm).not.toBeNull();
-                    expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length + 1);
-                    expect(comm.sendCommMessage.calls.allArgs()).toEqual(pingArgs.concat([[]]));
-
-                    expect(comm.comm.send).toHaveBeenCalled();
-                    expect(comm.comm.send.calls.allArgs()).toEqual(
-                        [0, 1].map((num) => {
-                            return [
-                                {
-                                    target_name: 'KBaseJobs',
-                                    request_type: 'ping',
-                                    ping_id: num,
-                                },
-                            ];
-                        })
-                    );
-                    // });
                 });
             });
         });

@@ -91,7 +91,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
         function ensureChannel(name) {
             if (!channels[name]) {
                 warn(`Channel implicitly created: ${name}`);
-                makeChannel({ name: name });
+                makeChannel({ name });
             }
             return channels[name];
         }
@@ -496,7 +496,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
                 // timeout. (TODO)
                 listen({
                     channel: address.channel,
-                    key: { requestId: requestId },
+                    key: { requestId },
                     once: true,
                     timeout: address.timeout || 10000,
                     handle: function (responseMessage) {
@@ -566,7 +566,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
         function on(type, handler, channel) {
             return listen({
                 channel,
-                key: JSON.stringify({ type: type }),
+                key: JSON.stringify({ type }),
                 handle: handler,
             });
         }
@@ -603,7 +603,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
             function on(type, handler) {
                 return listen({
                     channel: channelName,
-                    key: { type: type },
+                    key: { type },
                     handle: handler,
                 });
             }
@@ -671,7 +671,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
             function channelWhen(type) {
                 return when({
                     channel: channelName,
-                    key: { type: type },
+                    key: { type },
                 });
             }
 

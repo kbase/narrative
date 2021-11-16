@@ -25,7 +25,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
             'This job was not found, or may not have been registered with this narrative.',
             'You will not be able to inspect the job status or view the job log.',
         ],
-        jobStatusUnknown = ['Determining job state...'],
+        jobStatusUnknown = ['Awaiting job data...'],
         // valid job states from ee2, plus 'does_not_exist'
         validJobStatuses = [
             JOB.created,

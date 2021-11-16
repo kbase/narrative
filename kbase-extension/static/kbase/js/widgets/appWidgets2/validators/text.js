@@ -1,4 +1,4 @@
-define(['bluebird', 'common/lang'], (Promise, Util) => {
+define(['bluebird', 'util/string'], (Promise, StringUtil) => {
     'use strict';
 
     function importString(value) {
@@ -28,7 +28,7 @@ define(['bluebird', 'common/lang'], (Promise, Util) => {
             });
         }
 
-        if (Util.isEmptyString(value)) {
+        if (StringUtil.isEmptyString(value)) {
             parsedValue = '';
             if (constraints.required) {
                 diagnosis = 'required-missing';

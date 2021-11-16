@@ -51,25 +51,9 @@ define(['bluebird'], (Promise) => {
         }
     }
 
-    /**
-     * Returns true if the value is an empty string (or entirely whitespace), or null.
-     * Returns false otherwise.
-     * @param {*} value
-     */
-    function isEmptyString(value) {
-        if (value === null) {
-            return true;
-        }
-        if (typeof value === 'string' && value.trim() === '') {
-            return true;
-        }
-        return false;
-    }
-
     return Object.freeze({
         copy: copyValue,
         pRequire,
         toInteger,
-        isEmptyString,
     });
 });

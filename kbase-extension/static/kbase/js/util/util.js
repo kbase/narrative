@@ -1,6 +1,15 @@
+/**
+ * A collection of general utility functions that don't fit well anywhere else.
+ */
 define(['bluebird'], (Promise) => {
     'use strict';
 
+    /**
+     * Copies an object so that it occupies a separate memory space. That is,
+     * modifying the copied object does not modify the original.
+     * @param {*} obj
+     * @returns the copied object
+     */
     function copyValue(obj) {
         if (obj !== undefined) {
             return JSON.parse(JSON.stringify(obj));
@@ -29,7 +38,7 @@ define(['bluebird'], (Promise) => {
      * Floats are not reduced into integers, unless the decimal part === 0.
      * @param {string|number} value
      * @returns {number} the integer version of the value.
-     * @throws {*} an error if:
+     * @throws {Error} an error if:
      * - the value is a non-integer number,
      * - if the value is a non-int-parseable string,
      * - if value is anything else (like an Array or Object)

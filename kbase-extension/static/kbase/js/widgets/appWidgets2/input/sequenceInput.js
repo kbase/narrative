@@ -5,7 +5,7 @@ define([
     'common/events',
     'common/ui',
     'common/runtime',
-    'common/lang',
+    'util/util',
     'common/props',
     '../paramResolver',
     '../validators/sequence',
@@ -19,7 +19,7 @@ define([
     Events,
     UI,
     Runtime,
-    lang,
+    Util,
     Props,
     Resolver,
     Validation,
@@ -30,18 +30,15 @@ define([
     // Constants
     const t = html.tag,
         div = t('div'),
-        span = t('span'),
         button = t('button');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        let container, parent, ui;
+        const spec = config.parameterSpec,
             itemSpec = spec.parameters.specs.item,
-            container,
-            parent,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            ui,
             model = {
                 value: [],
             },
@@ -155,9 +152,7 @@ define([
         function makeSingleInputControl(control, events) {
             return resolver.loadInputControl(itemSpec).then((widgetFactory) => {
                 // CONTROL
-                let preButton,
-                    postButton,
-                    widgetId = html.genId(),
+                const widgetId = html.genId(),
                     inputBus = runtime.bus().makeChannelBus({
                         description: 'Array input control',
                     }),
@@ -207,18 +202,7 @@ define([
                     },
                 });
 
-                preButton = div(
-                    {
-                        class: 'input-group-addon kb-input-group-addon',
-                        dataElement: 'index-label',
-                        style: {
-                            width: '5ex',
-                            padding: '0',
-                        },
-                    },
-                    [span({ dataElement: 'index' }, String(control.index + 1)), '.']
-                );
-                postButton = div(
+                const postButton = div(
                     {
                         class: 'input-group-addon kb-app-row-close-btn-addon',
                         style: {
@@ -327,7 +311,7 @@ define([
 
         function addNewControl(initialValue) {
             if (initialValue === undefined) {
-                initialValue = lang.copy(itemSpec.data.defaultValue);
+                initialValue = Util.copy(itemSpec.data.defaultValue);
             }
             return Promise.try(() => {
                 const events = Events.make({ node: container });
@@ -423,7 +407,7 @@ define([
                 ui = UI.make({ node: container });
 
                 return render(config.initialValue).then(() => {
-                    channel.on('reset-to-defaults', (message) => {
+                    channel.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
                     channel.on('update', (message) => {

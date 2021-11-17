@@ -5,7 +5,7 @@ define([
     'common/events',
     'common/ui',
     'common/runtime',
-    'common/lang',
+    'util/util',
     'common/props',
     '../paramResolver',
     '../validators/sequence',
@@ -19,7 +19,7 @@ define([
     Events,
     UI,
     Runtime,
-    lang,
+    Util,
     Props,
     Resolver,
     Validation,
@@ -33,14 +33,12 @@ define([
         button = t('button');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        let container, parent, ui;
+        const spec = config.parameterSpec,
             itemSpec = spec.parameters.specs.item,
-            container,
-            parent,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            ui,
             model = {
                 value: [],
             },
@@ -109,8 +107,7 @@ define([
         function makeSingleViewControl(control) {
             return resolver.loadViewControl(itemSpec).then((widgetFactory) => {
                 // CONTROL
-                let postButton,
-                    widgetId = html.genId(),
+                const widgetId = html.genId(),
                     inputBus = runtime.bus().makeChannelBus({
                         description: 'Array input control',
                     }),
@@ -153,7 +150,7 @@ define([
                     },
                 });
 
-                postButton = div(
+                const postButton = div(
                     {
                         class: 'input-group-addon kb-input-group-addon',
                         style: {
@@ -204,7 +201,7 @@ define([
 
         function addNewControl(initialValue) {
             if (initialValue === undefined) {
-                initialValue = lang.copy(itemSpec.data.defaultValue);
+                initialValue = Util.copy(itemSpec.data.defaultValue);
             }
             return Promise.try(() => {
                 const events = Events.make({ node: container });

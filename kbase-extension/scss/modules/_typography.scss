@@ -34,14 +34,14 @@
   font-family: $typeface-fixed-width;
   font-size: $font-size-base;
   font-weight: 400;
-  line-height: 24px;
+  line-height: $line-height-spacious;
 }
 
 @mixin body-text {
   font-family: $typeface-page-text;
   font-size: $font-size-base;
   font-weight: 400;
-  line-height: 24px;
+  line-height: $line-height-spacious;
 }
 
 @mixin body-text-with-margins {
@@ -53,7 +53,7 @@
   font-family: $typeface-page-text;
   font-size: $font-size-base;
   font-weight: 400;
-  line-height: 20px;
+  line-height: $line-height-base;
 }
 
 @mixin base-text {

@@ -488,8 +488,6 @@ define([
                 let jlv, container;
 
                 beforeEach(async function () {
-                    // const jobState = jobsByStatus.completed[0];
-                    // const jobId = jobState.job_id;
                     jlv = this.jobLogViewerInstance;
                     container = this.node;
                     this.runtimeBus.on('request-job-status', (msg) => {
@@ -549,17 +547,21 @@ define([
                     expect(this.node.querySelectorAll(expandedClass).length).toEqual(0);
                 });
 
-                it('Should have the top button go to the top', function () {
+                it('Should have the top button go to the top', async function () {
                     const logContent = this.node.querySelector('.kb-log__content'),
                         topButton = this.node.querySelector(`.${cssBaseClass}__log_button--top`);
                     // set the scrollTop to the midway point
                     logContent.scrollTop = logContent.clientHeight / 2;
 
+                    await TestUtil.waitForElementChange(logContent, () => {
+                        topButton.click();
+                    });
+
                     topButton.click();
                     expect(logContent.scrollTop).toEqual(0);
                 });
 
-                it('Should have the bottom button go to the end', function () {
+                it('Should have the bottom button go to the end', async function () {
                     const logContent = this.node.querySelector('.kb-log__content'),
                         bottomButton = this.node.querySelector(
                             `.${cssBaseClass}__log_button--bottom`
@@ -567,7 +569,10 @@ define([
                     // set the scrollTop to the midway point
                     logContent.scrollTop = logContent.clientHeight / 2;
 
-                    bottomButton.click();
+                    await TestUtil.waitForElementChange(logContent, () => {
+                        bottomButton.click();
+                    });
+
                     expect(logContent.scrollTop).not.toEqual(0);
                     expect(logContent.scrollTop).toEqual(
                         logContent.scrollHeight - logContent.clientHeight

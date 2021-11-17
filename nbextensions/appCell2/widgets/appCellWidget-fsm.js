@@ -1031,7 +1031,7 @@ define([], () => {
                 stage: 'runtime',
             },
             ui: {
-                tabs: uiTabs.error,
+                tabs: Object.assign({}, uiTabs.error, { jobStatus: { enabled: true } }),
                 actionButton: {
                     name: 'reRunApp',
                 },

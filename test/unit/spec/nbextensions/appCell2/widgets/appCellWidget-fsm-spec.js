@@ -1,6 +1,7 @@
-define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscore'], (
+define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscore', 'common/fsm'], (
     AppCellStates,
-    _
+    _,
+    Fsm
 ) => {
     'use strict';
 
@@ -54,6 +55,28 @@ define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscor
                     );
                     expect(matchingState.length).toBe(1);
                 }
+            });
+        });
+
+        // a special case that modifies the set of error tabs
+        it('should show the job status tab when a run results in an error', () => {
+            const fsm = Fsm.make({
+                states,
+                initialState: {
+                    mode: 'error',
+                    stage: 'runtime',
+                },
+                onNewState: () => {},
+            });
+            fsm.start();
+            const state = fsm.getCurrentState();
+            const trueTabs = ['jobStatus', 'error', 'viewConfigure', 'info'];
+            const falseTabs = ['configure', 'results'];
+            trueTabs.forEach((tab) => {
+                expect(state.ui.tabs[tab].enabled).toBeTrue();
+            });
+            falseTabs.forEach((tab) => {
+                expect(state.ui.tabs[tab].enabled).toBeFalse();
             });
         });
     });

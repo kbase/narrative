@@ -8,7 +8,7 @@ define(['common/format'], (format) => {
     };
 
     const jobStrings = {
-        unknown: 'Determining job state...',
+        unknown: 'Awaiting job data...',
         not_found: 'This job was not found, or may not have been registered with this narrative.',
         queued: 'In the queue since ' + format.niceTime(t.created),
         termination: 'Finished with cancellation at ' + format.niceTime(t.finished),

@@ -83,8 +83,6 @@ define([
     'common/jupyter',
     'common/lang',
     'common/messages',
-    'common/microBus',
-    'common/miniBus',
     'common/monoBus',
     'common/parameterSpec',
     'common/props',

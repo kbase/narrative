@@ -1,7 +1,5 @@
 # Job Management Architecture
-The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative, and the KBase Execution Engine (EE2) behind that. In general, each bit of data flows between those three stops.
-
-In general, there's a single point of information flow on the front end and one on the backend.
+The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative (also known as the narrative backend), and the KBase Execution Engine (EE2) behind that. Some frontend components access external resources directly, but job-related data flows between those three stops across a single channel from frontend and backend, and backend and EE2.
 
 # Comm channels
 Jupyter provides a "Comm" object that allows for custom messaging between the frontend and the kernel ([details and documentation here](https://jupyter-notebook.readthedocs.io/en/stable/comms.html)). This provides an interface for the frontend to directly request information from the kernel, and to listen to asynchronous responses. On the kernel-side, it allows one or more modules to register message handlers to process those requests out of the band of the usual kernel invocation. These are used to implement the Jupyter Notebook's ipywidgets, for example.
@@ -9,7 +7,7 @@ Jupyter provides a "Comm" object that allows for custom messaging between the fr
 The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel.
 
 ## Frontend Comm Channel
-On the frontend, there's a `jobCommChannel.js` module that uses the MiniBus system to communicate. So, the following happens. Frontend modules use the bus system to send one of the following messages over the main channel, which then get interpreted and crafted into a message that gets passed through a kernel comm object. Most of these take one or more inputs. These are listed below the command, where applicable.
+On the frontend, there's a `jobCommChannel.js` module that uses the MonoBus system to communicate. Frontend modules use the bus system to send one of the following messages over the main channel, which then get transformed into a message that gets passed through a kernel comm object. Most of these take one or more inputs. These are listed below the command, where applicable.
 
 This section is broken into two parts - kernel requests and kernel responses. Both of these are from the perspective of the frontend Javascript stack, using an AMD module and the Runtime object. The request parameters and examples are given first, then the responses below.
 

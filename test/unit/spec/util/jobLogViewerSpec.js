@@ -257,7 +257,7 @@ define([
         });
 
         describe('initial widget state', () => {
-            describe('should be determining the state with no job object', () => {
+            describe('should be awaiting job data with no job object', () => {
                 beforeEach(async function () {
                     await this.jobLogViewerInstance.start({
                         node: this.node,
@@ -282,7 +282,7 @@ define([
             });
 
             JobsData.invalidJobs.forEach((state) => {
-                describe(`should be determining the state with dodgy state ${JSON.stringify(
+                describe(`should be awaiting job data with dodgy state ${JSON.stringify(
                     state
                 )}`, () => {
                     const jobId = 'dodgy_job_state_test';
@@ -303,7 +303,7 @@ define([
                 createLogViewer(this, true);
             });
 
-            describe('should be determining the state with no job object', () => {
+            describe('should be awaiting job data with no job object', () => {
                 beforeEach(async function () {
                     await this.jobLogViewerInstance.start({
                         node: this.node,

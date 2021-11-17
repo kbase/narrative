@@ -81,7 +81,6 @@ define([
     'common/html',
     'common/jobs',
     'common/jupyter',
-    'common/lang',
     'common/messages',
     'common/monoBus',
     'common/parameterSpec',
@@ -93,6 +92,7 @@ define([
     'common/spec',
     'common/ui',
     'common/validation',
+    'util/util',
     'util/icon',
 ], () => {
     'use strict';

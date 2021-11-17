@@ -2,7 +2,7 @@ define([
     'bluebird',
     'kb_service/client/workspace',
     'kb_service/utils',
-    'common/lang',
+    'util/util',
     'util/string',
 ], (Promise, Workspace, serviceUtils, Util, StringUtil) => {
     'use strict';

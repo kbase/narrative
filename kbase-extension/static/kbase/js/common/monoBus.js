@@ -14,7 +14,7 @@
  *
  *
  */
-define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) => {
+define(['uuid', 'bluebird', 'underscore', 'util/util'], (Uuid, Promise, _, Util) => {
     'use strict';
 
     function factory(cfg) {
@@ -370,7 +370,7 @@ define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) =>
             if (!persistentMessage) {
                 return;
             }
-            const envelope = lang.copy(persistentMessage.envelope);
+            const envelope = Util.copy(persistentMessage.envelope);
             envelope.listenerId = id;
             transientMessages.push({
                 message: persistentMessage.message,

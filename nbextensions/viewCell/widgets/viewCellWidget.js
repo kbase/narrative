@@ -4,7 +4,6 @@ define(
         'bluebird',
         'uuid',
         'base/js/namespace',
-        'common/lang',
         'common/runtime',
         'common/events',
         'common/html',
@@ -12,7 +11,6 @@ define(
         'common/jupyter',
         'common/busEventManager',
         'kb_service/client/narrativeMethodStore',
-        'kb_service/client/workspace',
         'common/pythonInterop',
         'common/cellUtils',
         'common/ui',
@@ -28,7 +26,6 @@ define(
         Promise,
         Uuid,
         JupyterNamespace,
-        Lang,
         Runtime,
         Events,
         html,
@@ -36,7 +33,6 @@ define(
         Narrative,
         BusEventManager,
         NarrativeMethodStore,
-        Workspace,
         PythonInterop,
         utils,
         Ui,
@@ -257,19 +253,14 @@ define(
             ];
 
         function factory(config) {
-            let container,
-                ui,
-                workspaceInfo = config.workspaceInfo,
+            let container, ui, cellBus, paramsWidget, fsm;
+            const workspaceInfo = config.workspaceInfo,
                 runtime = Runtime.make(),
                 cell = config.cell,
                 parentBus = config.bus,
-                spec,
                 // TODO: the cell bus should be created and managed through main.js,
                 // that is, the extension.
-                cellBus,
                 bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
-                model,
-                paramsWidget,
                 eventManager = BusEventManager.make({
                     bus: runtime.bus(),
                 }),
@@ -292,8 +283,7 @@ define(
                         type: 'toggle',
                         element: 'about-app',
                     },
-                },
-                fsm;
+                };
 
             if (runtime.config('features.developer')) {
                 settings.showDeveloper = {
@@ -411,14 +401,13 @@ define(
             }
 
             function renderSetting(settingName) {
-                let setting = settings[settingName],
-                    value;
+                const setting = settings[settingName];
 
                 if (!setting) {
                     return;
                 }
 
-                value = model.getItem(['user-settings', settingName], setting.defaultValue);
+                const value = model.getItem(['user-settings', settingName], setting.defaultValue);
                 switch (setting.type) {
                     case 'toggle':
                         if (value) {
@@ -702,8 +691,8 @@ define(
                         ]
                     );
                 return {
-                    content: content,
-                    events: events,
+                    content,
+                    events,
                 };
             }
 
@@ -803,10 +792,10 @@ define(
             }
 
             function toggleSettings() {
-                let name = 'showSettings',
+                const name = 'showSettings',
                     selector = 'settings',
-                    node = ui.getElement(selector),
-                    showing = model.getItem(['user-settings', name]);
+                    node = ui.getElement(selector);
+                let showing = model.getItem(['user-settings', name]);
                 if (showing) {
                     model.setItem(['user-settings', name], false);
                 } else {
@@ -1323,22 +1312,22 @@ define(
             }
 
             // INIT
-            model = Props.make({
+            const model = Props.make({
                 data: utils.getMeta(cell, 'viewCell'),
                 onUpdate: function (props) {
                     utils.setMeta(cell, 'viewCell', props.getRawObject());
                 },
             });
 
-            spec = Spec.make({
+            const spec = Spec.make({
                 appSpec: model.getItem('app.spec'),
             });
 
             return {
-                init: init,
-                attach: attach,
-                start: start,
-                run: run,
+                init,
+                attach,
+                start,
+                run,
             };
         }
 

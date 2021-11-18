@@ -11,6 +11,7 @@ UNKNOWN_REASON = "Unknown reason"
 
 JOB_NOT_PROVIDED_ERR = "job_id not provided"
 JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
+CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 
 BOTH_INPUTS_PRESENT_ERR = "Both job_id and job_id_list present"
 
@@ -97,6 +98,13 @@ class JobRequest:
             return self.rq_data["job_id_list"]
         else:
             raise JobIDException(JOBS_NOT_PROVIDED_ERR)
+
+    @property
+    def cell_id_list(self):
+        if "cell_id_list" in self.rq_data:
+            return self.rq_data["cell_id_list"]
+        else:
+            raise ValueError(CELLS_NOT_PROVIDED_ERR)
 
     def input(self):
         if "job_id" in self.rq_data:
@@ -205,6 +213,7 @@ class JobComm:
         if self._msg_map is None:
             self._msg_map = {
                 "all_status": self._lookup_all_job_states,
+                "cell_job_status": self._lookup_job_states_by_cell_id,
                 "job_status": self._lookup_job_states,
                 "job_status_batch": self._lookup_job_states_batch,
                 "job_info": self._lookup_job_info,
@@ -279,6 +288,29 @@ class JobComm:
         self.send_comm_message("job_status_all", all_job_states)
         return all_job_states
 
+    def _lookup_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
+        """
+        Fetches status of all jobs associated with the given cell ID(s)
+        :param req: a JobRequest with the cell_id_list of interest
+        :returns: dict in the form
+        {
+            "jobs": {
+                # dict with job IDs as keys and job states as values
+                "job_one": { ... },
+                "job_two": { ... },
+            },
+            "mapping": {
+                # dict with cell IDs as keys and values being the set of job IDs associated
+                # with that cell
+                "cell_one": [ "job_one", "job_two", ... ],
+                "cell_two": [ ... ],
+            }
+        }
+        """
+        cell_job_states = self._jm.lookup_jobs_by_cell_id(cell_id_list=req.cell_id_list)
+        self.send_comm_message("cell_job_status", cell_job_states)
+        return cell_job_states
+
     def _lookup_job_info(self, req: JobRequest) -> dict:
         """
         Looks up job info. This is just some high-level generic information about the running
@@ -287,6 +319,7 @@ class JobComm:
         :returns: a dict keyed with job IDs and with values of dicts with the following keys:
             - app_id - str - module/name,
             - app_name - str - name of the app as it shows up in the Narrative interface
+            - batch_id - str - the batch parent ID (if appropriate)
             - job_id - str - just re-reporting the id string
             - job_params - dict - the params that were passed to that particular job
         """
@@ -486,7 +519,7 @@ class JobComm:
             data = req.get("content", {}).get("data", {})
             error_content["source"] = data.get("request_type")
             # If req is still a dict, could have both job_id and job_id_list
-            for attr in ["job_id", "job_id_list"]:
+            for attr in ["job_id", "job_id_list", "cell_id_list"]:
                 if attr in data:
                     error_content[attr] = data[attr]
         elif isinstance(req, str) or req is None:
@@ -500,6 +533,7 @@ class exc_to_msg:
     """
     This is a context manager to wrap around JC code
     """
+
     jc = JobComm()
 
     def __init__(self, req: Union[JobRequest, dict, str] = None):
@@ -541,7 +575,7 @@ class exc_to_msg:
                     "message": exc_value.message,
                     "error": exc_value.error,
                     "code": exc_value.code,
-                }
+                },
             )
         elif exc_type:
             self.jc.send_error_message(
@@ -550,5 +584,5 @@ class exc_to_msg:
                 {
                     "name": exc_type.__name__,
                     "message": str(exc_value),
-                }
+                },
             )

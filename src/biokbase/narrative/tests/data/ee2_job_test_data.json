@@ -244,7 +244,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -301,7 +301,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -349,7 +349,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -404,7 +404,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -451,7 +451,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -489,7 +489,7 @@
             "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -509,7 +509,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538
@@ -545,7 +545,7 @@
             "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -564,7 +564,7 @@
                     "workspace_name": "ialarmedalien:narrative_1623776017922"
                 }
             ],
-            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "parent_job_id": null,
             "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
             "source_ws_objects": [],
             "wsid": 10538

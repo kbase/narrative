@@ -81,6 +81,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
                     + "-----------------------------------------------------\n"
                     + e_trace
                 )
+
     return wrapper
 
 

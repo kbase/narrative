@@ -252,6 +252,12 @@ class Job(object):
         else:
             return self.cell_id in cell_ids
 
+    def batch_cell_ids(self):
+        if self.batch_job:
+            child_cell_ids = [child_job.cell_id for child_job in self.children]
+            return list(set(child_cell_ids))
+        return None
+
     @property
     def final_state(self):
         if self.was_terminal() is True:

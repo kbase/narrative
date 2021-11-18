@@ -80,25 +80,24 @@ CELL_ID_LIST = [
     "58356bf5-2e81-441a-b1ee-01b38eddefb1",
     "invalid_cell_id",
 ]
-
-CELL_IDs = {
-    CELL_ID_LIST[0]: [JOB_COMPLETED, JOB_CREATED],
-    CELL_ID_LIST[1]: [JOB_RUNNING, JOB_TERMINATED, JOB_ERROR],
-    CELL_ID_LIST[2]: [
+# expected _jobs_by_cell_id mapping in JobManager
+JOBS_BY_CELL_ID = {
+    CELL_ID_LIST[0]: {JOB_COMPLETED, JOB_CREATED},
+    CELL_ID_LIST[1]: {JOB_RUNNING, JOB_TERMINATED, JOB_ERROR},
+    CELL_ID_LIST[2]: {
         BATCH_PARENT,
         BATCH_COMPLETED,
         BATCH_TERMINATED,
         BATCH_TERMINATED_RETRIED,
         BATCH_ERROR_RETRIED,
         BATCH_RETRY_COMPLETED,
-    ],
-    CELL_ID_LIST[3]: [
-        BATCH_PARENT,
-        BATCH_RETRY_RUNNING,
-        BATCH_RETRY_ERROR,
-    ],
-    CELL_ID_LIST[4]: [],
+    },
+    CELL_ID_LIST[3]: {BATCH_PARENT, BATCH_RETRY_RUNNING, BATCH_RETRY_ERROR},
 }
+
+# mapping expected as output from lookup_jobs_by_cell_id
+CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
+CELL_IDs[CELL_ID_LIST[4]] = []
 
 BATCH_CHILDREN = [
     BATCH_COMPLETED,
@@ -946,9 +945,7 @@ class JobTest(unittest.TestCase):
         batch_fam = get_batch_family_jobs(return_list=True)
 
         job = batch_fam[0]
-        self.assertEqual(
-            set(job.batch_cell_ids()), set([CELL_ID_LIST[2], CELL_ID_LIST[3]])
-        )
+        self.assertEqual(set(job.batch_cell_ids()), {CELL_ID_LIST[2], CELL_ID_LIST[3]})
 
     def test_app_name(self):
         for job in get_all_jobs().values():

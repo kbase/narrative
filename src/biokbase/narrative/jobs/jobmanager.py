@@ -53,8 +53,10 @@ class JobManager(object):
 
     __instance = None
 
-    # keys = job_id, values = { refresh = 1/0, job = Job object }
+    # keys: job_id, values: { refresh = 1/0, job = Job object }
     _running_jobs = dict()
+    # keys: cell_id, values: set(job_1_id, job_2_id, job_3_id)
+    _jobs_by_cell_id = dict()
 
     _log = kblogging.get_logger(__name__)
 
@@ -74,6 +76,31 @@ class JobManager(object):
         states = {job_id: states[job_id] for job_id in ordering}
 
         return states
+
+    def register_new_job(self, job: Job, refresh: int = None) -> None:
+        """
+        Registers a new Job with the manager and stores the job locally.
+        This should only be invoked when a new Job gets started.
+
+        Parameters:
+        -----------
+        job : biokbase.narrative.jobs.job.Job object
+            The new Job that was started.
+        """
+        kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
+
+        if refresh is None:
+            refresh = int(not job.was_terminal())
+        self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
+
+        # add the new job to the _jobs_by_cell_id mapping if there is a cell_id present
+        if job.cell_id:
+            if job.cell_id not in self._jobs_by_cell_id.keys():
+                self._jobs_by_cell_id[job.cell_id] = set()
+
+            self._jobs_by_cell_id[job.cell_id].add(job.job_id)
+            if job.batch_id:
+                self._jobs_by_cell_id[job.cell_id].add(job.batch_id)
 
     def initialize_jobs(self, cell_ids: List[str] = None) -> None:
         """
@@ -337,25 +364,16 @@ class JobManager(object):
         if not cell_id_list:
             raise ValueError(CELLS_NOT_PROVIDED_ERR)
 
-        jobs_to_lookup = list()
-        cell_to_job_mapping = {id: set() for id in cell_id_list}
-
-        for job_id in self._running_jobs.keys():
-            job = self._running_jobs[job_id]["job"]
-            if not job.in_cells(cell_id_list):
-                continue
-
-            jobs_to_lookup.append(job_id)
-            if job.cell_id:
-                cell_to_job_mapping[job.cell_id].add(job_id)
-            elif job.batch_cell_ids():
-                for cell_id in job.batch_cell_ids():
-                    if cell_id in cell_id_list:
-                        cell_to_job_mapping[cell_id].add(job_id)
+        cell_to_job_mapping = {
+            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
+            for id in cell_id_list
+        }
+        # union of all the job_ids in the cell_to_job_mapping
+        jobs_to_lookup = set().union(*cell_to_job_mapping.values())
 
         job_states = {}
         if len(jobs_to_lookup) > 0:
-            job_states = self._construct_job_output_state_set(jobs_to_lookup)
+            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
 
         return {"jobs": job_states, "mapping": cell_to_job_mapping}
 
@@ -378,22 +396,6 @@ class JobManager(object):
         if len(jobs_to_lookup) > 0:
             return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
-
-    def register_new_job(self, job: Job, refresh: int = None) -> None:
-        """
-        Registers a new Job with the manager and stores the job locally.
-        This should only be invoked when a new Job gets started.
-
-        Parameters:
-        -----------
-        job : biokbase.narrative.jobs.job.Job object
-            The new Job that was started.
-        """
-        kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
-
-        if refresh is None:
-            refresh = int(not job.was_terminal())
-        self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
     def get_job(self, job_id):
         """

@@ -85,15 +85,9 @@ def make_comm_msg(
     if content is not None:
         msg["content"]["data"].update(content)
     if as_job_request:
-        return make_request(msg)
+        return JobRequest(msg)
     else:
         return msg
-
-
-def make_request(args):
-    print("args to make request")
-    print(args)
-    return JobRequest(args)
 
 
 def get_app_data(*args):

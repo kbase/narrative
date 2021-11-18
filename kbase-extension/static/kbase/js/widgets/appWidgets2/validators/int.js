@@ -1,4 +1,4 @@
-define(['bluebird', 'common/lang'], (Promise, Util) => {
+define(['bluebird', 'util/util'], (Promise, Util) => {
     'use strict';
 
     function importString(value) {

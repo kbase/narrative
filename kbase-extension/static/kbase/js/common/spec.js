@@ -2,9 +2,9 @@
  * Provides app spec functionality.
  */
 
-define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators/resolver'], (
+define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/resolver'], (
     Promise,
-    lang,
+    Util,
     sdk,
     validationResolver
 ) => {
@@ -46,12 +46,12 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
                 let modelValue;
                 if (paramSpec.data.type === 'struct') {
                     if (paramSpec.data.constraints.required) {
-                        modelValue = lang.copy(paramSpec.data.defaultValue);
+                        modelValue = Util.copy(paramSpec.data.defaultValue);
                     } else {
                         modelValue = paramSpec.data.nullValue;
                     }
                 } else {
-                    modelValue = lang.copy(paramSpec.data.defaultValue);
+                    modelValue = Util.copy(paramSpec.data.defaultValue);
                 }
                 if (appType === 'bulkImport') {
                     model.params[id] = modelValue;

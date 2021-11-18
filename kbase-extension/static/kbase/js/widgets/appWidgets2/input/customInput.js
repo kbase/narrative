@@ -1,13 +1,13 @@
 define([
     'bluebird',
     '../validators/text',
-    'common/lang',
+    'util/util',
     'common/ui',
     'common/props',
     'common/runtime',
 
     'bootstrap',
-], (Promise, Validation, Lang, UI, Props, Runtime) => {
+], (Promise, Validation, Util, UI, Props, Runtime) => {
     'use strict';
 
     function factory(config) {
@@ -36,7 +36,7 @@ define([
 
         // sync the dom to the model.
         function syncModelToControl() {
-            console.log('syncing...', inputWidget, model.getItem('value', null));
+            console.warn('syncing...', inputWidget, model.getItem('value', null));
         }
 
         // VALIDATION
@@ -59,7 +59,7 @@ define([
             // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
-            return Lang.pRequire(['./customInputs/' + subtype + 'Input']).spread((Module) => {
+            return Util.pRequire(['./customInputs/' + subtype + 'Input']).spread((Module) => {
                 const inputWidget = Module.make({
                     runtime: runtime,
                 });

@@ -33,7 +33,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
     function updateRunStats(ui, viewModel, jobState) {
         if (!jobState) {
             viewModel.launch._attrib.hidden = false;
-            viewModel.launch.label = 'Determining Job State...';
+            viewModel.launch.label = 'Awaiting job data...';
         } else {
             const now = new Date().getTime();
 

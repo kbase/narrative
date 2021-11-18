@@ -5,7 +5,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    'common/lang',
+    'util/util',
     // Wrapper for inputs
     'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/paramResolver',
@@ -19,7 +19,7 @@ define([
     UI,
     Events,
     Props,
-    Lang,
+    Util,
     //Wrappers
     RowWidget,
     ParamResolver,
@@ -61,7 +61,7 @@ define([
 
             return Promise.all([
                 paramResolver.loadInputControl(parameterSpec),
-                Lang.pRequire(['widgets/appWidgets2/' + fieldWidgetModule]),
+                Util.pRequire(['widgets/appWidgets2/' + fieldWidgetModule]),
             ]).spread((inputWidget, [FieldWidget]) => {
                 const fieldWidget = FieldWidget.make({
                     inputControlFactory: inputWidget,

@@ -1,9 +1,9 @@
-define(['common/lang'], (Utils) => {
+define(['util/util'], (Utils) => {
     'use strict';
 
-    describe('Lang Util functions', () => {
+    describe('Basic Util functions', () => {
         it('should have expected functions', () => {
-            ['copy', 'pRequire'].forEach((fn) => {
+            ['copy', 'pRequire', 'toInteger'].forEach((fn) => {
                 expect(Utils[fn]).toEqual(jasmine.any(Function));
             });
         });
@@ -71,6 +71,45 @@ define(['common/lang'], (Utils) => {
             it('should fail to load a non-existent module', async () => {
                 const module = 'not_a_real_module';
                 await expectAsync(Utils.pRequire([module])).toBeRejected();
+            });
+        });
+
+        describe('the toInteger function', () => {
+            [undefined, null, {}, { a: 1 }, [], () => {}].forEach((input) => {
+                it(`should not convert "${input}" to an integer`, () => {
+                    expect(() => Utils.toInteger(input)).toThrowError(
+                        /cannot be converted to integer/
+                    );
+                });
+            });
+
+            it('should convert number strings', () => {
+                const okCases = {
+                    '-1': -1,
+                    '+1': 1,
+                    1: 1,
+                    100000000: 100000000,
+                    0: 0,
+                };
+                Object.keys(okCases).forEach((testCase) => {
+                    expect(Utils.toInteger(testCase)).toEqual(okCases[testCase]);
+                });
+            });
+
+            it('should fail to convert non-integer numbers', () => {
+                const badCases = [1.1, -1.01, 10.00000001];
+                badCases.forEach((bad) => {
+                    expect(() => Utils.toInteger(bad)).toThrowError(
+                        'Integer is a non-integer number'
+                    );
+                });
+            });
+
+            it('should fail to convert non-integer strings', () => {
+                const badCases = ['-1.1', '0.00000001', '1.1', 'foo', '1 '];
+                badCases.forEach((bad) => {
+                    expect(() => Utils.toInteger(bad)).toThrowError('Invalid integer format');
+                });
             });
         });
     });

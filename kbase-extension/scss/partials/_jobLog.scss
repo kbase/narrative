@@ -31,7 +31,7 @@ $counter-name: code-list-counter;
   }
   // .kb-log__controls
   &__controls {
-    margin: 1rem 0;
+    margin: 2rem 0;
   }
   // .kb-log__content,
   // .kb-log__content--expanded
@@ -45,10 +45,10 @@ $counter-name: code-list-counter;
   }
   // .kb-log__content
   &__content {
-    max-height: 200px;
+    max-height: $line-height-spacious*12;
     // .kb-log__content--expanded
     &--expanded {
-      max-height: 600px;
+      max-height: $line-height-spacious*30;
     }
   }
   // .kb-log__log_line_container

@@ -148,6 +148,9 @@ define([
                 : () => {
                       /* no op */
                   };
+
+            this.messageQueue = [];
+            this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
         }
 
         /**
@@ -178,76 +181,99 @@ define([
         handleBusMessages() {
             const bus = this.runtime.bus();
 
-            for (const [key, value] of Object.entries(requestTranslation)) {
-                bus.on(key, (message) => {
-                    this.sendCommMessage(value, message);
+            Object.keys(requestTranslation).forEach((msgType) => {
+                bus.on(msgType, (msgData) => {
+                    this.sendCommMessage(msgType, msgData);
                 });
-            }
+            });
         }
 
         /**
-         * Sends a comm message to the JobManager in the kernel.
-         * If there's no comm channel ready, tries to set one up first.
-         * @param msgType {string} - one of the values in the requestTranslation object
-         *                           (see function handleBusMessages)
+         * transform a message received from the frontend to the format
+         * expected by the backend
+         * @param {object} rawMessage with key/values:
          *
-         * @param message {object} - an object containing additional parameters for the request
-         *                           such as jobId or jobIdList, or an 'options' object
+         *      {string} msgType
+         *      {object} msgData
          */
-        sendCommMessage(msgType, message) {
-            return new Promise((resolve, reject) => {
-                // TODO: send specific error so that client can retry
-                // or try to init comm channel here
+        _transformMessage(rawMessage) {
+            const { msgType, msgData } = rawMessage;
+            let transformedMsg = {
+                target_name: COMM_NAME,
+                request_type: requestTranslation[msgType],
+            };
+
+            const translations = {
+                // backend uses `job_id` instead of `batch_id`
+                batchId: 'job_id',
+                jobId: 'job_id',
+                jobIdList: 'job_id_list',
+                pingId: 'ping_id',
+            };
+
+            for (const [key, value] of Object.entries(msgData)) {
+                if (key !== 'options') {
+                    const msgKey = translations[key] || key;
+                    transformedMsg[msgKey] = value;
+                }
+                // convert to the batch form of the request
+                if (key === 'batchId' && BATCH_JOB_REQUESTS[transformedMsg.request_type]) {
+                    transformedMsg.request_type = BATCH_JOB_REQUESTS[transformedMsg.request_type];
+                }
+            }
+
+            if (msgData.options) {
+                transformedMsg = Object.assign({}, transformedMsg, msgData.options);
+            }
+
+            return transformedMsg;
+        }
+
+        /**
+         * Sends the messages in this.messageQueue to the JobManager in the kernel.
+         * If there's no comm channel ready, the message will be added to the
+         * message queue.
+         *
+         * If no arguments are supplied to sendCommMessage, the stored messages (if any)
+         * will be sent.
+         *
+         * @param {string} msgType - message type; will be one of the
+         *                 keys in the requestTranslation object (optional)
+         *
+         * @param {object} msgData - additional parameters for the request,
+         *                 such as jobId or jobIdList, or an 'options' object (optional)
+         */
+        sendCommMessage(msgType, msgData) {
+            if (msgType && msgData) {
+                this.messageQueue.push({ msgType, msgData });
+            }
+            return this._sendCommMessages();
+        }
+
+        /**
+         * Sends the messages in this.messageQueue to the JobManager in the kernel.
+         * If there's no comm channel ready, the message will be added to the
+         * message queue.
+         *
+         * If no arguments are supplied to sendCommMessage, the stored messages (if any)
+         * will be sent.
+         */
+
+        _sendCommMessages() {
+            let topMessage;
+            return Promise.try(() => {
                 if (!this.comm) {
-                    console.error(
-                        'Comm channel not initialized, not sending message.',
-                        msgType,
-                        message
-                    );
-                    reject(new Error('Comm channel not initialized, not sending message.'));
+                    // TODO: try to init comm channel here
+                    throw new Error('Comm channel not initialized, not sending message.');
                 }
-
-                let msg = {
-                    target_name: COMM_NAME,
-                    request_type: msgType,
-                };
-
-                const translations = {
-                    // backend uses `job_id` instead of `batch_id`
-                    batchId: 'job_id',
-                    jobId: 'job_id',
-                    jobIdList: 'job_id_list',
-                    pingId: 'ping_id',
-                };
-
-                for (const [key, value] of Object.entries(message)) {
-                    if (key !== 'options') {
-                        const msgKey = translations[key] || key;
-                        msg[msgKey] = value;
-                    }
-                    // convert to the batch form of the request
-                    if (key === 'batchId' && BATCH_JOB_REQUESTS[msgType]) {
-                        msg.request_type = BATCH_JOB_REQUESTS[msgType];
-                    }
+                while (this.messageQueue.length) {
+                    topMessage = this.messageQueue.shift();
+                    this.comm.send(this._transformMessage(topMessage));
+                    this.debug(`sending comm message: ${COMM_NAME} ${topMessage.msgType}`);
                 }
-
-                if (message.options) {
-                    msg = Object.assign({}, msg, message.options);
-                }
-
-                this.comm.send(msg);
-                this.debug(`sending comm message: ${COMM_NAME} ${msgType}`);
-                resolve();
             }).catch((err) => {
-                console.error('ERROR sending comm message', err, msgType, message);
-                throw new Error(
-                    'ERROR sending comm message: ' +
-                        JSON.stringify({
-                            error: err,
-                            msgType,
-                            message,
-                        })
-                );
+                console.error('ERROR sending comm message', err.message, err, topMessage);
+                throw new Error('ERROR sending comm message: ' + err.message);
             });
         }
 
@@ -545,21 +571,21 @@ define([
                         const callbacks = {
                             shell: {
                                 reply: function (reply) {
-                                    if (reply.content.error) {
-                                        console.error('ERROR executing jobInit', reply);
-                                        commSemaphore.set('comm', 'error');
-                                        reject(
-                                            new Error(
-                                                reply.content.name + ':' + reply.content.evalue
-                                            )
-                                        );
-                                    } else {
-                                        resolve();
+                                    if (!reply.content.error) {
+                                        return resolve();
                                     }
+                                    console.error('ERROR executing jobInit', reply);
+                                    commSemaphore.set('comm', 'error');
+                                    reject(
+                                        new Error(reply.content.name + ': ' + reply.content.evalue)
+                                    );
                                 },
                             },
                         };
                         Jupyter.notebook.kernel.execute(_this.getJobInitCode(), callbacks);
+                        if (_this.messageQueue.length) {
+                            _this.sendCommMessage();
+                        }
                     });
                 });
         }

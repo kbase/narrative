@@ -17,14 +17,13 @@ define([
     'common/runtime',
     'common/props',
     'common/ui',
-    'common/events',
     'common/fsm',
     'common/jobs',
     'common/html',
     'common/runClock',
     'common/errorDisplay',
     'util/developerMode',
-], (Promise, Runtime, Props, UI, Events, Fsm, Jobs, html, RunClock, ErrorDisplay, devMode) => {
+], (Promise, Runtime, Props, UI, Fsm, Jobs, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -42,6 +41,8 @@ define([
 
     let logContentClass = logContentStandardClass;
 
+    const allButtons = ['expand', 'play', 'stop', 'top', 'bottom'];
+
     // all the states possible, to be fed into the FSM.
     const appStates = [
         {
@@ -54,7 +55,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand'],
+                    disabled: allButtons,
                 },
             },
             next: [
@@ -85,7 +86,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand'],
+                    disabled: allButtons,
                 },
             },
             next: [
@@ -135,8 +136,8 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['stop', 'expand'],
-                    disabled: ['play', 'top', 'bottom'],
+                    enabled: ['expand', 'stop', 'top', 'bottom'],
+                    disabled: ['play'],
                 },
             },
             next: [
@@ -186,7 +187,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['play', 'top', 'bottom', 'expand'],
+                    enabled: ['expand', 'play', 'top', 'bottom'],
                     disabled: ['stop'],
                 },
             },
@@ -264,7 +265,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand'],
+                    disabled: allButtons,
                 },
             },
             on: {
@@ -341,12 +342,14 @@ define([
             this.lastJobState = {};
             this.listenersByType = {};
             this.lastMode = null;
-            this.looping = false; // if true, the log viewer is automatically requesting log updates
-            this.stopped = false; // if true, we have stopped automatically fetching logs
-            this.listeningForJob = false; // if true, this means we're listening for job updates
-            this.awaitingLog = false; // if true, there's a log request fired that we're awaiting
             this.requestLoop = null; // the timeout object
-            this.scrollToEndOnNext = false;
+            this.state = {
+                looping: false, // if true, the log viewer is automatically requesting log updates
+                stopped: false, // if true, we have stopped automatically fetching logs
+                listeningForJob: false, // if true, this means we're listening for job status updates
+                awaitingLog: false, // if true, there's a log request fired that we're awaiting
+                scrollToEndOnNext: false, // if true, the log viewer scrolls to keep up with incoming logs
+            };
         }
 
         /**
@@ -358,6 +361,7 @@ define([
          *   - jobId - string, a job id for this log
          */
         start(arg) {
+            const self = this;
             return Promise.try(() => {
                 this.stop(); // if the log viewer had already been instantiated, shut it down
                 this._resetVariables();
@@ -372,9 +376,26 @@ define([
                 }
 
                 this.ui = UI.make({ node: this.container });
-                const layout = this.renderLayout();
-                this.container.innerHTML = layout.content;
-                layout.events.attachEvents(this.container);
+                this.container.innerHTML = this.renderLayout();
+
+                // add event listeners to log control buttons
+                this.container.querySelectorAll(`.kb-log__controls button`).forEach((el) => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const dataButton = e.currentTarget.getAttribute('data-button');
+                        const actions = {
+                            expand: self.toggleViewerSize,
+                            play: self.doPlayLogs,
+                            stop: self.doStopLogs,
+                            top: self.doScrollToTop,
+                            bottom: self.doScrollToBottom,
+                        };
+                        if (actions[dataButton]) {
+                            actions[dataButton].bind(self)();
+                        }
+                    });
+                });
+
                 this.initializeFSM();
                 this.renderFsmState();
                 this.startEventListeners();
@@ -389,7 +410,7 @@ define([
                 this.bus.emit('request-job-status', {
                     jobId: this.jobId,
                 });
-                this.listeningForJob = true;
+                this.state.listeningForJob = true;
             }).catch((err) => {
                 throw err;
             });
@@ -412,7 +433,7 @@ define([
             if (this.runClock) {
                 this.runClock.stop();
             }
-            this.stopped = false;
+            this.state.stopped = false;
             if (this.container) {
                 this.container.innerHTML = '';
             }
@@ -425,16 +446,16 @@ define([
             this.bus.emit('request-job-updates-start', {
                 jobId: this.jobId,
             });
-            this.listeningForJob = true;
+            this.state.listeningForJob = true;
         }
 
         /**
          * stop regular job status updates
          */
         stopJobStatusUpdates() {
-            this.listeningForJob = false;
+            this.state.listeningForJob = false;
 
-            if (this.awaitingLog) {
+            if (this.state.awaitingLog) {
                 this.stopEventListeners(['job-status']);
             } else {
                 this.stopEventListeners();
@@ -450,7 +471,7 @@ define([
          */
         requestJobLog(firstLine) {
             this.ui.showElement('spinner');
-            this.awaitingLog = true;
+            this.state.awaitingLog = true;
             this.bus.emit('request-job-log', {
                 jobId: this.jobId,
                 options: {
@@ -464,9 +485,9 @@ define([
          * Executed whilst the job is running
          */
         requestLatestJobLog() {
-            this.scrollToEndOnNext = true;
+            this.state.scrollToEndOnNext = true;
             this.ui.showElement('spinner');
-            this.awaitingLog = true;
+            this.state.awaitingLog = true;
             this.bus.emit('request-job-log', {
                 jobId: this.jobId,
                 options: {
@@ -479,7 +500,7 @@ define([
          * Add a job log request to the request loop
          */
         scheduleLogRequest() {
-            if (!this.looping) {
+            if (!this.state.looping) {
                 return;
             }
             this.requestLoop = window.setTimeout(() => {
@@ -491,12 +512,12 @@ define([
          * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
          */
         startLogAutoFetch() {
-            if (this.looping || this.stopped) {
+            if (this.state.looping || this.state.stopped) {
                 return;
             }
             const { state } = this.fsm.getCurrentState();
             if (state.mode === 'running' && state.auto) {
-                this.looping = true;
+                this.state.looping = true;
                 this.fsm.newState({ mode: 'running', auto: true });
                 // stop the current timer if we have one.
                 if (this.requestLoop) {
@@ -510,7 +531,7 @@ define([
          * Stop automatically fetching the log
          */
         stopLogAutoFetch() {
-            this.looping = false;
+            this.state.looping = false;
             if (this.ui) {
                 this.ui.hideElement('spinner');
             }
@@ -523,7 +544,7 @@ define([
             this.fsm.updateState({
                 auto: true,
             });
-            this.stopped = false;
+            this.state.stopped = false;
             this.startLogAutoFetch();
         }
 
@@ -534,7 +555,7 @@ define([
             this.fsm.updateState({
                 auto: false,
             });
-            this.stopped = true;
+            this.state.stopped = true;
             this.stopLogAutoFetch();
             if (this.requestLoop) {
                 clearTimeout(this.requestLoop);
@@ -548,6 +569,14 @@ define([
 
         getLastLogLine() {
             return this.ui.getElement(LOG_LINES).lastChild;
+        }
+
+        doScrollToTop() {
+            this.getLogPanel().scrollTo(0, 0);
+        }
+
+        doScrollToBottom() {
+            this.getLogPanel().scrollTo(0, this.getLastLogLine().offsetTop);
         }
 
         /**
@@ -627,85 +656,54 @@ define([
 
         /**
          * builds contents of panel-heading div with the log controls in it
-         * @param {Object} events
          */
-        renderControls(events) {
+        renderControls() {
+            const buttons = [
+                {
+                    action: 'expand',
+                    title: 'Toggle log viewer size',
+                    icon: 'expand',
+                },
+                {
+                    action: 'play',
+                    title: 'Start fetching logs',
+                    icon: 'play',
+                },
+                {
+                    action: 'stop',
+                    title: 'Stop fetching logs',
+                    icon: 'stop',
+                },
+                {
+                    action: 'top',
+                    title: 'Jump to the top',
+                    icon: 'angle-double-up',
+                },
+                {
+                    action: 'bottom',
+                    title: 'Jump to the end',
+                    icon: 'angle-double-down',
+                },
+            ];
+
             return div(
                 {
                     dataElement: 'header',
                     class: `${cssBaseClass}__controls`,
                 },
                 [
-                    button(
-                        {
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'expand',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Toggle log viewer size',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: this.toggleViewerSize,
-                            }),
-                        },
-                        [span({ class: 'fa fa-expand' })]
-                    ),
-                    button(
-                        {
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'play',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Start fetching logs',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: this.doPlayLogs,
-                            }),
-                        },
-                        [span({ class: 'fa fa-play' })]
-                    ),
-                    button(
-                        {
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'stop',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Stop fetching logs',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: this.doStopLogs,
-                            }),
-                        },
-                        [span({ class: 'fa fa-stop' })]
-                    ),
-                    button(
-                        {
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'top',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Jump to the top',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: this.doFetchFirstLogChunk,
-                            }),
-                        },
-                        [span({ class: 'fa fa-angle-double-up' })]
-                    ),
-                    button(
-                        {
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'bottom',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Jump to the end',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: this.doFetchLastLogChunk,
-                            }),
-                        },
-                        [span({ class: 'fa fa-angle-double-down' })]
-                    ),
+                    buttons.map((b) => {
+                        return button(
+                            {
+                                class: `btn btn-sm btn-default ${cssBaseClass}__log_button--${b.action}`,
+                                dataToggle: 'tooltip',
+                                dataPlacement: 'top',
+                                title: b.title,
+                                dataButton: b.action,
+                            },
+                            [span({ class: `fa fa-${b.icon}` })]
+                        );
+                    }),
                     div(
                         {
                             dataElement: 'spinner',
@@ -721,8 +719,7 @@ define([
          * builds contents of panel-body class
          */
         renderLayout() {
-            const uniqueID = html.genId(),
-                events = Events.make();
+            const uniqueID = html.genId();
             let content = div(
                 {
                     class: `${cssBaseClass}__container`,
@@ -762,7 +759,7 @@ define([
                                     id: uniqueID,
                                 },
                                 [
-                                    this.renderControls(events),
+                                    this.renderControls(),
                                     div({
                                         dataElement: LOG_PANEL,
                                         class: logContentClass,
@@ -822,10 +819,7 @@ define([
                 content = div([devDiv, content]);
             }
 
-            return {
-                content,
-                events,
-            };
+            return content;
         }
 
         /**
@@ -871,9 +865,9 @@ define([
             );
 
             // if we're autoscrolling, scroll to the bottom
-            if (this.fsm.getCurrentState().state.auto || this.scrollToEndOnNext) {
+            if (this.fsm.getCurrentState().state.auto || this.state.scrollToEndOnNext) {
                 panel.scrollTo(0, this.getLastLogLine().offsetTop);
-                this.scrollToEndOnNext = false;
+                this.state.scrollToEndOnNext = false;
             }
         }
 
@@ -887,9 +881,7 @@ define([
                     JSON.stringify(
                         {
                             fsm: this.fsm.getCurrentState().state,
-                            looping: this.looping,
-                            awaitingLog: this.awaitingLog,
-                            listeningForJob: this.listeningForJob,
+                            state: this.state,
                         },
                         null,
                         1
@@ -1057,7 +1049,7 @@ define([
         doJobNotFound() {
             // clear the log container
             this.ui.setContent(LOG_CONTAINER, '');
-            this.awaitingLog = false;
+            this.state.awaitingLog = false;
             // slightly hacky way to get the appropriate job status lines
             this.renderJobState({
                 job_id: '',
@@ -1197,7 +1189,7 @@ define([
             }
 
             handleJobLogs(message) {
-                if (!this.awaitingLog) {
+                if (!this.state.awaitingLog) {
                     return;
                 }
 
@@ -1220,7 +1212,7 @@ define([
                  *   }
                  * }
                  */
-                this.awaitingLog = false;
+                this.state.awaitingLog = false;
 
                 if (message.error) {
                     return this.handleLogDeleted(message);
@@ -1239,11 +1231,11 @@ define([
                     this.model.setItem('totalLines', message.logs.max_lines);
                     this.renderLog();
                 }
-                if (this.looping) {
+                if (this.state.looping) {
                     this.scheduleLogRequest();
                 }
                 // no longer listening for job => remove any existing event listeners
-                if (!this.listeningForJob) {
+                if (!this.state.listeningForJob) {
                     this.stopEventListeners();
                 }
             }
@@ -1251,7 +1243,7 @@ define([
             handleLogDeleted(message) {
                 this.stopLogAutoFetch();
                 this.renderLog();
-                this.awaitingLog = false;
+                this.state.awaitingLog = false;
                 console.error(
                     `Error retrieving log for ${this.jobId}: ${JSON.stringify(
                         message.error,

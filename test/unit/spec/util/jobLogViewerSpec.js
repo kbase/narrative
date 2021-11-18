@@ -1,11 +1,12 @@
 define([
+    'jquery',
     'bluebird',
     'util/jobLogViewer',
     'common/runtime',
     'common/jobs',
     '/test/data/jobsData',
     'testUtil',
-], (Promise, JobLogViewerModule, Runtime, Jobs, JobsData, TestUtil) => {
+], ($, Promise, JobLogViewerModule, Runtime, Jobs, JobsData, TestUtil) => {
     'use strict';
 
     const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule;
@@ -15,9 +16,15 @@ define([
     const endStates = ['completed', 'error', 'terminated'];
     const queueStates = ['created', 'estimating', 'queued'];
 
-    function getWidgetState(node) {
-        const stateNode = node.querySelector('[data-element="widget-state"]');
-        return JSON.parse(stateNode.textContent);
+    const lotsOfLogLines = [];
+    let n = 0;
+    while (n < 50) {
+        n++;
+        lotsOfLogLines.push({
+            is_error: 0,
+            line: `log line ${n}`,
+            linepos: n,
+        });
     }
 
     function createLogViewer(context, showHistory = false, logPollInterval = null) {
@@ -234,25 +241,13 @@ define([
                 node: this.node,
                 jobId,
             };
-            await this.jobLogViewerInstance.start(arg).then(() => {
-                return new Promise((resolve) => {
-                    this.runtimeBus.on('request-job-status', (msg) => {
-                        expect(msg).toEqual({ jobId });
-                        resolve();
-                    });
-                });
-            });
-        });
-
-        it('Should start with all buttons disabled', async function () {
-            const arg = {
-                node: this.node,
-                jobId: 'testBtnState',
-            };
             await this.jobLogViewerInstance.start(arg);
-            const btns = this.node.querySelectorAll('div[data-element="header"] button');
-            btns.forEach((btn) => {
-                expect(btn).toHaveClass('disabled');
+
+            return new Promise((resolve) => {
+                this.runtimeBus.on('request-job-status', (msg) => {
+                    expect(msg).toEqual({ jobId });
+                    resolve();
+                });
             });
         });
 
@@ -298,7 +293,7 @@ define([
             });
         });
 
-        describe('initial widget state, history mode on', () => {
+        describe('initial state, history mode on', () => {
             beforeEach(function () {
                 createLogViewer(this, true);
             });
@@ -482,9 +477,109 @@ define([
         });
 
         // the log display
-        describe('job log viewer', () => {
+        describe('log viewer', () => {
             beforeEach(function () {
                 createLogViewer(this, false, 50);
+            });
+
+            describe('controls', () => {
+                const jobState = jobsByStatus.running[0];
+                const jobId = jobState.job_id;
+                let jlv, container;
+
+                beforeEach(async function () {
+                    jlv = this.jobLogViewerInstance;
+                    container = this.node;
+                    this.runtimeBus.on('request-job-status', (msg) => {
+                        expect(msg).toEqual({ jobId });
+                        this.runtimeBus.send(...formatStatusMessage(jobState));
+                    });
+
+                    this.runtimeBus.on('request-job-log', (msg) => {
+                        expect(msg).toEqual({ jobId, options: { latest: true } });
+                        this.runtimeBus.send(...formatLogMessage(jobId, lotsOfLogLines));
+                    });
+
+                    document.body.appendChild(this.node);
+                    await this.jobLogViewerInstance.start({
+                        node: this.node,
+                        jobId,
+                    });
+                    await TestUtil.waitForElementChange(
+                        this.node.querySelector('[data-element="log-panel"]')
+                    );
+                    const logPanelTitle = this.node.querySelector(`.${cssBaseClass}__logs_title`);
+                    await TestUtil.waitForElement(this.node, `.${cssBaseClass}__line_text`, () => {
+                        logPanelTitle.click();
+                    });
+                });
+
+                afterEach(async () => {
+                    await jlv.stop();
+                    container.remove();
+                });
+                it('Should start with all buttons disabled', async function () {
+                    const arg = {
+                        node: this.node,
+                        jobId,
+                    };
+                    await this.jobLogViewerInstance.start(arg);
+                    const btns = this.node.querySelectorAll('div[data-element="header"] button');
+                    btns.forEach((btn) => {
+                        expect(btn).toHaveClass('disabled');
+                    });
+                });
+
+                it('should have an expand button that toggles the log container class', function () {
+                    const standardClass = `.${cssBaseClass}__content`,
+                        expandedClass = `${standardClass}--expanded`,
+                        expandButton = this.node.querySelector(
+                            `.${cssBaseClass}__log_button--expand`
+                        );
+
+                    expect(this.node.querySelectorAll(standardClass).length).toEqual(1);
+                    expect(this.node.querySelectorAll(expandedClass).length).toEqual(0);
+
+                    expandButton.click();
+                    expect(this.node.querySelectorAll(standardClass).length).toEqual(0);
+                    expect(this.node.querySelectorAll(expandedClass).length).toEqual(1);
+
+                    expandButton.click();
+                    expect(this.node.querySelectorAll(standardClass).length).toEqual(1);
+                    expect(this.node.querySelectorAll(expandedClass).length).toEqual(0);
+                });
+
+                // the next two tests do not pass consistently when run by the test harness
+                xit('Should have the top button go to the top', async function () {
+                    const logContent = this.node.querySelector('.kb-log__content'),
+                        topButton = this.node.querySelector(`.${cssBaseClass}__log_button--top`);
+                    // set the scrollTop to the midway point
+                    logContent.scrollTop = logContent.clientHeight / 2;
+
+                    await TestUtil.waitForElementChange(logContent, () => {
+                        topButton.click();
+                    });
+                    expect(logContent.scrollTop).toEqual(0);
+                });
+
+                xit('Should have the bottom button go to the end', async function () {
+                    const logContent = this.node.querySelector('.kb-log__content'),
+                        bottomButton = this.node.querySelector(
+                            `.${cssBaseClass}__log_button--bottom`
+                        );
+                    // set the scrollTop to the midway point
+                    logContent.scrollTop = logContent.clientHeight / 2;
+
+                    await TestUtil.waitForElementChange(logContent, () => {
+                        bottomButton.click();
+                    });
+                    expect(logContent.scrollTop).not.toEqual(0);
+                    expect(logContent.scrollTop).toEqual(
+                        logContent.scrollHeight - logContent.clientHeight
+                    );
+                });
+
+                xit('should have stop and play buttons to turn logs off and on', () => {});
             });
 
             // job not found: logs container is removed
@@ -503,12 +598,11 @@ define([
                     jobId,
                 });
 
-                return TestUtil.waitForElementChange(
+                await TestUtil.waitForElementChange(
                     this.node.querySelector('[data-element="log-container"]')
-                ).then(() => {
-                    // the job log container should be empty
-                    expect(this.node.querySelector('.kb-log__logs_container').innerHTML).toBe('');
-                });
+                );
+                // the job log container should be empty
+                expect(this.node.querySelector('.kb-log__logs_container').innerHTML).toBe('');
             });
 
             // queued jobs: message to say that the logs will be available when job runs
@@ -529,13 +623,12 @@ define([
                         jobId,
                     });
 
-                    return TestUtil.waitForElementChange(
+                    await TestUtil.waitForElementChange(
                         this.node.querySelector('[data-element="log-panel"]')
-                    ).then(() => {
-                        expect(
-                            this.node.querySelector('[data-element="log-panel"]').textContent
-                        ).toBe('Job is queued; logs will be available when the job is running.');
-                    });
+                    );
+                    expect(this.node.querySelector('[data-element="log-panel"]').textContent).toBe(
+                        'Job is queued; logs will be available when the job is running.'
+                    );
                 });
             });
 
@@ -623,23 +716,20 @@ define([
                     jobId,
                 });
 
-                return TestUtil.waitForElementChange(
+                await TestUtil.waitForElementChange(
                     this.node.querySelector('[data-element="log-panel"]')
-                ).then(() => {
-                    expect(this.node.querySelector('[data-element="log-panel"]').textContent).toBe(
-                        'No log entries to show.'
-                    );
-                    const widgetState = getWidgetState(this.node);
-                    expect(widgetState.looping).toBe(true);
-                    expect(widgetState.awaitingLog).toBe(true);
-                    expect(widgetState.listeningForJob).toBe(true);
-                    const allCalls = console.error.calls.allArgs();
-                    expect(allCalls.length).toEqual(1);
-                    expect(allCalls[0].length).toEqual(1);
-                    expect(allCalls[0][0]).toMatch(
-                        /Error retrieving log for job.*?summat went wrong/
-                    );
-                });
+                );
+                expect(this.node.querySelector('[data-element="log-panel"]').textContent).toBe(
+                    'No log entries to show.'
+                );
+                expect(this.jobLogViewerInstance.state.awaitingLog).toBeFalse();
+                expect(this.jobLogViewerInstance.state.listeningForJob).toBeTrue();
+                expect(this.jobLogViewerInstance.state.looping).toBeFalse();
+
+                const allCalls = console.error.calls.allArgs();
+                expect(allCalls.length).toEqual(1);
+                expect(allCalls[0].length).toEqual(1);
+                expect(allCalls[0][0]).toMatch(/Error retrieving log for job.*?summat went wrong/);
             });
 
             endStates.forEach((endState) => {
@@ -663,11 +753,10 @@ define([
                         jobId,
                     });
 
-                    return TestUtil.waitForElementChange(
+                    await TestUtil.waitForElementChange(
                         this.node.querySelector('[data-element="log-panel"]')
-                    ).then(() => {
-                        testJobLogs(this.node, logLines);
-                    });
+                    );
+                    testJobLogs(this.node, logLines);
                 });
 
                 // logs deleted: 'No log entries to show' message
@@ -695,28 +784,22 @@ define([
                         node: this.node,
                         jobId,
                     });
-                    return TestUtil.waitForElementChange(
+                    await TestUtil.waitForElementChange(
                         this.node.querySelector('[data-element="log-panel"]')
-                    ).then(() => {
-                        expect(
-                            this.node.querySelector('[data-element="log-panel"]').textContent
-                        ).toBe('No log entries to show.');
-                        const widgetState = getWidgetState(this.node);
-                        expect(widgetState.looping).toBe(false);
-                        expect(widgetState.listeningForJob).toBe(false);
-                        const allCalls = console.error.calls.allArgs();
-                        expect(allCalls.length).toEqual(1);
-                        expect(allCalls[0].length).toEqual(1);
-                        expect(allCalls[0][0]).toMatch(/Error retrieving log for job.*?DANGER!/);
-                    });
+                    );
+
+                    expect(this.node.querySelector('[data-element="log-panel"]').textContent).toBe(
+                        'No log entries to show.'
+                    );
+                    expect(this.jobLogViewerInstance.state.awaitingLog).toBeFalse();
+                    expect(this.jobLogViewerInstance.state.looping).toBeFalse();
+                    expect(this.jobLogViewerInstance.state.listeningForJob).toBeFalse();
+                    const allCalls = console.error.calls.allArgs();
+                    expect(allCalls.length).toEqual(1);
+                    expect(allCalls[0].length).toEqual(1);
+                    expect(allCalls[0][0]).toMatch(/Error retrieving log for job.*?DANGER!/);
                 });
             });
         });
-
-        xit('Should have the top button go to the top', () => {});
-
-        xit('Should have the bottom button go to the end', () => {});
-
-        xit('Should have the stop button make sure it stops', () => {});
     });
 });

@@ -1,13 +1,10 @@
 // karma config for running tests that need to be isolated due to test runner issues
-
 module.exports = function (config) {
     'use strict';
     const karmaConfig = require('./karma.conf');
     karmaConfig(config);
-    const isolatePaths = [
-        'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
-        'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
-    ];
+
+    const isolatePaths = config.isolatedTests;
     config.files.forEach((line) => {
         if (typeof line === 'object' && line.pattern.indexOf('.js') >= 0) {
             line.nocache = true;
@@ -16,6 +13,7 @@ module.exports = function (config) {
             }
         }
     });
+
     isolatePaths.forEach((path) => {
         config.files.push({
             pattern: path,
@@ -24,9 +22,6 @@ module.exports = function (config) {
         });
     });
 
-    config.exclude = config.exclude.filter((line) => {
-        return !isolatePaths.includes(line);
-    });
-
+    config.exclude = config.alwaysExclude;
     config.reporters = ['mocha', 'json-result'];
 };

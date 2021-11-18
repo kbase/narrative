@@ -1,5 +1,18 @@
 module.exports = function (config) {
     'use strict';
+
+    const alwaysExclude = [
+        'kbase-extension/static/buildTools/*.js',
+        'kbase-extension/static/ext_components/**/test/**/*.js',
+        'kbase-extension/static/ext_modules/**/test/**/*.js',
+        'kbase-extension/static/kbase/js/patched-components/**/*',
+    ];
+    // the following tests should be run separately due to test runner issues
+    const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
+        'test/unit/spec/util/appCellUtil-spec.js',
+    ];
+
     config.set({
         basePath: '../../',
         frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
@@ -77,14 +90,9 @@ module.exports = function (config) {
                 included: false,
             },
         ],
-        exclude: [
-            'kbase-extension/static/buildTools/*.js',
-            'kbase-extension/static/ext_components/**/test/**/*.js',
-            'kbase-extension/static/ext_modules/**/test/**/*.js',
-            'kbase-extension/static/kbase/js/patched-components/**/*',
-            'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
-            'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
-        ],
+        isolatedTests,
+        alwaysExclude,
+        exclude: [...alwaysExclude, ...isolatedTests],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters: ['mocha', 'coverage', 'json-result'],

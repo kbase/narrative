@@ -508,8 +508,10 @@ define([
                     await TestUtil.waitForElementChange(
                         this.node.querySelector('[data-element="log-panel"]')
                     );
-                    const logPanelTitle = this.node.querySelector(`.kb-log__logs_title`);
-                    logPanelTitle.click();
+                    const logPanelTitle = this.node.querySelector(`.${cssBaseClass}__logs_title`);
+                    await TestUtil.waitForElement(this.node, `.${cssBaseClass}__line_text`, () => {
+                        logPanelTitle.click();
+                    });
                 });
 
                 afterEach(async () => {

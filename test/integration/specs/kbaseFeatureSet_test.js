@@ -37,9 +37,9 @@ describe('Test kbaseFeatureSet', () => {
             await expect(description).toHaveText(cellCase.description);
 
             // Test the 3rd row of the table.
-            const tableBody = await cell.$('[role="grid"] > tbody');
+            const tableBody = await cell.$('table.dataTable > tbody');
 
-            const rows = await tableBody.$$('[role="row"]');
+            const rows = await tableBody.$$('tr');
             await expect(rows.length).toEqual(cellCase.rowCount);
             const cols = await rows[cellCase.row - 1].$$('td');
 

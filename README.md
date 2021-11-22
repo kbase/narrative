@@ -9,16 +9,17 @@
 
 ***Table of Contents***
 
-- [About](#about)
-- [Installation](#installation)
-  - [Local Installation](#local-installation)
-    - [Using a Conda Environment](#using-a-conda-environment)
-    - [Without Conda](#without-conda)
-- [Architecture](#architecture)
-- [Testing](#testing)
-- [NPM scripts](#npm-scripts)
-- [Git Hooks](#git-hooks)
-- [Submitting Code](#submitting-code)
+- [The KBase Narrative Interface](#the-kbase-narrative-interface)
+  - [About](#about)
+  - [Installation](#installation)
+    - [Local Installation](#local-installation)
+    - [*Using a Conda Environment*](#using-a-conda-environment)
+    - [*Without conda*](#without-conda)
+  - [Architecture](#architecture)
+  - [Testing](#testing)
+  - [NPM Scripts](#npm-scripts)
+  - [Git Hooks](#git-hooks)
+  - [Submitting code](#submitting-code)
 
 ## About
 
@@ -37,8 +38,7 @@ Requires the following:
 
 -   Python 3.6+
 -   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
--   Node.js (latest LTS recommended)
--   Bower 1.8.8+
+-   Node.js (16.x+, Latest LTS recommended)
 
 ### *Using a Conda Environment*
 

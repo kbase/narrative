@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # installer steps
-# 0. prereqs = npm, bower, conda, pip, Python 3+
+# 0. prereqs = npm, conda, pip, Python 3+
 
 
 # given a virtual environment, install jupyter notebook, and the KBase goodies on top
@@ -99,8 +99,6 @@ then
     log "Installing front end build components with npm"
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
-    log "Installing front end components with bower"
-    npx bower install -V --allow-root --config.interactive=false 2>&1 | tee -a "${logfile}"
 
     # Install IPython
     # ---------------

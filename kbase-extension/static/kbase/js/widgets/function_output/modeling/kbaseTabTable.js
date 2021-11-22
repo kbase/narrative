@@ -9,6 +9,7 @@ define([
     'kbasePathways',
     'narrativeConfig',
 ], (KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways, Config) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseTabTable',
         parent: kbaseAuthenticatedWidget,
@@ -175,9 +176,9 @@ define([
 
                 // note: must add table first
                 tabPane.append(
-                    '<table class="table table-bordered table-striped" style="margin-left: auto; margin-right: auto;">'
+                    '<table class="table table-bordered table-striped" style="width:100%">'
                 );
-                tabPane.find('table').dataTable(settings);
+                tabPane.find('table').DataTable(settings);
 
                 // add any events
                 newTabEvents(tabSpec.name);

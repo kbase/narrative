@@ -6,30 +6,37 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 
--   SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
+- SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
 
-### Version 4.5.1
+### Version 4.6.0
+Code changes
+- DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
+- PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly. 
 
--   Python dependency updates
-    -   pillow 8.3.1 -> 8.3.2
-    -   plotly 5.1.0 -> 5.3.1
-    -   pygments 2.9.0 -> 2.10.0
-    -   pytest 6.2.4 -> 6.2.5
-    -   terminado 0.10.1 -> 0.11.1
--   Javascript dependency updates
-    -   @wdio/browserstack-service 7.9.1 -> 7.11.1
-    -   @wdio/cli 7.9.1 -> 7.11.1
-    -   @wdio/local-runner 7.9.1 -> 7.11.1
-    -   @wdio/mocha-framework 7.9.1 -> 7.11.1
-    -   @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
-    -   @wdio/spec-reporter 7.9.0 -> 7.10.1
-    -   chromedriver 92.0.1 -> 92.0.2
-    -   husky 7.0.1 -> 7.0.2
-    -   jasmine-core 3.8.0 -> 3.9.0
-    -   msw 0.34.0 -> 0.35.0
-    -   puppeteer 10.1.0 -> 10.2.0
-    -   terser 5.7.1 -> 5.7.2
-    -   webdriverio 7.9.1 -> 7.11.1
+Dependency Changes
+- Python dependency updates
+  - pillow 8.3.1 -> 8.3.2
+  - plotly 5.1.0 -> 5.3.1
+  - pygments 2.9.0 -> 2.10.0
+  - pytest 6.2.4 -> 6.2.5
+  - terminado 0.10.1 -> 0.11.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.9.1 -> 7.11.1
+  - @wdio/cli 7.9.1 -> 7.11.1
+  - @wdio/local-runner 7.9.1 -> 7.11.1 
+  - @wdio/mocha-framework 7.9.1 -> 7.11.1
+  - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
+  - @wdio/spec-reporter 7.9.0 -> 7.10.1
+  - chromedriver 92.0.1 -> 93.0.1
+  - husky 7.0.1 -> 7.0.2
+  - jasmine-core 3.8.0 -> 3.9.0
+  - msw 0.34.0 -> 0.35.0
+  - puppeteer 10.1.0 -> 10.4.0
+  - terser 5.7.1 -> 5.7.2
+  - webdriverio 7.9.1 -> 7.11.1
+- Javascript dependency additions
+  - expect-webdriverio 3.1.4
 
 ### Version 4.5.0
 

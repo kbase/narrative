@@ -170,6 +170,13 @@ define(['kbwidget', 'jquery', 'kbaseDeletePrompt', 'bootstrap'], (
                                     }
                                 }
                             }
+                            if (tab.onShown) {
+                                try {
+                                    tab.onShown();
+                                } catch (ex) {
+                                    console.error('Error in "onShown"', ex);
+                                }
+                            }
                         })
                         .append(
                             $('<button></button>')

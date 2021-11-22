@@ -6,7 +6,7 @@ define([
 
     // for effect
     'bootstrap',
-    'css!./ErrorMessage.css',
+    'css!styles/widgets/common/ErrorMessage.css',
 ], ($, errors, jsonrpcErrors, RenderJSON) => {
     'use strict';
 
@@ -150,6 +150,7 @@ define([
      * @returns {jQuery} A jQuery object representing an error object
      */
     function $ErrorMessage(err, { title } = {}) {
+        console.error('$ErrorMessage', err);
         return $('<div>')
             .addClass('panel panel-danger')
             .append(

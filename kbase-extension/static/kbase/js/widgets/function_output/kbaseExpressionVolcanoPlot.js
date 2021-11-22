@@ -12,7 +12,7 @@ define([
     'kbaseTabs',
 
     // For effect
-    'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
+    'css!ext_components/jquery.tipsy/src/jquery.tipsy.css',
     'bootstrap',
     'bootstrap-slider',
     'jquery-dataTables',
@@ -96,7 +96,7 @@ define([
             const $plot = this.$renderPlot();
             const $geneTable = this.$renderGeneTable();
 
-            // this.$volcanoPlotTab = 
+            // this.$volcanoPlotTab =
 
             const $tabs = $el('div');
             new KBaseTabs($tabs, {

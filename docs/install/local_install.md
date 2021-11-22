@@ -4,8 +4,7 @@
 ### Requirements
 
 * Python > 3.6+
-* NodeJS and NPM >= v10.0.0 (available here: https://nodejs.org/en/, LTS recommended)
-* Bower (install with `npm install -g bower` or instructions here https://bower.io/)
+* NodeJS and NPM >= v16.0.0 (available here: https://nodejs.org/en/, LTS recommended)
 * Highly recommended - a Python environment manager. Conda is mostly used here, but venv, Poetry, or Pipenv should work as well.
 
 ### Install - Short version

@@ -270,7 +270,7 @@ define([
             this.$featureTableDiv.empty();
 
             const $tbl = $(
-                '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0; margin-right: 0;">'
+                '<table style="width: 100%;">'
             ).addClass('table table-bordered table-striped');
             this.$featureTableDiv.append($tbl);
 

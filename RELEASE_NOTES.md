@@ -1,4 +1,4 @@
-### OVERVIEW
+# OVERVIEW
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
@@ -8,82 +8,87 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 Code Changes
 
-- SAM-40 - Add Name/ID column to SampleSet viewer
-- Migrated from Bower -> NPM, mostly kept the same versions, though some were unavoidably changed
-  - seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
-  - plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
-  - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
-  - requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
-  - kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
-  - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
-    - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
-    - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
-
+-   SAM-40 - Add Name/ID column to SampleSet viewer
+-   Migrated from Bower -> NPM, mostly kept the same versions, though some were unavoidably changed
+    -   seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
+    -   plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
+    -   requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
+    -   requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
+    -   kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
+    -   Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
+        -   `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
+        -   supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
+    -   SCT-2914 / PUBLIC-1493 - fix up/down cell movement behavior for unselected cells
 
 ### Version 4.6.0
+
 Code changes
-- DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
-- PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
-- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly. 
+
+-   DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
+-   PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+-   SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly.
 
 Dependency Changes
-- Python dependency updates
-  - pillow 8.3.1 -> 8.3.2
-  - plotly 5.1.0 -> 5.3.1
-  - pygments 2.9.0 -> 2.10.0
-  - pytest 6.2.4 -> 6.2.5
-  - terminado 0.10.1 -> 0.11.1
-- Javascript dependency updates
-  - @wdio/browserstack-service 7.9.1 -> 7.11.1
-  - @wdio/cli 7.9.1 -> 7.11.1
-  - @wdio/local-runner 7.9.1 -> 7.11.1 
-  - @wdio/mocha-framework 7.9.1 -> 7.11.1
-  - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
-  - @wdio/spec-reporter 7.9.0 -> 7.10.1
-  - chromedriver 92.0.1 -> 93.0.1
-  - husky 7.0.1 -> 7.0.2
-  - jasmine-core 3.8.0 -> 3.9.0
-  - msw 0.34.0 -> 0.35.0
-  - puppeteer 10.1.0 -> 10.4.0
-  - terser 5.7.1 -> 5.7.2
-  - webdriverio 7.9.1 -> 7.11.1
-- Javascript dependency additions
-  - expect-webdriverio 3.1.4
 
-### Version 4.5.0
-- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
-- SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
-- SCT-3084 - Fixed broken (non-functional) search in the data panel
-- SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
-- No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
-- Python dependency updates
-  - bokeh 2.3.2 -> 2.3.3
-  - pillow 8.2.0 -> 8.3.1
-  - plotly 4.14.3 -> 5.1.0
-  - pymongo 3.11.4 -> 3.12.0
-  - pytest 6.2.3. -> 6.2.4
-  - pytest-cov 2.11.1 -> 2.12.1
-  - requests 2.25.1 -> 2.26.0
-  - setuptools 57.0.0 -> 57.4.0
-- Javascript dependency updates
-  - @types/puppeteer 5.0.0 -> 5.4.4
-  - @wdio/browserstack-service 7.7.3 -> 7.9.0
-  - @wdio/cli 7.7.3 -> 7.9.0
-  - @wdio/local-runner 7.7.3 -> 7.9.0
-  - @wdio/mocha-framework 7.7.3 -> 7.9.0
-  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
-  - @wdio/spec-reporter 7.7.7 -> 7.9.0
-  - chromedriver 91.0.0 -> 91.0.1
-  - eslint 7.28.0 -> 7.32.0
-  - husky 6.0.0 -> 7.0.1
-  - karma 6.3.3. -> 6.3.4
-  - puppeteer 10.0.0 -> 10.1.0
-  - selenium-standalone 6.23.0 -> 7.1.0
-  - terser 5.7.0 -> 5.7.1
-  - wdio-chromedriver-service 7.1.0 -> 7.1.1
-  - webdriverio 7.7.3 -> 7.9.1
+-   Python dependency updates
+    -   pillow 8.3.1 -> 8.3.2
+    -   plotly 5.1.0 -> 5.3.1
+    -   pygments 2.9.0 -> 2.10.0
+    -   pytest 6.2.4 -> 6.2.5
+    -   terminado 0.10.1 -> 0.11.1
+-   Javascript dependency updates
+    -   @wdio/browserstack-service 7.9.1 -> 7.11.1
+    -   @wdio/cli 7.9.1 -> 7.11.1
+    -   @wdio/local-runner 7.9.1 -> 7.11.1
+    -   @wdio/mocha-framework 7.9.1 -> 7.11.1
+    -   @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
+    -   @wdio/spec-reporter 7.9.0 -> 7.10.1
+    -   chromedriver 92.0.1 -> 93.0.1
+    -   husky 7.0.1 -> 7.0.2
+    -   jasmine-core 3.8.0 -> 3.9.0
+    -   msw 0.34.0 -> 0.35.0
+    -   puppeteer 10.1.0 -> 10.4.0
+    -   terser 5.7.1 -> 5.7.2
+    -   webdriverio 7.9.1 -> 7.11.1
+-   Javascript dependency additions
+    -   expect-webdriverio 3.1.4
 
-### Version 4.4.0
+## Version 4.5.0
+
+-   PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+-   SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
+-   SCT-3084 - Fixed broken (non-functional) search in the data panel
+-   SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
+-   No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+-   Python dependency updates
+    -   bokeh 2.3.2 -> 2.3.3
+    -   pillow 8.2.0 -> 8.3.1
+    -   plotly 4.14.3 -> 5.1.0
+    -   pymongo 3.11.4 -> 3.12.0
+    -   pytest 6.2.3. -> 6.2.4
+    -   pytest-cov 2.11.1 -> 2.12.1
+    -   requests 2.25.1 -> 2.26.0
+    -   setuptools 57.0.0 -> 57.4.0
+-   Javascript dependency updates
+    -   @types/puppeteer 5.0.0 -> 5.4.4
+    -   @wdio/browserstack-service 7.7.3 -> 7.9.0
+    -   @wdio/cli 7.7.3 -> 7.9.0
+    -   @wdio/local-runner 7.7.3 -> 7.9.0
+    -   @wdio/mocha-framework 7.7.3 -> 7.9.0
+    -   @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+    -   @wdio/spec-reporter 7.7.7 -> 7.9.0
+    -   chromedriver 91.0.0 -> 91.0.1
+    -   eslint 7.28.0 -> 7.32.0
+    -   husky 6.0.0 -> 7.0.1
+    -   karma 6.3.3. -> 6.3.4
+    -   puppeteer 10.0.0 -> 10.1.0
+    -   selenium-standalone 6.23.0 -> 7.1.0
+    -   terser 5.7.0 -> 5.7.1
+    -   wdio-chromedriver-service 7.1.0 -> 7.1.1
+    -   webdriverio 7.7.3 -> 7.9.1
+
+## Version 4.4.0
+
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
@@ -91,12 +96,14 @@ Dependency Changes
 -   SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
 -   SCT-3038 - refseq public data search now includes genome_id and source_id
 
-### Version 4.3.2
+## Version 4.3.2
+
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
-### Version 4.3.1
+## Version 4.3.1
+
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.
@@ -114,21 +121,22 @@ Dependency Changes
 -   DATAUP-266 - fixed a problem where the staging area didn't automatically refresh when a file finishes uploading.
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
-### Version 4.3.0
-- SCT-2664 - Show the app cell status when in a collapsed state.
-- Added an "Info" tab to all app cells with app information.
-- Updated links to new KBase home page and docs site.
-- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
-- (Trigger release via labels)
+## Version 4.3.0
 
-### Version 4.2.1
+-   SCT-2664 - Show the app cell status when in a collapsed state.
+-   Added an "Info" tab to all app cells with app information.
+-   Updated links to new KBase home page and docs site.
+-   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+-   (Trigger release via labels)
+
+## Version 4.2.1
 
 -   Address problems with SampleSet / AMA Viewer widget.
 -   SCT-1822 - fix problems with drag and drop data upload failing for more than 100 files (updated the Dropzone widget to version 5.7.0)
 -   Updated Globus endpoint to point to the newer Globusconnect server.
 -   Updated tons of dependencies. Thanks Jason Fillman!
 
-### Version 4.2.0
+## Version 4.2.0
 
 -   Updated the Narrative interface to connect to the remade Execution Engine.
 -   Updated the Narrative interface to streamline events and cookies connected to the Traefik update.
@@ -136,41 +144,41 @@ Dependency Changes
 -   Added a viewer for the SampleSet object.
 -   PTV-1446 - fix bug preventing KBaseFeatureValues viewer apps from working and displaying data
 
-### Version 4.1.2
+## Version 4.1.2
 
 -   Improve display of job logs.
 -   Prevent App cell elements from overflowing the page.
 -   Job status is now inaccessible before a job enters the queue.
 
-### Version 4.1.1
+## Version 4.1.1
 
 -   Fix sort order in Narratives panel - should be by most recently saved.
 -   Add better error support in data staging uploader - if an upload directory is not available, you should be able to return to the root directory without trouble.
 
-### Version 4.1.0
+## Version 4.1.0
 
 -   Introduce Static Narratives, available under the Share menu. First release!
 
-### Version 4.0.0
+## Version 4.0.0
 
 -   Update various software packages
     -   Python to 3.6.9
     -   Jupyter Notebook to 6.0.2
     -   IPython to 7.9.0
 
-### Version 3.11.4
+## Version 3.11.4
 
 -   Add Annotated Metagenome Assembly viewer widget
 -   PTV-1214 - Fix Binned Contig Viewer labels
 -   PTV-1341 - Fix column and row labeling in GenomeComparison viewer
 -   Improve functionality and options for dynamic dropdowns in apps.
 
-### Version 3.11.3
+## Version 3.11.3
 
 -   PTV-1308 - Fix problem where users with a Globus account that's not linked to KBase will see an error when trying to access the Globus interface through the upload area.
 -   Add GFF Metagenome object upload type.
 
-### Version 3.11.2
+## Version 3.11.2
 
 -   Improve load times for the Data Panel and the browser in the data slideout (the "My Data" and "Shared with Me" tabs).
 -   Set the Narratives tab to lazy load.
@@ -178,13 +186,13 @@ Dependency Changes
 -   Updated data import tutorial for some clarity.
 -   Changed Pangenome viewer field names for clarity and consistency.
 
-### Version 3.11.1
+## Version 3.11.1
 
 -   Add internal information for users who came to the site from a Google ad click.
 -   Improve load time of the App Panel.
 -   Fix a bug where jobs canceled in the non-Narrative job browser would cause issues with the corresponding App Cell.
 
-### Version 3.11.0
+## Version 3.11.0
 
 -   Add an option to share a Narrative with an organization as well as people.
 -   SCT-1783 - Reduce the number of network calls to the auth service on startup.
@@ -193,11 +201,11 @@ Dependency Changes
 -   Fix an issue with nested subdata inputs into apps not being accessible as expected.
 -   Removed a bunch of dead code, including the older "service" modules, that haven't been in use for a few years.
 
-### Version 3.10.1
+## Version 3.10.1
 
 -   Fixed a critical bug where users with write access to a Narrative (but not share access) were unable to save changes to a Narrative or run Apps.
 
-### Version 3.10.0
+## Version 3.10.0
 
 -   Fix tooltip for long object names in the data panel.
 -   Add ability to prefix a part of path_to_subdata with WSREF to list options from other objects.
@@ -206,18 +214,18 @@ Dependency Changes
 -   Improved error handling and display when a Narrative doesn't exist or a user doesn't have permission to see it.
 -   Add functionality to request access to a Narrative instead of throwing a "not allowed" error.
 
-### Version 3.9.1
+## Version 3.9.1
 
 -   SCT-1509 - Ensure access permissions to Globus before redirecting a user there from the Import area.
 
-### Version 3.9.0
+## Version 3.9.0
 
 -   Fix security vulnerability with rendering some user info.
 -   SCT-1547 - Add a download endpoint to the staging service, so a user can now download files directly from the FTP stagin area.
 -   SCT-1496 - Add functionality for downloading data from the data panel to the FTP Staging area.
 -   SCT-1526 - Create a code cell generator as an app output.
 
-### Version 3.8.3
+## Version 3.8.3
 
 -   SCT-1253 - Replace old RNA-Seq data viewers.
 -   SCT-1393 - Fix "Objects Created" links in app outputs.
@@ -226,13 +234,13 @@ Dependency Changes
 -   Add viewers and support for generic data types.
 -   Fix RNA-Seq data viewers, including Feature Clusters.
 
-### Version 3.8.2
+## Version 3.8.2
 
 -   Add the clustergrammer_widget
 -   SCT-1219 - Fix the app cell so it shows an error if an app has multiple outputs, and they're given the same name.
 -   Add numpy, scipy, scikit-learn to the base Docker image
 
-### Version 3.8.1
+## Version 3.8.1
 
 -   SCT-1261 - Changed the 'outdated app' warning to a small icon with a popover text.
 -   SCT-886 - Added a default viewer for typed objects that don't have an actual viewer associated with them.
@@ -244,7 +252,7 @@ Dependency Changes
 -   Introduces a new build and deployment strategy.
 -   Updates the versions of numpy and pandas so they should work again.
 
-### Version 3.8.0
+## Version 3.8.0
 
 -   Generalized updates to support viewing the new version of the genome data type.
 -   SCT-500 - Fix DomainAnnotation viewer widget.
@@ -261,7 +269,7 @@ Dependency Changes
 -   SCT-1082 - fix regressions in Public Data tab.
 -   Fix regression in feature set viewer caused by SCT-762.
 
-### Version 3.7.2
+## Version 3.7.2
 
 -   SCT-908 - Fix formatting issues with heatmaps.
 -   SCT-875 - Accept poorly formatted input data into the RNA-Seq data heatmap viewers.
@@ -278,12 +286,12 @@ Dependency Changes
 -   SCT-698 - Redo the narrative build so that it uses Conda for installs of R, Python and Jupyter. This updates
     the versions to current levels, fixing numpy and pandas incompatibilities
 
-### Version 3.7.1
+## Version 3.7.1
 
 -   SCT-793, SCT-496 - Fix version of upstream dependency "file-saver" to 1.3.4; an upstream update had broken and taken down the Pangenome viewer and others.
 -   SCT-104 Convert the narrative container to new CI/CD model based on dockerize+environment variables for startup config
 
-### Version 3.7.0
+## Version 3.7.0
 
 -   Update Jupyter Notebook to 5.4.1 with a few KBase adjustments
     -   Prevent Jupyter favicon from overriding ours at various points.
@@ -301,19 +309,19 @@ Dependency Changes
 -   SCT-706 - fix problem where space characters were sometimes ignored in the app panel search.
 -   Remove old Import tab, remove (New) tag and warning from new Import tab.
 
-### Version 3.6.3
+## Version 3.6.3
 
 -   SCT-585 add folder drag and drop upload to the Import area.
 -   Remove old link to Search from the Narrative hamburger menu.
 -   Relabel public data referencing fungal genomes.
 
-### Version 3.6.2
+## Version 3.6.2
 
 -   Fix problem preventing read-only Narratives from loading.
 -   SCT-581 fix failure when reloading tabs in the data staging panel.
 -   SCT-582 reconcile labels and order of App Panel with Catalog.
 
-### Version 3.6.1
+## Version 3.6.1
 
 -   SCT-533 - Remove the accidental test uploader that crept into production.
 -   SCT-516 - Set staging panel to auto-refresh after various updates.
@@ -323,7 +331,7 @@ Dependency Changes
 -   Repaired somewhat broken Doman Annotation viewer.
 -   Text fixes to Import Tab tour.
 
-### Version 3.6.0
+## Version 3.6.0
 
 -   SCT-400 - Deprecates the old Import panel, change text from "Staging (beta)" -> "Import (new)"
 -   SCT-417
@@ -339,7 +347,7 @@ Dependency Changes
 -   SCT-405 - Custom compounds will now display properly in the media viewer.
 -   KBASE-5417 - Fix long strings not wrapping correctly when showing object metadata in the Data panel.
 
-### Version 3.5.2
+## Version 3.5.2
 
 -   PTV-682 - Fix problem with rendering a Pangenome widget in a copied Narrative.
 -   KBASE-5405 (in progress) - new version of app log viewer.
@@ -348,7 +356,7 @@ Dependency Changes
 -   KBASE-5410 - Put the user id onto the link to Globus in the staging upload area.
 -   Adds new functionality to the data staging area, including showing file metadata and whether a file has been uploaded before.
 
-### Version 3.5.1
+## Version 3.5.1
 
 -   TASK-1113/PUBLIC-148 - Import Panel scrolls if panel size is larger than screen size
 -   TASK-1114 - Add lock when editing name, that prevents data panel from refreshing with new data. Relinquishes lock after 15 min if no activity.
@@ -366,7 +374,7 @@ Dependency Changes
 -   PUBLIC-123 - Fix incorrect reaction counts in FBA Model viewer
 -   TASK-1158 - Standardize app and object cards in narrative and data panel
 
-### Version 3.5.0
+## Version 3.5.0
 
 -   TASK-1054 - Create a new loading window with a set of tasks to load and connect to (treats the problem of slowly loading websockets, still probably needs some adjusting).
 -   TASK-588 - Change status of importers from "suspend" to "error" if the import job fails.
@@ -382,7 +390,7 @@ Dependency Changes
 -   TASK-1079 - fix problems with code cell rendering and controls.
 -   KBASE-5275 - fix title for code cells used to track import jobs.
 
-### Version 3.4.4
+## Version 3.4.4
 
 -   TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.
 -   TASK-956 - fix error handling for the PanGenome viewer (and for other viewers that use the dynamicTable widget).
@@ -403,7 +411,7 @@ Dependency Changes
 -   Adds a generic data viewer for all Set data.
 -   TASK-1036 - Address problems with FBA Modeling object viewers (FBAModel, Media, etc.)
 
-### Version 3.4.3
+## Version 3.4.3
 
 -   TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.
 -   Update Expression Sample widget to better handle failures and only show a single widget tab.
@@ -414,30 +422,30 @@ Dependency Changes
 -   TASK-959 - sharing panel wasn't updating properly when sharing privileges were changed in a different window
 -   TASK-960 - fix problem where a user with sharing privileges who didn't own the Narrative could try and fail to remove privileges from the owner of that Narrative.
 
-### Version 3.4.2
+## Version 3.4.2
 
 -   Update base Narrative image to include an Ubuntu kernel security update.
 -   Add ETE3 to the environment.
 -   PTV-409 - fix problem where copying a Narrative using the "Narratives" panel would only make a copy of the currently viewed Narrative.
 
-### Version 3.4.1
+## Version 3.4.1
 
 -   Fixed job status widget spamming the kernel with constant update requests.
 -   Fixed job status widget not starting its logs as expected.
 -   Hide the "outdated job" warning in view only mode so tutorials don't look goofy.
 
-### Version 3.4.0
+## Version 3.4.0
 
-**Changes**
+### Changes
 
 -   Modified the Sharing dialog to make the actions more clear.
 -   Modified the configuration for publicly available data sources.
 -   Made global changes to support the new KBase authentication/authorization system.
 -   KBASE-5243 - fix problem where Narratives (and probably data objects) were showing a change date one month into the future.
 
-### Version 3.3.0
+## Version 3.3.0
 
-**Changes**
+### Changes
 
 -   Modified how to select an App from the App Panel, now you can sort and group by category, inputs, outputs, and alphabetically.
 -   Update a widget for viewing Pan-Genomes, and the underlying table to show data.
@@ -445,46 +453,46 @@ Dependency Changes
 -   Fixed several installation problems and technical dependency issues.
 -   Updated front end tests.
 
-### Version 3.2.5
+## Version 3.2.5
 
-**Changes**
+### Changes
 
 -   Fix problems preventing job logs from being scrolled in apps that are in an error state.
 -   Update widgets for viewing Binned Contigs, and the underlying table.
 -   Add tests for the above.
 
-### Version 3.2.4
+## Version 3.2.4
 
-**Changes**
+### Changes
 
 -   Added a viewer widget for Binned Contig objects.
 -   Updated the Assembly viewer to improve performance for large Assemblies.
 
-### Version 3.2.3
+## Version 3.2.3
 
-**Changes**
+### Changes
 
 -   Fixed problems that can occur on initial load (the page with the flashing KBase icons)
 -   Further improvements to the sharing interface.
 
-### Version 3.2.2
+## Version 3.2.2
 
-**Changes**
+### Changes
 
 -   Adjusted flow of job log viewing for data import jobs.
 -   Changed Narrative sharing interface, fixed cross-browser incompatibilities.
 -   Added new importer apps to the data staging panel.
 
-### Version 3.2.1
+## Version 3.2.1
 
-**Changes**
+### Changes
 
 -   Added JGI Data policy requirement to the JGI Public Data browser/stager.
 -   Fixed a text problem with an FBA viewer tab.
 
-### Version 3.2.0
+## Version 3.2.0
 
-**Changes**
+### Changes
 
 -   Added a prototype Public Data option to fetch files from JGI and load them into a user's staging area.
 -   Fixed problems with the Sharing popover having a very narrow text box.
@@ -492,9 +500,9 @@ Dependency Changes
 -   Introduced a new Selenium-based browser testing harness.
 -   Bumped version of Jupyter Notebook to 4.4.1, IPython to 5.3.0, and IPywidgets to 6.0.0.
 
-### Version 3.1.12
+## Version 3.1.12
 
-**Changes**
+### Changes
 
 -   Adjusted look and feel of group parameters in app cells.
 -   Fixed problems with RNA-seq viewer widgets.
@@ -502,9 +510,9 @@ Dependency Changes
 -   Data should now be downloadable in read-only mode.
 -   Added a taxonomy viewer widget.
 
-### Version 3.1.11
+## Version 3.1.11
 
-**Changes**
+### Changes
 
 -   Fixed a problem where the job log in app cells would continue to poll after the job had finished, or after a user had clicked onto a different tab.
 -   Fixed a problem with the Hisat viewer widget not working properly.
@@ -513,18 +521,18 @@ Dependency Changes
 -   Change text of copy button in view only mode.
 -   Adjust workflow of Narrative copying in view only mode to make more sense and prevent multi-clicking the copy button.
 
-### Version 3.1.10
+## Version 3.1.10
 
-**Changes**
+### Changes
 
 -   Fixed broken Import tab in the data slideout.
 -   Adjusted text in staging area tour.
 -   Fixed issue in App cells where the tab buttons could crowd each other out.
 -   Adjusted behavior of slider buttons in volcano plot widget to be more performant.
 
-### Version 3.1.9
+## Version 3.1.9
 
-**Changes**
+### Changes
 
 -   Expanded the reach of the front end code compiler.
 -   Adjusted the logic of job polling to only poll jobs that are currently attached to Narrative cells and running.
@@ -533,9 +541,9 @@ Dependency Changes
 -   Fixed sharing user lookup input field in Safari.
 -   Made many visual improvements to the app cell.
 
-### Version 3.1.8
+## Version 3.1.8
 
-**Changes**
+### Changes
 
 -   JIRA TASK-434 Made improvements to speed up loading and (hopefully) improve stability.
 -   JIRA TASK-439 Fixed a problem with adding inputs to subselected parameters in apps.
@@ -544,17 +552,17 @@ Dependency Changes
 -   Fixed issue with viewer cells not rendering properly.
 -   Enable a tab that displays which output objects were created in a report viewer.
 
-### Version 3.1.7
+## Version 3.1.7
 
-**Changes**
+### Changes
 
 -   Fixed an issue where if looking up any job status fails, all job statuses fail to update.
 -   Fixed problems with viewing RNA seq object viewers.
 -   Fixed a problem with displaying output widgets for many apps.
 
-### Version 3.1.6
+## Version 3.1.6
 
-**Changes**
+### Changes
 
 -   Created a help menu with some options migrated from the hamburger menu.
 -   Fixed staging area uploader configuration to keep up with uploader app changes.
@@ -563,9 +571,9 @@ Dependency Changes
 -   Fix import job panel not updating job status.
 -   Minor tweaks to labels in volcano plot viewer.
 
-### Version 3.1.5
+## Version 3.1.5
 
-**Changes**
+### Changes
 
 -   Added staging area uploaders for Genbank files, and SRA reads.
 -   Fixed (other) problems with backend job lookup.
@@ -573,9 +581,9 @@ Dependency Changes
 -   Fixed minor UI problems with volcano plot.
 -   Fixed potential problem with Cummerbund output viewer.
 
-### Version 3.1.4
+## Version 3.1.4
 
-**Changes**
+### Changes
 
 -   Linked the new reads uploaders to the staging panel.
 -   Wired the staging panel to include the subpath (not the username, just any subdirectories) in the input to uploaders.
@@ -583,31 +591,31 @@ Dependency Changes
 -   Added configuration for several data panel properties (max number of items to fetch, etc.).
 -   Added a semaphore lock that prevents any backend job lookup calls from being made before the channel is ready.
 
-### Version 3.1.3
+## Version 3.1.3
 
-**Changes**
+### Changes
 
 -   Fixed bug where read-only Narratives were still interactive (apps had run and reset buttons)
 -   Fixed bug where copying a read-only Narrative created a bad forwarding URL.
 
-### Version 3.1.2
+## Version 3.1.2
 
-**Changes**
+### Changes
 
 -   Do an autosave after starting an import job.
 -   Hide the code area for the 'Job Status' widget, whenever that widget gets instantiated.
 -   Remove 'Object Details...' button from data viewers (it's just hidden for now).
 -   In the App Cell Report tab, remove 'Summary' or 'Report' areas if either of those are missing.
 
-### Version 3.1.1
+## Version 3.1.1
 
-**Changes**
+### Changes
 
 -   Optimized how job status polling works.
 
-### Version 3.1.0
+## Version 3.1.0
 
-**Changes**
+### Changes
 
 -   Release of ReadsSet viewer and Reads viewer.
 -   Release of support for data palettes (currently disabled in the service)
@@ -615,17 +623,17 @@ Dependency Changes
 -   Support for an FTP-based data file staging area (currently disabled until import apps catch up).
 -   Fixed issue where an undefined app_type field would cause a crash while instantiating an app cell.
 
-### Version 3.1.0-alpha-4
+## Version 3.1.0-alpha-4
 
-**Changes**
+### Changes
 
 -   Adjust visuals in Reads viewer.
 -   Adjust tooltip for objects from other Narratives.
 -   Changed functionality of object copying in data slideout.
 
-### Version 3.1.0-alpha-3
+## Version 3.1.0-alpha-3
 
-**Changes**
+### Changes
 
 -   Updated ReadsSet viewer and Reads viewer.
 -   Modified icons for elements from an external Narrative.
@@ -633,47 +641,47 @@ Dependency Changes
 -   Fixed missing upload functions bug.
 -   Fixed issues with Narrative copying (from the Narratives panel)
 
-### Version 3.1.0-alpha-2
+## Version 3.1.0-alpha-2
 
-**Changes**
+### Changes
 
 -   Fixes problem with data hierarchy when sub-elements are from a different Narrative.
 -   Puts a visual label on things from another Narrative.
 
-### Version 3.1.0-alpha-1
+## Version 3.1.0-alpha-1
 
-**Changes**
+### Changes
 
 -   Introduces the concept of data sets with hierarchical manipulation.
 -   Sets objects should be able to expand and contract, showing sub objects.
 -   Adds Apps that can manipulate data sets (currently only Reads Sets).
 -   Rewires all data manipulation code to use a different service.
 
-### Version 3.0.2
+## Version 3.0.2
 
-**Changes**
+### Changes
 
 -   Fixed bug preventing the "Annotate Microbial Genome" app (and others that make use of randomized input strings) from launching.
 -   Fixed another bug with CSS files.
 
-### Version 3.0.1
+## Version 3.0.1
 
-**Changes**
+### Changes
 
 -   Fixed bug with path to some CSS files.
 -   Fixed error where an update to old viewer cells would just produce code that would crash.
 -   Fixed error where updated app cells containing Apps made with the KBase SDK weren't updated properly.
 
-### Version 3.0.0
+## Version 3.0.0
 
-**Changes**
+### Changes
 
 -   Final 3.0.0 release!
 -   Adjust data import user experience.
 
-### Version 3.0.0-alpha-23
+## Version 3.0.0-alpha-23
 
-**Changes**
+### Changes
 
 -   Major updates to the App Cell UI
     -   Restructured so each view is a separate tab.
@@ -691,9 +699,9 @@ Dependency Changes
 -   Updated Ontology view widgets to use tabs.
 -   Fixed automated front end test apparatus.
 
-### Version 3.0.0-alpha-22
+## Version 3.0.0-alpha-22
 
-**Changes**
+### Changes
 
 -   First pass at an inline clickable interface tour.
 -   Fixed problems with Jupyter's command-mode shortcuts overriding whatever they wanted to.
@@ -701,9 +709,9 @@ Dependency Changes
 -   Add GenomeAnnotation support to genome, pangenome, and proteome comparison viewers.
 -   Add warning for out of date apps.
 
-### Version 3.0.0-alpha-21
+## Version 3.0.0-alpha-21
 
-**Changes**
+### Changes
 
 -   Applied module release version to that module's method specs.
 -   Fixed regression preventing cell deletion in some conditions.
@@ -711,9 +719,9 @@ Dependency Changes
 -   Added 401 error when the Narrative handler is unauthenticated.
 -   Addressed issues with job cancellation.
 
-### Version 3.0.0-alpha-20
+## Version 3.0.0-alpha-20
 
-**Changes**
+### Changes
 
 -   Fixed custom parameter widgets.
 -   Improved error catching within App Cell.
@@ -723,56 +731,56 @@ Dependency Changes
 -   Updated Data API-based widgets to use latest clients.
 -   Added prompt with report option (not working yet) when the JobManager fails to initialize.
 
-### Version 3.0.0-alpha-19
+## Version 3.0.0-alpha-19
 
-**Changes**
+### Changes
 
 -   add latest workspace python client
 -   update narrative usage of ws client since ServerError has moved
 
-### Version 3.0.0-alpha-18
+## Version 3.0.0-alpha-18
 
-**Changes**
+### Changes
 
 -   revert python workspace client for now (breaks narrative launch)
 -   fix error widget for output cell
 
-### Version 3.0.0-alpha-17
+## Version 3.0.0-alpha-17
 
-**Changes**
+### Changes
 
 -   fix checkbox validation bug
 -   fix viewer widget not getting the cell id and therefore not rendering
 -   update python workspace client to latest
 
-### Version 3.0.0-alpha-16
+## Version 3.0.0-alpha-16
 
-**Changes**
+### Changes
 
 -   fix multiple object input widget
 -   remove execution summary widget
 -   updated kbase client api lib to bring in updated workspace client
 
-### Version 3.0.0-alpha-15
+## Version 3.0.0-alpha-15
 
-**Changes**
+### Changes
 
 -   fix output param marked as parameter triggering error and blocking app cell insertion
 -   improve error message when checkbox is misconfigured
 -   improve checkbox rules display
 
-### Version 3.0.0-alpha-14
+## Version 3.0.0-alpha-14
 
-**Changes**
+### Changes
 
 -   fix job cell (as produced by JobManager()->job_info())
 -   relax enforcement of object output name input widget being categorized as an "output" control
 -   fix tab label and job count badge in job panel
 -   more progress on custom subdata, binary, and select controls
 
-### Version 3.0.0-alpha-13
+## Version 3.0.0-alpha-13
 
-**Changes**
+### Changes
 
 -   Fix display of data objects drag-and-dropped or clicked from the data panel
 -   Job status lookup and error handling improvements
@@ -780,9 +788,9 @@ Dependency Changes
 -   Initial implementation of viewers for new objects
 -   Fixed ontology dictionary
 
-### Version 3.0.0-alpha-12
+## Version 3.0.0-alpha-12
 
-**Changes**
+### Changes
 
 -   Fixed JobManager.list_jobs (again)
 -   Reconnected the 'scroll to app' button in the Jobs panel to existing App Cell widgets
@@ -790,9 +798,9 @@ Dependency Changes
 -   Fixed a constant spam of Job info from the kernel on page refresh.
 -   Restored multiselection in subdata inputs.
 
-### Version 3.0.0-alpha-11
+## Version 3.0.0-alpha-11
 
-**Changes**
+### Changes
 
 -   Fixed Narrative metadata to contain a proper list of Apps for showing on the Dashboard.
 -   Updated read only mode
@@ -802,9 +810,9 @@ Dependency Changes
     -   Cell toolbars get their buttons hidden (maybe all but the collapse and code toggles should be hidden?)
 -   Tweaked placeholder text of Markdown cells.
 
-### Version 3.0.0-alpha-10
+## Version 3.0.0-alpha-10
 
-**Changes**
+### Changes
 
 -   Pressing the Enter key should trigger a positive reponse on most dialogs (e.g. if there are Yes or No options, it should select Yes)
 -   Only the user who started a job can delete it (except for owners of a narrative... that's all confusing, though, so it's only users who started a job now).
@@ -813,18 +821,18 @@ Dependency Changes
 -   Canceled jobs are treated as Deleted by the App cell.
 -   Added configuration for the service_wizard client - mild refactor to how configs get loaded.
 
-### Version 3.0.0-alpha-9
+## Version 3.0.0-alpha-9
 
-**Changes**
+### Changes
 
 -   Restore app and viewer cell icons to their rightful place
 -   Minor string tweaks
 -   Minor CSS tweaks
 -   First pass at setup for optionally using Dynamic services for getting widget subdata
 
-### Version 3.0.0-alpha-8
+## Version 3.0.0-alpha-8
 
-**Changes**
+### Changes
 
 -   Fix various problems with subdata input widget - selecting multiple when only one should be allowed, pathway issues into data object, etc.
 -   Convert execution area back to tabbed items.
@@ -834,17 +842,17 @@ Dependency Changes
 -   Add icon to tab in tabset.
 -   Make use of updated cancel job function in UJS (gonna need some iteration on this once the UJS change goes up)
 
-### Version 3.0.0-alpha-7
+## Version 3.0.0-alpha-7
 
-**Changes**
+### Changes
 
--   Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves. See this PR for details: https://github.com/kbase/narrative/pull/679
+-   Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves. See this PR for details: <https://github.com/kbase/narrative/pull/679>
 -   Newly generated output cells auto-hide their input areas (still not ideal, since it's the generated widget, but... it's a start).
 -   Fixed a couple UI typos
 
-### Version 3.0.0-alpha-6
+## Version 3.0.0-alpha-6
 
-**Changes**
+### Changes
 
 -   App parameter validation updates:
     -   Empty strings in either text fields or dropdowns get transformed to null before starting the app
@@ -855,38 +863,38 @@ Dependency Changes
 -   Improved error and warning handling for Apps. (e.g. pre-existing output object names can be overwritten again, but now there's a warning)
 -   '-' characters are not allowed in App parameter ids. They must be representable as variable names (still up for debate, but that's how it is now)
 
-### Version 3.0.0-alpha-5
+## Version 3.0.0-alpha-5
 
-**Changes**
+### Changes
 
 -   Fixed issue when starting SDK jobs from the upload panel with numeric parameters.
 -   Fixed crash bug when trying to unpack a finished job that has incomplete inputs.
 -   Shut off Jupyter command-mode quick keys when a text parameter input is focused.
 
-### Version 3.0.0-alpha-4
+## Version 3.0.0-alpha-4
 
-**Changes**
+### Changes
 
 -   Improve error reporting when failing to load a viewer.
 
-### Version 3.0.0-alpha-3
+## Version 3.0.0-alpha-3
 
-**Changes**
+### Changes
 
 -   Replace RNA-Seq viewers that had wandered off
 -   Display SDK methods for various uploaders
 
-### Version 3.0.0-alpha-2
+## Version 3.0.0-alpha-2
 
-**Changes**
+### Changes
 
 -   Fix updater so that it updates the Markdown cell version of viewer cells into pre-executed code cells that generate viewers. (So, updated viewers should work again)
 -   Fix Docker image so that it doesn't spam the annoying SSL errors in all cells.
 -   Put code area toggle on all code cells at all times. (Just to give Erik and I something to argue about)
 
-### Version 3.0.0-alpha-1
+## Version 3.0.0-alpha-1
 
-**Major Updates**
+### Major Updates
 
 -   Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference. This also gives suggestions for updated apps (that will be available in production eventually...)
 -   The distinction between "App" and "Method" has been removed. All cells that execute KBase jobs are now referred to as Apps.
@@ -894,7 +902,7 @@ Dependency Changes
 -   All output and viewer cells are now code cells as well. Existing viewers are still based on Markdown cells, and should work as previously.
 -   All visualization widgets had their initialization code slightly modified. See docs/developer/narrative_widgets.md for details.
 
-**Other Changes**
+### Other Changes
 
 -   Update Jupyter to version 4.2.1.
 -   Update IPython kernel to version 5.0.0.
@@ -905,16 +913,16 @@ Dependency Changes
 -   Copying a shared Narrative no longer copies its Jobs - copying a Narrative with running Jobs will not copy the results.
 -   Updated the job log widget to no longer fetch all lines of a running log. It has a limit of 100 lines at a time, with buttons to navigate around the log.
 
-### Version 2.0.9
+## Version 2.0.9
 
-**Changes**
+### Changes
 
 -   Small changes to viewer widgets - esp. genome viewer and expression data viewer.
 -   Fixed overlapping sort icons in tables - JIRA ticket KBASE-4220.
 
-### Version 2.0.8
+## Version 2.0.8
 
-**Changes**
+### Changes
 
 -   Numerous small fixes to text and layout of various widgets.
 -   Genome view deals with plants and eukaryota better.
@@ -923,15 +931,15 @@ Dependency Changes
 -   Ontologies, Assemblies, and GenomeAnnotations are uploadable.
 -   Fixed several issues with Narrative copying (see JIRA tickets KBASE-2034, KBASE-4140, KBASE-4154, KBASE-4159, NAR-849, and NAR-850).
 
-### Version 2.0.7
+## Version 2.0.7
 
-**Changes**
+### Changes
 
 -   Fixed data subsetting parameter input.
 
-### Version 2.0.6
+## Version 2.0.6
 
-**Changes**
+### Changes
 
 -   Fixed local configuration issue with Public and Example data tabs.
 -   Updated genome viewer widget to better support eukaryotic genomes.
@@ -939,9 +947,9 @@ Dependency Changes
 -   Added Release/Beta method button toggle that should show up in production mode.
 -   JIRA NAR-846 - fix problem with Run Time in jobs panel reported as "how long ago"
 
-### Version 2.0.5
+## Version 2.0.5
 
-**Changes**
+### Changes
 
 -   Fixed problems with missing data from Public data tab.
 -   Added separate configuration file for Public and Example data tabs.
@@ -949,9 +957,9 @@ Dependency Changes
 -   Fixed jitter on data object mouseover.
 -   Added 'Shutdown and Restart' option to hamburger menu.
 
-### Version 2.0.4
+## Version 2.0.4
 
-**Changes**
+### Changes
 
 -   Fixed problems with sharing jobs based on SDK-built methods.
 -   JIRA KBASE-3725 - renaming narratives should now trigger a save.
@@ -961,17 +969,17 @@ Dependency Changes
 -   Removed unused data objects from example data tab.
 -   Methods can now specify that no output widget should be created.
 
-### Version 2.0.3
+## Version 2.0.3
 
-**Changes**
+### Changes
 
 -   JIRA KBASE-3388 - fixed problem that caused a crash on save when too many unique methods or apps were in a narrative. The narrative metadata has been reformatted to support this.
 -   Fixed problems with funky unicode characters in narrative titles.
 -   Updates to various FBA widgets.
 
-### Version 2.0.2
+## Version 2.0.2
 
-**Changes**
+### Changes
 
 -   JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.
 -   Added tools for editing FBA models.
@@ -980,9 +988,9 @@ Dependency Changes
 -   JIRA NAR-589 - change "Copy Narrative" to "Copy This Narrative" for clarity.
 -   JIRA NAR-788 - remove light colors from random picker when coloring user names for sharing.
 
-### Version 2.0.1
+## Version 2.0.1
 
-**Changes**
+### Changes
 
 -   JIRA KBASE-3623 - fixed problem where updating an old version of the Narrative typed object could cause the Narrative title to be lost
 -   JIRA KBASE-3624 - fixed links in method input cell subtitles to manual pages
@@ -990,9 +998,9 @@ Dependency Changes
 -   Added widget for sequence comparison
 -   Added tools for editing FBA model media sets.
 
-### Version 2.0.0
+## Version 2.0.0
 
-**Changes**
+### Changes
 
 -   Update IPython Notebook backend to Jupyter 4.1.0.
 -   Data Panel slideout should now perform better for users with lots and lots of objects.
@@ -1004,9 +1012,9 @@ Dependency Changes
 -   Updated Narrative object definition to match the Jupyter notebook object definition more closely.
 -   Data panel should no longer hang forever on Narrative startup.
 
-### Version 1.1.0
+## Version 1.1.0
 
-**Changes**
+### Changes
 
 -   Added "Edit and Re-Run" button to method cells that have already been run.
 -   Updated 'filtered' in method panel to 'filtered out'.
@@ -1018,26 +1026,26 @@ Dependency Changes
 -   Added support for method specs based on namespacing.
 -   Added preliminary third party SDK support.
 
-### Version 1.0.5
+## Version 1.0.5
 
-**Changes**
+### Changes
 
 -   Fix for bugs in saving/loading App state and displaying App step output widgets.
 -   Fix for a bug that prevented users with edit privileges from saving a shared narrative.
 -   Fixed issue where FBA model comparison widget wasn't showing up properly.
 
-### Version 1.0.4
+## Version 1.0.4
 
-**Changes**
+### Changes
 
 -   Added widgets and methods to support feature-value analyses
 -   JIRA KBASE-2626 - Narrative should no longer crash when the Workspace Service is unavailable, but it will produce a 404 error when trying to fetch a Narrative from that Workspace.
 -   JIRA NAR-528 - Narrative method panel now allows filtering by input/output type along with additional
     search terms.
 
-### Version 1.0.3
+## Version 1.0.3
 
-**Changes**
+### Changes
 
 -   JIRA KBASE-1672 - updated text in upload dialogs
 -   JIRA KBASE-1288 - show prompt when copying a public genome to a Narrative if that genome already exists in the Narrative
@@ -1049,7 +1057,7 @@ Dependency Changes
 -   Updated root README, added Travis-CI and Coveralls badges
 -   Linked the Narrative Github repo to Travis-CI and Coveralls
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA KBASE-1671 - fix typo in genome annotation widget
 -   JIRA KBASE-2042 - fix errors in the error page that shows up when a Narrative is unavailable.
@@ -1058,81 +1066,81 @@ Dependency Changes
 -   JIRA NAR-758 - added a horizontal scrollbar to widgets who get too wide (this currenly only affects the OTU Abundance data table widget, but others might get affected in the future).
 -   JIRA NAR-814 - added a trailing slash to the service status url.
 
-### Version 1.0.2 - 2/19/2015
+## Version 1.0.2 - 2/19/2015
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-491 - modified public data panel to get metagenomes of the correct type from the updated search interface
 -   Fixed problem where Plant transcriptomes weren't properly rendered in the genome browser
 -   Fixed problems in domain annotation widget so it displays properly in different error cases
 
-### Version 1.0.1 - 2/16/2015
+## Version 1.0.1 - 2/16/2015
 
-**Changes**
+### Changes
 
 -   JIRA NAR-716 - If a app/method finishes with a non-error status, then the results in the step_errors field of the job status aren't shown.
 -   Added Lazy Loading to genome widget. Large genomes shouldn't take a long time to load now.
 -   JIRA KBASE-1607 - Sort data types in the data slide out panel
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed an issue where widgets would occasionally not load.
 -   JIRA NAR-699, NAR-700 - Made changes to widgets that were producing confusing or incorrect output based on different context.
 -   Fixed issue where data panel list sometimes doesn't load.
 
-### Version 1.0.0 - 2/13/2015
+## Version 1.0.0 - 2/13/2015
 
-## Production release!
+## Production release
 
-### Version 0.6.4 - 2/12/2015
+## Version 0.6.4 - 2/12/2015
 
-**Changes**
+### Changes
 
 -   Removed most 'View' methods from the Methods panel, except for those required by the Communities tutorials
 -   Set the default page title back to "KBase Narrative"
 
-**Bugfixes**
+### Bugfixes
 
 -   In the rename dialog:
     -   Text field wasn't autofocused
     -   Enter button didn't automatically work
 -   In other dropdowns, the escape key didn't work properly
--   https://atlassian.kbase.us/browse/KBASE-1586 - fixed parameter checking for min/max ints
--   https://atlassian.kbase.us/browse/NAR-687 - fixed issue with non-loading reactions and compounds for certain gapfilled FBA models
--   https://atlassian.kbase.us/browse/NAR-633 - Rerouted urls to the production site in prep for production release tomorrow. Eep!
+-   <https://atlassian.kbase.us/browse/KBASE-1586> - fixed parameter checking for min/max ints
+-   <https://atlassian.kbase.us/browse/NAR-687> - fixed issue with non-loading reactions and compounds for certain gapfilled FBA models
+-   <https://atlassian.kbase.us/browse/NAR-633> - Rerouted urls to the production site in prep for production release tomorrow. Eep!
 
-### Version 0.6.3 - 2/12/2015
+## Version 0.6.3 - 2/12/2015
 
-**Bugfixes**
+### Bugfixes
 
--   https://atlassian.kbase.us/browse/NAR-690 - Missing data types in data panel filter
--   https://atlassian.kbase.us/browse/NAR-692 - Fixed issue that led to drag and drop not working
+-   <https://atlassian.kbase.us/browse/NAR-690> - Missing data types in data panel filter
+-   <https://atlassian.kbase.us/browse/NAR-692> - Fixed issue that led to drag and drop not working
 
-### Version 0.6.2 - 2/11/2015
+## Version 0.6.2 - 2/11/2015
 
-**Changes**
+### Changes
 
 -   Adjustments to readonly mode
     -   Added reduced-functionality side panel
     -   Improved copy dialog
 -   Added support for uploading Microsoft Excel files with Media and FBAModels
 
-**Bugfixes**
+### Bugfixes
 
--   https://atlassian.kbase.us/browse/NAR-681 - loading screen blocks out valid HTTP error pages
--   https://atlassian.kbase.us/browse/NAR-682 - loading screen persists when it shouldn't
--   https://atlassian.kbase.us/browse/NAR-688 - 401 errors when unauthenticated don't redirect to kbase.us
+-   <https://atlassian.kbase.us/browse/NAR-681> - loading screen blocks out valid HTTP error pages
+-   <https://atlassian.kbase.us/browse/NAR-682> - loading screen persists when it shouldn't
+-   <https://atlassian.kbase.us/browse/NAR-688> - 401 errors when unauthenticated don't redirect to kbase.us
 
-### Version 0.6.1 - 2/10/2015
+## Version 0.6.1 - 2/10/2015
 
-**Changes**
+### Changes
 
 -   Made adjustments to Gapfill viewer widget
 -   Added downloaders for PhenotypeSimulationSet and Pangenome
 
-### Version 0.6.0 - 2/10/2015
+## Version 0.6.0 - 2/10/2015
 
-**Changes**
+### Changes
 
 -   Added a read-only mode for narratives. Users with read-only privileges can only view a narrative, but not change anything, including running functions, since they do not have write privileges anyway. This does come with a copy function that will allow a fork to be made and owned by the user.
 -   Header style update, some consistency issues
@@ -1140,14 +1148,14 @@ Dependency Changes
 -   Show loading icon in communities widgets
 -   Renamed CSV Transform API arguments to TSV
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA KBASE-1411 fix - render issue for protein comparison widget
 -   Fixed case where genome object doesn't have any contig info.
 
-### Version 0.5.7 - 2/9/2015
+## Version 0.5.7 - 2/9/2015
 
-**Changes**
+### Changes
 
 -   Updates to provisioning service to deal with JIRA NAR-660 and overall stability and control
 -   Updated urls for FBA service
@@ -1157,31 +1165,31 @@ Dependency Changes
 -   Updated intro cell text and links from the Narrative side (for this to be actually visible a deploy of ui-common is necessary)
 -   Improved genome viewer widget to show all contigs
 
-### Version 0.5.6 - 2/7/2015
+## Version 0.5.6 - 2/7/2015
 
-**Changes**
+### Changes
 
 -   Updates to FBA model viewer widgets
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA KBASE-1461 - The config file that contains the Narrative version should no longer be cached in the browser
 
-### Version 0.5.5 - 2/7/2015
+## Version 0.5.5 - 2/7/2015
 
-**Changes**
+### Changes
 
 -   Minor changes to icons
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-657, KBASE-1527 - Fixed problem where a new narrative that hasn't had any jobs in it would fail to save.
 -   JIRA NAR-651 - Fixed problem where a user with no narratives would see a constant spinner under the Narrative panel
 -   Fixed issue where the Narrative panel would refresh twice on startup
 
-### Version 0.5.4 - 2/6/2015
+## Version 0.5.4 - 2/6/2015
 
-**Changes**
+### Changes
 
 -   JIRA NAR-639, KBASE-1384 - Added completion time, run time, and queue time tracking for jobs
     -   a new 'job_info' property was added to object metadata, containing the following keys:
@@ -1194,16 +1202,16 @@ Dependency Changes
 -   JIRA NAR-640 - Added autosaving whenever an output or error cells is created by job status change
 -   JIRA NAR-650 - Block view of any queue position unless a job is in the 'queued' state.
 
-### Version 0.5.3 - 2/5/2015
+## Version 0.5.3 - 2/5/2015
 
-**Changes**
+### Changes
 
 -   More minor icon changes.
 -   Changed hard-coded urls to be relative to the config file in many widgets.
 
-### Version 0.5.2 - 2/5/2015
+## Version 0.5.2 - 2/5/2015
 
-**Changes**
+### Changes
 
 -   Rerouted landing pages to new endpoint
 -   Updated Docker container cleanup script to kill unused containers then images
@@ -1211,13 +1219,13 @@ Dependency Changes
 -   Added new icons, some code cleanup for setting icons
 -   Made "corrupt" narrative labels slightly more obvious
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed problem where data list filter gets confused when searching and changing type filters
 
-### Version 0.5.1 - 2/4/2015
+## Version 0.5.1 - 2/4/2015
 
-**Changes**
+### Changes
 
 -   Updated data and app icons, and docs about them
 -   Added stats tab to metagenome collection view
@@ -1226,14 +1234,14 @@ Dependency Changes
 -   Fixed more inconsistent font issues on buttons
 -   Modified text on 3-bar menu, added link to dashboard
 
-### Version 0.5.0 - 2/3/2015
+## Version 0.5.0 - 2/3/2015
 
-**Changes**
+### Changes
 
 -   Refactor to parts of Narrative init module
     -   JIRA NAR-561 Added a version check mechanism - when a new version is deployed, a green button should appear in the header with a prompt to reload
     -   Wired deployment script to emit a version text file that sits in /kb/deployment/ui-common's root
--   Made several style changes - see https://github.com/kbase/narrative/issues/161
+-   Made several style changes - see <https://github.com/kbase/narrative/issues/161>
     -   Removed edged corners from remaining KBase cells and IPython cells
     -   JIRA NAR-421 - removed header styling from markdown and code cells
     -   KBASE-1196 - changed red ring around running methods to blue ring
@@ -1251,7 +1259,7 @@ Dependency Changes
     -   Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
     -   Added custom icons for several datatypes
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-586 - fixed error with quotation marks not being used correctly in App info boxes, and links not being rendered properly
 -   Fixed several font mismatch issues - in kernel menu, new/copy narrative buttons, error buttons
@@ -1260,9 +1268,9 @@ Dependency Changes
 -   JIRA KBASE-1304 - fixed race condition that would prevent certain output cells from appearing in apps properly when restarted without saving the output
 -   Re-added ability to run the narrative_shutdown command from external hosts
 
-### Version 0.4.9 - 1/30/2015
+## Version 0.4.9 - 1/30/2015
 
-**Changes**
+### Changes
 
 -   Added some missing metagenome viewer widgets.
 -   Updated all JS client code to their most recent compiled versions.
@@ -1273,15 +1281,15 @@ Dependency Changes
 -   Added a 'Copy Narrative' button to narrative panel
 -   Added a friendly and potentially helpful message for narrative fatal errors.
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-530 - fixed issue with long object names not wrapping in dropdown selectors.
 -   JIRA NAR-579 - fixed problem where short-jobs (e.g. viewers) were improperly treated as long-running.
 -   JIRA NAR-582, NAR-514 - added better error status checking for job lookups. Now it covers network errors, unauthorized user errors, missing job errors, and generic AWE errors
 
-### Version 0.4.8 - 1/29/2015
+## Version 0.4.8 - 1/29/2015
 
-**Changes**
+### Changes
 
 -   Fixed issue with input object type for reads ref-lib uploader.
 -   Fixed bug with absent red box around long running UJS method
@@ -1290,26 +1298,26 @@ Dependency Changes
 -   Added lots of new icons for data and apps
 -   Updated some of the button styles in the data panels
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed issue with synchronous methods being treated as asynchronous, and not showing any output.
 
-### Version 0.4.7 - 1/28/2015
+## Version 0.4.7 - 1/28/2015
 
-**Changes**
+### Changes
 
 -   Changed Narrative tutorial link to the new one on staging.kbase.us
 -   JIRA NAR-444 - Changed websocket error dialog to something much more user-readable and KBase-appropriate.
 
-### Version 0.4.6 - 1/28/2015
+## Version 0.4.6 - 1/28/2015
 
-**Changes**
+### Changes
 
 -   Added another separate page when a narrative is not found (not just unauthorized)
 -   Added support for single file extraction during download
 -   Changed "dna" parameter of plant transcriptome uploader to integer value
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed issue with deployment script not auto-shutting-down all non-attached instances
 -   NAR-500 - completed UJS jobs should stay completed
@@ -1319,35 +1327,35 @@ Dependency Changes
 -   Fixed more issues with FBA model widgets
 -   Fixed boolean properties issues in uploaders
 
-### Version 0.4.5 - 1/28/2015
+## Version 0.4.5 - 1/28/2015
 
-**Changes**
+### Changes
 
 -   Changed endpoint URLs for transform service and job service
 -   Added better error page when a narrative is either not found or unauthorized
 -   Made several adjustments to communities visualization widgets
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed state checking for long-running job registered with the UJS
 -   Fixed issue where FBA service can return unparseable results
 -   Fixed various problems with FBA model visualization widgets
 
-### Version 0.4.4 - 1/27/2015
+## Version 0.4.4 - 1/27/2015
 
-**Changes**
+### Changes
 
 -   Updated deployment script to auto-init/update submodules and clear out old versions of provisioned (but unattached) containers,
 -   Updates to metagenome widgets to prevent crashes.
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-541 - fixed problem with missing datatables header images
 -   Removed (again?) a dead pointer to a deprecated/moved javascript file.
 
-### Version 0.4.3 - 1/27/2015
+## Version 0.4.3 - 1/27/2015
 
-**Changes**
+### Changes
 
 -   Updated Transform endpoint to the production version
 -   Updated Gene Domains endpoint to the production version
@@ -1356,13 +1364,13 @@ Dependency Changes
 -   Moved downloader panel to a separate widget
 -   Updated log testing proxy
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed issue where some workspace/narrative mappings were lost
 
-### Version 0.4.2 - 1/23/2015
+## Version 0.4.2 - 1/23/2015
 
-**Changes**
+### Changes
 
 -   JIRA NAR-432 - added little red badge in the Jobs header with the number of running jobs
 -   Added support for CSV to PhenotypeSet importer
@@ -1371,24 +1379,24 @@ Dependency Changes
 -   Optional dropdown inputs can now pass no inputs if its spec defaults to an empty string
 -   Parameter info mouseover icon only appears if the longer info is different from the short hint
 
-### Version 0.4.1 - 1/23/2015
+## Version 0.4.1 - 1/23/2015
 
-**Changes**
+### Changes
 
 -   Added link to app man page from app cell
 -   Importer for FASTA/FASTQ files was switched to a new version
 
-**Bugfixes**
+### Bugfixes
 
 -   Error modal that appears while trying to import data should be visible now, and not below the page dimmer
 -   JIRA NAR-477 - Propagating parameters to multiple steps should work correctly now
 -   JIRA NAR-516 - special characters should be properly escaped while searching for data now
 
-### Version 0.4.0 - 1/23/2015
+## Version 0.4.0 - 1/23/2015
 
 These are significant enough changes - mainly the improved data upload support and (mostly) feature complete data visualization widgets - to add a minor version number.
 
-**Changes**
+### Changes
 
 -   Updated URL of tutorial page
 -   Updated user-icon link to go to user profile page instead of globus
@@ -1400,34 +1408,34 @@ These are significant enough changes - mainly the improved data upload support a
 -   Updated import UI for all supported types
 -   Improved error messages in data panel and data slideout
 
-**Bugfixes**
+### Bugfixes
 
 -   Fixed some problems in create_metagenome_set widget
 -   JIRA NAR-465 Fixed problem where workspace id wasn't internally available when it should be
 -   JIRA KBASE-1610 Fixed issue with selecting multiple genomes for an input to an app
 
-### Version 0.3.18 - 1/22/2015
+## Version 0.3.18 - 1/22/2015
 
-**Changes**
+### Changes
 
 -   Added a different FBA model viewer widget
 -   Changed communities widgets to properly fetch an auth token
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-478 - fixed problem where contig count in genome viewer was incorrect
 -   JIRA NAR-487 - plant genomes should be copyable now in data slide out
 -   JIRA NAR-441 - corrupted Narratives should be properly handled; deleting a Narrative from a workspace via the API shouldn't break the Narrative loading process
 
-### Version 0.3.17 - 1/22/2015
+## Version 0.3.17 - 1/22/2015
 
-**Bugfixes**
+### Bugfixes
 
 -   Repaired link to FBA model visualization widgets
 
-### Version 0.3.16 - 1/21/2015
+## Version 0.3.16 - 1/21/2015
 
-**Changes**
+### Changes
 
 -   Added link to KBase internal status page.
 -   Added programmatic access to workspace id.
@@ -1436,22 +1444,22 @@ These are significant enough changes - mainly the improved data upload support a
 -   A traceback should now appear (where applicable) in the Jobs panel.
 -   Added "next steps" at bottom of app/method
 
-### Version 0.3.15 - 1/21/2015
+## Version 0.3.15 - 1/21/2015
 
-**Changes**
+### Changes
 
 -   Updated type name for Assembly File transform method
 -   Added reset button to App cells (method cells still need fixing)
 -   Added widgets for metagenome sets
 
-**Bugfixes**
+### Bugfixes
 
 -   JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
 -   Fixed issue where method panel error state wasn't being activated properly.
 
-### Version 0.3.14 - 1/21/2015
+## Version 0.3.14 - 1/21/2015
 
-**Changes**
+### Changes
 
 -   Updated server-side Narrative management code to always keep a queue of unattached Narrative containers present. When a user logs on, they already have one ready to connect to.
 -   Added visualization widget for microbial community abundance and boxplots.
@@ -1459,16 +1467,16 @@ These are significant enough changes - mainly the improved data upload support a
 -   Added app and method icons for the method panel.
 -   Added minimize to app & method panels
 
-### Version 0.3.13 - 1/20/2015
+## Version 0.3.13 - 1/20/2015
 
-**Changes**
+### Changes
 
 -   Added Transform service client code
 -   Exposed transform service as a method
 -   Added assembly view widget
 -   Added icons for Apps and Methods in panel
 
-**Bugfixes**
+### Bugfixes
 
 -   Now inserts a cell instead of freezing when DnD of data onto empty narrative
 -   JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging
@@ -1479,16 +1487,16 @@ These are significant enough changes - mainly the improved data upload support a
 -   NAR-400, KBASE-1202, KBASE-1192, KBASE-1191 - these were all related to the apps not properly catching errors when an output widget fails to render
 -   fixed a case where a typespec references a non-existent viewer
 
-### Version 0.3.12 - 1/20/2015
+## Version 0.3.12 - 1/20/2015
 
-**Changes**
+### Changes
 
 -   Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.
 -   Added a link to directly submit a JIRA ticket from the pulldown menu.
 
-### Version 0.3.11 - 1/16/2015
+## Version 0.3.11 - 1/16/2015
 
-**Changes**
+### Changes
 
 -   Running Apps and Methods have a "Cancel" button associated with them. Clicking that will restore the cell to its input state, and cancel (and delete) the running job
 -   Deleting App/Method cells now prompts to delete, warning the user that it'll kill any running job (if they've been run before)
@@ -1503,9 +1511,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Styled app/method control buttons to be closer to the style guide / mockup.
 -   Logging of apps and methods is substantially less ugly and made from fewer backslashes.
 
-### Version 0.3.10 - 1/16/2015
+## Version 0.3.10 - 1/16/2015
 
-**Changes**
+### Changes
 
 -   Narrative panel supports copy/delete/history/revert of narratives.
 -   Narrative panel shows apps/methods/description (if exists) for each narrative.
@@ -1517,9 +1525,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Fixed problem where error cells were not being shown properly.
 -   Added several widgets to support communities apps and methods.
 
-### Version 0.3.9 - 1/14/2015
+## Version 0.3.9 - 1/14/2015
 
-**Changes**
+### Changes
 
 -   Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)
 -   Restyled code and markdown cell buttons in the lower right corner of the page
@@ -1528,17 +1536,17 @@ These are significant enough changes - mainly the improved data upload support a
 -   Various styling adjustments on the data panel overlay
 -   The 'more' button under each app and method in the methods panel should now link to an external manual page
 
-### Version 0.3.8 - 1/13/2015
+## Version 0.3.8 - 1/13/2015
 
-**Changes**
+### Changes
 
 -   Drag and drop data and data viewer bug fixes.
 -   Position of a queued job should now be tracked in the job panel.
 -   The Narrative object metadata now tracks the number of each type of cell in that Narrative. Method and App cells are further tracked by their id.
 
-### Version 0.3.7 - 1/12/2015
+## Version 0.3.7 - 1/12/2015
 
-**Changes**
+### Changes
 
 -   Fix for int, float and array types of input sending to NJS
 -   Fix for empty parameter values in import tab
@@ -1546,9 +1554,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Fixed 'Add Data' button in a new Narrative - should properly open the data overlay now
 -   Updated layout and styling of Method Gallery overlay to be closer to the mockup
 
-### Version 0.3.6 - 1/9/2015
+## Version 0.3.6 - 1/9/2015
 
-**Changes**
+### Changes
 
 -   Changed install.sh - now it requires an existing Python virtual environment for installation
 -   Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
@@ -1563,9 +1571,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Added document that details app failure points
 -   Data list supports deleting, renaming, reverting objects
 
-### Version 0.3.5 - 1/7/2015
+## Version 0.3.5 - 1/7/2015
 
-**Changes**
+### Changes
 
 -   Added link to release notes in 'About' dialog.
 -   Removed old links from the Navbar menu.
@@ -1587,18 +1595,18 @@ These are significant enough changes - mainly the improved data upload support a
 -   States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
 -   Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
 
-### Version 0.3.4
+## Version 0.3.4
 
-**Changes**
+### Changes
 
 -   Redesign of the Method Gallery panel
 -   Adjusted Data Panel slideout to maintain its size across each internal tab
 -   Added buttons to the footer in the Data Panel slideout
 -   Adjustment to data upload panel behavior.
 
-### Version 0.3.3
+## Version 0.3.3
 
-**Changes**
+### Changes
 
 -   Long running method calls that produce job ids should now be tracked properly
 -   Method cells behave closer to App cells now - once they start running, they're 'locked' if they're a long running job
@@ -1609,49 +1617,49 @@ These are significant enough changes - mainly the improved data upload support a
 -   Added global 'delete cell' button back to the menu bar.
 -   Made major styling and functionality changes to the 'import' panel attached to 'data'
 
-### Version 0.3.2
+## Version 0.3.2
 
-**Changes**
+### Changes
 
 -   Steps toward getting long-running methods (not just apps) working.
 -   Modified job panel to consume method jobs
 -   Method jobs still do not correctly populate their end results.
 
-### Version 0.3.1
+## Version 0.3.1
 
-**Changes**
+### Changes
 
 -   Changed some text in the data panel, and what appears in the introductory markdown cell in a new Narrative
 -   Fixed an issue with infinite scrolling under the "My Data" and "Public" data tabs
 
-### Version 0.3.0
+## Version 0.3.0
 
-**Changes**
+### Changes
 
 -   Added Method Gallery for browing methods and apps and viewing information
 -   Added a manual Narrative Shutdown button (under the 'about' button)
 -   Integrated code cells and IPython kernel management
 -   Added prototype Narrative Management panel
 
-### Version 0.2.2
+## Version 0.2.2
 
-**Changes**
+### Changes
 
 -   Restyled Jobs panel, added better management controls, added ability to see Job error statuses
 -   Added first pass at data importer
 
-### Version 0.2.1
+## Version 0.2.1
 
-**Changes**
+### Changes
 
 -   More improvements to logging - includes more details like user's IP address, Narrative machine, etc.
 -   Changed data panel to be able to draw data from all other Narratives and Workspaces
 -   Stubs in place for importing data into your Narrative
 -   Changed paradigm to one narrative/one workspace for simplicity
 
-### Version 0.2.0
+## Version 0.2.0
 
-**Changes**
+### Changes
 
 -   Switched to semantic versioning - www.semver.org
 -   Began massive changes to the UI
@@ -1660,49 +1668,49 @@ These are significant enough changes - mainly the improved data upload support a
 -   Added a Job management panel for tracking App status
 -   Switched to fetching lists of Methods and Apps from a centralized method store
 
-### Release 9/25/2014
+## Release 9/25/2014
 
-**Changes**
+### Changes
 
 -   Fixed a bug that prevented a few Narrative functions from working if the
     user's workspace was empty.
 
-### Release 9/24/2014
+## Release 9/24/2014
 
-**Changes**
+### Changes
 
 -   Updated workspace URL from the Narrative Interface
 
-### Release 8/14/2014
+## Release 8/14/2014
 
-**Changes**
+### Changes
 
 -   Added functionality to Communities services
 
-### Release 8/8/2014
+## Release 8/8/2014
 
-**Changes**
+### Changes
 
 -   Fixed problems with loading page in Safari
 -   Added genome comparison widget
 
-**Known Issues**
+### Known Issues
 
 -   R support is problematic
 -   Sharing a Narrative with a running job might break
 -   Loading a Narrative with a large amount of data in it might be slow
 -   Mathjax support is currently out of sync due to version drift
 
-### Release 8/7/2014
+## Release 8/7/2014
 
-**Changes**
+### Changes
 
 -   Fixed links to landing pages linked to from the Narrative
 -   Fixed problem with KBCacheClient not loading properly
 -   Adjusted names of some functions (existing widgets might break!)
 -   Fixed 502 Bad Gateway error on Narrative provisioning
 
-**Known Issues**
+### Known Issues
 
 -   Loading page on Narrative provisioning sometimes loops too much in Safari
 -   R support is problematic
@@ -1710,9 +1718,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Loading a Narrative with a large amount of data in it might be slow
 -   Mathjax support is currently out of sync due to version drift
 
-### Release 8/6/2014
+## Release 8/6/2014
 
-**Changes**
+### Changes
 
 -   Services panel is sorted by service name now
 -   Removed old Microbes Service panel
@@ -1723,7 +1731,7 @@ These are significant enough changes - mainly the improved data upload support a
 -   Updates to plants widget code
 -   Visual fixes to how long function names are handed in the Services panel
 
-**Known Issues**
+### Known Issues
 
 -   R support is problematic
 -   Many links to landing pages within the Narrative are broken
@@ -1731,9 +1739,9 @@ These are significant enough changes - mainly the improved data upload support a
 -   Loading a Narrative with a large amount of data in it might be slow
 -   Mathjax support is currently out of sync due to version drift
 
-### Release 8/5/2014
+## Release 8/5/2014
 
-**Changes**
+### Changes
 
 -   Added a better fix to the "NoneType object has no attribute get_method" error
 -   Updated Microbes services code, split services into 4 separate groups
@@ -1741,7 +1749,7 @@ These are significant enough changes - mainly the improved data upload support a
 -   Split picrust widget into qiime and picrust
 -   Fixes to plant gene table size and heatmap rendering
 
-**Known Issues**
+### Known Issues
 
 -   Changing Narrative name in the workspace doesn't propagate inside of the Narrative itself (likely won't fix)
 -   R support is problematic
@@ -1752,18 +1760,18 @@ These are significant enough changes - mainly the improved data upload support a
 -   Narrative creator and current workspace should be visible in the top panel
 -   Mathjax support is currently out of sync due to version drift
 
-### Release 8/4/2014
+## Release 8/4/2014
 
-**Changes**
+### Changes
 
 -   Added MathJax.js directly into the repo to combat problems on the back end (this is a temporary fix - we need to install the backend MathJax locally somehow, or update the version)
 -   Added a fix where if a call to globusonline fails, the Narrative doesn't initialize properly, leading to broken service panels.
 -   Fixed a bug that caused some graphical widgets to time out while loading their script files.
 -   Various updates to plants_gwas.py and jnomics.py
 
-### Release 8/1/2014
+## Release 8/1/2014
 
-**Changes**
+### Changes
 
 -   Addressed issue with auth information getting overridden (leading to the 400 HTTP error)
 -   Addressed problems that cause the 502 Bad Gateway error
@@ -1772,15 +1780,15 @@ These are significant enough changes - mainly the improved data upload support a
 -   Revised gapfilling and phenotype view widgets
 -   Numerous widgets to GWAS and Plant-specific widgets and functionality
 
-**Known Issues**
+### Known Issues
 
 -   Current version of jquery.datatables is finicky and can create popup errors. These can be safely ignored.
 -   Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
 -   R support is occasionally problematic.
 
-### Release 7/30/2014
+## Release 7/30/2014
 
-**Changes**
+### Changes
 
 -   Updated config to make landing page links relative to deployment site
 -   Modified provisioning code to address a potential timeout issue (the 502 Bad Gateway error)
@@ -1788,15 +1796,15 @@ These are significant enough changes - mainly the improved data upload support a
 -   Updated NCBI genome importer
 -   Updated GWAS services endpoints
 
-**Known Issues**
+### Known Issues
 
 -   Cookie with auth information occasionally gets overwritten with a useless one - logging out and back in will fix this
 -   Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
 -   R support is occasionally problematic.
 
-### Release 7/29/2014
+## Release 7/29/2014
 
-**Changes**
+### Changes
 
 -   Updated nav bar to match changes to functional site
 -   Updated many KBase functions from all domains (Microbes, Communities, and Plants)
@@ -1811,20 +1819,20 @@ These are significant enough changes - mainly the improved data upload support a
 -   Fixed a problem where Services panel might get stuck and hang while loading a large Narrative
 -   Updated more HTTP errors to have a sensible error page
 
-**Known Issues**
+### Known Issues
 
 -   Cookie with auth information occasionally gets overwritten with a useless one - logging out and back in will fix this
 -   Unaddressed issues from previous release
 
-### Release 7/22/2014
+## Release 7/22/2014
 
-**Changes**
+### Changes
 
 -   Added widgets and functions for viewing phylogenies
 
-### Release 7/21/2014
+## Release 7/21/2014
 
-**Changes**
+### Changes
 
 -   Updates to Jnomics functions and widgets
 -   Updates to Microbes functions and widgets
@@ -1834,13 +1842,13 @@ These are significant enough changes - mainly the improved data upload support a
 -   Updated workspace type registry (the kbtypes class) to be up-to-date with the current state of the Workspace.
 -   The Narrative should now report unsupported browsers
 
-**Known Issues**
+### Known Issues
 
 -   Unaddressed issues from previous release
 
-### Release 7/15/2014
+## Release 7/15/2014
 
-**Changes**
+### Changes
 
 -   Created a service endpoint config file to toggle between dev and prod versions of various services
 -   Added Jnomics functions and widgets
@@ -1854,15 +1862,15 @@ These are significant enough changes - mainly the improved data upload support a
 -   We now have a verified SSL Certificate - Safari should work over HTTPS now.
 -   Did some CSS adjustment to GUI cells.
 
-**Known Issues**
+### Known Issues
 
 -   Unaddressed issues remain from previous release
 -   R support is occasionally problematic.
 -   Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
 
-### Release 6/20/2014
+## Release 6/20/2014
 
-**Changes**
+### Changes
 
 -   %%inv_run cell magic should now work properly
 -   %inv_run magic (line and cell) now translate some convenience commands
@@ -1875,7 +1883,7 @@ These are significant enough changes - mainly the improved data upload support a
     -   %inv_run mv == %inv_rename_files
 -   The menu bar should remain at the top of the page now, instead of being positioned inline with the rest of the narrative document.
 
-**Known Issues**
+### Known Issues
 
 -   %inv_ls to a directory that doesn't exist will create a generic, not-very-informative error.
 -   [NAR-153], [NAR-177] A generic "Autosave failed!" message appears when the narrative fails to save for any reason.

@@ -5,6 +5,9 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
+// We use a specific chrome binary because chromedriver only works with
+// a single major version of chrome. This ensures integration tests work
+// across all environments.
 const CHROME_BINARY = require('puppeteer').executablePath();
 
 /**

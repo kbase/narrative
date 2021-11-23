@@ -68,8 +68,9 @@ function* range(start, end) {
 /**
  * Navigates the wdio browser to a workspace as given by its id, and waits until the
  * narrative container is visible.
- * @arg {number} The narrative's workspace id
- * @returns {Promise} The Promise value is ignored.
+ *
+ * @param workspaceId {number} The narrative's workspace id
+ * @returns {Promise<void>}
  */
 async function openNarrative(workspaceId) {
     const timeout = 60000;
@@ -100,7 +101,7 @@ async function openNarrative(workspaceId) {
 
     await clickWhenReady(loginButton);
 
-    const userLabelElement = await $('[data-element="user-label"]');
+    const userLabelElement = await $('[data-testid="userMenu"] [data-testid="username"]');
     await browser.waitUntil(async () => {
         const userLabelText = await userLabelElement.getText();
         return userLabelText && userLabelText.length > 0;

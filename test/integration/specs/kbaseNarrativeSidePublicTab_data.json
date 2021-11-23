@@ -1,0 +1,291 @@
+{
+    "cases": {
+        "TEST_CASE_1": {},
+        "TEST_CASE_2": {},
+        "TEST_CASE_3": {},
+        "TEST_CASE_4": {},
+        "TEST_CASE_5": {}
+    },
+    "ci": {
+        "defaults": {
+            "narrativeId": 53983
+        },
+        "TEST_CASE_1": {
+            "row": 4,
+            "name": "Acetobacter ascendens",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_001766255.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_CP015168"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "4"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "3,032"
+                }
+            ]
+        },
+        "TEST_CASE_2": {
+            "row": 10,
+            "scrollTo": true,
+            "name": "Acidaminococcus fermentans",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Terrabacteria group > Firmicutes > Negativicutes > Acidaminococcales > Acidaminococcaceae > Acidaminococcus"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_900107075.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_FNOP01000039"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "40"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "2,067"
+                }
+            ]
+        },
+        "TEST_CASE_3": {
+            "row": 1,
+            "scrollTo": false,
+            "searchFor": "prochlorococcus",
+            "foundCount": "14",
+            "name": "Prochlorococcus marinus str. GP2",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus > Prochlorococcus marinus"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_000759885.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_JNAH01000001"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "11"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "1,760"
+                }
+            ]
+        },
+        "TEST_CASE_4": {
+            "searchFor": "foobar",
+            "foundCount": "None"
+        },
+        "TEST_CASE_5": {
+            "row": 30,
+            "scrollTo": true,
+            "scrolls": [
+                20
+            ],
+            "name": "Acinetobacter baumannii",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Proteobacteria > Gammaproteobacteria > Pseudomonadales > Moraxellaceae > Acinetobacter > Acinetobacter calcoaceticus/baumannii complex"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_000695855.3"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_CP007535"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "3"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "3,739"
+                }
+            ]
+        }
+    },
+    "narrative-dev": {
+        "defaults": {
+            "narrativeId": 78050
+        },
+        "TEST_CASE_1": {
+            "row": 3,
+            "name": "Absiella sp. AM09-45",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Terrabacteria group > Firmicutes > Erysipelotrichia > Erysipelotrichales > Erysipelotrichaceae > Absiella > unclassified Absiella"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_003433745.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_QVFJ01000001"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "96"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "4,170"
+                }
+            ]
+        },
+        "TEST_CASE_2": {
+            "row": 10,
+            "scrollTo": true,
+            "name": "Abyssicoccus albus",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Terrabacteria group > Firmicutes > Bacilli > Bacillales > Staphylococcaceae > Abyssicoccus"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_003815035.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_RKRK01000002"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "10"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "1,777"
+                }
+            ]
+        },
+        "TEST_CASE_3": {
+            "row": 1,
+            "scrollTo": false,
+            "searchFor": "prochlorococcus",
+            "foundCount": "28",
+            "name": "Prochlorococcus marinus",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_001180245.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_CVSV01000001"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "136"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "1,648"
+                }
+            ]
+        },
+        "TEST_CASE_4": {
+            "searchFor": "foobar",
+            "foundCount": "None"
+        },
+        "TEST_CASE_5": {
+            "row": 30,
+            "scrollTo": true,
+            "scrolls": [
+                20
+            ],
+            "name": "Acetobacter orientalis",
+            "metadata": [
+                {
+                    "id": "lineage",
+                    "label": "Lineage",
+                    "value": "Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter"
+                },
+                {
+                    "id": "kbase_id",
+                    "label": "KBase ID",
+                    "value": "GCF_002153475.1"
+                },
+                {
+                    "id": "refseq_id",
+                    "label": "RefSeq ID",
+                    "value": "NZ_JOMO01000001"
+                },
+                {
+                    "id": "contigs",
+                    "label": "Contigs",
+                    "value": "106"
+                },
+                {
+                    "id": "features",
+                    "label": "Features",
+                    "value": "2,539"
+                }
+            ]
+        }
+    }
+}

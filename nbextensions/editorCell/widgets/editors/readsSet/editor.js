@@ -128,9 +128,9 @@ define(
                 env.appId = appId;
                 env.appTag = appTag;
                 const appRef = {
-                        ids: [appId],
-                        tag: appTag,
-                    },
+                    ids: [appId],
+                    tag: appTag,
+                },
                     nms = new NarrativeMethodStore(
                         runtime.config('services.narrative_method_store.url'),
                         {
@@ -625,8 +625,8 @@ define(
                     require(['./update'], (Widget) => {
                         // TODO: widget should make own bus.
                         const bus = runtime.bus().makeChannelBus({
-                                description: 'Parent comm bus for input widget',
-                            }),
+                            description: 'Parent comm bus for input widget',
+                        }),
                             widget = Widget.make({
                                 bus: bus,
                                 workspaceInfo: workspaceInfo,
@@ -740,8 +740,8 @@ define(
                         th('Last saved'),
                         td(
                             info.saveDate.toLocaleDateString() +
-                                ' at ' +
-                                info.saveDate.toLocaleTimeString()
+                            ' at ' +
+                            info.saveDate.toLocaleTimeString()
                         ),
                     ]),
                     tr([th('By'), td(info.saved_by)]),
@@ -759,11 +759,11 @@ define(
                 // TODO: check if the editor has unsaved changed, and
                 // show an error message if so, and refuse to switch.
                 const setApiClient = new GenericClient({
-                        url: runtime.config('services.service_wizard.url'),
-                        token: runtime.authToken(),
-                        module: 'SetAPI',
-                        version: 'dev',
-                    }),
+                    url: runtime.config('services.service_wizard.url'),
+                    token: runtime.authToken(),
+                    module: 'SetAPI',
+                    version: 'dev',
+                }),
                     params = {
                         ref: objectRef,
                         include_item_info: 1,
@@ -810,11 +810,11 @@ define(
 
             function doCreateNewSet(name) {
                 const setApiClient = new GenericClient({
-                        url: runtime.config('services.service_wizard.url'),
-                        token: runtime.authToken(),
-                        module: 'SetAPI',
-                        version: 'dev',
-                    }),
+                    url: runtime.config('services.service_wizard.url'),
+                    token: runtime.authToken(),
+                    module: 'SetAPI',
+                    version: 'dev',
+                }),
                     params = {
                         workspace: String(workspaceInfo.id),
                         output_object_name: name,

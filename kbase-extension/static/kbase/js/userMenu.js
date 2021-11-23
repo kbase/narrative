@@ -57,7 +57,7 @@ define([
         }
 
         function render() {
-            const menu = div({ class: 'dropdown', style: 'display:inline-block' }, [
+            const menu = div({ class: 'dropdown', style: 'display:inline-block', dataTestid: 'userMenu' }, [
                 button(
                     {
                         type: 'button',
@@ -90,12 +90,11 @@ define([
                                 div(
                                     {
                                         style: 'display: inline-block',
-                                        'data-element': 'user-label',
                                     },
                                     [
-                                        span({ 'data-element': 'realname' }, displayName),
+                                        span({ dataTestid: 'realname' }, displayName),
                                         br(),
-                                        i({ 'data-element': 'username' }, userName),
+                                        i({ dataTestid: 'username' }, userName),
                                     ]
                                 ),
                             ]
@@ -110,10 +109,9 @@ define([
                                     style: 'font-size: 150%; margin-right: 10px;',
                                 }),
                             ]),
-                            'Sign Out',
                         ]),
                     ]),
-                ]),
+                ])
             ]);
             target.append(menu);
             target.find('#signout-button').click(logout);

@@ -309,9 +309,9 @@ define(
              */
             function syncAppSpec(appId, appTag) {
                 const appRef = {
-                        ids: [appId],
-                        tag: appTag,
-                    },
+                    ids: [appId],
+                    tag: appTag,
+                },
                     nms = new NarrativeMethodStore(
                         runtime.config('services.narrative_method_store.url'),
                         {
@@ -498,8 +498,8 @@ define(
                     })()
                 );
                 const appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id]
-                        .filter(toBoolean)
-                        .join('/'),
+                    .filter(toBoolean)
+                    .join('/'),
                     link = a(
                         { href: '/#appcatalog/app/' + appRef, target: '_blank' },
                         'Catalog Page'
@@ -1286,8 +1286,8 @@ define(
                 return syncAppSpec(params.appId, params.appTag)
                     .then(() => {
                         const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                                .filter(toBoolean)
-                                .join('/'),
+                            .filter(toBoolean)
+                            .join('/'),
                             url = '/#appcatalog/app/' + appRef;
                         utils.setCellMeta(
                             cell,

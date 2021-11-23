@@ -1,14 +1,14 @@
-'use strict';
-
 define([
     'kbwidget',
     'jquery',
-    'bootstrap',
     'kbaseAuthenticatedWidget',
     'kbaseTabTableTabs',
-    'kbasePathways',
     'narrativeConfig',
-], (KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways, Config) => {
+
+    // For effect
+    'bootstrap',
+    'kbasePathways'
+], (KBWidget, $, kbaseAuthenticatedWidget, kbaseTabTableTabs, Config) => {
     'use strict';
     return KBWidget({
         name: 'kbaseTabTable',
@@ -23,12 +23,9 @@ define([
             this.$elem.append($tableContainer);
 
             // root url path for landing pages
-            const DATAVIEW_URL = '/functional-site/#/dataview/';
+            const DATAVIEW_URL = '/#dataview/';
 
             const type = input.type;
-
-            // tab widget
-            let tabs;
 
             const kbModeling = new KBModeling(self.authToken());
 
@@ -47,40 +44,39 @@ define([
 
             const uiTabs = [];
             for (let i = 0; i < tabList.length; i++) {
-                const tab = tabList[i];
-
                 // add loading status
                 const placeholder = $('<div>');
                 placeholder.loading();
 
-                uiTabs.push({ name: tabList[i].name, content: placeholder });
+                uiTabs.push({name: tabList[i].name, content: placeholder});
             }
 
             uiTabs[0].active = true;
             //tabs = self.$elem.kbaseTabTableTabs({tabs: uiTabs});
-            tabs = new kbaseTabTableTabs($tableContainer, { tabs: uiTabs });
+            const tabs = new kbaseTabTableTabs($tableContainer, {tabs: uiTabs});
 
             //
             // 3) get meta data, add any metadata tables
             //
+            let param;
             if (isNaN(input.ws) && isNaN(input.obj))
-                var param = { workspace: input.ws, name: input.obj };
+                param = {workspace: input.ws, name: input.obj};
             else if (!isNaN(input.ws) && !isNaN(input.obj))
-                var param = { ref: input.ws + '/' + input.obj };
+                param = {ref: input.ws + '/' + input.obj};
 
-            self.kbapi('ws', 'get_object_info_new', { objects: [param], includeMetadata: 1 }).done(
+            self.kbapi('ws', 'get_object_info_new', {objects: [param], includeMetadata: 1}).done(
                 (res) => {
                     self.obj.setMetadata(res[0]);
 
                     for (let i = 0; i < tabList.length; i++) {
                         const spec = tabList[i];
 
-                        if (spec.type == 'verticaltbl') {
+                        if (spec.type === 'verticaltbl') {
                             const key = spec.key,
                                 data = self.obj[key],
                                 tabPane = tabs.tabContent(spec.name);
 
-                            const table = self.verticalTable({ rows: spec.rows, data: data });
+                            const table = self.verticalTable({rows: spec.rows, data: data});
                             tabPane.rmLoading();
                             tabPane.append(table);
                         }
@@ -92,9 +88,9 @@ define([
             // 4) get object data, create tabs
             //
             if (isNaN(input.ws) && isNaN(input.obj))
-                var param = { workspace: input.ws, name: input.obj };
+                param = {workspace: input.ws, name: input.obj};
             else if (!isNaN(input.ws) && !isNaN(input.obj))
-                var param = { ref: input.ws + '/' + input.obj };
+                param = {ref: input.ws + '/' + input.obj};
 
             self.kbapi('ws', 'get_objects', [param]).done((data) => {
                 const setMethod = self.obj.setData(data[0].data, tabs);
@@ -110,6 +106,7 @@ define([
             });
 
             const refLookup = {};
+
             function preProcessDataTable(tabSpec, tabPane) {
                 // get refs
                 const refs = [];
@@ -121,7 +118,7 @@ define([
                     ) {
                         self.obj[tabSpec.key].forEach((item) => {
                             if (refs.indexOf(item[col.key]) === -1) {
-                                refs.push({ ref: item[col.key] });
+                                refs.push({ref: item[col.key]});
                             }
                         });
                     }
@@ -130,7 +127,7 @@ define([
                 if (!refs.length) return;
 
                 // get human readable info from workspaces
-                return self.kbapi('ws', 'get_object_info_new', { objects: refs }).then((data) => {
+                return self.kbapi('ws', 'get_object_info_new', {objects: refs}).then((data) => {
                     refs.forEach((ref, i) => {
                         // if (ref in referenceLookup) return
                         refLookup[ref.ref] = {
@@ -145,14 +142,14 @@ define([
                 });
             }
 
-            function buildContent(data) {
+            function buildContent() {
                 //5) Iterates over the entries in the spec and instantiate things
                 for (let i = 0; i < tabList.length; i++) {
                     const tabSpec = tabList[i];
                     const tabPane = tabs.tabContent(tabSpec.name);
 
                     // skip any vertical tables for now
-                    if (tabSpec.type == 'verticaltbl') continue;
+                    if (tabSpec.type === 'verticaltbl') continue;
 
                     // if widget, invoke widget with arguments
 
@@ -185,23 +182,23 @@ define([
             }
 
             // takes table spec and prepared data, returns datatables settings object
-            this.getTableSettings = function (tab, data) {
+            this.getTableSettings = function (tab) {
                 const tableColumns = getColSettings(tab);
 
                 const settings = {
                     dom: '<"top"lf>rt<"bottom"ip><"clear">',
                     aaData: self.obj[tab.key],
                     aoColumns: tableColumns,
-                    language: { search: '_INPUT_', searchPlaceholder: 'Search ' + tab.name },
+                    language: {search: '_INPUT_', searchPlaceholder: 'Search ' + tab.name},
+                };
+
+                const fnDrawCallback = () => {
+                    newTabEvents(tab.name);
                 };
 
                 // add any events
                 for (let i = 0; i < tab.columns.length; i++) {
-                    const col = tab.columns[i];
-
-                    settings.fnDrawCallback = function () {
-                        newTabEvents(tab.name);
-                    };
+                    settings.fnDrawCallback = fnDrawCallback;
                 }
 
                 return settings;
@@ -224,33 +221,33 @@ define([
 
                     let content = $('<div>');
 
-                    if (info.method && info.method != 'undefined') {
+                    if (info.method && info.method !== 'undefined') {
                         const res = self.obj[info.method](info);
 
                         if (res && 'done' in res) {
                             content = $('<div>').loading();
                             $.when(res).done((rows) => {
                                 content.rmLoading();
-                                const table = self.verticalTable({ rows: rows });
+                                const table = self.verticalTable({rows: rows});
                                 content.append(table);
                             });
-                        } else if (res == undefined) {
+                        } else if (res === undefined) {
                             content.append('<br>No data found for ' + info.id);
                         } else {
-                            const table = self.verticalTable({ rows: res });
+                            const table = self.verticalTable({rows: res});
                             content.append(table);
                         }
 
-                        tabs.addTab({ name: info.id, content: content, removable: true });
+                        tabs.addTab({name: info.id, content: content, removable: true});
                         tabs.showTab(info.id);
                         newTabEvents(info.id);
-                    } else if (info.action == 'openWidget') {
+                    } else if (info.action === 'openWidget') {
                         new kbaseTabTable(content, {
                             ws: info.ws,
                             type: info.type,
                             obj: info.name,
                         });
-                        tabs.addTab({ name: info.id, content: content, removable: true });
+                        tabs.addTab({name: info.id, content: content, removable: true});
                         tabs.showTab(info.id);
                         newTabEvents(info.id);
                     }
@@ -285,9 +282,9 @@ define([
                 return settings;
             }
 
-            function ref(key, type, format, method, action) {
+            function ref(key, type, format, method) {
                 return function (d) {
-                    if (type == 'tabLink' && format == 'dispIDCompart') {
+                    if (type === 'tabLink' && format === 'dispIDCompart') {
                         let dispid = d[key];
                         if ('dispid' in d) {
                             dispid = d.dispid;
@@ -301,7 +298,7 @@ define([
                             dispid +
                             '</a>'
                         );
-                    } else if (type == 'tabLink' && format == 'dispID') {
+                    } else if (type === 'tabLink' && format === 'dispID') {
                         const id = d[key];
                         return (
                             '<a class="id-click" data-id="' +
@@ -312,7 +309,7 @@ define([
                             id +
                             '</a>'
                         );
-                    } else if (type == 'wstype' && format == 'dispWSRef') {
+                    } else if (type === 'wstype' && format === 'dispWSRef') {
                         const ws = refLookup[d[key]].ws,
                             name = refLookup[d[key]].name,
                             wstype = refLookup[d[key]].type,
@@ -345,7 +342,7 @@ define([
                     const value = d[key];
 
                     if ($.isArray(value)) {
-                        if (type == 'tabLinkArray') return tabLinkArray(value, method);
+                        if (type === 'tabLinkArray') return tabLinkArray(value, method);
                         return d[key].join(', ');
                     }
 
@@ -362,12 +359,12 @@ define([
                     }
                     links.push(
                         '<a class="id-click" data-id="' +
-                            d.id +
-                            '" data-method="' +
-                            method +
-                            '">' +
-                            dispid +
-                            '</a>'
+                        d.id +
+                        '" data-method="' +
+                        method +
+                        '">' +
+                        dispid +
+                        '</a>'
                     );
                 });
                 return links.join(', ');
@@ -387,8 +384,8 @@ define([
 
                     // don't display undefined things in vertical table
                     if (
-                        ('data' in row && typeof row.data == 'undefined') ||
-                        ('key' in row && typeof data[row.key] == 'undefined')
+                        ('data' in row && typeof row.data === 'undefined') ||
+                        ('key' in row && typeof data[row.key] === 'undefined')
                     )
                         continue;
 
@@ -397,10 +394,10 @@ define([
 
                     // if the data is in the row definition, use it
                     if ('data' in row) {
-                        var value;
-                        if (type == 'tabLinkArray') {
+                        let value;
+                        if (type === 'tabLinkArray') {
                             value = tabLinkArray(row.data, row.method);
-                        } else if (type == 'tabLink') {
+                        } else if (type === 'tabLink') {
                             value =
                                 '<a class="id-click" data-id="' +
                                 row.data +
@@ -414,7 +411,7 @@ define([
                         }
                         r.append('<td>' + value + '</td>');
                     } else if ('key' in row) {
-                        if (row.type == 'wstype') {
+                        if (row.type === 'wstype') {
                             const ref = data[row.key];
 
                             const cell = $('<td data-ref="' + ref + '">loading...</td>');
@@ -427,18 +424,18 @@ define([
                                     .find("[data-ref='" + ref + "']")
                                     .html(
                                         '<a href="' +
-                                            DATAVIEW_URL +
-                                            info.url +
-                                            '" target="_blank">' +
-                                            name +
-                                            '</a>'
+                                        DATAVIEW_URL +
+                                        info.url +
+                                        '" target="_blank">' +
+                                        name +
+                                        '</a>'
                                     );
                             });
                         } else {
                             r.append('<td>' + data[row.key] + '</td>');
                         }
-                    } else if (row.type == 'pictureEquation')
-                        r.append('<td>' + pictureEquation(row.data) + '</td>');
+                    } else if (row.type === 'pictureEquation')
+                        r.append('<td>' + this.pictureEquation(row.data) + '</td>');
 
                     table.append(r);
                 }
@@ -446,21 +443,8 @@ define([
                 return table;
             };
 
-            this.getBiochemReaction = function (id) {
-                const input = { reactions: [id] };
-                return self.kbapi('biochem', 'get_reactions', { reactions: [id] }).then((data) => {
-                    return data[0];
-                });
-            };
-
-            this.getBiochemCompound = function (id) {
-                return self.kbapi('biochem', 'get_compounds', { compounds: [id] }).then((data) => {
-                    return data[0];
-                });
-            };
-
             this.getBiochemCompounds = function (ids) {
-                return self.kbapi('biochem', 'get_compounds', { compounds: ids });
+                return self.kbapi('biochem', 'get_compounds', {compounds: ids});
             };
             const imageURL = Config.url('compound_img_url');
             this.compoundImage = function (id) {
@@ -473,64 +457,56 @@ define([
             };
 
             this.pictureEquation = function (eq) {
+                let img_url;
                 const cpds = get_cpds(eq);
+                const $panel = $('<div>');
 
-                for (var i = 0; i < cpds.left.length; i++) {
-                    var cpd = cpds.left[i];
-                    var img_url = imageURL + cpd + '.png';
-                    panel.append(
-                        '<div class="pull-left text-center">\
-                                    <img src="' +
-                            img_url +
-                            '" width=150 ><br>\
-                                    <div class="cpd-id" data-cpd="' +
-                            cpd +
-                            '">' +
-                            cpd +
-                            '</div>\
-                                </div>'
-                    );
+                for (let i = 0; i < cpds.left.length; i++) {
+                    const cpd = cpds.left[i];
+                    img_url = imageURL + cpd + '.png';
+                    $panel.append(`
+                        <div class="pull-left text-center">
+                            <img src="${img_url}" width=150 ><br>
+                            <div class="cpd-id" data-cpd="${cpd}">
+                            ${cpd}
+                            </div>
+                        </div>
+                    `);
 
-                    var plus = $('<div class="pull-left text-center">+</div>');
+                    const plus = $('<div class="pull-left text-center">+</div>');
                     plus.css('margin', '30px 0 0 0');
 
                     if (i < cpds.left.length - 1) {
-                        panel.append(plus);
+                        $panel.append(plus);
                     }
                 }
 
                 const direction = $('<div class="pull-left text-center">' + '<=>' + '</div>');
                 direction.css('margin', '25px 0 0 0');
-                panel.append(direction);
+                $panel.append(direction);
 
-                for (var i = 0; i < cpds.right.length; i++) {
-                    var cpd = cpds.right[i];
-                    var img_url = imageURL + cpd + '.jpeg';
-                    panel.append(
-                        '<div class="pull-left text-center">\
-                                    <img src="' +
-                            img_url +
-                            '" data-cpd="' +
-                            cpd +
-                            '" width=150 ><br>\
-                                    <div class="cpd-id" data-cpd="' +
-                            cpd +
-                            '">' +
-                            cpd +
-                            '</div>\
-                                </div>'
-                    );
+                for (let i = 0; i < cpds.right.length; i++) {
+                    const cpd = cpds.right[i];
+                    img_url = imageURL + cpd + '.jpeg';
+                    $panel.append(`
+                        <div class="pull-left text-center">
+                            <img src="${img_url}" data-cpd="${cpd}" width=150 ><br>
+                            <div class="cpd-id" data-cpd="${cpd}">
+                                ${cpd}
+                            </div>
+                        </div>
+                    `);
 
-                    var plus = $('<div class="pull-left text-center">+</div>');
+                    const plus = $('<div class="pull-left text-center">+</div>');
                     plus.css('margin', '25px 0 0 0');
 
                     if (i < cpds.right.length - 1) {
-                        panel.append(plus);
+                        $panel.append(plus);
                     }
                 }
 
                 const cpd_ids = cpds.left.concat(cpds.right);
-                const prom = self.kbapi('biochem', 'get_compounds', { compounds: cpd_ids });
+                const prom = self.kbapi('biochem', 'get_compounds', {compounds: cpd_ids});
                 $.when(prom).done((d) => {
                     const map = {};
                     for (const i in d) {
@@ -542,7 +518,7 @@ define([
                     });
                 });
 
-                return panel;
+                return $panel;
             };
 
             function get_cpds(equation) {
@@ -556,10 +532,10 @@ define([
 
             function getLink(ref) {
                 return self
-                    .kbapi('ws', 'get_object_info_new', { objects: [{ ref: ref }] })
+                    .kbapi('ws', 'get_object_info_new', {objects: [{ref: ref}]})
                     .then((data) => {
                         const a = data[0];
-                        return { url: a[7] + '/' + a[1], ref: a[6] + '/' + a[0] + '/' + a[4] };
+                        return {url: a[7] + '/' + a[1], ref: a[6] + '/' + a[0] + '/' + a[4]};
                     });
             }
 

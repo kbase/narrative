@@ -385,10 +385,8 @@ class Job(object):
         :return: dict, with structure
 
         {
-            user: string (username, who started the job),
-            spec: app spec (optional)
-            widget_info: (if not finished, None, else...) job.get_viewer_params result
-            state: {
+            outputWidgetInfo: (if not finished, None, else...) job.get_viewer_params result
+            jobState: {
                 job_id: string,
                 status: string,
                 created: epoch ms,
@@ -451,13 +449,10 @@ class Job(object):
                 # update timestamp if there was an error
                 state.update({"updated": int(time.time())})
 
-        job_state = {
-            "state": state,
-            "widget_info": widget_info,
-            "user": self.user,
-            "cell_id": self.cell_id,
+        return {
+            "jobState": state,
+            "outputWidgetInfo": widget_info,
         }
-        return job_state
 
     def show_output_widget(self, state=None):
         """

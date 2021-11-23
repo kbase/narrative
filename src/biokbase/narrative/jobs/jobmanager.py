@@ -41,7 +41,7 @@ CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 def get_error_output_state(job_id, error="does_not_exist"):
     if error not in ["does_not_exist", "ee2_error"]:
         raise ValueError(f"Unknown error type: {error}")
-    return {"state": {"job_id": job_id, "status": error}}
+    return {"jobState": {"job_id": job_id, "status": error}}
 
 
 class JobManager(object):
@@ -207,7 +207,7 @@ class JobManager(object):
         """
         try:
             all_states = self.lookup_all_job_states(ignore_refresh_flag=True)
-            state_list = [copy.deepcopy(s["state"]) for s in all_states.values()]
+            state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
 
             if not len(state_list):
                 return "No running jobs!"
@@ -221,6 +221,7 @@ class JobManager(object):
                 state["run_time"] = "Not started"
                 state["owner"] = job.user
                 state["app_id"] = job.app_id
+                state["batch_id"] = job.batch_id
                 exec_start = state.get("running", None)
 
                 if state.get("finished"):
@@ -247,6 +248,7 @@ class JobManager(object):
                     <th>Id</th>
                     <th>Name</th>
                     <th>Submitted</th>
+                    <th>Batch ID</th>
                     <th>Submitted By</th>
                     <th>Status</th>
                     <th>Run Time</th>
@@ -257,6 +259,7 @@ class JobManager(object):
                     <td>{{ j.job_id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.created|e }}</td>
+                    <td>{{ j.batch_id|e }}</td>
                     <td>{{ j.user|e }}</td>
                     <td>{{ j.status|e }}</td>
                     <td>{{ j.run_time|e }}</td>
@@ -483,9 +486,7 @@ class JobManager(object):
         job_states = self._construct_job_output_state_set(job_ids)
 
         for job_id in error_ids:
-            job_states[job_id] = {
-                "state": {"job_id": job_id, "status": "does_not_exist"}
-            }
+            job_states[job_id] = get_error_output_state(job_id)
 
         return job_states
 
@@ -552,7 +553,7 @@ class JobManager(object):
         for job_id in error_ids:
             retry_results.append(
                 {
-                    "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+                    "job": get_error_output_state(job_id),
                     "error": "does_not_exist",
                 }
             )

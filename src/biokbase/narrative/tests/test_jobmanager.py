@@ -88,7 +88,7 @@ def create_jm_message(r_type, job_id=None, data=None):
 
 def get_retry_job_state(orig_id, status="unmocked"):
     return {
-        "state": {
+        "jobState": {
             "job_id": orig_id[::-1],
             "status": status,
             "batch_id": None,
@@ -97,9 +97,7 @@ def get_retry_job_state(orig_id, status="unmocked"):
             "run_id": None,
             "child_jobs": [],
         },
-        "cell_id": None,
-        "widget_info": None,
-        "user": None,
+        "outputWidgetInfo": None,
     }
 
 
@@ -145,27 +143,6 @@ class JobManagerTest(unittest.TestCase):
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         self.jm.initialize_jobs()
         self.job_states = get_test_job_states()
-
-    def validate_status_message(self, msg):
-        core_keys = set(["widget_info", "user", "state"])
-        state_keys = set(
-            ["user", "authstrat", "wsid", "status", "updated", "job_input"]
-        )
-        if not core_keys.issubset(set(msg.keys())):
-            print(
-                "Missing core key(s) - [{}]".format(
-                    ", ".join(core_keys.difference(set(msg.keys())))
-                )
-            )
-            return False
-        if not state_keys.issubset(set(msg["state"].keys())):
-            print(
-                "Missing status key(s) - [{}]".format(
-                    ", ".join(state_keys.difference(set(msg["state"].keys())))
-                )
-            )
-            return False
-        return True
 
     @mock.patch(CLIENTS, get_failing_mock_client)
     def test_initialize_jobs_ee2_fail(self):
@@ -438,7 +415,7 @@ class JobManagerTest(unittest.TestCase):
             JOB_COMPLETED: self.job_states[JOB_COMPLETED],
             JOB_TERMINATED: self.job_states[JOB_TERMINATED],
             JOB_NOT_FOUND: {
-                "state": {
+                "jobState": {
                     "job_id": JOB_NOT_FOUND,
                     "status": "does_not_exist",
                 }
@@ -486,19 +463,19 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(expected, retry_results)
 
         orig_ids = [
-            result["job"]["state"]["job_id"]
+            result["job"]["jobState"]["job_id"]
             for result in retry_results
             if "error" not in result
         ]
         retry_ids = [
-            result["retry"]["state"]["job_id"]
+            result["retry"]["jobState"]["job_id"]
             for result in retry_results
             if "error" not in result
         ]
         dne_ids = [
-            result["job"]["state"]["job_id"]
+            result["job"]["jobState"]["job_id"]
             for result in retry_results
-            if result["job"]["state"]["status"] == "does_not_exist"
+            if result["job"]["jobState"]["status"] == "does_not_exist"
         ]
 
         for job_id in orig_ids + retry_ids:

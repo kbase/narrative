@@ -228,10 +228,8 @@ def get_test_job_state(job_id):
             del state[f]
 
     output_state = {
-        "state": state,
-        "widget_info": get_widget_info(job_id),
-        "cell_id": state.get("cell_id"),
-        "user": state.get("user"),
+        "jobState": state,
+        "outputWidgetInfo": get_widget_info(job_id),
     }
     return output_state
 

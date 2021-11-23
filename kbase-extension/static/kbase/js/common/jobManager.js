@@ -478,8 +478,9 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
              * @param {Object} message
              */
             handleJobStatus(self, message) {
-                const { jobId, jobState } = message;
-                const { status, updated } = jobState;
+                const { jobState } = message,
+                    { status, updated } = jobState,
+                    jobId = jobState.job_id;
 
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates

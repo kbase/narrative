@@ -15,7 +15,7 @@ This section is broken into two parts - kernel requests and kernel responses. Bo
 These messages are sent to the `JobCommChannel` on the front end, to get processed into messages sent to the kernel.
 All the `request-job-*` requests take as arguments either a single job ID string, or an array of job IDs.
 
-`ping-comm-channel` - sees that the comm channel is open through the websocket
+`ping` - sees that the comm channel is open through the websocket
 
 `request-job-status` - gets the status for a job or an array of jobs.
   * `jobId` - a string, the job id OR
@@ -112,7 +112,6 @@ When the kernel sends a message to the front end, the only module set up to list
   * `error` - if exists, the log request has thrown an error. The error key contains the error details.
 
 `job-status` - contains the current job state
-  * `jobId` - string, the job id
   * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
   * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
 
@@ -227,7 +226,7 @@ These are organized by the `request_type` field, followed by the expected respon
 `cancel_job` - cancel a job or list of jobs; responds with `job_status`
 * `job_id` - string OR `job_id_list` - array of strings
 
-`retry_job` - retry a job or list of jobs, responds with `jobs_retried` and `new_job`
+`retry_job` - retry a job or list of jobs, responds with `job_retries` and `new_job`
 * `job_id` - string OR `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
@@ -253,12 +252,12 @@ a specific example:
     "msg_type": "job_status",
     "content": {
       "example_job_id": {
-        "state": {
+        "jobState": {
           "job_id": "example_job_id",
           "status": "running",
           ... other state keys ...
         },
-        "widget_info": {}
+        "outputWidgetInfo": {}
       }
     }
   }
@@ -311,20 +310,19 @@ The current job state. This one is probably most common.
 
 **content**
 Dictionary with key(s) job ID and value dictionaries with the following structure:
-  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Regarding error states: non-existent jobs have the status `does_not_exist`, and when the job state cannot be retrieved from EE2 the status `ee2_error` is used
-  * `widget_info` - the parameters to send to output widgets, only available for a completed job
-  * `user` - string, username of user who submitted the job
+  * `jobState` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Regarding error states: non-existent jobs have the status `does_not_exist`, and when the job state cannot be retrieved from EE2 the status `ee2_error` is used
+  * `outputWidgetInfo` - the parameters to send to output widgets, only available for a completed job
 
 Sample response JSON:
 ```json
 {
   "job_id_1": {
-    "state": {
+    "jobState": {
       "job_id": "job_id_1",
       "status": "running",
       ...
     },
-    "widget_info": null, // only available for completed jobs
+    "outputWidgetInfo": null, // only available for completed jobs
   },
   "job_id_2": { ...contents... }
 }
@@ -342,9 +340,8 @@ The set of all job states for all running jobs, or at least the set that should 
   "job_id_2": { ...contents... }
 }
 ```
-  * `state` - the job state (see the **Data Structures** section below for details
-  * `widget_info` - the parameters to send to output widgets, only available for a completed job
-  * `user` - string, username of user who submitted the job
+  * `jobState` - the job state (see the **Data Structures** section below for details
+  * `outputWidgetInfo` - the parameters to send to output widgets, only available for a completed job
 
 **bus** - a series of `job-status` messages
 
@@ -362,23 +359,23 @@ Includes log statement information for a given job.
 
 **bus** `job-logs`
 
-### `jobs_retried`
+### `job_retries`
 Sent when one or more jobs are retried
 
 **content** An array of objects, e.g.:
 ```json
 [
   {
-      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
-      "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
+      "job": {"jobState": {"job_id": job_id, "status": status, ...} ...},
+      "retry": {"jobState": {"job_id": job_id, "status": status, ...} ...}
   },
   {
-      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
+      "job": {"jobState": {"job_id": job_id, "status": status, ...} ...},
       "error": "..."
   },
   ...
   {
-      "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+      "job": {"jobState": {"job_id": job_id, "status": "does_not_exist"}},
       "error": "does_not_exist"
   }
 ]
@@ -528,10 +525,8 @@ In kernel, as retrieved from EE2.check_job
 As sent to browser, includes cell info and run info
 ```
 {
-    user: string (username, who started the job),
-    spec: app spec (optional)
-    widget_info: (if not finished, None, else...) job.get_viewer_params result
-    state: {
+    outputWidgetInfo: (if not finished, None, else...) job.get_viewer_params result
+    jobState: {
         job_id: string,
         status: string,
         created: epoch ms,
@@ -565,10 +560,10 @@ When an error occurs while preparing the job state, the output states will have 
 ```json
 {
   "job_id_0": {
-    "state": {"job_id": "job_id_0", "status": "does_not_exist"}
+    "jobState": {"job_id": "job_id_0", "status": "does_not_exist"}
   },
   "job_id_1": {
-    "state": {"job_id": "job_id_1", "status": "ee2_error"}
+    "jobState": {"job_id": "job_id_1", "status": "ee2_error"}
   },
   ...
 }

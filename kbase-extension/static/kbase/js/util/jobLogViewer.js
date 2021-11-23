@@ -963,7 +963,7 @@ define([
                 const errorModel = Props.make({
                     data: {
                         exec: {
-                            jobState: jobState,
+                            jobState,
                         },
                     },
                 });
@@ -1163,6 +1163,7 @@ define([
                                 this.startLogAutoFetch();
                                 break;
                             case 'finished':
+                                this.requestJobLog(0);
                                 // the FSM turns off log fetch and status updates
                                 newState = {
                                     mode: 'finished',

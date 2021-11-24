@@ -9,6 +9,7 @@ module.exports = function (config) {
     ];
     // the following tests should be run separately due to test runner issues
     const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
         'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
         'test/unit/spec/util/appCellUtil-spec.js',
     ];

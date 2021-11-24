@@ -3,12 +3,13 @@ define([
     'bluebird',
     'common/html',
     'common/jobs',
+    'common/jobCommChannel',
     './jobActionDropdown',
     'util/jobLogViewer',
     'util/appCellUtil',
     'util/string',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewerModule, Util, String) => {
+], ($, Promise, html, Jobs, JobComms, JobActionDropdown, JobLogViewerModule, Util, String) => {
     'use strict';
 
     const { JobLogViewer } = JobLogViewerModule;
@@ -24,7 +25,8 @@ define([
         button = t('button'),
         span = t('span'),
         dataTablePageLength = 50,
-        cssBaseClass = 'kb-job-status';
+        cssBaseClass = 'kb-job-status',
+        jcm = JobComms.JobCommMessages;
 
     function createTable() {
         return table(
@@ -264,8 +266,8 @@ define([
             Object.values(this.widgetsById).map((widget) => widget.stop());
             this.jobManager.removeEventHandler('modelUpdate', 'jobStatusTable_status');
             this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
-            this.jobManager.removeEventHandler('job-info', 'jobStatusTable_info');
-            this.jobManager.removeEventHandler('job-error', 'jobStateTable_error');
+            this.jobManager.removeEventHandler(jcm.RESPONSES.INFO, 'jobStatusTable_info');
+            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStateTable_error');
             this.container.innerHTML = '';
             if (this.dropdownWidget) {
                 return this.dropdownWidget.stop();
@@ -641,22 +643,22 @@ define([
                     }
                 }
             });
-            this.jobManager.addListener('job-status', [batchId].concat(jobIdList));
-            this.jobManager.addListener('job-error', [batchId].concat(jobIdList), {
+            this.jobManager.addListener(jcm.RESPONSES.STATUS, [batchId].concat(jobIdList));
+            this.jobManager.addListener(jcm.RESPONSES.ERROR, [batchId].concat(jobIdList), {
                 jobStatusTable_error: this.handleJobError.bind(this),
             });
 
             if (paramsRequired.length) {
-                this.jobManager.addListener('job-info', paramsRequired, {
+                this.jobManager.addListener(jcm.RESPONSES.INFO, paramsRequired, {
                     jobStatusTable_info: this.handleJobInfo.bind(this),
                 });
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
                         ? { batchId }
                         : { jobIdList: paramsRequired };
-                this.jobManager.bus.emit('request-job-info', jobInfoRequestParams);
+                this.jobManager.bus.emit(jcm.REQUESTS.INFO, jobInfoRequestParams);
             }
-            this.jobManager.bus.emit('request-job-status', { batchId });
+            this.jobManager.bus.emit(jcm.REQUESTS.STATUS, { batchId });
         }
 
         // HANDLERS

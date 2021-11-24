@@ -1,15 +1,17 @@
-define(['bluebird', 'common/runtime', 'common/ui', 'common/html', './jobStateListRow'], (
-    Promise,
-    Runtime,
-    UI,
-    html,
-    JobStateListRow
-) => {
+define([
+    'bluebird',
+    'common/runtime',
+    'common/ui',
+    'common/html',
+    './jobStateListRow',
+    'common/jobCommChannel',
+], (Promise, Runtime, UI, html, JobStateListRow, JobComms) => {
     'use strict';
 
     const t = html.tag,
         table = t('table'),
-        tbody = t('tbody');
+        tbody = t('tbody'),
+        jcm = JobComms.JobCommMessages;
 
     function renderTable() {
         return table({ class: 'table' }, [tbody()]);
@@ -69,7 +71,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/html', './jobStateLis
                     jobId: parentJobId,
                 },
                 key: {
-                    type: 'job-status',
+                    type: jcm.RESPONSES.STATUS,
                 },
                 handle: handleJobStatusUpdate,
             });

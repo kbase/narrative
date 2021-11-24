@@ -8,6 +8,7 @@ define([
     'common/html',
     'common/jobManager',
     'common/jobs',
+    'common/jobCommChannel',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -37,6 +38,7 @@ define([
     html,
     JobManagerModule,
     Jobs,
+    JobComms,
     Props,
     Runtime,
     Spec,
@@ -58,7 +60,8 @@ define([
     DevMode
 ) => {
     'use strict';
-    const { JobManager } = JobManagerModule;
+    const { JobManager } = JobManagerModule,
+        jcm = JobComms.JobCommMessages;
 
     const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
@@ -818,7 +821,7 @@ define([
          * Then changes the global cell state to "launching".
          */
         function doRunCellAction() {
-            runStatusListener = cellBus.on('run-status', handleRunStatus);
+            runStatusListener = cellBus.on(jcm.RESPONSES.RUN_STATUS, handleRunStatus);
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');

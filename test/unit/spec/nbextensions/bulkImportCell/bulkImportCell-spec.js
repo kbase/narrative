@@ -4,6 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
+    'common/jobCommChannel',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -17,6 +18,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
+    JobComms,
     Runtime,
     Mocks,
     TestUtil,
@@ -26,6 +28,7 @@ define([
     Config
 ) => {
     'use strict';
+    const jcm = JobComms.JobCommMessages;
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
@@ -383,7 +386,7 @@ define([
                                     cell: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.RESPONSES.RUN_STATUS,
                                 },
                             });
                         }
@@ -652,7 +655,7 @@ define([
                                     cell: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.RESPONSES.RUN_STATUS,
                                 },
                             }
                         );
@@ -663,10 +666,10 @@ define([
                 const batchId = JobsData.batchParentJob.job_id;
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    ['request-job-updates-start', { batchId }],
-                    ['request-job-info', { batchId }],
-                    ['request-job-cancel', { jobIdList: [batchId] }],
-                    ['request-job-updates-stop', { batchId }],
+                    [jcm.REQUESTS.START_UPDATE, { batchId }],
+                    [jcm.REQUESTS.INFO, { batchId }],
+                    [jcm.REQUESTS.CANCEL, { jobIdList: [batchId] }],
+                    [jcm.REQUESTS.STOP_UPDATE, { batchId }],
                 ];
                 expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

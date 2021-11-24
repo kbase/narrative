@@ -4,12 +4,14 @@ define([
     'util/jobLogViewer',
     'common/runtime',
     'common/jobs',
+    'common/jobCommChannel',
     '/test/data/jobsData',
     'testUtil',
-], ($, Promise, JobLogViewerModule, Runtime, Jobs, JobsData, TestUtil) => {
+], ($, Promise, JobLogViewerModule, Runtime, Jobs, JobComms, JobsData, TestUtil) => {
     'use strict';
 
-    const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule;
+    const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule,
+        jcm = JobComms.JobCommMessages;
 
     const jobsByStatus = JobsData.jobsByStatus;
 
@@ -244,7 +246,7 @@ define([
             await this.jobLogViewerInstance.start(arg);
 
             return new Promise((resolve) => {
-                this.runtimeBus.on('request-job-status', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                     expect(msg).toEqual({ jobId });
                     resolve();
                 });
@@ -373,7 +375,7 @@ define([
                     it(`should create a string for status ${jobState.status}, history mode ${
                         mode ? 'on' : 'off'
                     }`, async function () {
-                        this.runtimeBus.on('request-job-status', (msg) => {
+                        this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                             testJobStatus(this, mode);
                             expect(msg).toEqual({ jobId: jobState.job_id });
                         });
@@ -397,7 +399,7 @@ define([
             it('should create a string for an unknown job', async function () {
                 const jobState = JobsData.unknownJob;
 
-                this.runtimeBus.on('request-job-status', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                     testJobStatus(this);
                     expect(msg).toEqual({ jobId: jobState.job_id });
                 });
@@ -451,7 +453,7 @@ define([
                         return response;
                     });
 
-                    this.runtimeBus.on('request-job-status', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                         expect(msg).toEqual({ jobId });
                         testJobStatus(this);
                         this.runtimeBus.send(
@@ -490,12 +492,12 @@ define([
                 beforeEach(async function () {
                     jlv = this.jobLogViewerInstance;
                     container = this.node;
-                    this.runtimeBus.on('request-job-status', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                         expect(msg).toEqual({ jobId });
                         this.runtimeBus.send(...formatStatusMessage(jobState));
                     });
 
-                    this.runtimeBus.on('request-job-log', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
                         expect(msg).toEqual({ jobId, options: { latest: true } });
                         this.runtimeBus.send(...formatLogMessage(jobId, lotsOfLogLines));
                     });
@@ -587,7 +589,7 @@ define([
                 const jobState = jobsByStatus['does_not_exist'][0];
                 const jobId = jobState.job_id;
 
-                this.runtimeBus.on('request-job-status', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                     expect(msg).toEqual({ jobId: jobState.job_id });
                     // send the job message
                     this.runtimeBus.send(...formatStatusMessage(jobState));
@@ -611,7 +613,7 @@ define([
                     const jobState = jobsByStatus[queueState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on('request-job-status', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                         expect(msg).toEqual({ jobId: jobState.job_id });
                         // send the job message
                         const jobMessage = formatStatusMessage(jobState);
@@ -642,12 +644,12 @@ define([
                 const logs = [[], logLines.slice(0, 2), logLines.slice(0, 2), logLines]; //
                 let acc = 0;
 
-                this.runtimeBus.on('request-job-status', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                     expect(msg).toEqual({ jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
-                this.runtimeBus.on('request-job-updates-start', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.START_UPDATE, (msg) => {
                     expect(msg).toEqual({ jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
@@ -658,7 +660,7 @@ define([
                 });
 
                 return new Promise((resolve) => {
-                    this.runtimeBus.on('request-job-log', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
                         expect(msg).toEqual({ jobId, options: { latest: true } });
                         const logUpdate = logs[acc];
                         acc += 1;
@@ -690,18 +692,18 @@ define([
                 const jobState = jobsByStatus['running'][0];
                 const jobId = jobState.job_id;
 
-                this.runtimeBus.on('request-job-status', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                     expect(msg).toEqual({ jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
-                this.runtimeBus.on('request-job-updates-start', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.START_UPDATE, (msg) => {
                     expect(msg).toEqual({ jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
                 // this is called when the state is 'running'
-                this.runtimeBus.on('request-job-log', (msg) => {
+                this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
                     expect(msg).toEqual({ jobId, options: { latest: true } });
                     this.runtimeBus.send(
                         ...formatMessage(jobId, 'logs', {
@@ -738,12 +740,12 @@ define([
                     const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on('request-job-status', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                         expect(msg).toEqual({ jobId });
                         this.runtimeBus.send(...formatStatusMessage(jobState));
                     });
 
-                    this.runtimeBus.on('request-job-log', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
                         expect(msg).toEqual({ jobId, options: { first_line: 0 } });
                         this.runtimeBus.send(...formatLogMessage(jobId, logLines));
                     });
@@ -766,12 +768,12 @@ define([
                     const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on('request-job-status', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.STATUS, (msg) => {
                         expect(msg).toEqual({ jobId });
                         this.runtimeBus.send(...formatStatusMessage(jobState));
                     });
 
-                    this.runtimeBus.on('request-job-log', (msg) => {
+                    this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
                         expect(msg).toEqual({ jobId, options: { first_line: 0 } });
                         this.runtimeBus.send(
                             ...formatMessage(jobId, 'logs', {

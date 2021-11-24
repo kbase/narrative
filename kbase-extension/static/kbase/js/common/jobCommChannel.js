@@ -101,6 +101,7 @@ define([
             STOP_UPDATE: 'stop_job_update',
         },
         BACKEND_RESPONSES = {
+            ERROR: 'job_comm_error',
             INFO: BACKEND_REQUESTS.INFO,
             LOGS: BACKEND_REQUESTS.LOGS,
             RESULT: RESULT,
@@ -141,6 +142,10 @@ define([
         validOutgoingMessageTypes: function () {
             return Object.values(RESPONSES);
         },
+        RESPONSES,
+        REQUESTS,
+        BACKEND_REQUESTS,
+        BACKEND_RESPONSES,
     };
 
     class JobCommChannel {
@@ -344,7 +349,7 @@ define([
                 // filtering.
                 //
                 // errors
-                case 'job_comm_error':
+                case BACKEND_RESPONSES.ERROR:
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
                         break;
@@ -355,7 +360,7 @@ define([
                     if (msgData.source === BACKEND_REQUESTS.LOGS) {
                         msgTypeToSend = RESPONSES.LOGS;
                     } else {
-                        msgTypeToSend = 'job-error';
+                        msgTypeToSend = RESPONSES.ERROR;
                     }
 
                     jobIdList.forEach((_jobId) => {
@@ -423,7 +428,7 @@ define([
                                     message: 'ee2 connection error',
                                     code: msgData[_jobId].jobState.status,
                                 },
-                                request: 'job-status',
+                                request: 'job_status',
                             });
                         } else {
                             this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, msgData[_jobId]);

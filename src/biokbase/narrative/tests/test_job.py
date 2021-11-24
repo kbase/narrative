@@ -71,7 +71,7 @@ BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
 BATCH_RETRY_ERROR = "60e717d78ac80701062efe63"
 JOB_NOT_FOUND = "job_not_found"
 
-CELL_ID_LIST = [
+TEST_CELL_ID_LIST = [
     "9329ac6c-604c-42a9-aca2-a15dba6278ce",
     "9329ac6c-604c-42a9-aca2-a15dba6278cf",
     # batch cell
@@ -82,9 +82,9 @@ CELL_ID_LIST = [
 ]
 # expected _jobs_by_cell_id mapping in JobManager
 JOBS_BY_CELL_ID = {
-    CELL_ID_LIST[0]: {JOB_COMPLETED, JOB_CREATED},
-    CELL_ID_LIST[1]: {JOB_RUNNING, JOB_TERMINATED, JOB_ERROR},
-    CELL_ID_LIST[2]: {
+    TEST_CELL_ID_LIST[0]: {JOB_COMPLETED, JOB_CREATED},
+    TEST_CELL_ID_LIST[1]: {JOB_RUNNING, JOB_TERMINATED, JOB_ERROR},
+    TEST_CELL_ID_LIST[2]: {
         BATCH_PARENT,
         BATCH_COMPLETED,
         BATCH_TERMINATED,
@@ -92,12 +92,12 @@ JOBS_BY_CELL_ID = {
         BATCH_ERROR_RETRIED,
         BATCH_RETRY_COMPLETED,
     },
-    CELL_ID_LIST[3]: {BATCH_PARENT, BATCH_RETRY_RUNNING, BATCH_RETRY_ERROR},
+    TEST_CELL_ID_LIST[3]: {BATCH_PARENT, BATCH_RETRY_RUNNING, BATCH_RETRY_ERROR},
 }
 
 # mapping expected as output from lookup_jobs_by_cell_id
-CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
-CELL_IDs[CELL_ID_LIST[4]] = []
+TEST_CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
+TEST_CELL_IDs[TEST_CELL_ID_LIST[4]] = []
 
 BATCH_CHILDREN = [
     BATCH_COMPLETED,
@@ -943,7 +943,7 @@ class JobTest(unittest.TestCase):
         batch_fam = get_batch_family_jobs(return_list=True)
 
         job = batch_fam[0]
-        self.assertEqual(set(job.batch_cell_ids()), {CELL_ID_LIST[2], CELL_ID_LIST[3]})
+        self.assertEqual(set(job.batch_cell_ids()), {TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]})
 
     def test_app_name(self):
         for job in get_all_jobs().values():

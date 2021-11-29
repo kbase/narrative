@@ -368,7 +368,7 @@ class JobComm:
                 "job_status",
                 {
                     req.job_id: {
-                        "state": {"job_id": req.job_id, "status": "does_not_exist"}
+                        "jobState": {"job_id": req.job_id, "status": "does_not_exist"}
                     }
                 },
             )
@@ -431,12 +431,12 @@ class JobComm:
 
     def _retry_jobs(self, req: JobRequest) -> None:
         retry_results = self._jm.retry_jobs(req.job_id_list)
-        self.send_comm_message("jobs_retried", retry_results)
+        self.send_comm_message("job_retries", retry_results)
         self.send_comm_message(
             "new_job",
             {
                 "job_id_list": [
-                    result["retry"]["state"]["job_id"]
+                    result["retry"]["jobState"]["job_id"]
                     for result in retry_results
                     if "retry" in result
                 ]

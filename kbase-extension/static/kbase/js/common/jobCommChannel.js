@@ -59,23 +59,54 @@ define([
         CELL = 'cell',
         JOB = 'jobId',
         RESULT = 'result',
+        PING = 'ping',
+        JOB_ID = 'job_id',
+        JOB_ID_LIST = 'job_id_list',
         // messages to be sent to backend for job request types
-        JOB_REQUESTS = {
+        REQUESTS = {
+            PING: PING,
+
+            // cancels the job
+            CANCEL: 'request-job-cancel',
+
+            // Requests status of all jobs in a cell or list of cells
+            CELL_JOB_STATUS: 'request-cell-job-status',
+
+            // Fetches info (not state) about a job, including the app id, name, and inputs.
+            INFO: 'request-job-info',
+
+            // Fetches job logs from kernel.
+            LOGS: 'request-job-log',
+
+            // retries the job
+            RETRY: 'request-job-retry',
+
+            // Request regular job status updates for a job or list of jobs
+            START_UPDATE: 'request-job-updates-start',
+
+            // Fetches job status from kernel.
+            STATUS: 'request-job-status',
+
+            // Tells kernel to stop including a job in the regular job status updates
+            STOP_UPDATE: 'request-job-updates-stop',
+        },
+        BACKEND_REQUESTS = {
+            PING: PING,
             CANCEL: 'cancel_job',
             INFO: 'job_info',
             LOGS: 'job_logs',
             RETRY: 'retry_job',
-            STATUS: 'job_status',
             START_UPDATE: 'start_job_update',
+            STATUS: 'job_status',
             STOP_UPDATE: 'stop_job_update',
         },
         BACKEND_RESPONSES = {
-            INFO: JOB_REQUESTS.INFO,
-            LOGS: JOB_REQUESTS.LOGS,
+            INFO: BACKEND_REQUESTS.INFO,
+            LOGS: BACKEND_REQUESTS.LOGS,
             RESULT: RESULT,
-            RETRY: 'jobs_retried',
+            RETRY: 'job_retries',
             RUN_STATUS: 'run_status',
-            STATUS: JOB_REQUESTS.STATUS,
+            STATUS: BACKEND_REQUESTS.STATUS,
         },
         RESPONSES = {
             CELL_JOB_STATUS: 'cell-job-status',
@@ -89,42 +120,23 @@ define([
         },
         // these job request types also have a 'batch' version
         batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
-        BATCH_JOB_REQUESTS = {};
-    // the batch version of JOB_REQUESTS[type]
+        BATCH_BACKEND_REQUESTS = {};
+    // the batch version of BACKEND_REQUESTS[type]
     batchRequests.forEach((type) => {
-        BATCH_JOB_REQUESTS[JOB_REQUESTS[type]] = JOB_REQUESTS[type] + '_batch';
+        BATCH_BACKEND_REQUESTS[BACKEND_REQUESTS[type]] = BACKEND_REQUESTS[type] + '_batch';
     });
 
     // Conversion of the message type of an incoming message
     // to the type used for the message to be sent to the backend
-    const requestTranslation = {
-        'ping-comm-channel': 'ping',
+    const requestTranslation = {};
 
-        // cancels the job
-        'request-job-cancel': JOB_REQUESTS.CANCEL,
-
-        // Fetches info (not state) about a job, including the app id, name, and inputs.
-        'request-job-info': JOB_REQUESTS.INFO,
-
-        // Fetches job logs from kernel.
-        'request-job-log': JOB_REQUESTS.LOGS,
-
-        // retries the job
-        'request-job-retry': JOB_REQUESTS.RETRY,
-
-        // Fetches job status from kernel.
-        'request-job-status': JOB_REQUESTS.STATUS,
-
-        // Requests job status updates for this job via the job channel, and also
-        // ensures that job polling is running.
-        'request-job-updates-start': JOB_REQUESTS.START_UPDATE,
-        // Tells kernel to stop including a job in the lookup loop.
-        'request-job-updates-stop': JOB_REQUESTS.STOP_UPDATE,
-    };
+    Object.keys(REQUESTS).forEach((type) => {
+        requestTranslation[REQUESTS[type]] = BACKEND_REQUESTS[type];
+    });
 
     const JobCommMessages = {
         validIncomingMessageTypes: function () {
-            return Object.keys(requestTranslation);
+            return Object.values(REQUESTS);
         },
         validOutgoingMessageTypes: function () {
             return Object.values(RESPONSES);
@@ -181,7 +193,7 @@ define([
         handleBusMessages() {
             const bus = this.runtime.bus();
 
-            Object.keys(requestTranslation).forEach((msgType) => {
+            Object.values(REQUESTS).forEach((msgType) => {
                 bus.on(msgType, (msgData) => {
                     this.sendCommMessage(msgType, msgData);
                 });
@@ -205,9 +217,10 @@ define([
 
             const translations = {
                 // backend uses `job_id` instead of `batch_id`
-                batchId: 'job_id',
-                jobId: 'job_id',
-                jobIdList: 'job_id_list',
+                batchId: JOB_ID,
+                batch_id: JOB_ID,
+                jobId: JOB_ID,
+                jobIdList: JOB_ID_LIST,
                 pingId: 'ping_id',
             };
 
@@ -217,8 +230,12 @@ define([
                     transformedMsg[msgKey] = value;
                 }
                 // convert to the batch form of the request
-                if (key === 'batchId' && BATCH_JOB_REQUESTS[transformedMsg.request_type]) {
-                    transformedMsg.request_type = BATCH_JOB_REQUESTS[transformedMsg.request_type];
+                if (
+                    (key === 'batchId' || key === 'batch_id') &&
+                    BATCH_BACKEND_REQUESTS[transformedMsg.request_type]
+                ) {
+                    transformedMsg.request_type =
+                        BATCH_BACKEND_REQUESTS[transformedMsg.request_type];
                 }
             }
 
@@ -238,7 +255,7 @@ define([
          * will be sent.
          *
          * @param {string} msgType - message type; will be one of the
-         *                 keys in the requestTranslation object (optional)
+         *                 values in the REQUESTS object (optional)
          *
          * @param {object} msgData - additional parameters for the request,
          *                 such as jobId or jobIdList, or an 'options' object (optional)
@@ -275,26 +292,6 @@ define([
                 console.error('ERROR sending comm message', err.message, err, topMessage);
                 throw new Error('ERROR sending comm message: ' + err.message);
             });
-        }
-
-        convertJobState(backendJobState) {
-            const output = {};
-            const translateBEtoFE = {
-                state: 'jobState',
-                widget_info: 'outputWidgetInfo',
-                cell_id: 'cellId',
-            };
-
-            for (const key in translateBEtoFE) {
-                if (backendJobState[key]) {
-                    output[translateBEtoFE[key]] = backendJobState[key];
-                }
-            }
-
-            if (output.jobState) {
-                output.jobId = output.jobState.job_id;
-            }
-            return output;
         }
 
         /**
@@ -355,7 +352,7 @@ define([
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
                     const jobIdList = msgData.job_id ? [msgData.job_id] : msgData.job_id_list;
-                    if (msgData.source === JOB_REQUESTS.LOGS) {
+                    if (msgData.source === BACKEND_REQUESTS.LOGS) {
                         msgTypeToSend = RESPONSES.LOGS;
                     } else {
                         msgTypeToSend = 'job-error';
@@ -397,21 +394,11 @@ define([
 
                 case BACKEND_RESPONSES.RETRY:
                     msgData.forEach((jobRetried) => {
-                        const output = {
-                            job: this.convertJobState(jobRetried.job),
-                        };
-                        if (jobRetried.error) {
-                            output.error = jobRetried.error;
-                        }
-                        if (jobRetried.retry) {
-                            output.retry = this.convertJobState(jobRetried.retry);
-                        }
-
                         this.sendBusMessage(
                             JOB,
-                            jobRetried.job.state.job_id,
+                            jobRetried.job.jobState.job_id,
                             RESPONSES.RETRY,
-                            output
+                            jobRetried
                         );
                     });
                     break;
@@ -421,29 +408,25 @@ define([
                  * The job_status_all message covers all active jobs.
                  *
                  * data structure: object with key jobId and value
-                 * { jobState: job.state, outputWidgetInfo: job.widget_info }
+                 * { jobState: job.jobState, outputWidgetInfo: job.outputWidgetInfo }
                  */
                 case BACKEND_RESPONSES.STATUS:
                 case 'job_status_all':
                     Object.keys(msgData).forEach((_jobId) => {
+                        msgData[_jobId].jobId = _jobId;
                         // check whether or not this is an ee2 error
-                        if (msgData[_jobId].state.status === 'ee2_error') {
+                        if (msgData[_jobId].jobState.status === 'ee2_error') {
                             this.sendBusMessage(JOB, _jobId, RESPONSES.ERROR, {
                                 jobId: _jobId,
                                 error: {
                                     job_id: _jobId,
                                     message: 'ee2 connection error',
-                                    code: msgData[_jobId].state.status,
+                                    code: msgData[_jobId].jobState.status,
                                 },
                                 request: 'job-status',
                             });
                         } else {
-                            this.sendBusMessage(
-                                JOB,
-                                _jobId,
-                                RESPONSES.STATUS,
-                                this.convertJobState(msgData[_jobId])
-                            );
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, msgData[_jobId]);
                         }
                     });
                     break;

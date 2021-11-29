@@ -1155,8 +1155,6 @@ class JobCommTestCase(unittest.TestCase):
         states = msg["data"]["content"]
         self.assertIsInstance(states, dict)
         for job_id in states:
-            print("ALL JOB STATE TESTING")
-            print(states[job_id])
             validate_job_state(states[job_id])
 
     def test_handle_job_status_msg(self):

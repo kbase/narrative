@@ -312,17 +312,17 @@ def validate_job_state(job_state: dict) -> None:
     If any keys are missing, or extra keys exist, or values are weird, then this
     raises an AssertionError.
     """
-    assert "state" in job_state, "state key missing"
-    assert isinstance(job_state["state"], dict), "state is not a dict"
-    assert "user" in job_state, "user key missing"
-    assert isinstance(job_state["user"], str), "user is not a string"
-    assert "cell_id" in job_state, "cell_id key missing"
-    state = job_state["state"]
+    NoneType = type(None)
+
+    assert "jobState" in job_state, "jobState key missing"
+    assert isinstance(job_state["jobState"], dict), "jobState is not a dict"
+    assert "outputWidgetInfo" in job_state, "outputWidgetInfo key missing"
+    assert isinstance(job_state["outputWidgetInfo"], (dict, NoneType)), "outputWidgetInfo is not a dict or None"
+    state = job_state["jobState"]
     # list of tuples - first = key name, second = value type
     # details for other cases comes later. This is just the expected basic set of
     # keys for EVERY job, once it's been created in EE2.
 
-    NoneType = type(None)
     state_keys = {
         "required": {
             "job_id": str,

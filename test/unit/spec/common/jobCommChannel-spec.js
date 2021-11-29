@@ -13,6 +13,9 @@ define([
 
     const JobCommChannel = JobComms.JobCommChannel;
 
+    const TEST_JOB_ID = 'someJob',
+        TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'];
+
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
             commInfoReturn,
@@ -35,8 +38,9 @@ define([
 
     const convertToJobState = (acc, curr) => {
         acc[curr.job_id] = {
-            state: curr,
-            widget_info: {},
+            jobId: curr.job_id,
+            jobState: curr,
+            outputWidgetInfo: {},
         };
         return acc;
     };
@@ -153,9 +157,9 @@ define([
         });
 
         const pingArgs = [
-            ['ping-comm-channel', { pingId: 0 }],
-            ['ping-comm-channel', { pingId: 1 }],
-            ['ping-comm-channel', { pingId: 2 }],
+            ['ping', { pingId: 0 }],
+            ['ping', { pingId: 1 }],
+            ['ping', { pingId: 2 }],
         ];
         const messageQueuePings = pingArgs.map((arg) => {
             return {
@@ -320,41 +324,31 @@ define([
 
         const busMsgCases = [
             {
-                channel: 'ping-comm-channel',
+                channel: 'ping',
                 message: { pingId: 'ping!', pongId: 'pong!' },
                 expected: { request_type: 'ping', ping_id: 'ping!', pongId: 'pong!' },
             },
             {
-                channel: 'request-job-cancel',
-                message: { jobId: 'someJob' },
-                expected: { request_type: 'cancel_job', job_id: 'someJob' },
-            },
-            {
-                channel: 'request-job-retry',
-                message: { jobId: 'someJob' },
-                expected: { request_type: 'retry_job', job_id: 'someJob' },
-            },
-            {
                 channel: 'request-job-log',
-                message: { jobId: 'someJob', options: {} },
+                message: { jobId: TEST_JOB_ID, options: {} },
                 expected: {
                     request_type: 'job_logs',
-                    job_id: 'someJob',
+                    job_id: TEST_JOB_ID,
                 },
             },
             {
                 channel: 'request-job-log',
-                message: { jobId: 'someJob', options: { latest: true } },
+                message: { jobId: TEST_JOB_ID, options: { latest: true } },
                 expected: {
                     request_type: 'job_logs',
-                    job_id: 'someJob',
+                    job_id: TEST_JOB_ID,
                     latest: true,
                 },
             },
             {
                 channel: 'request-job-log',
                 message: {
-                    jobId: 'someJob',
+                    jobId: TEST_JOB_ID,
                     options: {
                         first_line: 2000,
                         job_id: 'overridden!',
@@ -367,6 +361,26 @@ define([
                     first_line: 2000,
                     latest: true,
                 },
+            },
+            {
+                channel: 'request-job-cancel',
+                message: { jobId: TEST_JOB_ID },
+                expected: { request_type: 'cancel_job', job_id: TEST_JOB_ID },
+            },
+            {
+                channel: 'request-job-cancel',
+                message: { jobIdList: TEST_JOB_LIST },
+                expected: { request_type: 'cancel_job', job_id_list: TEST_JOB_LIST },
+            },
+            {
+                channel: 'request-job-retry',
+                message: { jobId: TEST_JOB_ID },
+                expected: { request_type: 'retry_job', job_id: TEST_JOB_ID },
+            },
+            {
+                channel: 'request-job-retry',
+                message: { jobIdList: TEST_JOB_LIST },
+                expected: { request_type: 'retry_job', job_id_list: TEST_JOB_LIST },
             },
         ];
 
@@ -382,18 +396,18 @@ define([
             busMsgCases.push(
                 {
                     channel: `request-job-${type}`,
-                    message: { jobId: 'someJob' },
+                    message: { jobId: TEST_JOB_ID },
                     expected: {
                         request_type: translated[type],
-                        job_id: 'someJob',
+                        job_id: TEST_JOB_ID,
                     },
                 },
                 {
                     channel: `request-job-${type}`,
-                    message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
+                    message: { jobIdList: TEST_JOB_LIST },
                     expected: {
                         request_type: translated[type],
-                        job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
+                        job_id_list: TEST_JOB_LIST,
                     },
                 },
                 {
@@ -461,14 +475,12 @@ define([
             });
         });
 
-        const testJobId = 'someJob';
-
         const busTests = [
             {
                 type: 'run_status',
-                message: { job_id: testJobId, cell_id: 'bar' },
+                message: { job_id: TEST_JOB_ID, cell_id: 'bar' },
                 expected: [
-                    { job_id: testJobId, cell_id: 'bar' },
+                    { job_id: TEST_JOB_ID, cell_id: 'bar' },
                     {
                         channel: { cell: 'bar' },
                         key: { type: 'run-status' },
@@ -478,12 +490,12 @@ define([
             {
                 type: 'result',
                 message: {
-                    result: [1],
+                    result: [1, true, 3],
                     address: { cell_id: 'bar' },
                 },
                 expected: [
                     {
-                        result: [1],
+                        result: [1, true, 3],
                         address: { cell_id: 'bar' },
                     },
                     {
@@ -534,7 +546,7 @@ define([
             {
                 type: 'job_logs',
                 message: {
-                    job_id: testJobId,
+                    job_id: TEST_JOB_ID,
                     latest: true,
                     logs: [
                         {
@@ -544,9 +556,9 @@ define([
                 },
                 expected: [
                     {
-                        jobId: testJobId,
+                        jobId: TEST_JOB_ID,
                         logs: {
-                            job_id: testJobId,
+                            job_id: TEST_JOB_ID,
                             latest: true,
                             logs: [
                                 {
@@ -557,37 +569,36 @@ define([
                         latest: true,
                     },
                     {
-                        channel: { jobId: testJobId },
+                        channel: { jobId: TEST_JOB_ID },
                         key: { type: 'job-logs' },
                     },
                 ],
             },
             {
-                type: 'jobs_retried',
+                type: 'job_retries',
                 message: [
                     {
                         job: {
-                            widget_info: {},
-                            state: {
-                                job_id: testJobId,
+                            jobState: {
+                                job_id: TEST_JOB_ID,
                                 status: 'wherever',
                             },
+                            outputWidgetInfo: {},
                         },
                         retry: {
-                            widget_info: 'whatever',
-                            state: {
+                            jobState: {
                                 job_id: '1234567890abcdef',
                                 status: 'whenever',
                             },
+                            outputWidgetInfo: 'whatever',
                         },
                     },
                     {
                         job: {
-                            state: {
+                            jobState: {
                                 job_id: 'ping',
                             },
-                            widget_info: 'ping',
-                            cell_id: 12345,
+                            outputWidgetInfo: 'ping',
                         },
                         retry: {},
                     },
@@ -596,15 +607,13 @@ define([
                     [
                         {
                             job: {
-                                jobId: testJobId,
                                 jobState: {
-                                    job_id: testJobId,
+                                    job_id: TEST_JOB_ID,
                                     status: 'wherever',
                                 },
                                 outputWidgetInfo: {},
                             },
                             retry: {
-                                jobId: '1234567890abcdef',
                                 jobState: {
                                     job_id: '1234567890abcdef',
                                     status: 'whenever',
@@ -613,19 +622,17 @@ define([
                             },
                         },
                         {
-                            channel: { jobId: testJobId },
+                            channel: { jobId: TEST_JOB_ID },
                             key: { type: 'job-retry-response' },
                         },
                     ],
                     [
                         {
                             job: {
-                                jobId: 'ping',
                                 jobState: {
                                     job_id: 'ping',
                                 },
                                 outputWidgetInfo: 'ping',
-                                cellId: 12345,
                             },
                             retry: {},
                         },
@@ -642,8 +649,8 @@ define([
                 message: (() => {
                     const output = {};
                     output[JobsData.allJobs[0].job_id] = {
-                        state: JobsData.allJobs[0],
-                        widget_info: {},
+                        jobState: JobsData.allJobs[0],
+                        outputWidgetInfo: {},
                     };
                     return output;
                 })(),
@@ -665,7 +672,7 @@ define([
                 message: {
                     ee2_error_job: {
                         job_id: 'ee2_error_job',
-                        state: {
+                        jobState: {
                             job_id: 'ee2_error_job',
                             status: 'ee2_error',
                         },
@@ -727,16 +734,16 @@ define([
             {
                 type: 'job_comm_error',
                 message: {
-                    job_id: 'jobCancelWithErrors',
+                    job_id: TEST_JOB_ID,
                     message: 'cancel error',
                     source: 'cancel_job',
                     code: 'RED',
                 },
                 expected: [
                     {
-                        jobId: 'jobCancelWithErrors',
+                        jobId: TEST_JOB_ID,
                         error: {
-                            job_id: 'jobCancelWithErrors',
+                            job_id: TEST_JOB_ID,
                             message: 'cancel error',
                             source: 'cancel_job',
                             code: 'RED',
@@ -744,7 +751,7 @@ define([
                         request: 'cancel_job',
                     },
                     {
-                        channel: { jobId: 'jobCancelWithErrors' },
+                        channel: { jobId: TEST_JOB_ID },
                         key: { type: 'job-error' },
                     },
                 ],
@@ -752,16 +759,16 @@ define([
             {
                 type: 'job_comm_error',
                 message: {
-                    job_id: 'jobLogWithErrors',
+                    job_id: TEST_JOB_ID,
                     message: 'log error',
                     source: 'job_logs',
                     code: -32000,
                 },
                 expected: [
                     {
-                        jobId: 'jobLogWithErrors',
+                        jobId: TEST_JOB_ID,
                         error: {
-                            job_id: 'jobLogWithErrors',
+                            job_id: TEST_JOB_ID,
                             message: 'log error',
                             source: 'job_logs',
                             code: -32000,
@@ -769,7 +776,7 @@ define([
                         request: 'job_logs',
                     },
                     {
-                        channel: { jobId: 'jobLogWithErrors' },
+                        channel: { jobId: TEST_JOB_ID },
                         key: { type: 'job-logs' },
                     },
                 ],
@@ -779,23 +786,23 @@ define([
                 type: 'job_comm_error',
                 message: {
                     source: 'some-unknown-error',
-                    job_id: 'unknownJobErrors',
+                    job_id: TEST_JOB_ID,
                     message: 'some random error',
                     code: 404,
                 },
                 expected: [
                     {
-                        jobId: 'unknownJobErrors',
+                        jobId: TEST_JOB_ID,
                         error: {
                             source: 'some-unknown-error',
-                            job_id: 'unknownJobErrors',
+                            job_id: TEST_JOB_ID,
                             message: 'some random error',
                             code: 404,
                         },
                         request: 'some-unknown-error',
                     },
                     {
-                        channel: { jobId: 'unknownJobErrors' },
+                        channel: { jobId: TEST_JOB_ID },
                         key: { type: 'job-error' },
                     },
                 ],

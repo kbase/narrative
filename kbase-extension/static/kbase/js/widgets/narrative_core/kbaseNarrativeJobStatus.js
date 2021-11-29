@@ -14,6 +14,7 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
+    'common/jobCommChannel',
     'common/runtime',
     'common/semaphore',
     'common/cellUtils',
@@ -38,6 +39,7 @@ define([
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
+    JobComms,
     Runtime,
     Semaphore,
     utils,
@@ -49,7 +51,8 @@ define([
 ) => {
     'use strict';
 
-    const { JobLogViewer } = JobLogViewerModule;
+    const { JobLogViewer } = JobLogViewerModule,
+        jcm = JobComms.JobCommMessages;
 
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
@@ -147,7 +150,7 @@ define([
                             jobId: this.jobId,
                         },
                         key: {
-                            type: 'job-info',
+                            type: jcm.RESPONSES.INFO,
                         },
                         handle: function (message) {
                             this.handleJobInfo(message);
@@ -159,18 +162,18 @@ define([
                             jobId: this.jobId,
                         },
                         key: {
-                            type: 'job-status',
+                            type: jcm.RESPONSES.STATUS,
                         },
                         handle: function (message) {
                             this.handleJobStatus(message);
                         }.bind(this),
                     });
 
-                    this.channel.emit('request-job-info', {
+                    this.channel.emit(jcm.REQUESTS.INFO, {
                         jobId: this.jobId,
                     });
 
-                    this.channel.emit('request-job-status', {
+                    this.channel.emit(jcm.REQUESTS.STATUS, {
                         jobId: this.jobId,
                     });
                 })
@@ -497,7 +500,7 @@ define([
                 case 'completed':
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
-                        this.channel.emit('request-job-updates-stop', {
+                        this.channel.emit(jcm.REQUESTS.STOP_UPDATE, {
                             jobId: this.jobId,
                         });
                     }
@@ -521,14 +524,14 @@ define([
         },
 
         requestJobInfo: function () {
-            this.channel.emit('request-job-info', {
+            this.channel.emit(jcm.REQUESTS.INFO, {
                 jobId: this.jobId,
             });
         },
 
         requestJobStatus: function () {
             window.setTimeout(() => {
-                this.channel.emit('request-job-status', {
+                this.channel.emit(jcm.REQUESTS.STATUS, {
                     jobId: this.jobId,
                 });
             }, this.statusRequestInterval);

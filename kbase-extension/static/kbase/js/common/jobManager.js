@@ -11,12 +11,12 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
 
     const jobCommand = {
         cancel: {
-            command: 'request-job-cancel',
-            listener: 'job-status',
+            command: jcm.REQUESTS.CANCEL,
+            listener: jcm.RESPONSES.STATUS,
         },
         retry: {
-            command: 'request-job-retry',
-            listener: 'job-retry-response',
+            command: jcm.REQUESTS.RETRY,
+            listener: jcm.RESPONSES.RETRY,
         },
     };
 
@@ -62,9 +62,9 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
 
         _isValidMessage(type, message) {
             switch (type) {
-                case 'job-status':
+                case jcm.RESPONSES.STATUS:
                     return message.jobId && Jobs.isValidJobStateObject(message.jobState);
-                case 'job-info':
+                case jcm.RESPONSES.INFO:
                     return message.jobId && Jobs.isValidJobInfoObject(message.jobInfo);
                 case type.indexOf('job') !== -1:
                     return !!message.jobId;
@@ -91,12 +91,12 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          *              on the job manager already
          * Example:
          *
-         * jm.addEventListener('job-status', {
+         * jm.addEventListener(jcm.RESPONSES.STATUS, {
          *      handlerA: () => {}, // this function gets added to the job manager
          *      handlerB: null,     // this handler function is expected to exist
          * })
          * // handlers assumed to already exist:
-         * jm.addEventListener('job-error', ['handlerA', 'handlerB']);
+         * jm.addEventListener(jcm.RESPONSES.ERROR, ['handlerA', 'handlerB']);
          */
 
         addEventHandler(event, handlers) {
@@ -159,7 +159,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          *
          * Example:
          *
-         * jm.addEventListener('job-status', {
+         * jm.addEventListener(jcm.RESPONSES.STATUS, {
          *      handlerA: () => {}, // this function gets added to the job manager
          *      handlerB: null,     // this handler function is expected to exist
          * })
@@ -273,7 +273,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     }
                     if (!this.listeners[channel][type]) {
                         let channelObject = { jobId: channel };
-                        if (type === 'cell-job-status') {
+                        if (type === jcm.RESPONSES.CELL_JOB_STATUS) {
                             channelObject = { cell: channel };
                         }
 
@@ -427,15 +427,15 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
 
             addDefaultHandlers() {
                 const defaultHandlers = {
-                    'job-info': this.handleJobInfo,
-                    'job-retry-response': this.handleJobRetry,
-                    'job-status': this.handleJobStatus,
+                    INFO: this.handleJobInfo,
+                    RETRY: this.handleJobRetry,
+                    STATUS: this.handleJobStatus,
                 };
 
                 Object.keys(defaultHandlers).forEach((event) => {
                     const toAdd = {};
-                    toAdd[`__default_${event}`] = defaultHandlers[event];
-                    this.addEventHandler(event, toAdd);
+                    toAdd[`__default_${jcm.RESPONSES[event]}`] = defaultHandlers[event];
+                    this.addEventHandler(jcm.RESPONSES[event], toAdd);
                 }, this);
             }
 
@@ -450,7 +450,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     return;
                 }
                 self.model.setItem(`exec.jobs.info.${jobInfo.job_id}`, jobInfo);
-                self.removeListener(jobInfo.job_id, 'job-info');
+                self.removeListener(jobInfo.job_id, jcm.RESPONSES.INFO);
             }
 
             handleJobRetry(self, message) {
@@ -463,7 +463,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 ['status', 'error'].forEach((type) => {
                     self.addListener(`job-${type}`, [retry.jobState.job_id]);
                 });
-                self.bus.emit('request-job-updates-start', {
+                self.bus.emit(jcm.REQUESTS.START_UPDATE, {
                     jobId: retry.jobState.job_id,
                 });
                 // update the model with the job data
@@ -485,11 +485,11 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates
                 if (Jobs.isTerminalStatus(status) && !Jobs.canRetry(jobState)) {
-                    self.removeListener(jobId, 'job-status');
+                    self.removeListener(jobId, jcm.RESPONSES.STATUS);
                     if (status === 'does_not_exist') {
                         self.removeJobListeners(jobId);
                     }
-                    self.bus.emit('request-job-updates-stop', {
+                    self.bus.emit(jcm.REQUESTS.STOP_UPDATE, {
                         jobId,
                     });
                     self.updateModel([jobState]);
@@ -514,7 +514,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                         ['status', 'error', 'info'].forEach((type) => {
                             self.addListener(`job-${type}`, missingJobIds);
                         });
-                        self.bus.emit('request-job-updates-start', {
+                        self.bus.emit(jcm.REQUESTS.START_UPDATE, {
                             jobIdList: missingJobIds,
                         });
                     }
@@ -534,8 +534,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
              * @param {array[string]} jobIdList
              */
             requestJobInfo(jobIdList) {
-                this.addListener('job-info', jobIdList);
-                this.bus.emit('request-job-info', { jobIdList });
+                this.addListener(jcm.RESPONSES.INFO, jobIdList);
+                this.bus.emit(jcm.REQUESTS.INFO, { jobIdList });
             }
 
             /**
@@ -543,8 +543,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
              * @param {array[string]} jobIdList
              */
             requestJobStatus(jobIdList) {
-                this.addListener('job-status', jobIdList);
-                this.bus.emit('request-job-status', { jobIdList });
+                this.addListener(jcm.RESPONSES.STATUS, jobIdList);
+                this.bus.emit(jcm.REQUESTS.STATUS, { jobIdList });
             }
         };
 
@@ -708,7 +708,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     allJobs[batchJob.job_id] = batchJob;
                 }
 
-                this.bus.emit('request-job-updates-stop', {
+                this.bus.emit(jcm.REQUESTS.STOP_UPDATE, {
                     batchId: batchJob.job_id,
                 });
 
@@ -767,8 +767,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 this._initJobs({ allJobIds, batchId: batch_id });
 
                 // request job info
-                this.addListener('job-info', allJobIds);
-                this.bus.emit('request-job-info', { batchId: batch_id });
+                this.addListener(jcm.RESPONSES.INFO, allJobIds);
+                this.bus.emit(jcm.REQUESTS.INFO, { batchId: batch_id });
             }
 
             _initJobs(args) {
@@ -778,7 +778,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     this.addListener(`job-${type}`, allJobIds);
                 });
                 // request job updates
-                this.bus.emit('request-job-updates-start', { batchId });
+                this.bus.emit(jcm.REQUESTS.START_UPDATE, { batchId });
             }
 
             restoreFromSaved() {

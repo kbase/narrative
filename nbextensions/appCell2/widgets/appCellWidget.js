@@ -23,6 +23,7 @@ define(
         'common/spec',
         'common/semaphore',
         'common/jobs',
+        'common/jobCommChannel',
         'common/cellComponents/actionButtons',
         'narrativeConfig',
         'google-code-prettify/prettify',
@@ -60,6 +61,7 @@ define(
         Spec,
         Semaphore,
         Jobs,
+        JobComms,
         ActionButtons,
         Config,
         PR,
@@ -79,7 +81,8 @@ define(
             span = t('span'),
             a = t('a'),
             p = t('p'),
-            cssCellType = 'kb-app-cell';
+            cssCellType = 'kb-app-cell',
+            jcm = JobComms.JobCommMessages;
 
         function factory(config) {
             const runtime = Runtime.make(),
@@ -1196,7 +1199,7 @@ define(
              * narrative metadata.
              */
             function cancelJob(jobId) {
-                runtime.bus().emit('request-job-cancel', {
+                runtime.bus().emit(jcm.REQUESTS.CANCEL, {
                     jobId,
                 });
             }
@@ -1205,7 +1208,7 @@ define(
                 if (!jobId) {
                     return;
                 }
-                runtime.bus().emit('request-job-status', {
+                runtime.bus().emit(jcm.REQUESTS.STATUS, {
                     jobId,
                 });
             }
@@ -1412,13 +1415,13 @@ define(
                             jobId,
                         },
                         key: {
-                            type: 'job-status',
+                            type: jcm.RESPONSES.STATUS,
                         },
                         handle: doJobStatus,
                     })
                 );
 
-                runtime.bus().emit('request-job-updates-start', {
+                runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
                     jobId,
                 });
             }
@@ -1462,7 +1465,7 @@ define(
 
                 const jobId = model.getItem('exec.jobState.job_id');
                 if (jobId) {
-                    runtime.bus().emit('request-job-updates-stop', {
+                    runtime.bus().emit(jcm.REQUESTS.STOP_UPDATE, {
                         jobId,
                     });
                 }
@@ -1752,7 +1755,7 @@ define(
 
                         // TODO: only turn this on when we need it!
                         busEventManager.add(
-                            cellBus.on('run-status', (message) => {
+                            cellBus.on(jcm.RESPONSES.RUN_STATUS, (message) => {
                                 updateFromLaunchEvent(message);
 
                                 model.setItem('exec.launchState', message);

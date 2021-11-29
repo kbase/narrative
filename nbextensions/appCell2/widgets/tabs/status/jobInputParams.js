@@ -1,17 +1,19 @@
-define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
-    Promise,
-    Runtime,
-    UI,
-    format,
-    html
-) => {
+define([
+    'bluebird',
+    'common/runtime',
+    'common/ui',
+    'common/format',
+    'kb_common/html',
+    'common/jobCommChannel',
+], (Promise, Runtime, UI, format, html, JobComms) => {
     'use strict';
 
     const t = html.tag,
         table = t('table'),
         tr = t('tr'),
         td = t('td'),
-        th = t('th');
+        th = t('th'),
+        jcm = JobComms.JobCommMessages;
 
     function renderTable() {
         return table({ class: 'table' }, [tr([th('Input'), th('Value')])]);
@@ -59,7 +61,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
                     jobId: jobId,
                 },
                 key: {
-                    type: 'job-info',
+                    type: jcm.RESPONSES.INFO,
                 },
                 handle: (message) => {
                     updateRowStatus(ui, message.jobInfo.job_params[0], container);
@@ -81,7 +83,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
                 isParentJob = arg.isParentJob;
 
                 startParamsListener();
-                runtime.bus().emit('request-job-info', {
+                runtime.bus().emit(jcm.REQUESTS.INFO, {
                     jobId: jobId,
                     parentJobId: arg.parentJobId,
                 });

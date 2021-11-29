@@ -3,20 +3,22 @@
  * The viewer updates based on changes to the job state and view model.
  * It reports the current job state, runtime, and how long it has been / was queued for.
  */
-define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html', 'common/jobs'], (
-    Promise,
-    Runtime,
-    UI,
-    format,
-    html,
-    Jobs
-) => {
+define([
+    'bluebird',
+    'common/runtime',
+    'common/ui',
+    'common/format',
+    'common/html',
+    'common/jobs',
+    'common/jobCommChannel',
+], (Promise, Runtime, UI, format, html, Jobs, JobComms) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
         p = t('p'),
-        span = t('span');
+        span = t('span'),
+        jcm = JobComms.JobCommMessages;
 
     /**
      * Updates the view stats.
@@ -323,7 +325,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
             if (listeningForJob) {
                 return;
             }
-            runtime.bus().emit('request-job-updates-start', {
+            runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
                 jobId,
             });
             listeningForJob = true;
@@ -375,7 +377,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                         jobId: jobId,
                     },
                     key: {
-                        type: 'job-status',
+                        type: jcm.RESPONSES.STATUS,
                     },
                     handle: handleJobStatusUpdate,
                 })
@@ -413,7 +415,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                     listenForJobStatus();
 
                     // request a new job status update from the kernel on start
-                    runtime.bus().emit('request-job-status', {
+                    runtime.bus().emit(jcm.REQUESTS.STATUS, {
                         jobId: jobId,
                         parentJobId: parentJobId,
                     });

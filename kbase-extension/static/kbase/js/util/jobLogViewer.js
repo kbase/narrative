@@ -19,11 +19,12 @@ define([
     'common/ui',
     'common/fsm',
     'common/jobs',
+    'common/jobCommChannel',
     'common/html',
     'common/runClock',
     'common/errorDisplay',
     'util/developerMode',
-], (Promise, Runtime, Props, UI, Fsm, Jobs, html, RunClock, ErrorDisplay, devMode) => {
+], (Promise, Runtime, Props, UI, Fsm, Jobs, JobComms, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -37,7 +38,8 @@ define([
         logContentExpandedClass = `${logContentStandardClass}--expanded`,
         LOG_CONTAINER = 'log-container',
         LOG_PANEL = 'log-panel',
-        LOG_LINES = 'log-lines';
+        LOG_LINES = 'log-lines',
+        jcm = JobComms.JobCommMessages;
 
     let logContentClass = logContentStandardClass;
 
@@ -407,7 +409,7 @@ define([
 
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
-                this.bus.emit('request-job-status', {
+                this.bus.emit(jcm.REQUESTS.STATUS, {
                     jobId: this.jobId,
                 });
                 this.state.listeningForJob = true;
@@ -443,7 +445,7 @@ define([
          * request regular job status updates
          */
         startJobStatusUpdates() {
-            this.bus.emit('request-job-updates-start', {
+            this.bus.emit(jcm.REQUESTS.START_UPDATE, {
                 jobId: this.jobId,
             });
             this.state.listeningForJob = true;
@@ -456,7 +458,7 @@ define([
             this.state.listeningForJob = false;
 
             if (this.state.awaitingLog) {
-                this.stopEventListeners(['job-status']);
+                this.stopEventListeners([jcm.RESPONSES.STATUS]);
             } else {
                 this.stopEventListeners();
             }
@@ -472,7 +474,7 @@ define([
         requestJobLog(firstLine) {
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit('request-job-log', {
+            this.bus.emit(jcm.REQUESTS.LOGS, {
                 jobId: this.jobId,
                 options: {
                     first_line: firstLine,
@@ -488,7 +490,7 @@ define([
             this.state.scrollToEndOnNext = true;
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit('request-job-log', {
+            this.bus.emit(jcm.REQUESTS.LOGS, {
                 jobId: this.jobId,
                 options: {
                     latest: true,
@@ -1262,16 +1264,16 @@ define([
              */
             startEventListeners() {
                 const handlers = {
-                    'job-logs': this.handleJobLogs,
-                    'job-status': this.handleJobStatusUpdate,
+                    LOGS: this.handleJobLogs,
+                    STATUS: this.handleJobStatusUpdate,
                 };
 
                 Object.keys(handlers).forEach((type) => {
                     // ensure that the correct `this` context is bound
                     const handle = handlers[type].bind(this);
-                    this.listenersByType[type] = this.bus.listen({
+                    this.listenersByType[jcm.RESPONSES[type]] = this.bus.listen({
                         channel: { jobId: this.jobId },
-                        key: { type },
+                        key: { type: jcm.RESPONSES[type] },
                         handle,
                     });
                 }, this);

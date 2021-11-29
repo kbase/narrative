@@ -346,6 +346,7 @@ define([
                                 class: `${cssBaseClass}__title-container`,
                             },
                             [
+                                buttons,
                                 div(
                                     {
                                         dataElement: 'title',
@@ -364,7 +365,6 @@ define([
                                 ),
                             ]
                         ),
-                        buttons,
                     ]
                 );
             return {

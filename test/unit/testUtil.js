@@ -55,8 +55,8 @@ define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.
         });
     }
 
-    function JSONcopy(structure) {
-        return JSON.parse(JSON.stringify(structure));
+    function JSONcopy(...args) {
+        return JSON.parse(JSON.stringify(...args));
     }
 
     function wait(timeMs) {

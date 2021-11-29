@@ -84,14 +84,6 @@ define([
             // a report_name in the result, then show the batch result
             if (isParentJob && result && result.params && result.params.report_name) {
                 reportInputs = result.params;
-            } else if (
-                jobState.widget_info &&
-                jobState.widget_info.params &&
-                jobState.widget_info.params.report_name
-            ) {
-                // otherwise, if there's some report info in the jobState, show that
-                // report
-                reportInputs = jobState.widget_info.params;
             }
 
             // if there are no report parameters, then just dump the info given in
@@ -105,7 +97,7 @@ define([
                     ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
                 });
             }
-            // otherwise, render the report;lp
+            // otherwise, render the report
             return renderReportView(reportInputs);
         }
 

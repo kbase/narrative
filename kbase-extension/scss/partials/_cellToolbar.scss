@@ -29,6 +29,7 @@ $default-icon-size: 56px;
   &__title-container {
     flex: 1 1 10rem;
     text-overflow: ellipsis;
+    overflow: hidden;
 
     // .cell.unselected .kb-cell-toolbar__title-container
     .cell.unselected & {
@@ -44,6 +45,7 @@ $default-icon-size: 56px;
     margin-top: 8px;
     min-width: 0;
     text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   // .kb-cell-toolbar__subtitle
@@ -53,12 +55,13 @@ $default-icon-size: 56px;
     height: 20px;
     min-width: 0;
     text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   // .kb-cell-toolbar__buttons-container
   &__buttons-container {
-    flex: none;
-    min-width: 9.5rem;
+    float: right;
+    min-width: 2rem;
     white-space: nowrap;
 
     // unselected cells

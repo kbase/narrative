@@ -3,7 +3,7 @@ import threading
 from typing import List, Union
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
+from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR, get_error_output_state
 from biokbase.narrative.exception_util import NarrativeException, JobIDException
 from biokbase.narrative.common import kblogging
 
@@ -12,10 +12,13 @@ UNKNOWN_REASON = "Unknown reason"
 JOB_NOT_PROVIDED_ERR = "job_id not provided"
 JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-
 BOTH_INPUTS_PRESENT_ERR = "Both job_id and job_id_list present"
 
 LOOKUP_TIMER_INTERVAL = 5
+
+JOB_ID = "job_id"
+JOB_ID_LIST = "job_id_list"
+CELL_ID_LIST = "cell_id_list"
 
 
 class JobRequest:
@@ -82,35 +85,35 @@ class JobRequest:
         self.request = self.rq_data.get("request_type")
         if self.request is None:
             raise ValueError("Missing request type in job channel message!")
-        if "job_id" in self.rq_data and "job_id_list" in self.rq_data:
+        if JOB_ID in self.rq_data and JOB_ID_LIST in self.rq_data:
             raise ValueError(BOTH_INPUTS_PRESENT_ERR)
 
     @property
     def job_id(self):
-        if "job_id" in self.rq_data:
-            return self.rq_data["job_id"]
+        if JOB_ID in self.rq_data:
+            return self.rq_data[JOB_ID]
         else:
             raise JobIDException(JOB_NOT_PROVIDED_ERR)
 
     @property
     def job_id_list(self):
-        if "job_id_list" in self.rq_data:
-            return self.rq_data["job_id_list"]
+        if JOB_ID_LIST in self.rq_data:
+            return self.rq_data[JOB_ID_LIST]
         else:
             raise JobIDException(JOBS_NOT_PROVIDED_ERR)
 
     @property
     def cell_id_list(self):
-        if "cell_id_list" in self.rq_data:
-            return self.rq_data["cell_id_list"]
+        if CELL_ID_LIST in self.rq_data:
+            return self.rq_data[CELL_ID_LIST]
         else:
             raise ValueError(CELLS_NOT_PROVIDED_ERR)
 
     def input(self):
-        if "job_id" in self.rq_data:
-            return ("job_id", self.job_id)
-        elif "job_id_list" in self.rq_data:
-            return ("job_id_list", self.job_id_list)
+        if JOB_ID in self.rq_data:
+            return (JOB_ID, self.job_id)
+        elif JOB_ID_LIST in self.rq_data:
+            return (JOB_ID_LIST, self.job_id_list)
         else:
             return None
 
@@ -120,8 +123,8 @@ class JobRequest:
         If a message comes with job_id instead of job_id_list, it may be converted
         into a JobRequest with a job_id_list
         """
-        msg["content"]["data"]["job_id_list"] = [msg["content"]["data"]["job_id"]]
-        del msg["content"]["data"]["job_id"]
+        msg["content"]["data"][JOB_ID_LIST] = [msg["content"]["data"][JOB_ID]]
+        del msg["content"]["data"][JOB_ID]
         return cls(msg)
 
     @classmethod
@@ -130,28 +133,28 @@ class JobRequest:
         If a message comes with job_id_list instead of job_id, it may be converted
         into multiple JobRequest objects each having a single job_id
         """
-        job_id_list = msg["content"]["data"]["job_id_list"]
+        job_id_list = msg["content"]["data"][JOB_ID_LIST]
         if not isinstance(job_id_list, list):
             raise TypeError(JOBS_TYPE_ERR)
         insts = []
         for job_id in job_id_list:
             msg_ = copy.deepcopy(msg)
-            msg_["content"]["data"]["job_id"] = job_id
-            del msg_["content"]["data"]["job_id_list"]
+            msg_["content"]["data"][JOB_ID] = job_id
+            del msg_["content"]["data"][JOB_ID_LIST]
             insts.append(cls(msg_))
         return insts
 
     @classmethod
     def translate(cls, msg: dict) -> List["JobRequest"]:
         data = msg.get("content", {}).get("data", {})
-        if "job_id" in data and "job_id_list" in data:
+        if JOB_ID in data and JOB_ID_LIST in data:
             raise ValueError(BOTH_INPUTS_PRESENT_ERR)
 
         req_type = data.get("request_type")
 
-        if "job_id_list" in data and req_type in cls.REQUIRE_JOB_ID:
+        if JOB_ID_LIST in data and req_type in cls.REQUIRE_JOB_ID:
             requests = cls._split_request_by_job_id(msg)
-        elif "job_id" in data and req_type in cls.REQUIRE_JOB_ID_LIST:
+        elif JOB_ID in data and req_type in cls.REQUIRE_JOB_ID_LIST:
             requests = [cls._convert_to_using_job_id_list(msg)]
         else:
             requests = [cls(msg)]
@@ -345,7 +348,7 @@ class JobComm:
         req = JobRequest(
             {
                 "content": {
-                    "data": {"request_type": "job_status", "job_id_list": [job_id]}
+                    "data": {"request_type": "job_status", JOB_ID_LIST: [job_id]}
                 }
             }
         )
@@ -367,9 +370,7 @@ class JobComm:
             self.send_comm_message(
                 "job_status",
                 {
-                    req.job_id: {
-                        "jobState": {"job_id": req.job_id, "status": "does_not_exist"}
-                    }
+                    req.job_id: get_error_output_state(req.job_id)
                 },
             )
             raise
@@ -411,7 +412,7 @@ class JobComm:
                 "content": {
                     "data": {
                         "request_type": req.request.replace("_batch", ""),
-                        "job_id_list": job_ids,
+                        JOB_ID_LIST: job_ids,
                     }
                 }
             }
@@ -519,7 +520,7 @@ class JobComm:
             data = req.get("content", {}).get("data", {})
             error_content["source"] = data.get("request_type")
             # If req is still a dict, could have both job_id and job_id_list
-            for attr in ["job_id", "job_id_list", "cell_id_list"]:
+            for attr in [JOB_ID, JOB_ID_LIST, CELL_ID_LIST]:
                 if attr in data:
                     error_content[attr] = data[attr]
         elif isinstance(req, str) or req is None:

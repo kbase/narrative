@@ -4,17 +4,17 @@ This document highlights some development details about importing data into the 
 
 ## Introduction
 
-The general flow of data goes from an external data source, to files uploaded to the Staging Area, to data objects imported to the Workspace service. The two main user actions here - uploading and importing - are separated by accessing the Staging Service, and running one or more Import apps. Both of these are started by opening the Import tab of the data slideout.
+The general flow of data goes from an external data source, to files uploaded to the Staging Area, to data objects imported to the Workspace service and available in the Narrative. The two main user actions here - uploading and importing - are performed by accessing the Staging Service, and running one or more Import apps, respectively. Both of these are started by opening the Import tab of the data slideout.
 
 ## Staging Service
 
-The Staging Service acts as a first stop for importing data. This service provides an API to a KBase-hosted file system. Each user has separate file storage under their username. The Narrative front end uses a [REST client](../../kbase-extension/static/kbase/js/api/StagingServiceClient.js) to get access to that service.
+The Staging Service acts as a first stop for importing data. This service provides an API to a KBase-hosted file system, where each user has a separate file storage directory under their username. The Narrative front end uses a [REST client](../../kbase-extension/static/kbase/js/api/StagingServiceClient.js) to access that service and manipulate files.
 
 ## Staging Service Viewer
 
-Users can interact with the Staging Service through the Import tab of the data slideout. The top portion of this tab is controlled by the [FileUploadWidget](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/fileUploadWidget.js). This uses [Dropzone](https://www.dropzone.dev/js/) to provide a drag-and-drop interface for uploading files. If the user's account is linked to Globus, an active link is also provided.
+Users can interact with the Staging Service through the Import tab of the data slideout. The top portion of this tab is controlled by the [FileUploadWidget](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/fileUploadWidget.js). This uses [Dropzone](https://www.dropzone.dev/js/) to provide a drag-and-drop interface for uploading files. If the user's account is linked to Globus, a link is also provided. Another option is to upload via URL. This requires running an app that imports data to the Staging Service from an external, public URL.
 
-The bottom portion of the Import tab acts as a file browser and selector for starting the Import process. The staged files get rendered by the [StagingAreaViewer](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js) module. This viewer fetches the list of files from the Staging Service, updating every 30 seconds (by default, configured in [config.json](../../src/config.json.templ)).
+The bottom portion of the Import tab acts as a file browser and selector for starting the Import process. The staged files get rendered by the [StagingAreaViewer](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js) module. This viewer fetches the list of files from the Staging Service, updating every 30 seconds.
 
 ## Data Import
 
@@ -38,11 +38,11 @@ Each `app_info` object has the following accepted keys:
 
 ### Configuring a new Bulk Import app
 The steps for adding a bulk import app to the configuration are fairly simple.
-1. Add the `app_info` object field as described above with a unique id.
-2. Add the new data type's id to `bulk_import_types`.
+1. Add the `app_info` object field as described above, with a unique id.
+2. Add the new data uploader's id to `bulk_import_types`.
 
-Be aware that as of Narrative 5.0.0 (with the bulk import app MVP), there are several issues to be aware of before adding a new bulk import app:
-* Apps that parallelize themselves (e.g. make use of the KBParallel module, or otherwise create extra jobs in the Execution Engine) may not work, or may cause user deadlocking. These are not recommended for use.
+Be aware that as of Narrative 5.0.0, there are several issues to be aware of before adding a new bulk import app:
+* Apps that parallelize themselves (e.g. make use of the KBParallel module, or otherwise create extra jobs in the Execution Engine) may not work, or may cause a deadlock where no further app runs may be submitted by that user. These are not recommended for use.
 * Apps that make use of Grouped Parameters (the `"parameter-groups"` field in an app spec) will not work correctly in a Bulk Import cell.
 * Apps that require subobject selection may not work, and have not been tested in the Bulk Import cell.
-* Apps that require the use of a dynamic dropdown may not work as expected in a Bulk Import cell. This is especially apparent on page reload once a Bulk Import cell has been configured.
+* Apps that require the use of a dynamic dropdown (a select box that gets its available selections from a service) may not work as expected in a Bulk Import cell.

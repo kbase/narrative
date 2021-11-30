@@ -8,12 +8,17 @@ The general flow of data goes from an external data source, to files uploaded to
 
 ## Staging Service
 
-This fetches the list of files from the Staging service every 
-Each row represents one file - these get rendered by the [StagingAreaViewer](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js) module. 
+The Staging Service acts as a first stop for importing data. This service provides an API to a KBase-hosted file system. Each user has separate file storage under their username. The Narrative front end uses a [REST client](../../kbase-extension/static/kbase/js/api/StagingServiceClient.js) to get access to that service.
+
+## Staging Service Viewer
+
+Users can interact with the Staging Service through the Import tab of the data slideout. The top portion of this tab is controlled by the [FileUploadWidget](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/fileUploadWidget.js). This uses [Dropzone](https://www.dropzone.dev/js/) to provide a drag-and-drop interface for uploading files. If the user's account is linked to Globus, an active link is also provided.
+
+The bottom portion of the Import tab acts as a file browser and selector for starting the Import process. The staged files get rendered by the [StagingAreaViewer](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js) module. This viewer fetches the list of files from the Staging Service, updating every 30 seconds (by default, configured in [config.json](../../src/config.json.templ)).
 
 ## Data Import
 
-Data import is initiated by selecting one or more data files from the Import tab, then running the Importer app for that data type. When at least one file has a data type chosen and its checkbox selected, the `Import Selected` button will activate. Clicking that will close the slideout and open a Bulk Import cell and/or at least one App Cell with the relative file path entered. File paths are given as the relative path from the root of the Staging Area without the username - the username is assumed and will be added at app run time.
+Data import is initiated by selecting one or more data files from the Import tab, then running the Importer app for that data type. When at least one file has a data type chosen and its checkbox selected, the `Import Selected` button will activate. Clicking that will close the slideout and open a Bulk Import cell and/or at least one App Cell with the relative file path entered. File paths are given as the relative path from the root of the Staging Area without the username - the username is assumed to be the root, and will be added at app run time.
 
 ### Importer App Configuration
 

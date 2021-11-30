@@ -5,17 +5,14 @@
  *
  */
 
-define(['./unodep', 'common/runtime'], (utils, Runtime) => {
+define(['underscore', 'common/runtime'], (_, Runtime) => {
     'use strict';
 
     function factory(config) {
-        let allStates = config.states,
+        const allStates = config.states,
             initialState = config.initialState,
-            fallbackState = config.fallbackState,
-            currentState,
-            api,
-            timer,
             newStateHandler = config.onNewState;
+        let currentState, timer;
 
         const runtime = Runtime.make();
 
@@ -23,14 +20,6 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
         // on. This lets us cleanly disengage when we are done.
         const busConnection = runtime.bus().connect(),
             bus = busConnection.channel(null);
-
-        /*
-         * Validate the state machine configuration 'states'.
-         */
-        function validate() {
-            // find initial state
-            // ...
-        }
 
         function run() {
             if (!newStateHandler) {
@@ -44,14 +33,14 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
                     timer = null;
                     newStateHandler(api);
                 } catch (ex) {
-                    console.error('ERROR in fms newStateHandler', ex);
+                    console.error('ERROR in FSM newStateHandler', ex);
                 }
             }, 0);
         }
 
         function findState(stateToFind) {
             const foundStates = allStates.filter((stateDef) => {
-                return utils.isEqual(stateToFind, stateDef.state);
+                return _.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
                 return foundStates[0];
@@ -64,16 +53,14 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
 
         function doMessages(changeType) {
             const state = currentState;
-            if (state.on && state.on[changeType]) {
-                if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach((msg) => {
-                        if (msg.emit) {
-                            bus.emit(msg.emit, msg.message);
-                        } else if (msg.send) {
-                            bus.send(msg.send.message, msg.send.address);
-                        }
-                    });
-                }
+            if (state.on && state.on[changeType] && state.on[changeType].messages) {
+                state.on[changeType].messages.forEach((msg) => {
+                    if (msg.emit) {
+                        bus.emit(msg.emit, msg.message);
+                    } else if (msg.send) {
+                        bus.send(msg.send.message, msg.send.address);
+                    }
+                });
             }
         }
 
@@ -81,17 +68,9 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
             doMessages('resume');
         }
 
-        function doEnterState() {
-            doMessages('enter');
-        }
-
-        function doLeaveState() {
-            doMessages('leave');
-        }
-
         function findNextState(stateList, stateToFind) {
             const foundStates = stateList.filter((state) => {
-                if (utils.isEqual(state, stateToFind)) {
+                if (_.isEqual(state, stateToFind)) {
                     return true;
                 }
             });
@@ -115,19 +94,19 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
                 throw new Error('Cannot find the new state');
             }
 
-            const newState = findState(state);
-            if (!newState) {
+            const _newState = findState(state);
+            if (!_newState) {
                 throw new Error('Next state found, but that state does not exist');
             }
 
-            if (utils.isEqual(newState.state, currentState.state)) {
+            if (_.isEqual(_newState.state, currentState.state)) {
                 return;
             }
 
             doMessages('exit');
 
             // make it the current state
-            currentState = newState;
+            currentState = _newState;
 
             doMessages('enter');
 
@@ -169,14 +148,14 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
 
         // API
 
-        api = Object.freeze({
-            start: start,
-            stop: stop,
-            newState: newState,
-            updateState: updateState,
-            getCurrentState: getCurrentState,
-            findState: findState,
-            bus: bus,
+        const api = Object.freeze({
+            start,
+            stop,
+            newState,
+            updateState,
+            getCurrentState,
+            findState,
+            bus,
         });
 
         return api;

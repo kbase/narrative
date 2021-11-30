@@ -4,13 +4,12 @@ define([
     '../validators/resolver',
     'common/events',
     'common/ui',
-    'common/lang',
+    'util/util',
     '../paramResolver',
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
+], (Promise, html, Validation, Events, UI, Util, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -19,23 +18,18 @@ define([
         resolver = Resolver.make();
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            bus = config.bus,
-            container,
+        let container,
             parent,
             ui,
+            structFields = {};
+        const spec = config.parameterSpec,
+            bus = config.bus,
             viewModel = {
                 data: {},
                 state: {
                     enabled: null,
                 },
             },
-            structFields = {},
-            // model = {
-            //     value: {},
-            //     enabled: null
-            // },
-            // structFields,
             fieldLayout = spec.ui.layout,
             struct = spec.parameters;
 
@@ -67,7 +61,7 @@ define([
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(lang.copy(spec.defaultValue));
+                setModelValue(Util.copy(spec.defaultValue));
             } else {
                 unsetModelValue();
             }
@@ -116,9 +110,9 @@ define([
 
         function doChanged(id, newValue) {
             // Absorb and propagate the new value...
-            viewModel.data[id] = lang.copy(newValue);
+            viewModel.data[id] = Util.copy(newValue);
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data),
+                newValue: Util.copy(viewModel.data),
             });
 
             // Validate and propagate.
@@ -162,7 +156,7 @@ define([
                 fieldWidget.bus.on('validation', (message) => {
                     if (message.diagnosis === 'optional-empty') {
                         bus.emit('changed', {
-                            newValue: lang.copy(viewModel.data),
+                            newValue: Util.copy(viewModel.data),
                         });
                     }
                 });
@@ -226,7 +220,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },
@@ -259,7 +253,7 @@ define([
                 ui = UI.make({ node: container });
                 events = Events.make({ node: container });
 
-                viewModel.data = lang.copy(config.initialValue);
+                viewModel.data = Util.copy(config.initialValue);
 
                 // return bus.request({}, {
                 //     key: 'get-param-state'
@@ -285,7 +279,7 @@ define([
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
-                            viewModel.data = lang.copy(message.value);
+                            viewModel.data = Util.copy(message.value);
                             Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id],
@@ -297,7 +291,7 @@ define([
                     // A fake submit.
                     bus.on('submit', () => {
                         bus.emit('submitted', {
-                            value: lang.copy(viewModel.data),
+                            value: Util.copy(viewModel.data),
                         });
                     });
 

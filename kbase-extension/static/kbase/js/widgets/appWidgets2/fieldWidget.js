@@ -16,7 +16,7 @@ define([
     'common/ui',
     'common/props',
     './errorControl',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
 ], (Promise, $, PR, html, Events, UI, Props, ErrorControlFactory) => {
     'use strict';
     const t = html.tag,
@@ -377,8 +377,7 @@ define([
                         [
                             label(
                                 {
-                                    class:
-                                        'col-md-3 xcontrol-label kb-app-parameter-name control-label',
+                                    class: 'col-md-3 kb-app-parameter-name control-label',
                                 },
                                 [spec.label() || spec.id()]
                             ),
@@ -386,8 +385,7 @@ define([
                                 div({ dataElement: 'input-control' }),
                                 div(
                                     {
-                                        class:
-                                            'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                        class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
                                         dataElement: 'feedback',
                                         style: { width: '30px', padding: '0' },
                                     },

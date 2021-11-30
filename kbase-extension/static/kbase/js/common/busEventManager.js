@@ -1,14 +1,19 @@
 define([], () => {
+    'use strict';
+
     function factory(config) {
-        let listeners = [],
-            bus = config.bus;
+        let listeners = [];
+        const bus = config.bus;
+
         function add(listenerId) {
             listeners.push(listenerId);
         }
+
         function remove(listenerId) {
             bus.removeListener(listenerId);
             delete listeners[listenerId];
         }
+
         function removeAll() {
             listeners.forEach((id) => {
                 try {
@@ -19,6 +24,7 @@ define([], () => {
             });
             listeners = [];
         }
+
         return {
             add: add,
             remove: remove,

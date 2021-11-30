@@ -253,12 +253,11 @@ define([
                         });
                     } catch (ex) {
                         console.error('Error making input field widget', ex);
-                        const errorDisplay = div({ style: { border: '1px red solid' } }, [
+                        const errorDisplay = div({ style: { border: '1px solid red' } }, [
                             ex.message,
                         ]);
-                        document.getElementById(
-                            layout.view[parameterId].id
-                        ).innerHTML = errorDisplay;
+                        document.getElementById(layout.view[parameterId].id).innerHTML =
+                            errorDisplay;
                     }
                 })
             );

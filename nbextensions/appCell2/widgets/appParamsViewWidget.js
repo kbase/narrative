@@ -1,14 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
-    'kb_common/html',
-    // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
@@ -34,23 +32,23 @@ define([
     const t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
-            workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
-            container,
-            ui,
-            bus,
-            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
-            widgets = [];
+            widgets = [],
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
+        let container,
+            places = {},
+            ui;
 
         // DATA
         /*
@@ -96,9 +94,9 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
-                    workspaceId: workspaceInfo.id,
+                    appSpec,
+                    parameterSpec,
+                    workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
                 });
@@ -128,7 +126,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
+                    handle: function () {
                         return paramsBus.request(
                             { id: parameterSpec.id },
                             {
@@ -153,9 +151,9 @@ define([
                                 key: 'get-parameter-value',
                             }
                         )
-                        .then((message) => {
+                        .then((_message) => {
                             bus.emit('parameter-value', {
-                                parameter: message.parameter,
+                                parameter: _message.parameter,
                             });
                         });
                 });
@@ -222,24 +220,27 @@ define([
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
+
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
 
             let message;
+            let showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -252,14 +253,15 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
                         type: 'toggle-advanced',
                     },
-                    events: events,
+                    events,
                 });
 
                 ui.setContent(
@@ -274,70 +276,71 @@ define([
         function renderBatchModeMessage() {
             return ui.buildPanel({
                 title: span('Batch Mode'),
+                classes: ['kb-panel-batch'],
                 name: 'batch-mode-doc',
-                body: div(
-                    {
-                        style: 'margin-left: 3ex',
-                    },
-                    [
-                        div(
-                            'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
-                        ),
-                        div('Also, the "Job Status" tab will show the inputs for each job.'),
-                        div({ style: 'margin-top: 1ex' }, [
-                            'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.',
-                        ]),
-                    ]
-                ),
-                classes: ['kb-panel-light'],
+                body: div([
+                    p(
+                        'This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'
+                    ),
+                    p('The "Job Status" tab will show the inputs for each job.'),
+                    p(
+                        'Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.'
+                    ),
+                ]),
             });
         }
 
         function renderLayout(batchMode) {
-            let events = Events.make(),
-                formContent = [];
+            const events = Events.make();
             if (batchMode) {
-                formContent.push(renderBatchModeMessage());
-            } else {
-                formContent = formContent.concat([
+                return {
+                    events,
+                    content: renderBatchModeMessage(),
+                };
+            }
+
+            const classes = ['kb-panel-params'];
+            const content = form(
+                {
+                    dataElement: 'input-widget-form',
+                    class: 'kb-panel-params__container',
+                },
+                [
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-cell__message--advanced-hidden',
                             }),
                         ]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
+                        classes,
                         title: span([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-cell__message--advanced-hidden',
                             }),
                         ]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
                     ui.buildPanel({
+                        classes,
                         title: 'Output Objects',
                         name: 'output-objects-area',
                         body: div({ dataElement: 'output-fields' }),
-                        classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Output Report', 'output-report')
-                ]);
-            }
-            const content = form({ dataElement: 'input-widget-form' }, formContent);
+                ]
+            );
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -347,7 +350,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
@@ -394,11 +397,11 @@ define([
                 .map((parameterId) => {
                     const id = html.genId();
                     view[parameterId] = {
-                        id: id,
+                        id,
                     };
 
                     return div({
-                        id: id,
+                        id,
                         dataParameter: parameterId,
                     });
                 })
@@ -407,9 +410,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
-                view: view,
-                paramMap: paramMap,
+                params,
+                view,
+                paramMap,
             };
         }
 
@@ -455,11 +458,6 @@ define([
                     .then(() => {
                         if (inputParams.layout.length === 0) {
                             ui.getElement('input-objects-area').classList.add('hidden');
-                            // places.inputFields.innerHTML = span({
-                            //     style: {
-                            //         fontStyle: 'italic'
-                            //     }
-                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(
@@ -484,7 +482,7 @@ define([
                                         const errorDisplay = div(
                                             {
                                                 style: {
-                                                    border: '1px red solid',
+                                                    border: '1px solid red',
                                                 },
                                             },
                                             [ex.message]
@@ -500,7 +498,6 @@ define([
                     .then(() => {
                         if (outputParams.layout.length === 0) {
                             ui.getElement('output-objects-area').classList.add('hidden');
-                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(
@@ -523,7 +520,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -540,7 +537,6 @@ define([
                             if (ui.getElement('parameter-objects-area')) {
                                 ui.getElement('parameter-objects-area').classList.add('hidden');
                             }
-                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
@@ -564,7 +560,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -603,7 +599,6 @@ define([
                                     parameter: message.parameter,
                                 },
                             });
-                            // bus.emit('parameter-changed', message);
                         });
                     });
                     // we then create our widgets
@@ -632,13 +627,9 @@ define([
             });
         }
 
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
             bus: function () {
                 return bus;
             },

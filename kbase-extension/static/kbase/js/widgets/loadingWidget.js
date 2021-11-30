@@ -40,7 +40,7 @@ define([
         if (this.timeoutShown) {
             return;
         }
-        $(this.config.node).find('.loading-warning').fadeIn('fast');
+        $(this.config.node).find('.kb-loading-blocker__text--warning').fadeIn('fast');
         this.timeoutShown = true;
     };
 

@@ -24,7 +24,7 @@ define([
 
             const jobState = model.getItem('exec.jobState');
             if (jobState.child_jobs && jobState.child_jobs.length) {
-                return startBatch(jobState);
+                return startBatch();
             } else {
                 return startSingle(jobState);
             }
@@ -65,10 +65,8 @@ define([
 
         function renderError(jobState, errorNode) {
             function convertJobError(errorInfo) {
-                let errorId = new Uuid(4).format(),
-                    errorType,
-                    errorMessage,
-                    errorDetail;
+                const errorId = new Uuid(4).format();
+                let errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
                     // Classic KBase rpc error message
                     errorType = errorInfo.name;
@@ -113,7 +111,7 @@ define([
                     div({
                         dataElement: 'detail',
                         style: {
-                            border: '0px silver solid',
+                            border: '0',
                             padding: '4px',
                             wordBreak: 'break-word',
                         },
@@ -128,24 +126,24 @@ define([
             errorUi.updateFromViewModel(viewModel);
         }
 
-        function startBatch(jobState) {
+        function startBatch() {
             // gonna have to listen to job state somewhere. maybe here?
             // and have a control for stopping the listener
             return Promise.try(() => {
                 const layout = batchLayout();
                 container.innerHTML = layout;
 
-                jobList = JobStateList.make({ model: model });
-                resultsViewer = JobResult.make({ model: model });
+                jobList = JobStateList.make({ model });
+                resultsViewer = JobResult.make({ model });
                 startResults({
                     jobId: model.getItem('exec.jobState.job_id'),
                     isParentJob: true,
                 });
 
                 function startResults(arg) {
-                    let jobId = arg.jobId,
-                        selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id'),
-                        jobState;
+                    const jobId = arg.jobId,
+                        selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
+                    let jobState;
 
                     if (Number.isInteger(arg.jobIndex)) {
                         jobState = model.getItem('exec.jobState.child_jobs')[arg.jobIndex];
@@ -162,7 +160,7 @@ define([
                                     node: resultNode,
                                     jobId: selectedJobId,
                                     isParentJob: arg.isParentJob,
-                                    jobState: jobState,
+                                    jobState,
                                 });
                             case 'error':
                             case 'suspend':
@@ -191,11 +189,11 @@ define([
 
         function startSingle(jobState) {
             return Promise.try(() => {
-                resultsViewer = JobResult.make({ model: model });
+                resultsViewer = JobResult.make({ model });
                 return resultsViewer.start({
                     node: container,
                     jobId: jobState.job_id,
-                    jobState: jobState,
+                    jobState,
                     isParentJob: true,
                 });
             });
@@ -213,8 +211,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

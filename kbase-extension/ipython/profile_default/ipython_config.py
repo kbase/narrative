@@ -1,11 +1,11 @@
 # Configuration file for ipython.
 
-c = get_config()
+c = get_config()  # noqa: F821
 c.Completer.use_jedi = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # InteractiveShellApp configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # A Mixin for applications that start InteractiveShell instances.
 #
@@ -33,10 +33,12 @@ c.Completer.use_jedi = False
 # c.InteractiveShellApp.exec_PYTHONSTARTUP = True
 
 # lines of code to run at IPython startup.
-c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
-                                     'from biokbase.narrative.services import *',
-                                     'from biokbase.narrative.widgetmanager import WidgetManager',
-                                     'from biokbase.narrative.jobs import *' ]
+c.InteractiveShellApp.exec_lines = [
+    "import biokbase.narrative.magics",
+    "from biokbase.narrative.services import *",
+    "from biokbase.narrative.widgetmanager import WidgetManager",
+    "from biokbase.narrative.jobs import *",
+]
 # Enable GUI event loop integration with any of ('glut', 'gtk', 'gtk3', 'osx',
 # 'pyglet', 'qt', 'qt5', 'tk', 'wx').
 # c.InteractiveShellApp.gui = None
@@ -72,9 +74,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # A file to be run
 # c.InteractiveShellApp.file_to_run = ''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # TerminalIPythonApp configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # TerminalIPythonApp will inherit config from: BaseIPythonApplication,
 # Application, InteractiveShellApp
@@ -177,9 +179,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # The Logging format template
 # c.TerminalIPythonApp.log_format = '[%(name)s]%(highlevel)s %(message)s'
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # TerminalInteractiveShell configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # TerminalInteractiveShell will inherit config from: InteractiveShell
 
@@ -340,9 +342,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # Automatically call the pdb debugger after every exception.
 # c.TerminalInteractiveShell.pdb = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # PromptManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # This is the primary interface for producing IPython's prompts.
 
@@ -361,9 +363,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 #
 # c.PromptManager.color_scheme = 'Linux'
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # HistoryManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # A class to organize all history-related functionality in one place.
 
@@ -402,9 +404,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # This may be necessary in some threaded environments where IPython is embedded.
 # c.HistoryManager.enabled = True
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ProfileDir configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # An object to manage the profile directory and its resources.
 #
@@ -418,9 +420,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # `profile` option.
 # c.ProfileDir.location = u''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # PlainTextFormatter configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # The default pretty-printer.
 #
@@ -475,9 +477,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 #
 # c.PlainTextFormatter.singleton_printers = {}
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # IPCompleter configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Extension of the completer class with IPython-specific features
 
@@ -515,9 +517,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # etc., but can be unsafe because the code is actually evaluated on TAB.
 # c.IPCompleter.greedy = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ScriptMagics configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Magics for talking to scripts
 #
@@ -539,9 +541,9 @@ c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
 # the right interpreter.
 # c.ScriptMagics.script_paths = {}
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # StoreMagics configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Lightweight persistence for python variables.
 #

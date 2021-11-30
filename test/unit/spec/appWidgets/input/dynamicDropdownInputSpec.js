@@ -1,8 +1,9 @@
-define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', 'narrativeMocks'], (
-    DynamicDropdownInput,
-    Jupyter,
-    Mocks
-) => {
+define([
+    'widgets/appWidgets2/input/dynamicDropdownInput',
+    'base/js/namespace',
+    'narrativeMocks',
+    'testUtil',
+], (DynamicDropdownInput, Jupyter, Mocks, TestUtil) => {
     'use strict';
 
     describe('Test dynamic dropdown input widget', () => {
@@ -22,8 +23,10 @@ define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', '
                 channelName: 'foo',
             },
             AUTH_TOKEN = 'fakeAuthToken';
+        let container;
 
         beforeEach(() => {
+            container = document.createElement('div');
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
@@ -32,8 +35,10 @@ define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', '
         });
 
         afterEach(() => {
+            container.remove();
             Mocks.clearAuthToken();
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {
@@ -50,15 +55,14 @@ define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', '
 
         it('should start up and stop correctly', () => {
             const widget = DynamicDropdownInput.make(testConfig);
-            const node = document.createElement('div');
             return widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.innerHTML).toContain('input-container');
+                    expect(container.innerHTML).toContain('input-container');
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.innerHTML).not.toContain('input-container');
+                    expect(container.innerHTML).not.toContain('input-container');
                 });
         });
     });

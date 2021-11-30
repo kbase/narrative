@@ -24,6 +24,7 @@ class StagingHelperTest(unittest.TestCase):
             "kbase.us/services/staging_service" in self.staging_helper._staging_url
         )
 
+    @unittest.skip("Skipped: test contacts the staging service, but should not")
     def test_unauthorized_token(self):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.list()

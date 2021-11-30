@@ -16,14 +16,11 @@ define([
     'kbaseReportView',
     'common/runtime',
     'common/semaphore',
-    'common/utils',
+    'common/cellUtils',
     'util/jobLogViewer',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
-    'text!kbase/templates/job_status/log_panel.html',
-    'text!kbase/templates/job_status/log_line.html',
     'text!kbase/templates/job_status/new_objects.html',
-    'css!kbase/css/kbaseJobLog.css',
     'bootstrap',
 ], (
     Promise,
@@ -44,15 +41,15 @@ define([
     Runtime,
     Semaphore,
     utils,
-    JobViewer,
+    JobLogViewerModule,
     JobStatusTableTemplate,
     HeaderTemplate,
-    LogPanelTemplate,
-    LogLineTemplate,
     NewObjectsTemplate,
     Alert
 ) => {
     'use strict';
+
+    const { JobLogViewer } = JobLogViewerModule;
 
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
@@ -71,8 +68,9 @@ define([
             this.jobId = this.options.jobId;
             this.state = this.options.state;
             this.outputWidgetInfo = this.options.outputWidgetInfo;
-            this.widgets = {};
-            this.widgets.jobViewer = JobViewer.make({});
+            this.widgets = {
+                JobLogViewer: new JobLogViewer({ showHistory: true }),
+            };
 
             // expects:
             // name, id, version for appInfo
@@ -92,7 +90,10 @@ define([
                 if (cells.length === 1) {
                     return $(cells[0]).data('cell');
                 }
-                throw new Error('Cannot find the cell node!', cellNode, cells);
+                throw new Error(
+                    'Cannot find the cell node: ' +
+                        JSON.stringify({ cellNode: cellNode, cells: cells })
+                );
             }
 
             this.cell = findCell();
@@ -165,19 +166,6 @@ define([
                         }.bind(this),
                     });
 
-                    this.busConnection.listen({
-                        channel: {
-                            jobId: this.jobId,
-                        },
-                        key: {
-                            type: 'job-does-not-exist',
-                        },
-                        handle: function (message) {
-                            // this.handleJobStatus(message);
-                            console.warn('job does not exist? ', message);
-                        }.bind(this),
-                    });
-
                     this.channel.emit('request-job-info', {
                         jobId: this.jobId,
                     });
@@ -194,7 +182,7 @@ define([
 
         handleJobInfo: function (info) {
             if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
-                const metadata = this.cell.metadata;
+                const { metadata } = this.cell;
                 if (metadata.kbase && metadata.kbase.attributes) {
                     metadata.kbase.attributes.title = info.jobInfo.app_name;
                     metadata.kbase.attributes.subtitle = 'App Status';
@@ -239,11 +227,13 @@ define([
                     },
                 ],
             });
-            this.widgets.jobViewer.start({
-                node: $jobLogDiv[0],
-                jobId: this.jobId,
-            });
             this.$elem.append($tabDiv);
+            Promise.try(async () => {
+                await this.widgets.JobLogViewer.start({
+                    node: $jobLogDiv[0],
+                    jobId: this.jobId,
+                });
+            });
         },
 
         initLogView: function () {
@@ -288,7 +278,7 @@ define([
                     this.tabController.addTab({
                         tab: 'New Data Objects',
                         showContentCallback: function () {
-                            const params = this.outputWidgetInfo.params;
+                            const { params } = this.outputWidgetInfo;
                             params.showReportText = false;
                             params.showCreatedObjects = true;
                             const $newObjDiv = $('<div>');
@@ -328,7 +318,7 @@ define([
                                         });
                                         const $objTable = $(newObjTmpl(renderedInfo));
                                         for (let i = 0; i < objInfo.length; i++) {
-                                            var info = objInfo[0];
+                                            const info = objInfo[0];
                                             $objTable
                                                 .find('[data-object-name="' + objInfo[i][1] + '"]')
                                                 .click((e) => {
@@ -338,8 +328,7 @@ define([
                                                         new Alert({
                                                             type: 'warning',
                                                             title: 'Warning: Read-only Narrative',
-                                                            body:
-                                                                'You cannot insert a data viewer cell into this Narrative because it is read-only',
+                                                            body: 'You cannot insert a data viewer cell into this Narrative because it is read-only',
                                                         });
                                                         return;
                                                     }
@@ -351,7 +340,7 @@ define([
                                     }.bind(this),
                                 });
                             })
-                            .catch((error) => {
+                            .catch(() => {
                                 //die silently.
                             });
                     }
@@ -376,16 +365,15 @@ define([
              * - scan all elements with guessReferences
              */
             const type = Object.prototype.toString.call(obj);
+            let ret = [];
             switch (type) {
                 case '[object String]':
-                    if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
+                    if (obj.match(/^[^/]+\/[^/]+(\/[^/]+)?$/)) {
                         return [obj];
-                    } else {
-                        return null;
                     }
+                    return null;
 
                 case '[object Array]':
-                    var ret = [];
                     obj.forEach((elem) => {
                         const refs = this.guessReferences(elem);
                         if (refs) {
@@ -395,7 +383,6 @@ define([
                     return ret;
 
                 case '[object Object]':
-                    var ret = [];
                     Object.keys(obj).forEach((key) => {
                         const refs = this.guessReferences(obj[key]);
                         if (refs) {
@@ -418,7 +405,7 @@ define([
                 this.tabController.addTab({
                     tab: 'Report',
                     showContentCallback: function () {
-                        const params = this.outputWidgetInfo.params;
+                        const { params } = this.outputWidgetInfo;
                         params.showReportText = true;
                         params.showCreatedObjects = false;
                         const $reportDiv = $('<div>');
@@ -444,7 +431,7 @@ define([
         },
 
         getCellState: function () {
-            const metadata = this.cell.metadata;
+            const { metadata } = this.cell;
             // This is altogether the wrong place to do this sort of
             // cell repair...
             if (metadata.kbase) {
@@ -462,7 +449,7 @@ define([
                             subtitle: '',
                         },
                         codeCell: {
-                            userSettings: {
+                            'user-settings': {
                                 showCodeInputArea: true,
                             },
                             jobInfo: {
@@ -479,6 +466,7 @@ define([
                     // did not match an output cell metadata, so would fail
                     // we need to fix that here...
                     this.cell.metadata.kbase = newKbaseMeta;
+                    // eslint-disable-next-line no-self-assign
                     this.cell.metadata = this.cell.metadata;
                 }
                 return metadata.kbase;
@@ -488,7 +476,7 @@ define([
         },
 
         setCellState: function () {
-            const metadata = this.cell.metadata;
+            const { metadata } = this.cell;
             metadata.kbase.codeCell.jobInfo = {
                 jobId: this.jobId,
                 state: this.state,
@@ -509,7 +497,7 @@ define([
                 case 'completed':
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
-                        this.channel.emit('request-job-completion', {
+                        this.channel.emit('request-job-updates-stop', {
                             jobId: this.jobId,
                         });
                     }
@@ -520,9 +508,6 @@ define([
                     // this.busConnection.stop();
                     break;
                 case 'queued':
-                    this.requestedUpdates = true;
-                    this.requestJobStatus();
-                    break;
                 case 'running':
                     this.requestedUpdates = true;
                     this.requestJobStatus();

@@ -41,4 +41,3 @@ else
 		--rm -it \
 		kbase/narrative:dev
 fi
-

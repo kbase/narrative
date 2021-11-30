@@ -1,29 +1,35 @@
-define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
-    $,
-    Login,
-    Config,
-    Mocks
-) => {
+define([
+    'jquery',
+    'narrativeLogin',
+    'narrativeConfig',
+    'narrativeMocks',
+    'util/bootstrapDialog',
+    'testUtil',
+], ($, Login, Config, Mocks, BootstrapDialog, TestUtil) => {
     'use strict';
 
     const FAKE_TOKEN = 'some_fake_token';
 
     describe('Test the narrativeLogin module', () => {
+        let $container;
         beforeEach(() => {
             // remove any jquery events that get bound to document,
             // including login and logout listeners
-            $(document).off();
+            Login.destroy();
             Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
+            $container = $('<div>');
         });
 
         afterEach(() => {
+            $container.remove();
             // remove any jquery events that get bound to document,
             // including login and logout listeners
-            $(document).off();
+            Login.clearTokenCheckTimers();
+            Login.destroy();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
-            document.body.innerHTML = '';
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate and have expected functions', () => {
@@ -34,8 +40,7 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
         });
 
         it('Should instantiate on a DOM node in the happy path', () => {
-            const $node = $('<div>'),
-                fakeUser = 'some_user',
+            const fakeUser = 'some_user',
                 fakeName = 'Some User',
                 tokenInfo = {
                     expires: Date.now() + 10 * 60 * 60 * 24 * 1000,
@@ -68,29 +73,28 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
                 url: Config.url('user_profile'),
                 response: [{}],
             });
-            return Login.init($node, true) // true here means there's no kernel
+            return Login.init($container, true) // true here means there's no kernel
                 .finally(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
                     // test that the user menu was created by checking for the username and id
                     // embedded in the node
-                    expect($node.text()).toContain(fakeName);
-                    expect($node.text()).toContain(fakeUser);
-                    Login.clearTokenCheckTimers();
-                    Login.destroy();
+                    expect($container.text()).toContain(fakeName);
+                    expect($container.text()).toContain(fakeUser);
                 });
         });
 
+        // produces a modal
         it('Should throw an error when instantiating with a bad token', () => {
-            const $node = $('<div>');
             Mocks.mockAuthRequest('token', { error: {} }, 401);
             Mocks.mockAuthRequest('me', { error: {} }, 401);
-            return Login.init($node, true) // true here means there's no kernel
+            // prevent the dialog from actually showing up by spying on the function
+            spyOn(BootstrapDialog.prototype, 'show');
+            return Login.init($container, true) // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                    Login.clearTokenCheckTimers();
-                    Login.destroy();
+                    expect(BootstrapDialog.prototype.show).toHaveBeenCalled();
                 });
         });
     });

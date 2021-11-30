@@ -1,0 +1,75 @@
+.kb-file-path {
+  // .kb-file-path__list
+  &__list {
+    counter-reset: fpw-item;
+    list-style-position: outside;
+    list-style-type: none;
+    padding: 0;
+  }
+
+  // .kb-file-path__list_item
+  &__list_item {
+    align-items: center;
+    display: flex;
+    font: normal 400 14px/18px $typeface-page-text;
+    padding: 0 1.5rem 0.5rem;
+
+    &:nth-child(2n) {
+      background-color: use_color('base-lightest');
+    }
+  }
+
+  &__list_item::before {
+    content: counter(fpw-item) ' ';
+    counter-increment: fpw-item;
+    font-weight: 700;
+    padding-right: 0.5rem;
+    padding-top: 20px;
+    vertical-align: middle;
+  }
+
+  // .kb-file-path__param_container
+  &__param_container {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    // .kb-file-path__param_container .input_group .select2-container
+    .input-group .select2-container {
+      display: table;
+      table-layout: fixed;
+    }
+  }
+
+  // .kb-file-path__table_cell--file-path_id
+  &__row_cell--file-path_id {
+    flex: 1;
+    min-width: 30rem;
+    padding: 4px;
+  }
+
+  // .kb-file-path__button--delete
+  &__button--delete {
+    @extend %kbase-button;
+
+    @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+
+    margin-top: 2rem;
+  }
+
+  // .kb-file-path__button--add_row
+  &__button--add_row {
+    @extend %kbase-button;
+
+    @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+
+    margin: 1rem;
+  }
+
+  &__button_icon--add_row {
+    margin-right: 0.5rem;
+  }
+
+  &__params {
+    margin-left: 0.5rem;
+  }
+}

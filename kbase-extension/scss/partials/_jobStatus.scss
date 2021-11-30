@@ -1,0 +1,167 @@
+$job_status_table_cols: 'action', 'import-type', 'output', 'status';
+
+.kb-job-status {
+  box-shadow: none;
+
+  &__table {
+    @include tabular-text;
+
+    padding: 0;
+    table-layout: fixed;
+    width: 100%;
+
+    &.dataTable {
+      border-collapse: collapse !important;
+    }
+
+    // .kb-job-status__table_body
+    &_body {
+      border-bottom: 2px solid use-color('base-light');
+      border-top: 2px solid use-color('base-light');
+
+      // .odd / .even are from DataTables
+      // .kb-job-status__table_body tr.odd,
+      // .kb-job-status__table_body tr.even,
+      // .kb-job-status__table_body .kb-job-status__row
+      tr.odd,
+      tr.even,
+      .kb-job-status__row {
+        border-bottom: 1px solid use-color('base-lightest');
+
+        &:hover {
+          background: use-color('disabled-light');
+        }
+      }
+    }
+
+    // .kb-job-status__row--selected
+    &__row--selected {
+      background: use-color('base-lightest');
+
+      &:hover {
+        background: use-color('primary-lighter');
+      }
+    }
+
+    &_head {
+      // .kb-job-status__table_head_row
+      &_row {
+        font-weight: 700;
+
+        .sorting::after,
+        .sorting_asc::after,
+        .sorting_desc::after {
+          bottom: 0 !important;
+          display: inline-block !important;
+          left: 5px !important;
+          position: relative !important;
+        }
+      }
+
+      // .kb-job-status__table_head_cell--${col}
+      &_cell {
+        @each $col in $job_status_table_cols {
+          &--#{$col} {
+            @include table-cell;
+          }
+        }
+      }
+    }
+
+    // .kb-job-status__table_footer
+    &_footer {
+      @include body-text;
+    }
+  }
+
+  &__cell {
+    // .kb-job-status__cell--${col}
+    @each $col in $job_status_table_cols {
+      &--#{$col} {
+        @include table-cell;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    // .kb-job-status__cell--status
+    &--status {
+      text-transform: capitalize;
+      width: 10rem;
+    }
+    // .kb-job-status__cell--action
+    &--action {
+      width: 11rem;
+    }
+    // .kb-job-status_cell--import-type
+    &--import-type {
+      width: 18rem;
+    }
+
+    // .kb-job-status__cell_action (action buttons)
+    &_action {
+      // .kb-job-status__cell_action--retry
+      // .kb-job-status__cell_action--go-to-results
+      &--retry,
+      &--go-to-results {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+      }
+      // .kb-job-status__cell_action--cell
+      &--cancel {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('error'), use_color('error-lightest'), transparent);
+      }
+    }
+  }
+
+  // .kb-job-status__param_list
+  &__param_list {
+    @include body-text;
+
+    list-style-type: none;
+    margin: 1rem 0;
+    padding: 0;
+  }
+
+  // .kb-job-status__detail_container
+  &__detail_container {
+    background-color: use-color('info-lighter');
+    border-bottom: 1px solid use-color('base-lightest');
+    padding: 1rem;
+  }
+
+  // .kb-job-status__icon--action_warning
+  &__icon--action_warning {
+    color: use_color('error');
+    font-size: 1.5em;
+    padding: 0.5rem 1rem;
+    vertical-align: middle;
+  }
+
+  @each $key, $value in $job_status_colors {
+    // .kb-job-status__icon--${status}
+    &__icon--#{$key} {
+      color: use-color($key);
+      margin: 4px;
+    }
+
+    // .kb-job-status__summary--${status}
+    &__summary--#{$key} {
+      color: use-color($key);
+      font-weight: 700;
+    }
+
+    // .kb-job-status__cell_summary--${status}
+    &__cell_summary--#{$key} {
+      color: use-color($key);
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0.5rem;
+      text-transform: capitalize;
+    }
+  }
+}

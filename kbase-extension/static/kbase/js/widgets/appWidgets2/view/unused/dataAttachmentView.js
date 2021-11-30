@@ -3,11 +3,10 @@ define([
     'kb_common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'common/runtime',
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, Dom, Runtime) => {
+], (Promise, html, Validation, Events, Ui, Runtime) => {
     'use strict';
 
     // Constants
@@ -23,7 +22,7 @@ define([
             container,
             parent,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 value: {},
             },
@@ -442,7 +441,7 @@ define([
             const events = Events.make(),
                 control = makeInputControl(events, bus);
 
-            dom.setContent('input-container', control);
+            ui.setContent('input-container', control);
             widgets.forEach((widget) => {
                 widget.instance.start().then(() => {
                     widget.bus.emit('run', {
@@ -503,12 +502,10 @@ define([
 
         function start() {
             return Promise.try(() => {
-                // runtime.bus().logMessages(true);
-
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = Ui.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

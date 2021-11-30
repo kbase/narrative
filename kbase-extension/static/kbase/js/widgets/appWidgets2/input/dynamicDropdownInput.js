@@ -16,7 +16,6 @@ define([
     'common/props',
     'select2',
     'bootstrap',
-    'css!font-awesome',
 ], (
     Promise,
     $,
@@ -45,13 +44,10 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            parent,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             dd_options = spec.original.dynamic_dropdown_options || {},
             dataSource = dd_options.data_source || 'ftp_staging',
             model = {
@@ -61,8 +57,8 @@ define([
                 root: runtime.config('services.staging_api_url.url'),
                 token: runtime.authToken(),
             }),
-            userId = runtime.userId(),
-            eventListeners = [];
+            userId = runtime.userId();
+        let parent, container, ui;
 
         if (typeof dd_options.query_on_empty_input === 'undefined') {
             dd_options.query_on_empty_input = 1;
@@ -72,7 +68,7 @@ define([
          * This function takes a nested return and returns a flat key-value pairing for use with
          * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
          */
-        var flattenObject = function (ob) {
+        const flattenObject = function (ob) {
             const toReturn = {};
             for (const i in ob) {
                 if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
@@ -113,7 +109,9 @@ define([
             const control = ui.getElement('input-container.input'),
                 selected = $(control).select2('data')[0];
 
-            const selection_val = selected[dd_options.selection_id] || selected.subpath;
+            const selection_val = selected
+                ? selected[dd_options.selection_id] || selected.subpath
+                : '';
             if (!selected || !selection_val) {
                 // might have just started up, and we don't have a selection value, but
                 // we might have a model value.
@@ -164,12 +162,12 @@ define([
 
         function validate() {
             return Promise.try(() => {
-                let selectedItem = getControlValue(),
-                    validationConstraints = {
-                        min_length: spec.data.constraints.min_length,
-                        max_length: spec.data.constraints.max_length,
-                        required: spec.data.constraints.required,
-                    };
+                let selectedItem = getControlValue();
+                const validationConstraints = {
+                    min_length: spec.data.constraints.min_length,
+                    max_length: spec.data.constraints.max_length,
+                    required: spec.data.constraints.required,
+                };
                 // selected item might be either a string or a number.
                 // if it's a number, we want it to be a string
                 // if it's something else, we should raise an error, since that's
@@ -253,15 +251,15 @@ define([
                         );
                         return [];
                     } else {
-                        results.forEach((obj, index) => {
+                        results.forEach((obj, _index) => {
                             // could check here that each item is a map? YAGNI
                             obj = flattenObject(obj);
                             if (!('id' in obj)) {
-                                obj.id = index; // what the fuck
+                                obj.id = _index; // what the fuck
                             }
                             //this blows away any 'text' field
                             obj.text = obj[dd_options.selection_id];
-                            results[index] = obj;
+                            results[_index] = obj;
                         });
                         return results;
                     }
@@ -288,6 +286,16 @@ define([
                     errorMessage: result.errorMessage,
                     diagnosis: result.diagnosis,
                 });
+            });
+        }
+
+        /**
+         * Clears the current selection and updates the model.
+         */
+        function doClear() {
+            model.value = spec.data.nullValue;
+            channel.emit('changed', {
+                newValue: spec.data.nullValue,
             });
         }
 
@@ -355,13 +363,14 @@ define([
         function render() {
             return Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(events),
+                    inputControl = makeInputControl(),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input'))
                     .select2({
+                        allowClear: true,
                         templateResult: formatObjectDisplay,
                         templateSelection: selectionTemplate,
                         ajax: {
@@ -377,9 +386,15 @@ define([
                                     });
                             },
                         },
+                        placeholder: {
+                            id: 'select an option',
+                        },
                     })
                     .on('change', () => {
                         doChange();
+                    })
+                    .on('select2:clear', () => {
+                        doClear();
                     });
                 events.attachEvents(container);
             });
@@ -449,9 +464,6 @@ define([
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach((id) => {
-                    runtime.bus().removeListener(id);
-                });
             });
         }
 

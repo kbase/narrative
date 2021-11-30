@@ -6,7 +6,6 @@ define([
     'common/runtime',
     'common/props',
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Workspace, serviceUtils, Runtime, Props) => {
     'use strict';
 
@@ -81,7 +80,7 @@ define([
                         container.innerHTML = results
                             .map((result) => {
                                 return div(
-                                    { style: { border: '1px silver solid', padding: '2px' } },
+                                    { style: { border: '1px solid silver', padding: '2px' } },
                                     result
                                 );
                             })

@@ -1,17 +1,22 @@
-define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxInput, Runtime) => {
+define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (
+    CheckboxInput,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test checkbox data input widget', () => {
         let testConfig = {},
             runtime,
-            bus;
+            bus,
+            container;
 
         beforeEach(() => {
             runtime = Runtime.make();
             bus = runtime.bus().makeChannelBus({
                 description: 'checkbox testing',
             });
+            container = document.createElement('div');
             testConfig = {
                 bus: bus,
                 parameterSpec: {
@@ -32,7 +37,9 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxI
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -49,36 +56,34 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxI
 
         it('should start and stop properly without initial value', () => {
             const widget = CheckboxInput.make(testConfig);
-            const node = document.createElement('div');
             return widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[type="checkbox"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[type="checkbox"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('checked')).toBeNull();
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                 });
         });
 
         it('should start and stop properly with initial value', () => {
             testConfig.initialValue = 1;
             const widget = CheckboxInput.make(testConfig);
-            const node = document.createElement('div');
             return widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[type="checkbox"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[type="checkbox"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('checked')).not.toBeNull();
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                 });
         });
 
@@ -88,9 +93,8 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxI
                 done();
             });
             const widget = CheckboxInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[type="checkbox"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[type="checkbox"]');
                 input.setAttribute('checked', true);
                 input.dispatchEvent(new Event('change'));
             });

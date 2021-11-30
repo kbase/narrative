@@ -170,7 +170,7 @@ define([
 
             // Build widget container panel that holds importer inputs
             this.widgetPanel = $('<div>');
-            this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0px 30px;">');
+            this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0 30px;">');
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append(
                 "<div class='kb-cell-run'><h2 class='collapse in'>" +
@@ -221,10 +221,10 @@ define([
                 .append('<div style="height: 30px">')
                 .append($('<div>').append($nextButton));
 
-            this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
+            this.widgetPanelCard2 = $('<div style="display: none; margin: 0;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
-            this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
+            this.infoPanel = $('<div style="margin: 20px 30px 0 30px;">');
 
             this.$mainPanel = $('<div>')
                 .css({ 'overflow-y': 'auto', height: '604px' })
@@ -244,7 +244,7 @@ define([
                     const aTypes = data[3];
                     self.methodIds = [];
                     self.types = {};
-                    for (var key in aTypes) {
+                    for (const key in aTypes) {
                         if (aTypes[key]['loading_error']) {
                             console.log(
                                 'Error loading type [' + key + ']: ' + aTypes[key]['loading_error']
@@ -260,7 +260,7 @@ define([
                         }
                     }
                     const keys = [];
-                    for (key in self.types) {
+                    for (const key in self.types) {
                         keys.push(key);
                     }
                     keys.sort((a, b) => {
@@ -293,7 +293,7 @@ define([
         },
 
         // getVersionTag: function() {
-        //     var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+        //     let tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
         //     if (!tag) {
         //         tag = "release";
         //     }
@@ -338,11 +338,11 @@ define([
                     $.when(prom1, prom2)
                         .done((fullInfoList, specs) => {
                             self.methodFullInfo[tag] = {};
-                            for (var i in fullInfoList) {
+                            for (const i in fullInfoList) {
                                 self.methodFullInfo[tag][fullInfoList[i].id] = fullInfoList[i];
                             }
                             self.methods[tag] = {};
-                            for (i in specs) {
+                            for (const i in specs) {
                                 self.methods[tag][specs[i].info.id] = specs[i];
                             }
                             callback(self.methodFullInfo[tag], self.methods[tag], tag);
@@ -368,7 +368,7 @@ define([
             let $header = null;
             let $body = null;
             const importMethodIds = [];
-            for (var methodPos in self.types[type]['import_method_ids']) {
+            for (const methodPos in self.types[type]['import_method_ids']) {
                 const methodId = this.types[type]['import_method_ids'][methodPos];
                 if (methods[methodId]) {
                     importMethodIds.push(methodId);
@@ -381,7 +381,7 @@ define([
                 this.widgetPanelCard2.append($header).append($body);
             }
 
-            for (var methodPos in importMethodIds) {
+            for (const methodPos in importMethodIds) {
                 self.showTab(
                     importMethodIds,
                     methodPos,
@@ -426,7 +426,7 @@ define([
             if (numberOfTabs == 0) {
                 $importButton.hide();
                 self.widgetPanelCard2.append(
-                    "<div class='kb-cell-run' style='margin: 30px 30px 0px 33px;'>" +
+                    "<div class='kb-cell-run' style='margin: 30px 30px 0 33px;'>" +
                         "<h2 class='collapse in'>" +
                         'No import methods available for "' +
                         tag +
@@ -447,7 +447,7 @@ define([
                 }, this)
             );
 
-            const $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
+            const $buttons = $('<div style="margin: 0 30px 0 33px;">')
                 .addClass('buttons')
                 .append($backButton)
                 .append('&nbsp;')
@@ -478,13 +478,13 @@ define([
             const $inputDiv = $('<div>');
 
             const methodUuid = 'import-method-details-' + StringUtil.uuid();
-            // var buttonLabel = 'details';
+            // let buttonLabel = 'details';
             const methodTitle = methodSpec.info.tooltip.trim();
             const methodDescr = methodFullInfo[methodId].description.trim();
             const $overviewSwitch = $('<a/>').html('more...');
             const $methodInfo = $('<div>')
                 .addClass('kb-func-desc')
-                .css({ margin: '25px 0px 0px 15px' })
+                .css({ margin: '25px 0 0 15px' })
                 .append(
                     $('<h2>')
                         .attr('id', methodUuid)
@@ -496,7 +496,7 @@ define([
 
             const $methodDescrPanel = $('<div/>')
                 .addClass('kb-func-desc')
-                .css({ margin: '20px 0px 0px 20px', display: 'none' })
+                .css({ margin: '20px 0 0 20px', display: 'none' })
                 .append(methodDescr);
             if (
                 methodDescr &&
@@ -512,16 +512,16 @@ define([
                 $overviewSwitch.css({ display: 'none' });
             }
 
-            const tab = $('<div style="margin: 0px 30px 0px 15px;">')
+            const tab = $('<div style="margin: 0 30px 0 15px;">')
                 .append(
                     $('<div>')
                         .addClass('kb-func-panel kb-cell-run')
                         .append($methodInfo)
                         .append($methodDescrPanel)
                 )
-                .append($('<div>').css({ margin: '25px 0px 0px 15px' }).append('<hr>'))
+                .append($('<div>').css({ margin: '25px 0 0 15px' }).append('<hr>'))
                 .append($('<div>').append($inputDiv))
-                .append($('<div>').css({ overflow: 'hidden', margin: '0px 0px 0px 18px' }));
+                .append($('<div>').css({ overflow: 'hidden', margin: '0 0 0 18px' }));
 
             const isShown = methodPos == 0;
             const tabName = methodSpec.info.name;
@@ -565,7 +565,7 @@ define([
                 );
             }
             require([inputWidgetName], (InputWidget) => {
-                // var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+                // let wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
                 const wig = new InputWidget($inputDiv, { method: methodJson, isInSidePanel: true });
                 self.inputWidget[methodId] = wig;
 
@@ -631,6 +631,7 @@ define([
 
         createImportStatusCell: function (methodName, jobId) {
             const cellIndex = Jupyter.notebook.get_selected_index();
+            const title = 'Import job status for ' + methodName;
             const cellData = {
                 type: 'code',
                 language: 'python',
@@ -638,7 +639,6 @@ define([
             };
             const cell = Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             $(cell.element).trigger('toggleCodeArea.cell');
-            var title = 'Import job status for ' + methodName;
             const cellText = [
                 'from biokbase.narrative.jobs.jobmanager import JobManager',
                 'JobManager().get_job(' + jobId + ')',
@@ -676,21 +676,21 @@ define([
             pythonCode += ".job_id.encode('ascii','ignore')";
             const callbacks = {
                 shell: {
-                    reply: function (content) {},
-                    payload: { set_next_input: function (content) {} },
+                    reply: function () {},
+                    payload: { set_next_input: function () {} },
                 },
                 iopub: {
                     output: function (ret) {
                         const data = ret.content.data;
                         if (!data) return;
-                        // var session = ret.header.session;
+                        // let session = ret.header.session;
                         const jobId = data['text/plain'];
                         const methodName = methodSpec.info.name;
                         self.createImportStatusCell(methodName, jobId);
                     },
-                    clear_output: function (content) {},
+                    clear_output: function () {},
                 },
-                input: function (content) {},
+                input: function () {},
             };
             const executeOptions = {
                 silent: false,
@@ -749,7 +749,7 @@ define([
             return this;
         },
 
-        loggedOutCallback: function (event) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;

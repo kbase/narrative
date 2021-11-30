@@ -6,12 +6,14 @@ define([
     'kbwidget',
     'narrativeConfig',
     'common/runtime',
+    'common/html',
     'base/js/namespace',
     'handlebars',
     'util/string',
     'util/timeFormat',
     './uploadTour',
     'util/kbaseApiUtil',
+    'util/stagingFileCache',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -26,29 +28,35 @@ define([
     KBWidget,
     Config,
     Runtime,
+    html,
     Jupyter,
     Handlebars,
     StringUtil,
     TimeFormat,
     UploadTour,
     APIUtil,
+    StagingFileCache,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
     Workspace
 ) => {
     'use strict';
+    const cssBaseClass = 'kb-staging-table',
+        tableId = 'kb-staging-table',
+        fileMetadataCssBaseClass = `${cssBaseClass}-file-metadata`,
+        tableBodyCssBaseClass = `${cssBaseClass}-body`;
+
     return new KBWidget({
         name: 'StagingAreaViewer',
 
         options: {
             refreshIntervalDuration: 30000,
-            path: '/',
+            path: '',
         },
 
         init: function (options) {
             this._super(options);
-
             const runtime = Runtime.make();
 
             this.workspaceClient = new Workspace(Config.url('workspace'), {
@@ -65,11 +73,15 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
+            this.bulkImportTypes = this.uploaders.bulk_import_types;
             this.userInfo = options.userInfo;
 
-            // Get this party started.
+            // setting first load so setPath doesn't call updateView() as that will happen via narrativeStagingDataTab
+            this.firstLoad = true;
             this.setPath(options.path);
-            this.openFileInfo = {};
+            this.openFileInfo = {}; // key = file path, value = metadata info
+            this.selectedFileTypes = {}; // key = file path, value = file info
+            this.checkedFiles = new Set(); // set of file paths
 
             return this;
         },
@@ -88,59 +100,57 @@ define([
                 clearInterval(this.refreshInterval);
                 this.refreshInterval = undefined;
             }
+            if (this.fullDataTable) {
+                $.fn.DataTable.ext.search.pop();
+                this.fullDataTable.destroy();
+            }
         },
 
         /**
          * Returns a Promise that resolves once the rendering is done.
          */
         render: function () {
-            return this.updateView();
+            // a full render should wipe the entire view.
+            // really, this should only be done once. Subsequent data fetching
+            // just updates the data in the datatable.
+            this.$elem.empty();
+            this.renderFileHeader();
+            return this.updateView().then(() => {
+                this.renderImportButton();
+            });
         },
 
         updateView: function () {
-            return Promise.resolve(
-                this.stagingServiceClient.list({
-                    path: this.subpath,
-                })
-            )
+            return StagingFileCache.getFileList(true)
                 .then((data) => {
-                    //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
-                    const files = JSON.parse(data).filter((f) => {
-                        // this is less complicated than you think. The path is the username,
-                        // subpath, and name concatenated. The subpath may be empty so we
-                        // filter it out and only join defined things. If that's the same as
-                        // the file's path, we're at the right level. If not, we're not.
-                        return (
-                            [this.userInfo.user, this.subpath, f.name]
-                                .filter((p) => p.length > 0)
-                                .join('/') === f.path
-                        );
+                    const files = JSON.parse(data).map((f) => {
+                        f.path = f.path.substring(f.path.indexOf('/') + 1);
+                        f.subdir = '/' + f.path.substring(0, f.path.lastIndexOf('/')) || '/';
+                        return f;
                     });
-                    files.forEach((f) => {
-                        if (!f.isFolder) {
-                            f.imported = {};
-                        }
-                    });
+                    return this.identifyImporterMappings(files);
+                })
+                .then((files) => {
                     const scrollTop = this.$elem.parent().scrollTop();
-                    $('.staging-area-file-metadata').detach();
-                    this.$elem.empty();
-                    this.renderFileHeader();
-                    this.renderFiles(files);
+                    $(`.${fileMetadataCssBaseClass}`).detach();
+
+                    if (this.fullDataTable) {
+                        this.fullDataTable.clear().rows.add(files).draw(false);
+                    } else {
+                        this.renderFiles(files);
+                    }
+
                     setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop);
                     }, 0);
                 })
                 .catch((xhr) => {
-                    this.$elem.empty();
-                    this.renderFileHeader();
+                    console.error('Staging area failure:', xhr);
                     this.renderError(
                         xhr.responseText
                             ? xhr.responseText
                             : 'Unknown error - directory was not found, or may have been deleted'
                     );
-                })
-                .finally(() => {
-                    this.renderPath();
                 });
         },
 
@@ -150,14 +160,7 @@ define([
          */
         setPath: function (path) {
             this.path = path;
-            // factor out the current subdirectory path into its own variable
-            const subpath = path.split('/');
-            let subpathTokens = subpath.length - 1;
-            if (this.path.startsWith('/')) {
-                subpathTokens--;
-            }
-            this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
-            return this.updateView();
+            this.updateTableDrawPath();
         },
 
         renderFileHeader: function () {
@@ -200,9 +203,7 @@ define([
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
-            // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
             splitPath = splitPath.split('/').filter((p) => p.length);
-            splitPath.unshift(this.userInfo.user);
             const pathTerms = [];
             for (let i = 0; i < splitPath.length; i++) {
                 let prevPath = '';
@@ -214,13 +215,17 @@ define([
                     subpath: prevPath + '/' + splitPath[i],
                 };
             }
-            pathTerms[0].subpath = '/';
+            // we don't store the username as part of the path, but we still want to display it to the user for navigation purposes
+            pathTerms.unshift({ term: this.userInfo.user, subpath: '/' });
 
-            this.$elem.find('div.file-path').append(
-                this.filePathTmpl({
-                    path: pathTerms,
-                })
-            );
+            this.$elem
+                .find('div.file-path')
+                .empty()
+                .append(
+                    this.filePathTmpl({
+                        path: pathTerms,
+                    })
+                );
             this.$elem.find('div.file-path a').click((e) => {
                 this.updatePathFn($(e.currentTarget).data().element);
             });
@@ -252,255 +257,646 @@ define([
         },
 
         /**
+         * Identifies any potential file type mappings based on a call to the Staging Service,
+         * and returns the list of staging file objects with an added 'mappings' field.
+         * @param {Array} stagingFiles
+         * @returns {Array} the stagingFiles array augmented with a 'mappings' field for each file,
+         *  each containing an id, title, and app_weight. If there are no file->type mappings, this
+         *  field is null
+         */
+        identifyImporterMappings: function (stagingFiles) {
+            const fileNames = stagingFiles.map((f) => f['path']);
+
+            /* Currently, the mapping info lookup is only a GET request with URL parameters.
+             * meaning that we're limited to 2048 characters per request. Additionally, each file
+             * is a separate "file_list=" parameter, which adds 10 required characters. If a user
+             * has a ton of files, this gets full very quickly, and causes errors.
+             *
+             * A POST version in the staging service is pending, which would solve this.
+             *
+             * In the meantime, this ugly pile of code splits the lookup into multiple requests.
+             * At least it's commented...
+             */
+            const importerMappingsProms = [];
+            // how many characters a query can be, after the URL and path are given.
+            const maxQueryLength =
+                2048 - Config.url('staging_api_url').length - '/importer_mappings?'.length;
+            // a quickie for roughly how many characters each file param has at minimum.
+            const paramLength = 'file_list=&'.length; // kinda off by one at the end, but ok.
+            /* Now, go down the list.
+             * If there are remaining characters for the next file, add it to this query.
+             * Using shift() lets us retain file order when the results are collated.
+             * Once the batch is full, use the $.param method (as before) to build URL params.
+             * Finally, start the request, then keep the Promise in an array.
+             */
+            while (fileNames.length) {
+                let remainingLength = maxQueryLength;
+                const fileBatch = [];
+                while (
+                    fileNames.length &&
+                    remainingLength - paramLength - fileNames[0].length >= 0
+                ) {
+                    const nextFile = fileNames.shift();
+                    fileBatch.push(nextFile);
+                    remainingLength -= paramLength + nextFile.length;
+                }
+                importerMappingsProms.push(
+                    this.stagingServiceClient.importer_mappings({
+                        file_list: $.param({ file_list: fileBatch }, true),
+                    })
+                );
+            }
+            return Promise.all(importerMappingsProms)
+                .then((data) => {
+                    // data is a list of all results, in the order run.
+                    // each data item is a JSON, with a mappings field. That field is a list of file mappings.
+                    // When reassembled into one big list, that will still be in the same order as stagingFiles.
+                    // Well, it should be.
+
+                    const mappings = data.reduce((accumulator, dataItem) => {
+                        return accumulator.concat(JSON.parse(dataItem)['mappings']);
+                    }, []);
+
+                    // Extract mappings, sort by weight, assign mappings to staging files
+                    mappings.forEach((mapping) => {
+                        if (mapping) {
+                            mapping.sort((a, b) => a.app_weight < b.app_weight);
+                        }
+                    });
+                    stagingFiles.map((element, index) => {
+                        element['mappings'] = mappings[index] || null;
+                    });
+                    return stagingFiles;
+                })
+                .catch((err) => {
+                    console.error('Error', err);
+                });
+        },
+
+        /**
          * This renders the files datatable. If there's no data, it gives a message
          * about no files being present. If there's an error, that gets put in the table instead.
          * @param {object} data
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
+            const stagingAreaViewer = this;
+            const option = html.tag('option'),
+                button = html.tag('button'),
+                span = html.tag('span'),
+                select = html.tag('select'),
+                div = html.tag('div'),
+                optgroup = html.tag('optgroup'),
+                input = html.tag('input');
             files = files || [];
-            const emptyMsg = 'No files found.';
-            const $fileTable = $(
-                this.ftpFileTableTmpl({
-                    files: files,
-                    uploaders: this.uploaders.dropdown_order,
-                })
-            );
-            this.$elem.append($fileTable);
-            this.$elem.find('table').dataTable({
+            const emptyMsg = 'No files found.',
+                filterMsg = 'in directory',
+                infoMsg = 'Showing _START_ to _END_ of _TOTAL_ files',
+                infoEmptyMsg = 'No files';
+
+            const uploaders = stagingAreaViewer.uploaders.dropdown_order;
+            stagingAreaViewer.$elem.append(stagingAreaViewer.ftpFileTableTmpl());
+            stagingAreaViewer.fullDataTable = stagingAreaViewer.$elem.find('table').DataTable({
                 language: {
                     emptyTable: emptyMsg,
+                    infoFiltered: filterMsg,
+                    info: infoMsg,
+                    infoEmpty: infoEmptyMsg,
+                    zeroRecords: emptyMsg,
                 },
+                data: files,
                 dom: '<"file-path pull-left">frtip',
-                bAutoWidth: false,
-                aaSorting: [[3, 'desc']],
-                aoColumnDefs: [
+                autoWidth: false,
+                order: [[4, 'desc']],
+                drawCallback: () => stagingAreaViewer.renderPath(),
+                headerCallback: function (thead) {
+                    $(thead)
+                        .find('th')
+                        .eq(0)
+                        .on('click keyPress', (e) => {
+                            stagingAreaViewer.selectAllOrNone(e);
+                        });
+                },
+                columnDefs: [
                     {
-                        aTargets: [0],
-                        mRender: function (data, type, full) {
-                            if (type === 'display') {
-                                const isFolder = data === 'true' ? true : false;
-                                const icon = isFolder ? 'folder' : 'file-o';
-                                let disp = '<span><i class="fa fa-' + icon + '"></i></span>';
-                                if (isFolder) {
-                                    disp =
-                                        '<button data-name="' +
-                                        full[1] +
-                                        '" class="btn btn-xs btn-default">' +
-                                        disp +
-                                        '</button>';
-                                } else {
-                                    disp =
-                                        '<i class="fa fa-caret-right kb-pointer" data-caret="' +
-                                        full[1] +
-                                        '"></i> ' +
-                                        disp;
-                                }
-                                return disp;
-                            } else {
-                                return data;
-                            }
+                        // checkboxes
+                        targets: 0,
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data) {
+                            // render checkboxes disabled until the user selects a type
+                            return input({
+                                class: `${tableBodyCssBaseClass}__checkbox-input`,
+                                type: 'checkbox',
+                                role: 'checkbox',
+                                disabled: true,
+                                ariaChecked: false,
+                                tabindex: 0,
+                                ariaLabel:
+                                    'Select to import file checkbox: disabled until at least one data type is selected',
+                                dataFileName: data.path,
+                                id: data.path,
+                            });
                         },
                     },
                     {
-                        aTargets: [1],
-                        sClass: 'staging-name',
-                        mRender: function (data, type, full) {
+                        // file or folder icon
+                        // if file icon, includes caret to toggle subrow
+                        targets: 1,
+                        data: 'isFolder',
+                        createdCell: function (td) {
+                            $(td).addClass(`${tableBodyCssBaseClass}__cell--expander`);
+                        },
+                        render: function (data, type, full) {
                             if (type === 'display') {
-                                let decompressButton = '';
-
-                                if (
-                                    data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)
-                                ) {
-                                    decompressButton =
-                                        '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' +
-                                        data +
-                                        '"><i class="fa fa-expand"></i></button>';
-                                }
-
-                                if (full[0] === 'true') {
-                                    data =
-                                        '<span class="kb-data-staging-folder" data-name="' +
-                                        data +
-                                        '">' +
-                                        data +
-                                        '</span>';
+                                const isFolder = data;
+                                const icon = isFolder ? 'folder' : 'file-o';
+                                const disp = span({
+                                    class: `fa fa-${icon}`,
+                                });
+                                if (isFolder) {
+                                    return button(
+                                        {
+                                            dataName: full.path,
+                                            class: `${tableBodyCssBaseClass}__button--${icon}`,
+                                        },
+                                        disp
+                                    );
                                 }
 
                                 return (
-                                    '<div class="kb-data-staging-table-name">' +
-                                    decompressButton +
-                                    data +
-                                    '</div>'
+                                    span({
+                                        class: 'fa fa-caret-right kb-pointer',
+                                        dataCaret: full.path,
+                                    }) +
+                                    ' ' +
+                                    disp
                                 );
                             }
                             return data;
                         },
                     },
                     {
-                        aTargets: [2],
-                        mRender: function (data, type) {
+                        targets: 2,
+                        data: 'name',
+                        render: function (data, type, full) {
                             if (type === 'display') {
-                                return StringUtil.readableBytes(Number(data));
-                            } else {
-                                return Number(data);
+                                let decompressButton = '';
+
+                                if (
+                                    data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)
+                                ) {
+                                    decompressButton = button(
+                                        {
+                                            class: `${tableBodyCssBaseClass}__button--decompress`,
+                                            dataDecompress: data,
+                                        },
+                                        [
+                                            span({
+                                                class: 'fa fa-expand',
+                                            }),
+                                        ]
+                                    );
+                                }
+
+                                if (full.isFolder) {
+                                    data = span(
+                                        {
+                                            class: `${tableBodyCssBaseClass}__folder`,
+                                            dataName: full.path,
+                                        },
+                                        data
+                                    );
+                                }
+
+                                return div(
+                                    {
+                                        class: `${tableBodyCssBaseClass}__name`,
+                                    },
+                                    [decompressButton, data]
+                                );
                             }
+                            return data;
                         },
-                        sType: 'numeric',
                     },
                     {
-                        aTargets: [3],
-                        mRender: function (data, type) {
+                        targets: 3,
+                        data: 'size',
+                        type: 'num',
+                        render: function (data, type) {
+                            if (type === 'display') {
+                                return StringUtil.readableBytes(Number(data));
+                            }
+                            return Number(data);
+                        },
+                    },
+                    {
+                        targets: 4,
+                        data: 'mtime',
+                        type: 'num',
+                        render: function (data, type) {
                             if (type === 'display') {
                                 return TimeFormat.getShortTimeStampStr(Number(data));
-                            } else {
-                                return data;
                             }
+                            return data;
                         },
-                        sType: 'numeric',
                     },
-                ],
-                rowCallback: function (nRow) {
-                    const getFileFromName = function (_fileName) {
-                        return files.filter((file) => {
-                            return file.name === _fileName;
-                        })[0];
-                    };
-
-                    $('td:eq(1)', nRow)
-                        .find('.kb-data-staging-table-name')
-                        .tooltip({
-                            title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
-                            placement: 'top',
-                            delay: {
-                                show: Config.get('tooltip').showDelay,
-                                hide: Config.get('tooltip').hideDelay,
-                            },
-                        });
-                    $('td:eq(1)', nRow)
-                        .find('span.kb-data-staging-folder')
-                        .off('click')
-                        .on('click', (e) => {
-                            $(e.currentTarget).off('click');
-                            this.updatePathFn((this.path += '/' + $(e.currentTarget).data().name));
-                        });
-                    $('td:eq(4)', nRow).find('select').select2({
-                        placeholder: 'Select format',
-                    });
-                    $('td:eq(4)', nRow)
-                        .find('button[data-import]')
-                        .off('click')
-                        .on('click', (e) => {
-                            const importType = $(e.currentTarget).prevAll('#import-type').val();
-                            const importFile = getFileFromName($(e.currentTarget).data().import);
-                            this.initImportApp(importType, importFile);
-                            this.updateView();
-                        });
-
-                    $('td:eq(4)', nRow)
-                        .find('button[data-download]')
-                        .off('click')
-                        .on('click', (e) => {
-                            let file = $(e.currentTarget).data('download');
-                            if (this.subpath) {
-                                file = this.subpath + '/' + file;
-                            }
-                            const url = Config.url('staging_api_url') + '/download/' + file;
-                            this.downloadFile(url);
-                        });
-
-                    $('td:eq(4)', nRow)
-                        .find('button[data-delete]')
-                        .off('click')
-                        .on('click', (e) => {
-                            const file = $(e.currentTarget).data('delete');
-                            if (window.confirm('Really delete ' + file + '?')) {
-                                this.stagingServiceClient
-                                    .delete({
-                                        path: this.subpath + '/' + file,
-                                    })
-                                    .then(() => {
-                                        this.updateView();
-                                    })
-                                    .fail((xhr) => {
-                                        alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                                    });
-                            }
-                        });
-
-                    $('td:eq(0)', nRow)
-                        .find('button[data-name]')
-                        .off('click')
-                        .on('click', (e) => {
-                            $(e.currentTarget).off('click');
-                            this.updatePathFn((this.path += '/' + $(e.currentTarget).data().name));
-                        });
-
-                    $('td:eq(0)', nRow).find('i[data-caret]').off('click');
-
-                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    const $caret = $('td:eq(0)', nRow).find('i[data-caret]');
-                    let fileName, myFile;
-                    if ($caret.length) {
-                        //next, we use that caret to find the fileName, and the file Data.
-                        fileName = $caret.data().caret;
-                        myFile = getFileFromName(fileName);
-                    }
-
-                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (fileName && this.openFileInfo[fileName]) {
-                        //so we note that we've already loaded the info.
-                        myFile.loaded = this.openFileInfo[fileName].loaded;
-                        //toggle the caret
-                        $caret.toggleClass('fa-caret-down fa-caret-right');
-                        //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
-                        setTimeout(() => {
-                            $caret.parent().parent().after(this.renderMoreFileInfo(myFile));
-                        }, 0);
-                    }
-
-                    $('td:eq(0)', nRow)
-                        .find('i[data-caret]')
-                        .on('click', (e) => {
-                            $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
-                            const $tr = $(e.currentTarget).parent().parent();
-
-                            if ($(e.currentTarget).hasClass('fa-caret-down')) {
-                                $('.kb-dropzone').css('min-height', '75px');
-                                this.openFileInfo[fileName] = myFile;
-                                $tr.after(this.renderMoreFileInfo(myFile));
-                            } else {
-                                $('.kb-dropzone').css('min-height', '200px');
-                                $tr.next().detach();
-                                delete this.openFileInfo[fileName];
-                            }
-                        });
-
-                    $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
-                    $('td:eq(1)', nRow)
-                        .find('button[data-decompress]')
-                        .on('click', (e) => {
-                            const _fileName = $(e.currentTarget).data().decompress;
-                            const _myFile = getFileFromName(_fileName);
-
-                            $(e.currentTarget).replaceWith(
-                                $.jqElem('i').addClass('fa fa-spinner fa-spin')
+                    {
+                        targets: 5,
+                        createdCell: function (td) {
+                            $(td)
+                                .addClass(`${tableBodyCssBaseClass}__cell--import`)
+                                .attr('role', 'option');
+                        },
+                        data: function (rowData) {
+                            return !rowData.isFolder ? rowData.mappings : null;
+                        },
+                        render: function (data, _type, rowData) {
+                            const fileOrFolder = !rowData.isFolder ? 'file' : 'folder';
+                            const deleteBtn = button(
+                                {
+                                    dataDelete: rowData.path,
+                                    class: `${tableBodyCssBaseClass}__button--delete`,
+                                    role: 'button',
+                                    ariaLabel: `Delete ${fileOrFolder}`,
+                                    title: `Delete ${fileOrFolder}`,
+                                },
+                                span({ class: 'fa fa-trash' })
                             );
 
-                            this.stagingServiceClient
-                                .decompress({
-                                    path: _myFile.name,
-                                })
-                                .then(() => this.updateView())
-                                .fail((xhr) => {
-                                    console.error('FAILED', xhr);
-                                    alert(xhr.responseText);
-                                });
+                            if (rowData.isFolder) {
+                                return deleteBtn;
+                            }
+                            let uploaderOptions = uploaders.map((uploader) => {
+                                return option(
+                                    {
+                                        value: uploader.id,
+                                    },
+                                    uploader.name
+                                );
+                            });
+                            let mappedOptions = '';
+                            if (data) {
+                                mappedOptions = optgroup(
+                                    {
+                                        label: 'Suggested Types',
+                                    },
+                                    data.map((uploader) => {
+                                        return option(
+                                            {
+                                                value: uploader.id,
+                                            },
+                                            uploader.title
+                                        );
+                                    })
+                                );
+                                uploaderOptions = optgroup(
+                                    {
+                                        label: 'Other Types',
+                                    },
+                                    uploaderOptions
+                                );
+                            }
+
+                            const selectUploader = select({}, [
+                                option(),
+                                mappedOptions,
+                                uploaderOptions,
+                            ]);
+                            const downloadBtn = button(
+                                {
+                                    dataDownload: rowData.path,
+                                    class: `${tableBodyCssBaseClass}__button--download`,
+                                    role: 'button',
+                                    ariaLabel: 'Download Data',
+                                    title: 'Download data',
+                                },
+                                span({ class: 'fa fa-download' })
+                            );
+                            return div(
+                                {
+                                    class: `${tableBodyCssBaseClass}__select_container`,
+                                },
+                                [selectUploader, downloadBtn, deleteBtn]
+                            );
+                        },
+                    },
+                ],
+                createdRow: function (row, data) {
+                    $(row)
+                        .addClass('kb-staging-table__row')
+                        .attr('data-file-path', data.path)
+                        .attr('data-subdir', data.subdir);
+                },
+                rowCallback: function (row, data) {
+                    const $rowCheckbox = $('td:eq(0)', row).find(
+                        `.${cssBaseClass}-body__checkbox-input`
+                    );
+                    stagingAreaViewer.attachFileIconEvents($('td:eq(1)', row), data);
+                    stagingAreaViewer.attachImportSelectionEvents(
+                        $('td:eq(5)', row),
+                        $rowCheckbox,
+                        data
+                    );
+                    stagingAreaViewer.attachFileNameEvents($('td:eq(2)', row), data);
+
+                    // attach events to the row checkbox
+                    if (stagingAreaViewer.checkedFiles.has(data.path)) {
+                        $rowCheckbox.prop('checked', true);
+                    }
+                    // bind the change event here so it gets triggered
+                    // when selecting a type by the dropdown makes the change
+                    $rowCheckbox.off('click change').on('click change', (e) => {
+                        stagingAreaViewer.changeCheckboxState(e, data.path);
+                    });
+                },
+            });
+
+            stagingAreaViewer.updateTableDrawPath();
+        },
+
+        /*
+            Used to manage the select all checkbox in the header
+            has to be outside of the main DataTable call
+            so that we can get entire table data
+            not just what is drawn in the current dom
+            aka dealing with pagination
+        */
+        selectAllOrNone: function (event) {
+            const selectAllChecked = event.target.checked;
+
+            //get all of the rows in the data table
+            const nodes = this.fullDataTable.column(0).nodes();
+
+            $(`input.${cssBaseClass}-body__checkbox-input:enabled`, nodes)
+                .prop('checked', selectAllChecked)
+                .attr('aria-checked', selectAllChecked)
+                .change();
+        },
+
+        /**
+         * When a checkbox is checked/unchecked, its path is added/removed from a state saving Set.
+         * This way, when a data refresh happens, the right state can be applied to the checkbox.
+         * This also updates the import button state: if any files are checked (i.e. included in the
+         * checkedFiles Set) the import button is enabled.
+         * @param {Event} event the change event fired on the checkbox
+         * @param {string} filePath the full path for the file that was changed
+         */
+        changeCheckboxState: function (event, filePath) {
+            const checked = event.currentTarget.checked;
+            if (checked) {
+                this.enableImportButton();
+                this.checkedFiles.add(filePath);
+            } else {
+                this.checkedFiles.delete(filePath);
+                // if we don't have any checked files, disable the import button
+                if (!this.checkedFiles.size) {
+                    this.disableImportButton();
+                }
+            }
+        },
+
+        attachFileNameEvents: function ($td, data) {
+            $td.find(`.${cssBaseClass}-body__name`).tooltip({
+                title: data.name,
+                placement: 'top',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay,
+                },
+            });
+
+            $td.find(`span.${cssBaseClass}-body__folder`)
+                .off('click')
+                .on('click', (e) => {
+                    $(e.currentTarget).off('click');
+                    const separator = this.path.slice(-1) !== '/' ? '/' : '';
+                    this.updatePathFn(this.path + separator + data.name);
+                });
+
+            $td.find('button[data-decompress]')
+                .off('click')
+                .on('click', (e) => {
+                    const decompressButton = $(e.currentTarget);
+                    decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+
+                    this.stagingServiceClient
+                        .decompress({
+                            path: data.path,
+                        })
+                        .then(() => this.updateView())
+                        .fail((xhr) => {
+                            console.error('FAILED', xhr);
+                            alert('Error ' + xhr.status + '\r' + xhr.responseText);
                         });
-                }.bind(this),
+                });
+        },
+
+        /**
+         *
+         * @param {jquery element} $td the DOM element with the select box, download, and delete buttons
+         * @param {object} data the file data for that row
+         */
+        attachImportSelectionEvents: function ($td, $checkboxElem, data) {
+            // find the initial singly mapped datatype from the staging service
+            const stagingAreaViewer = this;
+            let suggestedType = null;
+            if (data.mappings && data.mappings.length === 1) {
+                suggestedType = data.mappings[0];
+            }
+
+            // find the element
+            const importDropdown = $td.find('select');
+
+            /**
+             * When a data type is selected from the "Import As..." dropdown,
+             * enable the checkbox for that row (so user can import).
+             * Make sure the "select all" checkbox is also enabled.
+             *
+             * @param {string} dataType the identifier of what the data type is, e.g.: sra_reads
+             * @param {boolean} check if true, checks the now-enabled checkbox. Should generally only
+             *  be true if this is called from a user selection event.
+             */
+            function enableCheckboxes(dataType, check) {
+                $td.find('.select2-selection').addClass(
+                    `${cssBaseClass}-body__import-type-selected`
+                );
+
+                //make checkbox for that row enabled
+                //also set the data type so that we have the reference later when importing
+                $checkboxElem
+                    .prop('disabled', false)
+                    .attr('aria-label', 'Select to import file checkbox')
+                    .attr('data-type', dataType);
+
+                //make sure select all checkbox is enabled
+                $('#staging_table_select_all')
+                    .prop('disabled', false)
+                    .attr('aria-label', 'Select to import all files checkbox');
+
+                if (check) {
+                    $checkboxElem.prop('checked', true).attr('aria-checked', true).change();
+                    stagingAreaViewer.enableImportButton();
+                }
+            }
+
+            const storedFileData = this.selectedFileTypes[data.path];
+            // where we have data type set, render those dropdowns correctly
+            if (storedFileData) {
+                // tell select2 which option to set
+                importDropdown
+                    .select2({
+                        containerCssClass: `${cssBaseClass}-body__import-dropdown`,
+                    })
+                    .val(storedFileData.dataType)
+                    .trigger('change');
+                //enable the checkboxes
+                enableCheckboxes(storedFileData.dataType);
+            } else if (suggestedType) {
+                // otherwise we set the dropdowns with a placeholder
+                // And if we have a suggested type, select it and enable the checkboxes
+                importDropdown
+                    .select2({
+                        containerCssClass: `${cssBaseClass}-body__import-dropdown ${cssBaseClass}-body__import-type-selected`,
+                        placeholder: 'make the empty option disappear',
+                    })
+                    .val(suggestedType.id)
+                    .trigger('change');
+                enableCheckboxes(suggestedType.id);
+            } else {
+                importDropdown.select2({
+                    placeholder: 'Select a type',
+                    containerCssClass: `${cssBaseClass}-body__import-dropdown`,
+                });
+            }
+
+            // set the behavior on the import dropdown when a user selects a type
+            importDropdown.off('select2:select').on('select2:select', (e) => {
+                const dataType = e.currentTarget.value;
+
+                // store the type we selected along with file data so we can persist on a view update
+                data.dataType = dataType;
+                this.selectedFileTypes[data.path] = data;
+
+                enableCheckboxes(dataType, true);
+            });
+
+            $td.find('button[data-download]')
+                .off('click')
+                .on('click', () => {
+                    const url = Config.url('staging_api_url') + '/download/' + data.path;
+                    this.downloadFile(url);
+                });
+
+            $td.find('button[data-delete]')
+                .off('click')
+                .on('click', () => {
+                    if (window.confirm('Really delete ' + data.path + '?')) {
+                        this.stagingServiceClient
+                            .delete({
+                                path: data.path,
+                            })
+                            .then(() => {
+                                // if the file was in any of the cached states - checked,
+                                // open to show metadata, had type set - remove it from
+                                // those structures
+                                delete this.openFileInfo[data.path];
+                                delete this.selectedFileTypes[data.path];
+                                this.checkedFiles.delete(data.path);
+                                if (!this.checkedFiles.size) {
+                                    this.disableImportButton();
+                                }
+                                this.updateView();
+                            })
+                            .fail((xhr) => {
+                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                            });
+                    }
+                });
+        },
+
+        /**
+         *
+         * @param {jquery element} $td the dom element with the file or folder icon
+         * @param {object} data the file data for that row
+         */
+        attachFileIconEvents: function ($td, data) {
+            if (data.isFolder) {
+                $td.find('button[data-name]')
+                    .off('click')
+                    .on('click', (e) => {
+                        $(e.currentTarget).off('click');
+                        const separator = this.path.slice(-1) !== '/' ? '/' : '';
+                        this.updatePathFn(this.path + separator + data.name);
+                    });
+                return;
+            }
+
+            // First, we find the expansion caret in the first cell.
+            const $caret = $td.find('[data-caret]');
+
+            $caret.off('click');
+
+            // now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+            if ($caret.length && this.openFileInfo[data.path]) {
+                //so we note that we've already loaded the info.
+                data.loaded = this.openFileInfo[data.path].loaded;
+                //toggle the caret
+                $caret.toggleClass('fa-caret-down fa-caret-right');
+                //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                setTimeout(() => {
+                    $caret.parent().parent().after(this.renderMoreFileInfo(data));
+                }, 0);
+            }
+
+            $caret.on('click', (e) => {
+                const fileExpander = $(e.currentTarget);
+                fileExpander.toggleClass('fa-caret-down fa-caret-right');
+                const $tr = fileExpander.parent().parent();
+
+                if (fileExpander.hasClass('fa-caret-down')) {
+                    $('.kb-dropzone').css('min-height', '75px');
+                    this.openFileInfo[data.path] = data;
+                    $tr.after(this.renderMoreFileInfo(data));
+                } else {
+                    $('.kb-dropzone').css('min-height', '200px');
+                    $tr.next().detach();
+                    delete this.openFileInfo[data.path];
+                }
             });
         },
 
+        updateTableDrawPath: function () {
+            if (!this.fullDataTable) {
+                return;
+            }
+            const table = this.fullDataTable;
+            $.fn.DataTable.ext.search.pop();
+
+            $.fn.DataTable.ext.search.push((_settings, _data, dataIndex) => {
+                if (_settings.nTable.id !== tableId) {
+                    return true;
+                }
+                const row = table.row(dataIndex);
+                if (row && row.node()) {
+                    const subdir = row.node().getAttribute('data-subdir');
+                    return subdir === this.path;
+                }
+                return true;
+            });
+            this.fullDataTable.draw();
+        },
+
+        /**
+         *
+         * @param {Object} fileData - file data object with attributes:
+         *  - loaded: boolean
+         *  - subpath: string
+         *  - name: string
+         *  -
+         * @returns
+         */
         renderMoreFileInfo: function (fileData) {
             const self = this;
 
@@ -509,21 +905,15 @@ define([
             }
 
             const $tabsDiv = $.jqElem('div').append(
-                '<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait'
+                '<span class="fa fa-spinner fa-spin"></span> Loading file info...please wait'
             );
-
-            let filePath = this.subpath;
-            if (filePath.length) {
-                filePath += '/';
-            }
-
-            filePath += fileData.name;
 
             // define our tabs externally. This is so we can do our metadata call and our jgi_metadata call (in serial) and then update
             // the UI after they're completed. It's a smidgen slower this way (maybe 0.25 seconds) - we could load the metadata and display
             // it to the user immediately, then add the JGI tab if it exists. But that causes a brief blink where the JGI tab isn't there and
             // pops into being later. This way, it all shows up fully built. It seemed like the lesser of the evils.
             let $tabs;
+            const filePath = fileData.path;
 
             this.stagingServiceClient
                 .metadata({
@@ -533,119 +923,95 @@ define([
                     const $tabsContainer = $.jqElem('div');
                     const data = JSON.parse(dataString);
 
-                    const $upaField = $.jqElem('span').append('<i class="fa fa-spinner fa-spin">');
+                    const fileMetadata = {
+                        Name: data.name,
+                        Created: TimeFormat.reformatDate(new Date(data.mtime)),
+                        Size: StringUtil.readableBytes(Number(data.size)),
+                        MD5: data.md5 || 'Not provided',
+                    };
 
-                    const $upa = (() => {
-                        if (data.UPA) {
-                            return $('<li>')
-                                .append(
-                                    $('<span>')
-                                        .addClass('kb-data-staging-metadata-list')
-                                        .text('Imported as')
-                                )
-                                .append($upaField);
-                        }
-                        return '';
-                    })();
-
-                    self.workspaceClient
-                        .get_object_info_new({
-                            objects: [
-                                {
-                                    ref: data.UPA,
-                                },
-                            ],
-                        })
-                        .then((name) => {
-                            $upaField.empty();
-                            $upaField.append(
-                                $.jqElem('a')
-                                    .attr('href', '/#dataview/' + data.UPA)
-                                    .attr('target', '_blank')
-                                    .append(name[0][1])
-                            );
-                        })
-                        .catch((xhr) => {
-                            $upaField.empty();
-                            $upaField.addClass('alert alert-danger');
-                            $upaField.css({
-                                padding: '0px',
-                                margin: '0px',
-                            });
-                            $upaField.append(xhr.error.message);
-                        });
-
-                    let lineCount = parseInt(data.lineCount, 10);
-                    if (!Number.isNaN(lineCount)) {
-                        lineCount = lineCount.toLocaleString();
+                    const lineCount = parseInt(data.lineCount, 10);
+                    if (Number.isNaN(lineCount)) {
+                        fileMetadata['Line count'] = 'Not provided';
                     } else {
-                        lineCount = 'Not provided';
+                        fileMetadata['Line count'] = lineCount.toLocaleString();
                     }
+
+                    if (data.UPA) {
+                        const $upaField = $.jqElem('span').addClass('fa fa-spinner fa-spin');
+                        self.workspaceClient
+                            .get_object_info_new({
+                                objects: [
+                                    {
+                                        ref: data.UPA,
+                                    },
+                                ],
+                            })
+                            .then((name) => {
+                                $upaField.empty();
+                                $upaField.append(
+                                    $.jqElem('a')
+                                        .attr('href', '/#dataview/' + data.UPA)
+                                        .attr('target', '_blank')
+                                        .append(name[0][1])
+                                );
+                            })
+                            .catch((xhr) => {
+                                $upaField.empty();
+                                $upaField.addClass('alert alert-danger');
+                                $upaField.append(xhr.error.message);
+                            })
+                            .finally(() => {
+                                $upaField.removeClass('fa fa-spinner fa-spin');
+                            });
+                        fileMetadata['Imported as'] = $upaField;
+                    }
+
+                    const $fileDataDl = $.jqElem('dl').addClass(
+                        `${fileMetadataCssBaseClass}__def_list`
+                    );
+
+                    ['Name', 'Created', 'Size', 'Line count', 'MD5', 'Imported as'].forEach(
+                        (item) => {
+                            if (fileMetadata[item]) {
+                                $fileDataDl
+                                    .append(
+                                        $.jqElem('dt')
+                                            .addClass(`${fileMetadataCssBaseClass}__term`)
+                                            .append(item)
+                                    )
+                                    .append(
+                                        $.jqElem('dd')
+                                            .addClass(`${fileMetadataCssBaseClass}__def`)
+                                            .append(fileMetadata[item])
+                                    );
+                            }
+                        }
+                    );
+
+                    const notATextFile = data.head === 'not text file';
 
                     $tabs = new KBaseTabs($tabsContainer, {
                         tabs: [
                             {
                                 tab: 'Info',
-                                content: $.jqElem('ul')
-                                    .css('list-style', 'none')
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
-                                                    .append('Name')
-                                            )
-                                            .append(data.name)
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
-                                                    .append('Created')
-                                            )
-                                            .append(TimeFormat.reformatDate(new Date(data.mtime)))
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
-                                                    .append('Size')
-                                            )
-                                            .append(StringUtil.readableBytes(Number(data.size)))
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
-                                                    .append('Line Count')
-                                            )
-                                            .append(lineCount)
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
-                                                    .append('MD5')
-                                            )
-                                            .append(data.md5 || 'Not provided')
-                                    )
-                                    .append($upa),
+                                content: $fileDataDl,
                             },
                             {
-                                tab: 'First 10 lines',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
-                                    .append(data.head),
+                                tab: 'First 1024 chars',
+                                content: notATextFile
+                                    ? $.jqElem('div').append('Not a text file')
+                                    : $.jqElem('div')
+                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                                          .append(data.head),
                             },
                             {
-                                tab: 'Last 10 lines',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
-                                    .append(data.tail),
+                                tab: 'Last 1024 chars',
+                                content: notATextFile
+                                    ? $.jqElem('div').append('Not a text file')
+                                    : $.jqElem('div')
+                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                                          .append(data.tail),
                             },
                         ],
                     });
@@ -659,14 +1025,14 @@ define([
                         })
                         .then((_dataString) => {
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
-                            //       So we nuke any NaN fields to make it valid again.
+                            //  So we nuke any NaN fields to make it valid again.
                             const metadataJSON = JSON.parse(_dataString.replace(/NaN/g, '""'));
                             const metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
                                 content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .addClass(`${fileMetadataCssBaseClass}__file_lines`)
                                     .append(metadataContents),
                             });
                         })
@@ -687,44 +1053,143 @@ define([
                 });
 
             return (fileData.loaded = $.jqElem('tr')
-                .addClass('staging-area-file-metadata')
-                .append(
-                    $.jqElem('td').attr('colspan', 5).css('vertical-align', 'top').append($tabsDiv)
-                ));
+                .addClass(fileMetadataCssBaseClass)
+                .append($.jqElem('td').attr('colspan', 6).append($tabsDiv)));
+        },
+
+        renderImportButton: function () {
+            const importButton = $('<button></button>')
+                .addClass(`${cssBaseClass}-import__button`)
+                .text('Import Selected');
+
+            this.$elem.find(`div.${cssBaseClass}-import`).append(importButton);
+
+            /*
+                By default import button is disabled until the user selects a data type
+            */
+            this.disableImportButton();
+        },
+
+        disableImportButton: function () {
+            this.$elem
+                .find(`button.${cssBaseClass}-import__button`)
+                .attr('disabled', true)
+                .tooltip({
+                    title: 'Select a file/s to continue.',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay,
+                    },
+                    template: `<div class="${cssBaseClass}-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>`,
+                })
+                .off('click');
+        },
+
+        enableImportButton: function () {
+            const stagingAreaViewer = this;
+
+            this.$elem
+                .find(`button.${cssBaseClass}-import__button`)
+                .attr('disabled', false)
+                .tooltip('disable')
+                .off('click')
+                .on('click keyPress', () => {
+                    stagingAreaViewer.initBulkImport();
+                });
+        },
+
+        /**
+         * Initializes the bulk import process. This takes the bulk-importer-supported types and
+         * builds a Bulk Import cell to address them. Other types have one import app cell
+         * generated for each.
+         *
+         * For example, if FASTQ files are supported by the bulk import cell, and you have
+         * 10 of those selected, and 2 genomes, then a single Bulk import cell will be created for
+         * the 10 FASTQ files, and 2 more cells are generated for each genome.
+         *
+         * If no files are selected by their checkbox, then no new cells will be created.
+         *
+         * Creating a new bulk import cell returns a Promise, so this returns a Promise.
+         */
+        initBulkImport: function () {
+            const stagingAreaViewer = this;
+            /*
+             * We're building up a structure like this to send to the
+             * bulk import cell initializer:
+             * {
+             *   fileType: {
+             *     appId: string,
+             *     files: list of files
+             *   }
+             * }
+             */
+            const bulkMapping = {};
+            // get all of the selected checkbox file names and import type
+
+            const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
+            const selectedRows = stagingAreaViewer.fullDataTable.rows((_idx, _data, node) => {
+                return !!node.querySelector(checkedBoxSelector);
+            });
+            selectedRows.nodes().each((rowNode) => {
+                const dataElem = rowNode.querySelector(checkedBoxSelector);
+                const importType = $(dataElem).attr('data-type');
+                const importFile = $(dataElem).attr('data-file-name');
+                if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
+                    if (!(importType in bulkMapping)) {
+                        bulkMapping[importType] = {
+                            appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
+                            files: [],
+                        };
+                    }
+                    bulkMapping[importType].files.push(importFile);
+                } else {
+                    stagingAreaViewer.initImportApp(importType, importFile);
+                }
+            });
+            Jupyter.narrative.hideOverlay();
+            if (Object.keys(bulkMapping).length) {
+                return Jupyter.narrative.insertBulkImportCell(bulkMapping);
+            } else {
+                return Promise.resolve();
+            }
         },
 
         /**
          * Initializes an import app using the given file info as input.
          * Expects 'type' to match a KBase object type string that maps onto an importer.
-         * Expects 'file' to be an object with the following attributes:
-         *   name = string, name of the file
+         * Expects 'file' to be a string that is the name of the file
          */
         initImportApp: function (type, file) {
             const appInfo = this.uploaders.app_info[type];
             if (appInfo) {
-                const tag = APIUtil.getAppVersionTag(),
-                    inputs = {};
-                let fileParam = file ? file.name : '';
-                if (this.subpath) {
-                    fileParam = this.subpath + '/' + file.name;
-                }
+                const tag = APIUtil.getAppVersionTag();
+                let fileParam = file || '';
+                const inputs = {};
+
                 if (appInfo.app_input_param_type && appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
+
                 if (appInfo.app_input_param) {
                     inputs[appInfo.app_input_param] = fileParam;
                 }
+
                 if (appInfo.app_output_param) {
+                    let outputName = file;
+                    // if we're in a subpath, need to strip it down to just the file name
+                    if (outputName.indexOf('/') !== -1) {
+                        outputName = outputName.substring(outputName.lastIndexOf('/') + 1);
+                    }
                     inputs[appInfo.app_output_param] =
-                        file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                        outputName.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 }
+
                 if (appInfo.app_static_params) {
-                    for (const p in appInfo.app_static_params) {
-                        if (Object.prototype.hasOwnProperty.call(appInfo.app_static_params, p)) {
-                            inputs[p] = appInfo.app_static_params[p];
-                        }
+                    for (const p of Object.keys(appInfo.app_static_params)) {
+                        inputs[p] = appInfo.app_static_params[p];
                     }
                 }
+
                 Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
                 Jupyter.narrative.hideOverlay();
             }

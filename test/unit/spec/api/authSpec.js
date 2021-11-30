@@ -1,4 +1,4 @@
-define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
+define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid, TestUtil) => {
     'use strict';
 
     let authClient;
@@ -140,6 +140,8 @@ define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
     ];
 
     describe('Test the Auth API module', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         beforeEach(() => {
             setToken(FAKE_TOKEN);
             authClient = Auth.make({
@@ -369,6 +371,7 @@ define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
             expect(authClient.getCookie('kbase_session')).toBeNull();
         });
 
+        // FIXME: this fails on successive test runs
         it('Should properly handle backup cookie in non-prod environment', () => {
             const env = Config.get('environment');
             const backupCookieName = 'kbase_session_backup';

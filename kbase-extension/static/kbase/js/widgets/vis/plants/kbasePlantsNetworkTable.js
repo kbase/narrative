@@ -47,44 +47,37 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseIrisWidget', 'kbaseTable'], (
                                 {
                                     value: 'dataset',
                                     label: 'Dataset',
-                                    style:
-                                        'max-width : 190px; background-color : black; color : white',
+                                    style: 'max-width : 190px; background-color : black; color : white',
                                 },
                                 {
                                     value: 'description',
                                     label: 'Description',
-                                    style:
-                                        'width : 300px; max-width : 300px;  background-color : black; color : white',
+                                    style: 'width : 300px; max-width : 300px;  background-color : black; color : white',
                                 },
                                 {
                                     value: 'num_nodes',
                                     label: 'Nodes',
-                                    style:
-                                        'min-width : 75px; background-color : black; color : white',
+                                    style: 'min-width : 75px; background-color : black; color : white',
                                 },
                                 {
                                     value: 'num_edges',
                                     label: 'Edges',
-                                    style:
-                                        'min-width : 75px; background-color : black; color : white',
+                                    style: 'min-width : 75px; background-color : black; color : white',
                                 },
                                 {
                                     value: 'density',
                                     label: 'Density',
-                                    style:
-                                        'min-width : 90px; background-color : black; color : white',
+                                    style: 'min-width : 90px; background-color : black; color : white',
                                 },
                                 {
                                     value: 'type',
                                     label: 'Type',
-                                    style:
-                                        'max-width : 125px; background-color : black; color : white',
+                                    style: 'max-width : 125px; background-color : black; color : white',
                                 },
                                 {
                                     value: 'source',
                                     label: 'Source',
-                                    style:
-                                        'min-width : 80px; background-color : black; color : white',
+                                    style: 'min-width : 80px; background-color : black; color : white',
                                 },
                             ],
                             rows: [],

@@ -1,7 +1,139 @@
 define([], () => {
     'use strict';
 
+    const uiTabs = {
+        inProgress: {
+            info: {
+                enabled: true,
+            },
+            configure: {
+                enabled: false,
+                hidden: true,
+            },
+            viewConfigure: {
+                enabled: true,
+            },
+            jobStatus: {
+                enabled: true,
+            },
+            results: {
+                enabled: false,
+            },
+            error: {
+                enabled: false,
+                hidden: true,
+            },
+        },
+        error: {
+            info: {
+                enabled: true,
+            },
+            configure: {
+                enabled: false,
+                hidden: true,
+            },
+            viewConfigure: {
+                enabled: true,
+            },
+            jobStatus: {
+                enabled: false,
+            },
+            results: {
+                enabled: false,
+                hidden: true,
+            },
+            error: {
+                enabled: true,
+                selected: true,
+            },
+        },
+    };
+
+    const configureTabSettings = [
+            {
+                selector: {
+                    viewOnly: false,
+                },
+                settings: {
+                    enabled: true,
+                    hidden: false,
+                    selected: true,
+                },
+            },
+            {
+                selector: {
+                    viewOnly: true,
+                },
+                settings: {
+                    enabled: false,
+                    hidden: true,
+                    selected: false,
+                },
+            },
+        ],
+        viewConfigureTabSettings = [
+            {
+                selector: {
+                    viewOnly: false,
+                },
+                settings: {
+                    enabled: false,
+                    hidden: true,
+                    selected: false,
+                },
+            },
+            {
+                selector: {
+                    viewOnly: true,
+                },
+                settings: {
+                    enabled: true,
+                    hidden: false,
+                    selected: true,
+                },
+            },
+        ],
+        batchModeTabs = {
+            info: {
+                enabled: true,
+            },
+            configureBatch: configureTabSettings,
+            viewConfigure: viewConfigureTabSettings,
+            configure: {
+                enabled: false,
+                hidden: true,
+            },
+            jobStatus: {
+                enabled: false,
+            },
+            results: {
+                enabled: false,
+            },
+            error: {
+                enabled: false,
+                hidden: true,
+            },
+        },
+        standardModeTabs = {
+            info: {
+                enabled: true,
+            },
+            configure: configureTabSettings,
+            viewConfigure: viewConfigureTabSettings,
+            jobStatus: {
+                enabled: false,
+            },
+            results: {
+                enabled: false,
+            },
+            error: {
+                enabled: false,
+                hidden: true,
+            },
+        };
+
     const appStates = [
+        // new
         {
             state: {
                 mode: 'new',
@@ -18,7 +150,7 @@ define([], () => {
                         enabled: false,
                         hidden: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -33,24 +165,6 @@ define([], () => {
                     name: 'runApp',
                     disabled: true,
                 },
-                elements: {
-                    show: [],
-                    hide: [
-                        'internal-error',
-                        'parameters-group',
-                        'output-group',
-                        'parameters-display-group',
-                        'exec-group',
-                    ],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-default'],
-                    icon: {
-                        type: 'minus',
-                    },
-                },
-                label: 'new',
-                message: '',
             },
             next: [
                 {
@@ -62,88 +176,18 @@ define([], () => {
                 },
             ],
         },
+        // editing - incomplete
         {
             state: {
                 mode: 'editing',
                 params: 'incomplete',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                    ],
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: standardModeTabs,
                 actionButton: {
                     name: 'runApp',
                     disabled: true,
                 },
-                elements: {
-                    show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-warning'],
-                    icon: {
-                        type: 'pencil',
-                    },
-                },
-                label: 'editing',
-                message:
-                    'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.',
             },
             next: [
                 {
@@ -164,6 +208,7 @@ define([], () => {
                 },
             ],
         },
+        // editing - complete
         {
             state: {
                 mode: 'editing',
@@ -171,82 +216,11 @@ define([], () => {
                 code: 'built',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                    ],
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: standardModeTabs,
                 actionButton: {
                     name: 'runApp',
                     disabled: false,
                 },
-                elements: {
-                    show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'pencil',
-                    },
-                },
-                label: 'editing',
-                message:
-                    'You have completed the required parameters for this App; you may run it or continue to edit parameters.',
             },
             next: [
                 {
@@ -290,106 +264,25 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
-                },
-                {
-                    mode: 'error',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'internal-error',
                 },
             ],
         },
+        // batch editing - incomplete
         {
             state: {
                 mode: 'editing-batch',
                 params: 'incomplete',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configureBatch: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                    ],
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: batchModeTabs,
                 actionButton: {
                     name: 'runApp',
                     disabled: true,
                 },
-                elements: {
-                    show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-warning'],
-                    icon: {
-                        type: 'pencil',
-                    },
-                },
-                label: 'editing',
-                message:
-                    'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.',
             },
             next: [
                 {
@@ -410,6 +303,7 @@ define([], () => {
                 },
             ],
         },
+        // batch editing - complete
         {
             state: {
                 mode: 'editing-batch',
@@ -417,86 +311,11 @@ define([], () => {
                 code: 'built',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configureBatch: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
-                        },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
-                        },
-                    ],
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: batchModeTabs,
                 actionButton: {
                     name: 'runApp',
                     disabled: false,
                 },
-                elements: {
-                    show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'pencil',
-                    },
-                },
-                label: 'editing',
-                message:
-                    'You have completed the required parameters for this App; you may run it or continue to edit parameters.',
             },
             next: [
                 {
@@ -540,20 +359,14 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
-                },
-                {
-                    mode: 'error',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'internal-error',
                 },
             ],
         },
+        // execute-requested
         {
             state: {
                 mode: 'execute-requested',
@@ -576,7 +389,7 @@ define([], () => {
                         enabled: true,
                         selected: false,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                         selected: false,
                     },
@@ -592,30 +405,6 @@ define([], () => {
                     name: 'cancel',
                     disabled: false,
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                messages: [
-                    {
-                        widget: 'paramsDisplayWidget',
-                        message: {},
-                        address: {
-                            key: {
-                                type: 'sync-all-parameters',
-                            },
-                        },
-                    },
-                ],
-                appStatus: {
-                    classes: ['kb-app-status-primary'],
-                    icon: {
-                        color: 'blue',
-                        type: 'rocket',
-                    },
-                },
-                label: 'sending...',
-                message: 'Launching the App...',
             },
             on: {
                 enter: {
@@ -642,26 +431,49 @@ define([], () => {
             },
             next: [
                 {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built',
+                },
+                {
                     mode: 'processing',
                     stage: 'launched',
                 },
                 {
-                    mode: 'error',
+                    mode: 'processing',
+                    stage: 'queued',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'running',
+                },
+                {
+                    mode: 'processing',
+                    stage: 'partial-complete',
+                },
+                {
+                    mode: 'canceled',
+                },
+                {
+                    mode: 'canceling',
+                },
+                {
+                    mode: 'success',
                 },
                 {
                     mode: 'error',
                     stage: 'launching',
                 },
                 {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
+                    mode: 'error',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'internal-error',
                 },
             ],
         },
+        // processing - launched
         {
             state: {
                 mode: 'processing',
@@ -679,7 +491,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -694,18 +506,6 @@ define([], () => {
                     name: 'cancel',
                     disabled: true,
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'rocket',
-                    },
-                },
-                label: 'executing...',
-                message: 'The App has now entered the execution engine.',
             },
             on: {
                 enter: {
@@ -758,9 +558,6 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                },
-                {
-                    mode: 'error',
                     stage: 'launching',
                 },
                 {
@@ -773,49 +570,17 @@ define([], () => {
                 },
             ],
         },
+        // processing - queued
         {
             state: {
                 mode: 'processing',
                 stage: 'queued',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: uiTabs.inProgress,
                 actionButton: {
                     name: 'cancel',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'list',
-                    },
-                },
-                label: 'queued',
-                message: 'The App is queued for running.',
             },
             on: {
                 enter: {
@@ -843,17 +608,16 @@ define([], () => {
             next: [
                 {
                     mode: 'processing',
+                    stage: 'queued',
+                },
+                {
+                    mode: 'processing',
                     stage: 'running',
                 },
                 {
                     mode: 'processing',
                     stage: 'partial-complete',
                 },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-
                 {
                     mode: 'canceled',
                 },
@@ -863,22 +627,15 @@ define([], () => {
                 {
                     mode: 'success',
                 },
-                {
-                    mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued',
-                },
                 // This can happen if there is no in-progress message received
                 // before an error occurs.
                 {
                     mode: 'error',
-                    stage: 'running',
+                    stage: 'runtime',
                 },
                 // This can happen if the job disappeared while the app thinks
                 // it is queued, yet the user still wants to cancel (which can't really
-                // cancel, it just has to return to editing mode.
+                // cancel, it just has to return to editing mode).
                 {
                     mode: 'editing',
                     params: 'complete',
@@ -889,50 +646,17 @@ define([], () => {
                 },
             ],
         },
-
+        // processing - running
         {
             state: {
                 mode: 'processing',
                 stage: 'running',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: uiTabs.inProgress,
                 actionButton: {
                     name: 'cancel',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'bolt',
-                    },
-                },
-                label: 'running',
-                message: 'The App is now running.',
             },
             on: {
                 enter: {
@@ -978,10 +702,7 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'editing',
@@ -993,6 +714,7 @@ define([], () => {
                 },
             ],
         },
+        // processing - partial complete
         {
             state: {
                 mode: 'processing',
@@ -1010,7 +732,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1024,18 +746,6 @@ define([], () => {
                 actionButton: {
                     name: 'cancel',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'bolt',
-                    },
-                },
-                label: 'running',
-                message: 'The App is now running.',
             },
             on: {
                 enter: {
@@ -1065,7 +775,6 @@ define([], () => {
                     mode: 'processing',
                     stage: 'partial-complete',
                 },
-
                 {
                     mode: 'canceled',
                 },
@@ -1077,10 +786,7 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'editing',
@@ -1092,49 +798,17 @@ define([], () => {
                 },
             ],
         },
+        // cancelling the app run
         {
             state: {
                 mode: 'canceling',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: false,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
+                tabs: uiTabs.inProgress,
                 actionButton: {
                     name: 'cancel',
                     default: true,
                 },
-                elements: {
-                    show: ['exec-group', 'output-group'],
-                    hide: ['parameters-display-group', 'parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-warning'],
-                    icon: {
-                        type: 'bolt',
-                    },
-                },
-                label: 'canceling...',
-                message: 'Canceling App execution...',
             },
             on: {
                 enter: {
@@ -1174,7 +848,7 @@ define([], () => {
                 },
                 {
                     mode: 'error',
-                    stage: 'running',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'editing',
@@ -1186,6 +860,7 @@ define([], () => {
                 },
             ],
         },
+        // app run cancelled
         {
             state: {
                 mode: 'canceled',
@@ -1202,7 +877,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                         selected: true,
                     },
@@ -1217,18 +892,6 @@ define([], () => {
                 actionButton: {
                     name: 'reRunApp',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-error'],
-                    icon: {
-                        type: 'ban',
-                    },
-                },
-                label: 'canceled',
-                message: 'App execution has been successfully canceled.',
             },
             on: {
                 enter: {
@@ -1264,6 +927,7 @@ define([], () => {
                 },
             ],
         },
+        // success
         {
             state: {
                 mode: 'success',
@@ -1280,7 +944,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1295,18 +959,6 @@ define([], () => {
                 actionButton: {
                     name: 'reRunApp',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-ok'],
-                    icon: {
-                        type: 'check',
-                    },
-                },
-                label: 'finished',
-                message: 'The App has successfully finished.',
             },
             on: {
                 enter: {
@@ -1345,51 +997,17 @@ define([], () => {
                 },
             ],
         },
-
+        // launch error
         {
             state: {
                 mode: 'error',
                 stage: 'launching',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    error: {
-                        enabled: true,
-                        selected: true,
-                    },
-                },
+                tabs: uiTabs.error,
                 actionButton: {
                     name: 'reRunApp',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-danger'],
-                    icon: {
-                        type: 'exclamation-circle',
-                    },
-                },
-                label: 'error',
-                message: 'There was an error launching the App.',
             },
             next: [
                 {
@@ -1406,50 +1024,17 @@ define([], () => {
                 },
             ],
         },
+        // error during job execution (including whilst queueing)
         {
             state: {
                 mode: 'error',
-                stage: 'queued',
+                stage: 'runtime',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    error: {
-                        enabled: true,
-                        selected: true,
-                    },
-                },
+                tabs: Object.assign({}, uiTabs.error, { jobStatus: { enabled: true } }),
                 actionButton: {
                     name: 'reRunApp',
                 },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-danger'],
-                    icon: {
-                        type: 'exclamation-circle',
-                    },
-                },
-                label: 'error',
-                message: 'An error was encountered while the App was queued.',
             },
             on: {
                 enter: {
@@ -1477,149 +1062,7 @@ define([], () => {
             next: [
                 {
                     mode: 'error',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'running',
-            },
-            ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: true,
-                        hidden: true,
-                    },
-                    error: {
-                        enabled: true,
-                        selected: true,
-                    },
-                },
-                actionButton: {
-                    name: 'reRunApp',
-                },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-app-status-danger'],
-                    icon: {
-                        type: 'exclamation-circle',
-                    },
-                },
-                label: 'error',
-                message: 'An error was encountered running the App.',
-            },
-            on: {
-                enter: {
-                    messages: [
-                        {
-                            emit: 'on-error',
-                        },
-                    ],
-                },
-                resume: {
-                    messages: [
-                        {
-                            emit: 'on-error',
-                        },
-                    ],
-                },
-                exit: {
-                    messages: [
-                        {
-                            emit: 'exit-error',
-                        },
-                    ],
-                },
-            },
-            next: [
-                {
-                    mode: 'error',
-                    stage: 'running',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
-        },
-        // Just a plain error state ... not sure how we get here...
-        {
-            state: {
-                mode: 'error',
-            },
-            ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    error: {
-                        enabled: true,
-                        selected: true,
-                    },
-                },
-                actionButton: {
-                    name: 'reRunApp',
-                },
-                elements: {
-                    show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
-                },
-                appStatus: {
-                    classes: ['kb-status-danger'],
-                    icon: {
-                        type: 'exclamation-circle',
-                    },
-                },
-                label: 'error',
-                message: 'An error was encountered.',
-            },
-            next: [
-                {
-                    mode: 'error',
+                    stage: 'runtime',
                 },
                 {
                     mode: 'editing',
@@ -1637,49 +1080,10 @@ define([], () => {
                 mode: 'internal-error',
             },
             ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: false,
-                    },
-                    logs: {
-                        enabled: false,
-                    },
-                    results: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    error: {
-                        enabled: true,
-                        selected: true,
-                    },
-                },
+                tabs: uiTabs.error,
                 actionButton: {
                     name: 'resetApp',
                 },
-                elements: {
-                    show: ['internal-error'],
-                    hide: [
-                        'parameters-group',
-                        'parameters-display-group',
-                        'exec-group',
-                        'output-group',
-                    ],
-                },
-                appStatus: {
-                    classes: ['kb-status-danger'],
-                    icon: {
-                        type: 'exclamation-circle',
-                    },
-                },
-                label: 'error',
-                message: 'An internal error was encountered.',
             },
             next: [
                 {
@@ -1692,5 +1096,8 @@ define([], () => {
             ],
         },
     ];
-    return appStates;
+
+    return {
+        appStates,
+    };
 });

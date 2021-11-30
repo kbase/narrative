@@ -4,13 +4,12 @@ define([
     '../validators/resolver',
     'common/events',
     'common/ui',
-    'common/lang',
+    'util/util',
     '../paramResolver',
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
+], (Promise, html, Validation, Events, UI, Util, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -21,18 +20,19 @@ define([
         resolver = Resolver.make();
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            bus = config.bus,
-            container,
+        let container,
             hostNode,
             ui,
+            structFields = {};
+
+        const spec = config.parameterSpec,
+            bus = config.bus,
             viewModel = {
                 data: {},
                 state: {
                     enabled: null,
                 },
             },
-            structFields = {},
             fieldLayout = spec.ui.layout,
             struct = spec.parameters,
             places = {};
@@ -62,7 +62,7 @@ define([
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(lang.copy(spec.defaultValue));
+                setModelValue(Util.copy(spec.defaultValue));
             } else {
                 unsetModelValue();
             }
@@ -90,8 +90,6 @@ define([
                         p('If enabled again, the values will be set to their defaults.'),
                         p('Continue to disable this parameter group?'),
                     ]),
-                    yesLabel: 'Yes',
-                    noLabel: 'No',
                 }).then((confirmed) => {
                     if (!confirmed) {
                         return;
@@ -103,7 +101,7 @@ define([
                         state: viewModel.state,
                     });
                     bus.emit('changed', {
-                        newValue: lang.copy(viewModel.data),
+                        newValue: Util.copy(viewModel.data),
                     });
                     renderSubcontrols();
                 });
@@ -113,13 +111,13 @@ define([
                 // Enable it
                 viewModel.state.enabled = true;
                 button.innerHTML = 'Disable';
-                viewModel.data = lang.copy(spec.data.defaultValue);
+                viewModel.data = Util.copy(spec.data.defaultValue);
             }
             bus.emit('set-param-state', {
                 state: viewModel.state,
             });
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data),
+                newValue: Util.copy(viewModel.data),
             });
             renderSubcontrols();
         }
@@ -194,9 +192,9 @@ define([
 
         function doChanged(id, newValue) {
             // Absorb and propagate the new value...
-            viewModel.data[id] = lang.copy(newValue);
+            viewModel.data[id] = Util.copy(newValue);
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data),
+                newValue: Util.copy(viewModel.data),
             });
 
             // Validate and propagate.
@@ -213,7 +211,7 @@ define([
          * The single input control wraps a field widget, which provides the
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(value, fieldSpec, events) {
+        function makeSingleInputControl(value, fieldSpec) {
             return resolver.loadInputControl(fieldSpec).then((widgetFactory) => {
                 const id = html.genId(),
                     fieldWidget = FieldWidget.make({
@@ -238,7 +236,7 @@ define([
                 fieldWidget.bus.on('validation', (message) => {
                     if (message.diagnosis === 'optional-empty') {
                         bus.emit('changed', {
-                            newValue: lang.copy(viewModel.data),
+                            newValue: Util.copy(viewModel.data),
                         });
                     }
                 });
@@ -302,7 +300,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },
@@ -351,7 +349,7 @@ define([
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
                 events = Events.make({ node: container });
-                viewModel.data = lang.copy(config.initialValue);
+                viewModel.data = Util.copy(config.initialValue);
             });
             return init
                 .then(() => {
@@ -373,7 +371,7 @@ define([
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
-                            viewModel.data = lang.copy(message.value);
+                            viewModel.data = Util.copy(message.value);
                             Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id],
@@ -384,7 +382,7 @@ define([
 
                     bus.on('submit', () => {
                         bus.emit('submitted', {
-                            value: lang.copy(viewModel.data),
+                            value: Util.copy(viewModel.data),
                         });
                     });
 

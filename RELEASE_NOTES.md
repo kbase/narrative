@@ -4,8 +4,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
-
+### Version 5.0.0
 Code Changes
 
 - SAM-40 - Add Name/ID column to SampleSet viewer
@@ -18,7 +17,6 @@ Code Changes
   - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
     - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
     - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
-
 
 ### Version 4.6.0
 Code changes

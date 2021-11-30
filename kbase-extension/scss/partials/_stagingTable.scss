@@ -1,0 +1,310 @@
+.kb-staging-table {
+  table-layout: fixed;
+
+  .kb-staging-table-body td {
+    vertical-align: middle;
+  }
+
+  .kb-staging-table-header {
+    // Overriding default datatables sort icons so they come
+    // before the header title rather than after
+    .sorting::before,
+    .sorting_asc::before,
+    .sorting_desc::before {
+      content: '\e150';
+      display: inline-block;
+      font-family: $typeface-glyphicons;
+      opacity: 0.2;
+      position: relative;
+      right: 4px;
+      top: 1px;
+    }
+
+    .sorting_asc::before {
+      content: '\e155';
+    }
+
+    .sorting_desc::before {
+      content: '\e156';
+    }
+
+    .sorting::after,
+    .sorting_asc::after,
+    .sorting_desc::after {
+      display: none;
+    }
+
+    .kb-staging-table-header {
+      // .kb-staging-table-header__checkbox
+      &__checkbox {
+        padding-right: 0;
+        width: 2rem;
+      }
+
+      // .kb-staging-table-header__file
+      &__file {
+        padding-right: 0;
+        width: 4rem;
+
+        // Special positioning for folder sort icon as there is no title
+        &.sorting::before,
+        &.sorting_asc::before,
+        &.sorting_desc::before {
+          left: 9px;
+        }
+      }
+
+      // .kb-staging-table-header__age,
+      // .kb-staging-table-header__size
+      &__age,
+      &__size {
+        width: 7rem;
+      }
+
+      // .kb-staging-table-header__import
+      &__import {
+        width: 24rem;
+      }
+    }
+  }
+
+  // .kb-staging-table-body
+  &-body {
+    // .kb-staging-table-body__cell--expander
+    &__cell--expander {
+      text-align: center;
+    }
+
+    // .kb-staging-table-body__cell--import
+    &__cell--import {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    &__button {
+      // .kb-staging-table-body__decompress
+      &--decompress {
+        @extend %kbase-button-sm;
+
+        @include button-size(0.2rem, 0.2rem, 12px, 12px, 0);
+
+        background: transparent;
+      }
+
+      // .kb-staging-table-body__button--download
+      &--download {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('white'), use_color('primary'), transparent);
+        @include button-size(0.5rem, 0.5rem, 12px, 12px, 0);
+
+        margin-left: 0.5rem;
+      }
+
+      // .kb-staging-table-body__button--delete
+      // .kb-staging-table-body__button--folder
+      &--delete,
+      &--folder {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('primary'), transparent, transparent);
+        @include button-size(0.5rem, 0.5rem, 18px, 12px, 0);
+
+        &:active,
+        &:hover {
+          color: use_color('primary-vivid');
+        }
+      }
+    }
+
+    // .kb-staging-table-body__name
+    &__name {
+      @include ellipsis-overflow;
+    }
+
+    // .kb-staging-table-body__folder:hover
+    &__folder:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    // kb-staging-table-body__select_container
+    &__select_container {
+      align-items: center;
+      display: flex;
+      justify-content: flex-end;
+      text-align: left;
+    }
+
+    // style for Import As dropdown container
+    // set the width here
+    // otherwise it will get overriden by datatables when changing the sort order
+    // it gets set directly on the element via inline css so we have to use important to override
+    .select2 {
+      margin: 4px 0;
+      width: 19rem !important;
+    }
+
+    // style for Import As dropdown container text
+    // .kb-staging-table-body .kb-staging-table-body__import-dropdown
+    .kb-staging-table-body__import-dropdown {
+      align-items: center;
+      background: use_color('white');
+      border: 1px solid use_color('error-dark');
+      border-radius: 4px;
+      box-sizing: border-box;
+      display: flex;
+      height: 38px;
+
+      // style for Import As dropdown container text
+      .select2-selection {
+        // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered
+        &__rendered {
+          color: use_color('ink');
+          flex: 1 1 auto;
+          font-size: 14px;
+          line-height: 20px;
+          padding: 8px 20px 8px 8px;
+        }
+
+        // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder
+        &__placeholder {
+          color: use_color('error-dark');
+        }
+
+        // style for Import As dropdown container arrow
+        // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow
+        &__arrow {
+          margin-top: 4px;
+
+          b {
+            border-color: use_color('error-dark') transparent transparent;
+          }
+        }
+      }
+
+      &.kb-staging-table-body__import-type-selected,
+      &:focus {
+        .select2-selection__arrow b {
+          border-color: use_color('grey') transparent transparent;
+        }
+      }
+      // Import as dropdown placeholder text is red
+      // Change placeholder color when user clicks in
+      .select2-container--focus .select2-selection__placeholder,
+      .select2-container--open .select2-selection__placeholder {
+        color: use-color('ink');
+      }
+
+      // When user clicks into the dropdown or chooses a selection box, change border color
+      &.kb-staging-table-body__import-type-selected {
+        border: 1px solid use-color('silver');
+      }
+    }
+    // When user clicks into the dropdown or chooses a selection box, change border color
+    .select2-container--focus .kb-staging-table-body__import-dropdown,
+    .select2-container--open .kb-staging-table-body__import-dropdown {
+      border: 1px solid use-color('silver');
+    }
+  }
+
+  // .kb-staging-table-file-metadata
+  &-file-metadata {
+    .tab-pane {
+      margin: 1rem;
+    }
+
+    // .kb-staging-table-file-metadata__def_list
+    &__def_list {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 1rem;
+      padding: 0;
+      width: 100%;
+    }
+
+    // .kb-staging-table-file-metadata__term
+    &__term {
+      font-weight: 700;
+      padding-top: 0.5rem;
+      text-align: right;
+      width: 9rem;
+    }
+
+    // .kb-staging-table-file-metadata__def
+    &__def {
+      margin-left: 0;
+      padding-left: 1rem;
+      padding-top: 0.5rem;
+      width: calc(100% - 9rem);
+    }
+
+    &__list {
+      list-style-type: none;
+    }
+
+    // .kb-data-staging-file-metadata__file-lines
+    &__file_lines {
+      @include code-block;
+
+      max-height: 200px;
+      overflow: scroll;
+      white-space: pre;
+    }
+  }
+
+  &__notice {
+    background-color: use_color('base-lightest');
+    font: normal 700 16px/20px $typeface-page-text;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  // container for the 'Import selected' button and tooltip
+  // .kb-staging-table-import
+  &-import {
+    &__button {
+      @extend %kbase-button;
+
+      @include button-variant(use_color('white'), use_color('primary'), transparent);
+      @include button-size($padding-large-vertical, $padding-large-horizontal, $font-size-base, $line-height-large, $btn-border-radius-large);
+
+      bottom: -50px;
+      position: absolute;
+      right: 10px;
+      text-transform: none;
+
+      &[disabled] {
+        background-color: use_color('info');
+        cursor: not-allowed;
+        opacity: 1;
+
+        &:active,
+        &:hover,
+        &:focus {
+          background-color: use_color('info');
+        }
+
+        &:focus {
+          outline: none;
+        }
+      }
+    }
+
+    &__tooltip.tooltip {
+      background: use_color('white');
+      border-radius: 4px;
+      box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
+
+      .tooltip-inner {
+        align-items: center;
+        background: use_color('white');
+        color: use_color('black');
+        display: flex;
+        font: normal 400 14px/16px $typeface-page-text;
+        height: 6rem;
+        width: 20rem;
+      }
+    }
+  }
+}

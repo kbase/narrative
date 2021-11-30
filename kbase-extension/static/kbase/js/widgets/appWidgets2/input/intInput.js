@@ -9,7 +9,6 @@ define([
     '../validators/int',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) => {
     'use strict';
 

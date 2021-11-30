@@ -33,7 +33,7 @@
         "grunt-stylelint": "^0.16.0",
         "husky": "7.0.2",
         "jasmine-ajax": "4.0.0",
-        "jasmine-core": "3.9.0",
+        "jasmine-core": "3.10.1",
         "jasmine-jquery": "2.1.1",
         "karma": "6.3.4",
         "karma-brief-reporter": "0.2.1",

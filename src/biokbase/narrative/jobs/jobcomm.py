@@ -314,9 +314,9 @@ class JobComm:
         self.send_comm_message("cell_job_status", cell_job_states)
         return cell_job_states
 
-    def _lookup_job_info(self, req: JobRequest) -> dict:
+    def __job_info(self, job_id_list):
         """
-        Looks up job info. This is just some high-level generic information about the running
+        Look up job info. This is just some high-level generic information about the running
         job, including the app id, name, and job parameters.
         :param req: a JobRequest with the job_id_list of interest
         :returns: a dict keyed with job IDs and with values of dicts with the following keys:
@@ -326,59 +326,50 @@ class JobComm:
             - job_id - str - just re-reporting the id string
             - job_params - dict - the params that were passed to that particular job
         """
-        job_info = self._jm.lookup_job_info(req.job_id_list)
+        job_info = self._jm.lookup_job_info(job_id_list)
         self.send_comm_message("job_info", job_info)
         return job_info
 
+    def _lookup_job_info(self, req: JobRequest) -> dict:
+        return self.__job_info(req.job_id_list)
+
     def _lookup_job_info_batch(self, req: JobRequest) -> dict:
         job_ids = self._jm.update_batch_job(req.job_id)
-        job_info_batch = self._jm.lookup_job_info(job_ids)
-        self.send_comm_message("job_info", job_info_batch)
-        return job_info_batch
+        return self.__job_info(job_ids)
+
+    def __job_states(self, job_id_list):
+        """
+        Look up job states.
+
+        Returns a dictionary of job state information indexed by job ID.
+        """
+        output_states = self._jm.get_job_states(job_id_list)
+        self.send_comm_message("job_status", output_states)
+        return output_states
 
     def lookup_job_state(self, job_id: str) -> dict:
         """
         This differs from the _lookup_job_state (underscored version) in that
-        it just takes a job_id string, not a JobRequest. It, however, functions the
-        same, by creating a JobRequest and forwarding it to the request version.
-
-        Therefore, it sends the job message to the browser over the right channel,
-        and also returns the job state (or raises a ValueError if not found).
+        it just takes a job_id string, not a JobRequest.
         """
-        req = JobRequest(
-            {
-                "content": {
-                    "data": {"request_type": "job_status", JOB_ID_LIST: [job_id]}
-                }
-            }
-        )
-        return self._lookup_job_states(req)
+        return self.__job_states([job_id])
 
     def _lookup_job_states(self, req: JobRequest) -> dict:
-        """
-        Look up job states.
-        """
-        output_states = self._jm.get_job_states(req.job_id_list)
-        self.send_comm_message("job_status", output_states)
-        return output_states
+        return self.__job_states(req.job_id_list)
 
     def _lookup_job_states_batch(self, req: JobRequest) -> dict:
         try:
             job_ids = self._jm.update_batch_job(req.job_id)
-            output_states = self._jm.get_job_states(job_ids)
         except JobIDException:
             self.send_comm_message(
                 "job_status",
-                {
-                    req.job_id: get_error_output_state(req.job_id)
-                },
+                {req.job_id: get_error_output_state(req.job_id)},
             )
             raise
 
-        self.send_comm_message("job_status", output_states)
-        return output_states
+        return self.__job_states(job_ids)
 
-    def _modify_job_updates(self, req: JobRequest) -> None:
+    def __modify_updates(self, job_id_list, update_type):
         """
         Modifies how many things want to listen to a job update.
         If this is a request to start a job update, then this starts the update loop that
@@ -390,34 +381,27 @@ class JobComm:
         If the given job_id in the request doesn't exist in the current Narrative, or is None,
         this raises a ValueError.
         """
-        if req.request == "start_job_update":
+        if update_type == "start_job_update":
             update_adjust = 1
-        elif req.request == "stop_job_update":
+        elif update_type == "stop_job_update":
             update_adjust = -1
         else:
             raise ValueError("Unknown request")
 
-        self._jm.modify_job_refresh(req.job_id_list, update_adjust)
-        output_states = self._jm.get_job_states(req.job_id_list)
+        self._jm.modify_job_refresh(job_id_list, update_adjust)
+        output_states = self._jm.get_job_states(job_id_list)
 
         if update_adjust == 1:
             self.start_job_status_loop()
             self.send_comm_message("job_status", output_states)
 
+    def _modify_job_updates(self, req: JobRequest) -> None:
+        self.__modify_updates(req.job_id_list, req.request)
+
     def _modify_job_updates_batch(self, req: JobRequest) -> None:
         job_ids = self._jm.update_batch_job(req.job_id)
-
-        req = JobRequest(
-            {
-                "content": {
-                    "data": {
-                        "request_type": req.request.replace("_batch", ""),
-                        JOB_ID_LIST: job_ids,
-                    }
-                }
-            }
-        )
-        self._modify_job_updates(req)
+        update_type = req.request.replace("_batch", "")
+        self.__modify_updates(job_ids, update_type)
 
     def _cancel_jobs(self, req: JobRequest) -> None:
         """
@@ -436,9 +420,9 @@ class JobComm:
         self.send_comm_message(
             "new_job",
             {
-                "job_id_list": [
+                JOB_ID_LIST: [
                     result["retry"]["jobState"]["job_id"]
-                    for result in retry_results
+                    for result in retry_results.values()
                     if "retry" in result
                 ]
             },
@@ -448,17 +432,13 @@ class JobComm:
         """
         This returns a set of job logs based on the info in the request.
         """
-        first_line = req.rq_data.get("first_line", 0)
-        num_lines = req.rq_data.get("num_lines", None)
-        latest_only = req.rq_data.get("latest", False)
         log_output = self._jm.get_job_logs(
             req.job_id,
-            num_lines=num_lines,
-            first_line=first_line,
-            latest_only=latest_only,
+            num_lines=req.rq_data.get("num_lines", None),
+            first_line=req.rq_data.get("first_line", 0),
+            latest=req.rq_data.get("latest", False),
         )
-        log_output["latest"] = latest_only
-        self.send_comm_message("job_logs", log_output)
+        self.send_comm_message("job_logs", {req.job_id: log_output})
 
     def _handle_comm_message(self, msg: dict) -> None:
         """

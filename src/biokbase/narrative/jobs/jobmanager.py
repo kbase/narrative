@@ -2,6 +2,7 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 import copy
+import time
 from typing import List, Tuple
 import biokbase.narrative.clients as clients
 from .job import (
@@ -36,10 +37,11 @@ JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
+DOES_NOT_EXIST = "does_not_exist"
 
 
-def get_error_output_state(job_id, error="does_not_exist"):
-    if error not in ["does_not_exist", "ee2_error"]:
+def get_error_output_state(job_id, error=DOES_NOT_EXIST):
+    if error not in [DOES_NOT_EXIST, "ee2_error"]:
         raise ValueError(f"Unknown error type: {error}")
     return {"jobState": {"job_id": job_id, "status": error}}
 
@@ -172,10 +174,6 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job(self, input_id: str) -> None:
-        if input_id not in self._running_jobs:
-            raise JobIDException(JOB_NOT_REG_ERR, input_id)
-
     def _check_job_list(self, input_ids: List[str]) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order
@@ -282,11 +280,6 @@ class JobManager(object):
         Builds a set of job states for the list of job ids.
         :param states: dict, where each value is a state is from EE2
         """
-        # if cached, use 'em.
-        # otherwise, lookup.
-        # do transform
-        # cache terminal ones.
-        # return all.
         if not isinstance(job_ids, list):
             raise ValueError("job_ids must be a list")
 
@@ -321,13 +314,23 @@ class JobManager(object):
                 )
             except Exception as e:
                 kblogging.log_event(
-                    self._log, "_construct_job_output_state_set", {"err": str(e)}
+                    self._log, "_construct_job_output_state_set", {"exception": str(e)}
                 )
-                for job_id in jobs_to_lookup:
-                    output_states[job_id] = get_error_output_state(job_id, "ee2_error")
 
-        for job_id, state in fetched_states.items():
-            output_states[job_id] = self.get_job(job_id).output_state(state)
+            # fill in the output states for the missing jobs
+            # if the job fetch failed, set the job status to "ee2_error"
+            # without altering the cached job data
+            for job_id in jobs_to_lookup:
+                job = self.get_job(job_id)
+                if job_id in fetched_states:
+                    output_states[job_id] = job.output_state(fetched_states[job_id])
+                else:
+                    # fetch the current state without updating it
+                    output_states[job_id] = job.output_state({})
+                    # set the status to 'ee2_error' and the 'updated' timestamp to now
+                    output_states[job_id]["jobState"]["status"] = "ee2_error"
+                    output_states[job_id]["jobState"]["updated"] = int(time.time())
+
         return output_states
 
     def lookup_job_info(self, job_ids: List[str]) -> dict:
@@ -355,13 +358,13 @@ class JobManager(object):
                 "batch_id": job.batch_id,
             }
         for error_id in error_ids:
-            infos[error_id] = "does_not_exist"
+            infos[error_id] = DOES_NOT_EXIST
         return infos
 
     def lookup_jobs_by_cell_id(self, cell_id_list=None):
         """
         Fetch job states for jobs with a cell_id in cell_id_list
-        Batch job cell IDs are calculated using the `batch_cell_ids` method
+        Mappings of job ID to cell ID are added when new jobs are registered
         Returns a dictionary of job states keyed by job ID and a mapping of
         cell IDs to the list of job IDs associated with the cell.
         """
@@ -406,7 +409,8 @@ class JobManager(object):
         Returns a Job with the given job_id.
         Raises a JobIDException if not found.
         """
-        self._check_job(job_id)
+        if job_id not in self._running_jobs:
+            raise JobIDException(JOB_NOT_REG_ERR, job_id)
         return self._running_jobs[job_id]["job"]
 
     def get_job_logs(
@@ -414,7 +418,7 @@ class JobManager(object):
         job_id: str,
         first_line: int = 0,
         num_lines: int = None,
-        latest_only: bool = False,
+        latest: bool = False,
     ) -> dict:
         """
         Raises a Value error if the job_id doesn't exist or is not present.
@@ -424,14 +428,15 @@ class JobManager(object):
         :param num_lines: int - the maximum number of lines to return.
             if < 0, will be reset to 0.
             if None, then will not be considered, and just return all the lines.
-        :param latest_only: bool - if True, will only return the most recent max_lines
+        :param latest: bool - if True, will only return the most recent max_lines
             of logs. This overrides the first_line parameter if set to True. So if the call made
-            is get_job_logs(id, first_line=0, num_lines=5, latest_only=True), and there are 100
+            is get_job_logs(id, first_line=0, num_lines=5, latest=True), and there are 100
             log lines available, then lines 96-100 will be returned.
         :returns: dict with keys:
             job_id:     string
             batch_id:   string | None
             first:      int - the first line returned
+            latest:     bool - whether the latest lines were returned
             max_lines:  int - the number of logs lines currently available for that job
             lines:      list - the lines themselves, fresh from the server. These are all tiny dicts with keys
                 "line" - the log line string
@@ -445,7 +450,7 @@ class JobManager(object):
             num_lines = 0
 
         try:
-            if latest_only:
+            if latest:
                 (max_lines, logs) = job.log()
                 if num_lines is None or max_lines <= num_lines:
                     first_line = 0
@@ -459,6 +464,7 @@ class JobManager(object):
                 "job_id": job.job_id,
                 "batch_id": job.batch_id,
                 "first": first_line,
+                "latest": True if latest else False,
                 "max_lines": max_lines,
                 "lines": logs,
             }
@@ -506,7 +512,7 @@ class JobManager(object):
             self._running_jobs[job_id]["refresh"] = is_refreshing
             del self._running_jobs[job_id]["canceling"]
 
-    def retry_jobs(self, job_id_list: List[str]) -> List[dict]:
+    def retry_jobs(self, job_id_list: List[str]) -> dict:
         """
         Returns
         [
@@ -544,22 +550,23 @@ class JobManager(object):
             retry_ids, self._create_jobs(retry_ids)  # add to self._running_jobs index
         )
         job_states = {**orig_states, **retry_states}
+
+        results_by_job_id = {}
         # fill in the job state details
         for result in retry_results:
-            result["job"] = job_states[result["job_id"]]
-            del result["job_id"]
+            job_id = result["job_id"]
+            results_by_job_id[job_id] = {"job": job_states[job_id]}
             if "retry_id" in result:
-                result["retry"] = job_states[result["retry_id"]]
-                del result["retry_id"]
+                retry_id = result["retry_id"]
+                results_by_job_id[job_id]["retry"] = job_states[retry_id]
+            if "error" in result:
+                results_by_job_id[job_id]["error"] = result["error"]
         for job_id in error_ids:
-            retry_results.append(
-                {
-                    "job": get_error_output_state(job_id),
-                    "error": "does_not_exist",
-                }
-            )
-
-        return retry_results
+            results_by_job_id[job_id] = {
+                "job": get_error_output_state(job_id),
+                "error": DOES_NOT_EXIST,
+            }
+        return results_by_job_id
 
     def get_job_states(self, job_ids: List[str]) -> dict:
         job_ids, error_ids = self._check_job_list(job_ids)

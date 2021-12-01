@@ -317,7 +317,9 @@ def validate_job_state(job_state: dict) -> None:
     assert "jobState" in job_state, "jobState key missing"
     assert isinstance(job_state["jobState"], dict), "jobState is not a dict"
     assert "outputWidgetInfo" in job_state, "outputWidgetInfo key missing"
-    assert isinstance(job_state["outputWidgetInfo"], (dict, NoneType)), "outputWidgetInfo is not a dict or None"
+    assert isinstance(
+        job_state["outputWidgetInfo"], (dict, NoneType)
+    ), "outputWidgetInfo is not a dict or None"
     state = job_state["jobState"]
     # list of tuples - first = key name, second = value type
     # details for other cases comes later. This is just the expected basic set of

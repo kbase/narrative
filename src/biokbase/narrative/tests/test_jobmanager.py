@@ -206,19 +206,6 @@ class JobManagerTest(unittest.TestCase):
                         refresh,
                     )
 
-    def test__check_job(self):
-        for job_id in ALL_JOBS:
-            self.jm._check_job(job_id)
-
-    def test__check_job_fail(self):
-        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {None}"):
-            self.jm._check_job(None)
-
-        with self.assertRaisesRegex(
-            JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
-        ):
-            self.jm._check_job(JOB_NOT_FOUND)
-
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
             self.jm._check_job_list(None)
@@ -286,17 +273,23 @@ class JobManagerTest(unittest.TestCase):
         def mock_check_jobs(self, params):
             raise Exception("Test exception")
 
-        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
-            job_states = self.jm._construct_job_output_state_set(ALL_JOBS)
+        TIME_NOW = 987654321
+        with mock.patch("time.time") as fake_time:
+            fake_time.return_value = TIME_NOW
+            with mock.patch.object(
+                MockClients, "check_jobs", side_effect=mock_check_jobs
+            ):
+                job_states = self.jm._construct_job_output_state_set(ALL_JOBS)
+
+        expected = get_test_job_states(ALL_JOBS)
+
+        for job_id in ACTIVE_JOBS:
+            # add in the ee2_error status and updated timestamp
+            expected[job_id]["jobState"]["status"] = "ee2_error"
+            expected[job_id]["jobState"]["updated"] = TIME_NOW
 
         self.assertEqual(
-            {
-                **get_test_job_states(TERMINAL_JOBS),
-                **{
-                    job_id: get_error_output_state(job_id, "ee2_error")
-                    for job_id in ACTIVE_JOBS
-                },
-            },
+            expected,
             job_states,
         )
 
@@ -307,15 +300,19 @@ class JobManagerTest(unittest.TestCase):
         job_list = self.jm._running_jobs.keys()
         self.assertEqual(self.jm._create_jobs(job_list), {})
 
-    def test_get_job_good(self):
+    def test__get_job_good(self):
         job_id = self.job_ids[0]
         job = self.jm.get_job(job_id)
         self.assertEqual(job_id, job.job_id)
         self.assertIsInstance(job, Job)
 
-    def test_get_job_bad(self):
-        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: not_a_job_id"):
-            self.jm.get_job("not_a_job_id")
+    def test__get_job_fail(self):
+
+        inputs = [None, "", JOB_NOT_FOUND]
+
+        for input in inputs:
+            with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {input}"):
+                self.jm.get_job(input)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_list_jobs_html(self):
@@ -457,20 +454,19 @@ class JobManagerTest(unittest.TestCase):
         retry_results,
     ):
         self.assertEqual(expected, retry_results)
-
         orig_ids = [
             result["job"]["jobState"]["job_id"]
-            for result in retry_results
+            for result in retry_results.values()
             if "error" not in result
         ]
         retry_ids = [
             result["retry"]["jobState"]["job_id"]
-            for result in retry_results
+            for result in retry_results.values()
             if "error" not in result
         ]
         dne_ids = [
             result["job"]["jobState"]["job_id"]
-            for result in retry_results
+            for result in retry_results.values()
             if result["job"]["jobState"]["status"] == "does_not_exist"
         ]
 
@@ -485,12 +481,12 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__success(self):
         job_ids = [JOB_TERMINATED]
-        expected = [
-            {
+        expected = {
+            JOB_TERMINATED: {
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             }
-        ]
+        }
 
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
@@ -498,16 +494,16 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__multi_success(self):
         job_ids = [JOB_TERMINATED, JOB_ERROR]
-        expected = [
-            {
+        expected = {
+            JOB_TERMINATED: {
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             },
-            {
+            JOB_ERROR: {
                 "job": self.job_states[JOB_ERROR],
                 "retry": get_retry_job_state(JOB_ERROR),
             },
-        ]
+        }
 
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
@@ -515,20 +511,20 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__success_error_dne(self):
         job_ids = [JOB_NOT_FOUND, JOB_TERMINATED, JOB_COMPLETED]
-        expected = [
-            {
+        expected = {
+            JOB_TERMINATED: {
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             },
-            {
+            JOB_COMPLETED: {
                 "job": self.job_states[JOB_COMPLETED],
                 "error": ERR_STR,
             },
-            {
+            JOB_NOT_FOUND: {
                 "job": get_error_output_state(JOB_NOT_FOUND),
                 "error": "does_not_exist",
             },
-        ]
+        }
 
         ee2_ret = [
             {"job_id": JOB_TERMINATED, "retry_id": JOB_TERMINATED[::-1]},
@@ -546,11 +542,11 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__all_error(self):
         job_ids = [JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
-        expected = [
-            {"job": self.job_states[JOB_TERMINATED], "error": ERR_STR},
-            {"job": self.job_states[JOB_CREATED], "error": ERR_STR},
-            {"job": self.job_states[JOB_RUNNING], "error": ERR_STR},
-        ]
+        expected = {
+            JOB_TERMINATED: {"job": self.job_states[JOB_TERMINATED], "error": ERR_STR},
+            JOB_CREATED: {"job": self.job_states[JOB_CREATED], "error": ERR_STR},
+            JOB_RUNNING: {"job": self.job_states[JOB_RUNNING], "error": ERR_STR},
+        }
 
         ee2_ret = [
             {"job_id": JOB_TERMINATED, "error": ERR_STR},
@@ -572,12 +568,12 @@ class JobManagerTest(unittest.TestCase):
         retry_id = JOB_TERMINATED[::-1]
         retry_status = "error"
 
-        expected = [
-            {
+        expected = {
+            JOB_TERMINATED: {
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED, status=retry_status),
             }
-        ]
+        }
 
         test_jobs_ = copy.deepcopy(TEST_JOBS)
         test_jobs_[retry_id] = {"job_id": retry_id, "status": retry_status}
@@ -594,12 +590,12 @@ class JobManagerTest(unittest.TestCase):
     def test_retry_jobs__none_exist(self):
         dne_id = "nope"
         job_ids = ["", "", None, dne_id]
-        expected = [
-            {
+        expected = {
+            dne_id: {
                 "job": get_error_output_state(dne_id),
                 "error": "does_not_exist",
             }
-        ]
+        }
 
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
@@ -676,7 +672,9 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_jobs_by_cell_id__cell_id_list__batch_job__two_cells(self):
         cell_ids = [TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]]
-        expected_ids = TEST_CELL_IDs[TEST_CELL_ID_LIST[2]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[3]]
+        expected_ids = (
+            TEST_CELL_IDs[TEST_CELL_ID_LIST[2]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[3]]
+        )
         self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -688,7 +686,9 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_jobs_by_cell_id__cell_id_list__batch_and_other_job(self):
         cell_ids = [TEST_CELL_ID_LIST[0], TEST_CELL_ID_LIST[2]]
-        expected_ids = TEST_CELL_IDs[TEST_CELL_ID_LIST[0]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[2]]
+        expected_ids = (
+            TEST_CELL_IDs[TEST_CELL_ID_LIST[0]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[2]]
+        )
         self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)

@@ -62,6 +62,8 @@ def transform_job_exception(e, error=None):
             msg = "An internal error occurred in the KBase service."
         else:
             msg = "An untracked error occurred."
-        return NarrativeException(e.response.status_code, msg, "HTTPError", "network", error)
+        return NarrativeException(
+            e.response.status_code, msg, "HTTPError", "network", error
+        )
     else:
         return NarrativeException(-1, str(e), "Exception", "unknown", error)

@@ -102,13 +102,10 @@ When the kernel sends a message to the front end, the only module set up to list
   * `message` - string, some message about the error
 
 `job-info` - contains information about the current job
-  * `jobId` - string, the job id
   * `jobInfo` - object, the job information object (see the **Data Structures** section below)
 
 `job-logs` - sent with information about some job logs.
-  * `jobId` - string, the job id
   * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
-  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs.
   * `error` - if exists, the log request has thrown an error. The error key contains the error details.
 
 `job-status` - contains the current job state
@@ -191,30 +188,34 @@ These are organized by the `request_type` field, followed by the expected respon
 }
 ```
 
-`all_status` - request the status of all currently running jobs, responds with `job_status_all`
-
 `job_status` - request job status, responds with `job_status` for each job
-* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
-`job_status_batch` request job statuses, responds with `job_status`
+`job_status_batch` request job statuses for all jobs in a batch; responds with `job_status`
 * `job_id` - string - job_id of batch container job
 
 `start_job_update` - request updating job(s) during the update thread, responds with `job_status`
-* `job_id` - string OR `job_id_list` - array of strings
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
 `stop_job_update` - request halting update for job(s) during the update thread, no response
-* `job_id` - string OR `job_id_list` - array of strings
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
 `start_job_update_batch` - request updating batch container and children jobs, responds with `job_status`
-* `job_id` - string OR `job_id_list` - array of strings, but generally uses `job_id`
+* `job_id` - string OR
+* `job_id_list` - array of strings, but generally uses `job_id`
 
 `stop_job_update_batch` - request halting update for batch container and children jobs during the update thread, no response
-* `job_id` - string OR `job_id_list` - array of strings, but generally uses `job_id`
+* `job_id` - string OR
+* `job_id_list` - array of strings, but generally uses `job_id`
 
 `job_info` - request general information about job(s), responds with `job_info` for each job
-* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
-`job_info_batch` - request general information about jobs, responds with `job_info`
+`job_info_batch` - request general information about all jobs in a batch; responds with `job_info`
 * `job_id` - string - job_id of batch container job
 
 `job_logs` - request job log information, responds with `job_logs` for each job
@@ -224,10 +225,12 @@ These are organized by the `request_type` field, followed by the expected respon
 * `latest` - boolean, `true` if requesting just the latest logs
 
 `cancel_job` - cancel a job or list of jobs; responds with `job_status`
-* `job_id` - string OR `job_id_list` - array of strings
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
 `retry_job` - retry a job or list of jobs, responds with `job_retries` and `new_job`
-* `job_id` - string OR `job_id_list` - array of strings
+* `job_id` - string OR
+* `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
 These are all caught by the `JobCommChannel` on the browser side, then parsed and sent as the bus messages described above. Like other kernel messages, they have a `msg_type` field, and a `content` field containing data meant for the frontend to use. They have a rough structure like this:
@@ -303,7 +306,9 @@ i.e.
 }
 ```
 
-**bus** - `job-info`
+**bus** `job-info` sent by `job_id`
+
+Job info is split out into individual jobs and sent to `job_id` under the key `jobInfo` (see above)
 
 ### `job_status`
 The current job state. This one is probably most common.
@@ -328,7 +333,10 @@ Sample response JSON:
 }
 ```
 
-**bus** - `job-status`
+**bus** - `job-status` sent to `job_id`
+
+Job status data is split out into individual jobs and sent to `job_id`
+
 
 ### `job_status_all`
 The set of all job states for all running jobs, or at least the set that should be updated (those that are complete and not requested by the front end are not included - if a job is sitting in an error or finished state, it doesn't need ot have its app cell updated)
@@ -343,12 +351,14 @@ The set of all job states for all running jobs, or at least the set that should 
   * `jobState` - the job state (see the **Data Structures** section below for details
   * `outputWidgetInfo` - the parameters to send to output widgets, only available for a completed job
 
-**bus** - a series of `job-status` messages
+**bus** - see `job-status`
+
 
 ### `job_logs`
 Includes log statement information for a given job.
 
 **content**
+Dictionary with key(s) job ID and value dictionaries with the following structure:
   * `job_id` - string, the job id
   * `latest` - boolean, `true` if this is just the latest set of logs
   * `first` - int, the index of first line included in the set
@@ -357,34 +367,43 @@ Includes log statement information for a given job.
     * `line` - string, the log line
     * `is_error` - 0 or 1, if 1 then the line is an "error" as reported by the server
 
-**bus** `job-logs`
+**bus** `job-logs` sent by `job_id`
+
+Logs data is split out into individual jobs and sent to `job_id` (see above)
+
 
 ### `job_retries`
 Sent when one or more jobs are retried
 
-**content** An array of objects, e.g.:
+**content**
+Dictionary with key(s) original job ID and value dictionaries with the following structure:
 ```json
-[
-  {
-      "job": {"jobState": {"job_id": job_id, "status": status, ...} ...},
-      "retry": {"jobState": {"job_id": job_id, "status": status, ...} ...}
+{
+  job_id_1: {
+    "job": {"jobState": {"job_id": "job_id_1", "status": status, ...} ...},
+    "retry": {"jobState": {"job_id": "retry_id_1", "status": status, ...} ...}
   },
-  {
-      "job": {"jobState": {"job_id": job_id, "status": status, ...} ...},
-      "error": "..."
+  job_id_2: {
+    "job": {"jobState": {"job_id": "job_id_2", "status": status, ...} ...},
+    "error": "..."
   },
   ...
-  {
-      "job": {"jobState": {"job_id": job_id, "status": "does_not_exist"}},
-      "error": "does_not_exist"
+  job_id_x: {
+    "job": {"jobState": {"job_id": "job_id_x", "status": "does_not_exist"}},
+    "error": "does_not_exist"
   }
-]
+}
 ```
 Where the dict values corresponding to "job" or "retry" are the same data structures as for `job_status`
 Outer keys:
   * `job` - string, the job id of the retried job
   * `retry` - string, the job id of the job that was launched
   * `error` - string, appears if there was an error when trying to retry the job
+
+**bus** `job-retry-response` sent by `job_id`
+
+Retry data is split out into individual jobs and sent to `job_id`
+
 
 ### `new_job`
 Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent
@@ -414,18 +433,11 @@ All cases:
 (if ok)
   * `job_id` - if the job was launched successfully
 
-**bus** `run-status`
+**bus** `run-status` sent to `cell_id`
 
-### `result`
-Sent at the end of a `AppManager.run_dynamic_service` call (of which there aren't many).
+Sent unchanged to `cell_id`
 
-**content**
-  * `cell_id` - the app cell id (used for routing)
-  * `run_id` - the run id of the app (autogenerated by the cell)
-  * `event_at` - string, timestamp
-  * `result` - the result of the dynamic service call (some unspecified object)
 
-**bus** `result` - sent to `cell_id` channel
 
 ## Job Management flow on backend (in IPython kernel, biokbase.narrative.jobs package)
 These steps define the process of creating a new app running job.
@@ -448,7 +460,11 @@ These steps define the process of creating a new app running job.
 ## JobManager initialization and startup.
 These steps take place whenever the user loads a narrative, or when the kernel is restarted. This ensures that the JobManager in the kernel is kept up-to-date on Job status.
 1. User starts kernel (opens a Narrative, or clicks Kernel -> Restart)
-2. `jobCommsChannel` (front end widget) executes the following kernel call: `JobManager().initialize_jobs(); JobComm().start_update_loop`
+2. `jobCommChannel.js` (front end widget) executes the following kernel call:
+```py
+JobManager().initialize_jobs()
+JobComm().start_update_loop
+```
 3. `JobManager` does:
   * Get current user and workspace id.
   * `ExecutionEngine2.check_workspace_jobs` with the workspace id - gets the set of jobs in that workspace, and builds them into `Job` objects.
@@ -563,7 +579,12 @@ When an error occurs while preparing the job state, the output states will have 
     "jobState": {"job_id": "job_id_0", "status": "does_not_exist"}
   },
   "job_id_1": {
-    "jobState": {"job_id": "job_id_1", "status": "ee2_error"}
+    "jobState": {
+      "job_id": "job_id_1",
+      "status": "ee2_error",
+      "updated": 1234567890, // the current epoch time
+      ... // cached job data
+      }
   },
   ...
 }

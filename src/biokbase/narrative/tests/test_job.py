@@ -464,31 +464,27 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs_custom(job, expected)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_state__no_final_state__non_terminal(self):
+    def test_state__non_terminal(self):
         """
         test that a job outputs the correct state
         """
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
         state = job.state()
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
         self.assertEqual(state["status"], "created")
 
         expected_state = create_state_from_ee2(JOB_CREATED)
         self.assertEqual(state, expected_state)
 
-    def test_state__final_state_exists__terminal(self):
+    def test_state__terminal(self):
         """
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
         self.assertTrue(job.was_terminal())
-        self.assertIsNotNone(job.final_state)
         expected = create_state_from_ee2(JOB_COMPLETED)
-        self.assertEqual(job.final_state, expected)
 
         with assert_obj_method_called(MockClients, "check_job", call_status=False):
             state = job.state()
@@ -502,7 +498,6 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
         with self.assertRaisesRegex(ServerError, "Check job failed"):
             job.state()
 
@@ -577,20 +572,6 @@ class JobTest(unittest.TestCase):
         self.assertIn("element.html", js_out)
         self.assertIn(job.job_id, js_out)
         self.assertIn("kbaseNarrativeJobStatus", js_out)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_job_finished(self):
-
-        is_finished = {
-            JOB_CREATED: False,
-            JOB_RUNNING: False,
-            JOB_COMPLETED: True,
-            JOB_TERMINATED: True,
-        }
-
-        for job_id in is_finished.keys():
-            job = create_job_from_ee2(job_id)
-            self.assertEqual(job.is_finished(), is_finished[job_id])
 
     @mock.patch("biokbase.narrative.widgetmanager.WidgetManager.show_output_widget")
     @mock.patch(CLIENTS, get_mock_client)
@@ -932,18 +913,6 @@ class JobTest(unittest.TestCase):
             self.assertTrue(batch_job.in_cells(["B", "A", cell_id]))
 
         self.assertFalse(batch_job.in_cells(["goodbye", "hasta manana"]))
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_batch_cell_ids__not_batch(self):
-        job = Job.from_job_id(JOB_COMPLETED)
-        self.assertEqual(job.batch_cell_ids(), None)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_batch_cell_ids__batch_job(self):
-        batch_fam = get_batch_family_jobs(return_list=True)
-
-        job = batch_fam[0]
-        self.assertEqual(set(job.batch_cell_ids()), {TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]})
 
     def test_app_name(self):
         for job in get_all_jobs().values():

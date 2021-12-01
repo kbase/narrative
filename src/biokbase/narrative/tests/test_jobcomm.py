@@ -831,9 +831,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("retry_job", job_id_list, True)
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
-        )
+        self.assertEqual({JOB_ID_LIST: [JOB_TERMINATED[::-1]]}, msg["data"]["content"])
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -843,7 +841,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]},
+            {JOB_ID_LIST: [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]},
             msg["data"]["content"],
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
@@ -862,9 +860,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("retry_job", job_id_list, True)
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
-        )
+        self.assertEqual({JOB_ID_LIST: [JOB_TERMINATED[::-1]]}, msg["data"]["content"])
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -873,7 +869,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("retry_job", job_id_list, True)
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual({"job_id_list": []}, msg["data"]["content"])
+        self.assertEqual({JOB_ID_LIST: []}, msg["data"]["content"])
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
     @mock.patch(CLIENTS, get_failing_mock_client)
@@ -915,12 +911,13 @@ class JobCommTestCase(unittest.TestCase):
             req = make_comm_msg("job_logs", job_id, True, content)
             self.jc._get_job_logs(req)
             msg = self.jc._comm.last_message
-            self.assertEqual(job_id, msg["data"]["content"]["job_id"])
-            self.assertEqual(None, msg["data"]["content"]["batch_id"])
             self.assertEqual("job_logs", msg["data"]["msg_type"])
-            self.assertEqual(lines_available, msg["data"]["content"]["max_lines"])
-            self.assertEqual(c[3], len(msg["data"]["content"]["lines"]))
-            self.assertEqual(c[2], msg["data"]["content"]["latest"])
+            msg_content = msg["data"]["content"][job_id]
+            self.assertEqual(job_id, msg_content["job_id"])
+            self.assertEqual(None, msg_content["batch_id"])
+            self.assertEqual(lines_available, msg_content["max_lines"])
+            self.assertEqual(c[3], len(msg_content["lines"]))
+            self.assertEqual(c[2], msg_content["latest"])
             first = 0 if c[1] is None and c[2] is True else c[0]
             n_lines = c[1] if c[1] else lines_available
             if first < 0:
@@ -928,8 +925,8 @@ class JobCommTestCase(unittest.TestCase):
             if c[2]:
                 first = lines_available - min(n_lines, lines_available)
 
-            self.assertEqual(first, msg["data"]["content"]["first"])
-            for idx, line in enumerate(msg["data"]["content"]["lines"]):
+            self.assertEqual(first, msg_content["first"])
+            for idx, line in enumerate(msg_content["lines"]):
                 self.assertIn(str(first + idx), line["line"])
                 self.assertEqual(0, line["is_error"])
 
@@ -959,6 +956,38 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
         self.check_error_message("job_logs", {JOB_ID: job_id}, err)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__latest(self):
+        job_id = JOB_COMPLETED
+        req = make_comm_msg(
+            "job_logs", job_id, False, content={"num_lines": 10, "latest": True}
+        )
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        msg_content = msg["data"]["content"][job_id]
+        self.assertEqual(msg["data"]["msg_type"], "job_logs")
+        self.assertEqual(msg_content["job_id"], job_id)
+        self.assertTrue(msg_content["latest"])
+        self.assertEqual(msg_content["first"], 90)
+        self.assertEqual(msg_content["max_lines"], 100)
+        self.assertEqual(len(msg_content["lines"]), 10)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__first_line(self):
+        job_id = JOB_COMPLETED
+        req = make_comm_msg(
+            "job_logs", job_id, False, content={"num_lines": 10, "first_line": 0}
+        )
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        msg_content = msg["data"]["content"][job_id]
+        self.assertEqual(msg["data"]["msg_type"], "job_logs")
+        self.assertEqual(msg_content["job_id"], job_id)
+        self.assertFalse(msg_content["latest"])
+        self.assertEqual(msg_content["first"], 0)
+        self.assertEqual(msg_content["max_lines"], 100)
+        self.assertEqual(len(msg_content["lines"]), 10)
 
     # ------------------------
     # Modify job update
@@ -1302,36 +1331,6 @@ class JobCommTestCase(unittest.TestCase):
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_handle_latest_job_logs_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg(
-            "job_logs", job_id, False, content={"num_lines": 10, "latest": True}
-        )
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_logs")
-        self.assertEqual(msg["data"]["content"]["job_id"], job_id)
-        self.assertTrue(msg["data"]["content"]["latest"])
-        self.assertEqual(msg["data"]["content"]["first"], 90)
-        self.assertEqual(msg["data"]["content"]["max_lines"], 100)
-        self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_handle_job_logs_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg(
-            "job_logs", job_id, False, content={"num_lines": 10, "first_line": 0}
-        )
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_logs")
-        self.assertEqual(msg["data"]["content"]["job_id"], job_id)
-        self.assertFalse(msg["data"]["content"]["latest"])
-        self.assertEqual(msg["data"]["content"]["first"], 0)
-        self.assertEqual(msg["data"]["content"]["max_lines"], 100)
-        self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_handle_cancel_job_msg_with_job_id_list(self):

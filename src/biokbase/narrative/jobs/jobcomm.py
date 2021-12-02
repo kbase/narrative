@@ -2,8 +2,11 @@ import copy
 import threading
 from typing import List, Union
 from ipykernel.comm import Comm
-import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR, get_error_output_state
+from biokbase.narrative.jobs.jobmanager import (
+    JOBS_TYPE_ERR,
+    get_error_output_state,
+    JobManager,
+)
 from biokbase.narrative.exception_util import NarrativeException, JobIDException
 from biokbase.narrative.common import kblogging
 
@@ -212,7 +215,7 @@ class JobComm:
             self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
         if self._jm is None:
-            self._jm = jobmanager.JobManager()
+            self._jm = JobManager()
         if self._msg_map is None:
             self._msg_map = {
                 "all_status": self._lookup_all_job_states,

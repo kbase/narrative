@@ -873,8 +873,6 @@ define([
             cancelBatch = null;
             updateEditingState();
             switchToTab('configure');
-            // set a new KBase cell ID
-            cell.metadata.kbase.attributes.id = new Uuid(4).format();
             Jupyter.notebook.save_checkpoint();
         }
 

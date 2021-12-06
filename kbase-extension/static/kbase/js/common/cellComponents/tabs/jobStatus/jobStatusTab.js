@@ -38,9 +38,11 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
         }
 
         function stop() {
-            container.innerHTML = '';
             if (jobStatusTableWidget) {
-                return jobStatusTableWidget.stop();
+                jobStatusTableWidget.stop();
+            }
+            if (container) {
+                container.innerHTML = '';
             }
             return Promise.resolve();
         }

@@ -689,7 +689,6 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 if (batchId) {
                     this.doJobAction('cancel', [batchId]);
                 }
-                this.resetJobs();
             }
 
             /**
@@ -700,6 +699,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     batchJob = this.model.getItem('exec.jobState');
                 if (!allJobs || !Object.keys(allJobs).length) {
                     this.model.deleteItem('exec');
+                    this.resetCell();
                     return;
                 }
 
@@ -710,13 +710,21 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 this.bus.emit('request-job-updates-stop', {
                     batchId: batchJob.job_id,
                 });
-
                 // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
                     this.removeJobListeners(jobId);
                 });
 
                 this.model.deleteItem('exec');
+                this.resetCell();
+            }
+
+            resetCell() {
+                if (this.cellId) {
+                    this.bus.emit('reset-cell', {
+                        cellId: this.cellId,
+                    });
+                }
             }
         };
 

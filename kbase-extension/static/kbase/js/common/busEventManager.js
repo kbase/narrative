@@ -19,6 +19,7 @@ define([], () => {
                 try {
                     bus.removeListener(id);
                 } catch (ex) {
+                    // eslint-disable-next-line no-console
                     console.log('Error removing bus listener', ex, id, listeners);
                 }
             });
@@ -26,9 +27,9 @@ define([], () => {
         }
 
         return {
-            add: add,
-            remove: remove,
-            removeAll: removeAll,
+            add,
+            remove,
+            removeAll,
         };
     }
 

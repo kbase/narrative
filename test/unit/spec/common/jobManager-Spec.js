@@ -20,6 +20,8 @@ define([
         });
     }
 
+    const cellId = 'MY_FAVE_CELL_ID';
+
     /**
      * test whether a handler is defined
      * @param {JobManager} jobManagerInstance
@@ -134,7 +136,6 @@ define([
 
         describe('cell ID', () => {
             it('can store a cell ID', () => {
-                const cellId = 'my-fave-cell';
                 const jobManagerInstance = new jobManagerClass({
                     model: {},
                     bus: {},
@@ -1331,45 +1332,46 @@ define([
             });
 
             const resetJobsCallArgs = [
-                ['request-job-updates-stop', { batchId: JobsData.batchParentJob.job_id }],
+                'request-job-updates-stop',
+                { batchId: JobsData.batchParentJob.job_id },
             ];
 
             describe('cancelBatchJob', () => {
                 it('cancels the current batch parent job', function () {
                     spyOn(this.bus, 'emit');
+                    const batchIds = JobsData.allJobsWithBatchParent.map((jobState) => {
+                        return jobState.job_id;
+                    });
                     expect(
                         Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
-                    ).toEqual(
-                        jasmine.arrayWithExactContents(
-                            JobsData.allJobsWithBatchParent.map((jobState) => {
-                                return jobState.job_id;
-                            })
-                        )
-                    );
+                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
                     expect(this.jobManagerInstance.listeners).toBeDefined();
                     this.jobManagerInstance.cancelBatchJob();
                     // check the args to bus.emit were correct
                     expect(this.bus.emit).toHaveBeenCalled();
-                    const callArgs = this.bus.emit.calls.allArgs();
+
                     const actionRequest = `request-job-${actionStatusMatrix.cancel.request}`;
-                    expect(callArgs).toEqual(
-                        jasmine.arrayWithExactContents(
-                            resetJobsCallArgs.concat([
-                                [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
-                            ])
-                        )
-                    );
-                    // the job model should have been reset and job listeners removed
-                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
-                    expect(this.jobManagerInstance.listeners).toEqual({});
+                    const expected = [
+                        [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
+                    ];
+                    const callArgs = this.bus.emit.calls.allArgs();
+                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));
+                    // the job model should be unchanged
+                    expect(
+                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
+                    // there should be a status listener for the batch parent
+                    expect(
+                        this.jobManagerInstance.listeners[JobsData.batchParentJob.job_id]
+                    ).toEqual({ 'job-status': this.bus.listen() });
                 });
             });
 
             describe('resetJobs', () => {
-                it('can reset the stored jobs and listeners', function () {
-                    spyOn(this.bus, 'emit');
+                function runResetTest(ctx, thisCellId = null) {
+                    spyOn(ctx.bus, 'emit');
                     expect(
-                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                        Object.keys(ctx.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(
                         jasmine.arrayWithExactContents(
                             JobsData.allJobsWithBatchParent.map((jobState) => {
@@ -1377,14 +1379,26 @@ define([
                             })
                         )
                     );
-                    expect(this.jobManagerInstance.listeners).toBeDefined();
-                    this.jobManagerInstance.resetJobs();
-                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
-                    expect(this.jobManagerInstance.listeners).toEqual({});
+                    expect(ctx.jobManagerInstance.listeners).toBeDefined();
+                    ctx.jobManagerInstance.resetJobs();
+                    expect(ctx.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
+                    expect(ctx.jobManagerInstance.listeners).toEqual({});
                     // check the args to bus.emit were correct
-                    expect(this.bus.emit).toHaveBeenCalled();
-                    const callArgs = this.bus.emit.calls.allArgs();
-                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(resetJobsCallArgs));
+                    expect(ctx.bus.emit).toHaveBeenCalled();
+                    let expected = [resetJobsCallArgs];
+                    if (thisCellId) {
+                        expected = [resetJobsCallArgs, ['reset-cell', { cellId }]];
+                    }
+                    const callArgs = ctx.bus.emit.calls.allArgs();
+                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));
+                }
+                it('can reset the stored jobs and listeners', function () {
+                    runResetTest(this);
+                });
+
+                it('can reset stored jobs, listeners, and cells', function () {
+                    this.jobManagerInstance.cellId = cellId;
+                    runResetTest(this, cellId);
                 });
             });
         });

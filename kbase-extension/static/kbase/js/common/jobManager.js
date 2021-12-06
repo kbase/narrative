@@ -155,7 +155,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          *  {string}    handlerName - the name of the handler to add
          *  {function}  handlerFn - the function to be performed
          *              if the handler function is already installed on the job manager,
-         *              'null' can be supplied in place of the function
+         *              `handlerFn` will replace the existing function. If the existing
+         *              function can be used, `null` can be supplied.
          *
          * Example:
          *
@@ -172,10 +173,12 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 return handlerName;
             } else if (this.__handlerFns[handlerName]) {
                 // a function with this name already exists
-                if (handlerFn !== null) {
-                    console.warn(`A handler with the name ${handlerName} already exists`);
+                // this handler can be used unchanged
+                if (handlerFn === null) {
+                    return;
                 }
-                return;
+                // otherwise, replace the handler
+                console.warn(`Replaced existing ${handlerName} handler`);
             } else if (handlerFn === null && !this.__handlerFns[handlerName]) {
                 // expected the handler to exist already, but it does not
                 console.error(`No handler function supplied for ${handlerName}`);
@@ -226,6 +229,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
          * @param  {...any} args
          */
         runHandler(event, ...args) {
+            const ctx = this;
             if (
                 !this._isValidEvent(event) ||
                 !this.handlers[event] ||
@@ -238,7 +242,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 .sort()
                 .forEach((handlerName) => {
                     try {
-                        this.handlers[event][handlerName](this, ...args);
+                        this.handlers[event][handlerName](ctx, ...args);
                     } catch (err) {
                         console.warn(`Error executing handler ${handlerName}:`, err);
                     }

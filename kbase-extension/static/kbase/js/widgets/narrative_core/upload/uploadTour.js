@@ -34,44 +34,44 @@ define([
             {
                 title: 'Globus Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.globus_div > a'),
+                element: that.$elem.find('.globus_acl_link'),
                 content:
                     'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, pointing to your directory in KBase.',
             },
             {
                 title: 'Web Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.web_upload_div > a'),
+                element: that.$elem.find('.web_upload_div'),
                 content:
-                    'Click here to add an App to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.',
+                    'Click here to add an import app to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.',
             },
             {
                 title: 'Staging Path',
                 placement: 'right',
-                element: that.$elem.find('div.file-path'),
+                element: that.$elem.find('.kb-data-staging__breadcrumbs'),
                 content:
-                    'If you are viewing the contents of a folder, you can click links next to that folder name to navigate and show other files. Click the button on the left to manually refresh the list.',
+                    'If you are viewing the contents of a folder, you can click links next to that folder name to navigate and show other files. Click the "Refresh" button on the left to manually refresh the list.',
             },
             {
                 title: 'Uploaded Files',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table'),
+                element: that.$elem.find('#kb-staging-table'),
                 content:
                     'This table lists your uploaded files, their filenames, their size, and when they were last modified. You can sort by any of the fields.',
             },
             {
                 title: 'File or Folder',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table > thead > tr > th:nth-child(1)'),
+                element: that.$elem.find('.kb-staging-table-header__file'),
                 content:
                     'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click a folder icon to show the files inside.',
             },
             {
                 title: 'Import to this Narrative',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table > thead > tr > th:last-child'),
+                element: that.$elem.find('#kb-staging-table > thead > tr > th:last-child'),
                 content:
-                    'Select an object type for your file, then click the <i class="fa fa-upload"></i> button to create an Import App cell in your narrative. Check the app parameters and click the Run button to transform your data file(s) into an object available for analysis in your Narrative.',
+                    'Select an object type for your file, then click the <i class="fa fa-download"></i> button to generate an importer app in your narrative. Check the app parameters and click the Run button to transform your data file(s) into an object available for analysis in your Narrative.',
             },
             {
                 title: 'End of Tour',

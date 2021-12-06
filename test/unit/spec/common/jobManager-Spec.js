@@ -447,6 +447,7 @@ define([
                         secondEvent = 'job-status';
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'warn');
+                    spyOn(console, 'error');
                     this.jobManagerInstance.addEventHandler(event, { scream, shout });
                     expectHandlersDefined(this.jobManagerInstance, event, true, [
                         'scream',
@@ -455,16 +456,18 @@ define([
                     this.jobManagerInstance.addEventHandler(secondEvent, { shout: scream });
                     expect(console.warn).toHaveBeenCalledTimes(1);
                     expect(console.warn.calls.allArgs()).toEqual([
-                        ['A handler with the name shout already exists'],
+                        ['Replaced existing shout handler'],
                     ]);
                     expect(this.jobManagerInstance.handlers[event]).toEqual({ scream, shout });
-                    expect(this.jobManagerInstance.handlers[secondEvent]).toEqual({ shout });
-                    // trigger the second event handler; 'shout' should run, not 'scream'
+                    expect(this.jobManagerInstance.handlers[secondEvent]).toEqual({
+                        shout: scream,
+                    });
+                    // trigger the second event handler; 'scream' should run, not 'shout'
                     this.jobManagerInstance.runHandler(secondEvent);
                     expect(console.warn.calls.allArgs()).toEqual([
-                        ['A handler with the name shout already exists'],
-                        [shoutStr],
+                        ['Replaced existing shout handler'],
                     ]);
+                    expect(console.error.calls.allArgs()).toEqual([[screamStr]]);
                 });
 
                 const badArguments = [

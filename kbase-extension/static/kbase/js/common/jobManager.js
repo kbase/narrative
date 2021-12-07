@@ -727,6 +727,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 if (this.cellId) {
                     this.bus.emit('reset-cell', {
                         cellId: this.cellId,
+                        ts: Date.now(),
                     });
                 }
             }

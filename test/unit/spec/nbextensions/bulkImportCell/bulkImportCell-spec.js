@@ -511,6 +511,7 @@ define([
                     // expect the state to be editingComplete
                     Jupyter.notebook = Mocks.buildMockNotebook();
                     spyOn(Jupyter.notebook, 'save_checkpoint');
+                    spyOn(Date, 'now').and.returnValue(1234567890);
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
 
@@ -573,7 +574,10 @@ define([
                                     ['request-job-updates-start', { batchId }],
                                     ['request-job-cancel', { jobIdList: [batchId] }],
                                     ['request-job-updates-stop', { batchId }],
-                                    ['reset-cell', { cellId: `${testCase.cellId}-test-cell` }],
+                                    [
+                                        'reset-cell',
+                                        { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
+                                    ],
                                 ]).toEqual(allEmissions);
                             }
                         });
@@ -584,6 +588,7 @@ define([
                 const cellId = 'cancelDuringSubmit';
                 Jupyter.notebook = Mocks.buildMockNotebook();
                 spyOn(Jupyter.notebook, 'save_checkpoint');
+                spyOn(Date, 'now').and.returnValue(1234567890);
                 const { cell, bulkImportCellInstance } = initCell({
                     cellId,
                     state: 'editingComplete',
@@ -675,7 +680,7 @@ define([
                     ['request-job-info', { batchId }],
                     ['request-job-cancel', { jobIdList: [batchId] }],
                     ['request-job-updates-stop', { batchId }],
-                    ['reset-cell', { cellId: `${cellId}-test-cell` }],
+                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
                 ];
                 expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

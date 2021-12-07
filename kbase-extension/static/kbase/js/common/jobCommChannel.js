@@ -35,8 +35,10 @@ define([
     'kbaseAccordion',
     'util/bootstrapDialog',
     'util/developerMode',
+    'util/util',
     'base/js/namespace',
     'common/runtime',
+    'common/jobs',
     'services/kernels/comm',
     'common/semaphore',
     'text!kbase/templates/job_panel/job_init_error.html',
@@ -47,8 +49,10 @@ define([
     kbaseAccordion,
     BootstrapDialog,
     devMode,
+    Utils,
     Jupyter,
     Runtime,
+    Jobs,
     JupyterComm,
     Semaphore,
     JobInitErrorTemplate
@@ -215,6 +219,11 @@ define([
          */
         _transformMessage(rawMessage) {
             const { msgType, msgData } = rawMessage;
+
+            if (!requestTranslation[msgType]) {
+                throw new Error(`Ignoring unknown message type "${msgType}"`);
+            }
+
             let transformedMsg = {
                 target_name: COMM_NAME,
                 request_type: requestTranslation[msgType],
@@ -320,6 +329,13 @@ define([
         handleCommMessages(msg) {
             const msgType = msg.content.data.msg_type;
             const msgData = msg.content.data.content;
+            const msgDataType = Utils.objectToString(msgData);
+
+            // message data should be an object
+            if (msgDataType !== 'Object') {
+                return this.reportCommMessageError({ msgType, msgData });
+            }
+
             let msgTypeToSend = null;
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
@@ -356,7 +372,7 @@ define([
                     }
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData.job_id ? [msgData.job_id] : msgData.job_id_list;
+                    const jobIdList = msgData[JOB_ID] ? [msgData[JOB_ID]] : msgData[JOB_ID_LIST];
                     if (msgData.source === BACKEND_REQUESTS.LOGS) {
                         msgTypeToSend = RESPONSES.LOGS;
                     } else {
@@ -379,32 +395,42 @@ define([
                     break;
 
                 // job information for one or more jobs
-                // Object with keys jobId and values { jobId: jobId, jobInfo: { ...job params... } }
+                // Object with keys jobId and values { jobInfo: { ...job params... } }
                 case BACKEND_RESPONSES.INFO:
                     Object.keys(msgData).forEach((_jobId) => {
-                        this.sendBusMessage(JOB, msgData[_jobId].job_id, RESPONSES.INFO, {
-                            jobId: msgData[_jobId].job_id,
-                            jobInfo: msgData[_jobId],
-                        });
+                        const jobData = msgData[_jobId];
+                        if (Jobs.isValidJobInfoObject(jobData)) {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.INFO, {
+                                jobInfo: jobData,
+                            });
+                        } else {
+                            this.reportCommMessageError({ msgType, msgData: jobData });
+                        }
                     });
                     break;
 
                 case BACKEND_RESPONSES.LOGS:
-                    this.sendBusMessage(JOB, msgData.job_id, RESPONSES.LOGS, {
-                        jobId: msgData.job_id,
-                        logs: msgData,
-                        latest: msgData.latest,
+                    Object.keys(msgData).forEach((_jobId) => {
+                        const jobData = msgData[_jobId];
+                        if (Jobs.isValidJobLogsObject(jobData)) {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.LOGS, {
+                                jobId: _jobId,
+                                logs: jobData,
+                            });
+                        } else {
+                            this.reportCommMessageError({ msgType, msgData: jobData });
+                        }
                     });
                     break;
 
                 case BACKEND_RESPONSES.RETRY:
-                    msgData.forEach((jobRetried) => {
-                        this.sendBusMessage(
-                            JOB,
-                            jobRetried.job.jobState.job_id,
-                            RESPONSES.RETRY,
-                            jobRetried
-                        );
+                    Object.keys(msgData).forEach((_jobId) => {
+                        const jobData = msgData[_jobId];
+                        if (Jobs.isValidJobRetryObject(jobData)) {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.RETRY, jobData);
+                        } else {
+                            this.reportCommMessageError({ msgType, msgData: jobData });
+                        }
                     });
                     break;
 
@@ -418,20 +444,12 @@ define([
                 case BACKEND_RESPONSES.STATUS:
                 case 'job_status_all':
                     Object.keys(msgData).forEach((_jobId) => {
-                        msgData[_jobId].jobId = _jobId;
-                        // check whether or not this is an ee2 error
-                        if (msgData[_jobId].jobState.status === 'ee2_error') {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.ERROR, {
-                                jobId: _jobId,
-                                error: {
-                                    job_id: _jobId,
-                                    message: 'ee2 connection error',
-                                    code: msgData[_jobId].jobState.status,
-                                },
-                                request: 'job_status',
-                            });
+                        const jobData = msgData[_jobId];
+                        if (Jobs.isValidBackendJobStateObject(jobData)) {
+                            msgData[_jobId].jobId = _jobId;
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, jobData);
                         } else {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, msgData[_jobId]);
+                            this.reportCommMessageError({ msgType, msgData: jobData });
                         }
                     });
                     break;
@@ -442,6 +460,15 @@ define([
                         msg
                     );
             }
+        }
+
+        reportCommMessageError(message) {
+            const { msgType, msgData } = message;
+            console.error(
+                'Invalid message data error',
+                `message type ${msgType} with data`,
+                msgData
+            );
         }
 
         displayJobError(msgData) {

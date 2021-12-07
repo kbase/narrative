@@ -1,4 +1,4 @@
-define(['common/format'], (format) => {
+define(['common/format', 'testUtil'], (format, TestUtil) => {
     'use strict';
     const t = {
         created: 1610065000000,
@@ -7,8 +7,11 @@ define(['common/format'], (format) => {
         finished: 1610065800000,
     };
 
+    const TEST_JOB_ID = 'someJob';
+
     const jobStrings = {
         unknown: 'Awaiting job data...',
+        conn_error: 'Connection error',
         not_found: 'This job was not found, or may not have been registered with this narrative.',
         queued: 'In the queue since ' + format.niceTime(t.created),
         termination: 'Finished with cancellation at ' + format.niceTime(t.finished),
@@ -301,6 +304,30 @@ define(['common/format'], (format) => {
         },
     };
 
+    const ee2ErrorJob = {
+        job_id: 'ee2-error',
+        status: 'ee2_error',
+        created: t.created,
+        queued: t.queued,
+        running: t.running,
+        updated: 12345678910,
+        meta: {
+            canCancel: false,
+            canRetry: false,
+            createJobStatusLines: {
+                line: jobStrings.conn_error,
+                history: [jobStrings.queueHistory, jobStrings.conn_error],
+            },
+            jobAction: null,
+            jobLabel: 'connection error',
+            niceState: {
+                class: 'kb-job-status__summary--ee2_error',
+                label: 'connection error',
+            },
+            terminal: false,
+        },
+    };
+
     const batchParentJob = {
         job_id: 'batch-parent-job',
         batch_id: 'batch-parent-job',
@@ -340,10 +367,34 @@ define(['common/format'], (format) => {
     const allJobs = JSON.parse(JSON.stringify([...validJobs, unknownJob]));
     const allJobsWithBatchParent = JSON.parse(JSON.stringify([batchParentJob].concat(allJobs)));
 
-    const invalidJobs = [
-        1,
-        'foo',
-        ['a', 'list'],
+    function generateMissingKeys(dataStructure) {
+        return Object.keys(dataStructure).map((key) => {
+            const newStructure = TestUtil.JSONcopy(dataStructure);
+            delete newStructure[key];
+        });
+    }
+
+    const invalidTypes = [null, undefined, 1, 'foo', [], ['a', 'list'], {}];
+
+    const validJobStates = allJobsWithBatchParent.concat([
+        ee2ErrorJob,
+        {
+            job_id: 'zero_created',
+            created: 0,
+            status: 'created',
+        },
+        {
+            job_id: 'does_not_exist',
+            status: 'does_not_exist',
+        },
+        {
+            job_id: 'ee2_error',
+            status: 'ee2_error',
+        },
+    ]);
+
+    const invalidJobStates = [
+        ...invalidTypes,
         {
             job_id: 'somejob',
             other: 'key',
@@ -361,12 +412,33 @@ define(['common/format'], (format) => {
             status: 'running',
         },
         {
-            job_id: 'no job status',
+            job_id: 'invalid job status',
             created: 12345678,
             status: 'who cares?',
         },
-        null,
-        undefined,
+    ];
+
+    const validBackendJobStates = [
+        {
+            jobState: validJobStates[0],
+        },
+        {
+            jobState: validJobStates[1],
+            outputWidgetInfo: {},
+        },
+        {
+            jobState: validJobStates[2],
+            outputWidgetInfo: {
+                ping: 'pong',
+            },
+        },
+    ];
+
+    const invalidBackendJobStates = [
+        ...invalidJobStates,
+        ...invalidJobStates.map((item) => {
+            return { jobState: item };
+        }),
     ];
 
     const validInfo = [
@@ -381,24 +453,106 @@ define(['common/format'], (format) => {
             job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
             job_id: 'job_with_multiple_params',
             batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+        },
+        {
+            job_id: 'batch-parent-job',
+            batch_id: 'batch-parent-job',
+            app_name: 'batch',
+            app_id: 'batch',
+            job_params: [],
         },
     ];
 
     const invalidInfo = [
-        null,
-        undefined,
-        {},
-        ['job_id'],
-        { job_id: 12345, params: [{ hello: 'world' }] },
-        { job_id: 12345, job_params: {} },
-        { job_id: 12345, job_params: [] },
-        { job_id: 12345, job_params: ['hello world'] },
-        { job_id: 12345, job_params: [['hello world']] },
-        { job_id: 12345, job_params: [{}] },
-        { job_params: [{ this: 'that' }] },
+        ...invalidTypes,
+        ...generateMissingKeys(validInfo[0]),
+        { job_params: [] },
+        { job_params: [{ ping: 'pong' }] },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            params: [{ hello: 'world' }],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: {},
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: ['hello world'],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: [['hello world']],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: [{}],
+        },
     ];
 
-    const jobsByStatus = allJobs.reduce((acc, curr) => {
+    const validLogs = [
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch_parent_job',
+            first: 0,
+            latest: false,
+            max_lines: 0,
+            lines: [],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch_parent_job',
+            first: 500,
+            latest: true,
+            max_lines: 500,
+            lines: [],
+        },
+    ];
+
+    const invalidLogs = [
+        ...invalidTypes,
+        ...generateMissingKeys(validLogs[0]),
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch_parent_job',
+            first: 500,
+            latest: true,
+            max_lines: 500,
+            lines: {},
+        },
+    ];
+
+    const validRetry = [
+        { job: { jobState: validJobStates[0] }, retry: { jobState: validJobStates[1] } },
+        { job: { jobState: validJobStates[2] }, error: 'some error' },
+    ];
+    const invalidRetry = [
+        ...invalidTypes,
+        // no jobState
+        { job: validJobStates[3], retry: validJobStates[4] },
+        // no jobState for the retry
+        { job: { jobState: validJobStates[5] }, retry: validJobStates[6] },
+        { job: { jobState: validJobStates[7] } },
+    ];
+
+    const jobsByStatus = [ee2ErrorJob].concat(allJobs).reduce((acc, curr) => {
         if (!acc[curr.status]) {
             acc[curr.status] = [];
         }
@@ -562,8 +716,8 @@ define(['common/format'], (format) => {
 
     return {
         validJobs,
-        invalidJobs,
         unknownJob,
+        ee2ErrorJob,
         batchParentJob,
         allJobs,
         allJobsWithBatchParent,
@@ -571,7 +725,35 @@ define(['common/format'], (format) => {
         jobsByStatus,
         jobsById,
         jobStrings,
+        example: {
+            BackendJobState: {
+                valid: validBackendJobStates,
+                invalid: invalidBackendJobStates,
+            },
+            Info: {
+                valid: validInfo,
+                invalid: invalidInfo,
+            },
+            JobState: {
+                valid: validJobStates,
+                invalid: invalidJobStates,
+            },
+            Logs: {
+                valid: validLogs,
+                invalid: invalidLogs,
+            },
+            Retry: {
+                valid: validRetry,
+                invalid: invalidRetry,
+            },
+        },
+        validJobStates,
+        invalidJobStates,
         validInfo,
         invalidInfo,
+        validRetry,
+        invalidRetry,
+        validLogs,
+        invalidLogs,
     };
 });

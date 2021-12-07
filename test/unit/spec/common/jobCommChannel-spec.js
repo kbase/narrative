@@ -157,23 +157,23 @@ define([
             );
         });
 
-        const pingArgs = [
-            ['ping', { pingId: 0 }],
-            ['ping', { pingId: 1 }],
-            ['ping', { pingId: 2 }],
+        const messagesToSend = [
+            [jcm.REQUESTS.STATUS, { jobId: 0 }],
+            [jcm.REQUESTS.STATUS, { jobId: 1 }],
+            [jcm.REQUESTS.STATUS, { jobId: 2 }],
         ];
-        const messageQueuePings = pingArgs.map((arg) => {
+        const messagesInQueue = messagesToSend.map((arg) => {
             return {
                 msgType: arg[0],
                 msgData: arg[1],
             };
         });
-        const sentPings = [0, 1, 2].map((num) => {
+        const messagesSent = [0, 1, 2].map((num) => {
             return [
                 {
                     target_name: 'KBaseJobs',
-                    request_type: 'ping',
-                    ping_id: num,
+                    request_type: jcm.BACKEND_REQUESTS.STATUS,
+                    job_id: num,
                 },
             ];
         });
@@ -182,7 +182,7 @@ define([
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
 
-            // send three pings over the channel
+            // send three messages over the channel
             // expect all three to be stored in comm.messageQueue
             return new Promise((resolve) => {
                 spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
@@ -192,28 +192,28 @@ define([
                     ).toBeRejectedWithError(
                         'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
                     );
-                    // resolve the promise on receiving the last ping
-                    if (args[1].pingId === 2) {
+                    // resolve the promise on receiving the last message
+                    if (args[1].jobId === 2) {
                         resolve();
                     }
                 });
-                pingArgs.forEach((pingMsg) => {
-                    testBus.emit(...pingMsg);
+                messagesToSend.forEach((msg) => {
+                    testBus.emit(...msg);
                 });
             }).then(() => {
-                expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length);
-                expect(comm.sendCommMessage.calls.allArgs()).toEqual(pingArgs);
-                expect(comm.messageQueue).toEqual(messageQueuePings);
+                expect(comm.sendCommMessage).toHaveBeenCalledTimes(messagesToSend.length);
+                expect(comm.sendCommMessage.calls.allArgs()).toEqual(messagesToSend);
+                expect(comm.messageQueue).toEqual(messagesInQueue);
             });
         });
 
         it('should send any stored messages on initing the comm channel', () => {
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
-            // send three pings over the bus
-            // init the comm channel after the last ping
-            // all pings should generate an error and be stored
-            // when the channel is initialised, the stored pings will be sent
+            // send three messages over the bus
+            // init the comm channel after the last message
+            // all messages should generate an error and be stored
+            // when the channel is initialised, the stored messages will be sent
             return new Promise((resolve) => {
                 spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
                     // after initialising the comm channel,
@@ -225,34 +225,36 @@ define([
                         }
                         return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
-                    const { pingId } = args[1];
+                    const { jobId } = args[1];
                     // original function should throw an error
                     await expectAsync(
                         comm.sendCommMessage.and.originalFn.call(comm, ...args)
                     ).toBeRejectedWithError(
                         'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
                     );
-                    // resolve the promise on receiving the last ping
-                    if (pingId === 2) {
+                    // resolve the promise on receiving the last message
+                    if (jobId === 2) {
                         resolve();
                     }
                 });
-                // emit the pings
-                pingArgs.forEach((ping) => {
-                    testBus.emit(...ping);
+                // emit the messages
+                messagesToSend.forEach((msg) => {
+                    testBus.emit(...msg);
                 });
             }).then(() => {
-                // all pings will be stored
-                expect(comm.messageQueue).toEqual(messageQueuePings);
+                // all messages will be stored
+                expect(comm.messageQueue).toEqual(messagesInQueue);
                 // init the comm channel, which will send everything in the message queue
                 return comm.initCommChannel().then(() => {
                     expect(comm.comm).not.toBeNull();
-                    expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length + 1);
+                    expect(comm.sendCommMessage).toHaveBeenCalledTimes(messagesToSend.length + 1);
                     // the last call comes from comm.initCommChannel, and has no args
-                    expect(comm.sendCommMessage.calls.allArgs()).toEqual(pingArgs.concat([[]]));
+                    expect(comm.sendCommMessage.calls.allArgs()).toEqual(
+                        messagesToSend.concat([[]])
+                    );
 
                     expect(comm.comm.send).toHaveBeenCalled();
-                    expect(comm.comm.send.calls.allArgs()).toEqual(sentPings);
+                    expect(comm.comm.send.calls.allArgs()).toEqual(messagesSent);
                 });
             });
         });
@@ -260,10 +262,10 @@ define([
         it('should send new and stored messages after initing the channel', () => {
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
-            // send three pings over the bus
-            // init the comm channel after the second ping
-            // the first two pings should generate an error and be stored
-            // the third ping should be processed successfully
+            // send three messages over the bus
+            // init the comm channel after the second message
+            // the first two messages should generate an error and be stored
+            // the third message should be processed successfully
             return new Promise((resolve) => {
                 spyOn(comm, 'sendCommMessage').and.callFake(async (...args) => {
                     if (!args.length) {
@@ -272,8 +274,8 @@ define([
                         }
                         return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
-                    const { pingId } = args[1];
-                    if (pingId < 2) {
+                    const { jobId } = args[1];
+                    if (jobId < 2) {
                         // original function should throw an error
                         await expectAsync(
                             comm.sendCommMessage.and.originalFn.call(comm, ...args)
@@ -284,20 +286,20 @@ define([
                         // call the original function
                         await comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
-                    // resolve the promise on receiving the second ping
+                    // resolve the promise on receiving the second message
                     // this allows the test to progress to the next "then"
-                    if (pingId === 1) {
+                    if (jobId === 1) {
                         resolve();
                     }
                 });
-                // emit the first two pings
+                // emit the first two messages
                 [0, 1].forEach((ix) => {
-                    testBus.emit(...pingArgs[ix]);
+                    testBus.emit(...messagesToSend[ix]);
                 });
             }).then(() => {
-                // first two pings will be stored
-                expect(comm.messageQueue).toEqual(messageQueuePings.slice(0, 2));
-                // init the comm channel and send the last ping
+                // first two messages will be stored
+                expect(comm.messageQueue).toEqual(messagesInQueue.slice(0, 2));
+                // init the comm channel and send the last message
                 return comm.initCommChannel().then(() => {
                     expect(comm.comm).not.toBeNull();
                     return new Promise((resolve) => {
@@ -305,19 +307,21 @@ define([
                         spyOn(comm.comm, 'send').and.callFake(() => {
                             resolve();
                         });
-                        // emit the last ping
-                        testBus.emit(...pingArgs[2]);
+                        // emit the last message
+                        testBus.emit(...messagesToSend[2]);
                     }).then(() => {
-                        expect(comm.sendCommMessage).toHaveBeenCalledTimes(pingArgs.length + 1);
+                        expect(comm.sendCommMessage).toHaveBeenCalledTimes(
+                            messagesToSend.length + 1
+                        );
                         expect(comm.sendCommMessage.calls.allArgs()).toEqual([
-                            pingArgs[0],
-                            pingArgs[1],
+                            messagesToSend[0],
+                            messagesToSend[1],
                             [],
-                            pingArgs[2],
+                            messagesToSend[2],
                         ]);
 
                         expect(comm.comm.send).toHaveBeenCalled();
-                        expect(comm.comm.send.calls.allArgs()).toEqual(sentPings);
+                        expect(comm.comm.send.calls.allArgs()).toEqual(messagesSent);
                     });
                 });
             });
@@ -331,7 +335,7 @@ define([
             },
             {
                 channel: jcm.REQUESTS.LOGS,
-                message: { jobId: TEST_JOB_ID, options: {} },
+                message: { jobId: TEST_JOB_ID },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
                     job_id: TEST_JOB_ID,
@@ -339,7 +343,10 @@ define([
             },
             {
                 channel: jcm.REQUESTS.LOGS,
-                message: { jobId: TEST_JOB_ID, options: { latest: true } },
+                message: {
+                    jobId: TEST_JOB_ID,
+                    latest: true,
+                },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
                     job_id: TEST_JOB_ID,
@@ -350,15 +357,12 @@ define([
                 channel: jcm.REQUESTS.LOGS,
                 message: {
                     jobId: TEST_JOB_ID,
-                    options: {
-                        first_line: 2000,
-                        job_id: 'overridden!',
-                        latest: true,
-                    },
+                    first_line: 2000,
+                    latest: true,
                 },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
-                    job_id: 'overridden!',
+                    job_id: TEST_JOB_ID,
                     first_line: 2000,
                     latest: true,
                 },
@@ -447,6 +451,17 @@ define([
             });
         });
 
+        it('should handle unrecognised message types', async () => {
+            const comm = new JobCommChannel();
+            await comm.initCommChannel();
+
+            await expectAsync(
+                comm.sendCommMessage('unknown', { jobId: TEST_JOB_ID })
+            ).toBeRejectedWithError(
+                'ERROR sending comm message: Ignoring unknown message type "unknown"'
+            );
+        });
+
         /* Mocking out comm messages coming back over the channel is gruesome. Just
          * calling the handleCommMessage function directly.
          */
@@ -467,6 +482,28 @@ define([
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(makeCommMsg('new_job', {}));
                 expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+            });
+        });
+
+        const tests = [
+            ['null', null],
+            ['undefined', undefined],
+            ['number', 123456],
+            ['string', 'string'],
+            ['string', ''],
+            ['array', [1, 2, 3]],
+        ];
+        tests.forEach((test) => {
+            const [type, sample] = test;
+            it(`should reject responses with ${type} content`, () => {
+                const comm = new JobCommChannel();
+                spyOn(comm, 'reportCommMessageError');
+                return comm.initCommChannel().then(() => {
+                    comm.handleCommMessages(makeCommMsg(jcm.BACKEND_RESPONSES.JOB_STATUS, sample));
+                    expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
+                        [{ msgType: jcm.BACKEND_RESPONSES.JOB_STATUS, msgData: sample }],
+                    ]);
+                });
             });
         });
 
@@ -504,16 +541,15 @@ define([
                 type: jcm.BACKEND_RESPONSES.INFO,
                 message: (() => {
                     const output = {};
-                    output[JobsData.validInfo[0].job_id] = JobsData.validInfo[0];
+                    output[JobsData.example.Info.valid[0].job_id] = JobsData.example.Info.valid[0];
                     return output;
                 })(),
                 expected: [
                     {
-                        jobId: JobsData.validInfo[0].job_id,
-                        jobInfo: JobsData.validInfo[0],
+                        jobInfo: JobsData.example.Info.valid[0],
                     },
                     {
-                        channel: { jobId: JobsData.validInfo[0].job_id },
+                        channel: { jobId: JobsData.example.Info.valid[0].job_id },
                         key: { type: jcm.RESPONSES.INFO },
                     },
                 ],
@@ -521,14 +557,13 @@ define([
             {
                 // info multiple jobs
                 type: jcm.BACKEND_RESPONSES.INFO,
-                message: JobsData.validInfo.reduce((acc, curr) => {
+                message: JobsData.example.Info.valid.reduce((acc, curr) => {
                     acc[curr.job_id] = curr;
                     return acc;
                 }, {}),
-                expectedMultiple: JobsData.validInfo.map((info) => {
+                expectedMultiple: JobsData.example.Info.valid.map((info) => {
                     return [
                         {
-                            jobId: info.job_id,
                             jobInfo: info,
                         },
                         {
@@ -541,27 +576,12 @@ define([
             {
                 type: jcm.BACKEND_RESPONSES.LOGS,
                 message: {
-                    job_id: TEST_JOB_ID,
-                    latest: true,
-                    logs: [
-                        {
-                            line: 'this',
-                        },
-                    ],
+                    someJob: JobsData.example.Logs.valid[0],
                 },
                 expected: [
                     {
                         jobId: TEST_JOB_ID,
-                        logs: {
-                            job_id: TEST_JOB_ID,
-                            latest: true,
-                            logs: [
-                                {
-                                    line: 'this',
-                                },
-                            ],
-                        },
-                        latest: true,
+                        logs: JobsData.example.Logs.valid[0],
                     },
                     {
                         channel: { jobId: TEST_JOB_ID },
@@ -571,68 +591,25 @@ define([
             },
             {
                 type: jcm.BACKEND_RESPONSES.RETRY,
-                message: [
-                    {
-                        job: {
-                            jobState: {
-                                job_id: TEST_JOB_ID,
-                                status: 'wherever',
-                            },
-                            outputWidgetInfo: {},
-                        },
-                        retry: {
-                            jobState: {
-                                job_id: '1234567890abcdef',
-                                status: 'whenever',
-                            },
-                            outputWidgetInfo: 'whatever',
-                        },
-                    },
-                    {
-                        job: {
-                            jobState: {
-                                job_id: 'ping',
-                            },
-                            outputWidgetInfo: 'ping',
-                        },
-                        retry: {},
-                    },
-                ],
+                message: (() => {
+                    const retryData = {};
+                    JobsData.example.Retry.valid.forEach((retry) => {
+                        retryData[retry.job.jobState.job_id] = retry;
+                    });
+                    return retryData;
+                })(),
                 expectedMultiple: [
                     [
+                        JobsData.example.Retry.valid[0],
                         {
-                            job: {
-                                jobState: {
-                                    job_id: TEST_JOB_ID,
-                                    status: 'wherever',
-                                },
-                                outputWidgetInfo: {},
-                            },
-                            retry: {
-                                jobState: {
-                                    job_id: '1234567890abcdef',
-                                    status: 'whenever',
-                                },
-                                outputWidgetInfo: 'whatever',
-                            },
-                        },
-                        {
-                            channel: { jobId: TEST_JOB_ID },
+                            channel: { jobId: JobsData.example.Retry.valid[0].job.jobState.job_id },
                             key: { type: jcm.RESPONSES.RETRY },
                         },
                     ],
                     [
+                        JobsData.example.Retry.valid[1],
                         {
-                            job: {
-                                jobState: {
-                                    job_id: 'ping',
-                                },
-                                outputWidgetInfo: 'ping',
-                            },
-                            retry: {},
-                        },
-                        {
-                            channel: { jobId: 'ping' },
+                            channel: { jobId: JobsData.example.Retry.valid[1].job.jobState.job_id },
                             key: { type: jcm.RESPONSES.RETRY },
                         },
                     ],
@@ -665,27 +642,24 @@ define([
                 // single job status message, ee2 error
                 type: jcm.BACKEND_RESPONSES.STATUS,
                 message: {
-                    ee2_error_job: {
-                        job_id: 'ee2_error_job',
+                    someJob: {
                         jobState: {
-                            job_id: 'ee2_error_job',
+                            job_id: TEST_JOB_ID,
                             status: 'ee2_error',
                         },
                     },
                 },
                 expected: [
                     {
-                        jobId: 'ee2_error_job',
-                        error: {
-                            job_id: 'ee2_error_job',
-                            message: 'ee2 connection error',
-                            code: 'ee2_error',
+                        jobId: TEST_JOB_ID,
+                        jobState: {
+                            job_id: TEST_JOB_ID,
+                            status: 'ee2_error',
                         },
-                        request: jcm.BACKEND_RESPONSES.STATUS,
                     },
                     {
-                        channel: { jobId: 'ee2_error_job' },
-                        key: { type: jcm.RESPONSES.ERROR },
+                        channel: { jobId: TEST_JOB_ID },
+                        key: { type: jcm.RESPONSES.STATUS },
                     },
                 ],
             },
@@ -895,6 +869,50 @@ define([
                     }
                 });
             });
+        });
+
+        ['JobState', 'Info', 'Retry', 'Logs'].forEach((type) => {
+            const ucType = type === 'JobState' ? 'STATUS' : type.toUpperCase();
+            const msgType = jcm.BACKEND_RESPONSES[ucType];
+            const values = JobsData.example[type].invalid;
+
+            values.forEach((value) => {
+                it(`should not send a ${msgType} message if the data is invalid`, () => {
+                    const jobData = {};
+                    jobData[TEST_JOB_ID] = value;
+                    const msg = makeCommMsg(msgType, jobData),
+                        comm = new JobCommChannel();
+                    return comm.initCommChannel().then(() => {
+                        spyOn(comm, 'reportCommMessageError');
+                        spyOn(console, 'error');
+                        comm.handleCommMessages(msg);
+                        expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
+                            [{ msgType, msgData: value }],
+                        ]);
+                    });
+                });
+            });
+
+            if (type !== 'Logs') {
+                it(`should not send a ${msgType} message with invalid data`, () => {
+                    const allMsgData = {};
+                    values.forEach((val, ix) => {
+                        allMsgData[`test_job_${ix}`] = val;
+                    });
+                    const msg = makeCommMsg(msgType, allMsgData),
+                        comm = new JobCommChannel();
+                    return comm.initCommChannel().then(() => {
+                        spyOn(comm, 'reportCommMessageError');
+                        spyOn(console, 'error');
+                        comm.handleCommMessages(msg);
+                        expect(comm.reportCommMessageError.calls.allArgs()).toEqual(
+                            values.map((msgData) => {
+                                return [{ msgType, msgData }];
+                            })
+                        );
+                    });
+                });
+            }
         });
 
         ['job_init_err', 'job_init_lookup_err'].forEach((errType) => {

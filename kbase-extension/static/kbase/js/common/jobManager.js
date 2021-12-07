@@ -1,7 +1,8 @@
-define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
+define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/util'], (
     DialogMessages,
     Jobs,
-    JobComms
+    JobComms,
+    Utils
 ) => {
     'use strict';
 
@@ -63,9 +64,13 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
         _isValidMessage(type, message) {
             switch (type) {
                 case jcm.RESPONSES.STATUS:
-                    return message.jobId && Jobs.isValidJobStateObject(message.jobState);
+                    return Jobs.isValidJobStateObject(message.jobState);
                 case jcm.RESPONSES.INFO:
-                    return message.jobId && Jobs.isValidJobInfoObject(message.jobInfo);
+                    return Jobs.isValidJobInfoObject(message.jobInfo);
+                case jcm.RESPONSES.LOGS:
+                    return Jobs.isValidJobLogsObject(message.logs);
+                case jcm.RESPONSES.RETRY:
+                    return Jobs.isValidJobRetryObject(message);
                 case type.indexOf('job') !== -1:
                     return !!message.jobId;
                 default:
@@ -104,18 +109,15 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 throw new Error(`addEventHandler: invalid event ${event} supplied`);
             }
 
-            const handlersType = Object.prototype.toString.call(handlers) || null;
+            const handlersType = Utils.objectToString(handlers) || null;
 
-            if (
-                !handlers ||
-                (handlersType !== '[object Array]' && handlersType !== '[object Object]')
-            ) {
+            if (!handlers || (handlersType !== 'Array' && handlersType !== 'Object')) {
                 throw new Error(
                     'addEventHandler: invalid handlers supplied (must be of type array or object)'
                 );
             }
 
-            if (handlersType === '[object Array]') {
+            if (handlersType === 'Array') {
                 const handlerObj = {};
                 handlers.forEach((h) => {
                     handlerObj[h] = null;
@@ -263,7 +265,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 throw new Error(`addListener: invalid listener ${type} supplied`);
             }
 
-            if (Object.prototype.toString.call(channelList) !== '[object Array]') {
+            if (Utils.objectToString(channelList) !== 'Array') {
                 channelList = [channelList];
             }
 
@@ -749,7 +751,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 if (
                     !batch_id ||
                     !child_job_ids ||
-                    Object.prototype.toString.call(child_job_ids) !== '[object Array]' ||
+                    Utils.objectToString(child_job_ids) !== 'Array' ||
                     !child_job_ids.length
                 ) {
                     throw new Error('Batch job must have a batch ID and at least one child job ID');
@@ -758,8 +760,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                     // create the child jobs
                     allJobs = child_job_ids.map((job_id) => {
                         return {
-                            job_id: job_id,
-                            batch_id: batch_id,
+                            job_id,
+                            batch_id,
                             status: 'created',
                             created: 0,
                         };
@@ -768,7 +770,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel'], (
                 // add the parent job
                 allJobs.push({
                     job_id: batch_id,
-                    batch_id: batch_id,
+                    batch_id,
                     batch_job: true,
                     child_jobs: [],
                     status: 'created',

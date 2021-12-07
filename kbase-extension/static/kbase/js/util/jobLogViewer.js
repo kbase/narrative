@@ -476,9 +476,7 @@ define([
             this.state.awaitingLog = true;
             this.bus.emit(jcm.REQUESTS.LOGS, {
                 jobId: this.jobId,
-                options: {
-                    first_line: firstLine,
-                },
+                first_line: firstLine,
             });
         }
 
@@ -492,9 +490,7 @@ define([
             this.state.awaitingLog = true;
             this.bus.emit(jcm.REQUESTS.LOGS, {
                 jobId: this.jobId,
-                options: {
-                    latest: true,
-                },
+                latest: true,
             });
         }
 
@@ -1200,7 +1196,6 @@ define([
                 /* message has structure:
                  * {
                  *   jobId: string,
-                 *   latest: bool,
                  *   logs: {
                  *      first: int (first line of the log batch), 0-indexed
                  *      job_id: string,

@@ -805,6 +805,9 @@ define([
                             the: 'other',
                         },
                         jobInfo = {
+                            app_id: 'some/app',
+                            app_name: 'Some app',
+                            batch_id: null,
                             job_id: this.jobId,
                             job_params: [jobParams],
                         };
@@ -815,11 +818,7 @@ define([
                     ).not.toBeDefined();
                     // rather than faffing around with sending messages over the bus,
                     // trigger the job handler directly
-                    this.jobManagerInstance.runHandler(
-                        jcm.RESPONSES.INFO,
-                        { jobInfo, jobId },
-                        jobId
-                    );
+                    this.jobManagerInstance.runHandler(jcm.RESPONSES.INFO, { jobInfo }, jobId);
 
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)

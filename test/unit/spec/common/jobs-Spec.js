@@ -54,17 +54,15 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         afterEach(() => {
             TestUtil.clearRuntime();
         });
+        const terminalStatuses = ['completed', 'does_not_exist', 'error', 'terminated'];
 
-        it('should return true if the job status is terminal', () => {
-            ['completed', 'terminated', 'error', 'does_not_exist'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeTrue();
+        Jobs.validJobStatuses.forEach((status) => {
+            const isTerminal = terminalStatuses.includes(status);
+            it(`should return ${isTerminal} for status ${status}`, () => {
+                expect(Jobs.isTerminalStatus(status)).toEqual(isTerminal);
             });
         });
-        it('should return false for jobs that are in progress', () => {
-            ['created', 'estimating', 'queued', 'running'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeFalse();
-            });
-        });
+
         it('should return false for invalid job statuses', () => {
             badStates.forEach((status) => {
                 expect(Jobs.isTerminalStatus(status)).toBeFalse();
@@ -72,50 +70,32 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
     });
 
-    describe('The isValidJobStateObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
+    describe('Job data validation', () => {
+        ['BackendJobState', 'JobState', 'Info', 'Retry', 'Logs'].forEach((type) => {
+            let fn;
+            switch (type) {
+                case 'BackendJobState':
+                    fn = 'isValidBackendJobStateObject';
+                    break;
+                case 'JobState':
+                    fn = 'isValidJobStateObject';
+                    break;
+                default:
+                    fn = `isValidJob${type}Object`;
+            }
 
-        it('Should know how to tell good job states', () => {
-            JobsData.allJobsWithBatchParent
-                .concat([
-                    {
-                        job_id: 'zero_created',
-                        created: 0,
-                        status: 'created',
-                    },
-                    {
-                        job_id: 'does_not_exist',
-                        status: 'does_not_exist',
-                    },
-                ])
-                .forEach((elem) => {
-                    expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
+            describe(`The ${fn} function`, () => {
+                JobsData.example[type].valid.forEach((elem) => {
+                    it(`passes ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeTrue();
+                    });
                 });
-        });
 
-        it('Should know how to tell bad job states', () => {
-            JobsData.invalidJobs.forEach((elem) => {
-                expect(Jobs.isValidJobStateObject(elem)).toBeFalse();
-            });
-        });
-    });
-
-    describe('The isValidJobInfoObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
-
-        JobsData.validInfo.forEach((elem) => {
-            it(`passes ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeTrue();
-            });
-        });
-
-        JobsData.invalidInfo.forEach((elem) => {
-            it(`fails ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeFalse();
+                JobsData.example[type].invalid.forEach((elem) => {
+                    it(`fails ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeFalse();
+                    });
+                });
             });
         });
     });
@@ -167,7 +147,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
 
         it('should return an appropriate string for dodgy jobStates', () => {
-            JobsData.invalidJobs.forEach((state) => {
+            JobsData.example.JobState.invalid.forEach((state) => {
                 args.forEach((arg) => {
                     const statusLines = Jobs.createJobStatusLines(state, arg);
                     container.innerHTML = arrayToHTML(statusLines);
@@ -188,6 +168,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             ['error', 'failed'],
             ['terminated', 'cancelled'],
             ['running', 'running'],
+            ['ee2_error', 'connection error'],
         ];
         labelToState.forEach((entry) => {
             it(`should create an abbreviated label when given the job state ${entry[0]}`, () => {

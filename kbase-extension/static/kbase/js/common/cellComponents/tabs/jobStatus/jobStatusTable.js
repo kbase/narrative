@@ -704,8 +704,9 @@ define([
          * parse and update the row with job info
          * @param {object} message
          */
-        handleJobInfo(message) {
-            const { jobId, jobInfo } = message;
+        handleJobInfo(_, message) {
+            const { jobInfo } = message,
+                jobId = jobInfo.job_id;
             const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const appData = this.jobManager.model.getItem('app');
             const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;

@@ -1,16 +1,17 @@
 define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/uploadTour',
+    'kbaseNarrativeStagingDataTab',
     'base/js/namespace',
     'narrativeConfig',
     'testUtil',
-], ($, UploadTour, Jupyter, Config, TestUtil) => {
+], ($, UploadTour, StagingDataTab, Jupyter, Config, TestUtil) => {
     'use strict';
 
     const fakeUser = 'fakeuser',
         stagingServiceUrl = Config.url('staging_api_url');
     describe('staging area upload tour', () => {
-        beforeAll(() => {
+        beforeEach(() => {
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(/\/auth\/api\/V2\/me$/).andReturn({
                 status: 200,
@@ -77,9 +78,12 @@ define([
             };
         });
 
+        afterEach(() => {
+            jasmine.Ajax.uninstall();
+        });
+
         afterAll(() => {
             TestUtil.clearRuntime();
-            jasmine.Ajax.uninstall();
         });
 
         it('Loaded the Tour module', () => {
@@ -96,6 +100,42 @@ define([
             const tourInstance = new UploadTour.Tour($('div'));
             tourInstance.start();
             expect(document.querySelector('.kb-tour')).toBeTruthy();
+            tourInstance.stop();
+        });
+
+        xit('Can run with the Globus step', async () => {
+            const stagingDiv = $('div'),
+                tourDiv = $('div');
+            $(document.body).append(stagingDiv);
+            $(document.body).append(tourDiv);
+            const stagingWidget = new StagingDataTab(stagingDiv);
+            const tourInstance = new UploadTour.Tour(tourDiv, true);
+
+            await stagingWidget.render();
+            await TestUtil.waitForElement(
+                document.body,
+                '.kb-staging-table .kb-staging-table-body__name',
+                () => stagingWidget.activate()
+            );
+            tourInstance.start();
+            for (const step of tourInstance.tour_steps) {
+                const tourOuter = 'div.kb-tour';
+                const titleSelector = `${tourOuter} > h3.popover-title`;
+                const bodySelector = `${tourOuter} > div.popover-content`;
+                const nextSelector = `${tourOuter} button.fa-step-forward`;
+                await TestUtil.waitFor({
+                    documentElement: document.body,
+                    domStateFunction: () => {
+                        return (
+                            document.querySelector(titleSelector) !== null &&
+                            document.querySelector(titleSelector).textContent === step.title
+                        );
+                    },
+                });
+                expect(document.querySelector(bodySelector).textContent).toEqual(step.content);
+                $(document.querySelector(nextSelector)).click();
+            }
+            tourInstance.stop();
         });
     });
 });

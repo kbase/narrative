@@ -133,6 +133,12 @@ define([
         }
     };
 
+    UploadTour.prototype.stop = function () {
+        if (this.tour && !this.tour.ended()) {
+            this.tour.end();
+        }
+    };
+
     UploadTour.prototype.command_icon_hack = function () {
         $('#modal_indicator').css('min-height', '18px');
     };

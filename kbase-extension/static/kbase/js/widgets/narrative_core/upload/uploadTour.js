@@ -34,16 +34,16 @@ define([
             {
                 title: 'Globus Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.upload-options > .globus-link'),
+                element: that.$elem.find('.globus_acl_link'),
                 content:
                     'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, pointing to your directory in KBase.',
             },
             {
                 title: 'Web Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.upload-options > .web_upload_div'),
+                element: that.$elem.find('.web_upload_div'),
                 content:
-                    'Click here to add an App to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.',
+                    'Click here to add an import app to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.',
             },
             {
                 title: 'Staging Path',
@@ -69,7 +69,7 @@ define([
             {
                 title: 'File or Folder',
                 placement: 'top',
-                element: that.$elem.find('table.kb-staging-table > thead > tr > th:nth-child(2)'),
+                element: that.$elem.find('.kb-staging-table-header__file'),
                 content:
                     'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click a folder icon to show the files inside.',
             },

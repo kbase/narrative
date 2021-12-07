@@ -48,7 +48,7 @@ define([
             {
                 title: 'Staging Path',
                 placement: 'left',
-                element: that.$elem.find('div.file-path'),
+                element: that.$elem.find('.kb-data-staging__breadcrumbs'),
                 content:
                     'If you are viewing the contents of a folder, you can click links next to that folder name to navigate and show other files. Click the Refresh button to manually refresh the list.',
             },

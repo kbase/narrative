@@ -150,13 +150,16 @@ define([
         paramTests = [
             {
                 input: {
+                    app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
+                    app_name: 'Import FASTQ',
+                    batch_id: null,
+                    job_id: 'something',
                     job_params: [
                         {
                             name: 'some_old_file',
                             workspace_id: 'some_workspace_id',
                         },
                     ],
-                    app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
                 },
                 type: 'FASTQ Reads Interleaved',
                 object: /Reads Object Name: some_old_file/,
@@ -165,6 +168,9 @@ define([
             {
                 input: {
                     app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+                    app_name: 'Import FASTA',
+                    batch_id: null,
+                    job_id: 'something',
                     job_params: [
                         {
                             assembly_name: 'assembly_file.fa',
@@ -377,7 +383,6 @@ define([
         sendBusMessage(
             ctx,
             {
-                jobId,
                 jobState: ctx.input,
             },
             { jobId },
@@ -396,7 +401,6 @@ define([
         sendBusMessage(
             ctx,
             {
-                jobId,
                 jobInfo,
             },
             { jobId },
@@ -1092,7 +1096,7 @@ define([
                     beforeEach(async function () {
                         await createJobStatusTableWithContext(this, jobUpdateTestJob);
                     });
-                    JobsData.invalidJobs.forEach((invalidJob) => {
+                    JobsData.example.JobState.invalid.forEach((invalidJob) => {
                         it(`should not update with invalid job ${JSON.stringify(
                             invalidJob
                         )}`, async function () {
@@ -1496,7 +1500,7 @@ define([
                     beforeEach(async function () {
                         await createJobStatusTableWithContext(this, jobUpdateTestJob);
                     });
-                    JobsData.invalidInfo.forEach((invalidInfo) => {
+                    JobsData.example.Info.invalid.forEach((invalidInfo) => {
                         it('will be ignored', async function () {
                             _checkRowStructure(this.row, this.job);
                             spyOn(this.jobManager, 'removeListener').and.callThrough();
@@ -1581,7 +1585,6 @@ define([
                                 const expectedCallArgs = [
                                     jcm.RESPONSES.INFO,
                                     {
-                                        jobId: 'job_update_test',
                                         jobInfo: { job_id: 'job_update_test', ...test.input },
                                     },
                                     'job_update_test',
@@ -1601,7 +1604,6 @@ define([
                                     () => {
                                         this.jobManager.bus.send(
                                             {
-                                                jobId: this.job.retry_parent,
                                                 jobInfo: test.input,
                                             },
                                             {
@@ -1617,7 +1619,6 @@ define([
                                 const expectedCallArgs = [
                                     jcm.RESPONSES.INFO,
                                     {
-                                        jobId: this.job.retry_parent,
                                         jobInfo: {
                                             job_id: this.job.retry_parent,
                                             ...test.input,

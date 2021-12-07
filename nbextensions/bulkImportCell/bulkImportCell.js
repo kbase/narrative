@@ -193,6 +193,10 @@ define([
                         label: 'Offline',
                     },
                 },
+            },
+            initialActionState = {
+                disabled: true,
+                name: 'runApp',
             };
         let runStatusListener = null, // only used while listening for the jobs to start
             kbaseNode = null, // the DOM element used as the container for everything in this cell
@@ -1064,6 +1068,7 @@ define([
             kbaseNode.innerHTML = layout.content;
             return buildTabs(ui.getElement('body.run-control-panel.toolbar')).then(() => {
                 layout.events.attachEvents(kbaseNode);
+                controlPanel.setActionState(initialActionState);
             });
         }
 

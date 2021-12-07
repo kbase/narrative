@@ -70,9 +70,9 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
         }
 
         return {
-            buildLayout: buildLayout,
-            setActionState: setActionState,
-            setExecMessage: setExecMessage,
+            buildLayout,
+            setActionState,
+            setExecMessage,
         };
     }
 

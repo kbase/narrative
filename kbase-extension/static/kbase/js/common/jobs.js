@@ -1,24 +1,31 @@
-define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
+define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'util/util'], (
     ErrorDisplay,
     Format,
     html,
-    UI
+    UI,
+    Utils
 ) => {
     'use strict';
 
     const t = html.tag,
         span = t('span');
 
-    const JOB = {
-        created: 'created',
-        estimating: 'estimating',
-        queued: 'queued',
-        running: 'running',
-        completed: 'completed',
-        error: 'error',
-        terminated: 'terminated',
-        does_not_exist: 'does_not_exist',
-    };
+    const JOB_STATUSES = [
+            'created',
+            'estimating',
+            'queued',
+            'running',
+            'completed',
+            'error',
+            'terminated',
+            'does_not_exist',
+            'ee2_error',
+        ],
+        JOB = {};
+    // JOB is an object with keys job status and values the string for that status
+    JOB_STATUSES.forEach((status) => {
+        JOB[status] = status;
+    });
 
     const cssBaseClass = 'kb-job-status',
         jobNotFound = [
@@ -26,17 +33,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
             'You will not be able to inspect the job status or view the job log.',
         ],
         jobStatusUnknown = ['Awaiting job data...'],
-        // valid job states from ee2, plus 'does_not_exist'
-        validJobStatuses = [
-            JOB.created,
-            JOB.estimating,
-            JOB.queued,
-            JOB.running,
-            JOB.completed,
-            JOB.error,
-            JOB.terminated,
-            JOB.does_not_exist,
-        ],
+        validJobStatuses = JOB_STATUSES,
         // job states where there will be no more updates
         terminalStates = [JOB.completed, JOB.error, JOB.terminated, JOB.does_not_exist];
 
@@ -46,6 +43,13 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
             nice: 'does not exist',
             status: 'not found',
             statusBatch: 'not found',
+        },
+
+        ee2_error: {
+            action: null,
+            nice: 'connection error',
+            status: 'connection error',
+            statusBatch: 'connection error',
         },
 
         queued: {
@@ -109,11 +113,13 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     }
 
     /**
-     * A jobState object is deemed valid if
-     * 1. It's an object (not an array or atomic type)
-     * 2. It has a 'job_id' key
-     * 3. It has a 'status' key, which appears in the array validJobStatuses
-     * 4. If the status is NOT 'does_not_exist', it must have a 'created' key
+     * A job state object should have the minimal structure
+     *
+     * {
+     *      job_id:     str
+     *      status:     str -- one of the validJobStatuses
+     *      created:    int -- if the status is NOT 'does_not_exist'
+     * }
      *
      * There are other required fields, but these checks are sufficient for the UI.
      *
@@ -126,16 +132,32 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
      * @returns {boolean} true|false
      */
     function isValidJobStateObject(jobState) {
-        const requiredProperties = ['job_id', 'status'];
+        const required = ['job_id', 'status'];
         return !!(
             jobState !== null &&
             typeof jobState === 'object' &&
-            requiredProperties.every((prop) => prop in jobState) &&
+            required.every((prop) => prop in jobState) &&
             validJobStatuses.includes(jobState.status) &&
-            // require the 'created' key if the status is not 'does_not_exist'
-            (jobState.status === JOB.does_not_exist
+            // require the 'created' key if the status is not 'does_not_exist' or 'ee2_error'
+            (jobState.status === JOB.does_not_exist || jobState.status === JOB.ee2_error
                 ? true
                 : Object.prototype.hasOwnProperty.call(jobState, JOB.created))
+        );
+    }
+
+    /**
+     * Takes as input the object received from a backend 'job_status' call
+     * Ensures that the jobState key is present and that the contents are a valid jobState object
+     *
+     * @param {object} backendJobState
+     * @returns {boolean} true|false
+     */
+    function isValidBackendJobStateObject(backendJobState) {
+        return !!(
+            backendJobState &&
+            Utils.objectToString(backendJobState) === 'Object' &&
+            backendJobState.jobState &&
+            isValidJobStateObject(backendJobState.jobState)
         );
     }
 
@@ -150,11 +172,14 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     }
 
     /**
-     * A jobInfo object should have the minimal structure
+     * A job info object should have the minimal structure
      *
      * {
-     *      job_id: ...
-     *      job_params: [
+     *      job_id:     str
+     *      app_id:     str
+     *      app_name:   str
+     *      batch_id:   str
+     *      job_params: [] or [
      *          {
      *              param_one: 'value one',
      *              param_two: 'value two',
@@ -169,11 +194,100 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
      * @returns {boolean} true|false
      */
     function isValidJobInfoObject(jobInfo) {
+        const required = ['app_id', 'app_name', 'batch_id', 'job_id', 'job_params'];
         try {
             if (
-                'job_id' in jobInfo &&
-                Object.prototype.toString.call(jobInfo.job_params[0]) === '[object Object]' &&
-                Object.keys(jobInfo.job_params[0]).length > 0
+                jobInfo !== null &&
+                typeof jobInfo === 'object' &&
+                required.every((key) => key in jobInfo) &&
+                Utils.objectToString(jobInfo.job_params) === 'Array' &&
+                // job_params is empty
+                (jobInfo.job_params.length === 0 ||
+                    // job params is populated with an object
+                    (Utils.objectToString(jobInfo.job_params[0]) === 'Object' &&
+                        Object.keys(jobInfo.job_params[0]).length > 0))
+            ) {
+                return true;
+            }
+            // eslint-disable-next-line no-empty
+        } catch (err) {}
+        return false;
+    }
+
+    /**
+     * A job retry object should have the minimal structure
+     * {
+     *      job: {
+     *          jobState: { ... },
+     *      },
+     *      retry: {
+     *          jobState: { ... },
+     *      }
+     * }
+     *
+     * This function should be updated to stay in sync with ee2's output.
+     *
+     * @param {object} jobLogs
+     * @returns {boolean} true|false
+     */
+    function isValidJobRetryObject(jobRetry) {
+        const required = ['job'],
+            oneOf = ['retry', 'error'];
+        try {
+            if (
+                jobRetry !== null &&
+                typeof jobRetry === 'object' &&
+                required.every((key) => key in jobRetry) &&
+                oneOf.some((key) => key in jobRetry) &&
+                'jobState' in jobRetry.job &&
+                isValidJobStateObject(jobRetry.job.jobState)
+            ) {
+                if (jobRetry.retry) {
+                    return (
+                        'jobState' in jobRetry.retry &&
+                        isValidJobStateObject(jobRetry.retry.jobState)
+                    );
+                }
+                return true;
+            }
+            // eslint-disable-next-line no-empty
+        } catch (err) {}
+        return false;
+    }
+
+    /**
+     * A job log object should have the structure
+     *
+     * {
+     *      job_id:     str
+     *      batch_id:   str
+     *      first:      int
+     *      latest:     bool
+     *      max_lines:  int
+     *      lines: [
+     *          { line: ..., is_error: bool },
+     *          { line: ..., is_error: bool },
+     *          ...
+     *      ]
+     * }
+     *
+     * This function should be updated to stay in sync with ee2's output.
+     *
+     * N.b. this function checks for the presence of keys, but does not check their type
+     *
+     * @param {object} jobLogs
+     * @returns {boolean} true|false
+     */
+
+    function isValidJobLogsObject(jobLogs) {
+        const required = ['job_id', 'batch_id', 'first', 'latest', 'max_lines', 'lines'];
+
+        try {
+            if (
+                jobLogs !== null &&
+                typeof jobLogs === 'object' &&
+                required.every((key) => key in jobLogs) &&
+                Utils.objectToString(jobLogs.lines) === 'Array'
             ) {
                 return true;
             }
@@ -495,6 +609,9 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
         }
 
         const jobLines = [];
+        if (jobState.status === JOB.ee2_error) {
+            jobLines.push('Connection error');
+        }
         // Finished status
         if (jobState.finished) {
             // Amount of time it was in the queue
@@ -845,9 +962,12 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
         getCurrentJobs,
         getFsmStateFromJobs,
         isTerminalStatus,
+        isValidBackendJobStateObject,
         isValidJobStatus,
         isValidJobStateObject,
         isValidJobInfoObject,
+        isValidJobLogsObject,
+        isValidJobRetryObject,
         jobAction,
         jobArrayToIndexedObject,
         jobLabel,

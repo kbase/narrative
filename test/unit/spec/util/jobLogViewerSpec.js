@@ -278,7 +278,7 @@ define([
                 });
             });
 
-            JobsData.invalidJobs.forEach((state) => {
+            JobsData.example.JobState.invalid.forEach((state) => {
                 describe(`should be awaiting job data with dodgy state ${JSON.stringify(
                     state
                 )}`, () => {
@@ -425,7 +425,7 @@ define([
              * change is detected in the status node area, which should only occur when the valid
              * job state object is received.
              */
-            JobsData.invalidJobs.forEach((state) => {
+            JobsData.example.JobState.invalid.forEach((state) => {
                 it(`should not do anything when given dodgy job state ${JSON.stringify(
                     state
                 )}`, async function () {
@@ -498,7 +498,7 @@ define([
                     });
 
                     this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
-                        expect(msg).toEqual({ jobId, options: { latest: true } });
+                        expect(msg).toEqual({ jobId, latest: true });
                         this.runtimeBus.send(...formatLogMessage(jobId, lotsOfLogLines));
                     });
 
@@ -661,7 +661,7 @@ define([
 
                 return new Promise((resolve) => {
                     this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
-                        expect(msg).toEqual({ jobId, options: { latest: true } });
+                        expect(msg).toEqual({ jobId, latest: true });
                         const logUpdate = logs[acc];
                         acc += 1;
                         // set up the mutation observer to watch for UI spinner changes
@@ -704,7 +704,7 @@ define([
 
                 // this is called when the state is 'running'
                 this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
-                    expect(msg).toEqual({ jobId, options: { latest: true } });
+                    expect(msg).toEqual({ jobId, latest: true });
                     this.runtimeBus.send(
                         ...formatMessage(jobId, 'logs', {
                             error: 'summat went wrong',
@@ -746,7 +746,7 @@ define([
                     });
 
                     this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
-                        expect(msg).toEqual({ jobId, options: { first_line: 0 } });
+                        expect(msg).toEqual({ jobId, first_line: 0 });
                         this.runtimeBus.send(...formatLogMessage(jobId, logLines));
                     });
 
@@ -774,7 +774,7 @@ define([
                     });
 
                     this.runtimeBus.on(jcm.REQUESTS.LOGS, (msg) => {
-                        expect(msg).toEqual({ jobId, options: { first_line: 0 } });
+                        expect(msg).toEqual({ jobId, first_line: 0 });
                         this.runtimeBus.send(
                             ...formatMessage(jobId, 'logs', {
                                 error: 'DANGER!',

@@ -701,7 +701,8 @@ define([
          * @param {object} message
          */
         handleJobInfo(_, message) {
-            const { jobId, jobInfo } = message;
+            const { jobInfo } = message,
+                jobId = jobInfo.job_id;
             const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const appData = this.jobManager.model.getItem('app');
             const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;

@@ -1373,6 +1373,7 @@ define([
             describe('resetJobs', () => {
                 function runResetTest(ctx, thisCellId = null) {
                     spyOn(ctx.bus, 'emit');
+                    spyOn(Date, 'now').and.returnValue(1234567890);
                     expect(
                         Object.keys(ctx.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(
@@ -1390,7 +1391,7 @@ define([
                     expect(ctx.bus.emit).toHaveBeenCalled();
                     let expected = [resetJobsCallArgs];
                     if (thisCellId) {
-                        expected = [resetJobsCallArgs, ['reset-cell', { cellId }]];
+                        expected = [resetJobsCallArgs, ['reset-cell', { cellId, ts: 1234567890 }]];
                     }
                     const callArgs = ctx.bus.emit.calls.allArgs();
                     expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));

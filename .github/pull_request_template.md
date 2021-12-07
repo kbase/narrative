@@ -5,7 +5,8 @@
 * List any dependencies that are required for this change.
 
 # Jira Ticket / Issue #
-e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
+
+Related Jira ticket: https://kbase-jira.atlassian.net/browse/DATAUP-X
 - [ ] Added the Jira Ticket to the title of the PR (e.g. `DATAUP-69 Adds a PR template`)
 
 # Testing Instructions
@@ -22,9 +23,9 @@ e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] (JavaScript) I have run Prettier and ESLint on changed code manually or with a git precommit hook
 - [ ] (Python) I have run Black and Flake8 on changed Python code manually or with a git precommit hook
+- [ ] Any dependent changes have been merged and published in downstream modules
 
 # Updating Version and Release Notes (if applicable)
 

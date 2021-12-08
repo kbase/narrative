@@ -48,10 +48,9 @@ All the `request-job-*` requests take as arguments either a single job ID string
 `request-job-log` - request the job logs starting at some given line.
   * `jobId` - a string, the job id OR
   * `jobIdList` - an array of job IDs
-  * `options` - an object, with attributes:
-    * `first_line` - the first line (0-indexed) to request
-    * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
-    * `latest` -  true if requesting just the latest set of logs
+  * `first_line` - the first line (0-indexed) to request (optional)
+  * `num_lines` - the number of lines to request (will get back up to that many if there aren't more) (optional)
+  * `latest` -  true if requesting just the latest set of logs (optional)
 
 ### Usage Example
 The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
@@ -78,10 +77,8 @@ define(
     let runtime = Runtime.make();
     runtime.bus().emit('request-job-log', {
       jobId: 'some_job_id',
-      options: {
-        first_line: 0,
-        num_lines: 10
-      }
+      first_line: 0,
+      num_lines: 10
     });
   }
 );
@@ -93,7 +90,7 @@ When the kernel sends a message to the front end, the only module set up to list
 ### Cell-related
 
 `run-status` - updates the run status of the job - this is part of the initial flow of starting a job through the AppManager.
-  * TODO
+  * see `run_status` below for the message format.
 
 ### Job-related
 
@@ -101,12 +98,9 @@ When the kernel sends a message to the front end, the only module set up to list
   * `jobId` - string, the job id
   * `message` - string, some message about the error
 
-`job-info` - contains information about the current job
-  * `jobInfo` - object, the job information object (see the **Data Structures** section below)
+`job-info` - contains information about the current job. The format is described under `job_info` in the **Messages sent from the kernel to the browser** section below.
 
-`job-logs` - sent with information about some job logs.
-  * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
-  * `error` - if exists, the log request has thrown an error. The error key contains the error details.
+`job-logs` - sent with information about some job logs. The format is described under `job_logs` in the **Messages sent from the kernel to the browser** section below.
 
 `job-status` - contains the current job state
   * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
@@ -308,7 +302,7 @@ i.e.
 
 **bus** `job-info` sent by `job_id`
 
-Job info is split out into individual jobs and sent to `job_id` under the key `jobInfo` (see above)
+Job info is split out into individual jobs for distribution.
 
 ### `job_status`
 The current job state. This one is probably most common.

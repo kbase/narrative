@@ -64,11 +64,11 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
         _isValidMessage(type, message) {
             switch (type) {
                 case jcm.RESPONSES.STATUS:
-                    return Jobs.isValidJobStateObject(message.jobState);
+                    return Jobs.isValidBackendJobStateObject(message);
                 case jcm.RESPONSES.INFO:
-                    return Jobs.isValidJobInfoObject(message.jobInfo);
+                    return Jobs.isValidJobInfoObject(message);
                 case jcm.RESPONSES.LOGS:
-                    return Jobs.isValidJobLogsObject(message.logs);
+                    return Jobs.isValidJobLogsObject(message);
                 case jcm.RESPONSES.RETRY:
                     return Jobs.isValidJobRetryObject(message);
                 case type.indexOf('job') !== -1:
@@ -451,12 +451,12 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
              * @param {object} message
              */
             handleJobInfo(self, message) {
-                const { jobInfo, error } = message;
-                if (error) {
+                if (message.error) {
                     return;
                 }
-                self.model.setItem(`exec.jobs.info.${jobInfo.job_id}`, jobInfo);
-                self.removeListener(jobInfo.job_id, jcm.RESPONSES.INFO);
+                const jobId = message.job_id;
+                self.model.setItem(`exec.jobs.info.${jobId}`, message);
+                self.removeListener(jobId, jcm.RESPONSES.INFO);
             }
 
             handleJobRetry(self, message) {

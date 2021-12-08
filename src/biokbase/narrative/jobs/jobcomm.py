@@ -513,7 +513,7 @@ class JobComm:
 
         This sends a packet that looks like:
         {
-            job_id or job_id_list: (string or list of strings, if relevant),
+            job_id or job_id_list or cell_id_list: (string or list of strings, if relevant),
             source: the original message that spawned the error,
             other fields about the error, dependent on the content.
         }

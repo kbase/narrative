@@ -30,6 +30,7 @@ Code Changes
 - Remove app info dialog option - superseded by the “Info” tab on all app cells
 - DATAUP-263 - Fix bug where app cells can get stuck in the “Sending…” phase
 - SAM-40 - Add Name/ID column to SampleSet viewer
+- DATAUP-651 - Update Data Import tab help tour to include new features.
 
 Development Changes
 - UIP-3 - Made the migration away from Bower to using only NPM for Javascript package management. Mostly, the same versions were kept, though some were unavoidably changed

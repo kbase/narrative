@@ -222,7 +222,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR
 * `job_id_list` - array of strings
 
-`retry_job` - retry a job or list of jobs, responds with `job_retries` and `new_job`
+`retry_job` - retry a job or list of jobs, responds with `retry_job` and `new_job`
 * `job_id` - string OR
 * `job_id_list` - array of strings
 
@@ -265,7 +265,7 @@ These are described below. The name (`msg_type`) is given, followed by the keys 
 
 By design, these should only be seen by the `JobCommChannel` instance, then sent into bus messages that get sent on specific channels. That information is also given in each block.
 
-### `job_comm_error`
+### `job_error`
 A general job comm error, capturing most errors that get thrown by the kernel
 
 **content** (this varies, but usually includes the below)
@@ -366,7 +366,7 @@ Dictionary with key(s) job ID and value dictionaries with the following structur
 Logs data is split out into individual jobs and sent to `job_id` (see above)
 
 
-### `job_retries`
+### `retry_job`
 Sent when one or more jobs are retried
 
 **content**

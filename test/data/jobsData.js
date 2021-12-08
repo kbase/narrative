@@ -453,7 +453,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         {
             job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
             job_id: 'job_with_multiple_params',
-            batch_id: 'batch-parent-job',
+            batch_id: null,
             app_name: 'some app',
             app_id: 'some/app',
         },
@@ -463,6 +463,13 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             app_name: 'batch',
             app_id: 'batch',
             job_params: [],
+        },
+        {
+            job_id: 'some-crappy-job',
+            batch_id: null,
+            app_name: 'Some Crappy App',
+            app_id: 'some/crappy-app',
+            job_params: [{}],
         },
     ];
 
@@ -504,7 +511,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             batch_id: 'batch-parent-job',
             app_name: 'some app',
             app_id: 'some/app',
-            job_params: [{}],
+            job_params: 12345,
         },
     ];
 

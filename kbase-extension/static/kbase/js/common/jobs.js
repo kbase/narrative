@@ -135,7 +135,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         const required = ['job_id', 'status'];
         return !!(
             jobState !== null &&
-            typeof jobState === 'object' &&
+            Utils.objectToString(jobState) === 'Object' &&
             required.every((prop) => prop in jobState) &&
             validJobStatuses.includes(jobState.status) &&
             // require the 'created' key if the status is not 'does_not_exist' or 'ee2_error'
@@ -198,14 +198,13 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         try {
             if (
                 jobInfo !== null &&
-                typeof jobInfo === 'object' &&
+                Utils.objectToString(jobInfo) === 'Object' &&
                 required.every((key) => key in jobInfo) &&
                 Utils.objectToString(jobInfo.job_params) === 'Array' &&
                 // job_params is empty
                 (jobInfo.job_params.length === 0 ||
                     // job params is populated with an object
-                    (Utils.objectToString(jobInfo.job_params[0]) === 'Object' &&
-                        Object.keys(jobInfo.job_params[0]).length > 0))
+                    Utils.objectToString(jobInfo.job_params[0]) === 'Object')
             ) {
                 return true;
             }
@@ -236,17 +235,13 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         try {
             if (
                 jobRetry !== null &&
-                typeof jobRetry === 'object' &&
+                Utils.objectToString(jobRetry) === 'Object' &&
                 required.every((key) => key in jobRetry) &&
                 oneOf.some((key) => key in jobRetry) &&
-                'jobState' in jobRetry.job &&
-                isValidJobStateObject(jobRetry.job.jobState)
+                isValidBackendJobStateObject(jobRetry.job)
             ) {
                 if (jobRetry.retry) {
-                    return (
-                        'jobState' in jobRetry.retry &&
-                        isValidJobStateObject(jobRetry.retry.jobState)
-                    );
+                    return isValidBackendJobStateObject(jobRetry.retry);
                 }
                 return true;
             }
@@ -285,7 +280,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         try {
             if (
                 jobLogs !== null &&
-                typeof jobLogs === 'object' &&
+                Utils.objectToString(jobLogs) === 'Object' &&
                 required.every((key) => key in jobLogs) &&
                 Utils.objectToString(jobLogs.lines) === 'Array'
             ) {

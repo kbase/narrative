@@ -371,6 +371,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         return Object.keys(dataStructure).map((key) => {
             const newStructure = TestUtil.JSONcopy(dataStructure);
             delete newStructure[key];
+            return newStructure;
         });
     }
 

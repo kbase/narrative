@@ -62,19 +62,27 @@ define([
     const COMM_NAME = 'KBaseJobs',
         CELL = 'cell',
         JOB = 'jobId',
-        RESULT = 'result',
-        PING = 'ping',
         JOB_ID = 'job_id',
         JOB_ID_LIST = 'job_id_list',
+        // commands
+        CANCEL = 'cancel_job',
+        CELL_JOB_STATUS = 'cell_job_status',
+        COMM_ERROR = 'job_comm_error',
+        INFO = 'job_info',
+        LOGS = 'job_logs',
+        RETRY = 'retry_job',
+        RUN_STATUS = 'run_status',
+        START_UPDATE = 'start_job_update',
+        STATUS = 'job_status',
+        STATUS_ALL = 'job_status_all',
+        STOP_UPDATE = 'stop_job_update',
         // messages to be sent to backend for job request types
         REQUESTS = {
-            PING: PING,
-
             // cancels the job
             CANCEL: 'request-job-cancel',
 
             // Requests status of all jobs in a cell or list of cells
-            CELL_JOB_STATUS: 'request-cell-job-status',
+            CELL_JOB_STATUS,
 
             // Fetches info (not state) about a job, including the app id, name, and inputs.
             INFO: 'request-job-info',
@@ -95,30 +103,30 @@ define([
             STOP_UPDATE: 'request-job-updates-stop',
         },
         BACKEND_REQUESTS = {
-            PING: PING,
-            CANCEL: 'cancel_job',
-            INFO: 'job_info',
-            LOGS: 'job_logs',
-            RETRY: 'retry_job',
-            START_UPDATE: 'start_job_update',
-            STATUS: 'job_status',
-            STOP_UPDATE: 'stop_job_update',
+            CANCEL,
+            CELL_JOB_STATUS,
+            INFO,
+            LOGS,
+            RETRY,
+            START_UPDATE,
+            STATUS,
+            STOP_UPDATE,
         },
         BACKEND_RESPONSES = {
-            ERROR: 'job_comm_error',
-            INFO: BACKEND_REQUESTS.INFO,
-            LOGS: BACKEND_REQUESTS.LOGS,
-            RESULT: RESULT,
+            CELL_JOB_STATUS,
+            COMM_ERROR,
+            INFO,
+            LOGS,
             RETRY: 'job_retries',
-            RUN_STATUS: 'run_status',
-            STATUS: BACKEND_REQUESTS.STATUS,
+            RUN_STATUS,
+            STATUS,
+            STATUS_ALL,
         },
         RESPONSES = {
-            CELL_JOB_STATUS: 'cell-job-status',
+            CELL_JOB_STATUS,
             ERROR: 'job-error',
             INFO: 'job-info',
             LOGS: 'job-logs',
-            RESULT: RESULT,
             RETRY: 'job-retry-response',
             RUN_STATUS: 'run-status',
             STATUS: 'job-status',
@@ -172,6 +180,14 @@ define([
 
             this.messageQueue = [];
             this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
+
+            // set up validators for incoming backend job messages
+            this.validationFn = {};
+            this.validationFn[BACKEND_RESPONSES.INFO] = Jobs.isValidJobInfoObject;
+            this.validationFn[BACKEND_RESPONSES.LOGS] = Jobs.isValidJobLogsObject;
+            this.validationFn[BACKEND_RESPONSES.STATUS] = Jobs.isValidBackendJobStateObject;
+            this.validationFn[BACKEND_RESPONSES.STATUS_ALL] = Jobs.isValidBackendJobStateObject;
+            this.validationFn[BACKEND_RESPONSES.RETRY] = Jobs.isValidJobRetryObject;
         }
 
         /**
@@ -224,7 +240,7 @@ define([
                 throw new Error(`Ignoring unknown message type "${msgType}"`);
             }
 
-            let transformedMsg = {
+            const transformedMsg = {
                 target_name: COMM_NAME,
                 request_type: requestTranslation[msgType],
             };
@@ -235,14 +251,11 @@ define([
                 batch_id: JOB_ID,
                 jobId: JOB_ID,
                 jobIdList: JOB_ID_LIST,
-                pingId: 'ping_id',
             };
 
             for (const [key, value] of Object.entries(msgData)) {
-                if (key !== 'options') {
-                    const msgKey = translations[key] || key;
-                    transformedMsg[msgKey] = value;
-                }
+                const msgKey = translations[key] || key;
+                transformedMsg[msgKey] = value;
                 // convert to the batch form of the request
                 if (
                     (key === 'batchId' || key === 'batch_id') &&
@@ -251,10 +264,6 @@ define([
                     transformedMsg.request_type =
                         BATCH_BACKEND_REQUESTS[transformedMsg.request_type];
                 }
-            }
-
-            if (msgData.options) {
-                transformedMsg = Object.assign({}, transformedMsg, msgData.options);
             }
 
             return transformedMsg;
@@ -351,10 +360,6 @@ define([
                     this.sendBusMessage(CELL, msgData.cell_id, RESPONSES.RUN_STATUS, msgData);
                     break;
 
-                case BACKEND_RESPONSES.RESULT:
-                    this.sendBusMessage(CELL, msgData.address.cell_id, RESPONSES.RESULT, msgData);
-                    break;
-
                 // JOB messages
                 // Send job-related notifications on the default channel,
                 // with a key on the message type and the job id.
@@ -365,7 +370,7 @@ define([
                 // filtering.
                 //
                 // errors
-                case BACKEND_RESPONSES.ERROR:
+                case BACKEND_RESPONSES.COMM_ERROR:
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
                         break;
@@ -395,14 +400,11 @@ define([
                     break;
 
                 // job information for one or more jobs
-                // Object with keys jobId and values { jobInfo: { ...job params... } }
                 case BACKEND_RESPONSES.INFO:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
-                        if (Jobs.isValidJobInfoObject(jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.INFO, {
-                                jobInfo: jobData,
-                            });
+                        if (this.validationFn[msgType](jobData)) {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.INFO, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -412,11 +414,8 @@ define([
                 case BACKEND_RESPONSES.LOGS:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
-                        if (Jobs.isValidJobLogsObject(jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.LOGS, {
-                                jobId: _jobId,
-                                logs: jobData,
-                            });
+                        if (this.validationFn[msgType](jobData)) {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.LOGS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -426,7 +425,7 @@ define([
                 case BACKEND_RESPONSES.RETRY:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
-                        if (Jobs.isValidJobRetryObject(jobData)) {
+                        if (this.validationFn[msgType](jobData)) {
                             this.sendBusMessage(JOB, _jobId, RESPONSES.RETRY, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
@@ -442,11 +441,10 @@ define([
                  * { jobState: job.jobState, outputWidgetInfo: job.outputWidgetInfo }
                  */
                 case BACKEND_RESPONSES.STATUS:
-                case 'job_status_all':
+                case BACKEND_RESPONSES.STATUS_ALL:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
-                        if (Jobs.isValidBackendJobStateObject(jobData)) {
-                            msgData[_jobId].jobId = _jobId;
+                        if (this.validationFn[msgType](jobData)) {
                             this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });

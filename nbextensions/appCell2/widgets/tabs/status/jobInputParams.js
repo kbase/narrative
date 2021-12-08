@@ -64,7 +64,7 @@ define([
                     type: jcm.RESPONSES.INFO,
                 },
                 handle: (message) => {
-                    updateRowStatus(ui, message.jobInfo.job_params[0], container);
+                    updateRowStatus(ui, message.job_params[0], container);
                 },
             });
         }

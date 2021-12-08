@@ -814,7 +814,7 @@ define([
                     ).not.toBeDefined();
                     // rather than faffing around with sending messages over the bus,
                     // trigger the job handler directly
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.INFO, { jobInfo }, jobId);
+                    this.jobManagerInstance.runHandler(jcm.RESPONSES.INFO, jobInfo, jobId);
 
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)

@@ -398,14 +398,7 @@ define([
      */
     function updateInfo(ctx) {
         const { jobId, jobInfo } = ctx;
-        sendBusMessage(
-            ctx,
-            {
-                jobInfo,
-            },
-            { jobId },
-            jcm.RESPONSES.INFO
-        );
+        sendBusMessage(ctx, jobInfo, { jobId }, jcm.RESPONSES.INFO);
     }
 
     /**
@@ -1570,9 +1563,7 @@ define([
                                 });
                                 const expectedCallArgs = [
                                     jcm.RESPONSES.INFO,
-                                    {
-                                        jobInfo: { job_id: 'job_update_test', ...test.input },
-                                    },
+                                    { job_id: 'job_update_test', ...test.input },
                                     'job_update_test',
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);
@@ -1588,27 +1579,20 @@ define([
                                 await TestUtil.waitForElementChange(
                                     this.container.querySelector('#' + indicatorId),
                                     () => {
-                                        this.jobManager.bus.send(
-                                            {
-                                                jobInfo: test.input,
+                                        this.jobManager.bus.send(test.input, {
+                                            channel: {
+                                                jobId: this.job.retry_parent,
                                             },
-                                            {
-                                                channel: {
-                                                    jobId: this.job.retry_parent,
-                                                },
-                                                key: { type: jcm.RESPONSES.INFO },
-                                            }
-                                        );
+                                            key: { type: jcm.RESPONSES.INFO },
+                                        });
                                     }
                                 );
 
                                 const expectedCallArgs = [
                                     jcm.RESPONSES.INFO,
                                     {
-                                        jobInfo: {
-                                            job_id: this.job.retry_parent,
-                                            ...test.input,
-                                        },
+                                        job_id: this.job.retry_parent,
+                                        ...test.input,
                                     },
                                     this.job.retry_parent,
                                 ];

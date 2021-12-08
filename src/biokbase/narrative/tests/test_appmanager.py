@@ -3,6 +3,7 @@ Tests for the app manager.
 """
 from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job, JOB_ATTRS, JOB_ATTR_DEFAULTS
@@ -1174,7 +1175,7 @@ class AppManagerTestCase(unittest.TestCase):
         self._verify_comm_mock(
             comm_mock,
             1,
-            expected_messages=["run_status"],
+            expected_messages=[RUN_STATUS],
             expected_keys=expected_keys,
             expected_values=expected_values,
         )
@@ -1182,7 +1183,7 @@ class AppManagerTestCase(unittest.TestCase):
     def _verify_comm_success(
         self, comm_mock, is_batch, num_jobs=1, cell_id=None, run_id=None
     ) -> None:
-        expected_messages = ["run_status"]
+        expected_messages = [RUN_STATUS]
         expected_keys = [
             ["event", "event_at", "cell_id", "run_id"],
         ]
@@ -1202,7 +1203,7 @@ class AppManagerTestCase(unittest.TestCase):
             expected_keys[0].append("job_id")
             expected_values[0]["job_id"] = self.test_job_id
         for i in range(num_jobs):
-            expected_messages.append("new_job")
+            expected_messages.append(NEW)
             expected_keys.append(["job_id"])
             # job ids are new_job_id_child_0, new_job_id_child_1, ..., new_job_id
             expected_values.append(

@@ -732,9 +732,7 @@ class JobCommTestCase(unittest.TestCase):
         # Create req manually because want job_id_list to be not list
         req = {
             "msg_id": "some_id",
-            "content": {
-                "data": {"request_type": CANCEL, JOB_ID_LIST: job_id_list}
-            },
+            "content": {"data": {"request_type": CANCEL, JOB_ID_LIST: job_id_list}},
         }
         err = TypeError(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):

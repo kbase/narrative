@@ -24,18 +24,18 @@ JOB_ID_LIST = "job_id_list"
 CELL_ID_LIST = "cell_id_list"
 
 # messages
-CANCEL = 'cancel_job'
-CELL_JOB_STATUS = 'cell_job_status'
-ERROR = 'job_error'
-INFO = 'job_info'
-LOGS = 'job_logs'
-NEW = 'new_job'
-RETRY = 'retry_job'
-RUN_STATUS = 'run_status'
-START_UPDATE = 'start_job_update'
-STATUS = 'job_status'
-STATUS_ALL = 'job_status_all'
-STOP_UPDATE = 'stop_job_update'
+CANCEL = "cancel_job"
+CELL_JOB_STATUS = "cell_job_status"
+ERROR = "job_error"
+INFO = "job_info"
+LOGS = "job_logs"
+NEW = "new_job"
+RETRY = "retry_job"
+RUN_STATUS = "run_status"
+START_UPDATE = "start_job_update"
+STATUS = "job_status"
+STATUS_ALL = "job_status_all"
+STOP_UPDATE = "stop_job_update"
 
 # batch versions
 STATUS_BATCH = STATUS + "_batch"

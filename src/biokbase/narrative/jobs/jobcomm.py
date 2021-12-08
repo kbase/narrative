@@ -23,6 +23,26 @@ JOB_ID = "job_id"
 JOB_ID_LIST = "job_id_list"
 CELL_ID_LIST = "cell_id_list"
 
+# messages
+CANCEL = 'cancel_job'
+CELL_JOB_STATUS = 'cell_job_status'
+ERROR = 'job_error'
+INFO = 'job_info'
+LOGS = 'job_logs'
+NEW = 'new_job'
+RETRY = 'retry_job'
+RUN_STATUS = 'run_status'
+START_UPDATE = 'start_job_update'
+STATUS = 'job_status'
+STATUS_ALL = 'job_status_all'
+STOP_UPDATE = 'stop_job_update'
+
+# batch versions
+STATUS_BATCH = STATUS + "_batch"
+INFO_BATCH = INFO + "_batch"
+START_UPDATE_BATCH = START_UPDATE + "_batch"
+STOP_UPDATE_BATCH = STOP_UPDATE + "_batch"
+
 
 class JobRequest:
     """
@@ -65,19 +85,19 @@ class JobRequest:
     # each kind of request handling requires a job_id, a job_id_list,
     # or none of those
     REQUIRE_JOB_ID = [
-        "job_info_batch",
-        "job_status_batch",
-        "start_job_update_batch",
-        "stop_job_update_batch",
-        "job_logs",
+        INFO_BATCH,
+        STATUS_BATCH,
+        START_UPDATE_BATCH,
+        STOP_UPDATE_BATCH,
+        LOGS,
     ]
     REQUIRE_JOB_ID_LIST = [
-        "job_info",
-        "job_status",
-        "start_job_update",
-        "stop_job_update",
-        "retry_job",
-        "cancel_job",
+        INFO,
+        STATUS,
+        START_UPDATE,
+        STOP_UPDATE,
+        RETRY,
+        CANCEL,
     ]
 
     def __init__(self, rq: dict):
@@ -181,12 +201,13 @@ class JobComm:
     look up, this cancels itself.
 
     Allowed messages:
-    * all_status - return job state for all jobs in this Narrative.
     * job_status - return the job state for a single job (requires a job_id)
+    * job_status_all - return job state for all jobs in this Narrative.
     * job_info - return basic job info for a single job (requires a job_id)
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
+    * retry_job - retries a job (requires a job_id)
     * job_logs - sends job logs back over the comm channel (requires a job id)
     """
 
@@ -218,19 +239,19 @@ class JobComm:
             self._jm = JobManager()
         if self._msg_map is None:
             self._msg_map = {
-                "all_status": self._lookup_all_job_states,
-                "cell_job_status": self._lookup_job_states_by_cell_id,
-                "job_status": self._lookup_job_states,
-                "job_status_batch": self._lookup_job_states_batch,
-                "job_info": self._lookup_job_info,
-                "job_info_batch": self._lookup_job_info_batch,
-                "start_job_update": self._modify_job_updates,
-                "stop_job_update": self._modify_job_updates,
-                "start_job_update_batch": self._modify_job_updates_batch,
-                "stop_job_update_batch": self._modify_job_updates_batch,
-                "cancel_job": self._cancel_jobs,
-                "retry_job": self._retry_jobs,
-                "job_logs": self._get_job_logs,
+                STATUS_ALL: self._lookup_all_job_states,
+                CELL_JOB_STATUS: self._lookup_job_states_by_cell_id,
+                STATUS: self._lookup_job_states,
+                STATUS_BATCH: self._lookup_job_states_batch,
+                INFO: self._lookup_job_info,
+                INFO_BATCH: self._lookup_job_info_batch,
+                START_UPDATE: self._modify_job_updates,
+                STOP_UPDATE: self._modify_job_updates,
+                START_UPDATE_BATCH: self._modify_job_updates_batch,
+                STOP_UPDATE_BATCH: self._modify_job_updates_batch,
+                CANCEL: self._cancel_jobs,
+                RETRY: self._retry_jobs,
+                LOGS: self._get_job_logs,
             }
 
     def start_job_status_loop(
@@ -257,7 +278,7 @@ class JobComm:
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
                 }
-                self.send_comm_message("job_comm_err", error)
+                self.send_comm_message(ERROR, error)
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
@@ -295,7 +316,7 @@ class JobComm:
         all_job_states = self._jm.lookup_all_job_states(
             ignore_refresh_flag=ignore_refresh_flag
         )
-        self.send_comm_message("job_status_all", all_job_states)
+        self.send_comm_message(STATUS_ALL, all_job_states)
         return all_job_states
 
     def _lookup_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
@@ -318,7 +339,7 @@ class JobComm:
         }
         """
         cell_job_states = self._jm.lookup_jobs_by_cell_id(cell_id_list=req.cell_id_list)
-        self.send_comm_message("cell_job_status", cell_job_states)
+        self.send_comm_message(CELL_JOB_STATUS, cell_job_states)
         return cell_job_states
 
     def __job_info(self, job_id_list):
@@ -334,7 +355,7 @@ class JobComm:
             - job_params - dict - the params that were passed to that particular job
         """
         job_info = self._jm.lookup_job_info(job_id_list)
-        self.send_comm_message("job_info", job_info)
+        self.send_comm_message(INFO, job_info)
         return job_info
 
     def _lookup_job_info(self, req: JobRequest) -> dict:
@@ -351,7 +372,7 @@ class JobComm:
         Returns a dictionary of job state information indexed by job ID.
         """
         output_states = self._jm.get_job_states(job_id_list)
-        self.send_comm_message("job_status", output_states)
+        self.send_comm_message(STATUS, output_states)
         return output_states
 
     def lookup_job_state(self, job_id: str) -> dict:
@@ -369,7 +390,7 @@ class JobComm:
             job_ids = self._jm.update_batch_job(req.job_id)
         except JobIDException:
             self.send_comm_message(
-                "job_status",
+                STATUS,
                 {req.job_id: get_error_output_state(req.job_id)},
             )
             raise
@@ -400,7 +421,7 @@ class JobComm:
 
         if update_refresh:
             self.start_job_status_loop()
-            self.send_comm_message("job_status", output_states)
+            self.send_comm_message(STATUS, output_states)
 
     def _modify_job_updates(self, req: JobRequest) -> None:
         self.__modify_updates(req.job_id_list, req.request)
@@ -419,13 +440,13 @@ class JobComm:
         job state with the new status.
         """
         cancel_results = self._jm.cancel_jobs(req.job_id_list)
-        self.send_comm_message("job_status", cancel_results)
+        self.send_comm_message(STATUS, cancel_results)
 
     def _retry_jobs(self, req: JobRequest) -> None:
         retry_results = self._jm.retry_jobs(req.job_id_list)
-        self.send_comm_message("job_retries", retry_results)
+        self.send_comm_message(RETRY, retry_results)
         self.send_comm_message(
-            "new_job",
+            NEW,
             {
                 JOB_ID_LIST: [
                     result["retry"]["jobState"]["job_id"]
@@ -445,7 +466,7 @@ class JobComm:
             first_line=req.rq_data.get("first_line", 0),
             latest=req.rq_data.get("latest", False),
         )
-        self.send_comm_message("job_logs", {req.job_id: log_output})
+        self.send_comm_message(LOGS, {req.job_id: log_output})
 
     def _handle_comm_message(self, msg: dict) -> None:
         """
@@ -455,7 +476,7 @@ class JobComm:
 
         A handler dictionary is created on JobComm creation.
 
-        Any unknown request is returned over the channel as a job_comm_error, and a
+        Any unknown request is returned over the channel with message type 'job_error', and a
         ValueError is raised.
         """
         with exc_to_msg(msg):
@@ -541,7 +562,7 @@ class exc_to_msg:
         """
         If exception is caught, will send job comm message in this format
         {
-            "msg_type": "job_comm_error",
+            "msg_type": ERROR,
             "content": {
                 "source": "request_type",
                 "job_id": "0123456789abcdef",  # or job_id_list. optional and mutually exclusive
@@ -556,7 +577,7 @@ class exc_to_msg:
         """
         if exc_type == NarrativeException:
             self.jc.send_error_message(
-                "job_comm_error",
+                ERROR,
                 self.req,
                 {
                     "name": exc_value.name,
@@ -567,7 +588,7 @@ class exc_to_msg:
             )
         elif exc_type:
             self.jc.send_error_message(
-                "job_comm_error",
+                ERROR,
                 self.req,
                 {
                     "name": exc_type.__name__,

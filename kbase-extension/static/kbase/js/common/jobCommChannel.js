@@ -67,7 +67,7 @@ define([
         // commands
         CANCEL = 'cancel_job',
         CELL_JOB_STATUS = 'cell_job_status',
-        COMM_ERROR = 'job_comm_error',
+        ERROR = 'job_error',
         INFO = 'job_info',
         LOGS = 'job_logs',
         RETRY = 'retry_job',
@@ -114,10 +114,10 @@ define([
         },
         BACKEND_RESPONSES = {
             CELL_JOB_STATUS,
-            COMM_ERROR,
+            ERROR,
             INFO,
             LOGS,
-            RETRY: 'job_retries',
+            RETRY,
             RUN_STATUS,
             STATUS,
             STATUS_ALL,
@@ -370,7 +370,7 @@ define([
                 // filtering.
                 //
                 // errors
-                case BACKEND_RESPONSES.COMM_ERROR:
+                case BACKEND_RESPONSES.ERROR:
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
                         break;

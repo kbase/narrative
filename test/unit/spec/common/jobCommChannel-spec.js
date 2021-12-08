@@ -667,7 +667,7 @@ define([
                 expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
             },
             {
-                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
+                type: jcm.BACKEND_RESPONSES.ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'cancel error',
@@ -692,7 +692,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
+                type: jcm.BACKEND_RESPONSES.ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'log error',
@@ -718,7 +718,7 @@ define([
             },
             {
                 // unrecognised error type
-                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
+                type: jcm.BACKEND_RESPONSES.ERROR,
                 message: {
                     source: 'some-unknown-error',
                     job_id: TEST_JOB_ID,
@@ -743,7 +743,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
+                type: jcm.BACKEND_RESPONSES.ERROR,
                 message: {
                     job_id_list: [
                         'job_1_RetryWithErrors',

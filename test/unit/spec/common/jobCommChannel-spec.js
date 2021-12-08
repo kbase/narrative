@@ -39,7 +39,6 @@ define([
 
     const convertToJobState = (acc, curr) => {
         acc[curr.job_id] = {
-            jobId: curr.job_id,
             jobState: curr,
             outputWidgetInfo: {},
         };
@@ -49,7 +48,6 @@ define([
     const convertToJobStateBusMessage = (job) => {
         return [
             {
-                jobId: job.job_id,
                 jobState: job,
                 outputWidgetInfo: {},
             },
@@ -329,11 +327,6 @@ define([
 
         const busMsgCases = [
             {
-                channel: 'ping',
-                message: { pingId: 'ping!', pongId: 'pong!' },
-                expected: { request_type: 'ping', ping_id: 'ping!', pongId: 'pong!' },
-            },
-            {
                 channel: jcm.REQUESTS.LOGS,
                 message: { jobId: TEST_JOB_ID },
                 expected: {
@@ -520,23 +513,6 @@ define([
                 ],
             },
             {
-                type: jcm.RESPONSES.RESULT,
-                message: {
-                    result: [1, true, 3],
-                    address: { cell_id: 'bar' },
-                },
-                expected: [
-                    {
-                        result: [1, true, 3],
-                        address: { cell_id: 'bar' },
-                    },
-                    {
-                        channel: { cell: 'bar' },
-                        key: { type: jcm.RESPONSES.RESULT },
-                    },
-                ],
-            },
-            {
                 // info for a single job
                 type: jcm.BACKEND_RESPONSES.INFO,
                 message: (() => {
@@ -545,9 +521,7 @@ define([
                     return output;
                 })(),
                 expected: [
-                    {
-                        jobInfo: JobsData.example.Info.valid[0],
-                    },
+                    JobsData.example.Info.valid[0],
                     {
                         channel: { jobId: JobsData.example.Info.valid[0].job_id },
                         key: { type: jcm.RESPONSES.INFO },
@@ -563,9 +537,7 @@ define([
                 }, {}),
                 expectedMultiple: JobsData.example.Info.valid.map((info) => {
                     return [
-                        {
-                            jobInfo: info,
-                        },
+                        info,
                         {
                             channel: { jobId: info.job_id },
                             key: { type: jcm.RESPONSES.INFO },
@@ -579,10 +551,7 @@ define([
                     someJob: JobsData.example.Logs.valid[0],
                 },
                 expected: [
-                    {
-                        jobId: TEST_JOB_ID,
-                        logs: JobsData.example.Logs.valid[0],
-                    },
+                    JobsData.example.Logs.valid[0],
                     {
                         channel: { jobId: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.LOGS },
@@ -628,7 +597,6 @@ define([
                 })(),
                 expected: [
                     {
-                        jobId: JobsData.allJobs[0].job_id,
                         jobState: JobsData.allJobs[0],
                         outputWidgetInfo: {},
                     },
@@ -651,7 +619,6 @@ define([
                 },
                 expected: [
                     {
-                        jobId: TEST_JOB_ID,
                         jobState: {
                             job_id: TEST_JOB_ID,
                             status: 'ee2_error',
@@ -681,7 +648,6 @@ define([
                 expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage).concat([
                     [
                         {
-                            jobId: '1234567890abcdef',
                             jobState: {
                                 job_id: '1234567890abcdef',
                                 status: 'does_not_exist',
@@ -696,12 +662,12 @@ define([
                 ]),
             },
             {
-                type: 'job_status_all',
+                type: jcm.BACKEND_RESPONSES.STATUS_ALL,
                 message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
                 expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'cancel error',
@@ -726,7 +692,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'log error',
@@ -752,7 +718,7 @@ define([
             },
             {
                 // unrecognised error type
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
                 message: {
                     source: 'some-unknown-error',
                     job_id: TEST_JOB_ID,
@@ -777,7 +743,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.BACKEND_RESPONSES.COMM_ERROR,
                 message: {
                     job_id_list: [
                         'job_1_RetryWithErrors',

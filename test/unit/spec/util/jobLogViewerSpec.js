@@ -66,11 +66,10 @@ define([
 
     function formatLogMessage(jobId, logMessages) {
         return formatMessage(jobId, 'logs', {
-            logs: {
-                first: 0,
-                max_lines: logMessages.length,
-                lines: logMessages,
-            },
+            job_id: jobId,
+            first: 0,
+            max_lines: logMessages.length,
+            lines: logMessages,
         });
     }
 

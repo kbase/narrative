@@ -122,10 +122,6 @@ define([
                 this.state = utils.getCellMeta(this.cell, 'kbase.codeCell.jobInfo.state');
             }
 
-            // if (cellMeta && cellMeta.codeCell && cellMeta.codeCell && cellMeta.codeCell.jobInfo.state.jobId === this.jobId) {
-            //     // use this and not the state input.
-            //     this.state = cellMeta.codeCell.jobInfo.state;
-            // }
             if (cellMeta && cellMeta.attributes && cellMeta.attributes.id) {
                 this.cellId = cellMeta.attributes.id;
             } else {
@@ -184,10 +180,10 @@ define([
         },
 
         handleJobInfo: function (info) {
-            if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
+            if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.app_name) {
                 const { metadata } = this.cell;
                 if (metadata.kbase && metadata.kbase.attributes) {
-                    metadata.kbase.attributes.title = info.jobInfo.app_name;
+                    metadata.kbase.attributes.title = info.app_name;
                     metadata.kbase.attributes.subtitle = 'App Status';
                     metadata.kbase.attributes.icon = 'code';
                 }

@@ -2,7 +2,7 @@ const crypto = require('crypto');
 
 module.exports = function (grunt) {
     'use strict';
-    grunt.loadNpmTasks('grunt-regex-replace');
+    require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({
         // This inserts the reference to the compiled, minified JS file into page.html at
@@ -22,6 +22,44 @@ module.exports = function (grunt) {
                     },
                 ],
             },
+        },
+
+        // Run CSS / SCSS-related tasks
+        // these files are modified in place
+        postcss: {
+            // autoprefix and minify the concatenated css files
+            concat: {
+                options: {
+                    processors: [
+                        // add vendor prefixes
+                        require('autoprefixer')(),
+                        // minify
+                        require('cssnano')([
+                            'default',
+                            {
+                                normalizeWhitespace: {
+                                    exclude: true,
+                                },
+                            },
+                        ]),
+                    ],
+                },
+                src: ['kbase-extension/static/kbase/css/all_concat.css'],
+            },
+        },
+
+        // runs the npm command to compile scss -> css and run autoprefixer on it
+        shell: {
+            compile_css: {
+                command: 'npm run compile_css',
+            },
+        },
+
+        // watch scss files for any changes
+        // when they change, regenerate the compiled css files
+        watch: {
+            files: 'kbase-extension/scss/**/*.scss',
+            tasks: ['shell:compile_css'],
         },
     });
 };

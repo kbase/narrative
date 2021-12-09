@@ -1,9 +1,9 @@
 # Configuration file for ipython-notebook.
 
-c = get_config()
-#------------------------------------------------------------------------------
+c = get_config()  # noqa: F821
+# ------------------------------------------------------------------------------
 # NotebookApp configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # NotebookApp will inherit config from: BaseIPythonApplication, Application
 
@@ -17,7 +17,7 @@ c = get_config()
 # c.NotebookApp.jinja_environment_options = {}
 
 # The IP address the notebook server will listen on.
-c.NotebookApp.ip = 'localhost'
+c.NotebookApp.ip = "localhost"
 
 # DEPRECATED use base_url
 # c.NotebookApp.base_project_url = '/'
@@ -29,7 +29,7 @@ c.NotebookApp.ip = 'localhost'
 # Python modules to load as notebook server extensions. This is an experimental
 # API, and may change in future releases.
 # c.NotebookApp.server_extensions = []
-c.NotebookApp.server_extensions=['biokbase.narrative.handlers.narrativehandler']
+c.NotebookApp.server_extensions = ["biokbase.narrative.handlers.narrativehandler"]
 
 # The random bytes used to secure cookies. By default this is a new random
 # number every time you start the Notebook. Set it to a value in a config file
@@ -72,7 +72,9 @@ c.NotebookApp.port = 8888
 # c.NotebookApp.allow_origin = ''
 
 # The notebook manager class to use.
-c.NotebookApp.contents_manager_class = 'biokbase.narrative.contents.kbasewsmanager.KBaseWSManager'
+c.NotebookApp.contents_manager_class = (
+    "biokbase.narrative.contents.kbasewsmanager.KBaseWSManager"
+)
 # default: 'IPython.html.services.contents.filemanager.FileContentsManager'
 
 # Use a regular expression for the Access-Control-Allow-Origin header
@@ -90,7 +92,9 @@ c.NotebookApp.contents_manager_class = 'biokbase.narrative.contents.kbasewsmanag
 # c.NotebookApp.certfile = u''
 
 # The logout handler class to use.
-c.NotebookApp.logout_handler_class = 'biokbase.narrative.handlers.authhandlers.KBaseLogoutHandler'
+c.NotebookApp.logout_handler_class = (
+    "biokbase.narrative.handlers.authhandlers.KBaseLogoutHandler"
+)
 
 # The base URL for the notebook server.
 #
@@ -108,8 +112,9 @@ c.NotebookApp.logout_handler_class = 'biokbase.narrative.handlers.authhandlers.K
 
 # Supply overrides for the tornado.web.Application that the IPython notebook
 # uses.
-c.NotebookApp.tornado_settings = { 'compress_response': True, } #'debug': True, 'log_function': debug_log }
-
+c.NotebookApp.tornado_settings = {
+    "compress_response": True,
+}  # 'debug': True, 'log_function': debug_log }
 
 
 # The directory to use for notebooks and kernels.
@@ -119,7 +124,7 @@ c.NotebookApp.tornado_settings = { 'compress_response': True, } #'debug': True, 
 # c.NotebookApp.kernel_manager_class = <class 'IPython.html.services.kernels.kernelmanager.MappingKernelManager'>
 
 # The file where the cookie secret is stored.
-c.NotebookApp.cookie_secret_file = u'/tmp/notebook_cookie'
+c.NotebookApp.cookie_secret_file = u"/tmp/notebook_cookie"
 
 # Supply SSL options for the tornado HTTPServer. See the tornado docs for
 # details.
@@ -189,10 +194,11 @@ c.NotebookApp.cookie_secret_file = u'/tmp/notebook_cookie'
 
 
 import os
+
 try:
     myfile = __file__
 except NameError:
-    myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))
+    myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))  # noqa: F821
 
 myfile = os.path.dirname(myfile)
 
@@ -202,7 +208,7 @@ myfile = os.path.dirname(myfile)
 # This allows adding javascript/css to be available from the notebook server
 # machine, or overriding individual files in the IPython
 
-c.NotebookApp.extra_static_paths = [os.path.join(myfile, 'static')]
+c.NotebookApp.extra_static_paths = [os.path.join(myfile, "static")]
 
 # The full path to a private key file for usage with SSL/TLS.
 # c.NotebookApp.keyfile = u''
@@ -216,7 +222,7 @@ c.NotebookApp.extra_static_paths = [os.path.join(myfile, 'static')]
 #
 # Can be used to override templates from IPython.html.templates.
 
-c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
+c.NotebookApp.extra_template_paths = [os.path.join(myfile, "kbase_templates")]
 
 # The config manager class to use
 # c.NotebookApp.config_manager_class = <class 'IPython.html.services.config.manager.ConfigManager'>
@@ -229,7 +235,9 @@ c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
 
 # The login handler class to use.
 # c.NotebookApp.login_handler_class = <class 'IPython.html.auth.login.LoginHandler'>
-c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KBaseLoginHandler'
+c.NotebookApp.login_handler_class = (
+    "biokbase.narrative.handlers.authhandlers.KBaseLoginHandler"
+)
 
 # DEPRECATED, use tornado_settings
 # c.NotebookApp.webapp_settings = {}
@@ -240,9 +248,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # variable to override it.
 # c.NotebookApp.browser = u''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # KernelManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Manages a single kernel in a subprocess on this host.
 #
@@ -293,9 +301,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # set the iopub (PUB) port [default: random]
 # c.KernelManager.iopub_port = 0
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ProfileDir configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # An object to manage the profile directory and its resources.
 #
@@ -309,9 +317,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # `profile` option.
 # c.ProfileDir.location = u''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Session configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Object for handling serialization and sending of messages.
 #
@@ -397,9 +405,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # each message.
 # c.Session.metadata = {}
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # MappingKernelManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # A KernelManager that handles notebook mapping and HTTP error handling
 
@@ -415,9 +423,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # KernelManager for customized behavior.
 # c.MappingKernelManager.kernel_manager_class = 'IPython.kernel.ioloop.IOLoopKernelManager'
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ContentsManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Base class for serving files and directories.
 #
@@ -471,9 +479,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 #
 # c.ContentsManager.checkpoints_kwargs = {}
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # FileContentsManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # FileContentsManager will inherit config from: ContentsManager
 
@@ -536,9 +544,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # DEPRECATED, use post_save_hook
 # c.FileContentsManager.save_script = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # NotebookNotary configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # A class for computing and verifying notebook signatures.
 
@@ -560,9 +568,9 @@ c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KB
 # The hashing algorithm used to sign notebooks.
 # c.NotebookNotary.algorithm = 'sha256'
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # KernelSpecManager configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Whitelist of allowed kernel names.
 #

@@ -4,14 +4,12 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths: {
-        fileSaver: 'ext_components/file-saver/FileSaver.min',
+        fileSaver: 'ext_components/file-saver/dist/FileSaver.min',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
-        'bootstrap-slider': 'ext_components/seiyria-bootstrap-slider/dist/bootstrap-slider',
-        'bootstrap-slider-css': 'ext_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider',
-        'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',
-        'jquery-dataTables': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
+        'bootstrap-slider': 'ext_components/bootstrap-slider/dist/bootstrap-slider',
+        'bootstrap-slider-css': 'ext_components/bootstrap-slider/dist/css/bootstrap-slider',
         'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',
-        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap.min',
+        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap',
         'datatables.net-buttons': 'ext_components/datatables.net-buttons/js/dataTables.buttons.min',
         'datatables.net-buttons-bs':
             'ext_components/datatables.net-buttons-bs/js/buttons.bootstrap.min',
@@ -22,30 +20,28 @@ require.config({
         'datatables.net-buttons-print':
             'ext_components/datatables.net-buttons/js/buttons.print.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
-        // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
         md5: 'ext_components/spark-md5/spark-md5',
-        domReady: 'ext_components/requirejs/domReady',
+        domReady: 'ext_components/requirejs-domready/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
-        handlebars: 'ext_components/handlebars/handlebars',
+        handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
-        plotly: 'ext_components/plotly.js/dist/plotly.min',
+        plotly: 'ext_components/plotly.js-dist-min/plotly.min',
         kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
         kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',
         text: 'ext_components/requirejs-plugins/lib/text',
-        tipsy: 'ext_components/jquery.tipsy/js/jquery.tipsy',
+        tipsy: 'ext_components/jquery.tipsy/src/jquery.tipsy',
         typeahead: 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
         underscore: 'ext_components/underscore/underscore-min',
         select2: 'ext_components/select2/dist/js/select2.full.min',
         uuid: 'ext_components/pure-uuid/uuid',
         'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
         yaml: 'ext_components/require-yaml/yaml',
-        'js-yaml': 'ext_components/js-yaml/dist/js-yaml.min',
+        'js-yaml': 'ext_components/js-yaml/dist/js-yaml',
 
-        // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
@@ -69,7 +65,6 @@ require.config({
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/jquery-ui.min',
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
-        // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig: 'kbase/js/narrativeConfig',
         narrativeMain: 'narrativeMain',
@@ -108,7 +103,6 @@ require.config({
         runtimeManager: 'kbase/js/widgetApi/runtimeManager',
         messageManager: 'kbase/js/widgetApi/messageManager',
         narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
-        narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
         common: 'kbase/js/common',
@@ -125,7 +119,6 @@ require.config({
         kbaseNarrativeDataPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
         kbaseNarrativeDataList: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         kbaseNarrativeSidePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
-        jobCommChannel: 'kbase/js/widgets/narrative_core/jobCommChannel',
         kbaseNarrativeAppPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         kbaseNarrativeManagePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         kbaseNarrativeOutlinePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutlinePanel',
@@ -163,10 +156,11 @@ require.config({
         kbaseNarrativeError: 'kbase/js/widgets/function_output/kbaseNarrativeError',
         ipythonCellMenu: 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
-        // not yet ADMs, but still load with Require
         kbaseNarrativeAppCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
         kbaseNarrativeMethodCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
         kbaseNarrativeWorkspace: 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
+
+        // not an AMD, but load with require
         kbaseLogging: 'kbase/js/kbaseLogging',
         RGBColor: 'kbase/js/rgbcolor',
         kbStandaloneTable: 'kbase/js/widgets/kbStandaloneTable',
@@ -391,10 +385,13 @@ require.config({
         kbasePanel: 'kbase/js/widgets/kbasePanel',
         kbaseDeletePrompt: 'kbase/js/widgets/kbaseDeletePrompt',
     },
+    excludeShallow: ['common/jobCommChannel'],
     map: {
         '*': {
             css: 'ext_components/require-css/css',
+            'jquery-dataTables': 'datatables.net-bs'
         },
+
     },
 
     shim: {
@@ -414,18 +411,11 @@ require.config({
         'jquery-nearest': {
             deps: ['jquery'],
         },
-        'jquery-dataTables-base': {
-            deps: ['jquery'],
+        'datatables.net-bs': {
+            deps: ['jquery', 'datatables.net', 'bootstrap']
         },
-        'jquery-dataTables': {
-            deps: ['jquery', 'jquery-dataTables-base', 'bootstrap'],
-        },
-        kbaseNarrativeAppCell: {
-            deps: [
-                'kbaseNarrativeMethodCell',
-                'kbaseNarrativeOutputCell',
-                'kbaseNarrativeCellMenu',
-            ],
+        'datatables.net': {
+            deps: ['jquery']
         },
         kbaseNarrativeMethodCell: {
             deps: ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu'],
@@ -478,7 +468,6 @@ require.config({
                 'jquery',
                 'kbwidget',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'KBModeling',
                 'KBaseFBA.FBAModel',
@@ -503,7 +492,6 @@ require.config({
                 'kbwidget',
                 'KBModeling',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'msPathway',
             ],

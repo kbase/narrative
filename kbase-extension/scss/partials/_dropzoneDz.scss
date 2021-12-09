@@ -1,0 +1,104 @@
+.dz-clear-all__button {
+  @extend %kbase-button;
+
+  @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+}
+
+.dz-file {
+  border: 1px solid use_color('base-lightest');
+  font: 16px $typeface-page-text;
+  margin: 2px 0;
+  padding: 5px 0;
+  width: 100%;
+
+  // .dz-file__progress__bar
+  &__progress__bar {
+    margin-bottom: inherit;
+    margin-left: 5px;
+  }
+
+  // .dz-file__upload-progress
+  &__upload-progress {
+    display: inline;
+  }
+
+  // .dz-file__row
+  &__row {
+    align-items: center;
+    display: flex;
+  }
+
+  // .dz-file__name
+  &__name {
+    line-height: 20px;
+    white-space: nowrap;
+  }
+
+  // .dz-file__msg,
+  // .dz-file__name
+  &__msg,
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // .dz-file__msg
+  &__msg {
+    font-size: 14px;
+  }
+
+  // .dz-file__msg__success
+  &__msg__success {
+    color: rgb(75 175 79);
+    display: none;
+  }
+
+  // .dz-file__status
+  &__status {
+    align-items: center;
+    display: none;
+    font-weight: 700;
+  }
+
+  // .dz-file__status__icon
+  &__status__icon {
+    margin: 0 4px 0 8px;
+  }
+
+  // .dz-file__status__success
+  &__status__success {
+    color: rgb(75 175 79);
+  }
+
+  // .dz-file__status__error
+  &__status__error {
+    color: rgb(223 0 2);
+  }
+}
+
+.kb-dropzone {
+  border: 2px dashed use_color('mid-blue') !important;
+  margin-bottom: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+
+  &-progress__header {
+    border-bottom: 1px solid use_color('base-lightest');
+    display: none;
+    margin-bottom: 5px;
+  }
+
+  .dz-message {
+    color: rgb(0 0 0);
+    font: normal 400 24px/28px $typeface-page-text;
+    margin: 2em 4.5em;
+    mix-blend-mode: normal;
+    text-align: center;
+  }
+
+  // .kb-dropzone__message--upload
+  &__message--upload {
+    font-family: $typeface-page-text;
+    font-weight: 700;
+  }
+}

@@ -72,7 +72,8 @@ define([
                 '<div><b>You are operating in the ' + Config.get('environment') + ' environment.'
             )
             .append($('<div>').append($inputField));
-        var dialog = new BootstrapDialog({
+
+        const dialog = new BootstrapDialog({
             title: 'Insert an authentication token?',
             body: $body,
             buttons: [
@@ -102,7 +103,7 @@ define([
         } seconds,
            whichever comes first.</p>
         `;
-        var dialog = new BootstrapDialog({
+        const dialog = new BootstrapDialog({
             title: 'Logged Out',
             body: $('<div>').append(message),
             buttons: [

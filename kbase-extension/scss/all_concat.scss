@@ -1,0 +1,56 @@
+// SCSS file containing all css
+
+// Modules
+@import "modules/colours";
+@import "modules/variables";
+@import "modules/fonts";
+@import "modules/typography";
+@import "modules/mixins";
+
+@import "../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/mixins/buttons";
+
+// overrides of specific jupyter notebook formatting bits
+@import "partials/custom";
+
+// basic formatting
+@import "partials/stylesheet";
+
+@import "partials/narrative";
+@import "partials/icons";
+@import "partials/landingPages";
+@import "partials/editor";
+@import "partials/notify";
+@import "partials/methodCell";
+@import "partials/bootstrapHelper";
+@import "partials/buttons";
+@import "partials/contigBrowserStyles";
+@import "partials/tour";
+@import "partials/batchMode";
+@import "partials/advancedViewCell";
+@import "partials/errorDialog";
+@import "partials/appCell";
+@import "partials/editorCell";
+
+// order should not be important for the following files
+@import "partials/appParams";
+@import "partials/bulkImportCell";
+@import "partials/cellToolbar";
+@import "partials/dataStaging";
+@import "partials/dropzoneDz";
+@import "partials/errorDisplay";
+@import "partials/filePath";
+@import "partials/filetypePanel";
+@import "partials/fsm";
+@import "partials/infoTab";
+@import "partials/jobAction";
+@import "partials/jobLog";
+@import "partials/jobStatus";
+@import "partials/kb-icon";
+@import "partials/loadingBlocker";
+@import "partials/narrativeOutline";
+@import "partials/rcp";
+@import "partials/reportViewer";
+@import "partials/select2";
+@import "partials/stagingTable";
+@import "partials/ui";
+@import "partials/userMenu";

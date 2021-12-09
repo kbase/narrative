@@ -49,7 +49,7 @@ define([
             <span role='row' data-test-id='${item.id}'>
             <span style='color: #AAA; font-weight: normal; font-style: italic' data-test-id='label' role='cell'>${
                 item.label
-            }</span>: 
+            }</span>:
             &nbsp;
             <span data-test-id='value' role='cell'>${formatValue(item.value)}</span>
             </span>
@@ -67,8 +67,8 @@ define([
             let value;
             if (item.value instanceof Array) {
                 value = item.value
-                    .map((value) => {
-                        return formatItem(value);
+                    .map((_item) => {
+                        return formatItem(_item);
                     })
                     .join('&nbsp;&nbsp;&nbsp;');
             } else {
@@ -298,7 +298,7 @@ define([
                 token: this.token,
             });
 
-            const margin = { margin: '10px 0px 10px 0px' };
+            const margin = { margin: '10px 0' };
             const $typeInput = $('<select class="form-control">').css(margin);
 
             this.dataSourceConfigs.forEach((config, index) => {
@@ -360,6 +360,7 @@ define([
                     if (dataSource.logoUrl) {
                         this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
                     }
+                    this.searchAndRender(newDataSourceID, $filterInput.val());
                 }
                 $filterInput.focus();
                 this.searchAndRender(newDataSourceID, $filterInput.val());
@@ -372,8 +373,8 @@ define([
             $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
-                const dataSourceID = parseInt($typeInput.val());
-                this.searchAndRender(dataSourceID, $filterInput.val());
+                const _dataSourceID = parseInt($typeInput.val());
+                this.searchAndRender(_dataSourceID, $filterInput.val());
             });
 
             function renderInputFieldState() {
@@ -395,11 +396,11 @@ define([
             const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
             const header = $('<div class="row">')
-                .css({ margin: '0px 10px 0px 10px' })
+                .css({ margin: '0 10px' })
                 .append(typeFilter)
                 .append(searchFilter);
             this.$elem.append(header);
-            this.totalPanel = $('<div>').css({ margin: '0px 0px 0px 10px' });
+            this.totalPanel = $('<div>').css({ margin: '0 0 0 10px' });
             this.$elem.append(this.totalPanel);
 
             this.resultPanel = $('<div role="table" data-test-id="result">');

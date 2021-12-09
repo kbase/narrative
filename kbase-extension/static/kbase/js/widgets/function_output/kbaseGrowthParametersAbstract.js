@@ -182,28 +182,34 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseGrowthMatrixAbstract'], (
             series.avg_lag_phase = (n > 0 ? s1_lag_phase / n : 0).toFixed(3);
             series.avg_max_growth = (n > 0 ? s1_max_growth / n : 0).toFixed(3);
 
-            series.se_area_under_curve = (n > 1
-                ? Math.sqrt(
-                      (s2_area_under_curve * n - s1_area_under_curve * s1_area_under_curve) /
-                          (n - 1) /
-                          n /
-                          n
-                  )
-                : 0
+            series.se_area_under_curve = (
+                n > 1
+                    ? Math.sqrt(
+                          (s2_area_under_curve * n - s1_area_under_curve * s1_area_under_curve) /
+                              (n - 1) /
+                              n /
+                              n
+                      )
+                    : 0
             ).toFixed(5);
-            series.se_growth_rate = (n > 1
-                ? Math.sqrt(
-                      (s2_growth_rate * n - s1_growth_rate * s1_growth_rate) / (n - 1) / n / n
-                  )
-                : 0
+            series.se_growth_rate = (
+                n > 1
+                    ? Math.sqrt(
+                          (s2_growth_rate * n - s1_growth_rate * s1_growth_rate) / (n - 1) / n / n
+                      )
+                    : 0
             ).toFixed(5);
-            series.se_lag_phase = (n > 1
-                ? Math.sqrt((s2_lag_phase * n - s1_lag_phase * s1_lag_phase) / (n - 1) / n / n)
-                : 0
+            series.se_lag_phase = (
+                n > 1
+                    ? Math.sqrt((s2_lag_phase * n - s1_lag_phase * s1_lag_phase) / (n - 1) / n / n)
+                    : 0
             ).toFixed(5);
-            series.se_max_growth = (n > 1
-                ? Math.sqrt((s2_max_growth * n - s1_max_growth * s1_max_growth) / (n - 1) / n / n)
-                : 0
+            series.se_max_growth = (
+                n > 1
+                    ? Math.sqrt(
+                          (s2_max_growth * n - s1_max_growth * s1_max_growth) / (n - 1) / n / n
+                      )
+                    : 0
             ).toFixed(5);
             series.samplesCountTotal = samples.length;
             series.samplesCountGood = n;

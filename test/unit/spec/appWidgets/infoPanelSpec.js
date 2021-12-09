@@ -1,4 +1,9 @@
-define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel'], ($, Config, InfoPanel) => {
+define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel', 'testUtil'], (
+    $,
+    Config,
+    InfoPanel,
+    TestUtil
+) => {
     'use strict';
 
     function makeDummyPanel() {
@@ -86,6 +91,7 @@ define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel'], ($, Confi
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('Loads the module with its expected constructor', () => {

@@ -1,3 +1,4 @@
+/* global UserProfile */
 /**
  * A few string utility functions. These are kinda unrelated, but used in several places.
  *
@@ -86,68 +87,6 @@ define([
             div: $loader,
             setText: setText,
         };
-    }
-
-    /**
-     * @method
-     * getMethodIcon
-     *
-     * Provides a JQuery object containing an Icon for narrative apps (in the
-     * legacy style) or methods (soon to be called apps).
-     *
-     * params = {
-     *    isApp: true | false  // set to true to use the default app icon
-     *    url:  string         // url to the icon image, if missing this will provide a default
-     *    size: string         // set the max-width and max-height property for url icons
-     *                         // (icons are square), default is 50px
-     *    cursor: string       // if set, set the cursor css of the icon, default is 'default'
-     *    setColor: true | false  // this param should probably go away, but if true will set the color of the default icon
-     * }
-     */
-    function getAppIcon(params) {
-        let cursor = 'default';
-        if (params.cursor) {
-            cursor = params.cursor;
-        }
-
-        if (params.url) {
-            let size = '50px';
-            if (params.size) {
-                size = params.size;
-            }
-            return $('<img src="' + params.url + '">').css({
-                'max-width': size,
-                'max-height': size,
-                cursor: cursor,
-            });
-        }
-
-        // no url, so show default
-        const icons = Config.get('icons'); // icon default parameters are set in a config
-
-        let isApp = false;
-        if (params['isApp']) {
-            isApp = params['isApp'];
-        }
-
-        const name = isApp ? 'app' : 'method';
-        const icon_color = isApp ? icons.colors[9] : icons.colors[5];
-        const icon_class = isApp ? 'app-icon' : 'method-icon';
-
-        const icon = icons.methods[name];
-        const $icon = $('<i>');
-        // background
-        $icon.addClass('fa-stack fa-2x').css({ cursor: cursor });
-        const $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
-        if (params.setColor) {
-            $i.css({ color: icon_color });
-        }
-        $icon.append($i);
-        // add stack of font-awesome icons
-        _.each(icon, (cls) => {
-            $icon.append($('<i>').addClass('fa fa-inverse fa-stack-1x ' + cls));
-        });
-        return $icon;
     }
 
     /**
@@ -259,7 +198,6 @@ define([
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
-        getAppIcon: getAppIcon,
         createError: createError,
         simpleButton: simpleButton,
         verticalInViewport: verticalInViewport,

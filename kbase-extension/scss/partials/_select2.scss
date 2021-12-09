@@ -1,0 +1,37 @@
+.kb-select2 {
+  &-taxonomy-ref,
+  &-object-input {
+    &__item {
+      @include base-text;
+
+      display: block;
+      height: $line-height-px;
+    }
+  }
+
+  &-object-input {
+    &__object {
+      @include base-text;
+
+      word-wrap: break-word;
+
+      &_name {
+        font-weight: 700;
+      }
+
+      &_type {
+        font-style: italic;
+      }
+
+      &_details {
+        margin-left: 1rem;
+      }
+
+      &_type,
+      &_narrative,
+      &_updated {
+        display: block;
+      }
+    }
+  }
+}

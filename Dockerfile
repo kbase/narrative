@@ -22,11 +22,22 @@ ARG SKIP_MINIFY
 
 EXPOSE 8888
 
+# install NodeJS 16.x (latest LTS until ~October 2022, https://nodejs.org/en/about/releases/)
+RUN \
+    curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && \
+    sudo apt-get install -y nodejs
+
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
 RUN source activate base && \
-    conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
-          beautifulsoup4==4.8.1 html5lib==1.0.1
+    conda install -c conda-forge ndg-httpsclient==0.5.1 \
+          pyasn1==0.4.5 \
+          pyopenssl==19.0.0 \
+          cryptography==2.7 \
+          idna==2.8 \
+          requests==2.21.0 \
+          beautifulsoup4==4.8.1 \
+          html5lib==1.0.1
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -40,8 +51,7 @@ RUN \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
     # install JS deps
     npm install -g grunt-cli && \
-    npm install && \
-    ./node_modules/.bin/bower install --allow-root --config.interactive=false && \
+    npm install && npm run install-npm && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \

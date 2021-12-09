@@ -1,8 +1,8 @@
 define([
     'jquery',
     'bluebird',
+    'underscore',
     'kb_common/html',
-    'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
     'kb_sdk_clients/genericClient',
@@ -11,12 +11,11 @@ define([
     'common/runtime',
     'common/ui',
     'bootstrap',
-    'css!font-awesome',
 ], (
     $,
     Promise,
+    _,
     html,
-    utils,
     Workspace,
     serviceUtils,
     GenericClient,
@@ -408,7 +407,7 @@ define([
          */
         function doWorkspaceChanged(data) {
             // compare to availableData.
-            if (!utils.isEqual(data, model.availableValues)) {
+            if (!_.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
                 const matching = model.availableValues.filter((value) => {
                     if (model.value && model.value === getObjectRef(value, model.value)) {
@@ -429,7 +428,7 @@ define([
             // there are a few thin
             fetchData().then((data) => {
                 // compare to availableData.
-                if (!utils.isEqual(data, model.availableValues)) {
+                if (!_.isEqual(data, model.availableValues)) {
                     model.availableValues = data;
                     const matching = model.availableValues.filter((value) => {
                         if (model.value && model.value === getObjectRef(value, model.value)) {

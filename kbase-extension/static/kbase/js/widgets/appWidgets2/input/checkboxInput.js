@@ -7,7 +7,6 @@ define([
     '../validation',
 
     'bootstrap',
-    'css!font-awesome',
 ], (Promise, html, Events, UI, Runtime, Validation) => {
     'use strict';
 
@@ -160,7 +159,6 @@ define([
                     syncModelToControl();
                 });
 
-                // bus.emit('sync');
                 return null;
             });
         }

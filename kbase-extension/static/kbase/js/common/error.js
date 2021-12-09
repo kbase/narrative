@@ -1,4 +1,4 @@
-define([], () => {
+define(['common/ui', 'common/html'], (UI, html) => {
     'use strict';
 
     function KBError(arg) {
@@ -73,8 +73,48 @@ define([], () => {
         }
     }
 
+    /**
+     * This creates and displays a little dialog that shows some error information. It
+     * makes 3 tabs: Summary, Details, and Stack Trace
+     * Summary contains the preamble and text error.
+     * Details contains more details based on the error message.
+     * Stack Trace contains the Javascript stack trace included with the Error object.
+     * @param {string} title the title of the error dialog (populates the header inside the
+     * dialog)
+     * @param {string} preamble the "preamble" of the error dialog. This is a
+     * string that overall describes what the case is that led to the error.
+     * @param {Error} error the error object to be rendered in the error tab.
+     */
+    function reportCellError(title, preamble, error) {
+        const { tag } = html,
+            div = tag('div');
+
+        const ui = UI.make({
+            node: document.body,
+        });
+        ui.showInfoDialog({
+            title: 'Error',
+            body: div(
+                {
+                    class: 'kb-error-dialog__body',
+                },
+                [
+                    ui.buildPanel({
+                        title: title,
+                        type: 'danger',
+                        body: ui.buildErrorTabs({
+                            preamble: preamble,
+                            error: error,
+                        }),
+                    }),
+                ]
+            ),
+        });
+    }
+
     return {
         grokError: grokError,
         KBError: KBError,
+        reportCellError: reportCellError,
     };
 });

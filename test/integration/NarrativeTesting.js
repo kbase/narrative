@@ -1,4 +1,3 @@
-/* eslint strict: ["error", "global"] */
 'use strict';
 
 const { makeURL, clickWhenReady } = require('./wdioUtils');

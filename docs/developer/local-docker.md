@@ -93,7 +93,7 @@ All of the testing options may be used
 
 The container can't be killed with Ctrl-C; you'll need to stop it using Docker or another tool like Kitematic.
 
-If you need to update or change dependencies (bower.json), you'll need to rebuild the image.
+If you need to update or change dependencies (package.json), you'll need to rebuild the image.
 
 ### config.json changes
 

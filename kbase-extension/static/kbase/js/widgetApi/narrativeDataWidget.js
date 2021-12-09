@@ -16,18 +16,18 @@ define(['bluebird', 'runtimeManager', 'narrativeConfig'], (
     NarrativeConfig
 ) => {
     'use strict';
-    function factory(config) {
-        var packageName = config.package,
-            packageVersion = config.version,
-            widgetName = config.widget,
-            widgetTitle = config.title,
-            widgetParentNode = config.parent,
-            authRequired = config.authRequired,
+    function factory(conf) {
+        const packageName = conf.package,
+            packageVersion = conf.version,
+            widgetName = conf.widget,
+            widgetTitle = conf.title,
+            widgetParentNode = conf.parent,
+            authRequired = conf.authRequired,
             config = NarrativeConfig.getConfig();
 
         function showErrorMessage(message) {
             widgetParentNode.innerHTML =
-                '<div style="margin: 1em; padding: 1em; border: 2px red solid;"><h1>Error in ' +
+                '<div style="margin: 1em; padding: 1em; border: 2px solid red;"><h1>Error in ' +
                 widgetTitle +
                 '</h1><p>' +
                 message +
@@ -64,15 +64,15 @@ define(['bluebird', 'runtimeManager', 'narrativeConfig'], (
                                 const session = Session.make({ cookieName: 'kbase_session' });
                                 return session.getAuthToken();
                             }
-                            function makeWidgetHostAdapter(objectRefs, options) {
+                            function makeWidgetHostAdapter(_objectRefs, _options) {
                                 const configProps = Props.make({
                                     data: NarrativeConfig.getConfig(),
                                 });
                                 return function (bus) {
                                     bus.subscribe('ready', () => {
                                         bus.publish('start', {
-                                            objectRefs: objectRefs,
-                                            options: options,
+                                            objectRefs: _objectRefs,
+                                            options: _options,
                                         });
                                     });
 

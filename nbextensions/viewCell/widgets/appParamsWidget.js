@@ -1,14 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
-    'kb_common/html',
-    // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
@@ -37,19 +35,17 @@ define([
         div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
-            container,
-            ui,
-            bus,
-            places,
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
+        let container, ui, places;
 
         // DATA
         /*
@@ -263,6 +259,7 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
                 showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -283,6 +280,7 @@ define([
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
                 showAdvancedButton = ui.buildButton({
+                    class: 'kb-app-params__toggle--advanced-hidden',
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -330,7 +328,7 @@ define([
                             'Input Objects',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-params__message--advanced-hidden',
                             }),
                         ]),
                         name: 'input-objects-area',
@@ -342,7 +340,7 @@ define([
                             'Parameters',
                             span({
                                 dataElement: 'advanced-hidden-message',
-                                style: { marginLeft: '6px', fontStyle: 'italic' },
+                                class: 'kb-app-params__message--advanced-hidden',
                             }),
                         ]),
                         name: 'parameters-area',
@@ -514,7 +512,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -553,7 +551,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -593,7 +591,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -654,10 +652,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,

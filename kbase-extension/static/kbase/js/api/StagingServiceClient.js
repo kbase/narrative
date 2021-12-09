@@ -20,6 +20,7 @@ define(['RestAPIClient'], (RestAPIClient) => {
                 delete: { method: 'delete', path: 'delete/${path}' },
                 rename: { method: 'post', path: 'rename/${path}' },
                 decompress: { method: 'patch', path: 'decompress/${path}' },
+                importer_mappings: { method: 'get', path: 'importer_mappings/?${file_list}' },
             },
         });
     };

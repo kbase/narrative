@@ -100,5 +100,47 @@ define(['util/string'], (StringUtil) => {
                 expect(StringUtil.escape(t[0])).toEqual(t[1]);
             });
         });
+
+        it('should capitalize a string', () => {
+            const tests = [
+                ['capitalize', 'Capitalize'],
+                ['1,2,3-trichloroethane', '1,2,3-trichloroethane'],
+                [{ value: true }, { value: true }],
+                [undefined, undefined],
+                [null, null],
+                [123456, 123456],
+                ['this is it', 'This is it'],
+            ];
+
+            tests.forEach((t) => {
+                expect(StringUtil.capitalize(t[0])).toEqual(t[1]);
+            });
+        });
+
+        it('should stringify an array nicely', () => {
+            const tests = [
+                [[], ''],
+                [['this'], 'this'],
+                [['bits', 'bobs'], 'bits and bobs'],
+                [['this', 'that', 'the other'], 'this, that, and the other'],
+            ];
+            tests.forEach((t) => {
+                expect(StringUtil.arrayToEnglish(t[0])).toEqual(t[1]);
+            });
+        });
+
+        const emptyCases = [null, ' ', '\n', '\t', ' \n \t '];
+        emptyCases.forEach((testCase) => {
+            it(`should see "${testCase}" as an empty string`, () => {
+                expect(StringUtil.isEmptyString(testCase)).toBeTrue();
+            });
+        });
+
+        const nonEmptyCases = [undefined, 'a', 'b    ', '    c'];
+        nonEmptyCases.forEach((testCase) => {
+            it(`should not see "${testCase}" as an empty string`, () => {
+                expect(StringUtil.isEmptyString(testCase)).toBeFalse();
+            });
+        });
     });
 });

@@ -1,10 +1,11 @@
-define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseDataCard'], (
+define(['jquery', 'kbase/js/widgets/narrative_core/kbaseDataCard', 'testUtil'], (
     $,
-    Jupyter,
-    DataCard
+    DataCard,
+    TestUtil
 ) => {
     'use strict';
     let object_info, $card;
+
     describe('The kbaseDataCard widget', () => {
         beforeEach(() => {
             object_info = [
@@ -23,6 +24,9 @@ define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseDat
             $card = DataCard({
                 object_info: object_info,
             });
+        });
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
         it('Should initalize properly', (done) => {
             expect($card instanceof $).toEqual(true);

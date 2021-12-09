@@ -5,7 +5,8 @@ define([
     'kb_service/client/workspace',
     'base/js/namespace',
     'narrativeMocks',
-], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
+    'testUtil',
+], (DataList, $, Config, Workspace, Jupyter, Mocks, TestUtil) => {
     'use strict';
 
     const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
@@ -154,6 +155,7 @@ define([
             $dataList = null;
             dataListObj = null;
             $(document).off();
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate itself with expected functions', () => {
@@ -200,7 +202,7 @@ define([
             expect($addDataButton).toBeDefined();
             expect($addDataButton.length).toEqual(1);
             expect($addDataButton.is('button')).toBeTruthy();
-            expect($addDataButton.css('display')).toEqual('inline-block');
+            expect($addDataButton.css('display')).toEqual('block');
         });
 
         it('Should render with data, conduct a search, and show a resulting data card', async () => {

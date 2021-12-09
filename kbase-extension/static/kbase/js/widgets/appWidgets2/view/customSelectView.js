@@ -1,12 +1,10 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validation',
-    'common/events',
-    'common/dom',
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, Dom) => {
+define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui', 'bootstrap'], (
+    Promise,
+    html,
+    Validation,
+    Events,
+    Ui
+) => {
     'use strict';
 
     // Constants
@@ -19,7 +17,7 @@ define([
         let options = {},
             spec = config.parameterSpec,
             parent,
-            dom,
+            ui,
             container,
             bus = config.bus,
             model = {
@@ -44,7 +42,7 @@ define([
          */
 
         function getInputValue() {
-            const control = dom.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
 
             if (selected.length === 0) {
@@ -133,7 +131,7 @@ define([
                 const events = Events.make(),
                     inputControl = makeInputControl(events);
 
-                dom.setContent('input-container', inputControl);
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             }).then(() => {
                 autoValidate();
@@ -197,7 +195,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = Ui.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

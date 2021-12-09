@@ -4,8 +4,10 @@ define([
     'base/js/namespace',
     'narrativeConfig',
     'narrativeMocks',
-], ($, AppPanel, Jupyter, Config, Mocks) => {
+    'testUtil',
+], ($, AppPanel, Jupyter, Config, Mocks, TestUtil) => {
     'use strict';
+
     let $panel, appPanel;
     const FAKE_USER = 'some_user',
         FAKE_TOKEN = 'some_fake_token',
@@ -115,6 +117,7 @@ define([
             Jupyter.notebook = null;
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('Should initialize properly', () => {

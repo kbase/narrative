@@ -1,0 +1,12 @@
+.kb-fsm {
+  &__key {
+    margin-left: 3px;
+  }
+
+  &__value {
+    background-color: use-color('neutral');
+    color: use-color('white');
+    margin: 0 3px;
+    padding: 2px;
+  }
+}

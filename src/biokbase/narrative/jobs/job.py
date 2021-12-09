@@ -1,117 +1,262 @@
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
+from biokbase.narrative.exception_util import transform_job_exception
+import copy
 import json
+import time
 import uuid
 from jinja2 import Template
 from pprint import pprint
+from typing import List
 
 """
 KBase job class
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
+COMPLETED_STATUS = "completed"
+TERMINAL_STATUSES = [COMPLETED_STATUS, "terminated", "error"]
+
+EXCLUDED_JOB_STATE_FIELDS = [
+    "authstrat",
+    "condor_job_ads",
+    "job_input",
+    "scheduler_type",
+    "scheduler_id",
+]
+JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
+    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
+]
+
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "child_jobs"]
+
+
+# The app_id and app_version should both align with what's available in
+# the Narrative Method Store service.
+#
+# app_id (str): identifier for the app
+# app_version (str): service version string
+# batch_id (str): for batch jobs, the ID of the parent job
+# batch_job (bool): whether or not this is a batch job
+# child_jobs (list[str]): IDs of child jobs in a batch
+# cell_id (str): ID of the cell that initiated the job (if applicable)
+# job_id (str): the ID of the job
+# params (dict): input parameters
+# user (str): the user who started the job
+# run_id (str): unique run ID for the job
+# tag (str): the application tag (dev/beta/release)
+JOB_ATTR_DEFAULTS = {
+    "app_id": None,
+    "app_version": None,
+    "batch_id": None,
+    "batch_job": False,
+    "child_jobs": [],
+    "cell_id": None,
+    "params": None,
+    "retry_ids": [],
+    "retry_parent": None,
+    "run_id": None,
+    "tag": "release",
+    "user": None,
+}
+
+JOB_ATTRS = list(JOB_ATTR_DEFAULTS.keys())
+JOB_ATTRS.append("job_id")
+
+# Group attributes by place in nested dict state
+NARR_CELL_INFO_ATTRS = [
+    "cell_id",
+    "run_id",
+    "tag",
+]
+JOB_INPUT_ATTRS = [
+    "app_id",
+    "app_version",
+    "params",
+]
+STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
 
 
 class Job(object):
-    job_id = None
-    app_id = None
-    app_version = None
-    cell_id = None
-    run_id = None
-    inputs = None
-    token_id = None
     _job_logs = list()
-    _last_state = None
+    _acc_state = None  # accumulates state
 
-    def __init__(
-        self,
-        job_id,
-        app_id,
-        inputs,
-        owner,
-        tag="release",
-        app_version=None,
-        cell_id=None,
-        run_id=None,
-        token_id=None,
-        meta=dict(),
-    ):
-        """
-        Initializes a new Job with a given id, app id, and app app_version.
-        The app_id and app_version should both align with what's available in
-        the Narrative Method Store service.
-        """
-        self.job_id = job_id
-        self.app_id = app_id
-        self.app_version = app_version
-        self.tag = tag
-        self.cell_id = cell_id
-        self.run_id = run_id
-        self.inputs = inputs
-        self.owner = owner
-        self.token_id = token_id
-        self.meta = meta
-
-    @classmethod
-    def from_state(
-        cls,
-        job_id,
-        job_info,
-        owner,
-        app_id,
-        tag="release",
-        cell_id=None,
-        run_id=None,
-        token_id=None,
-        meta=dict(),
-    ):
+    def __init__(self, ee2_state, extra_data=None, children=None):
         """
         Parameters:
         -----------
-        job_id - string
-            The job's unique identifier as returned at job start time.
-        job_info - dict
-            The job information returned from njs.get_job_params, just the first
-            element of that list (not the extra list with URLs). Should have the following keys:
-            'params': The set of parameters sent to that job.
-            'service_ver': The version of the service that was run.
-        owner - string
-            The owner of the job (username of person who started it)
-        app_id - string
-            Used in place of job_info.method. This is the actual method spec that was used to
-            start the job. Can be None, but Bad Things might happen.
-        tag - string
-            The Tag (release, beta, dev) used to start the job.
-        cell_id - the cell associated with the job (optional)
-        run_id - the front-end id associated with the job (optional)
-        token_id - the id of the authentication token used to start the job (optional)
+        job_state - dict
+            the job information returned from ee2.check_job, or something in that format
+        extra_data (dict): currently only used by the legacy batch job interface;
+            format:
+                batch_app: ID of app being run,
+                batch_tag: app tag
+                batch_size: number of jobs being run
+        children (list): applies to batch parent jobs, Job instances of this Job's child jobs
         """
-        return cls(
-            job_id,
-            app_id,
-            job_info.get("params", {}),
-            owner,
-            tag=tag,
-            app_version=job_info.get("service_ver", None),
-            cell_id=cell_id,
-            run_id=run_id,
-            token_id=token_id,
-            meta=meta,
-        )
+        # verify job_id ... TODO validate ee2_state
+        if ee2_state.get("job_id") is None:
+            raise ValueError("Cannot create a job without a job ID!")
+
+        self._acc_state = ee2_state
+        self.extra_data = extra_data
+
+        # verify parent-children relationship
+        if ee2_state.get("batch_job"):
+            self._verify_children(children)
+        self.children = children
 
     @classmethod
-    def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
-        # get app spec.
-        if job_state is None or job_state.get("status", "") != "completed":
-            return None
+    def from_job_id(cls, job_id, extra_data=None, children=None):
+        state = cls.query_ee2_state(job_id, init=True)
+        return cls(state, extra_data=extra_data, children=children)
 
-        spec = SpecManager().get_spec(app_id, app_tag)
-        (output_widget, widget_params) = map_outputs_from_state(
-            job_state, map_inputs_from_job(job_inputs, spec), spec
+    @classmethod
+    def from_job_ids(cls, job_ids, return_list=True):
+        states = cls.query_ee2_states(job_ids, init=True)
+        jobs = dict()
+        for job_id, state in states.items():
+            jobs[job_id] = cls(state)
+
+        if return_list:
+            return list(jobs.values())
+        else:
+            return jobs
+
+    def __getattr__(self, name):
+        """
+        Map expected job attributes to paths in stored ee2 state
+        """
+        attr = dict(
+            app_id=lambda: self._acc_state.get("job_input", {}).get(
+                "app_id", JOB_ATTR_DEFAULTS["app_id"]
+            ),
+            app_version=lambda: self._acc_state.get("job_input", {}).get(
+                "service_ver", JOB_ATTR_DEFAULTS["app_version"]
+            ),
+            batch_id=lambda: (
+                self.job_id
+                if self.batch_job
+                else self._acc_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
+            ),
+            batch_job=lambda: self._acc_state.get(
+                "batch_job", JOB_ATTR_DEFAULTS["batch_job"]
+            ),
+            cell_id=lambda: self._acc_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
+            child_jobs=lambda: copy.deepcopy(
+                # TODO
+                # Only batch container jobs have a child_jobs field
+                # and need the state refresh.
+                # But KBParallel/KB Batch App jobs may not have the
+                # batch_job field
+                self.state(force_refresh=True).get(
+                    "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
+                )
+                if self.batch_job
+                else self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
+            ),
+            job_id=lambda: self._acc_state.get("job_id"),
+            params=lambda: copy.deepcopy(
+                self._acc_state.get("job_input", {}).get(
+                    "params", JOB_ATTR_DEFAULTS["params"]
+                )
+            ),
+            retry_ids=lambda: copy.deepcopy(
+                # Batch container and retry jobs don't have a
+                # retry_ids field so skip the state refresh
+                self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
+                if self.batch_job or self.retry_parent
+                else self.state(force_refresh=True).get(
+                    "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
+                )
+            ),
+            retry_parent=lambda: self._acc_state.get(
+                "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
+            ),
+            run_id=lambda: self._acc_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
+            tag=lambda: self._acc_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("tag", JOB_ATTR_DEFAULTS["tag"]),
+            user=lambda: self._acc_state.get("user", JOB_ATTR_DEFAULTS["user"]),
         )
-        return {"name": output_widget, "tag": app_tag, "params": widget_params}
+
+        if name not in attr:
+            raise AttributeError(f"'Job' object has no attribute '{name}'")
+
+        return attr[name]()
+
+    def __setattr__(self, name, value):
+        if name in STATE_ATTRS:
+            self._acc_state[name] = value
+        elif name in JOB_INPUT_ATTRS:
+            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
+            self._acc_state["job_input"][name] = value
+        elif name in NARR_CELL_INFO_ATTRS:
+            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
+            self._acc_state["job_input"]["narrative_cell_info"] = self._acc_state[
+                "job_input"
+            ].get("narrative_cell_info", {})
+            self._acc_state["job_input"]["narrative_cell_info"][name] = value
+        else:
+            object.__setattr__(self, name, value)
+
+    @property
+    def app_name(self):
+        return "batch" if self.batch_job else self.app_spec()["info"]["name"]
+
+    def was_terminal(self):
+        """
+        Checks if last queried ee2 state (or those of its children) was terminal.
+        """
+        # add in a check for the case where this is a batch parent job
+        # batch parent jobs with where all children have status "completed" are in a terminal state
+        # otherwise, child jobs may be retried
+        if self._acc_state.get("batch_job"):
+            for child_job in self.children:
+                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                    return False
+            return True
+
+        else:
+            return self._acc_state.get("status") in TERMINAL_STATUSES
+
+    def is_terminal(self):
+        self.state()
+        if self._acc_state.get("batch_job"):
+            for child_job in self.children:
+                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                    child_job.state(force_refresh=True)
+        return self.was_terminal()
+
+    def in_cells(self, cell_ids: List[str]) -> bool:
+        """
+        For job initialization.
+        See if job is associated with present cells
+
+        A batch job technically can have children in different cells,
+        so consider it in any cell a child is in
+        """
+        if cell_ids is None:
+            raise ValueError("cell_ids cannot be None")
+
+        if self.batch_job:
+            for child_job in self.children:
+                if child_job.cell_id in cell_ids:
+                    return True
+            return False
+        else:
+            return self.cell_id in cell_ids
+
+    @property
+    def final_state(self):
+        if self.was_terminal() is True:
+            return self.state()
+        return None
 
     def info(self):
         spec = self.app_spec()
@@ -121,62 +266,192 @@ class Job(object):
         try:
             state = self.state()
             print(f"Status: {state['status']}")
-            # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
-            pprint(self.inputs)
+            pprint(self.params)
         except BaseException:
             print("Unable to retrieve current running state!")
 
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
 
-    def status(self):
-        return self.state().get("status", "unknown")
-
     def parameters(self):
         """
-        Returns the parameters used to start the job. Job tries to use its inputs field, but
+        Returns the parameters used to start the job. Job tries to use its params field, but
         if that's None, then it makes a call to njs.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
-        object fetched from NJS.get_job_params
+        object fetched from ee2.get_job_params
         """
-        if self.inputs is not None:
-            return self.inputs
+        if self.params is not None:
+            return self.params
         else:
             try:
-                self.inputs = clients.get("execution_engine2").get_job_params(
+                self.params = clients.get("execution_engine2").get_job_params(
                     self.job_id
                 )["params"]
-                return self.inputs
+                return self.params
             except Exception as e:
                 raise Exception(
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def state(self):
+    def _update_state(self, state: dict) -> None:
         """
-        Queries the job service to see the status of the current job.
-        Returns a <something> stating its status. (string? enum type? different traitlet?)
+        given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if self._last_state is not None and self._last_state.get("status") in [
-            "completed",
-            "terminated",
-            "error",
-        ]:
-            return self._last_state
-        try:
-            state = clients.get("execution_engine2").check_job(
-                {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
+        if state:
+
+            if "job_id" in state and state["job_id"] != self.job_id:
+                raise ValueError(
+                    f"Job ID mismatch in _update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+                )
+
+            state = copy.deepcopy(state)
+            if self._acc_state is None:
+                self._acc_state = state
+            else:
+                self._acc_state.update(state)
+
+    @staticmethod
+    def _trim_ee2_state(state: dict, exclude: list) -> None:
+        if exclude:
+            for field in exclude:
+                if field in state:
+                    del state[field]
+
+    def state(self, force_refresh=False):
+        """
+        Queries the job service to see the state of the current job.
+        """
+
+        if force_refresh or not self.was_terminal():
+            state = self.query_ee2_state(self.job_id, init=False)
+            self._update_state(state)
+
+        return self._internal_state(JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+
+    def _internal_state(self, exclude=None):
+        """Wrapper for self._acc_state"""
+        state = copy.deepcopy(self._acc_state)
+        self._trim_ee2_state(state, exclude)
+        return state
+
+    @staticmethod
+    def query_ee2_state(
+        job_id: str,
+        init: bool = True,
+    ) -> dict:
+        return clients.get("execution_engine2").check_job(
+            {
+                "job_id": job_id,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
+                ),
+            }
+        )
+
+    @staticmethod
+    def query_ee2_states(
+        job_ids: List[str],
+        init: bool = True,
+    ) -> dict:
+        if not job_ids:
+            return {}
+
+        return clients.get("execution_engine2").check_jobs(
+            {
+                "job_ids": job_ids,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
+                ),
+                "return_list": 0,
+            }
+        )
+
+    def output_state(self, state=None) -> dict:
+        """
+        :param state: can be queried individually from ee2/cache with self.state(),
+            but sometimes want it to be queried in bulk from ee2 upstream
+        :return: dict, with structure
+
+        {
+            user: string (username, who started the job),
+            spec: app spec (optional)
+            widget_info: (if not finished, None, else...) job.get_viewer_params result
+            state: {
+                job_id: string,
+                status: string,
+                created: epoch ms,
+                updated: epoch ms,
+                queued: optional - epoch ms,
+                finished: optional - epoc ms,
+                terminated_code: optional - int,
+                tag: string (release, beta, dev),
+                parent_job_id: optional - string or null,
+                run_id: string,
+                cell_id: string,
+                errormsg: optional - string,
+                error (optional): {
+                    code: int,
+                    name: string,
+                    message: string (should be for the user to read),
+                    error: string, (likely a stacktrace)
+                },
+                error_code: optional - int
+            }
+        }
+        """
+        if not state:
+            state = self.state()
+        else:
+            self._update_state(state)
+            state = self._internal_state()
+
+        if state is None:
+            return self._create_error_state(
+                "Unable to find current job state. Please try again later, or contact KBase.",
+                "Unable to return job state",
+                -1,
             )
-            state["job_output"] = state.get("job_output", {})
-            state["cell_id"] = self.cell_id
-            state["run_id"] = self.run_id
-            state["token_id"] = self.token_id
-            self._last_state = state
-            return dict(state)
-        except Exception as e:
-            raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
+
+        self._trim_ee2_state(state, EXCLUDED_JOB_STATE_FIELDS)
+        if "job_output" not in state:
+            state["job_output"] = {}
+        for arg in EXTRA_JOB_STATE_FIELDS:
+            state[arg] = getattr(self, arg)
+
+        widget_info = None
+        if state.get("finished"):
+            try:
+                widget_info = self.get_viewer_params(state)
+            except Exception as e:
+                # Can't get viewer params
+                new_e = transform_job_exception(e)
+                widget_info = {
+                    "status": "error",
+                    "errormsg": "Unable to build output viewer parameters!",
+                    "error": {
+                        "code": getattr(new_e, "code", -1),
+                        "source": getattr(new_e, "source", "JobManager"),
+                        "name": "App Error",
+                        "message": "Unable to build output viewer parameters",
+                        "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
+                    },
+                }
+                # update timestamp if there was an error
+                state.update({"updated": int(time.time())})
+
+        job_state = {
+            "state": state,
+            "widget_info": widget_info,
+            "user": self.user,
+            "cell_id": self.cell_id,
+        }
+        return job_state
 
     def show_output_widget(self, state=None):
         """
@@ -185,9 +460,13 @@ class Job(object):
         """
         from biokbase.narrative.widgetmanager import WidgetManager
 
-        if state is None:
+        if not state:
             state = self.state()
-        if state["status"] == "completed" and "job_output" in state:
+        else:
+            self._update_state(state)
+            state = self._internal_state()
+
+        if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(
                 output_widget, widget_params, tag=self.tag
@@ -199,7 +478,7 @@ class Job(object):
         """
         Maps job state 'result' onto the inputs for a viewer.
         """
-        if state is None or state["status"] != "completed":
+        if state is None or state["status"] != COMPLETED_STATUS:
             return None
         (output_widget, widget_params) = self._get_output_info(state)
         return {"name": output_widget, "tag": self.tag, "params": widget_params}
@@ -263,13 +542,15 @@ class Job(object):
         Returns True if the job is finished (in any state, including errors or canceled),
         False if its running/queued.
         """
-        status = self.status()
-        return status.lower() in ["completed", "terminated", "error"]
+        return self.state().get("status") in TERMINAL_STATUSES
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
 
     def _repr_javascript_(self):
+        """
+        Called by Jupyter when a Job object is entered into a code cell
+        """
         tmpl = """
         element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 
@@ -281,7 +562,7 @@ class Job(object):
         try:
             state = self.state()
             spec = self.app_spec()
-            if state.get("status", "") == "completed":
+            if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)
                 output_widget_info = {"name": output_widget, "params": widget_params}
 
@@ -300,3 +581,59 @@ class Job(object):
             info=json.dumps(info),
             output_widget_info=json.dumps(output_widget_info),
         )
+
+    def dump(self):
+        """
+        Display job info without having to iterate through the attributes
+        """
+
+        return {attr: getattr(self, attr) for attr in [*JOB_ATTRS, "_acc_state"]}
+
+    def _create_error_state(
+        self,
+        error: str,
+        error_msg: str,
+        code: int,
+    ) -> dict:
+        """
+        Creates an error state to return if
+        1. the state is missing or unretrievable
+        2. Job is none
+        This creates the whole state dictionary to return, as described in
+        _construct_cache_job_state.
+        :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
+        :param error_msg: a shortened error string, meant to be human-readable
+        :param code: int, an error code
+        """
+        return {
+            "status": "error",
+            "error": {
+                "code": code,
+                "name": "Job Error",
+                "message": error_msg,
+                "error": error,
+            },
+            "errormsg": error_msg,
+            "error_code": code,
+            "job_id": self.job_id,
+            "cell_id": self.cell_id,
+            "run_id": self.run_id,
+            "created": 0,
+            "updated": 0,
+        }
+
+    def _verify_children(self, children: List["Job"]) -> None:
+        if not self.batch_job:
+            raise ValueError("Not a batch container job")
+        if children is None:
+            raise ValueError(
+                "Must supply children when setting children of batch job parent"
+            )
+
+        inst_child_ids = [job.job_id for job in children]
+        if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
+            raise ValueError("Child job id mismatch")
+
+    def update_children(self, children: List["Job"]) -> None:
+        self._verify_children(children)
+        self.children = children

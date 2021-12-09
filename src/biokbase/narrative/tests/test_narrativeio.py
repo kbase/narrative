@@ -45,7 +45,7 @@ def skipUnlessToken():
 
 
 def str_to_ref(s):
-    """ Takes a ref string, returns a NarrativeRef object """
+    """Takes a ref string, returns a NarrativeRef object"""
     vals = s.split("/")
     ref = {"wsid": vals[0], "objid": vals[1]}
     if len(vals) == 3:

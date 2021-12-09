@@ -1,0 +1,93 @@
+
+body {
+  background-color: use-color('white');
+  color: use-color('ink');
+
+  // default body font size: 14px
+  font: 1.4em $typeface-page-text;
+}
+
+h1 {
+  color: rgb(35 35 35);
+  font: 400 1.75em/2em $typeface-display-legacy;
+  letter-spacing: 0;
+}
+
+h2 {
+  color: rgb(137 137 137);
+  font: normal 400 1.5em/1.75em $typeface-display-legacy;
+  letter-spacing: 0;
+}
+
+h3 {
+  font: normal 400 1.15em/1.25em $typeface-display-legacy;
+  letter-spacing: 0;
+}
+
+h4 {
+  font: italic 400 1.15em/1.25em $typeface-page-text;
+  letter-spacing: 0.07em;
+}
+
+b,
+strong {
+  font-family: $typeface-page-text;
+  font-weight: 700;
+}
+
+b i {
+  font-family: $typeface-page-text;
+  font-style: italic;
+}
+
+em {
+  font-family: $typeface-page-text;
+  font-style: italic;
+
+  strong {
+    font-family: $typeface-page-text;
+    font-style: italic;
+  }
+}
+
+i {
+  font-family: $typeface-page-text;
+  font-style: italic;
+
+  b {
+    font-family: $typeface-page-text;
+    font-style: italic;
+  }
+}
+
+strong em {
+  font-family: $typeface-page-text;
+  font-style: italic;
+}
+
+b i,
+em strong,
+i b,
+strong em {
+  font-weight: 700;
+}
+
+a {
+  color: use-color('blue');
+  text-decoration: none;
+
+  &:hover,
+  &:visited {
+    color: use-color('blue-hlink');
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+code,
+pre {
+  font-family: $typeface-fixed-width;
+  font-style: normal;
+}

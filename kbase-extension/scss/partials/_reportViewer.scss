@@ -47,8 +47,15 @@
   }
 }
 
-.kb-output-widget__object_link {
-  cursor: pointer;
+.kb-output-widget {
+  // .kb-output-widget__object_link
+  &__object_link {
+    cursor: pointer;
+  }
+  // .kb-output-widget__table
+  &__table.dataTable {
+    width: 100%;
+  }
 }
 
 .kb-report {

@@ -7,22 +7,20 @@ define([
     'common/html',
     'common/ui',
     'util/kbaseApiUtil',
-    'common/events',
     'jquery',
     'jquery-dataTables',
-], (Promise, Jupyter, html, UI, APIUtil, Events, $) => {
+], (Promise, Jupyter, html, UI, APIUtil, $) => {
     'use strict';
 
     const tag = html.tag,
         div = tag('div'),
         tr = tag('tr'),
         th = tag('th'),
-        td = tag('td'),
         thead = tag('thead'),
-        tbody = tag('tbody'),
         table = tag('table'),
         a = tag('a'),
-        tablePageLength = 50;
+        tablePageLength = 50,
+        cssBaseClass = 'kb-output-widget';
 
     function OutputWidget() {
         let container, ui;
@@ -40,55 +38,17 @@ define([
          */
         function renderOutput(objectData) {
             if (objectData.length === 0) {
-                return {
-                    layout: div('No objects created'),
-                };
+                return div('No objects created');
             }
-            const events = Events.make();
-            const layout = table(
+
+            return table(
                 {
-                    class: 'table table-bordered',
+                    class: `table table-striped ${cssBaseClass}__table`,
+                    style: 'width: 100%',
                     dataElement: 'objects-table',
                 },
-                [
-                    thead(tr([th('Created Object Name'), th('Type'), th('Description')])),
-                    tbody([
-                        ...objectData.map((obj) => {
-                            let name = obj.name;
-                            if (!name) {
-                                name = obj.wsInfo ? obj.wsInfo[1] : 'Unknown object name';
-                            }
-                            let type = obj.type;
-                            if (!type) {
-                                type = obj.wsInfo ? obj.wsInfo[2] : 'Missing type';
-                            }
-                            const parsedType = APIUtil.parseWorkspaceType(type) || { type };
-                            const description = obj.description || 'Missing description';
-                            let objLink = name;
-                            if (obj.wsInfo) {
-                                objLink = a(
-                                    {
-                                        class: 'kb-output-widget__object_link',
-                                        dataObjRef: obj.ref,
-                                        type: 'button',
-                                        ariaLabel: 'show viewer for ' + name,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: () => {
-                                                Jupyter.narrative.addViewerCell(obj.wsInfo);
-                                            },
-                                        }),
-                                    },
-                                    [name]
-                                );
-                            }
-                            return tr([td(objLink), td(parsedType.type), td(description)]);
-                        }),
-                    ]),
-                ]
+                [thead(tr([th('Created Object Name'), th('Type'), th('Description')]))]
             );
-
-            return { layout, events };
         }
 
         /**
@@ -110,7 +70,7 @@ define([
                 dataElement: 'created-objects',
                 class: 'kb-created-objects',
             });
-            const renderedOutput = renderOutput(arg.objectData);
+
             ui.setContent(
                 'created-objects',
                 ui.buildCollapsiblePanel({
@@ -119,23 +79,78 @@ define([
                     hidden: false,
                     type: 'default',
                     classes: ['kb-panel-container'],
-                    body: renderedOutput.layout,
+                    body: renderOutput(arg.objectData),
                 })
             );
+
             if (arg.objectData.length) {
                 const $objTable = $(ui.getElement('objects-table'));
+
+                const tableData = arg.objectData.map((obj) => {
+                    let name = obj.name;
+                    if (!name) {
+                        name = obj.wsInfo ? obj.wsInfo[1] : 'Unknown object name';
+                    }
+                    let type = obj.type;
+                    if (!type) {
+                        type = obj.wsInfo ? obj.wsInfo[2] : 'Missing type';
+                    }
+                    const parsedType = APIUtil.parseWorkspaceType(type) || { type };
+                    const description = obj.description || 'Missing description';
+                    return {
+                        wsInfo: obj.wsInfo,
+                        name,
+                        type,
+                        parsedType,
+                        description,
+                    };
+                });
+
                 $objTable.DataTable({
-                    searching: false,
-                    pageLength: tablePageLength,
+                    data: tableData,
+                    dom: "<'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
                     lengthChange: false,
-                    fnDrawCallback: () => {
-                        // Hide pagination controls if length is less than or equal to table length
-                        if (arg.objectData.length <= tablePageLength) {
-                            $(container).find('.dataTables_paginate').hide();
+                    pageLength: tablePageLength,
+                    paging: arg.objectData.length > tablePageLength,
+                    searching: false,
+                    columns: [
+                        {
+                            render: (data, type, row) => {
+                                if (!row.wsInfo) {
+                                    return row.name;
+                                }
+
+                                return a(
+                                    {
+                                        class: `${cssBaseClass}__object_link`,
+                                        dataObjRef: row.ref,
+                                        type: 'button',
+                                        ariaLabel: 'show viewer for ' + row.name,
+                                    },
+                                    [row.name]
+                                );
+                            },
+                        },
+                        {
+                            render: (data, type, row) => {
+                                return row.parsedType.type;
+                            },
+                        },
+                        {
+                            render: (data, type, row) => {
+                                return row.description || 'Missing description';
+                            },
+                        },
+                    ],
+                    createdRow: (el, row) => {
+                        if (row.wsInfo) {
+                            const objLink = el.querySelector('.kb-output-widget__object_link');
+                            $(objLink).on('click', () => {
+                                Jupyter.narrative.addViewerCell(row.wsInfo);
+                            });
                         }
                     },
                 });
-                renderedOutput.events.attachEvents(container);
             }
         }
 

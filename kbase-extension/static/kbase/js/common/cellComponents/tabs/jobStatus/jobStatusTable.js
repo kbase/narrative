@@ -257,7 +257,6 @@ define([
                 this.renderTable(jobs);
                 this.setUpEventHandlers();
                 this.setUpJobListeners(jobs);
-                this.addTableClickListeners();
             });
         }
 
@@ -406,6 +405,25 @@ define([
                         },
                     },
                 ],
+                createdRow: (el) => {
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        const $currentButton = $(e.target).closest(
+                            '[data-element="job-action-button"]'
+                        );
+                        const $currentRow = $(e.target).closest('tr.odd, tr.even');
+                        // not an expandable row or a job action button
+                        if (!$currentRow[0] && !$currentButton[0]) {
+                            return Promise.resolve();
+                        }
+                        // job action button
+                        if ($currentButton[0]) {
+                            return Promise.resolve(this.doSingleJobAction(e));
+                        }
+                        // expandable row
+                        return this.showHideChildRow(e);
+                    };
+                },
                 drawCallback: function () {
                     // Hide pagination controls if length is less than or equal to table length
                     if (this.api().data().length <= dataTablePageLength) {
@@ -454,32 +472,6 @@ define([
             }
             // this is a new job that is part of the same batch
             this.dataTable.DataTable().row.add(jobState).draw();
-            this.addTableClickListeners();
-        }
-
-        /**
-         * add the listeners to the table that allow row expansion
-         */
-        addTableClickListeners() {
-            this.container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    const $currentButton = $(e.target).closest(
-                        '[data-element="job-action-button"]'
-                    );
-                    const $currentRow = $(e.target).closest('tr.odd, tr.even');
-                    // not an expandable row or a job action button
-                    if (!$currentRow[0] && !$currentButton[0]) {
-                        return Promise.resolve();
-                    }
-                    // job action button
-                    if ($currentButton[0]) {
-                        return Promise.resolve(this.doSingleJobAction(e));
-                    }
-                    // expandable row
-                    return this.showHideChildRow(e);
-                };
-            });
         }
 
         /**

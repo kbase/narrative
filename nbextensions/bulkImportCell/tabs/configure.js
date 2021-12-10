@@ -44,7 +44,8 @@ define([
             fileTypePanel,
             selectedFileType = model.getItem('state.selectedFileType'),
             unavailableFiles,
-            ui;
+            ui,
+            running = false;
 
         /**
          * args includes:
@@ -82,7 +83,7 @@ define([
                         buildFileTypePanel(fileTypeNode, readyState),
                         startInputWidgets(),
                     ];
-
+                    running = true;
                     return Promise.all(initPromises);
                 });
         }
@@ -540,14 +541,19 @@ define([
         }
 
         function stop() {
+            if (!running) {
+                return Promise.resolve();
+            }
+
             return stopInputWidgets().then(() => {
                 container.innerHTML = '';
+                running = false;
             });
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

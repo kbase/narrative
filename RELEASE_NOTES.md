@@ -4,12 +4,36 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
+### Version 5.0.0
+This new major version of the KBase Narrative Interface introduces a way to import data from your data staging area in large batches using a single Bulk Import cell. See more details about the new workflows here: [Bulk Import Guide](https://docs.kbase.us/data/upload-download-guide/bulk-import-guide)
+
+There are also a ton of other updates and changes to both the Narrative interface (in various small and not-so-small ways) and to how the Narrative software will be developed going forward.
+
+The following is a high level list of changes, with matching JIRA tickets where appropriate. As always, all Narrative work is done on Github and is available for view and discussion there.
 
 Code Changes
-
+- Built an entirely new Bulk Import cell type that runs a batch of Import jobs all at once.
+- Objects that can be imported in bulk are:
+  - SRA reads
+  - Interleaved FASTQ reads
+  - Non-interleaved FASTQ reads
+  - Read Assemblies
+  - GFF metagenomes
+  - Genbank genomes
+- Redesigned the Data Import Tab 
+  - It now suggests object upload type based on file suffix.
+  - Files are now selected for import by clicking a checkbox (or selecting a type), then clicking “Import Selected”
+  - The Import Tab file browser has been improved and remembers selections more consistently
+  - The Import Tab styling has been made more internally consistent.
+- DATAUP-225 - Styles and color usage have been normalized in many places in the app cell and bulk import cell
+- DATAUP-329 - Standardized the use of select boxes in various inputs for the app cell and bulk import cell
+- Remove app info dialog option - superseded by the “Info” tab on all app cells
+- DATAUP-263 - Fix bug where app cells can get stuck in the “Sending…” phase
 - SAM-40 - Add Name/ID column to SampleSet viewer
-- Migrated from Bower -> NPM, mostly kept the same versions, though some were unavoidably changed
+- DATAUP-651 - Update Data Import tab help tour to include new features.
+
+Development Changes
+- UIP-3 - Made the migration away from Bower to using only NPM for Javascript package management. Mostly, the same versions were kept, though some were unavoidably changed
   - seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
   - plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
   - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
@@ -18,6 +42,9 @@ Code Changes
   - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
     - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
     - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
+DATAUP-246 - migrate from CSS to using SASS throughout the Narrative, making use of [BEM notation](http://getbem.com/introduction/) for element styling
+DATAUP-62 - designed and implemented simple coding standards and git workflow for the Narrative repo
+DATAUP-71 - added automated linting and code quality tools to the Narrative repo
 
 
 ### Version 4.6.0

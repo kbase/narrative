@@ -23,6 +23,8 @@ define([
         });
     }
 
+    const cellId = 'MY_FAVE_CELL_ID';
+
     /**
      * test whether a handler is defined
      * @param {JobManager} jobManagerInstance
@@ -137,7 +139,6 @@ define([
 
         describe('cell ID', () => {
             it('can store a cell ID', () => {
-                const cellId = 'my-fave-cell';
                 const jobManagerInstance = new jobManagerClass({
                     model: {},
                     bus: {},
@@ -449,6 +450,7 @@ define([
                         secondEvent = jcm.RESPONSES.STATUS;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'warn');
+                    spyOn(console, 'error');
                     this.jobManagerInstance.addEventHandler(event, { scream, shout });
                     expectHandlersDefined(this.jobManagerInstance, event, true, [
                         'scream',
@@ -457,16 +459,18 @@ define([
                     this.jobManagerInstance.addEventHandler(secondEvent, { shout: scream });
                     expect(console.warn).toHaveBeenCalledTimes(1);
                     expect(console.warn.calls.allArgs()).toEqual([
-                        ['A handler with the name shout already exists'],
+                        ['Replaced existing shout handler'],
                     ]);
                     expect(this.jobManagerInstance.handlers[event]).toEqual({ scream, shout });
-                    expect(this.jobManagerInstance.handlers[secondEvent]).toEqual({ shout });
-                    // trigger the second event handler; 'shout' should run, not 'scream'
+                    expect(this.jobManagerInstance.handlers[secondEvent]).toEqual({
+                        shout: scream,
+                    });
+                    // trigger the second event handler; 'scream' should run, not 'shout'
                     this.jobManagerInstance.runHandler(secondEvent);
                     expect(console.warn.calls.allArgs()).toEqual([
-                        ['A handler with the name shout already exists'],
-                        [shoutStr],
+                        ['Replaced existing shout handler'],
                     ]);
+                    expect(console.error.calls.allArgs()).toEqual([[screamStr]]);
                 });
 
                 const badArguments = [
@@ -1359,15 +1363,12 @@ define([
             describe('cancelBatchJob', () => {
                 it('cancels the current batch parent job', function () {
                     spyOn(this.bus, 'emit');
+                    const batchIds = JobsData.allJobsWithBatchParent.map((jobState) => {
+                        return jobState.job_id;
+                    });
                     expect(
                         Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
-                    ).toEqual(
-                        jasmine.arrayWithExactContents(
-                            JobsData.allJobsWithBatchParent.map((jobState) => {
-                                return jobState.job_id;
-                            })
-                        )
-                    );
+                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
                     expect(this.jobManagerInstance.listeners).toBeDefined();
                     this.jobManagerInstance.cancelBatchJob();
                     // check the args to bus.emit were correct
@@ -1388,10 +1389,11 @@ define([
             });
 
             describe('resetJobs', () => {
-                it('can reset the stored jobs and listeners', function () {
-                    spyOn(this.bus, 'emit');
+                function runResetTest(ctx, thisCellId = null) {
+                    spyOn(ctx.bus, 'emit');
+                    spyOn(Date, 'now').and.returnValue(1234567890);
                     expect(
-                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                        Object.keys(ctx.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(
                         jasmine.arrayWithExactContents(
                             JobsData.allJobsWithBatchParent.map((jobState) => {
@@ -1399,14 +1401,26 @@ define([
                             })
                         )
                     );
-                    expect(this.jobManagerInstance.listeners).toBeDefined();
-                    this.jobManagerInstance.resetJobs();
-                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
-                    expect(this.jobManagerInstance.listeners).toEqual({});
+                    expect(ctx.jobManagerInstance.listeners).toBeDefined();
+                    ctx.jobManagerInstance.resetJobs();
+                    expect(ctx.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
+                    expect(ctx.jobManagerInstance.listeners).toEqual({});
                     // check the args to bus.emit were correct
-                    expect(this.bus.emit).toHaveBeenCalled();
-                    const callArgs = this.bus.emit.calls.allArgs();
-                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(resetJobsCallArgs));
+                    expect(ctx.bus.emit).toHaveBeenCalled();
+                    let expected = [resetJobsCallArgs];
+                    if (thisCellId) {
+                        expected = [resetJobsCallArgs, ['reset-cell', { cellId, ts: 1234567890 }]];
+                    }
+                    const callArgs = ctx.bus.emit.calls.allArgs();
+                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));
+                }
+                it('can reset the stored jobs and listeners', function () {
+                    runResetTest(this);
+                });
+
+                it('can reset stored jobs, listeners, and cells', function () {
+                    this.jobManagerInstance.cellId = cellId;
+                    runResetTest(this, cellId);
                 });
             });
         });

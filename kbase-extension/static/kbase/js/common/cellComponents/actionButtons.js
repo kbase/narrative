@@ -18,7 +18,6 @@ define(['common/html'], (html) => {
          *      - type - Bootstrap class types
          *      - classes - array of classes to add to the button component
          *      - label - button text
-
          */
 
         const t = html.tag,
@@ -84,8 +83,8 @@ define(['common/html'], (html) => {
         }
 
         return {
-            setState: setState,
-            buildLayout: buildLayout,
+            setState,
+            buildLayout,
         };
     }
 

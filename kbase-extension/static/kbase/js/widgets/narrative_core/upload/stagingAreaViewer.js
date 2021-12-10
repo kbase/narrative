@@ -1136,9 +1136,11 @@ define([
                 const importFile = $(dataElem).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
                     if (!(importType in bulkMapping)) {
+                        const appInfo = stagingAreaViewer.uploaders.app_info[importType];
                         bulkMapping[importType] = {
-                            appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
+                            appId: appInfo.app_id,
                             files: [],
+                            outputSuffix: appInfo.app_output_suffix,
                         };
                     }
                     bulkMapping[importType].files.push(importFile);
@@ -1175,13 +1177,13 @@ define([
                 }
 
                 if (appInfo.app_output_param) {
-                    let outputName = file;
-                    // if we're in a subpath, need to strip it down to just the file name
-                    if (outputName.indexOf('/') !== -1) {
-                        outputName = outputName.substring(outputName.lastIndexOf('/') + 1);
+                    inputs[appInfo.app_output_param] = StringUtil.sanitizeWorkspaceObjectName(
+                        file,
+                        true
+                    );
+                    if (appInfo.app_output_suffix) {
+                        inputs[appInfo.app_output_param] += appInfo.app_output_suffix;
                     }
-                    inputs[appInfo.app_output_param] =
-                        outputName.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 }
 
                 if (appInfo.app_static_params) {

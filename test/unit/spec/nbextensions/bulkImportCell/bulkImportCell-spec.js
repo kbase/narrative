@@ -98,7 +98,6 @@ define([
     }
 
     /**
-     *
      * @param {object} cell - cell object to be queried for tab structures
      * @param {object} tabStatus - object with keys
      *          {array} enabledTabs -  names of enabled tabs

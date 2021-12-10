@@ -14,6 +14,7 @@ define([
     'common/ui',
     'common/cellUtils',
     'util/appCellUtil',
+    'util/string',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -43,6 +44,7 @@ define([
     UI,
     Utils,
     BulkImportUtil,
+    StringUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -332,11 +334,20 @@ define([
                 initialParamStates[fileType] = 'incomplete';
                 [fileParamIds[fileType], otherParamIds[fileType], outputParamIds[fileType]] =
                     filterFileParameters(spec);
+                // if there's just a file and an output
                 if (fileParamIds[fileType].length < 3) {
+                    const outputParamId = outputParamIds[fileType][0];
                     initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
                         (inputFile) => {
                             return fileParamIds[fileType].reduce((fileParams, paramId) => {
-                                fileParams[paramId] = inputFile;
+                                if (paramId === outputParamId) {
+                                    const suffix = typesToFiles[fileType].outputSuffix || '';
+                                    fileParams[paramId] =
+                                        StringUtil.sanitizeWorkspaceObjectName(inputFile, true) +
+                                        suffix;
+                                } else {
+                                    fileParams[paramId] = inputFile;
+                                }
                                 return fileParams;
                             }, {});
                         }
@@ -359,6 +370,9 @@ define([
                 otherParamIds[fileType].forEach((paramId) => {
                     initialParams[fileType].params[paramId] = defaultSpecModel[paramId];
                 });
+                // remove the outputSuffix key before storing in metadata, as it's not
+                // useful anymore once we set up the initial output names
+                delete typesToFiles[fileType].outputSuffix;
             });
             const meta = {
                 kbase: {

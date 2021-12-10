@@ -1186,7 +1186,8 @@ define([
      * {
      *   fileType: {
      *     appId: string,
-     *     files: array of files
+     *     files: array of files,
+     *     outputSuffix: string, a suggested suffix for the automated output names
      *   }
      * }
      * This returns a Promise that resolves into the cell that was created.

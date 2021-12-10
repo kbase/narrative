@@ -149,6 +149,22 @@ define([], () => {
         return false;
     }
 
+    /**
+     * This brings sanity to the output object name string in two steps:
+     * 1. the name is treated as a path, and reduced down to only the filename
+     *   e.g. /path/to/file.txt -> file.txt
+     * 2. any illegal characters are transformed into _
+     *   e.g. "bad_file name&?.txt" -> "bad_file_name__.txt"
+     * @param {string} name the potential output object name to make valid
+     */
+    function sanitizeWorkspaceObjectName(name, isPath) {
+        // if we're in a subpath, need to strip it down to just the file name
+        if (isPath && name.indexOf('/') !== -1) {
+            name = name.substring(name.lastIndexOf('/') + 1);
+        }
+        return name.replace(/[^A-Za-z0-9|._-]/g, '_');
+    }
+
     return {
         uuid,
         safeJSONStringify,
@@ -158,5 +174,6 @@ define([], () => {
         capitalize,
         arrayToEnglish,
         isEmptyString,
+        sanitizeWorkspaceObjectName,
     };
 });

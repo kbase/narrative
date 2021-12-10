@@ -1357,7 +1357,8 @@ define([
             });
 
             const resetJobsCallArgs = [
-                [jcm.REQUESTS.STOP_UPDATE, { batchId: JobsData.batchParentJob.job_id }],
+                jcm.REQUESTS.STOP_UPDATE,
+                { batchId: JobsData.batchParentJob.job_id },
             ];
 
             describe('cancelBatchJob', () => {
@@ -1376,11 +1377,9 @@ define([
                     const callArgs = this.bus.emit.calls.allArgs();
                     const actionRequest = actionStatusMatrix.cancel.jobRequest;
                     expect(callArgs).toEqual(
-                        jasmine.arrayWithExactContents(
-                            resetJobsCallArgs.concat([
-                                [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
-                            ])
-                        )
+                        jasmine.arrayWithExactContents([
+                            [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
+                        ])
                     );
                     // the job model should have been reset and job listeners removed
                     expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();

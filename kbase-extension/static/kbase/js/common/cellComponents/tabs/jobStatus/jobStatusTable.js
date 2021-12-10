@@ -267,7 +267,7 @@ define([
             this.jobManager.removeEventHandler('modelUpdate', 'jobStatusTable_status');
             this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
             this.jobManager.removeEventHandler(jcm.RESPONSES.INFO, 'jobStatusTable_info');
-            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStateTable_error');
+            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStatusTable_error');
             this.container.innerHTML = '';
             if (this.dropdownWidget) {
                 return this.dropdownWidget.stop();

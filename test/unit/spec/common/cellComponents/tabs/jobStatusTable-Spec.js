@@ -543,7 +543,7 @@ define([
                 { event: 'modelUpdate', name: 'jobStatusTable_status' },
                 { event: 'modelUpdate', name: 'dropdown' },
                 { event: jcm.RESPONSES.INFO, name: 'jobStatusTable_info' },
-                { event: jcm.RESPONSES.ERROR, name: 'jobStatusTable_info' },
+                { event: jcm.RESPONSES.ERROR, name: 'jobStatusTable_error' },
             ];
 
             [null, { byId: null }, { byId: {} }].forEach((execJobsObject) => {
@@ -606,21 +606,17 @@ define([
                 });
                 handlers.forEach((handler) => {
                     const { event, name } = handler;
-                    if (event === jcm.RESPONSES.INFO) {
-                        expect(this.jobManager.handlers[event][name]).not.toBeDefined();
-                    } else {
-                        expect(this.jobManager.handlers[event][name]).toBeDefined();
-                    }
+                    expect(this.jobManager.handlers[event][name]).toBeDefined();
                 });
                 expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
                     // job status request for the full batch
                     [jcm.REQUESTS.STATUS, { batchId }],
                 ]);
                 // this table already has the info populated, so the 'job-info'
-                // listeners is not required
+                // listener is not required
                 jobIdList.forEach((jobId) => {
                     expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
-                        jasmine.arrayWithExactContents(['job-status', 'job-error'])
+                        jasmine.arrayWithExactContents([jcm.RESPONSES.STATUS, jcm.RESPONSES.ERROR])
                     );
                 });
             });

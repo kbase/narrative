@@ -1381,9 +1381,14 @@ define([
                             [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
                         ])
                     );
-                    // the job model should have been reset and job listeners removed
-                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
-                    expect(this.jobManagerInstance.listeners).toEqual({});
+                    // the job model should be unchanged
+                    expect(
+                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
+                    // there should be a status listener for the batch parent
+                    expect(
+                        this.jobManagerInstance.listeners[JobsData.batchParentJob.job_id]
+                    ).toEqual({ [jcm.RESPONSES.STATUS]: this.bus.listen() });
                 });
             });
 

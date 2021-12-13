@@ -1,7 +1,7 @@
 define(['util/string'], (StringUtil) => {
     'use strict';
 
-    fdescribe('KBase String Utility function module', () => {
+    describe('KBase String Utility function module', () => {
         it('uuid() should create a uuid', () => {
             const uuid = StringUtil.uuid();
             expect(uuid.length).toBe(36);

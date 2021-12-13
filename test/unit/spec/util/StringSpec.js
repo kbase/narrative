@@ -1,7 +1,7 @@
 define(['util/string'], (StringUtil) => {
     'use strict';
 
-    describe('KBase String Utility function module', () => {
+    fdescribe('KBase String Utility function module', () => {
         it('uuid() should create a uuid', () => {
             const uuid = StringUtil.uuid();
             expect(uuid.length).toBe(36);
@@ -140,6 +140,36 @@ define(['util/string'], (StringUtil) => {
         nonEmptyCases.forEach((testCase) => {
             it(`should not see "${testCase}" as an empty string`, () => {
                 expect(StringUtil.isEmptyString(testCase)).toBeFalse();
+            });
+        });
+
+        [
+            ['abcd', 'abcd'],
+            ['ab_cd', 'ab_cd'],
+            ['ab cd', 'ab_cd'],
+            ['123', 'obj_123'],
+            ['ab&!*()', 'ab_____'],
+            ['a/b/c/abcd', 'a_b_c_abcd'],
+            [
+                'ThisIsAnOtherwiseValidButVeryLongNameThatShouldVeryMuchBeTruncatedToBeLessThan255CharactersButWhichMeansIMustTypeAndTypeAndTypeAndTypeForeverAndEverUtilIGetToTheRightLengthICouldImplementASimpleStringGeneratorThatPutsIn1000AsOrSomethingButThisIsOddlySoothingAndWillMakeAnAmusingPRIHope',
+                'ThisIsAnOtherwiseValidButVeryLongNameThatShouldVeryMuchBeTruncatedToBeLessThan255CharactersButWhichMeansIMustTypeAndTypeAndTypeAndTypeForeverAndEverUtilIGetToTheRightLengthICouldImplementASimpleStringGeneratorThatPutsIn1000AsOrSomethingButThisIsOddlySooth',
+            ],
+        ].forEach((testCase) => {
+            it('should sanitize a name for workspace consumption', () => {
+                const [input, expected] = testCase;
+                expect(StringUtil.sanitizeWorkspaceObjectName(input)).toEqual(expected);
+            });
+        });
+
+        [
+            ['a/b/c/abcd', 'abcd'],
+            ['/a/b/ab_cd', 'ab_cd'],
+            ['a/b/c/d/e/f/g/ab cd', 'ab_cd'],
+            ['a/b/c/123', 'obj_123'],
+        ].forEach((testCase) => {
+            it('should sanitize a file path for workspace consumption', () => {
+                const [input, expected] = testCase;
+                expect(StringUtil.sanitizeWorkspaceObjectName(input, true)).toEqual(expected);
             });
         });
     });

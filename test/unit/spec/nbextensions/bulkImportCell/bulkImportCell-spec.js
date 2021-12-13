@@ -11,6 +11,7 @@ define([
     '/test/data/testBulkImportObj',
     'common/ui',
     'narrativeConfig',
+    'json!/test/data/kb_uploadmethods.import_fasta_as_assembly_from_staging.spec.json',
 ], (
     BulkImportCell,
     BulkImportUtil,
@@ -23,13 +24,15 @@ define([
     JobsData,
     TestBulkImportObject,
     UI,
-    Config
+    Config,
+    SimpleAppSpec
 ) => {
     'use strict';
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
                 appId: 'someApp',
+                suffix: '_obj',
             },
         },
         fakeSpecs = {
@@ -178,6 +181,41 @@ define([
                         dataType: 'incomplete',
                     },
                 });
+            });
+
+            it('should construct a bulk import cell with modified output names', () => {
+                const weirdFileName = 'some file !@#.fasta',
+                    expectedOutputName = 'some_file____.fasta_obj';
+
+                const testInputs = {
+                        dataType: {
+                            files: [weirdFileName],
+                            appId: 'simpleApp',
+                            outputSuffix: '_obj',
+                        },
+                    },
+                    fakeSpecs = {
+                        simpleApp: SimpleAppSpec,
+                    };
+
+                const cell = Mocks.buildMockCell('code');
+                expect(cell.renderIcon).not.toBeDefined();
+
+                const cellWidget = BulkImportCell.make({
+                    cell,
+                    importData: testInputs,
+                    specs: fakeSpecs,
+                    initialize: true,
+                });
+
+                expect(cellWidget).toBeDefined();
+                expect(cell.metadata.kbase).toBeDefined();
+                expect(cell.metadata.kbase.bulkImportCell.params.dataType.filePaths).toEqual([
+                    {
+                        staging_file_subdir_path: weirdFileName,
+                        assembly_name: expectedOutputName,
+                    },
+                ]);
             });
 
             it('should have a cell that can render its icon', () => {

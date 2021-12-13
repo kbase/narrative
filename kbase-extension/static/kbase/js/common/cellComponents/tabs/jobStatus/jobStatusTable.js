@@ -32,6 +32,7 @@ define([
         return table(
             {
                 class: `${cssBaseClass}__table table-striped`,
+                dataElement: 'job-status-table',
                 caption: 'Job Status',
             },
             [
@@ -258,7 +259,6 @@ define([
                 this.renderTable(jobs);
                 this.setUpEventHandlers();
                 this.setUpJobListeners(jobs);
-                this.addTableClickListeners();
             });
         }
 
@@ -267,7 +267,7 @@ define([
             this.jobManager.removeEventHandler('modelUpdate', 'jobStatusTable_status');
             this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
             this.jobManager.removeEventHandler(jcm.RESPONSES.INFO, 'jobStatusTable_info');
-            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStateTable_error');
+            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStatusTable_error');
             this.container.innerHTML = '';
             if (this.dropdownWidget) {
                 return this.dropdownWidget.stop();
@@ -304,6 +304,7 @@ define([
             this.dataTable = $(this.container.querySelector('table')).dataTable({
                 autoWidth: false,
                 data: Object.values(jobsByOriginalId),
+                destroy: true,
                 rowId: (row) => {
                     return `job_${row.retry_parent || row.job_id}`;
                 },
@@ -406,6 +407,25 @@ define([
                         },
                     },
                 ],
+                createdRow: (el) => {
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        const $currentButton = $(e.target).closest(
+                            '[data-element="job-action-button"]'
+                        );
+                        const $currentRow = $(e.target).closest('tr.odd, tr.even');
+                        // not an expandable row or a job action button
+                        if (!$currentRow[0] && !$currentButton[0]) {
+                            return Promise.resolve();
+                        }
+                        // job action button
+                        if ($currentButton[0]) {
+                            return Promise.resolve(this.doSingleJobAction(e));
+                        }
+                        // expandable row
+                        return this.showHideChildRow(e);
+                    };
+                },
                 drawCallback: function () {
                     // Hide pagination controls if length is less than or equal to table length
                     if (this.api().data().length <= dataTablePageLength) {
@@ -454,32 +474,6 @@ define([
             }
             // this is a new job that is part of the same batch
             this.dataTable.DataTable().row.add(jobState).draw();
-            this.addTableClickListeners();
-        }
-
-        /**
-         * add the listeners to the table that allow row expansion
-         */
-        addTableClickListeners() {
-            this.container.querySelectorAll('tbody tr.odd, tbody tr.even').forEach((el) => {
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    const $currentButton = $(e.target).closest(
-                        '[data-element="job-action-button"]'
-                    );
-                    const $currentRow = $(e.target).closest('tr.odd, tr.even');
-                    // not an expandable row or a job action button
-                    if (!$currentRow[0] && !$currentButton[0]) {
-                        return Promise.resolve();
-                    }
-                    // job action button
-                    if ($currentButton[0]) {
-                        return Promise.resolve(this.doSingleJobAction(e));
-                    }
-                    // expandable row
-                    return this.showHideChildRow(e);
-                };
-            });
         }
 
         /**
@@ -613,12 +607,25 @@ define([
          * Set up event handlers
          */
         setUpEventHandlers() {
+            const self = this;
             this.jobManager.addEventHandler('modelUpdate', {
                 dropdown: () => {
                     this.dropdownWidget.updateState();
                 },
                 jobStatusTable_status: (_, jobArray) => {
-                    jobArray.forEach((jobState) => this.updateJobStatusInTable(jobState));
+                    jobArray.forEach((jobState) =>
+                        this.updateJobStatusInTable.bind(self)(jobState)
+                    );
+                },
+            });
+            this.jobManager.addEventHandler(jcm.RESPONSES.ERROR, {
+                jobStatusTable_error: (_, jobError) => {
+                    this.handleJobError.bind(self)(jobError);
+                },
+            });
+            this.jobManager.addEventHandler(jcm.RESPONSES.INFO, {
+                jobStatusTable_info: (_, jobInfo) => {
+                    this.handleJobInfo.bind(self)(jobInfo);
                 },
             });
         }
@@ -643,15 +650,13 @@ define([
                     }
                 }
             });
-            this.jobManager.addListener(jcm.RESPONSES.STATUS, [batchId].concat(jobIdList));
-            this.jobManager.addListener(jcm.RESPONSES.ERROR, [batchId].concat(jobIdList), {
-                jobStatusTable_error: this.handleJobError.bind(this),
+
+            ['STATUS', 'ERROR'].forEach((event) => {
+                this.jobManager.addListener(jcm.RESPONSES[event], [batchId].concat(jobIdList));
             });
 
             if (paramsRequired.length) {
-                this.jobManager.addListener(jcm.RESPONSES.INFO, paramsRequired, {
-                    jobStatusTable_info: this.handleJobInfo.bind(this),
-                });
+                this.jobManager.addListener(jcm.RESPONSES.INFO, paramsRequired);
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
                         ? { batchId }
@@ -697,10 +702,9 @@ define([
 
         /**
          * parse and update the row with job info
-         * @param {object} _ - job manager context
          * @param {object} message
          */
-        handleJobInfo(_, message) {
+        handleJobInfo(message) {
             const { jobId, jobInfo } = message;
             const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const appData = this.jobManager.model.getItem('app');
@@ -720,10 +724,9 @@ define([
 
         /**
          * parse a job error message
-         * @param {object} _ - job manager context
          * @param {object} message
          */
-        handleJobError(_, message) {
+        handleJobError(message) {
             const { jobId, error } = message;
             if (!error) {
                 return;

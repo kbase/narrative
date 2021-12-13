@@ -48,6 +48,7 @@ define([
         reset: '.kb-rcp__action-button-container .-reset',
         run: '.kb-rcp__action-button-container .-run',
     };
+    const batchId = JobsData.batchParentJob.job_id;
 
     /**
      * Initialise a fake bulk import cell
@@ -513,6 +514,7 @@ define([
                     // expect the state to be editingComplete
                     Jupyter.notebook = Mocks.buildMockNotebook();
                     spyOn(Jupyter.notebook, 'save_checkpoint');
+                    spyOn(Date, 'now').and.returnValue(1234567890);
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
 
@@ -520,6 +522,7 @@ define([
                     // I'm guessing it's a jquery fadeIn event thing.
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                     spyOn(Jobs, 'getFsmStateFromJobs').and.returnValue(testCase.state);
+                    spyOn(bulkImportCellInstance.jobManager.bus, 'emit');
 
                     const actionButton = cell.element[0].querySelector(selectors[testCase.action]);
                     const runButton = cell.element[0].querySelector(selectors.run);
@@ -568,18 +571,29 @@ define([
                             expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {
-                                expect(cell.metadata.kbase.attributes.id).not.toEqual(
-                                    `${testCase.cellId}-test-cell`
-                                );
+                                const allEmissions =
+                                    bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
+                                expect([
+                                    ['request-job-updates-start', { batchId }],
+                                    ['request-job-cancel', { jobIdList: [batchId] }],
+                                    ['request-job-updates-stop', { batchId }],
+                                    [
+                                        'reset-cell',
+                                        { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
+                                    ],
+                                ]).toEqual(allEmissions);
                             }
                         });
                 });
             });
 
             it('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
+                const cellId = 'cancelDuringSubmit';
                 Jupyter.notebook = Mocks.buildMockNotebook();
                 spyOn(Jupyter.notebook, 'save_checkpoint');
+                spyOn(Date, 'now').and.returnValue(1234567890);
                 const { cell, bulkImportCellInstance } = initCell({
+                    cellId,
                     state: 'editingComplete',
                     selectedTab: 'configure',
                     deleteJobData: true,
@@ -663,13 +677,13 @@ define([
                 );
                 // batch job data should have been received and processed
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
-                const batchId = JobsData.batchParentJob.job_id;
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
                     [jcm.REQUESTS.START_UPDATE, { batchId }],
                     [jcm.REQUESTS.INFO, { batchId }],
                     [jcm.REQUESTS.CANCEL, { jobIdList: [batchId] }],
                     [jcm.REQUESTS.STOP_UPDATE, { batchId }],
+                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
                 ];
                 expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

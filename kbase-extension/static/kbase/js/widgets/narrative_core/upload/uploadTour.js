@@ -34,44 +34,51 @@ define([
             {
                 title: 'Globus Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.globus_div > a'),
+                element: that.$elem.find('.globus_acl_link'),
                 content:
                     'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, pointing to your directory in KBase.',
             },
             {
                 title: 'Web Upload',
                 placement: 'bottom',
-                element: that.$elem.find('.web_upload_div > a'),
+                element: that.$elem.find('.web_upload_div'),
                 content:
-                    'Click here to add an App to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.',
+                    'Click here to add an import app to your Narrative that will walk you through uploading files from a publicly accessible website, FTP, Dropbox, or Google Drive.',
             },
             {
                 title: 'Staging Path',
-                placement: 'right',
-                element: that.$elem.find('div.file-path'),
+                placement: 'left',
+                element: that.$elem.find('.kb-data-staging__breadcrumbs'),
                 content:
-                    'If you are viewing the contents of a folder, you can click links next to that folder name to navigate and show other files. Click the button on the left to manually refresh the list.',
+                    'If you are viewing the contents of a subfolder, you can click links a different folder name to navigate and show other files. Click the Refresh button to manually refresh the list of files in the current folder.',
             },
             {
                 title: 'Uploaded Files',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table'),
+                element: that.$elem.find('table.kb-staging-table > .kb-staging-table-header'),
                 content:
                     'This table lists your uploaded files, their filenames, their size, and when they were last modified. You can sort by any of the fields.',
             },
             {
-                title: 'File or Folder',
+                title: 'Selected Files',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table > thead > tr > th:nth-child(1)'),
+                element: that.$elem.find('table.kb-staging-table > thead > tr > th:nth-child(1)'),
                 content:
-                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click a folder icon to show the files inside.',
+                    'This column shows whether the file is selected. If a file has an assigned type, then it can be selected. If one or more files are selected, the Import Selected button will become available',
             },
             {
-                title: 'Import to this Narrative',
+                title: 'File or Folder',
                 placement: 'top',
-                element: that.$elem.find('#kb-data-staging-table > thead > tr > th:last-child'),
+                element: that.$elem.find('.kb-staging-table-header__file'),
                 content:
-                    'Select an object type for your file, then click the <i class="fa fa-upload"></i> button to create an Import App cell in your narrative. Check the app parameters and click the Run button to transform your data file(s) into an object available for analysis in your Narrative.',
+                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click the folder show the files inside.',
+            },
+            {
+                title: 'Import As...',
+                placement: 'top',
+                element: that.$elem.find('table.kb-staging-table > thead > tr > th:last-child'),
+                content:
+                    'Select an object type for your file, make sure it is selected, then click the Import Selected button to create one or more Import cells. Check the app parameters and click the Run button to transform your data file(s) into an object available for analysis in your Narrative.',
             },
             {
                 title: 'End of Tour',
@@ -123,6 +130,12 @@ define([
         this.tour.start();
         if (this.tour.ended()) {
             this.tour.restart();
+        }
+    };
+
+    UploadTour.prototype.stop = function () {
+        if (this.tour && !this.tour.ended()) {
+            this.tour.end();
         }
     };
 

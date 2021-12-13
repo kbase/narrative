@@ -543,6 +543,7 @@ define([
                 { event: 'modelUpdate', name: 'jobStatusTable_status' },
                 { event: 'modelUpdate', name: 'dropdown' },
                 { event: jcm.RESPONSES.INFO, name: 'jobStatusTable_info' },
+                { event: jcm.RESPONSES.ERROR, name: 'jobStatusTable_error' },
             ];
 
             [null, { byId: null }, { byId: {} }].forEach((execJobsObject) => {
@@ -589,7 +590,7 @@ define([
                 });
             });
 
-            it('only adds the necessary handlers', async function () {
+            it('adds the appropriate handlers and listeners', async function () {
                 instantiateJobStatusTable(this);
                 const jobData = this.jobManager.model.getItem('exec.jobs'),
                     jobIdList = Object.keys(jobData.byId);
@@ -603,20 +604,21 @@ define([
                 await this.jobStatusTableInstance.start({
                     node: container,
                 });
-                // this table already has the info populated, so the 'jobStatusTable-info'
-                // handler is not required
                 handlers.forEach((handler) => {
                     const { event, name } = handler;
-                    if (event === jcm.RESPONSES.INFO) {
-                        expect(this.jobManager.handlers[event][name]).not.toBeDefined();
-                    } else {
-                        expect(this.jobManager.handlers[event][name]).toBeDefined();
-                    }
+                    expect(this.jobManager.handlers[event][name]).toBeDefined();
                 });
                 expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
                     // job status request for the full batch
                     [jcm.REQUESTS.STATUS, { batchId }],
                 ]);
+                // this table already has the info populated, so the 'job-info'
+                // listener is not required
+                jobIdList.forEach((jobId) => {
+                    expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                        jasmine.arrayWithExactContents([jcm.RESPONSES.STATUS, jcm.RESPONSES.ERROR])
+                    );
+                });
             });
             it('requests info for jobs that do not have info defined', async function () {
                 instantiateJobStatusTable(this);
@@ -648,6 +650,18 @@ define([
                     // job status request for the full batch
                     [jcm.REQUESTS.STATUS, { batchId }],
                 ]);
+                // job-info listeners only required for some jobs
+                jobIdList.forEach((jobId) => {
+                    if (missingJobIds.includes(jobId)) {
+                        expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                            jasmine.arrayWithExactContents(['job-status', 'job-error', 'job-info'])
+                        );
+                    } else {
+                        expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                            jasmine.arrayWithExactContents(['job-status', 'job-error'])
+                        );
+                    }
+                });
             });
         });
 

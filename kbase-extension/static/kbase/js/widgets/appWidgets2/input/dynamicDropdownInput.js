@@ -218,6 +218,19 @@ define([
                     }
                 );
             } else {
+                channel
+                    .request(
+                        {},
+                        {
+                            key: {
+                                type: 'get-parameters',
+                            },
+                        }
+                    )
+                    .then((params) => {
+                        console.warn(params);
+                    });
+
                 let call_params = JSON.stringify(dd_options.service_params).replace(
                     '{{dynamic_dropdown_input}}',
                     searchTerm

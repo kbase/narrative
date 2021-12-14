@@ -29,12 +29,12 @@ The data import app selection is configured in [`staging_upload.json`](../../kba
 
 Each `app_info` object has the following accepted keys:
 * `app_id`: the app to use for importing the file in the format `module_name/app_name` (e.g. `kb_uploadmethods/import_genbank_as_genome_from_staging`). This is the only required field.
-* `app_input_param`: this is the parameter for setting the file name in the app
-* `app_input_param_type`: describes what the `app_input_param` is expected to be. Accepts either `string` or `list` (list of strings)
+* `app_input_param`: this is the parameter for setting the file name in the app.
+* `app_input_param_type`: describes what the `app_input_param` is expected to be. Accepts either `string` or `list` (list of strings). If the given app spec has `allow_multiple` as an option for the input, then this should be of type `list`.
 * `app_static_params`: an object with key-value pairs of other app parameters that should be preset when creating the app cell.
-* `app_output_param`: the app's parameter id for the created object
-* `app_output_suffix`: an automatic suffix to add to the data file name for a created object. E.g. if the file name is "e_coli.gbk", and the `app_output_suffix` is "_genome", then the automatically set output name will be "e_coli.gbk_genome"
-* `multiselect`: originally intended to denote files with multiple inputs, this is not currently implemented
+* `app_output_param`: this should be the app's parameter id for the created object. This gets automatically filled with a suggested name based on the file name and the `app_output_suffix` field below. Note that this does not take into account whether the parameter has the `is_output_name` option set.
+* `app_output_suffix`: an automatic suffix to add to the data file name for a created object. E.g. if the file name is "e_coli.gbk", and the `app_output_suffix` is "_genome", then the automatically set output name will be "e_coli.gbk_genome".
+* `multiselect`: (deprecated) originally intended to denote files with multiple inputs, this is not currently implemented.
 
 ### Configuring a new Bulk Import app
 The steps for adding a bulk import app to the configuration are fairly simple.

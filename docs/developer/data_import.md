@@ -34,7 +34,7 @@ Each `app_info` object has the following accepted keys:
 * `app_static_params`: an object with key-value pairs of other app parameters that should be preset when creating the app cell.
 * `app_output_param`: this should be the app's parameter id for the created object. This gets automatically filled with a suggested name based on the file name and the `app_output_suffix` field below. Note that this does not take into account whether the parameter has the `is_output_name` option set.
 * `app_output_suffix`: an automatic suffix to add to the data file name for a created object. E.g. if the file name is "e_coli.gbk", and the `app_output_suffix` is "_genome", then the automatically set output name will be "e_coli.gbk_genome".
-* `multiselect`: (deprecated) originally intended to denote files with multiple inputs, this is not currently implemented.
+* `multiselect`: (deprecated) originally intended to denote files with multiple inputs, this is not currently implemented and will be removed in the future.
 
 ### Configuring a new Bulk Import app
 The steps for adding a bulk import app to the configuration are fairly simple.

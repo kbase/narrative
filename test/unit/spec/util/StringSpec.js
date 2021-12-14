@@ -150,6 +150,8 @@ define(['util/string'], (StringUtil) => {
             ['123', 'obj_123'],
             ['ab&!*()', 'ab_____'],
             ['a/b/c/abcd', 'a_b_c_abcd'],
+            ['123_a.b|c-d_EFG', '123_a.b|c-d_EFG'],
+            ['_|.---', '_|.---'],
             [
                 'ThisIsAnOtherwiseValidButVeryLongNameThatShouldVeryMuchBeTruncatedToBeLessThan255CharactersButWhichMeansIMustTypeAndTypeAndTypeAndTypeForeverAndEverUtilIGetToTheRightLengthICouldImplementASimpleStringGeneratorThatPutsIn1000AsOrSomethingButThisIsOddlySoothingAndWillMakeAnAmusingPRIHope',
                 'ThisIsAnOtherwiseValidButVeryLongNameThatShouldVeryMuchBeTruncatedToBeLessThan255CharactersButWhichMeansIMustTypeAndTypeAndTypeAndTypeForeverAndEverUtilIGetToTheRightLengthICouldImplementASimpleStringGeneratorThatPutsIn1000AsOrSomethingButThisIsOddlySooth',
@@ -166,6 +168,7 @@ define(['util/string'], (StringUtil) => {
             ['/a/b/ab_cd', 'ab_cd'],
             ['a/b/c/d/e/f/g/ab cd', 'ab_cd'],
             ['a/b/c/123', 'obj_123'],
+            ['a/b/c/1_a.B|C-d', '1_a.B|C-d'],
         ].forEach((testCase) => {
             it('should sanitize a file path for workspace consumption', () => {
                 const [input, expected] = testCase;

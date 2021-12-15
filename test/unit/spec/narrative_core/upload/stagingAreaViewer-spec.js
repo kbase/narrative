@@ -484,7 +484,8 @@ define([
 
         describe('Should initialize a bulk import cell', () => {
             const appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
-                importType = 'sra_reads';
+                importType = 'sra_reads',
+                outputSuffix = '_reads';
 
             [
                 {
@@ -518,6 +519,7 @@ define([
                     expectedInputs[importType] = {
                         appId,
                         files: [filePath],
+                        outputSuffix,
                     };
 
                     spyOn(Jupyter.narrative, 'insertBulkImportCell');

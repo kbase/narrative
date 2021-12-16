@@ -83,14 +83,13 @@ $default-icon-size: 56px;
       color: use_color('accent-warm');
     }
 
-    // .kb-cell-toolbar__icon--notch-spin
-    &--notch-spin {
-      color: use_color('primary');
-    }
-
     // .kb-cell-toolbar__icon--outdated
     &--outdated {
+      border: 0;
       color: use_color('accent-warm');
+      margin: 0 5px;
+      padding: 0;
+      vertical-align: top;
     }
 
     // .kb-cell-toolbar__icon--plus
@@ -107,8 +106,7 @@ $default-icon-size: 56px;
 
     /* .kb-cell-toolbar__icon--times,
     .kb-cell-toolbar__icon--triangle */
-    &--times,
-    &--triangle {
+    &--times {
       color: use_color('red');
     }
   }

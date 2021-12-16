@@ -244,13 +244,13 @@ define([
                                                 `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
                                         );
                                         // dont include bad parameters that don't exist
-                                        return { ...acc };
+                                        return acc;
                                     }
                                     // replace dynamic values with actual param values
-                                    return { ...acc, [k]: params[d_param[0]] };
+                                    return Object.assign({}, acc, { [k]: params[d_param[0]] });
                                 }
                                 // return anything else as normal
-                                return { ...acc, [k]: v };
+                                return Object.assign({}, acc, { [k]: v });
                             }, {});
                         });
                 }

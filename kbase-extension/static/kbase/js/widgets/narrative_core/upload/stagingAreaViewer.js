@@ -317,12 +317,25 @@ define([
                         return accumulator.concat(JSON.parse(dataItem)['mappings']);
                     }, []);
 
+                    // from each file mapping, if not null, remove any mappings the Narrative doesn't know about
+                    for (let i = 0; i < mappings.length; i++) {
+                        if (mappings[i]) {
+                            mappings[i] = mappings[i].filter(
+                                (mapping) => mapping.id in this.uploaders.app_info
+                            );
+                            if (mappings[i].length === 0) {
+                                mappings[i] = null;
+                            }
+                        }
+                    }
+
                     // Extract mappings, sort by weight, assign mappings to staging files
                     mappings.forEach((mapping) => {
                         if (mapping) {
                             mapping.sort((a, b) => a.app_weight < b.app_weight);
                         }
                     });
+
                     stagingFiles.map((element, index) => {
                         element['mappings'] = mappings[index] || null;
                     });

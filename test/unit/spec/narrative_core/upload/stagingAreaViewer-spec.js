@@ -601,7 +601,7 @@ define([
                 expect($fourthSelect.find('optgroup[label="Suggested Types"]').length).toBe(0);
             });
 
-            xit('should use the Narrative-configured display names for mappings', async () => {
+            it('should use the Narrative-configured display names for mappings', async () => {
                 const mappings = {
                     mappings: [
                         null,

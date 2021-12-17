@@ -73,6 +73,10 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
+            this.uploaderNames = this.uploaders.dropdown_order.reduce((acc, uploader) => {
+                acc[uploader.id] = uploader.name;
+                return acc;
+            }, {});
             this.bulkImportTypes = this.uploaders.bulk_import_types;
             this.userInfo = options.userInfo;
 
@@ -560,7 +564,8 @@ define([
                                             {
                                                 value: uploader.id,
                                             },
-                                            uploader.title
+                                            stagingAreaViewer.uploaderNames[uploader.id]
+                                            //uploader.title
                                         );
                                     })
                                 );

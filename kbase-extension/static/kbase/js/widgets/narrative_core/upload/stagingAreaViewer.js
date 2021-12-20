@@ -565,7 +565,6 @@ define([
                                                 value: uploader.id,
                                             },
                                             stagingAreaViewer.uploaderNames[uploader.id]
-                                            //uploader.title
                                         );
                                     })
                                 );

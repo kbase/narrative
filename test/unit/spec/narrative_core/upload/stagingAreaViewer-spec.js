@@ -260,7 +260,7 @@ define([
             const placeholder = $container.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
-            //The options that should be in the import as dropdown
+            // The options that should be in the import as dropdown
             const menuOptions = [
                 'SRA Reads',
                 'GenBank Genome',
@@ -283,7 +283,7 @@ define([
         it('renders the dropdown correctly when a type is selected', async () => {
             await stagingViewer.render();
 
-            //find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
+            // find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
             const selectDropdown = $container
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');
@@ -425,109 +425,122 @@ define([
             expect(importButton.disabled).toBeTrue();
         });
 
-        describe('Should initialize an import app', () => {
+        describe('Should initialize uploader cells', () => {
+            const bulkAppId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
+                bulkImportType = 'sra_reads',
+                bulkOutputSuffix = '_reads',
+                nonBulkAppId = 'kb_uploadmethods/import_tsv_as_expression_matrix_from_staging',
+                nonBulkType = 'expression_matrix',
+                nonBulkSuffix = '_matrix';
+
             let tag;
 
             beforeEach(() => {
                 tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
             });
 
-            const fileType = 'fastq_reads_interleaved',
-                fileName = 'foobar.txt',
-                appId = 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
-                importType = 'FASTQ/FASTA';
+            it('Should run the import app init function when the import button is clicked', async () => {
+                await stagingViewer.render();
+                const fileName = 'fake_sra_reads.sra';
 
-            it('Should initialize an import app with the expected inputs', () => {
-                const inputs = {
-                    fastq_fwd_staging_file_name: fileName,
-                    name: fileName + '_reads',
-                    import_type: importType,
-                };
-                spyOn(Jupyter.narrative, 'addAndPopulateApp');
-                spyOn(Jupyter.narrative, 'hideOverlay');
-                stagingViewer.initImportApp(fileType, fileName);
-                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
-                    appId,
-                    tag,
-                    inputs
-                );
-                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+                // find the fake sra reads dropdown
+                const selectDropdown = $container
+                    .find(`[data-download='${fileName}']`)
+                    .siblings('select');
+
+                // this auto-checks the checkbox
+                selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+                const button = container.querySelector('.kb-staging-table-import__button');
+                expect(button.disabled).toBeFalse();
+
+                spyOn(stagingViewer, 'initImport');
+                $(button).click();
+                expect(stagingViewer.initImport).toHaveBeenCalled();
             });
 
-            it('Should initialize an import app with files in subdirectories', () => {
-                const subDir = 'a_subdirectory',
-                    inputs = {
-                        fastq_fwd_staging_file_name: subDir + '/' + fileName,
-                        name: fileName + '_reads',
-                        import_type: 'FASTQ/FASTA',
-                    };
+            it('Should initialize an import app with unselected files', async () => {
                 spyOn(Jupyter.narrative, 'addAndPopulateApp');
+                spyOn(Jupyter.narrative, 'insertBulkImportCell');
                 spyOn(Jupyter.narrative, 'hideOverlay');
-
-                stagingViewer.initImportApp(fileType, subDir + '/' + fileName);
-                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
-                    appId,
-                    tag,
-                    inputs
-                );
-                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
-            });
-
-            it('Should NOT initialize an import app with an unknown type', () => {
-                spyOn(Jupyter.narrative, 'addAndPopulateApp');
-                spyOn(Jupyter.narrative, 'hideOverlay');
-                stagingViewer.initImportApp('some_unknown_type', 'foobar.txt');
+                await stagingViewer.initImport();
                 expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
+                expect(Jupyter.narrative.insertBulkImportCell).not.toHaveBeenCalled();
                 expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
             });
-        });
-
-        describe('Should initialize a bulk import cell', () => {
-            const appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
-                importType = 'sra_reads',
-                outputSuffix = '_reads';
 
             [
                 {
                     subdir: null,
                     filename: 'fake_sra_reads.sra',
+                    isBulk: true,
                 },
                 {
                     subdir: 'test_folder',
                     filename: 'some_reads.fq',
+                    isBulk: true,
+                },
+                {
+                    subdir: null,
+                    filename: 'unknown_file.txt',
+                    isBulk: false,
+                },
+                {
+                    subdir: 'test_folder',
+                    filename: 'some_reads.fq',
+                    isBulk: false,
                 },
             ].forEach((testCase) => {
                 const filePath = (testCase.subdir ? testCase.subdir + '/' : '') + testCase.filename;
-                it(`Should initialize a bulk import cell with the expected input file ${filePath}`, async () => {
+                const isBulk = testCase.isBulk;
+                const dataType = isBulk ? bulkImportType : nonBulkType;
+                it(`Should initialize a${
+                    testCase.isBulk ? ' bulk' : 'n'
+                } import cell with the expected single input file ${filePath} and type ${dataType}`, async () => {
                     await stagingViewer.render();
                     if (testCase.subdir) {
                         stagingViewer.$elem.find(`button[data-name="${testCase.subdir}"]`).click();
                     }
 
-                    //find the fake sra reads one specifically
+                    // find the given file specifically
                     const selectDropdown = $container
                         .find(`[data-download='${filePath}']`)
                         .siblings('select');
 
-                    //this auto-checks the checkbox
-                    selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+                    // this auto-checks the checkbox
+                    selectDropdown.val(dataType).trigger('change').trigger('select2:select');
 
                     const button = container.querySelector('.kb-staging-table-import__button');
                     expect(button.disabled).toBeFalse();
 
-                    const expectedInputs = {};
-                    expectedInputs[importType] = {
-                        appId,
-                        files: [filePath],
-                        outputSuffix,
-                    };
-
                     spyOn(Jupyter.narrative, 'insertBulkImportCell');
+                    spyOn(Jupyter.narrative, 'addAndPopulateApp');
                     spyOn(Jupyter.narrative, 'hideOverlay');
-                    $(button).click();
-                    expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(
-                        expectedInputs
-                    );
+
+                    await stagingViewer.initImport();
+
+                    if (isBulk) {
+                        const expectedInputs = {};
+                        expectedInputs[dataType] = {
+                            appId: bulkAppId,
+                            files: [filePath],
+                            outputSuffix: isBulk ? bulkOutputSuffix : nonBulkSuffix,
+                        };
+                        expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(
+                            expectedInputs
+                        );
+                        expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
+                    } else {
+                        const fileInputs = {
+                            staging_file_subdir_path: filePath,
+                            matrix_name: testCase.filename + '_matrix',
+                        };
+                        expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
+                            nonBulkAppId,
+                            tag,
+                            fileInputs
+                        );
+                        expect(Jupyter.narrative.insertBulkImportCell).not.toHaveBeenCalled();
+                    }
                     expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
                 });
             });

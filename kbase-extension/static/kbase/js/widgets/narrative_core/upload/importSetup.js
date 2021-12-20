@@ -6,12 +6,15 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
     StringUtil
 ) => {
     'use strict';
+    const uploaders = Config.get('uploaders');
+    const bulkIds = new Set(uploaders.bulk_import_types);
 
     function getSpreadsheetFileInfo(fileName) {
         return Promise.resolve(fileName);
     }
 
-    function initSingleFileUploads(fileInfo, appInfos) {
+    function initSingleFileUploads(fileInfo) {
+        const appInfos = uploaders.app_info;
         const tag = APIUtil.getAppVersionTag();
         const uploadCellProms = fileInfo.map((file) => {
             let fileParam = file.name;
@@ -48,6 +51,10 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
         return Promise.all(uploadCellProms);
     }
 
+    function setupWebUploadCell() {
+        return initSingleFileUploads([{ name: null, type: 'web_upload' }]);
+    }
+
     /**
      *
      * @param {Array[object]} fileInfo :
@@ -57,9 +64,6 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
      * }
      */
     function setupImportCells(fileInfo) {
-        const uploaders = Config.get('uploaders');
-        const bulkIds = new Set(uploaders.bulkImportTypes);
-
         /* Bin the files based on import stuff
          * 1. format and put in bulkFiles if the type is in the bulkIds set
          * 2. put in the queue to fetch spreadsheet info from the staging service if it's that type (TBD)
@@ -70,8 +74,8 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
         const xsvFiles = [];
         fileInfo.forEach((file) => {
             const importType = file.type;
-            const appInfo = uploaders.app_info[importType];
             if (bulkIds.has(importType)) {
+                const appInfo = uploaders.app_info[importType];
                 if (!(importType in bulkFiles)) {
                     bulkFiles[importType] = {
                         appId: appInfo.app_id,
@@ -79,7 +83,7 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
                         outputSuffix: appInfo.app_output_suffix,
                     };
                 }
-                bulkFiles[importType].push(file.name);
+                bulkFiles[importType].files.push(file.name);
             } else if (importType === 'csv/tsv/spreadsheet/whatever') {
                 xsvFiles.push(file.name);
             } else {
@@ -88,7 +92,7 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
         });
         return getSpreadsheetFileInfo(xsvFiles)
             .then(() => {
-                // TODO: merge xsvFileInfo with bulkFiles
+                // TODO: merge xsvFileInfo with bulkFiles, handle errors, etc.
                 if (Object.keys(bulkFiles).length) {
                     return Jupyter.narrative.insertBulkImportCell(bulkFiles);
                 } else {
@@ -96,11 +100,12 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
                 }
             })
             .then(() => {
-                return initSingleFileUploads(singleFiles, uploaders.app_info);
+                return initSingleFileUploads(singleFiles);
             });
     }
 
     return {
         setupImportCells,
+        setupWebUploadCell,
     };
 });

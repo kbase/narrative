@@ -73,6 +73,10 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
+            this.uploaderNames = this.uploaders.dropdown_order.reduce((acc, uploader) => {
+                acc[uploader.id] = uploader.name;
+                return acc;
+            }, {});
             this.bulkImportTypes = this.uploaders.bulk_import_types;
             this.userInfo = options.userInfo;
 
@@ -317,12 +321,25 @@ define([
                         return accumulator.concat(JSON.parse(dataItem)['mappings']);
                     }, []);
 
+                    // from each file mapping, if not null, remove any mappings the Narrative doesn't know about
+                    for (let i = 0; i < mappings.length; i++) {
+                        if (mappings[i]) {
+                            mappings[i] = mappings[i].filter(
+                                (mapping) => mapping.id in this.uploaders.app_info
+                            );
+                            if (mappings[i].length === 0) {
+                                mappings[i] = null;
+                            }
+                        }
+                    }
+
                     // Extract mappings, sort by weight, assign mappings to staging files
                     mappings.forEach((mapping) => {
                         if (mapping) {
                             mapping.sort((a, b) => a.app_weight < b.app_weight);
                         }
                     });
+
                     stagingFiles.map((element, index) => {
                         element['mappings'] = mappings[index] || null;
                     });
@@ -547,7 +564,7 @@ define([
                                             {
                                                 value: uploader.id,
                                             },
-                                            uploader.title
+                                            stagingAreaViewer.uploaderNames[uploader.id]
                                         );
                                     })
                                 );

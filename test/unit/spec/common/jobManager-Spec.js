@@ -899,8 +899,6 @@ define([
                     expect(storedJobs[jobId]).toEqual(updatedJobState);
                     expect(storedJobs[newJobId]).toEqual(retryJobState);
                     expect(this.bus.emit).toHaveBeenCalled();
-                    // eslint-disable-next-line no-console
-                    console.log(this.jobManagerInstance.bus.emit.calls.allArgs());
                     expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
                         [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.JOB_ID]: newJobId }],
                     ]);

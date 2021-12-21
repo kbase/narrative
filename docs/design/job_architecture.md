@@ -94,15 +94,15 @@ When the kernel sends a message to the front end, the only module set up to list
 
 ### Job-related
 
-`job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
+`job_error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
   * `jobId` - string, the job id
   * `message` - string, some message about the error
 
-`job-info` - contains information about the current job. The format is described under `job_info` in the **Messages sent from the kernel to the browser** section below.
+`job_info` - contains information about the current job. The format is described under `job_info` in the **Messages sent from the kernel to the browser** section below.
 
-`job-logs` - sent with information about some job logs. The format is described under `job_logs` in the **Messages sent from the kernel to the browser** section below.
+`job_logs` - sent with information about some job logs. The format is described under `job_logs` in the **Messages sent from the kernel to the browser** section below.
 
-`job-status` - contains the current job state
+`job_status` - contains the current job state
   * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
   * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
 
@@ -120,7 +120,7 @@ define(['common/runtime'],
         jobId: 'some_job_id'
       },
       key: {
-        type: 'job-status'
+        type: 'job_status'
       },
       handle: (message) => {
         ...process the message...
@@ -273,7 +273,7 @@ A general job comm error, capturing most errors that get thrown by the kernel
   * `job_id` - string OR `job_id_list` - array of strings, the job id(s) (if present)
   * `message` - string, an error message
 
-**bus** `job-error`
+**bus** `job_error`
 
 ### `job_info`
 Includes information about the running job
@@ -300,7 +300,7 @@ i.e.
 }
 ```
 
-**bus** `job-info` sent by `job_id`
+**bus** `job_info` sent by `job_id`
 
 Job info is split out into individual jobs for distribution.
 
@@ -327,7 +327,7 @@ Sample response JSON:
 }
 ```
 
-**bus** - `job-status` sent to `job_id`
+**bus** - `job_status` sent to `job_id`
 
 Job status data is split out into individual jobs and sent to `job_id`
 
@@ -345,7 +345,7 @@ The set of all job states for all running jobs, or at least the set that should 
   * `jobState` - the job state (see the **Data Structures** section below for details
   * `outputWidgetInfo` - the parameters to send to output widgets, only available for a completed job
 
-**bus** - see `job-status`
+**bus** - see `job_status`
 
 
 ### `job_logs`
@@ -361,7 +361,7 @@ Dictionary with key(s) job ID and value dictionaries with the following structur
     * `line` - string, the log line
     * `is_error` - 0 or 1, if 1 then the line is an "error" as reported by the server
 
-**bus** `job-logs` sent by `job_id`
+**bus** `job_logs` sent by `job_id`
 
 Logs data is split out into individual jobs and sent to `job_id` (see above)
 
@@ -394,7 +394,7 @@ Outer keys:
   * `retry` - string, the job id of the job that was launched
   * `error` - string, appears if there was an error when trying to retry the job
 
-**bus** `job-retry-response` sent by `job_id`
+**bus** `retry_job` sent by `job_id`
 
 Retry data is split out into individual jobs and sent to `job_id`
 
@@ -427,7 +427,7 @@ All cases:
 (if ok)
   * `job_id` - if the job was launched successfully
 
-**bus** `run-status` sent to `cell_id`
+**bus** `run_status` sent to `cell_id`
 
 Sent unchanged to `cell_id`
 

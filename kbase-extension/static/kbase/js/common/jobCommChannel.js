@@ -62,6 +62,14 @@ define([
     const COMM_NAME = 'KBaseJobs',
         CELL = 'cell',
         JOB = 'jobId',
+        // frontend params
+        PARAMS = {
+            JOB_ID: 'jobId',
+            JOB_ID_LIST: 'jobIdList',
+            BATCH_ID: 'batchId',
+            CELL_ID_LIST: 'cellIdList',
+        },
+        // backend params
         JOB_ID = 'job_id',
         JOB_ID_LIST = 'job_id_list',
         // commands
@@ -78,29 +86,24 @@ define([
         STOP_UPDATE = 'stop_job_update',
         // messages to be sent to backend for job request types
         REQUESTS = {
-            // cancels the job
-            CANCEL: 'request-job-cancel',
-
+            // Cancels the job
+            CANCEL,
             // Requests status of all jobs in a cell or list of cells
             CELL_JOB_STATUS,
-
-            // Fetches info (not state) about a job, including the app id, name, and inputs.
-            INFO: 'request-job-info',
-
-            // Fetches job logs from kernel.
-            LOGS: 'request-job-log',
-
-            // retries the job
-            RETRY: 'request-job-retry',
-
+            // Fetches info (not state) about a job, including the app id, name, and inputs
+            INFO,
+            // Fetches job logs
+            LOGS,
+            // Retries the job
+            RETRY,
             // Request regular job status updates for a job or list of jobs
-            START_UPDATE: 'request-job-updates-start',
-
-            // Fetches job status from kernel.
-            STATUS: 'request-job-status',
-
+            START_UPDATE,
+            // Fetches job status
+            STATUS,
+            // Request status of all jobs
+            STATUS_ALL,
             // Tells kernel to stop including a job in the regular job status updates
-            STOP_UPDATE: 'request-job-updates-stop',
+            STOP_UPDATE,
         },
         BACKEND_REQUESTS = {
             CANCEL,
@@ -124,12 +127,12 @@ define([
         },
         RESPONSES = {
             CELL_JOB_STATUS,
-            ERROR: 'job-error',
-            INFO: 'job-info',
-            LOGS: 'job-logs',
-            RETRY: 'job-retry-response',
-            RUN_STATUS: 'run-status',
-            STATUS: 'job-status',
+            ERROR,
+            INFO,
+            LOGS,
+            RETRY,
+            RUN_STATUS,
+            STATUS,
         },
         // these job request types also have a 'batch' version
         batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
@@ -158,6 +161,7 @@ define([
         REQUESTS,
         BACKEND_REQUESTS,
         BACKEND_RESPONSES,
+        PARAMS,
     };
 
     class JobCommChannel {
@@ -182,12 +186,13 @@ define([
             this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
 
             // set up validators for incoming backend job messages
-            this.validationFn = {};
-            this.validationFn[BACKEND_RESPONSES.INFO] = Jobs.isValidJobInfoObject;
-            this.validationFn[BACKEND_RESPONSES.LOGS] = Jobs.isValidJobLogsObject;
-            this.validationFn[BACKEND_RESPONSES.STATUS] = Jobs.isValidBackendJobStateObject;
-            this.validationFn[BACKEND_RESPONSES.STATUS_ALL] = Jobs.isValidBackendJobStateObject;
-            this.validationFn[BACKEND_RESPONSES.RETRY] = Jobs.isValidJobRetryObject;
+            this.validationFn = {
+                [BACKEND_RESPONSES.INFO]: Jobs.isValidJobInfoObject,
+                [BACKEND_RESPONSES.LOGS]: Jobs.isValidJobLogsObject,
+                [BACKEND_RESPONSES.STATUS]: Jobs.isValidBackendJobStateObject,
+                [BACKEND_RESPONSES.STATUS_ALL]: Jobs.isValidBackendJobStateObject,
+                [BACKEND_RESPONSES.RETRY]: Jobs.isValidJobRetryObject,
+            };
         }
 
         /**
@@ -199,8 +204,9 @@ define([
          * @param {any} message
          */
         sendBusMessage(channelName, channelId, msgType, message) {
-            const channel = {};
-            channel[channelName] = channelId;
+            const channel = {
+                [channelName]: channelId,
+            };
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel,
                 key: {
@@ -247,10 +253,9 @@ define([
 
             const translations = {
                 // backend uses `job_id` instead of `batch_id`
-                batchId: JOB_ID,
-                batch_id: JOB_ID,
-                jobId: JOB_ID,
-                jobIdList: JOB_ID_LIST,
+                [PARAMS.BATCH_ID]: JOB_ID,
+                [PARAMS.JOB_ID]: JOB_ID,
+                [PARAMS.JOB_ID_LIST]: JOB_ID_LIST,
             };
 
             for (const [key, value] of Object.entries(msgData)) {
@@ -258,7 +263,7 @@ define([
                 transformedMsg[msgKey] = value;
                 // convert to the batch form of the request
                 if (
-                    (key === 'batchId' || key === 'batch_id') &&
+                    key === PARAMS.BATCH_ID &&
                     BATCH_BACKEND_REQUESTS[transformedMsg.request_type]
                 ) {
                     transformedMsg.request_type =

@@ -704,16 +704,18 @@ define([
 
                 it('will remove a specified job ID / type listener combo', function () {
                     spyOn(this.bus, 'removeListener').and.returnValue(true);
-                    const fakeJob = {};
-                    fakeJob[jcm.RESPONSES.INFO] = 'job-info-fake-job';
-                    fakeJob[jcm.RESPONSES.STATUS] = 'job-status-fake-job';
-                    fakeJob[jcm.RESPONSES.LOGS] = 'job-logs-fake-job';
+                    const fakeJob = {
+                        [jcm.RESPONSES.INFO]: 'job-info-fake-job',
+                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
+                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                    };
                     this.jobManagerInstance.listeners.fakeJob = fakeJob;
 
                     this.jobManagerInstance.removeListener('fakeJob', jcm.RESPONSES.INFO);
-                    const expected = {};
-                    expected[jcm.RESPONSES.STATUS] = 'job-status-fake-job';
-                    expected[jcm.RESPONSES.LOGS] = 'job-logs-fake-job';
+                    const expected = {
+                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
+                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                    };
 
                     expect(this.jobManagerInstance.listeners.fakeJob).toEqual(expected);
                     expect(this.bus.removeListener).toHaveBeenCalledTimes(1);
@@ -728,10 +730,11 @@ define([
                     this.jobManagerInstance = createJobManagerInstance(this, JobManagerCore);
                 });
                 it('will remove all listeners from a certain job ID', function () {
-                    const fakeJob = {};
-                    fakeJob[jcm.RESPONSES.INFO] = 'job-info-fake-job';
-                    fakeJob[jcm.RESPONSES.STATUS] = 'job-status-fake-job';
-                    fakeJob[jcm.RESPONSES.LOGS] = 'job-logs-fake-job';
+                    const fakeJob = {
+                        [jcm.RESPONSES.INFO]: 'job-info-fake-job',
+                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
+                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                    };
                     this.jobManagerInstance.listeners.fakeJob = fakeJob;
 
                     this.jobManagerInstance.removeJobListeners('fakeJob');
@@ -760,11 +763,13 @@ define([
 
         function checkForHandlers(jobManagerInstance) {
             const currentHandlers = jobManagerInstance.handlers;
-            expect(Object.keys(currentHandlers).sort()).toEqual([
-                jcm.RESPONSES.INFO,
-                jcm.RESPONSES.RETRY,
-                jcm.RESPONSES.STATUS,
-            ]);
+            expect(Object.keys(currentHandlers)).toEqual(
+                jasmine.arrayWithExactContents([
+                    jcm.RESPONSES.INFO,
+                    jcm.RESPONSES.RETRY,
+                    jcm.RESPONSES.STATUS,
+                ])
+            );
             Object.keys(currentHandlers).forEach((handlerName) => {
                 const expected = {};
                 expected[`__default_${handlerName}`] = jasmine.any(Function);
@@ -894,8 +899,10 @@ define([
                     expect(storedJobs[jobId]).toEqual(updatedJobState);
                     expect(storedJobs[newJobId]).toEqual(retryJobState);
                     expect(this.bus.emit).toHaveBeenCalled();
+                    // eslint-disable-next-line no-console
+                    console.log(this.jobManagerInstance.bus.emit.calls.allArgs());
                     expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
-                        [jcm.REQUESTS.START_UPDATE, { jobId: newJobId }],
+                        [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.JOB_ID]: newJobId }],
                     ]);
                 });
 
@@ -1054,7 +1061,7 @@ define([
                     expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
                     expect(console.error).toHaveBeenCalledTimes(1);
 
-                    // all child jobs should have job-status and job-info listeners
+                    // all child jobs should have job status and job info listeners
                     batchParentUpdate.child_jobs.forEach((_jobId) => {
                         expect(
                             this.jobManagerInstance.listeners[_jobId][jcm.RESPONSES.STATUS]
@@ -1069,7 +1076,7 @@ define([
                         [
                             jcm.REQUESTS.START_UPDATE,
                             {
-                                jobIdList: jasmine.arrayWithExactContents(
+                                [jcm.PARAMS.JOB_ID_LIST]: jasmine.arrayWithExactContents(
                                     batchParentUpdate.child_jobs
                                 ),
                             },

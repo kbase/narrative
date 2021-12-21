@@ -607,9 +607,9 @@ define([
                 });
                 expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
                     // job status request for the full batch
-                    [jcm.REQUESTS.STATUS, { batchId }],
+                    [jcm.REQUESTS.STATUS, { [jcm.PARAMS.BATCH_ID]: batchId }],
                 ]);
-                // this table already has the info populated, so the 'job-info'
+                // this table already has the info populated, so the job info
                 // listener is not required
                 jobIdList.forEach((jobId) => {
                     expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
@@ -643,19 +643,26 @@ define([
                 });
                 expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
                     // job info request for missing IDs
-                    [jcm.REQUESTS.INFO, { jobIdList: this.missingJobIds }],
+                    [jcm.REQUESTS.INFO, { [jcm.PARAMS.JOB_ID_LIST]: this.missingJobIds }],
                     // job status request for the full batch
-                    [jcm.REQUESTS.STATUS, { batchId }],
+                    [jcm.REQUESTS.STATUS, { [jcm.PARAMS.BATCH_ID]: batchId }],
                 ]);
-                // job-info listeners only required for some jobs
+                // job info listeners only required for some jobs
                 jobIdList.forEach((jobId) => {
                     if (missingJobIds.includes(jobId)) {
                         expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
-                            jasmine.arrayWithExactContents(['job-status', 'job-error', 'job-info'])
+                            jasmine.arrayWithExactContents([
+                                jcm.RESPONSES.STATUS,
+                                jcm.RESPONSES.ERROR,
+                                jcm.RESPONSES.INFO,
+                            ])
                         );
                     } else {
                         expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
-                            jasmine.arrayWithExactContents(['job-status', 'job-error'])
+                            jasmine.arrayWithExactContents([
+                                jcm.RESPONSES.STATUS,
+                                jcm.RESPONSES.ERROR,
+                            ])
                         );
                     }
                 });

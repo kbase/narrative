@@ -655,9 +655,9 @@ define([
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    ['request-job-updates-start', { batchId }],
-                                    ['request-job-cancel', { jobIdList: [batchId] }],
-                                    ['request-job-updates-stop', { batchId }],
+                                    [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
+                                    [jcm.REQUESTS.CANCEL, { [jcm.PARAMS.JOB_ID_LIST]: [batchId] }],
+                                    [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
                                     [
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
@@ -760,11 +760,10 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    [jcm.REQUESTS.START_UPDATE, { batchId }],
-                    [jcm.REQUESTS.INFO, { batchId }],
-                    [jcm.REQUESTS.CANCEL, { jobIdList: [batchId] }],
-                    [jcm.REQUESTS.STOP_UPDATE, { batchId }],
-                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
+                    [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
+                    [jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batchId }],
+                    [jcm.REQUESTS.CANCEL, { [jcm.PARAMS.JOB_ID_LIST]: [batchId] }],
+                    [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

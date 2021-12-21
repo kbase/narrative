@@ -17,6 +17,12 @@ define([
     const TEST_JOB_ID = 'someJob',
         TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'];
 
+    const JOB_ID = jcm.PARAMS.JOB_ID,
+        JOB_ID_LIST = jcm.PARAMS.JOB_ID_LIST,
+        BATCH_ID = jcm.PARAMS.BATCH_ID,
+        BACKEND_JOB_ID = 'job_id',
+        BACKEND_JOB_ID_LIST = 'job_id_list';
+
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
             commInfoReturn,
@@ -328,57 +334,69 @@ define([
         const busMsgCases = [
             {
                 channel: jcm.REQUESTS.LOGS,
-                message: { jobId: TEST_JOB_ID },
+                message: { [JOB_ID]: TEST_JOB_ID },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
-                    job_id: TEST_JOB_ID,
+                    [BACKEND_JOB_ID]: TEST_JOB_ID,
                 },
             },
             {
                 channel: jcm.REQUESTS.LOGS,
                 message: {
-                    jobId: TEST_JOB_ID,
+                    [JOB_ID]: TEST_JOB_ID,
                     latest: true,
                 },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
-                    job_id: TEST_JOB_ID,
+                    [BACKEND_JOB_ID]: TEST_JOB_ID,
                     latest: true,
                 },
             },
             {
                 channel: jcm.REQUESTS.LOGS,
                 message: {
-                    jobId: TEST_JOB_ID,
+                    [JOB_ID]: TEST_JOB_ID,
                     first_line: 2000,
                     latest: true,
                 },
                 expected: {
                     request_type: jcm.BACKEND_REQUESTS.LOGS,
-                    job_id: TEST_JOB_ID,
+                    [BACKEND_JOB_ID]: TEST_JOB_ID,
                     first_line: 2000,
                     latest: true,
                 },
             },
             {
                 channel: jcm.REQUESTS.CANCEL,
-                message: { jobId: TEST_JOB_ID },
-                expected: { request_type: jcm.BACKEND_REQUESTS.CANCEL, job_id: TEST_JOB_ID },
+                message: { [JOB_ID]: TEST_JOB_ID },
+                expected: {
+                    request_type: jcm.BACKEND_REQUESTS.CANCEL,
+                    [BACKEND_JOB_ID]: TEST_JOB_ID,
+                },
             },
             {
                 channel: jcm.REQUESTS.CANCEL,
-                message: { jobIdList: TEST_JOB_LIST },
-                expected: { request_type: jcm.BACKEND_REQUESTS.CANCEL, job_id_list: TEST_JOB_LIST },
+                message: { [JOB_ID_LIST]: TEST_JOB_LIST },
+                expected: {
+                    request_type: jcm.BACKEND_REQUESTS.CANCEL,
+                    [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
+                },
             },
             {
                 channel: jcm.REQUESTS.RETRY,
-                message: { jobId: TEST_JOB_ID },
-                expected: { request_type: jcm.BACKEND_REQUESTS.RETRY, job_id: TEST_JOB_ID },
+                message: { [JOB_ID]: TEST_JOB_ID },
+                expected: {
+                    request_type: jcm.BACKEND_REQUESTS.RETRY,
+                    [BACKEND_JOB_ID]: TEST_JOB_ID,
+                },
             },
             {
                 channel: jcm.REQUESTS.RETRY,
-                message: { jobIdList: TEST_JOB_LIST },
-                expected: { request_type: jcm.BACKEND_REQUESTS.RETRY, job_id_list: TEST_JOB_LIST },
+                message: { [JOB_ID_LIST]: TEST_JOB_LIST },
+                expected: {
+                    request_type: jcm.BACKEND_REQUESTS.RETRY,
+                    [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
+                },
             },
         ];
 
@@ -388,26 +406,26 @@ define([
             busMsgCases.push(
                 {
                     channel: jcm.REQUESTS[type],
-                    message: { jobId: TEST_JOB_ID },
+                    message: { [JOB_ID]: TEST_JOB_ID },
                     expected: {
                         request_type: jcm.BACKEND_REQUESTS[type],
-                        job_id: TEST_JOB_ID,
+                        [BACKEND_JOB_ID]: TEST_JOB_ID,
                     },
                 },
                 {
                     channel: jcm.REQUESTS[type],
-                    message: { jobIdList: TEST_JOB_LIST },
+                    message: { [JOB_ID_LIST]: TEST_JOB_LIST },
                     expected: {
                         request_type: jcm.BACKEND_REQUESTS[type],
-                        job_id_list: TEST_JOB_LIST,
+                        [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
                     },
                 },
                 {
                     channel: jcm.REQUESTS[type],
-                    message: { batchId: 'batch_job' },
+                    message: { [BATCH_ID]: 'batch_job' },
                     expected: {
                         request_type: `${jcm.BACKEND_REQUESTS[type]}_batch`,
-                        job_id: 'batch_job',
+                        [BACKEND_JOB_ID]: 'batch_job',
                     },
                 }
             );
@@ -745,7 +763,7 @@ define([
             {
                 type: jcm.BACKEND_RESPONSES.ERROR,
                 message: {
-                    job_id_list: [
+                    [BACKEND_JOB_ID_LIST]: [
                         'job_1_RetryWithErrors',
                         'job_2_RetryWithErrors',
                         'job_3_RetryWithErrors',
@@ -759,7 +777,7 @@ define([
                         {
                             jobId: 'job_1_RetryWithErrors',
                             error: {
-                                job_id_list: [
+                                [BACKEND_JOB_ID_LIST]: [
                                     'job_1_RetryWithErrors',
                                     'job_2_RetryWithErrors',
                                     'job_3_RetryWithErrors',
@@ -779,7 +797,7 @@ define([
                         {
                             jobId: 'job_2_RetryWithErrors',
                             error: {
-                                job_id_list: [
+                                [BACKEND_JOB_ID_LIST]: [
                                     'job_1_RetryWithErrors',
                                     'job_2_RetryWithErrors',
                                     'job_3_RetryWithErrors',
@@ -799,7 +817,7 @@ define([
                         {
                             jobId: 'job_3_RetryWithErrors',
                             error: {
-                                job_id_list: [
+                                [BACKEND_JOB_ID_LIST]: [
                                     'job_1_RetryWithErrors',
                                     'job_2_RetryWithErrors',
                                     'job_3_RetryWithErrors',

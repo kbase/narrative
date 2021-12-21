@@ -516,7 +516,7 @@ define([
                 },
                 [
                     div({
-                        dataElement: `job-logs-div`,
+                        dataElement: 'job-logs-div',
                     }),
                 ]
             );
@@ -659,11 +659,11 @@ define([
                 this.jobManager.addListener(jcm.RESPONSES.INFO, paramsRequired);
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
-                        ? { batchId }
-                        : { jobIdList: paramsRequired };
+                        ? { [jcm.PARAMS.BATCH_ID]: batchId }
+                        : { [jcm.PARAMS.JOB_ID_LIST]: paramsRequired };
                 this.jobManager.bus.emit(jcm.REQUESTS.INFO, jobInfoRequestParams);
             }
-            this.jobManager.bus.emit(jcm.REQUESTS.STATUS, { batchId });
+            this.jobManager.bus.emit(jcm.REQUESTS.STATUS, { [jcm.PARAMS.BATCH_ID]: batchId });
         }
 
         // HANDLERS
@@ -704,7 +704,7 @@ define([
          * parse and update the row with job info
          * @param {object} message
          */
-        handleJobInfo(_, message) {
+        handleJobInfo(message) {
             const jobId = message.job_id;
             const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const appData = this.jobManager.model.getItem('app');

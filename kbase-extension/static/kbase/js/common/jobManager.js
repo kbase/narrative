@@ -466,11 +466,11 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
                 }
 
                 // request job updates for the new job
-                ['status', 'error'].forEach((type) => {
-                    self.addListener(`job-${type}`, [retry.jobState.job_id]);
+                ['STATUS', 'ERROR'].forEach((type) => {
+                    self.addListener(jcm.RESPONSES[type], [retry.jobState.job_id]);
                 });
                 self.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                    jobId: retry.jobState.job_id,
+                    [jcm.PARAMS.JOB_ID]: retry.jobState.job_id,
                 });
                 // update the model with the job data
                 self.updateModel(
@@ -495,9 +495,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
                     if (status === 'does_not_exist') {
                         self.removeJobListeners(jobId);
                     }
-                    self.bus.emit(jcm.REQUESTS.STOP_UPDATE, {
-                        jobId,
-                    });
+                    self.bus.emit(jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.JOB_ID]: jobId });
                     self.updateModel([jobState]);
                     return;
                 }
@@ -517,11 +515,11 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
                         }
                     });
                     if (missingJobIds.length) {
-                        ['status', 'error', 'info'].forEach((type) => {
-                            self.addListener(`job-${type}`, missingJobIds);
+                        ['STATUS', 'ERROR', 'INFO'].forEach((type) => {
+                            self.addListener(jcm.RESPONSES[type], missingJobIds);
                         });
                         self.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                            jobIdList: missingJobIds,
+                            [jcm.PARAMS.JOB_ID_LIST]: missingJobIds,
                         });
                     }
                 }
@@ -541,7 +539,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
              */
             requestJobInfo(jobIdList) {
                 this.addListener(jcm.RESPONSES.INFO, jobIdList);
-                this.bus.emit(jcm.REQUESTS.INFO, { jobIdList });
+                this.bus.emit(jcm.REQUESTS.INFO, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
             }
 
             /**
@@ -550,7 +548,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
              */
             requestJobStatus(jobIdList) {
                 this.addListener(jcm.RESPONSES.STATUS, jobIdList);
-                this.bus.emit(jcm.REQUESTS.STATUS, { jobIdList });
+                this.bus.emit(jcm.REQUESTS.STATUS, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
             }
         };
 
@@ -565,9 +563,7 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
              * @param {array} jobIdList
              */
             doJobAction(action, jobIdList) {
-                this.bus.emit(jobCommand[action].command, {
-                    jobIdList,
-                });
+                this.bus.emit(jobCommand[action].command, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
                 // add the appropriate listener
                 this.addListener(jobCommand[action].listener, jobIdList);
             }
@@ -714,9 +710,8 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
                     allJobs[batchJob.job_id] = batchJob;
                 }
 
-                this.bus.emit(jcm.REQUESTS.STOP_UPDATE, {
-                    batchId: batchJob.job_id,
-                });
+                this.bus.emit(jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchJob.job_id });
+
                 // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
                     this.removeJobListeners(jobId);
@@ -783,17 +778,17 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
 
                 // request job info
                 this.addListener(jcm.RESPONSES.INFO, allJobIds);
-                this.bus.emit(jcm.REQUESTS.INFO, { batchId: batch_id });
+                this.bus.emit(jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batch_id });
             }
 
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
-                ['status', 'error'].forEach((type) => {
-                    this.addListener(`job-${type}`, allJobIds);
+                ['STATUS', 'ERROR'].forEach((type) => {
+                    this.addListener(jcm.RESPONSES[type], allJobIds);
                 });
                 // request job updates
-                this.bus.emit(jcm.REQUESTS.START_UPDATE, { batchId });
+                this.bus.emit(jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId });
             }
 
             restoreFromSaved() {

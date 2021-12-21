@@ -84,8 +84,7 @@ define([
 
                 startParamsListener();
                 runtime.bus().emit(jcm.REQUESTS.INFO, {
-                    jobId: jobId,
-                    parentJobId: arg.parentJobId,
+                    [jcm.PARAMS.JOB_ID]: jobId,
                 });
                 params = arg.params;
                 updateRowStatus(ui, params, container);

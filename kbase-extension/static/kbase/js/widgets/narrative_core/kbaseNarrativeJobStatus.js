@@ -166,11 +166,11 @@ define([
                     });
 
                     this.channel.emit(jcm.REQUESTS.INFO, {
-                        jobId: this.jobId,
+                        [jcm.PARAMS.JOB_ID]: this.jobId,
                     });
 
                     this.channel.emit(jcm.REQUESTS.STATUS, {
-                        jobId: this.jobId,
+                        [jcm.PARAMS.JOB_ID]: this.jobId,
                     });
                 })
                 .catch((err) => {
@@ -497,7 +497,7 @@ define([
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
                         this.channel.emit(jcm.REQUESTS.STOP_UPDATE, {
-                            jobId: this.jobId,
+                            [jcm.PARAMS.JOB_ID]: this.jobId,
                         });
                     }
                     // TODO: we need to remove all of the job listeners at this point, but
@@ -521,14 +521,14 @@ define([
 
         requestJobInfo: function () {
             this.channel.emit(jcm.REQUESTS.INFO, {
-                jobId: this.jobId,
+                [jcm.PARAMS.JOB_ID]: this.jobId,
             });
         },
 
         requestJobStatus: function () {
             window.setTimeout(() => {
                 this.channel.emit(jcm.REQUESTS.STATUS, {
-                    jobId: this.jobId,
+                    [jcm.PARAMS.JOB_ID]: this.jobId,
                 });
             }, this.statusRequestInterval);
         },

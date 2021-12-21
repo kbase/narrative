@@ -410,7 +410,7 @@ define([
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
                 this.bus.emit(jcm.REQUESTS.STATUS, {
-                    jobId: this.jobId,
+                    [jcm.PARAMS.JOB_ID]: this.jobId,
                 });
                 this.state.listeningForJob = true;
             }).catch((err) => {
@@ -446,7 +446,7 @@ define([
          */
         startJobStatusUpdates() {
             this.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                jobId: this.jobId,
+                [jcm.PARAMS.JOB_ID]: this.jobId,
             });
             this.state.listeningForJob = true;
         }
@@ -475,7 +475,7 @@ define([
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
             this.bus.emit(jcm.REQUESTS.LOGS, {
-                jobId: this.jobId,
+                [jcm.PARAMS.JOB_ID]: this.jobId,
                 first_line: firstLine,
             });
         }
@@ -489,7 +489,7 @@ define([
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
             this.bus.emit(jcm.REQUESTS.LOGS, {
-                jobId: this.jobId,
+                [jcm.PARAMS.JOB_ID]: this.jobId,
                 latest: true,
             });
         }

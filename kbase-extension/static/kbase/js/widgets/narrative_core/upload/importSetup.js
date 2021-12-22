@@ -51,17 +51,27 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
         return Promise.all(uploadCellProms);
     }
 
+    /**
+     * This creates a single app cell initialized with the web uploader app.
+     * @returns Promise that resolves when the web upload app cell is created
+     */
     function setupWebUploadCell() {
         return initSingleFileUploads([{ name: null, type: 'web_upload' }]);
     }
 
     /**
-     *
-     * @param {Array[object]} fileInfo :
+     * This does the work of taking a list of file and their types and converting them into one
+     * or more import app cells. It does so in 3 phases.
+     * 1. Filter the file infos into bins based on their given type - single upload, bulk upload, or xsv (that's CSV, TSV, Excel)
+     * 2. Get all the extended file info from the xsv files to push into the bulk uploader section
+     * 3. Make the bulk import and other singleton import cells.
+     * This returns a Promise that resolves once the cells are made.
+     * @param {Array[object]} fileInfo an array of file infos composed of these objects:
      * {
      *   name: filename (might be a path),
      *   type: data type id
      * }
+     * @returns a Promise that resolves when all cells are made
      */
     function setupImportCells(fileInfo) {
         /* Bin the files based on import stuff

@@ -256,8 +256,7 @@ define([
             ui,
             jobState = null,
             listeningForJob = false,
-            jobId,
-            parentJobId;
+            jobId;
 
         const viewModel = {
             lastUpdated: {
@@ -326,7 +325,7 @@ define([
                 return;
             }
             runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
-                jobId,
+                [jcm.PARAMS.JOB_ID]: jobId,
             });
             listeningForJob = true;
         }
@@ -402,9 +401,7 @@ define([
                     ui = UI.make({ node: container });
 
                     container.innerHTML = renderRunStats();
-
                     jobId = arg.jobId;
-                    parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
                     listeners.push(
                         runtime.bus().on('clock-tick', () => {
@@ -416,8 +413,7 @@ define([
 
                     // request a new job status update from the kernel on start
                     runtime.bus().emit(jcm.REQUESTS.STATUS, {
-                        jobId: jobId,
-                        parentJobId: parentJobId,
+                        [jcm.PARAMS.JOB_ID]: jobId,
                     });
                     listeningForJob = true;
 

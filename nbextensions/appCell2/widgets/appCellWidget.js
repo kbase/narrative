@@ -1200,7 +1200,7 @@ define(
              */
             function cancelJob(jobId) {
                 runtime.bus().emit(jcm.REQUESTS.CANCEL, {
-                    jobId,
+                    [jcm.PARAMS.JOB_ID]: jobId,
                 });
             }
 
@@ -1209,7 +1209,7 @@ define(
                     return;
                 }
                 runtime.bus().emit(jcm.REQUESTS.STATUS, {
-                    jobId,
+                    [jcm.PARAMS.JOB_ID]: jobId,
                 });
             }
 
@@ -1422,7 +1422,7 @@ define(
                 );
 
                 runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
-                    jobId,
+                    [jcm.PARAMS.JOB_ID]: jobId,
                 });
             }
 
@@ -1466,7 +1466,7 @@ define(
                 const jobId = model.getItem('exec.jobState.job_id');
                 if (jobId) {
                     runtime.bus().emit(jcm.REQUESTS.STOP_UPDATE, {
-                        jobId,
+                        [jcm.PARAMS.JOB_ID]: jobId,
                     });
                 }
             }

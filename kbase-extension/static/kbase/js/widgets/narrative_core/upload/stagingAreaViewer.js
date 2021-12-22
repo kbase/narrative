@@ -1129,13 +1129,11 @@ define([
          * Creating a new bulk import cell returns a Promise, so this returns a Promise.
          */
         initImport: function () {
-            const stagingAreaViewer = this;
-
-            if (!stagingAreaViewer.fullDataTable) {
+            if (!this.fullDataTable) {
                 return Promise.resolve();
             }
             const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
-            const selectedRows = stagingAreaViewer.fullDataTable.rows((_idx, _data, node) => {
+            const selectedRows = this.fullDataTable.rows((_idx, _data, node) => {
                 return !!node.querySelector(checkedBoxSelector);
             });
             const fileInfo = [];

@@ -432,11 +432,19 @@ define([
                 nonBulkAppId = 'kb_uploadmethods/import_tsv_as_expression_matrix_from_staging',
                 nonBulkType = 'expression_matrix',
                 nonBulkSuffix = '_matrix';
-
             let tag;
 
             beforeEach(() => {
                 tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            });
+
+            it('Should initialize a web upload app cell', async () => {
+                await stagingViewer.render();
+                spyOn(Jupyter.narrative, 'addAndPopulateApp');
+                const $urlButton = $container.find('.web_upload_div');
+
+                $urlButton.click();
+                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalled();
             });
 
             it('Should run the import app init function when the import button is clicked', async () => {

@@ -557,14 +557,13 @@ define([
         describe('autodetect mapping tests', () => {
             const filename = 'fake_sra_reads.sra',
                 typeId = 'sra_reads';
-            let $selectInput;
 
-            beforeEach(async () => {
+            it('should render autodetected mappings in the type select dropdown', async () => {
                 await stagingViewer.render();
-                $selectInput = $container.find(`[data-download="${filename}"]`).siblings('select');
-            });
+                const $selectInput = $container
+                    .find(`[data-download="${filename}"]`)
+                    .siblings('select');
 
-            it('should render autodetected mappings in the type select dropdown', () => {
                 const $suggestedOptGroup = $selectInput.find('optgroup[label="Suggested Types"]');
                 const $otherOptGroup = $selectInput.find('optgroup[label="Other Types"]');
                 expect($suggestedOptGroup.length).toBe(1);
@@ -574,9 +573,85 @@ define([
                 expect($suggestedOptGroup.find(`option[value="${typeId}"]`).length).toBe(1);
             });
 
-            it('should automatically select the mapping if there is only one suggested file type', () => {
+            it('should automatically select the mapping if there is only one suggested file type', async () => {
                 // only one suggested file type for the sra reads file, so just make sure it's selected!
+                await stagingViewer.render();
+                const $selectInput = $container
+                    .find(`[data-download="${filename}"]`)
+                    .siblings('select');
+
                 expect($selectInput.val()).toBe(typeId);
+            });
+
+            it('should not include mappings that are not configured in the Narrative', async () => {
+                // change the mappings, not the fake files described above
+                const mappings = {
+                    mappings: [
+                        null,
+                        null,
+                        [
+                            { id: 'sra_reads', app_weight: 1, title: 'SRA Reads' },
+                            { id: 'also_not_real', app_weight: 1, title: 'Some Other Data' },
+                        ],
+                        [{ id: 'not_real', app_weight: 1, title: 'Some Random Data' }],
+                    ],
+                };
+                jasmine.Ajax.stubRequest(
+                    new RegExp(`${stagingServiceUrl}/importer_mappings/`)
+                ).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(mappings),
+                });
+                await stagingViewer.render();
+
+                // filename -> 3rd row
+                // otherFileName -> 4th row
+                const otherFileName = 'unknown_file.txt';
+                const [$thirdSelect, $fourthSelect] = [filename, otherFileName].map((name) =>
+                    $container.find(`[data-download="${name}"]`).siblings('select')
+                );
+
+                const $thirdSuggestions = $thirdSelect.find('optgroup[label="Suggested Types"]');
+                expect($thirdSuggestions.length).toBe(1);
+                expect($thirdSuggestions.find('option').length).toBe(1);
+                expect($thirdSuggestions.find('option').text()).toEqual('SRA Reads');
+
+                expect($fourthSelect.find('optgroup[label="Suggested Types"]').length).toBe(0);
+            });
+
+            it('should use the Narrative-configured display names for mappings', async () => {
+                const mappings = {
+                    mappings: [
+                        null,
+                        null,
+                        [
+                            {
+                                id: 'sra_reads',
+                                app_weight: 1,
+                                title: 'omg this is a special data type!',
+                            },
+                        ],
+                        null,
+                    ],
+                };
+                jasmine.Ajax.stubRequest(
+                    new RegExp(`${stagingServiceUrl}/importer_mappings/`)
+                ).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(mappings),
+                });
+                await stagingViewer.render();
+                const $select = $container.find(`[data-download="${filename}"]`).siblings('select');
+                const $suggestions = $select.find('optgroup[label="Suggested Types"]');
+                expect($suggestions.length).toBe(1);
+                expect($suggestions.find('option').length).toBe(1);
+                expect($suggestions.find('option').text()).toEqual('SRA Reads');
             });
         });
 

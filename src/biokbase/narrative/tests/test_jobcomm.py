@@ -314,15 +314,8 @@ class JobCommTestCase(unittest.TestCase):
     # ---------------------
     @mock.patch(CLIENTS, get_mock_client)
     def test_req_no_inputs__succeed(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": STATUS_ALL,
-                }
-            },
-        }
-        self.jc._handle_comm_message(msg)
+        req = make_comm_msg(STATUS_ALL, None, False)
+        self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(STATUS_ALL, msg["data"]["msg_type"])
 
@@ -384,7 +377,7 @@ class JobCommTestCase(unittest.TestCase):
                         "msg_type": STATUS_ALL,
                         "content": get_test_job_states(
                             EXP_ALL_STATE_IDS
-                        ),  # consult version history for when this was exp_job_ids
+                        ),
                     },
                     msg["data"],
                 )
@@ -535,18 +528,9 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_by_cell_id__job_req_none(self):
         cell_id_list = None
         req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": CELL_JOB_STATUS,
-                    CELL_ID_LIST: cell_id_list,
-                }
-            },
-        }
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(msg)
+            self.jc._handle_comm_message(req)
         self.check_error_message(
             req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err
         )
@@ -554,18 +538,9 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
         cell_id_list = []
         req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": CELL_JOB_STATUS,
-                    CELL_ID_LIST: cell_id_list,
-                }
-            },
-        }
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(msg)
+            self.jc._handle_comm_message(req)
         self.check_error_message(
             req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err
         )

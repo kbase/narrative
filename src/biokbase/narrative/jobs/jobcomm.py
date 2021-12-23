@@ -89,15 +89,15 @@ class JobRequest:
         STATUS_BATCH,
         START_UPDATE_BATCH,
         STOP_UPDATE_BATCH,
-        LOGS,
     ]
     REQUIRE_JOB_ID_LIST = [
+        CANCEL,
         INFO,
+        LOGS,
+        RETRY,
         STATUS,
         START_UPDATE,
         STOP_UPDATE,
-        RETRY,
-        CANCEL,
     ]
 
     def __init__(self, rq: dict):
@@ -115,22 +115,19 @@ class JobRequest:
     def job_id(self):
         if JOB_ID in self.rq_data:
             return self.rq_data[JOB_ID]
-        else:
-            raise JobIDException(JOB_NOT_PROVIDED_ERR)
+        raise JobIDException(JOB_NOT_PROVIDED_ERR)
 
     @property
     def job_id_list(self):
         if JOB_ID_LIST in self.rq_data:
             return self.rq_data[JOB_ID_LIST]
-        else:
-            raise JobIDException(JOBS_NOT_PROVIDED_ERR)
+        raise JobIDException(JOBS_NOT_PROVIDED_ERR)
 
     @property
     def cell_id_list(self):
         if CELL_ID_LIST in self.rq_data:
             return self.rq_data[CELL_ID_LIST]
-        else:
-            raise ValueError(CELLS_NOT_PROVIDED_ERR)
+        raise ValueError(CELLS_NOT_PROVIDED_ERR)
 
     def input(self):
         if JOB_ID in self.rq_data:
@@ -338,7 +335,9 @@ class JobComm:
             }
         }
         """
-        cell_job_states = self._jm.lookup_jobs_by_cell_id(cell_id_list=req.cell_id_list)
+        cell_job_states = self._jm.lookup_job_states_by_cell_id(
+            cell_id_list=req.cell_id_list
+        )
         self.send_comm_message(CELL_JOB_STATUS, cell_job_states)
         return cell_job_states
 
@@ -417,11 +416,12 @@ class JobComm:
             raise ValueError("Unknown request")
 
         self._jm.modify_job_refresh(job_id_list, update_refresh)
-        output_states = self._jm.get_job_states(job_id_list)
 
         if update_refresh:
             self.start_job_status_loop()
-            self.send_comm_message(STATUS, output_states)
+
+        output_states = self._jm.get_job_states(job_id_list)
+        self.send_comm_message(STATUS, output_states)
 
     def _modify_job_updates(self, req: JobRequest) -> None:
         self.__modify_updates(req.job_id_list, req.request)
@@ -460,13 +460,13 @@ class JobComm:
         """
         This returns a set of job logs based on the info in the request.
         """
-        log_output = self._jm.get_job_logs(
-            req.job_id,
+        log_output = self._jm.get_job_logs_for_list(
+            req.job_id_list,
             num_lines=req.rq_data.get("num_lines", None),
             first_line=req.rq_data.get("first_line", 0),
             latest=req.rq_data.get("latest", False),
         )
-        self.send_comm_message(LOGS, {req.job_id: log_output})
+        self.send_comm_message(LOGS, log_output)
 
     def _handle_comm_message(self, msg: dict) -> None:
         """

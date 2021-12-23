@@ -45,6 +45,8 @@ from biokbase.narrative.exception_util import (
     JobIDException,
 )
 
+from src.biokbase.narrative.jobs.jobmanager import DOES_NOT_EXIST
+
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import (
@@ -101,13 +103,17 @@ NO_JOBS_MAPPING = {
 def make_comm_msg(
     msg_type: str, job_id_like, as_job_request: bool, content: dict = None
 ):
-    if type(job_id_like) is list:
-        job_id_key = JOB_ID_LIST
+    job_arguments = {}
+    if type(job_id_like) is dict:
+        job_arguments = job_id_like
+    elif type(job_id_like) is list:
+        job_arguments[JOB_ID_LIST] = job_id_like
     else:
-        job_id_key = JOB_ID
+        job_arguments[JOB_ID] = job_id_like
+
     msg = {
         "msg_id": "some_id",
-        "content": {"data": {"request_type": msg_type, job_id_key: job_id_like}},
+        "content": {"data": {"request_type": msg_type, **job_arguments}},
     }
     if content is not None:
         msg["content"]["data"].update(content)
@@ -291,7 +297,7 @@ class JobCommTestCase(unittest.TestCase):
         expected = {
             STATUS_BATCH: JOB_NOT_PROVIDED_ERR,
             RETRY: JOBS_NOT_PROVIDED_ERR,
-            LOGS: JOB_NOT_PROVIDED_ERR,
+            LOGS: JOBS_NOT_PROVIDED_ERR,
         }
 
         for msg_type, err_type in expected.items():
@@ -643,7 +649,10 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": INFO,
                 "content": {
                     JOB_COMPLETED: get_test_job_info(JOB_COMPLETED),
-                    JOB_NOT_FOUND: "does_not_exist",
+                    JOB_NOT_FOUND: {
+                        "job_id": JOB_NOT_FOUND,
+                        "error": "does_not_exist",
+                    },
                 },
             },
             msg["data"],
@@ -884,7 +893,7 @@ class JobCommTestCase(unittest.TestCase):
         ]
         for c in cases:
             content = {"first_line": c[0], "num_lines": c[1], "latest": c[2]}
-            req = make_comm_msg(LOGS, job_id, True, content)
+            req = make_comm_msg(LOGS, [job_id], True, content)
             self.jc._get_job_logs(req)
             msg = self.jc._comm.last_message
             self.assertEqual(LOGS, msg["data"]["msg_type"])
@@ -906,32 +915,98 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertIn(str(first + idx), line["line"])
                 self.assertEqual(0, line["is_error"])
 
-    @mock.patch(CLIENTS, get_failing_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs_failure(self):
-        job_id = JOB_COMPLETED
+        job_id = JOB_CREATED
         req = make_comm_msg(LOGS, job_id, False)
-        with self.assertRaises(NarrativeException) as e:
-            self.jc._handle_comm_message(req)
-        self.assertIn("Can't get job logs", str(e.exception))
+        self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(ERROR, msg["data"]["msg_type"])
-        self.assertEqual("Unable to retrieve job logs", msg["data"]["content"]["error"])
+        print(msg)
+        self.assertEqual(
+            msg["data"],
+            {
+                "msg_type": LOGS,
+                "content": {
+                    JOB_CREATED: {
+                        "job_id": JOB_CREATED,
+                        "batch_id": None,
+                        "error": "Cannot find job log with id: " + JOB_CREATED,
+                    }
+                },
+            },
+        )
 
     def test_get_job_logs_no_job(self):
         job_id = None
         req = make_comm_msg(LOGS, job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
+        err = JobIDException(JOBS_MISSING_FALSY_ERR, [job_id])
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(LOGS, {JOB_ID: job_id}, err)
+        self.check_error_message(LOGS, {JOB_ID_LIST: [job_id]}, err)
 
+    @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs_bad_job(self):
         job_id = "bad_job"
         req = make_comm_msg(LOGS, job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message(LOGS, {JOB_ID: job_id}, err)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            msg["data"],
+            {
+                "msg_type": LOGS,
+                "content": {
+                    job_id: {
+                        "job_id": job_id,
+                        "error": DOES_NOT_EXIST,
+                    }
+                },
+            },
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs_job_dne(self):
+        req = make_comm_msg(LOGS, JOB_NOT_FOUND, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            msg["data"],
+            {
+                "msg_type": LOGS,
+                "content": {
+                    JOB_NOT_FOUND: {
+                        "job_id": JOB_NOT_FOUND,
+                        "error": DOES_NOT_EXIST,
+                    }
+                },
+            },
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__one_ok_one_bad_one_fetch_fail(self):
+        req = make_comm_msg(LOGS, [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND], False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(LOGS, msg["data"]["msg_type"])
+
+        self.assertEqual(
+            set(list(msg["data"]["content"][JOB_COMPLETED].keys())),
+            set(["job_id", "batch_id", "first", "latest", "max_lines", "lines"]),
+        )
+        self.assertEqual(
+            {
+                "job_id": JOB_CREATED,
+                "batch_id": None,
+                "error": "Cannot find job log with id: " + JOB_CREATED,
+            },
+            msg["data"]["content"][JOB_CREATED],
+        )
+        self.assertEqual(
+            {
+                "job_id": JOB_NOT_FOUND,
+                "error": DOES_NOT_EXIST,
+            },
+            msg["data"]["content"][JOB_NOT_FOUND],
+        )
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__latest(self):

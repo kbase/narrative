@@ -140,6 +140,15 @@ class JobManagerTest(unittest.TestCase):
         self.jm.initialize_jobs()
         self.job_states = get_test_job_states()
 
+    def reset_job_manager(self):
+        # all jobs have been removed from the JobManager
+        self.jm._running_jobs = {}
+        self.jm._jobs_by_cell_id = {}
+        self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
+
+        self.assertEqual(self.jm._running_jobs, {})
+        self.assertEqual(self.jm._jobs_by_cell_id, {})
+
     @mock.patch(CLIENTS, get_failing_mock_client)
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
@@ -149,13 +158,7 @@ class JobManagerTest(unittest.TestCase):
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_initialize_jobs(self):
-        # all jobs have been removed from the JobManager
-        self.jm._running_jobs = {}
-        self.jm._jobs_by_cell_id = {}
-        self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
-
-        self.assertEqual(self.jm._running_jobs, {})
-        self.assertEqual(self.jm._jobs_by_cell_id, {})
+        self.reset_job_manager()
 
         # redo the initialise to make sure it worked correctly
         self.jm.initialize_jobs()
@@ -195,7 +198,7 @@ class JobManagerTest(unittest.TestCase):
                     for job_id in job_ids
                     if cell_id in combo
                 ]
-                self.jm._running_jobs = {}
+                self.reset_job_manager()
                 self.jm.initialize_jobs(cell_ids=combo)
 
                 for job_id, d in self.jm._running_jobs.items():
@@ -626,31 +629,31 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(set(self.job_ids), set(states.keys()))
         self.assertEqual(self.job_states, states)
 
-    ## lookup_jobs_by_cell_id
+    ## lookup_job_states_by_cell_id
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list_None(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list_None(self):
         with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
-            self.jm.lookup_jobs_by_cell_id(cell_id_list=None)
+            self.jm.lookup_job_states_by_cell_id(cell_id_list=None)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list_empty(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list_empty(self):
         with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
-            self.jm.lookup_jobs_by_cell_id(cell_id_list=[])
+            self.jm.lookup_job_states_by_cell_id(cell_id_list=[])
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list_no_results(self):
-        result = self.jm.lookup_jobs_by_cell_id(cell_id_list=["a", "b", "c"])
+    def test_lookup_job_states_by_cell_id__cell_id_list_no_results(self):
+        result = self.jm.lookup_job_states_by_cell_id(cell_id_list=["a", "b", "c"])
         self.assertEqual(
             {"jobs": {}, "mapping": {"a": set(), "b": set(), "c": set()}}, result
         )
 
-    def check_lookup_jobs_by_cell_id_results(self, cell_ids, expected_ids):
+    def check_lookup_job_states_by_cell_id_results(self, cell_ids, expected_ids):
         expected_states = {
             id: self.job_states[id]
             for id in self.job_states.keys()
             if id in expected_ids
         }
-        result = self.jm.lookup_jobs_by_cell_id(cell_id_list=cell_ids)
+        result = self.jm.lookup_job_states_by_cell_id(cell_id_list=cell_ids)
         self.assertEqual(set(expected_ids), set(result["jobs"].keys()))
         self.assertEqual(expected_states, result["jobs"])
         self.assertEqual(set(cell_ids), set(result["mapping"].keys()))
@@ -658,48 +661,50 @@ class JobManagerTest(unittest.TestCase):
             self.assertEqual(set(TEST_CELL_IDs[key]), set(result["mapping"][key]))
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list_all_results(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list_all_results(self):
         cell_ids = TEST_CELL_ID_LIST
         expected_ids = self.job_ids
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list__batch_job__one_cell(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list__batch_job__one_cell(self):
         cell_ids = [TEST_CELL_ID_LIST[2]]
         expected_ids = TEST_CELL_IDs[TEST_CELL_ID_LIST[2]]
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list__batch_job__two_cells(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list__batch_job__two_cells(self):
         cell_ids = [TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]]
         expected_ids = (
             TEST_CELL_IDs[TEST_CELL_ID_LIST[2]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[3]]
         )
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list__batch_job__one_ok_one_invalid(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list__batch_job__one_ok_one_invalid(
+        self,
+    ):
         cell_ids = [TEST_CELL_ID_LIST[1], TEST_CELL_ID_LIST[4]]
         expected_ids = TEST_CELL_IDs[TEST_CELL_ID_LIST[1]]
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list__batch_and_other_job(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list__batch_and_other_job(self):
         cell_ids = [TEST_CELL_ID_LIST[0], TEST_CELL_ID_LIST[2]]
         expected_ids = (
             TEST_CELL_IDs[TEST_CELL_ID_LIST[0]] + TEST_CELL_IDs[TEST_CELL_ID_LIST[2]]
         )
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_jobs_by_cell_id__cell_id_list__batch_in_many_cells(self):
+    def test_lookup_job_states_by_cell_id__cell_id_list__batch_in_many_cells(self):
         cell_ids = [TEST_CELL_ID_LIST[0], TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]]
         expected_ids = (
             TEST_CELL_IDs[TEST_CELL_ID_LIST[0]]
             + TEST_CELL_IDs[TEST_CELL_ID_LIST[2]]
             + TEST_CELL_IDs[TEST_CELL_ID_LIST[3]]
         )
-        self.check_lookup_jobs_by_cell_id_results(cell_ids, expected_ids)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, expected_ids)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_states(self):

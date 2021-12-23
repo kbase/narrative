@@ -485,7 +485,9 @@ class JobComm:
                 if request.request_type in self._msg_map:
                     self._msg_map[request.request_type](request)
                 else:
-                    raise ValueError(f"Unknown KBaseJobs message '{request.request_type}'")
+                    raise ValueError(
+                        f"Unknown KBaseJobs message '{request.request_type}'"
+                    )
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """

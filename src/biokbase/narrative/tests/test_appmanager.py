@@ -777,15 +777,12 @@ class AppManagerTestCase(unittest.TestCase):
         run_ids = [None, "a_run_id"]
         # test with / w/o run_id
         # should return None, fire a couple of messages
-
         for run_id in run_ids:
             self.assertIsNone(
                 self.am.run_app_bulk(
                     self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
                 )
             )
-            print("bulk messages output")
-            print(self._bulk_messages(run_id=run_id, cell_id=cell_id, num_jobs=4))
 
             self._verify_comm_success(
                 c.return_value.send_comm_message,

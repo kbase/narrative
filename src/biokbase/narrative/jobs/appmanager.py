@@ -39,6 +39,10 @@ BATCH_APP = {
 }
 
 
+def timestamp() -> str:
+    return datetime.datetime.utcnow().isoformat() + "Z"
+
+
 def _app_error_wrapper(app_func: Callable) -> any:
     """
     This is a decorator meant to wrap any of the `run_app*` methods here.
@@ -61,7 +65,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
             e_source = getattr(e, "source", "appmanager")
             msg_info = {
                 "event": "error",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "error_message": e_message,
                 "error_type": e_type,
                 "error_stacktrace": e_trace,
@@ -302,13 +306,14 @@ class AppManager(object):
             RUN_STATUS,
             {
                 "event": "launched_job",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "job_id": job_id,
             },
         )
         self.register_new_job(new_job)
+        self._send_comm_message(NEW, {"job_id": job_id})
         if cell_id is None:
             return new_job
 
@@ -391,13 +396,14 @@ class AppManager(object):
             RUN_STATUS,
             {
                 "event": "launched_job",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "job_id": job_id,
             },
         )
         self.register_new_job(new_job)
+        self._send_comm_message(NEW, {"job_id": job_id})
         if cell_id is not None:
             return
         else:
@@ -529,7 +535,7 @@ class AppManager(object):
             RUN_STATUS,
             {
                 "event": "launched_job_batch",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "batch_id": batch_id,
@@ -548,6 +554,7 @@ class AppManager(object):
         for new_job in child_jobs:
             self.register_new_job(new_job)
         self.register_new_job(parent_job)
+        self._send_comm_message(NEW, {"job_id_list": [batch_id] + child_ids})
 
         if cell_id is None:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
@@ -747,7 +754,7 @@ class AppManager(object):
             RUN_STATUS,
             {
                 "event": "success",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
             },
@@ -978,7 +985,6 @@ class AppManager(object):
 
     def register_new_job(self, job: Job) -> None:
         JobManager().register_new_job(job, refresh=False)
-        self._send_comm_message(NEW, {"job_id": job.job_id})
         with exc_to_msg("appmanager"):
             JobComm().lookup_job_state(job.job_id)
             JobComm().start_job_status_loop()

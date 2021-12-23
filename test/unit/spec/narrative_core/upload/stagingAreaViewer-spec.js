@@ -283,7 +283,9 @@ define([
         it('renders the dropdown correctly when a type is selected', async () => {
             await stagingViewer.render();
 
-            // find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
+            // find the fake sra reads row specifically (via the download button, then chaining
+            // back up to the select dropdown above - since we don't have a unique ID for these
+            // select drodpowns it's the best method for now)
             const selectDropdown = $container
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');

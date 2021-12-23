@@ -1,16 +1,86 @@
-define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil', 'util/string'], (
-    Promise,
-    Jupyter,
-    Config,
-    APIUtil,
-    StringUtil
-) => {
+define([
+    'bluebird',
+    'base/js/namespace',
+    'narrativeConfig',
+    'util/kbaseApiUtil',
+    'util/string',
+    'common/runtime',
+    'StagingServiceClient',
+], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient) => {
     'use strict';
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
 
-    function getSpreadsheetFileInfo(fileName) {
-        return Promise.resolve(fileName);
+    /**
+     *
+     * @param {Array[string]} files - array of file names to treat as import specifications
+     * @returns Promise that resolves into all the bulk upload stuff
+     */
+    function getSpreadsheetFileInfo(files) {
+        if (!files || files.length === 0) {
+            return Promise.resolve({});
+        }
+        const stagingUrl = Config.url('staging_api_url');
+        const stagingServiceClient = new StagingServiceClient({
+            root: stagingUrl,
+            token: Runtime.make().authToken(),
+        });
+
+        // This is overkill, but a little future proofing. We have to make a GET call with an
+        // undetermined number of files, so if there are more than we can allow in the URL, gotta break that
+        // into multiple calls.
+
+        // a little cheating here to figure out the length allowance. Maybe it should be in the client?
+        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification?files='.length;
+        const bulkSpecProms = [];
+
+        while (files.length) {
+            const fileBatch = [];
+            let remainingLength = maxQueryLength;
+            while (
+                files.length &&
+                remainingLength - files[0].length - 1 >= 0 // -1 is for the comma
+            ) {
+                const nextFile = files.shift();
+                fileBatch.push(nextFile);
+                remainingLength -= nextFile.length + 1;
+            }
+            bulkSpecProms.push(
+                stagingServiceClient.bulkSpecification({
+                    files: encodeURIComponent(fileBatch.join(',')),
+                })
+            );
+        }
+        return Promise.all(bulkSpecProms)
+            .then((result) => {
+                // join results of all calls together
+                return result.reduce(
+                    (allCalls, callResult) => {
+                        callResult = JSON.parse(callResult);
+                        Object.keys(callResult.types).forEach((dataType) => {
+                            // if we already have a file of that datatype, then crap.
+                            if (allCalls.files[dataType]) {
+                                throw new Error(
+                                    'You cannot use multiple files to upload the same type because that is silly.'
+                                );
+                            }
+                            allCalls.types[dataType] = callResult.types[dataType];
+                            allCalls.files[dataType] = callResult.files[dataType];
+                        });
+                        return allCalls;
+                    },
+                    { types: {}, files: {} }
+                );
+            })
+            .then((result) => {
+                // TODO - insert validation here
+                return result;
+            })
+            .catch((error) => {
+                console.error(error);
+                console.error(JSON.parse(error.responseText));
+                return {};
+            });
     }
 
     function initSingleFileUploads(fileInfo) {
@@ -94,15 +164,26 @@ define(['bluebird', 'base/js/namespace', 'narrativeConfig', 'util/kbaseApiUtil',
                     };
                 }
                 bulkFiles[importType].files.push(file.name);
-            } else if (importType === 'csv/tsv/spreadsheet/whatever') {
+            } else if (importType === 'import_specification') {
                 xsvFiles.push(file.name);
             } else {
                 singleFiles.push(file);
             }
         });
         return getSpreadsheetFileInfo(xsvFiles)
-            .then(() => {
-                // TODO: merge xsvFileInfo with bulkFiles, handle errors, etc.
+            .then((result) => {
+                if (result.types) {
+                    Object.keys(result.types).forEach((dataType) => {
+                        if (!(dataType in bulkFiles)) {
+                            bulkFiles[dataType] = {
+                                appId: uploaders.app_info[dataType].app_id,
+                                files: [],
+                                outputSuffix: uploaders.app_info[dataType].app_output_suffix,
+                            };
+                        }
+                        bulkFiles[dataType].appParameters = result.types[dataType];
+                    });
+                }
                 if (Object.keys(bulkFiles).length) {
                     return Jupyter.narrative.insertBulkImportCell(bulkFiles);
                 } else {

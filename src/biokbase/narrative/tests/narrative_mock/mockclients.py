@@ -11,6 +11,8 @@ WSID_STANDARD = 12345
 NARR_DATE = "2017-03-31T23:42:59+0000"
 NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
+JOB_CREATED = "5d64935cb215ad4128de94d7"
+JOB_NOT_FOUND = "job_not_found"
 
 
 def get_nar_obj(i):
@@ -296,6 +298,15 @@ class MockClients:
         }
         there are only 100 "log lines" in total.
         """
+        if params["job_id"] == JOB_CREATED:
+            raise ServerError(
+                "JSONRPCError", 2, "Cannot find job log with id: " + JOB_CREATED
+            )
+        if params["job_id"] == JOB_NOT_FOUND:
+            raise ServerError(
+                "JSONRPCError", 99, "Job ID is not registered: " + JOB_NOT_FOUND
+            )
+
         total_lines = 100
         skip = params.get("skip_lines", 0)
         lines = list()

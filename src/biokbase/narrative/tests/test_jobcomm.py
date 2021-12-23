@@ -108,7 +108,7 @@ def make_comm_msg(
         job_arguments = job_id_like
     elif type(job_id_like) is list:
         job_arguments[JOB_ID_LIST] = job_id_like
-    else:
+    elif job_id_like:
         job_arguments[JOB_ID] = job_id_like
 
     msg = {
@@ -148,15 +148,23 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.stop_job_status_loop()
         self.job_states = get_test_job_states()
 
-    def check_error_message(self, source, input_, err):
+    def check_error_message(self, req, source, input_, err):
         """
         response when no input was submitted with a query
         args:
-          input: the dict with job_id/job_id_list key and value
-          source: the request that was called
-          name: the type of exception
-          message: the error message
+            req: the JobRequest, dictionary, or string passed when throwing the error
+            source: the request that was called
+            input: the dict with job_id/job_id_list key and value
+            name: the type of exception
+            message: the error message
         """
+        if isinstance(req, dict):
+            raw_request = req["content"]["data"]
+        elif isinstance(req, JobRequest):
+            raw_request = req.raw_request
+        elif isinstance(req, str):
+            raw_request = req
+
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
@@ -166,6 +174,7 @@ class JobCommTestCase(unittest.TestCase):
                     **input_,
                     "name": type(err).__name__,
                     "message": str(err),
+                    "raw_request": raw_request,
                 },
             },
             msg["data"],
@@ -177,7 +186,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(request_type, {JOB_ID_LIST: job_id_list}, err)
+        self.check_error_message(req, request_type, {JOB_ID_LIST: job_id_list}, err)
 
     def check_job_id_list__dne_jobs(self, request_type, response_type=None):
         FAKE_JOB = "fake_job_id"
@@ -198,11 +207,11 @@ class JobCommTestCase(unittest.TestCase):
 
     def check_batch_job__no_job_test(self, request_type):
         for job_id in ["", None]:
-            req = make_comm_msg(request_type, job_id, False)
+            req = make_comm_msg(request_type, {JOB_ID: job_id}, False)
             err = JobIDException(JOB_NOT_REG_ERR, job_id)
             with self.assertRaisesRegex(type(err), str(err)):
                 self.jc._handle_comm_message(req)
-            self.check_error_message(request_type, {JOB_ID: job_id}, err)
+            self.check_error_message(req, request_type, {JOB_ID: job_id}, err)
 
     def check_batch_job__dne_test(self, request_type):
         job_id = JOB_NOT_FOUND
@@ -210,7 +219,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOB_NOT_REG_ERR, job_id)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
-        self.check_error_message(request_type, {JOB_ID: job_id}, err)
+        self.check_error_message(req, request_type, {JOB_ID: job_id}, err)
 
     def check_batch_job__not_batch_test(self, request_type):
         job_id = BATCH_COMPLETED
@@ -218,7 +227,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOB_NOT_BATCH_ERR, job_id)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
-        self.check_error_message(request_type, {JOB_ID: job_id}, err)
+        self.check_error_message(req, request_type, {JOB_ID: job_id}, err)
 
     # ---------------------
     # Send comms methods
@@ -236,25 +245,35 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._comm.clear_message_cache()
 
     def test_send_error_msg__JobRequest(self):
-        msg = make_comm_msg("bar", "aeaeae", True)
-        self.jc.send_error_message("foo", msg, {"extra": "field"})
+        req = make_comm_msg("bar", "aeaeae", True)
+        self.jc.send_error_message("foo", req, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
                 "msg_type": "foo",
-                "content": {"source": "bar", JOB_ID: "aeaeae", "extra": "field"},
+                "content": {
+                    "source": "bar",
+                    JOB_ID: "aeaeae",
+                    "extra": "field",
+                    "raw_request": req.raw_request,
+                },
             },
             msg["data"],
         )
 
     def test_send_error_msg__dict(self):
-        msg = make_comm_msg("bar", "aeaeae", False)
-        self.jc.send_error_message("foo", msg, {"extra": "field"})
+        req = make_comm_msg("bar", "aeaeae", False)
+        self.jc.send_error_message("foo", req, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
                 "msg_type": "foo",
-                "content": {"source": "bar", JOB_ID: "aeaeae", "extra": "field"},
+                "content": {
+                    "source": "bar",
+                    JOB_ID: "aeaeae",
+                    "extra": "field",
+                    "raw_request": req["content"]["data"],
+                },
             },
             msg["data"],
         )
@@ -263,7 +282,14 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.send_error_message("foo", None, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"msg_type": "foo", "content": {"source": None, "extra": "field"}},
+            {
+                "msg_type": "foo",
+                "content": {
+                    "source": None,
+                    "extra": "field",
+                    "raw_request": None,
+                }
+            },
             msg["data"],
         )
 
@@ -272,7 +298,14 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.send_error_message("foo", source, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"msg_type": "foo", "content": {"source": source, "extra": "field"}},
+            {
+                "msg_type": "foo",
+                "content": {
+                    "source": source,
+                    "extra": "field",
+                    "raw_request": source,
+                }
+            },
             msg["data"],
         )
 
@@ -301,18 +334,11 @@ class JobCommTestCase(unittest.TestCase):
         }
 
         for msg_type, err_type in expected.items():
-            msg = {
-                "msg_id": "some_id",
-                "content": {
-                    "data": {
-                        "request_type": msg_type,
-                    }
-                },
-            }
+            req = make_comm_msg(msg_type, None, False)
             err = JobIDException(err_type)
             with self.assertRaisesRegex(type(err), str(err)):
-                self.jc._handle_comm_message(msg)
-            self.check_error_message(msg_type, {}, err)
+                self.jc._handle_comm_message(req)
+            self.check_error_message(req, msg_type, {}, err)
 
     # ---------------------
     # Start job status loop
@@ -508,6 +534,7 @@ class JobCommTestCase(unittest.TestCase):
 
     def test_lookup_job_states_by_cell_id__job_req_none(self):
         cell_id_list = None
+        req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         msg = {
             "msg_id": "some_id",
             "content": {
@@ -520,10 +547,11 @@ class JobCommTestCase(unittest.TestCase):
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(msg)
-        self.check_error_message(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
+        self.check_error_message(req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
 
     def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
         cell_id_list = []
+        req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         msg = {
             "msg_id": "some_id",
             "content": {
@@ -536,21 +564,13 @@ class JobCommTestCase(unittest.TestCase):
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(msg)
-        self.check_error_message(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
+        self.check_error_message(req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__invalid_cell_id_list(self):
         cell_id_list = ["a", "b", "c"]
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": CELL_JOB_STATUS,
-                    CELL_ID_LIST: cell_id_list,
-                }
-            },
-        }
-        self.jc._handle_comm_message(msg)
+        req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
@@ -563,16 +583,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__invalid_cell_id_list_req(self):
         cell_id_list = ["a", "b", "c"]
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": CELL_JOB_STATUS,
-                    CELL_ID_LIST: cell_id_list,
-                }
-            },
-        }
-        req = JobRequest(msg)
+        req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, True)
         result = self.jc._lookup_job_states_by_cell_id(req)
         self.assertEqual(result, NO_JOBS_MAPPING)
         msg = self.jc._comm.last_message
@@ -593,16 +604,8 @@ class JobCommTestCase(unittest.TestCase):
             id: job_states[id] for id in job_states.keys() if id in expected_ids
         }
 
-        request = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": CELL_JOB_STATUS,
-                    CELL_ID_LIST: cell_id_list,
-                }
-            },
-        }
-        self.jc._handle_comm_message(request)
+        req = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(set(msg["data"].keys()), set(["msg_type", "content"]))
         self.assertEqual(msg["data"]["msg_type"], CELL_JOB_STATUS)
@@ -733,11 +736,7 @@ class JobCommTestCase(unittest.TestCase):
 
     def test_cancel_jobs__no_job(self):
         job_id_list = None
-        # Create req manually because want job_id_list to be not list
-        req = {
-            "msg_id": "some_id",
-            "content": {"data": {"request_type": CANCEL, JOB_ID_LIST: job_id_list}},
-        }
+        req = make_comm_msg(CANCEL, {JOB_ID_LIST: job_id_list}, False)
         err = TypeError(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req)
@@ -747,7 +746,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(CANCEL, {JOB_ID_LIST: job_id_list}, err)
+        self.check_error_message(req, CANCEL, {JOB_ID_LIST: job_id_list}, err)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_cancel_jobs__some_bad_jobs(self):
@@ -933,11 +932,11 @@ class JobCommTestCase(unittest.TestCase):
 
     def test_get_job_logs_no_job(self):
         job_id = None
-        req = make_comm_msg(LOGS, job_id, False)
+        req = make_comm_msg(LOGS, {JOB_ID: job_id}, False)
         err = JobIDException(JOBS_MISSING_FALSY_ERR, [job_id])
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(LOGS, {JOB_ID_LIST: [job_id]}, err)
+        self.check_error_message(req, LOGS, {JOB_ID_LIST: [job_id]}, err)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs_bad_job(self):
@@ -1071,7 +1070,7 @@ class JobCommTestCase(unittest.TestCase):
         err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req)
-        self.check_error_message(START_UPDATE, {JOB_ID_LIST: job_id_list}, err)
+        self.check_error_message(req, START_UPDATE, {JOB_ID_LIST: job_id_list}, err)
 
     def test_modify_job_update__stop__ok_bad_job(self):
         job_id_list = [JOB_COMPLETED]
@@ -1373,7 +1372,7 @@ class JobRequestTestCase(unittest.TestCase):
         }
         rq = JobRequest(rq_msg)
         self.assertEqual(rq.msg_id, "some_id")
-        self.assertEqual(rq.request, "a_request")
+        self.assertEqual(rq.request_type, "a_request")
         with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
             rq.job_id
         with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
@@ -1428,13 +1427,13 @@ class JobRequestTestCase(unittest.TestCase):
     def _check_rq_equal(self, rq0, rq1):
         self.assertEqual(rq0.msg_id, rq1.msg_id)
         self.assertEqual(rq0.rq_data, rq1.rq_data)
-        self.assertEqual(rq0.request, rq1.request)
+        self.assertEqual(rq0.request_type, rq1.request_type)
         self.assertEqual(rq0.job_id, rq1.job_id)
 
     def test_convert_to_using_job_id_list(self):
         rq_msg = make_comm_msg("a_request", "a", False)
         rq = JobRequest._convert_to_using_job_id_list(rq_msg)
-        self.assertEqual(rq.request, "a_request")
+        self.assertEqual(rq.request_type, "a_request")
         with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
             rq.job_id
         self.assertEqual(rq.job_id_list, ["a"])
@@ -1555,6 +1554,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     JOB_ID_LIST: job_id_list,
                     "name": "RuntimeError",
                     "message": message,
+                    "raw_request": req.raw_request,
                 },
             },
             msg["data"],
@@ -1601,6 +1601,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "raw_request": req.raw_request,
                     "source": req_type,
                     JOB_ID_LIST: job_id_list,
                     # Below are from transform_job_exception
@@ -1634,6 +1635,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "raw_request": req.raw_request,
                     "source": req_type,
                     JOB_ID: job_id,
                     "name": "JobIDException",
@@ -1664,6 +1666,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "raw_request": req.raw_request,
                     "source": req_type,
                     JOB_ID_LIST: job_id_list,
                     "name": "ValueError",
@@ -1717,6 +1720,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "raw_request": req["content"]["data"],
                     "source": req_type,
                     JOB_ID: job_id,
                     "name": "ValueError",
@@ -1749,6 +1753,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "raw_request": req["content"]["data"],
                     "source": req_type,
                     JOB_ID: job_id,
                     JOB_ID_LIST: job_id_list,
@@ -1777,6 +1782,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
+                    "raw_request": None
                 },
             },
             msg["data"],
@@ -1800,6 +1806,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
+                    "raw_request": source,
                 },
             },
             msg["data"],

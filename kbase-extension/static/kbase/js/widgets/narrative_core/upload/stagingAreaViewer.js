@@ -12,8 +12,8 @@ define([
     'util/string',
     'util/timeFormat',
     './uploadTour',
-    'util/kbaseApiUtil',
     'util/stagingFileCache',
+    './importSetup',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -34,8 +34,8 @@ define([
     StringUtil,
     TimeFormat,
     UploadTour,
-    APIUtil,
     StagingFileCache,
+    Import,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
@@ -179,7 +179,9 @@ define([
 
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(() => {
-                this.initImportApp('web_upload');
+                return Import.setupWebUploadCell().then(() => {
+                    Jupyter.narrative.hideOverlay();
+                });
             });
 
             // Add ACL before going to the staging area
@@ -1103,15 +1105,13 @@ define([
         },
 
         enableImportButton: function () {
-            const stagingAreaViewer = this;
-
             this.$elem
                 .find(`button.${cssBaseClass}-import__button`)
                 .attr('disabled', false)
                 .tooltip('disable')
                 .off('click')
                 .on('click keyPress', () => {
-                    stagingAreaViewer.initBulkImport();
+                    this.initImport();
                 });
         },
 
@@ -1128,90 +1128,26 @@ define([
          *
          * Creating a new bulk import cell returns a Promise, so this returns a Promise.
          */
-        initBulkImport: function () {
-            const stagingAreaViewer = this;
-            /*
-             * We're building up a structure like this to send to the
-             * bulk import cell initializer:
-             * {
-             *   fileType: {
-             *     appId: string,
-             *     files: list of files
-             *   }
-             * }
-             */
-            const bulkMapping = {};
-            // get all of the selected checkbox file names and import type
-
-            const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
-            const selectedRows = stagingAreaViewer.fullDataTable.rows((_idx, _data, node) => {
-                return !!node.querySelector(checkedBoxSelector);
-            });
-            selectedRows.nodes().each((rowNode) => {
-                const dataElem = rowNode.querySelector(checkedBoxSelector);
-                const importType = $(dataElem).attr('data-type');
-                const importFile = $(dataElem).attr('data-file-name');
-                if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
-                    if (!(importType in bulkMapping)) {
-                        const appInfo = stagingAreaViewer.uploaders.app_info[importType];
-                        bulkMapping[importType] = {
-                            appId: appInfo.app_id,
-                            files: [],
-                            outputSuffix: appInfo.app_output_suffix,
-                        };
-                    }
-                    bulkMapping[importType].files.push(importFile);
-                } else {
-                    stagingAreaViewer.initImportApp(importType, importFile);
-                }
-            });
-            Jupyter.narrative.hideOverlay();
-            if (Object.keys(bulkMapping).length) {
-                return Jupyter.narrative.insertBulkImportCell(bulkMapping);
-            } else {
+        initImport: function () {
+            if (!this.fullDataTable) {
                 return Promise.resolve();
             }
-        },
+            const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
+            const selectedRows = this.fullDataTable.rows((_idx, _data, node) => {
+                return !!node.querySelector(checkedBoxSelector);
+            });
+            const fileInfo = [];
+            selectedRows.nodes().each((rowNode) => {
+                const dataElem = rowNode.querySelector(checkedBoxSelector);
+                fileInfo.push({
+                    type: dataElem.getAttribute('data-type'),
+                    name: dataElem.getAttribute('data-file-name'),
+                });
+            });
 
-        /**
-         * Initializes an import app using the given file info as input.
-         * Expects 'type' to match a KBase object type string that maps onto an importer.
-         * Expects 'file' to be a string that is the name of the file
-         */
-        initImportApp: function (type, file) {
-            const appInfo = this.uploaders.app_info[type];
-            if (appInfo) {
-                const tag = APIUtil.getAppVersionTag();
-                let fileParam = file || '';
-                const inputs = {};
-
-                if (appInfo.app_input_param_type && appInfo.app_input_param_type === 'list') {
-                    fileParam = [fileParam];
-                }
-
-                if (appInfo.app_input_param) {
-                    inputs[appInfo.app_input_param] = fileParam;
-                }
-
-                if (appInfo.app_output_param) {
-                    inputs[appInfo.app_output_param] = StringUtil.sanitizeWorkspaceObjectName(
-                        file,
-                        true
-                    );
-                    if (appInfo.app_output_suffix) {
-                        inputs[appInfo.app_output_param] += appInfo.app_output_suffix;
-                    }
-                }
-
-                if (appInfo.app_static_params) {
-                    for (const p of Object.keys(appInfo.app_static_params)) {
-                        inputs[p] = appInfo.app_static_params[p];
-                    }
-                }
-
-                Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
+            return Import.setupImportCells(fileInfo).then(() => {
                 Jupyter.narrative.hideOverlay();
-            }
+            });
         },
 
         startTour: function () {

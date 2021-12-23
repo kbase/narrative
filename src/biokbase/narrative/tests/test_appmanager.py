@@ -1,7 +1,7 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP, timestamp
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
 import biokbase.narrative.jobs.specmanager as specmanager
@@ -40,6 +40,11 @@ def get_method(tag, app_id, live=False):
     )
 
 
+def get_timestamp():
+    return "any old time"
+
+
+@mock.patch("biokbase.narrative.jobs.appmanager.timestamp", get_timestamp)
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -772,12 +777,16 @@ class AppManagerTestCase(unittest.TestCase):
         run_ids = [None, "a_run_id"]
         # test with / w/o run_id
         # should return None, fire a couple of messages
+
         for run_id in run_ids:
             self.assertIsNone(
                 self.am.run_app_bulk(
                     self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
                 )
             )
+            print("bulk messages output")
+            print(self._bulk_messages(run_id=run_id, cell_id=cell_id, num_jobs=4))
+
             self._verify_comm_success(
                 c.return_value.send_comm_message,
                 True,
@@ -1107,118 +1116,100 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             app_util.transform_param_value("foo", "bar", None)
 
-    def _verify_comm_mock(
-        self,
-        send_comm_mock: MagicMock,
-        num_calls: int,
-        expected_messages: List[str] = None,
-        expected_keys: List[List[str]] = None,
-        expected_values: List[List[dict]] = None,
-    ) -> None:
-        """
-        Validates the usage of the MagicMock used instead of sending a comm message to the
-        front end. This is expected to mock any calls to JobComm.mock_comm_channel. Each of
-        the "expected_*" kwargs are given as a list - each element represents which time the
-        call was made, in order.
-
-        This is done through a series of asserts. If they all pass and None is returned, then
-        the mock was used as expected.
-
-        num_calls - the number of times the call was expected (>= 0)
-        expected_messages - the send message types
-        expected_keys - the list of keys used in each message (may not all be given inspected
-          values, but all should be present)
-        expected_values - the set of values used in each message (there may be more keys, but
-          these are known key-value pairs)
-        """
-        self.assertEqual(send_comm_mock.call_count, num_calls)
-        for i in range(num_calls):
-            [message_name, message_dict] = send_comm_mock.call_args_list[i][0]
-            if expected_messages is not None:
-                self.assertEqual(message_name, expected_messages[i])
-            if expected_keys is not None:
-                for key in expected_keys[i]:
-                    self.assertIn(key, message_dict)
-            if expected_values is not None:
-                for key in expected_values[i]:
-                    self.assertEqual(message_dict.get(key), expected_values[i][key])
+    def _transform_comm_messages(self, comm_mock):
+        transformed_call_args_list = []
+        for call in comm_mock.call_args_list:
+            [msg_type, content] = call[0]
+            transformed_call_args_list.append(
+                {"msg_type": msg_type, "content": content}
+            )
+        return transformed_call_args_list
 
     def _verify_comm_error(self, comm_mock, cell_id=None, run_id=None) -> None:
         """
-        a wrapper around self._verify_comm_mock that just looks for the error message, and
-        ONLY the error message, to have been sent, so we can make these tests a little more
-        DRY.
-
-        This is really for app running cases that are expected to fail before trying to start
-        the app with EE2. Other cases should run _verify_comm_mock directly.
+        Generates standard error messages and tests it against stored comm messages.
         """
-        expected_keys = [
-            [
-                "event",
-                "event_at",
-                "error_message",
-                "error_code",
-                "error_source",
-                "error_stacktrace",
-                "error_type",
-            ]
-        ]
-        expected_values = [
-            {
-                "run_id": run_id,
-                "cell_id": cell_id,
+        transformed_call_args_list = self._transform_comm_messages(comm_mock)
+        expected_message = {
+            "msg_type": RUN_STATUS,
+            "content": {
                 "event": "error",
+                "event_at": get_timestamp(),
                 "error_code": -1,
                 "error_source": "appmanager",
-            }
-        ]
-        self._verify_comm_mock(
-            comm_mock,
-            1,
-            expected_messages=[RUN_STATUS],
-            expected_keys=expected_keys,
-            expected_values=expected_values,
-        )
+                "error_type": "ValueError",
+            },
+        }
+        if run_id:
+            expected_message["content"]["run_id"] = run_id
+        if cell_id:
+            expected_message["content"]["cell_id"] = cell_id
 
-    def _verify_comm_success(
-        self, comm_mock, is_batch, num_jobs=1, cell_id=None, run_id=None
-    ) -> None:
-        expected_messages = [RUN_STATUS]
-        expected_keys = [
-            ["event", "event_at", "cell_id", "run_id"],
-        ]
-        event = "launched_job_batch" if is_batch else "launched_job"
-        expected_values = [
+        for key in ["error_message", "error_stacktrace"]:
+            self.assertTrue(key in transformed_call_args_list[0]["content"])
+            del transformed_call_args_list[0]["content"][key]
+
+        self.assertEqual(transformed_call_args_list, [expected_message])
+
+    def _single_messages(self, cell_id=None, run_id=None):
+
+        return [
             {
-                "event": event,
-                "cell_id": cell_id,
-                "run_id": run_id,
+                "msg_type": RUN_STATUS,
+                "content": {
+                    "event": "launched_job",
+                    "event_at": get_timestamp(),
+                    "cell_id": cell_id,
+                    "run_id": run_id,
+                    "job_id": self.test_job_id,
+                },
+            },
+            {
+                "msg_type": NEW,
+                "content": {
+                    "job_id": self.test_job_id,
+                },
             },
         ]
-        if is_batch:
-            expected_keys[0].append("batch_id")
-            expected_keys[0].append("child_job_ids")
-            expected_values[0]["batch_id"] = self.test_job_id
+
+    def _bulk_messages(self, cell_id=None, run_id=None, num_jobs=1):
+
+        child_ids = []
+        n_child_jobs = num_jobs - 1
+        for i in range(n_child_jobs):
+            child_ids.append(self.test_job_id + f"_child_{i}")
+
+        return [
+            {
+                "msg_type": RUN_STATUS,
+                "content": {
+                    "event": "launched_job_batch",
+                    "event_at": get_timestamp(),
+                    "cell_id": cell_id,
+                    "run_id": run_id,
+                    "batch_id": self.test_job_id,
+                    "child_job_ids": child_ids,
+                },
+            },
+            {
+                "msg_type": NEW,
+                "content": {
+                    "job_id_list": [self.test_job_id] + child_ids,
+                },
+            },
+        ]
+
+    def _verify_comm_success(
+        self, comm_mock, is_bulk, num_jobs=1, cell_id=None, run_id=None
+    ) -> None:
+        transformed_call_args_list = self._transform_comm_messages(comm_mock)
+
+        if is_bulk:
+            expected = self._bulk_messages(cell_id, run_id, num_jobs)
         else:
-            expected_keys[0].append("job_id")
-            expected_values[0]["job_id"] = self.test_job_id
-        for i in range(num_jobs):
-            expected_messages.append(NEW)
-            expected_keys.append(["job_id"])
-            # job ids are new_job_id_child_0, new_job_id_child_1, ..., new_job_id
-            expected_values.append(
-                {
-                    "job_id": self.test_job_id
-                    + (f"_child_{i}" if i < num_jobs - 1 else "")
-                }
-            )
-        self._verify_comm_mock(
-            comm_mock,
-            1 + num_jobs,
-            expected_messages=expected_messages,
-            expected_keys=expected_keys,
-            expected_values=expected_values,
-        )
+            expected = self._single_messages(cell_id, run_id)
+
+        self.assertEqual(transformed_call_args_list, expected)
 
 
 if __name__ == "__main__":

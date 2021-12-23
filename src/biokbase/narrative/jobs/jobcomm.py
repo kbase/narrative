@@ -101,12 +101,13 @@ class JobRequest:
     ]
 
     def __init__(self, rq: dict):
+        self.raw_request = rq
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
         if self.rq_data is None:
             raise ValueError("Improperly formatted job channel message!")
-        self.request = self.rq_data.get("request_type")
-        if self.request is None:
+        self.request_type = self.rq_data.get("request_type")
+        if self.request_type is None:
             raise ValueError("Missing request type in job channel message!")
         if JOB_ID in self.rq_data and JOB_ID_LIST in self.rq_data:
             raise ValueError(BOTH_INPUTS_PRESENT_ERR)
@@ -419,11 +420,11 @@ class JobComm:
         self.send_comm_message(STATUS, output_states)
 
     def _modify_job_updates(self, req: JobRequest) -> None:
-        self.__modify_updates(req.job_id_list, req.request)
+        self.__modify_updates(req.job_id_list, req.request_type)
 
     def _modify_job_updates_batch(self, req: JobRequest) -> None:
         job_ids = self._jm.update_batch_job(req.job_id)
-        update_type = req.request.replace("_batch", "")
+        update_type = req.request_type.replace("_batch", "")
         self.__modify_updates(job_ids, update_type)
 
     def _cancel_jobs(self, req: JobRequest) -> None:
@@ -479,12 +480,12 @@ class JobComm:
 
             for request in requests:
                 kblogging.log_event(
-                    self._log, "handle_comm_message", {"msg": request.request}
+                    self._log, "handle_comm_message", {"msg": request.request_type}
                 )
-                if request.request in self._msg_map:
-                    self._msg_map[request.request](request)
+                if request.request_type in self._msg_map:
+                    self._msg_map[request.request_type](request)
                 else:
-                    raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
+                    raise ValueError(f"Unknown KBaseJobs message '{request.request_type}'")
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """
@@ -515,18 +516,21 @@ class JobComm:
         """
         error_content = dict()
         if isinstance(req, JobRequest):
-            error_content["source"] = req.request
+            error_content["raw_request"] = req.raw_request
+            error_content["source"] = req.request_type
             input_ = req.input()
             if input_:
                 error_content[input_[0]] = input_[1]
         elif isinstance(req, dict):
             data = req.get("content", {}).get("data", {})
+            error_content["raw_request"] = data
             error_content["source"] = data.get("request_type")
             # If req is still a dict, could have both job_id and job_id_list
             for attr in [JOB_ID, JOB_ID_LIST, CELL_ID_LIST]:
                 if attr in data:
                     error_content[attr] = data[attr]
         elif isinstance(req, str) or req is None:
+            error_content["raw_request"] = req
             error_content["source"] = req
         if content is not None:
             error_content.update(content)

@@ -288,7 +288,7 @@ class JobCommTestCase(unittest.TestCase):
                     "source": None,
                     "extra": "field",
                     "raw_request": None,
-                }
+                },
             },
             msg["data"],
         )
@@ -304,7 +304,7 @@ class JobCommTestCase(unittest.TestCase):
                     "source": source,
                     "extra": "field",
                     "raw_request": source,
-                }
+                },
             },
             msg["data"],
         )
@@ -552,7 +552,9 @@ class JobCommTestCase(unittest.TestCase):
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(msg)
-        self.check_error_message(req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
+        self.check_error_message(
+            req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err
+        )
 
     def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
         cell_id_list = []
@@ -569,7 +571,9 @@ class JobCommTestCase(unittest.TestCase):
         err = ValueError(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(msg)
-        self.check_error_message(req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err)
+        self.check_error_message(
+            req, CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, err
+        )
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__invalid_cell_id_list(self):
@@ -1778,7 +1782,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
-                    "raw_request": None
+                    "raw_request": None,
                 },
             },
             msg["data"],

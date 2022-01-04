@@ -4,6 +4,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Unreleased
+This new minor version of the KBase Narrative adds a small change to the dynamic dropdown that allows other parameters in a KBase app to be used as parameters for service method that populates dropdown.
+
+Code Changes
+- SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.
+- Updated AppParamsWidget to return all current values from `get-parameters` if no specific value was specified, allowing to see all current parameter values without having to know their names.
+
 ### Version 5.0.0
 This new major version of the KBase Narrative Interface introduces a way to import data from your data staging area in large batches using a single Bulk Import cell. See more details about the new workflows here: [Bulk Import Guide](https://docs.kbase.us/data/upload-download-guide/bulk-import-guide)
 

@@ -1,0 +1,210 @@
+{
+    "info": {
+        "id": "kb_uploadmethods/import_fasta_as_assembly_from_staging",
+        "module_name": "kb_uploadmethods",
+        "git_commit_hash": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
+        "name": "Import FASTA File as Assembly from Staging Area",
+        "ver": "1.0.51",
+        "subtitle": "Import a FASTA file from your staging area into your Narrative as an Assembly data object",
+        "tooltip": "Import a FASTA file from your staging area into your Narrative as an Assembly data object",
+        "icon": {
+            "url": "img?method_id=kb_uploadmethods/import_fasta_as_assembly_from_staging&image_name=data-blue.png&tag=release"
+        },
+        "categories": [
+            "inactive",
+            "reads",
+            "upload"
+        ],
+        "authors": [
+            "tgu2"
+        ],
+        "input_types": [],
+        "output_types": [
+            "KBaseGenomeAnnotations.Assembly"
+        ],
+        "app_type": "app",
+        "namespace": "kb_uploadmethods"
+    },
+    "widgets": {
+        "input": "kbaseNarrativeMethodInput",
+        "output": "no-display"
+    },
+    "parameters": [
+        {
+            "id": "staging_file_subdir_path",
+            "ui_name": "FASTA file path",
+            "short_hint": "File with DNA data (one or more sequences) in FASTA format.",
+            "description": "Recognized extensions for the FASTA input file are .fasta, .fna, .fa, or .gz",
+            "field_type": "dynamic_dropdown",
+            "allow_multiple": 0,
+            "optional": 0,
+            "advanced": 0,
+            "disabled": 0,
+            "ui_class": "parameter",
+            "default_values": [
+                ""
+            ],
+            "dynamic_dropdown_options": {
+                "data_source": "ftp_staging",
+                "service_params": null,
+                "multiselection": 0,
+                "query_on_empty_input": 1,
+                "result_array_index": 0
+            }
+        },
+        {
+            "id": "type",
+            "ui_name": "Assembly Type",
+            "short_hint": "The type or source of this assembly",
+            "description": "The type or source of this assembly",
+            "field_type": "dropdown",
+            "allow_multiple": 0,
+            "optional": 0,
+            "advanced": 0,
+            "disabled": 0,
+            "ui_class": "parameter",
+            "default_values": [
+                "draft isolate"
+            ],
+            "dropdown_options": {
+                "options": [
+                    {
+                        "value": "draft isolate",
+                        "display": "Draft Isolate"
+                    },
+                    {
+                        "value": "finished isolate",
+                        "display": "Finished Isolate"
+                    },
+                    {
+                        "value": "mag",
+                        "display": "Metagenome-assembled genome (MAG)"
+                    },
+                    {
+                        "value": "sag",
+                        "display": "Single amplified genome (SAG)"
+                    },
+                    {
+                        "value": "virus",
+                        "display": "Virus"
+                    },
+                    {
+                        "value": "plasmid",
+                        "display": "Plasmid"
+                    },
+                    {
+                        "value": "construct",
+                        "display": "Construct"
+                    }
+                ],
+                "multiselection": 0
+            }
+        },
+        {
+            "id": "min_contig_length",
+            "ui_name": "Minimum contig length",
+            "short_hint": "Contigs shorter than this length will be filtered out",
+            "description": "Contigs shorter than this value will be filtered out. Try larger value if upload fails.",
+            "field_type": "text",
+            "allow_multiple": 0,
+            "optional": 0,
+            "advanced": 0,
+            "disabled": 0,
+            "ui_class": "parameter",
+            "default_values": [
+                "500"
+            ],
+            "text_options": {
+                "validate_as": "int",
+                "is_output_name": 0,
+                "placeholder": "",
+                "regex_constraint": []
+            }
+        },
+        {
+            "id": "assembly_name",
+            "ui_name": "Assembly object name",
+            "short_hint": "Provide a name for the Assembly that will be created by this importer",
+            "description": "Provide a name for the Assembly that will be created by this importer",
+            "field_type": "text",
+            "allow_multiple": 0,
+            "optional": 0,
+            "advanced": 0,
+            "disabled": 0,
+            "ui_class": "output",
+            "default_values": [
+                ""
+            ],
+            "text_options": {
+                "valid_ws_types": [
+                    "KBaseGenomeAnnotations.Assembly"
+                ],
+                "is_output_name": 1,
+                "placeholder": "",
+                "regex_constraint": []
+            }
+        }
+    ],
+    "fixed_parameters": [],
+    "behavior": {
+        "kb_service_url": "",
+        "kb_service_name": "kb_uploadmethods",
+        "kb_service_version": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
+        "kb_service_method": "import_fasta_as_assembly_from_staging",
+        "kb_service_input_mapping": [
+            {
+                "narrative_system_variable": "workspace",
+                "target_property": "workspace_name"
+            },
+            {
+                "input_parameter": "type",
+                "target_property": "type"
+            },
+            {
+                "input_parameter": "min_contig_length",
+                "target_property": "min_contig_length"
+            },
+            {
+                "input_parameter": "assembly_name",
+                "target_property": "assembly_name"
+            },
+            {
+                "input_parameter": "staging_file_subdir_path",
+                "target_property": "staging_file_subdir_path"
+            }
+        ],
+        "kb_service_output_mapping": [
+            {
+                "narrative_system_variable": "workspace",
+                "target_property": "wsName"
+            },
+            {
+                "service_method_output_path": [
+                    "0",
+                    "obj_ref"
+                ],
+                "target_property": "obj_ref",
+                "target_type_transform": "resolved-ref"
+            },
+            {
+                "service_method_output_path": [
+                    "0",
+                    "report_name"
+                ],
+                "target_property": "report_name"
+            },
+            {
+                "service_method_output_path": [
+                    "0",
+                    "report_ref"
+                ],
+                "target_property": "report_ref"
+            },
+            {
+                "constant_value": "16",
+                "target_property": "report_window_line_height"
+            }
+        ]
+    },
+    "job_id_output_field": "docker"
+}

@@ -638,6 +638,23 @@ define([
                                 updateState(fsmState);
                             }
                         },
+                        titleBar: (jobManagerContext) => {
+                            const cellCollapsed =
+                                    Utils.getCellMeta(
+                                        cell,
+                                        'kbase.cellState.toggleMinMax',
+                                        'maximized'
+                                    ) !== 'maximized',
+                                jobStatusEl = cell.element[0].querySelector(
+                                    '[data-element="job-status"]'
+                                );
+
+                            if (cellCollapsed && jobStatusEl) {
+                                jobStatusEl.innerHTML = Jobs.createCombinedJobStateSummary(
+                                    jobManagerContext.model.getItem('exec.jobs')
+                                );
+                            }
+                        },
                     });
                     try {
                         const fsmState = jobManager.restoreFromSaved();

@@ -28,6 +28,9 @@ python-coverage/
 cover
 _attic
 
+# developer mode toggle
+kbase-extension/static/kbase/js/util/developerMode.js
+
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
 # Byte-compiled / optimized / DLL files

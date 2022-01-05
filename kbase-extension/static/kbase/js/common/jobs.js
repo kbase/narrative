@@ -368,7 +368,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
         return span(
             {
                 class: `${cssBaseClass}__cell_summary--${cssClass}`,
-                dataElement: 'job-status',
             },
             label
         );
@@ -810,6 +809,42 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     }
 
     /**
+     * Given an object containing jobs indexed by ID, create a summary for a collapsed cell
+     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs` in a batch cell
+     * @returns {string} summary string
+     */
+
+    function createCombinedJobStateSummary(jobsIndex) {
+        if (
+            !jobsIndex ||
+            !Object.keys(jobsIndex).length ||
+            !jobsIndex.byId ||
+            !Object.keys(jobsIndex.byId).length
+        ) {
+            return '';
+        }
+        // get job count for each status and retries
+        const statuses = getCurrentJobCounts(jobsIndex, { withRetries: 1 });
+        if (statuses[JOB.running] || statuses[JOB.queued]) {
+            if (!statuses[JOB.running]) {
+                return _createJobStatus({
+                    cssClass: 'queued',
+                    label: 'queued',
+                });
+            }
+            return _createJobStatus({ cssClass: 'running', label: 'running' });
+        }
+        if (statuses[JOB.error] || statuses[JOB.does_not_exist]) {
+            return _createJobStatus({ cssClass: 'error', label: 'error' });
+        }
+        // no completed jobs => everything was terminated
+        if (!statuses[JOB.completed]) {
+            return _createJobStatus({ cssClass: 'terminated', label: 'canceled' });
+        }
+        return _createJobStatus({ cssClass: 'completed', label: 'success' });
+    }
+
+    /**
      * Get the FSM state for a bulk cell from the jobs
      *
      * @param {object} jobsIndex jobs index
@@ -838,6 +873,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
         canDo,
         canRetry,
         createCombinedJobState,
+        createCombinedJobStateSummary,
         createJobStatusFromFsm,
         createJobStatusFromBulkCellFsm,
         createJobStatusLines,

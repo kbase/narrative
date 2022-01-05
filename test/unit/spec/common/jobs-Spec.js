@@ -328,12 +328,10 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             } else {
                 it(`should output "${test.text}" with ${testString}`, () => {
                     container.innerHTML = func(test);
-                    expect(
-                        container.querySelector('[data-element="job-status"]').classList
-                    ).toContain(`kb-job-status__cell_summary--${test.cssClass}`);
-                    expect(container.querySelector('[data-element="job-status"]').textContent).toBe(
-                        test.text
+                    expect(container.querySelector('span').classList).toContain(
+                        `kb-job-status__cell_summary--${test.cssClass}`
                     );
+                    expect(container.querySelector('span').textContent).toBe(test.text);
                 });
             }
         });
@@ -357,6 +355,14 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             TestUtil.clearRuntime();
         });
 
+        const summary = {
+            queued: 'queued',
+            running: 'running',
+            error: 'error',
+            success: 'success',
+            terminated: 'canceled',
+        };
+
         const batch = 'batch job';
         const retryBatchId = JobsData.batchJob.batchId;
         const tests = [
@@ -365,6 +371,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: { byId: JobsData.jobsById },
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: {
                     queued: 3,
                     running: 1,
@@ -379,6 +386,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: { byId: JobsData.batchJob.jobsById },
                 expected: `${batch} in progress: 2 queued, 1 running, 1 success (3 jobs retried)`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: { queued: 2, running: 1, completed: 1, retried: 3 },
             },
             {
@@ -391,6 +399,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 },
                 expected: `${batch} in progress: 1 queued, 1 failed, 2 cancelled`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.queued,
                 statuses: { queued: 1, error: 1, terminated: 2 },
             },
             {
@@ -398,6 +407,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } }),
                 expected: `${batch} in progress: 3 queued`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.queued,
                 statuses: { queued: 3 },
             },
             {
@@ -405,6 +415,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ estimating: { a: 1 }, running: { b: 1 } }),
                 expected: `${batch} in progress: 1 queued, 1 running`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1 },
             },
             {
@@ -412,6 +423,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ running: { a: 1 } }),
                 expected: `${batch} in progress: 1 running`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.running,
                 statuses: { running: 1 },
             },
             {
@@ -423,6 +435,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1, completed: 1 },
             },
             {
@@ -430,6 +443,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ completed: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with success: 3 successes`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.success,
                 statuses: { completed: 3 },
             },
             {
@@ -437,6 +451,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ error: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 failed`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
                 statuses: { error: 2 },
             },
             {
@@ -444,6 +459,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ terminated: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with cancellation: 3 cancelled`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.terminated,
                 statuses: { terminated: 3 },
             },
             {
@@ -455,7 +471,52 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} finished: 1 success, 3 failed, 1 cancelled`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
                 statuses: { terminated: 1, error: 3, completed: 1 },
+            },
+            {
+                desc: 'successful and cancelled jobs',
+                jobs: generateJobs({
+                    terminated: { a: 1, b: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 2 cancelled`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.success,
+                statuses: { terminated: 2, completed: 1 },
+            },
+            {
+                desc: 'success and error',
+                jobs: generateJobs({
+                    error: { b: 1, c: 1, d: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 3 failed`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
+                statuses: { error: 3, completed: 1 },
+            },
+            {
+                desc: 'success and not found',
+                jobs: generateJobs({
+                    does_not_exist: { b: 1, c: 1, d: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 3 not found`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
+                statuses: { does_not_exist: 3, completed: 1 },
+            },
+            {
+                desc: 'error and cancelled jobs',
+                jobs: generateJobs({
+                    terminated: { a: 1, b: 1 },
+                    error: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 failed, 2 cancelled`,
+                fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
+                statuses: { terminated: 2, error: 1 },
             },
             {
                 desc: 'in progress, finished, not found',
@@ -467,6 +528,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1, completed: 1, does_not_exist: 1 },
             },
             {
@@ -474,6 +536,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ does_not_exist: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 not found`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
                 statuses: { does_not_exist: 2 },
             },
             {
@@ -481,6 +544,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: {},
                 expected: '',
                 fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
             {
@@ -488,6 +552,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: null,
                 expected: '',
                 fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
             {
@@ -495,6 +560,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: { byId: {} },
                 expected: '',
                 fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
             {
@@ -502,6 +568,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: { byId: null },
                 expected: '',
                 fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
         ];
@@ -517,12 +584,20 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                     expect(div.childNodes.length).toBe(0);
                 }
             });
+
             it(`deduces FSM state: ${test.desc}`, () => {
                 expect(Jobs.getFsmStateFromJobs(test.jobs)).toEqual(test.fsmState);
             });
+
             it(`gets job counts, ${test.desc}`, () => {
                 const statuses = Jobs.getCurrentJobCounts(test.jobs, { withRetries: 1 });
                 expect(statuses).toEqual(test.statuses);
+            });
+
+            it(`creates a status bar summary, ${test.desc}`, () => {
+                const div = document.createElement('div');
+                div.innerHTML = Jobs.createCombinedJobStateSummary(test.jobs);
+                expect(div.textContent).toBe(test.statusBarSummary);
             });
         });
     });

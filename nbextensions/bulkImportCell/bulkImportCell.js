@@ -83,11 +83,13 @@ define([
      *   importData: {
      *     file_type: {
      *          files: ['array', 'of', 'files'],
-     *          appId: 'importAppId'
+     *          appId: 'importAppId',
+     *          appParameters: [{ ... }]
      *     },
      *     file_type_2: {
      *          files: ['array', 'of', 'files'],
-     *          appId: 'importAppId2'
+     *          appId: 'importAppId2',
+     *          appParameters: [{ ... }]
      *     }
      *   },
      *   specs: {
@@ -259,8 +261,10 @@ define([
          * that point, we haven't processed the app specs yet, so we don't know the
          * proper order to lay these out in. Thus, consider the returned arrays unordered.
          * @param {object} appSpec - a plain app spec (not processed by the Spec module)
-         * @returns an array with two elements. The first is an array of file parameter
-         *   ids, an the second is an array with all other parameter ids.
+         * @returns an array with 3 elements:
+         *   1 - array of file parameter ids (those ids that should be in the file param rows, includes output object names)
+         *   2 - array of non-file parameter ids
+         *   3 - array of output object parameter ids
          */
         function filterFileParameters(appSpec) {
             const fileParams = appSpec.parameters.filter((param) => {
@@ -334,6 +338,7 @@ define([
                 initialParamStates[fileType] = 'incomplete';
                 [fileParamIds[fileType], otherParamIds[fileType], outputParamIds[fileType]] =
                     filterFileParameters(spec);
+
                 // if there's just a file and an output
                 if (fileParamIds[fileType].length < 3) {
                     const outputParamId = outputParamIds[fileType][0];
@@ -366,10 +371,40 @@ define([
                         );
                     }
                 }
-                const defaultSpecModel = specs[appId].makeDefaultedModel();
-                otherParamIds[fileType].forEach((paramId) => {
-                    initialParams[fileType].params[paramId] = defaultSpecModel[paramId];
+
+                const inputFileIds = fileParamIds[fileType].filter(
+                    (param) => !outputParamIds[fileType].includes(param)
+                );
+                // if there's an appParameters array, then we need to process that into files
+                // if it's greater than 1 in length, just use the non-file params from the first one
+                // TODO: make a flag that there's more than 1 to show a warning
+                const appParameters = typesToFiles[fileType].appParameters || [];
+                appParameters.forEach((appParamSet) => {
+                    // store all the "input files" in the files array for that type
+                    inputFileIds.forEach((paramId) => {
+                        typesToFiles[fileType].files.push(appParamSet[paramId]);
+                    });
+                    // make a reduction with just the file paths / outputs (fileParamIds) for each parameter
+                    const filePathRow = fileParamIds[fileType].reduce((fpRow, paramId) => {
+                        fpRow[paramId] = appParamSet[paramId];
+                        return fpRow;
+                    }, {});
+                    initialParams[fileType].filePaths.push(filePathRow);
                 });
+
+                const otherParams = specs[appId].makeDefaultedModel();
+                const appParams = appParameters.length ? appParameters[0] : {};
+                initialParams[fileType].params = otherParamIds[fileType].reduce(
+                    (paramSet, paramId) => {
+                        paramSet[paramId] = otherParams[paramId];
+                        if (paramId in appParams) {
+                            paramSet[paramId] = appParams[paramId];
+                        }
+                        return paramSet;
+                    },
+                    {}
+                );
+
                 // remove the outputSuffix key before storing in metadata, as it's not
                 // useful anymore once we set up the initial output names
                 delete typesToFiles[fileType].outputSuffix;

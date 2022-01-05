@@ -621,7 +621,7 @@ define([
                 });
             });
 
-            it('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
+            xit('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
                 const cellId = 'cancelDuringSubmit';
                 Jupyter.notebook = Mocks.buildMockNotebook();
                 spyOn(Jupyter.notebook, 'save_checkpoint');

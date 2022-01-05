@@ -19,7 +19,7 @@ define(['StagingServiceClient'], (StagingServiceClient) => {
         bulkSpecification: { method: 'get', path: 'bulk_specification/?files=' },
     };
 
-    describe('the staging service client', () => {
+    fdescribe('the staging service client', () => {
         const ssClientUrl = 'https://kbase.us/staging_service';
         const fakeToken = 'fakeToken';
         const client = new StagingServiceClient({
@@ -39,6 +39,10 @@ define(['StagingServiceClient'], (StagingServiceClient) => {
             jasmine.Ajax.uninstall();
         });
 
+        // pretty simple - make sure all functions exist, they all fire off Ajax requests,
+        // and they all use the expected url path and method.
+        // not really concerned about results from the server, just that the client works
+        // as expected
         Object.keys(functions).forEach((fn) => {
             describe(`the ${fn} function`, () => {
                 it(`has the ${fn} function`, () => {
@@ -50,6 +54,7 @@ define(['StagingServiceClient'], (StagingServiceClient) => {
                     const req = jasmine.Ajax.requests.mostRecent();
                     expect(req.method.toLowerCase()).toBe(functions[fn].method);
                     expect(req.url).toContain(`${ssClientUrl}/${functions[fn].path}`);
+                    expect(req.requestHeaders.Authorization).toEqual(fakeToken);
                 });
             });
         });

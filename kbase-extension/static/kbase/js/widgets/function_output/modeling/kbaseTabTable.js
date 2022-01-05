@@ -267,13 +267,12 @@ define([
                     const key = col.key,
                         type = col.type,
                         format = col.linkformat,
-                        method = col.method,
-                        action = col.action;
+                        method = col.method;
 
                     const config = {
                         sTitle: col.label,
                         sDefaultContent: '-',
-                        mData: ref(key, type, format, method, action),
+                        mData: ref(key, type, format, method),
                     };
 
                     if (col.width) config.sWidth = col.width;
@@ -381,8 +380,7 @@ define([
                 );
 
                 for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i],
-                        type = row.type;
+                    const row = rows[i];
 
                     // don't display undefined things in vertical table
                     if (
@@ -397,9 +395,9 @@ define([
                     // if the data is in the row definition, use it
                     if ('data' in row) {
                         let value;
-                        if (type === 'tabLinkArray') {
+                        if (row.type === 'tabLinkArray') {
                             value = tabLinkArray(row.data, row.method);
-                        } else if (type === 'tabLink') {
+                        } else if (row.type === 'tabLink') {
                             value =
                                 '<a class="id-click" data-id="' +
                                 row.data +

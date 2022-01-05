@@ -25,8 +25,6 @@ define([
             // root url path for landing pages
             const DATAVIEW_URL = '/#dataview/';
 
-            const type = input.type;
-
             // eslint-disable-next-line no-undef
             const kbModeling = new KBModeling(self.authToken());
 
@@ -36,7 +34,7 @@ define([
             //
             // 1) Use type (periods replaced with underscores) to instantiate a modeling object
             //
-            this.obj = new kbModeling[type.replace(/\./g, '_')](self);
+            this.obj = new kbModeling[input.type.replace(/\./g, '_')](self);
 
             //
             // 2) add the tabs (at page load)

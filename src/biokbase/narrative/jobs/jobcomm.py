@@ -89,24 +89,25 @@ class JobRequest:
         STATUS_BATCH,
         START_UPDATE_BATCH,
         STOP_UPDATE_BATCH,
-        LOGS,
     ]
     REQUIRE_JOB_ID_LIST = [
+        CANCEL,
         INFO,
+        LOGS,
+        RETRY,
         STATUS,
         START_UPDATE,
         STOP_UPDATE,
-        RETRY,
-        CANCEL,
     ]
 
     def __init__(self, rq: dict):
+        self.raw_request = rq
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
         if self.rq_data is None:
             raise ValueError("Improperly formatted job channel message!")
-        self.request = self.rq_data.get("request_type")
-        if self.request is None:
+        self.request_type = self.rq_data.get("request_type")
+        if self.request_type is None:
             raise ValueError("Missing request type in job channel message!")
         if JOB_ID in self.rq_data and JOB_ID_LIST in self.rq_data:
             raise ValueError(BOTH_INPUTS_PRESENT_ERR)
@@ -115,22 +116,19 @@ class JobRequest:
     def job_id(self):
         if JOB_ID in self.rq_data:
             return self.rq_data[JOB_ID]
-        else:
-            raise JobIDException(JOB_NOT_PROVIDED_ERR)
+        raise JobIDException(JOB_NOT_PROVIDED_ERR)
 
     @property
     def job_id_list(self):
         if JOB_ID_LIST in self.rq_data:
             return self.rq_data[JOB_ID_LIST]
-        else:
-            raise JobIDException(JOBS_NOT_PROVIDED_ERR)
+        raise JobIDException(JOBS_NOT_PROVIDED_ERR)
 
     @property
     def cell_id_list(self):
         if CELL_ID_LIST in self.rq_data:
             return self.rq_data[CELL_ID_LIST]
-        else:
-            raise ValueError(CELLS_NOT_PROVIDED_ERR)
+        raise ValueError(CELLS_NOT_PROVIDED_ERR)
 
     def input(self):
         if JOB_ID in self.rq_data:
@@ -334,7 +332,9 @@ class JobComm:
             }
         }
         """
-        cell_job_states = self._jm.lookup_jobs_by_cell_id(cell_id_list=req.cell_id_list)
+        cell_job_states = self._jm.lookup_job_states_by_cell_id(
+            cell_id_list=req.cell_id_list
+        )
         self.send_comm_message(CELL_JOB_STATUS, cell_job_states)
         return cell_job_states
 
@@ -413,18 +413,18 @@ class JobComm:
             raise ValueError("Unknown request")
 
         self._jm.modify_job_refresh(job_id_list, update_adjust)
-        output_states = self._jm.get_job_states(job_id_list)
-
         if update_adjust == 1:
             self.start_job_status_loop()
-            self.send_comm_message(STATUS, output_states)
+
+        output_states = self._jm.get_job_states(job_id_list)
+        self.send_comm_message(STATUS, output_states)
 
     def _modify_job_updates(self, req: JobRequest) -> None:
-        self.__modify_updates(req.job_id_list, req.request)
+        self.__modify_updates(req.job_id_list, req.request_type)
 
     def _modify_job_updates_batch(self, req: JobRequest) -> None:
         job_ids = self._jm.update_batch_job(req.job_id)
-        update_type = req.request.replace("_batch", "")
+        update_type = req.request_type.replace("_batch", "")
         self.__modify_updates(job_ids, update_type)
 
     def _cancel_jobs(self, req: JobRequest) -> None:
@@ -456,13 +456,13 @@ class JobComm:
         """
         This returns a set of job logs based on the info in the request.
         """
-        log_output = self._jm.get_job_logs(
-            req.job_id,
+        log_output = self._jm.get_job_logs_for_list(
+            req.job_id_list,
             num_lines=req.rq_data.get("num_lines", None),
             first_line=req.rq_data.get("first_line", 0),
             latest=req.rq_data.get("latest", False),
         )
-        self.send_comm_message(LOGS, {req.job_id: log_output})
+        self.send_comm_message(LOGS, log_output)
 
     def _handle_comm_message(self, msg: dict) -> None:
         """
@@ -480,12 +480,14 @@ class JobComm:
 
             for request in requests:
                 kblogging.log_event(
-                    self._log, "handle_comm_message", {"msg": request.request}
+                    self._log, "handle_comm_message", {"msg": request.request_type}
                 )
-                if request.request in self._msg_map:
-                    self._msg_map[request.request](request)
+                if request.request_type in self._msg_map:
+                    self._msg_map[request.request_type](request)
                 else:
-                    raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
+                    raise ValueError(
+                        f"Unknown KBaseJobs message '{request.request_type}'"
+                    )
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """
@@ -516,18 +518,21 @@ class JobComm:
         """
         error_content = dict()
         if isinstance(req, JobRequest):
-            error_content["source"] = req.request
+            error_content["raw_request"] = req.raw_request
+            error_content["source"] = req.request_type
             input_ = req.input()
             if input_:
                 error_content[input_[0]] = input_[1]
         elif isinstance(req, dict):
             data = req.get("content", {}).get("data", {})
+            error_content["raw_request"] = data
             error_content["source"] = data.get("request_type")
             # If req is still a dict, could have both job_id and job_id_list
             for attr in [JOB_ID, JOB_ID_LIST, CELL_ID_LIST]:
                 if attr in data:
                     error_content[attr] = data[attr]
         elif isinstance(req, str) or req is None:
+            error_content["raw_request"] = req
             error_content["source"] = req
         if content is not None:
             error_content.update(content)

@@ -13,7 +13,7 @@ import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobmanager import (
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_FALSY_ERR,
+    JOBS_MISSING_ERR,
     CELLS_NOT_PROVIDED_ERR,
     get_error_output_state,
 )
@@ -214,12 +214,12 @@ class JobManagerTest(unittest.TestCase):
             self.jm._check_job_list(None)
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm._check_job_list([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm._check_job_list(["", "", None])
 
@@ -356,12 +356,12 @@ class JobManagerTest(unittest.TestCase):
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.cancel_jobs([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm.cancel_jobs(["", "", None])
 
@@ -432,10 +432,9 @@ class JobManagerTest(unittest.TestCase):
             mock.Mock(return_value={}, side_effect=check_state),
         ) as mock_cancel_job:
             results = self.jm.cancel_jobs(jobs)
-            self.assertNotIn("canceling", self.jm._running_jobs[JOB_RUNNING])
-            self.assertNotIn("canceling", self.jm._running_jobs[JOB_CREATED])
-            self.assertTrue(self.jm._running_jobs[JOB_RUNNING]["refresh"])
-            self.assertTrue(self.jm._running_jobs[JOB_CREATED]["refresh"])
+            for job in [JOB_RUNNING, JOB_CREATED]:
+                self.assertNotIn("canceling", self.jm._running_jobs[job])
+                self.assertEqual(self.jm._running_jobs[job]["refresh"], 1)
             self.assertEqual(results.keys(), expected.keys())
             self.assertEqual(results, expected)
             mock_cancel_job.assert_has_calls(
@@ -486,6 +485,7 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_TERMINATED]
         expected = {
             JOB_TERMINATED: {
+                "job_id": JOB_TERMINATED,
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             }
@@ -499,10 +499,12 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_TERMINATED, JOB_ERROR]
         expected = {
             JOB_TERMINATED: {
+                "job_id": JOB_TERMINATED,
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             },
             JOB_ERROR: {
+                "job_id": JOB_ERROR,
                 "job": self.job_states[JOB_ERROR],
                 "retry": get_retry_job_state(JOB_ERROR),
             },
@@ -516,14 +518,17 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_NOT_FOUND, JOB_TERMINATED, JOB_COMPLETED]
         expected = {
             JOB_TERMINATED: {
+                "job_id": JOB_TERMINATED,
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED),
             },
             JOB_COMPLETED: {
+                "job_id": JOB_COMPLETED,
                 "job": self.job_states[JOB_COMPLETED],
                 "error": ERR_STR,
             },
             JOB_NOT_FOUND: {
+                "job_id": JOB_NOT_FOUND,
                 "job": get_error_output_state(JOB_NOT_FOUND),
                 "error": "does_not_exist",
             },
@@ -546,9 +551,21 @@ class JobManagerTest(unittest.TestCase):
     def test_retry_jobs__all_error(self):
         job_ids = [JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
         expected = {
-            JOB_TERMINATED: {"job": self.job_states[JOB_TERMINATED], "error": ERR_STR},
-            JOB_CREATED: {"job": self.job_states[JOB_CREATED], "error": ERR_STR},
-            JOB_RUNNING: {"job": self.job_states[JOB_RUNNING], "error": ERR_STR},
+            JOB_TERMINATED: {
+                "job_id": JOB_TERMINATED,
+                "job": self.job_states[JOB_TERMINATED],
+                "error": ERR_STR,
+            },
+            JOB_CREATED: {
+                "job_id": JOB_CREATED,
+                "job": self.job_states[JOB_CREATED],
+                "error": ERR_STR,
+            },
+            JOB_RUNNING: {
+                "job_id": JOB_RUNNING,
+                "job": self.job_states[JOB_RUNNING],
+                "error": ERR_STR,
+            },
         }
 
         ee2_ret = [
@@ -573,6 +590,7 @@ class JobManagerTest(unittest.TestCase):
 
         expected = {
             JOB_TERMINATED: {
+                "job_id": JOB_TERMINATED,
                 "job": self.job_states[JOB_TERMINATED],
                 "retry": get_retry_job_state(JOB_TERMINATED, status=retry_status),
             }
@@ -595,6 +613,7 @@ class JobManagerTest(unittest.TestCase):
         job_ids = ["", "", None, dne_id]
         expected = {
             dne_id: {
+                "job_id": dne_id,
                 "job": get_error_output_state(dne_id),
                 "error": "does_not_exist",
             }
@@ -605,12 +624,12 @@ class JobManagerTest(unittest.TestCase):
 
     def test_retry_jobs__bad_inputs(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.retry_jobs([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm.retry_jobs(["", "", None])
 
@@ -741,7 +760,7 @@ class JobManagerTest(unittest.TestCase):
 
     def test_get_job_states__empty(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.get_job_states([])
 

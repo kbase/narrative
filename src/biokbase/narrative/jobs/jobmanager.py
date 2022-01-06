@@ -326,11 +326,6 @@ class JobManager(object):
         (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
             cell_id_list
         )
-
-        import json
-
-        print(cell_to_job_mapping)
-
         job_states = {}
         if len(jobs_to_lookup) > 0:
             job_states = self._construct_job_output_state_set(list(jobs_to_lookup))

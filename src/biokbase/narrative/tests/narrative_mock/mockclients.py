@@ -261,7 +261,6 @@ class MockClients:
         return {"batch_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, params):
-        print({"cancel_job input": params})
         if params["job_id"] == BATCH_RETRY_RUNNING:
             raise generate_ee2_error(CANCEL)
         return {}

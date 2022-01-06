@@ -1,8 +1,15 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 import copy
 import functools
 from unittest.mock import call
+
+from biokbase.narrative.jobs.jobcomm import (
+    CANCEL,
+    LOGS,
+    RETRY,
+)
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -11,8 +18,13 @@ WSID_STANDARD = 12345
 NARR_DATE = "2017-03-31T23:42:59+0000"
 NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
+BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
 JOB_NOT_FOUND = "job_not_found"
+
+
+def generate_ee2_error(fn):
+    return EEServerError("JSONRPCError", -32000, fn + " failed")
 
 
 def get_nar_obj(i):
@@ -248,7 +260,10 @@ class MockClients:
         ]
         return {"batch_id": self.test_job_id, "child_job_ids": child_job_ids}
 
-    def cancel_job(self, job_id):
+    def cancel_job(self, params):
+        print({"cancel_job input": params})
+        if params["job_id"] == BATCH_RETRY_RUNNING:
+            raise generate_ee2_error(CANCEL)
         return {}
 
     def retry_job(self, params):
@@ -511,19 +526,13 @@ class FailingMockClient:
         raise ServerError("JSONRPCError", -32000, "Check job failed")
 
     def cancel_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Can't cancel job")
-
-    def retry_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Job retry failed")
+        raise generate_ee2_error(CANCEL)
 
     def retry_jobs(self, params):
-        raise ServerError("JSONRPCError", -32000, "Jobs retry failed")
-
-    def check_job_canceled(self, params):
-        raise ServerError("JSONRPCError", 1, "Can't cancel job")
+        raise generate_ee2_error(RETRY)
 
     def get_job_logs(self, params):
-        raise ServerError("JSONRPCError", 2, "Can't get job logs")
+        raise generate_ee2_error(LOGS)
 
 
 class MockStagingHelper:

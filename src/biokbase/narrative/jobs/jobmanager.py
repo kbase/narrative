@@ -34,7 +34,7 @@ JOB_NOT_REG_ERR = "Job ID is not registered"
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
-JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
+JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 DOES_NOT_EXIST = "does_not_exist"
@@ -203,7 +203,7 @@ class JobManager(object):
                     error_ids.append(input_id)
 
         if not len(job_ids) + len(error_ids):
-            raise JobIDException(JOBS_MISSING_FALSY_ERR, input_ids)
+            raise JobIDException(JOBS_MISSING_ERR, input_ids)
 
         return job_ids, error_ids
 
@@ -314,7 +314,6 @@ class JobManager(object):
         }
         # union of all the job_ids in the cell_to_job_mapping
         job_id_list = set().union(*cell_to_job_mapping.values())
-
         return (job_id_list, cell_to_job_mapping)
 
     def lookup_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
@@ -327,13 +326,17 @@ class JobManager(object):
             cell_id_list
         )
 
+        import json
+
+        print(cell_to_job_mapping)
+
         job_states = {}
         if len(jobs_to_lookup) > 0:
             job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
 
         return {"jobs": job_states, "mapping": cell_to_job_mapping}
 
-    def lookup_all_job_states(self, ignore_refresh_flag=False):
+    def lookup_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
         Fetches states for all running jobs.
         If ignore_refresh_flag is True, then returns states for all jobs this
@@ -459,15 +462,26 @@ class JobManager(object):
 
         """
         job_ids, error_ids = self._check_job_list(job_id_list)
-
+        error_states = dict()
         for job_id in job_ids:
             if not self.get_job(job_id).was_terminal():
-                self._cancel_job(job_id)
+                cancel_err = self._cancel_job(job_id)
+                if cancel_err:
+                    error_states[job_id] = cancel_err
 
         job_states = self._construct_job_output_state_set(job_ids)
 
         for job_id in error_ids:
             job_states[job_id] = get_error_output_state(job_id)
+
+        for job_id in error_states:
+            error = error_states[job_id]
+            job_states[job_id]["error"] = {
+                "name": error.name,
+                "message": error.message,
+                "error": error.error,
+                "code": error.code,
+            }
 
         return job_states
 
@@ -477,14 +491,14 @@ class JobManager(object):
         is_refreshing = self._running_jobs[job_id].get("refresh", 0)
         self._running_jobs[job_id]["refresh"] = 0
         self._running_jobs[job_id]["canceling"] = True
-
+        error = None
         try:
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
-            raise transform_job_exception(e, "Unable to cancel job")
-        finally:
-            self._running_jobs[job_id]["refresh"] = is_refreshing
-            del self._running_jobs[job_id]["canceling"]
+            error = transform_job_exception(e, "Unable to cancel job")
+        self._running_jobs[job_id]["refresh"] = is_refreshing
+        del self._running_jobs[job_id]["canceling"]
+        return error
 
     def retry_jobs(self, job_id_list: List[str]) -> dict:
         """
@@ -529,7 +543,7 @@ class JobManager(object):
         # fill in the job state details
         for result in retry_results:
             job_id = result["job_id"]
-            results_by_job_id[job_id] = {"job": job_states[job_id]}
+            results_by_job_id[job_id] = {"job_id": job_id, "job": job_states[job_id]}
             if "retry_id" in result:
                 retry_id = result["retry_id"]
                 results_by_job_id[job_id]["retry"] = job_states[retry_id]
@@ -537,6 +551,7 @@ class JobManager(object):
                 results_by_job_id[job_id]["error"] = result["error"]
         for job_id in error_ids:
             results_by_job_id[job_id] = {
+                "job_id": job_id,
                 "job": get_error_output_state(job_id),
                 "error": DOES_NOT_EXIST,
             }

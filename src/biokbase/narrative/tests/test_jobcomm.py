@@ -3,7 +3,6 @@ from unittest import mock
 import os
 import itertools
 import re
-import json
 
 from biokbase.narrative.exception_util import transform_job_exception
 from biokbase.narrative.jobs.jobcomm import exc_to_msg
@@ -83,9 +82,6 @@ from .test_job import (
     TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
-    get_test_job,
-    get_test_spec,
-    TEST_SPECS,
     TEST_JOBS,
     get_test_job_states,
     get_cell_2_jobs,

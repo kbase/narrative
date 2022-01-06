@@ -58,10 +58,10 @@ define([
                     (allCalls, callResult) => {
                         callResult = JSON.parse(callResult);
                         Object.keys(callResult.types).forEach((dataType) => {
-                            // if we already have a file of that datatype, then crap.
+                            // if we already have a file of that datatype, then throw an error.
                             if (allCalls.files[dataType]) {
                                 throw new Error(
-                                    'You cannot use multiple files to upload the same type because that is silly.'
+                                    'You cannot use multiple files to upload the same type.'
                                 );
                             }
                             allCalls.types[dataType] = callResult.types[dataType];

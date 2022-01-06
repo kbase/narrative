@@ -19,7 +19,7 @@ define(['StagingServiceClient'], (StagingServiceClient) => {
         bulkSpecification: { method: 'get', path: 'bulk_specification/?files=' },
     };
 
-    fdescribe('the staging service client', () => {
+    describe('the staging service client', () => {
         const ssClientUrl = 'https://kbase.us/staging_service';
         const fakeToken = 'fakeToken';
         const client = new StagingServiceClient({

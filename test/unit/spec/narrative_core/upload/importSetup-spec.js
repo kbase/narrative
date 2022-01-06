@@ -7,6 +7,7 @@ define([
     'use strict';
 
     const uploaders = Config.get('uploaders');
+    const stagingServiceUrl = Config.url('staging_api_url');
     const RELEASE_TAG = 'release';
 
     describe('ImportSetup module tests', () => {
@@ -19,6 +20,7 @@ define([
                 },
                 addAndPopulateApp: () => {},
                 insertBulkImportCell: () => {},
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -174,6 +176,52 @@ define([
                 expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
                 expect(Jupyter.narrative.insertBulkImportCell).not.toHaveBeenCalled();
             });
+
+            it('should load a happy path bulk specification file into a bulk import cell', async () => {
+                const dataType = 'assembly';
+                const importData = [
+                    {
+                        staging_file_subdir_path: 'Desulfovibrio_vulgaris_Hildenborough_C1.fasta',
+                        assembly_name: 'dvh_assembly',
+                        type: 'draft isolate',
+                        min_contig_length: 500,
+                    },
+                ];
+                const fileName = 'some_file.csv';
+
+                jasmine.Ajax.stubRequest(
+                    new RegExp(`${stagingServiceUrl}/bulk_specification`)
+                ).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify({
+                        types: { [dataType]: importData },
+                        files: { [dataType]: { file: fileName, tab: null } },
+                    }),
+                });
+
+                await ImportSetup.setupImportCells([
+                    {
+                        name: 'some_file.csv',
+                        type: 'import_specification',
+                    },
+                ]);
+                expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith({
+                    [dataType]: {
+                        files: [],
+                        appId: uploaders.app_info[dataType].app_id,
+                        outputSuffix: uploaders.app_info[dataType].app_output_suffix,
+                        appParameters: importData,
+                    },
+                });
+            });
+
+            // TODO
+            xit('should error properly when unable to find bulk specification info', async () => {});
+
+            xit('should error when given multiple bulk spec files with the same type', async () => {});
         });
 
         describe('setupWebUploadCell tests', () => {

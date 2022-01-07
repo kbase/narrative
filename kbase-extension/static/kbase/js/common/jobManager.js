@@ -1,9 +1,10 @@
-define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/util'], (
-    DialogMessages,
-    Jobs,
-    JobComms,
-    Utils
-) => {
+define([
+    'underscore',
+    'common/dialogMessages',
+    'common/jobs',
+    'common/jobCommChannel',
+    'util/util',
+], (_, DialogMessages, Jobs, JobComms, Utils) => {
     'use strict';
 
     const jcm = JobComms.JobCommMessages;
@@ -485,8 +486,14 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
              */
             handleJobStatus(self, message) {
                 const { jobState } = message,
-                    { status, updated } = jobState,
+                    { status } = jobState,
                     jobId = jobState.job_id;
+
+                // check if the job object has changed since we last saved it
+                const savedState = self.model.getItem(`exec.jobs.byId.${jobId}`);
+                if (savedState && _.isEqual(savedState, jobState)) {
+                    return;
+                }
 
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates
@@ -497,12 +504,6 @@ define(['common/dialogMessages', 'common/jobs', 'common/jobCommChannel', 'util/u
                     }
                     self.bus.emit(jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.JOB_ID]: jobId });
                     self.updateModel([jobState]);
-                    return;
-                }
-
-                // check if the job object has been updated since we last saved it
-                const previousUpdate = self.model.getItem(`exec.jobs.byId.${jobId}.updated`);
-                if (updated && previousUpdate === updated) {
                     return;
                 }
 

@@ -21,7 +21,8 @@ define([
         JOB_ID_LIST = jcm.PARAMS.JOB_ID_LIST,
         BATCH_ID = jcm.PARAMS.BATCH_ID,
         BACKEND_JOB_ID = 'job_id',
-        BACKEND_JOB_ID_LIST = 'job_id_list';
+        BACKEND_JOB_ID_LIST = 'job_id_list',
+        BACKEND_BATCH_ID = 'batch_id';
 
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
@@ -176,7 +177,7 @@ define([
             return [
                 {
                     target_name: 'KBaseJobs',
-                    request_type: jcm.BACKEND_REQUESTS.STATUS,
+                    request_type: jcm.REQUESTS.STATUS,
                     job_id: num,
                 },
             ];
@@ -336,7 +337,7 @@ define([
                 channel: jcm.REQUESTS.LOGS,
                 message: { [JOB_ID]: TEST_JOB_ID },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.LOGS,
+                    request_type: jcm.REQUESTS.LOGS,
                     [BACKEND_JOB_ID]: TEST_JOB_ID,
                 },
             },
@@ -347,7 +348,7 @@ define([
                     latest: true,
                 },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.LOGS,
+                    request_type: jcm.REQUESTS.LOGS,
                     [BACKEND_JOB_ID]: TEST_JOB_ID,
                     latest: true,
                 },
@@ -360,7 +361,7 @@ define([
                     latest: true,
                 },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.LOGS,
+                    request_type: jcm.REQUESTS.LOGS,
                     [BACKEND_JOB_ID]: TEST_JOB_ID,
                     first_line: 2000,
                     latest: true,
@@ -370,7 +371,7 @@ define([
                 channel: jcm.REQUESTS.CANCEL,
                 message: { [JOB_ID]: TEST_JOB_ID },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.CANCEL,
+                    request_type: jcm.REQUESTS.CANCEL,
                     [BACKEND_JOB_ID]: TEST_JOB_ID,
                 },
             },
@@ -378,7 +379,7 @@ define([
                 channel: jcm.REQUESTS.CANCEL,
                 message: { [JOB_ID_LIST]: TEST_JOB_LIST },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.CANCEL,
+                    request_type: jcm.REQUESTS.CANCEL,
                     [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
                 },
             },
@@ -386,7 +387,7 @@ define([
                 channel: jcm.REQUESTS.RETRY,
                 message: { [JOB_ID]: TEST_JOB_ID },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.RETRY,
+                    request_type: jcm.REQUESTS.RETRY,
                     [BACKEND_JOB_ID]: TEST_JOB_ID,
                 },
             },
@@ -394,7 +395,7 @@ define([
                 channel: jcm.REQUESTS.RETRY,
                 message: { [JOB_ID_LIST]: TEST_JOB_LIST },
                 expected: {
-                    request_type: jcm.BACKEND_REQUESTS.RETRY,
+                    request_type: jcm.REQUESTS.RETRY,
                     [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
                 },
             },
@@ -408,7 +409,7 @@ define([
                     channel: jcm.REQUESTS[type],
                     message: { [JOB_ID]: TEST_JOB_ID },
                     expected: {
-                        request_type: jcm.BACKEND_REQUESTS[type],
+                        request_type: jcm.REQUESTS[type],
                         [BACKEND_JOB_ID]: TEST_JOB_ID,
                     },
                 },
@@ -416,7 +417,7 @@ define([
                     channel: jcm.REQUESTS[type],
                     message: { [JOB_ID_LIST]: TEST_JOB_LIST },
                     expected: {
-                        request_type: jcm.BACKEND_REQUESTS[type],
+                        request_type: jcm.REQUESTS[type],
                         [BACKEND_JOB_ID_LIST]: TEST_JOB_LIST,
                     },
                 },
@@ -424,8 +425,8 @@ define([
                     channel: jcm.REQUESTS[type],
                     message: { [BATCH_ID]: 'batch_job' },
                     expected: {
-                        request_type: `${jcm.BACKEND_REQUESTS[type]}_batch`,
-                        [BACKEND_JOB_ID]: 'batch_job',
+                        request_type: `${jcm.REQUESTS[type]}`,
+                        [BACKEND_BATCH_ID]: 'batch_job',
                     },
                 }
             );
@@ -510,9 +511,9 @@ define([
                 const comm = new JobCommChannel();
                 spyOn(comm, 'reportCommMessageError');
                 return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(makeCommMsg(jcm.BACKEND_RESPONSES.JOB_STATUS, sample));
+                    comm.handleCommMessages(makeCommMsg(jcm.RESPONSES.JOB_STATUS, sample));
                     expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
-                        [{ msgType: jcm.BACKEND_RESPONSES.JOB_STATUS, msgData: sample }],
+                        [{ msgType: jcm.RESPONSES.JOB_STATUS, msgData: sample }],
                     ]);
                 });
             });
@@ -520,7 +521,7 @@ define([
 
         const busTests = [
             {
-                type: jcm.BACKEND_RESPONSES.RUN_STATUS,
+                type: jcm.RESPONSES.RUN_STATUS,
                 message: { job_id: TEST_JOB_ID, cell_id: 'bar' },
                 expected: [
                     { job_id: TEST_JOB_ID, cell_id: 'bar' },
@@ -532,7 +533,7 @@ define([
             },
             {
                 // info for a single job
-                type: jcm.BACKEND_RESPONSES.INFO,
+                type: jcm.RESPONSES.INFO,
                 message: (() => {
                     const output = {};
                     output[JobsData.example.Info.valid[0].job_id] = JobsData.example.Info.valid[0];
@@ -548,7 +549,7 @@ define([
             },
             {
                 // info multiple jobs
-                type: jcm.BACKEND_RESPONSES.INFO,
+                type: jcm.RESPONSES.INFO,
                 message: JobsData.example.Info.valid.reduce((acc, curr) => {
                     acc[curr.job_id] = curr;
                     return acc;
@@ -564,7 +565,7 @@ define([
                 }),
             },
             {
-                type: jcm.BACKEND_RESPONSES.LOGS,
+                type: jcm.RESPONSES.LOGS,
                 message: {
                     someJob: JobsData.example.Logs.valid[0],
                 },
@@ -577,7 +578,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.RETRY,
+                type: jcm.RESPONSES.RETRY,
                 message: (() => {
                     const retryData = {};
                     JobsData.example.Retry.valid.forEach((retry) => {
@@ -604,7 +605,7 @@ define([
             },
             {
                 // single job status message
-                type: jcm.BACKEND_RESPONSES.STATUS,
+                type: jcm.RESPONSES.STATUS,
                 message: (() => {
                     const output = {};
                     output[JobsData.allJobs[0].job_id] = {
@@ -626,7 +627,7 @@ define([
             },
             {
                 // single job status message, ee2 error
-                type: jcm.BACKEND_RESPONSES.STATUS,
+                type: jcm.RESPONSES.STATUS,
                 message: {
                     someJob: {
                         jobState: {
@@ -650,13 +651,13 @@ define([
             },
             {
                 // more than one job, indexed by job ID
-                type: jcm.BACKEND_RESPONSES.STATUS,
+                type: jcm.RESPONSES.STATUS,
                 message: JobsData.allJobs.reduce(convertToJobState, {}),
                 expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage),
             },
             {
                 // OK job and an errored job
-                type: jcm.BACKEND_RESPONSES.STATUS,
+                type: jcm.RESPONSES.STATUS,
                 message: JobsData.allJobs
                     .concat({
                         job_id: '1234567890abcdef',
@@ -680,12 +681,12 @@ define([
                 ]),
             },
             {
-                type: jcm.BACKEND_RESPONSES.STATUS_ALL,
+                type: jcm.RESPONSES.STATUS_ALL,
                 message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
                 expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.RESPONSES.ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'cancel error',
@@ -710,7 +711,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.RESPONSES.ERROR,
                 message: {
                     job_id: TEST_JOB_ID,
                     message: 'log error',
@@ -736,7 +737,7 @@ define([
             },
             {
                 // unrecognised error type
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.RESPONSES.ERROR,
                 message: {
                     source: 'some-unknown-error',
                     job_id: TEST_JOB_ID,
@@ -761,7 +762,7 @@ define([
                 ],
             },
             {
-                type: jcm.BACKEND_RESPONSES.ERROR,
+                type: jcm.RESPONSES.ERROR,
                 message: {
                     [BACKEND_JOB_ID_LIST]: [
                         'job_1_RetryWithErrors',
@@ -857,7 +858,7 @@ define([
 
         ['JobState', 'Info', 'Retry', 'Logs'].forEach((type) => {
             const ucType = type === 'JobState' ? 'STATUS' : type.toUpperCase();
-            const msgType = jcm.BACKEND_RESPONSES[ucType];
+            const msgType = jcm.RESPONSES[ucType];
             const values = JobsData.example[type].invalid;
 
             values.forEach((value) => {

@@ -218,6 +218,49 @@ define([
                 ]);
             });
 
+            it('should build a bulk import cell with appParameters premade info', () => {
+                const inFileName = 'dvh.fasta',
+                    objName = 'dvh_assembly',
+                    testInputs = {
+                        dataType: {
+                            files: [],
+                            appId: 'simpleApp',
+                            outputSuffix: '_obj',
+                            appParameters: [
+                                {
+                                    staging_file_subdir_path: inFileName,
+                                    assembly_name: objName,
+                                    type: 'sag', // not default
+                                    min_contig_length: 1000, // not default
+                                },
+                            ],
+                        },
+                    },
+                    fakeSpecs = { simpleApp: SimpleAppSpec };
+                const cell = Mocks.buildMockCell('code');
+                const cellWidget = BulkImportCell.make({
+                    cell,
+                    importData: testInputs,
+                    specs: fakeSpecs,
+                    initialize: true,
+                });
+                expect(cellWidget).toBeDefined();
+                expect(cell.metadata.kbase).toBeDefined();
+                expect(cell.metadata.kbase.bulkImportCell.params.dataType.filePaths).toEqual([
+                    {
+                        staging_file_subdir_path: inFileName,
+                        assembly_name: objName,
+                    },
+                ]);
+                expect(cell.metadata.kbase.bulkImportCell.inputs.dataType.files).toEqual([
+                    inFileName,
+                ]);
+                expect(cell.metadata.kbase.bulkImportCell.params.dataType.params).toEqual({
+                    type: 'sag',
+                    min_contig_length: 1000,
+                });
+            });
+
             it('should have a cell that can render its icon', () => {
                 const cell = Mocks.buildMockCell('code');
                 const cellWidget = BulkImportCell.make({
@@ -621,7 +664,7 @@ define([
                 });
             });
 
-            it('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
+            xit('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
                 const cellId = 'cancelDuringSubmit';
                 Jupyter.notebook = Mocks.buildMockNotebook();
                 spyOn(Jupyter.notebook, 'save_checkpoint');

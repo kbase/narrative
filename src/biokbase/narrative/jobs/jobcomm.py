@@ -55,19 +55,6 @@ REQUESTS = [
     STOP_UPDATE,
 ]
 
-# batch versions
-INFO_BATCH = INFO + "_batch"
-START_UPDATE_BATCH = START_UPDATE + "_batch"
-STATUS_BATCH = STATUS + "_batch"
-STOP_UPDATE_BATCH = STOP_UPDATE + "_batch"
-
-BATCH_REQUESTS = [
-    INFO_BATCH,
-    START_UPDATE_BATCH,
-    STATUS_BATCH,
-    STOP_UPDATE_BATCH,
-]
-
 
 class JobRequest:
     """
@@ -112,26 +99,6 @@ class JobRequest:
     The IDs of the job(s) to perform the function on.
 
     """
-
-    # each kind of request handling requires a job_id, a job_id_list,
-    # or none of those
-    REQUIRE_JOB_ID = [
-        INFO_BATCH,
-        STATUS_BATCH,
-        START_UPDATE_BATCH,
-        STOP_UPDATE_BATCH,
-    ]
-
-    REQUIRE_JOB_ID_LIST = [
-        CANCEL,
-        INFO,
-        LOGS,
-        RETRY,
-        STATUS,
-        START_UPDATE,
-        STOP_UPDATE,
-    ]
-
     def __init__(self, rq: dict):
         self.raw_request = copy.deepcopy(rq)
         self.msg_id = rq.get("msg_id")  # might be useful later?
@@ -159,6 +126,8 @@ class JobRequest:
     def job_id_list(self):
         if JOB_ID_LIST in self.rq_data:
             return self.rq_data[JOB_ID_LIST]
+        if JOB_ID in self.rq_data:
+            return [self.rq_data[JOB_ID]]
         raise JobIDException(JOBS_NOT_PROVIDED_ERR)
 
     @property
@@ -175,49 +144,6 @@ class JobRequest:
         if CELL_ID_LIST in self.rq_data:
             return self.rq_data[CELL_ID_LIST]
         raise ValueError(CELLS_NOT_PROVIDED_ERR)
-
-    @classmethod
-    def _convert_to_using_job_id_list(cls, msg: dict) -> "JobRequest":
-        """
-        If a message comes with job_id instead of job_id_list, it may be converted
-        into a JobRequest with a job_id_list
-        """
-        msg["content"]["data"][JOB_ID_LIST] = [msg["content"]["data"][JOB_ID]]
-        del msg["content"]["data"][JOB_ID]
-        return cls(msg)
-
-    @classmethod
-    def _split_request_by_job_id(cls, msg: dict) -> List["JobRequest"]:
-        """
-        If a message comes with job_id_list instead of job_id, it may be converted
-        into multiple JobRequest objects each having a single job_id
-        """
-        job_id_list = msg["content"]["data"][JOB_ID_LIST]
-        if not isinstance(job_id_list, list):
-            raise TypeError(JOBS_TYPE_ERR)
-        insts = []
-        for job_id in job_id_list:
-            msg_ = copy.deepcopy(msg)
-            msg_["content"]["data"][JOB_ID] = job_id
-            del msg_["content"]["data"][JOB_ID_LIST]
-            insts.append(cls(msg_))
-        return insts
-
-    @classmethod
-    def translate(cls, msg: dict) -> List["JobRequest"]:
-        data = msg.get("content", {}).get("data", {})
-        if JOB_ID in data and JOB_ID_LIST in data:
-            raise ValueError(ONE_INPUT_TYPE_ONLY_ERR)
-
-        req_type = data.get("request_type")
-
-        if JOB_ID_LIST in data and req_type in cls.REQUIRE_JOB_ID:
-            requests = cls._split_request_by_job_id(msg)
-        elif JOB_ID in data and req_type in cls.REQUIRE_JOB_ID_LIST:
-            requests = [cls._convert_to_using_job_id_list(msg)]
-        else:
-            requests = [cls(msg)]
-        return requests
 
 
 class JobComm:
@@ -278,23 +204,18 @@ class JobComm:
                 CANCEL: self._cancel_jobs,
                 CELL_JOB_STATUS: self._lookup_job_states_by_cell_id,
                 INFO: self._lookup_job_info,
-                INFO_BATCH: self._lookup_job_info,
                 LOGS: self._get_job_logs,
                 RETRY: self._retry_jobs,
                 START_UPDATE: self._modify_job_updates,
-                START_UPDATE_BATCH: self._modify_job_updates,
                 STATUS: self._lookup_job_states,
-                STATUS_BATCH: self._lookup_job_states,
                 STATUS_ALL: self._lookup_all_job_states,
                 STOP_UPDATE: self._modify_job_updates,
-                STOP_UPDATE_BATCH: self._modify_job_updates,
             }
 
     def _get_job_ids(self, req: JobRequest = None):
 
-        if req.request_type in BATCH_REQUESTS:
-            req.request_type = req.request_type.replace("_batch", "")
-            return self._jm.update_batch_job(req.job_id)
+        if req.has_batch_id():
+            return self._jm.update_batch_job(req.batch_id)
 
         try:
             return req.job_id_list
@@ -471,16 +392,19 @@ class JobComm:
         job_id_list = self._get_job_ids(req)
         retry_results = self._jm.retry_jobs(job_id_list)
         self.send_comm_message(RETRY, retry_results)
-        self.send_comm_message(
-            NEW,
-            {
-                JOB_ID_LIST: [
-                    result["retry"]["jobState"]["job_id"]
-                    for result in retry_results.values()
-                    if "retry" in result
-                ]
-            },
-        )
+        retry_ids = [
+            result["retry"]["jobState"]["job_id"]
+            for result in retry_results.values()
+            if "retry" in result
+        ]
+
+        if len(retry_ids):
+            self.send_comm_message(
+                NEW,
+                {
+                    JOB_ID_LIST: retry_ids
+                },
+            )
         return retry_results
 
     def _get_job_logs(self, req: JobRequest) -> dict:
@@ -510,7 +434,7 @@ class JobComm:
         """
         output = {}
         with exc_to_msg(msg):
-            requests = JobRequest.translate(msg)
+            requests = [JobRequest(msg)]
 
             for request in requests:
                 kblogging.log_event(

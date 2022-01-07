@@ -900,39 +900,6 @@ define([
             }
         });
 
-        ['job_init_err', 'job_init_lookup_err'].forEach((errType) => {
-            it(`Should handle ${errType}`, () => {
-                const modalQuerySelector = '.modal #kb-job-err-trace';
-                const msg = makeCommMsg(errType, {
-                        service: 'job service',
-                        error: 'An error happened!',
-                        name: 'Error',
-                        source: 'jobmanager',
-                    }),
-                    comm = new JobCommChannel();
-                return comm
-                    .initCommChannel()
-                    .then(() => {
-                        comm.handleCommMessages(msg);
-                        return TestUtil.waitForElement(document.body, modalQuerySelector);
-                    })
-                    .then(() => {
-                        expect(document.querySelector(modalQuerySelector)).not.toBeNull();
-                        // click the 'OK' button
-                        document
-                            .querySelector('.modal a.btn.btn-default.kb-job-err-dialog__button')
-                            .click();
-                        // expect it to be gone
-                        return TestUtil.waitForElementState(document.body, () => {
-                            return document.querySelectorAll('.modal').length === 0;
-                        });
-                    })
-                    .then(() => {
-                        expect(document.querySelector(modalQuerySelector)).toBeNull();
-                    });
-            });
-        });
-
         it('Should handle unknown messages with console warnings', () => {
             const comm = new JobCommChannel(),
                 msg = makeCommMsg('unknown_weird_msg', {});

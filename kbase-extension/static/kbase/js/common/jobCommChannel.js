@@ -30,10 +30,6 @@
  */
 define([
     'bluebird',
-    'jquery',
-    'handlebars',
-    'kbaseAccordion',
-    'util/bootstrapDialog',
     'util/developerMode',
     'util/util',
     'base/js/namespace',
@@ -41,22 +37,7 @@ define([
     'common/jobs',
     'services/kernels/comm',
     'common/semaphore',
-    'text!kbase/templates/job_panel/job_init_error.html',
-], (
-    Promise,
-    $,
-    Handlebars,
-    kbaseAccordion,
-    BootstrapDialog,
-    devMode,
-    Utils,
-    Jupyter,
-    Runtime,
-    Jobs,
-    JupyterComm,
-    Semaphore,
-    JobInitErrorTemplate
-) => {
+], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, JupyterComm, Semaphore) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
@@ -354,12 +335,6 @@ define([
                     });
                     break;
 
-                case 'job_init_err':
-                case 'job_init_lookup_err':
-                    this.displayJobError(msgData);
-                    console.error('Error from job comm:', msg);
-                    break;
-
                 // job information for one or more jobs
                 case RESPONSES.INFO:
                     Object.keys(msgData).forEach((_jobId) => {
@@ -428,61 +403,6 @@ define([
                 `message type ${msgType} with data`,
                 msgData
             );
-        }
-
-        displayJobError(msgData) {
-            // code, error, job_id (opt), message, name, source
-            const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
-            const modal = new BootstrapDialog({
-                title: 'Job Initialization Error',
-                body: $modalBody,
-                buttons: [
-                    $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
-                        .append('OK')
-                        .click(() => {
-                            modal.hide();
-                        }),
-                ],
-            });
-            new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
-                elements: [
-                    {
-                        title: 'Detailed Error Information',
-                        body: $(
-                            '<table class="table table-bordered"><tr><th>code:</th><td>' +
-                                msgData.code +
-                                '</td></tr>' +
-                                '<tr><th>error:</th><td>' +
-                                msgData.message +
-                                '</td></tr>' +
-                                (function () {
-                                    if (msgData.service) {
-                                        return (
-                                            '<tr><th>service:</th><td>' +
-                                            msgData.service +
-                                            '</td></tr>'
-                                        );
-                                    }
-                                    return '';
-                                })() +
-                                '<tr><th>type:</th><td>' +
-                                msgData.name +
-                                '</td></tr>' +
-                                '<tr><th>source:</th><td>' +
-                                msgData.source +
-                                '</td></tr></table>'
-                        ),
-                    },
-                ],
-            });
-
-            $modalBody.find('button#kb-job-err-report').click(() => {
-                // no action
-            });
-            modal.getElement().on('hidden.bs.modal', () => {
-                modal.destroy();
-            });
-            modal.show();
         }
 
         /**

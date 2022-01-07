@@ -179,14 +179,14 @@ define([
             });
         }
 
-        function genericClientCall(call_params) {
+        function genericClientCall(callParams) {
             const swUrl = runtime.config('services.service_wizard.url'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken(),
                 });
             return genericClient.sync_call(
                 dd_options.service_function,
-                call_params,
+                callParams,
                 null,
                 null,
                 dd_options.service_version || 'release'
@@ -218,18 +218,18 @@ define([
                     }
                 );
             } else {
-                let call_params = JSON.stringify(dd_options.service_params).replace(
+                let callParams = JSON.stringify(dd_options.service_params).replace(
                     '{{dynamic_dropdown_input}}',
                     searchTerm
                 );
-                call_params = JSON.parse(call_params);
+                callParams = JSON.parse(callParams);
 
                 // TODO: wrap lines 228-252 in a check for dd_options.include_user_params and implement that in NMS
                 const params = await channel.request({}, { key: { type: 'get-parameters' } });
 
                 // text replacement for any dynamic parameter values
-                call_params = call_params.map((call_param) => {
-                    return Object.entries(call_param).reduce((acc, [k, v]) => {
+                callParams = callParams.map((callParam) => {
+                    return Object.entries(callParam).reduce((acc, [k, v]) => {
                         if (typeof v === 'string') {
                             // match dynamic user params that are {{in brackets}}
                             const d_param = v.match(/[^{{]+(?=}\})/);
@@ -243,15 +243,17 @@ define([
                                     return acc;
                                 }
                                 // replace dynamic values with actual param values
-                                return Object.assign({}, acc, { [k]: params[d_param[0]] });
+                                acc[k] = params[d_param[0]];
+                                return acc;
                             }
                         }
                         // return anything else as normal
-                        return Object.assign({}, acc, { [k]: v });
+                        acc[k] = v;
+                        return;
                     }, {});
                 });
 
-                return Promise.resolve(genericClientCall(call_params)).then((results) => {
+                return Promise.resolve(genericClientCall(callParams)).then((results) => {
                     let index = dd_options.result_array_index;
                     if (!index) {
                         index = 0;

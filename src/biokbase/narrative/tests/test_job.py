@@ -95,7 +95,7 @@ JOBS_BY_CELL_ID = {
     TEST_CELL_ID_LIST[3]: {BATCH_PARENT, BATCH_RETRY_RUNNING, BATCH_RETRY_ERROR},
 }
 
-# mapping expected as output from lookup_job_states_by_cell_id
+# mapping expected as output from get_job_states_by_cell_id
 TEST_CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
 TEST_CELL_IDs[TEST_CELL_ID_LIST[4]] = []
 

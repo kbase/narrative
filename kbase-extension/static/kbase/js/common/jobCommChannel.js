@@ -30,10 +30,6 @@
  */
 define([
     'bluebird',
-    'jquery',
-    'handlebars',
-    'kbaseAccordion',
-    'util/bootstrapDialog',
     'util/developerMode',
     'util/util',
     'base/js/namespace',
@@ -41,22 +37,7 @@ define([
     'common/jobs',
     'services/kernels/comm',
     'common/semaphore',
-    'text!kbase/templates/job_panel/job_init_error.html',
-], (
-    Promise,
-    $,
-    Handlebars,
-    kbaseAccordion,
-    BootstrapDialog,
-    devMode,
-    Utils,
-    Jupyter,
-    Runtime,
-    Jobs,
-    JupyterComm,
-    Semaphore,
-    JobInitErrorTemplate
-) => {
+], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, JupyterComm, Semaphore) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
@@ -72,6 +53,7 @@ define([
         // backend params
         JOB_ID = 'job_id',
         JOB_ID_LIST = 'job_id_list',
+        BATCH_ID = 'batch_id',
         // commands
         CANCEL = 'cancel_job',
         CELL_JOB_STATUS = 'cell_job_status',
@@ -105,26 +87,6 @@ define([
             // Tells kernel to stop including a job in the regular job status updates
             STOP_UPDATE,
         },
-        BACKEND_REQUESTS = {
-            CANCEL,
-            CELL_JOB_STATUS,
-            INFO,
-            LOGS,
-            RETRY,
-            START_UPDATE,
-            STATUS,
-            STOP_UPDATE,
-        },
-        BACKEND_RESPONSES = {
-            CELL_JOB_STATUS,
-            ERROR,
-            INFO,
-            LOGS,
-            RETRY,
-            RUN_STATUS,
-            STATUS,
-            STATUS_ALL,
-        },
         RESPONSES = {
             CELL_JOB_STATUS,
             ERROR,
@@ -133,22 +95,8 @@ define([
             RETRY,
             RUN_STATUS,
             STATUS,
-        },
-        // these job request types also have a 'batch' version
-        batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
-        BATCH_BACKEND_REQUESTS = {};
-    // the batch version of BACKEND_REQUESTS[type]
-    batchRequests.forEach((type) => {
-        BATCH_BACKEND_REQUESTS[BACKEND_REQUESTS[type]] = BACKEND_REQUESTS[type] + '_batch';
-    });
-
-    // Conversion of the message type of an incoming message
-    // to the type used for the message to be sent to the backend
-    const requestTranslation = {};
-
-    Object.keys(REQUESTS).forEach((type) => {
-        requestTranslation[REQUESTS[type]] = BACKEND_REQUESTS[type];
-    });
+            STATUS_ALL,
+        };
 
     const JobCommMessages = {
         validIncomingMessageTypes: function () {
@@ -159,8 +107,6 @@ define([
         },
         RESPONSES,
         REQUESTS,
-        BACKEND_REQUESTS,
-        BACKEND_RESPONSES,
         PARAMS,
     };
 
@@ -187,11 +133,11 @@ define([
 
             // set up validators for incoming backend job messages
             this.validationFn = {
-                [BACKEND_RESPONSES.INFO]: Jobs.isValidJobInfoObject,
-                [BACKEND_RESPONSES.LOGS]: Jobs.isValidJobLogsObject,
-                [BACKEND_RESPONSES.STATUS]: Jobs.isValidBackendJobStateObject,
-                [BACKEND_RESPONSES.STATUS_ALL]: Jobs.isValidBackendJobStateObject,
-                [BACKEND_RESPONSES.RETRY]: Jobs.isValidJobRetryObject,
+                [RESPONSES.INFO]: Jobs.isValidJobInfoObject,
+                [RESPONSES.LOGS]: Jobs.isValidJobLogsObject,
+                [RESPONSES.STATUS]: Jobs.isValidBackendJobStateObject,
+                [RESPONSES.STATUS_ALL]: Jobs.isValidBackendJobStateObject,
+                [RESPONSES.RETRY]: Jobs.isValidJobRetryObject,
             };
         }
 
@@ -242,18 +188,17 @@ define([
         _transformMessage(rawMessage) {
             const { msgType, msgData } = rawMessage;
 
-            if (!requestTranslation[msgType]) {
+            if (!Object.values(REQUESTS).includes(msgType)) {
                 throw new Error(`Ignoring unknown message type "${msgType}"`);
             }
 
             const transformedMsg = {
                 target_name: COMM_NAME,
-                request_type: requestTranslation[msgType],
+                request_type: msgType,
             };
 
             const translations = {
-                // backend uses `job_id` instead of `batch_id`
-                [PARAMS.BATCH_ID]: JOB_ID,
+                [PARAMS.BATCH_ID]: BATCH_ID,
                 [PARAMS.JOB_ID]: JOB_ID,
                 [PARAMS.JOB_ID_LIST]: JOB_ID_LIST,
             };
@@ -261,14 +206,6 @@ define([
             for (const [key, value] of Object.entries(msgData)) {
                 const msgKey = translations[key] || key;
                 transformedMsg[msgKey] = value;
-                // convert to the batch form of the request
-                if (
-                    key === PARAMS.BATCH_ID &&
-                    BATCH_BACKEND_REQUESTS[transformedMsg.request_type]
-                ) {
-                    transformedMsg.request_type =
-                        BATCH_BACKEND_REQUESTS[transformedMsg.request_type];
-                }
             }
 
             return transformedMsg;
@@ -336,7 +273,7 @@ define([
          * }
          * Where msg_type is one of:
          * start, new_job, job_status, job_status_all, job_comm_err, job_init_err, job_init_lookup_err,
-         * or any of the values of BACKEND_RESPONSES
+         * or any of the values of RESPONSES
          *
          * @param {object} msg
          */
@@ -361,7 +298,7 @@ define([
                     break;
 
                 // CELL messages
-                case BACKEND_RESPONSES.RUN_STATUS:
+                case RESPONSES.RUN_STATUS:
                     this.sendBusMessage(CELL, msgData.cell_id, RESPONSES.RUN_STATUS, msgData);
                     break;
 
@@ -375,7 +312,7 @@ define([
                 // filtering.
                 //
                 // errors
-                case BACKEND_RESPONSES.ERROR:
+                case RESPONSES.ERROR:
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
                         break;
@@ -383,7 +320,7 @@ define([
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
                     const jobIdList = msgData[JOB_ID] ? [msgData[JOB_ID]] : msgData[JOB_ID_LIST];
-                    if (msgData.source === BACKEND_REQUESTS.LOGS) {
+                    if (msgData.source === REQUESTS.LOGS) {
                         msgTypeToSend = RESPONSES.LOGS;
                     } else {
                         msgTypeToSend = RESPONSES.ERROR;
@@ -398,14 +335,8 @@ define([
                     });
                     break;
 
-                case 'job_init_err':
-                case 'job_init_lookup_err':
-                    this.displayJobError(msgData);
-                    console.error('Error from job comm:', msg);
-                    break;
-
                 // job information for one or more jobs
-                case BACKEND_RESPONSES.INFO:
+                case RESPONSES.INFO:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
@@ -416,7 +347,7 @@ define([
                     });
                     break;
 
-                case BACKEND_RESPONSES.LOGS:
+                case RESPONSES.LOGS:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
@@ -427,7 +358,7 @@ define([
                     });
                     break;
 
-                case BACKEND_RESPONSES.RETRY:
+                case RESPONSES.RETRY:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
@@ -445,8 +376,8 @@ define([
                  * data structure: object with key jobId and value
                  * { jobState: job.jobState, outputWidgetInfo: job.outputWidgetInfo }
                  */
-                case BACKEND_RESPONSES.STATUS:
-                case BACKEND_RESPONSES.STATUS_ALL:
+                case RESPONSES.STATUS:
+                case RESPONSES.STATUS_ALL:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
@@ -472,61 +403,6 @@ define([
                 `message type ${msgType} with data`,
                 msgData
             );
-        }
-
-        displayJobError(msgData) {
-            // code, error, job_id (opt), message, name, source
-            const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
-            const modal = new BootstrapDialog({
-                title: 'Job Initialization Error',
-                body: $modalBody,
-                buttons: [
-                    $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
-                        .append('OK')
-                        .click(() => {
-                            modal.hide();
-                        }),
-                ],
-            });
-            new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
-                elements: [
-                    {
-                        title: 'Detailed Error Information',
-                        body: $(
-                            '<table class="table table-bordered"><tr><th>code:</th><td>' +
-                                msgData.code +
-                                '</td></tr>' +
-                                '<tr><th>error:</th><td>' +
-                                msgData.message +
-                                '</td></tr>' +
-                                (function () {
-                                    if (msgData.service) {
-                                        return (
-                                            '<tr><th>service:</th><td>' +
-                                            msgData.service +
-                                            '</td></tr>'
-                                        );
-                                    }
-                                    return '';
-                                })() +
-                                '<tr><th>type:</th><td>' +
-                                msgData.name +
-                                '</td></tr>' +
-                                '<tr><th>source:</th><td>' +
-                                msgData.source +
-                                '</td></tr></table>'
-                        ),
-                    },
-                ],
-            });
-
-            $modalBody.find('button#kb-job-err-report').click(() => {
-                // no action
-            });
-            modal.getElement().on('hidden.bs.modal', () => {
-                modal.destroy();
-            });
-            modal.show();
         }
 
         /**

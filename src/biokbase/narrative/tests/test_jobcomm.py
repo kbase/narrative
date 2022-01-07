@@ -40,10 +40,6 @@ from biokbase.narrative.jobs.jobcomm import (
     STATUS,
     STATUS_ALL,
     STOP_UPDATE,
-    STATUS_BATCH,
-    INFO_BATCH,
-    START_UPDATE_BATCH,
-    STOP_UPDATE_BATCH,
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
@@ -255,8 +251,7 @@ class JobCommTestCase(unittest.TestCase):
             err = JobIDException(JOBS_MISSING_ERR, [job_id])
             self.check_id_error(req_dict, err)
 
-            # run directly -- returns
-            err = JobIDException(ONE_INPUT_TYPE_ONLY_ERR)
+            # run directly
             with self.assertRaisesRegex(type(err), re.escape(str(err))):
                 self.jc._msg_map[request_type](req)
 
@@ -267,20 +262,20 @@ class JobCommTestCase(unittest.TestCase):
 
     def check_batch_id__no_job_test(self, request_type):
         for job_id in [None, ""]:
-            req_dict = make_comm_msg(request_type + "_batch", {JOB_ID: job_id}, False)
+            req_dict = make_comm_msg(request_type, {BATCH_ID: job_id}, False)
             err = JobIDException(JOB_NOT_REG_ERR, job_id)
             self.check_id_error(req_dict, err)
 
     def check_batch_id__dne_test(self, request_type):
         req_dict = make_comm_msg(
-            request_type + "_batch", {JOB_ID: JOB_NOT_FOUND}, False
+            request_type, {BATCH_ID: JOB_NOT_FOUND}, False
         )
         err = JobIDException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
         self.check_id_error(req_dict, err)
 
     def check_batch_id__not_batch_test(self, request_type):
         req_dict = make_comm_msg(
-            request_type + "_batch", {JOB_ID: BATCH_COMPLETED}, False
+            request_type, {BATCH_ID: BATCH_COMPLETED}, False
         )
         err = JobIDException(JOB_NOT_BATCH_ERR, BATCH_COMPLETED)
         self.check_id_error(req_dict, err)
@@ -374,23 +369,19 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(STATUS_ALL, msg["msg_type"])
 
     def test_req_no_inputs__fail(self):
-        expected = {
-            STATUS_BATCH: JOB_NOT_PROVIDED_ERR,
-            INFO_BATCH: JOB_NOT_PROVIDED_ERR,
-            START_UPDATE_BATCH: JOB_NOT_PROVIDED_ERR,
-            STOP_UPDATE_BATCH: JOB_NOT_PROVIDED_ERR,
-            CANCEL: ONE_INPUT_TYPE_ONLY_ERR,
-            INFO: ONE_INPUT_TYPE_ONLY_ERR,
-            LOGS: ONE_INPUT_TYPE_ONLY_ERR,
-            RETRY: ONE_INPUT_TYPE_ONLY_ERR,
-            START_UPDATE: ONE_INPUT_TYPE_ONLY_ERR,
-            STATUS: ONE_INPUT_TYPE_ONLY_ERR,
-            STOP_UPDATE: ONE_INPUT_TYPE_ONLY_ERR,
-        }
+        functions = [
+            CANCEL,
+            INFO,
+            LOGS,
+            RETRY,
+            START_UPDATE,
+            STATUS,
+            STOP_UPDATE,
+        ]
 
-        for msg_type, err_type in expected.items():
+        for msg_type in functions:
             req_dict = make_comm_msg(msg_type, None, False)
-            err = JobIDException(err_type)
+            err = JobIDException(ONE_INPUT_TYPE_ONLY_ERR)
             with self.assertRaisesRegex(type(err), str(err)):
                 self.jc._handle_comm_message(req_dict)
             self.check_error_message(req_dict, err)
@@ -563,8 +554,8 @@ class JobCommTestCase(unittest.TestCase):
 
     def test_lookup_job_states__batch_id__ok(self):
         self.check_job_output_states(
-            request_type=STATUS_BATCH,
-            params={JOB_ID: BATCH_PARENT},
+            request_type=STATUS,
+            params={BATCH_ID: BATCH_PARENT},
             ok_states=BATCH_PARENT_CHILDREN,
         )
 
@@ -714,6 +705,9 @@ class JobCommTestCase(unittest.TestCase):
             msg,
         )
 
+    def test_lookup_job_info__job_id__invalid(self):
+        self.check_job_id__no_job_test(INFO)
+
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_info__job_id_list__ok(self):
         job_id_list = ALL_JOBS
@@ -753,7 +747,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_info__batch_id__ok(self):
         job_id = BATCH_PARENT
-        req_dict = make_comm_msg(INFO_BATCH, {JOB_ID: job_id}, False)
+        req_dict = make_comm_msg(INFO, {BATCH_ID: job_id}, False)
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -780,6 +774,23 @@ class JobCommTestCase(unittest.TestCase):
         self.check_job_output_states(
             request_type=CANCEL, params={JOB_ID: JOB_RUNNING}, ok_states=[JOB_RUNNING]
         )
+
+    def test_cancel_jobs__job_id__dne(self):
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID: JOB_NOT_FOUND},
+            error_states=[JOB_NOT_FOUND],
+        )
+
+    def test_cancel_jobs__job_id__invalid(self):
+        self.check_job_id__no_job_test(CANCEL)
+        job_id_list = [None, ""]
+        for job_id in job_id_list:
+            req_dict = make_comm_msg(CANCEL, {JOB_ID: job_id}, False)
+            err = JobIDException(JOBS_MISSING_ERR, [job_id])
+            with self.assertRaisesRegex(type(err), re.escape(str(err))):
+                self.jc._handle_comm_message(req_dict)
+            self.check_error_message(req_dict, err)
 
     def test_cancel_jobs__job_id_list__1_ok(self):
         job_id_list = [JOB_RUNNING]
@@ -894,6 +905,28 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     @mock.patch(CLIENTS, get_mock_client)
+    def test_retry_jobs__job_id__dne(self):
+        req_dict = make_comm_msg(RETRY, {JOB_ID: BAD_JOB_ID}, False)
+        expected = {
+            BAD_JOB_ID: {
+                "job_id": BAD_JOB_ID,
+                "job": get_error_output_state(BAD_JOB_ID),
+                "error": DOES_NOT_EXIST,
+            },
+        }
+        retry_data = self.jc._handle_comm_message(req_dict)
+        self.assertEqual(expected, retry_data)
+        # no NEW message as there are no new IDs
+        retry_msg = self.jc._comm.pop_message()
+        self.assertEqual(
+            {"msg_type": RETRY, "content": expected},
+            retry_msg,
+        )
+
+    def test_retry_jobs__job_id__invalid(self):
+        self.check_job_id__no_job_test(RETRY)
+
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__job_id_list__2_ok(self):
         job_id_list = [JOB_TERMINATED, JOB_ERROR, None]
         req_dict = make_comm_msg(RETRY, job_id_list, False)
@@ -983,8 +1016,7 @@ class JobCommTestCase(unittest.TestCase):
         }
         retry_data = self.jc._handle_comm_message(req_dict)
         self.assertEqual(expected, retry_data)
-        new_msg = self.jc._comm.pop_message()
-        self.assertEqual({"msg_type": NEW, "content": {JOB_ID_LIST: []}}, new_msg)
+        # no NEW message as there are no new IDs
         retry_msg = self.jc._comm.pop_message()
         self.assertEqual(
             {"msg_type": RETRY, "content": expected},
@@ -1285,8 +1317,8 @@ class JobCommTestCase(unittest.TestCase):
         batch_id = BATCH_PARENT
         job_id_list = BATCH_PARENT_CHILDREN
         self.check_job_output_states(
-            request_type=START_UPDATE_BATCH,
-            params={JOB_ID: batch_id},
+            request_type=START_UPDATE,
+            params={BATCH_ID: batch_id},
             ok_states=job_id_list,
         )
         for job_id in ALL_JOBS:
@@ -1308,8 +1340,8 @@ class JobCommTestCase(unittest.TestCase):
         batch_id = BATCH_PARENT
         job_id_list = BATCH_PARENT_CHILDREN
         self.check_job_output_states(
-            request_type=STOP_UPDATE_BATCH,
-            params={JOB_ID: batch_id},
+            request_type=STOP_UPDATE,
+            params={BATCH_ID: batch_id},
             ok_states=job_id_list,
         )
         for job_id in ALL_JOBS:
@@ -1407,17 +1439,12 @@ class JobRequestTestCase(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, ONE_INPUT_TYPE_ONLY_ERR):
                 JobRequest(msg)
 
-    def test_request_both_inputs(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": STATUS,
-                    JOB_ID: "ababab",
-                    JOB_ID_LIST: [],
-                }
-            },
-        }
+        # all three
+        msg = make_comm_msg(STATUS, {
+            JOB_ID: "job_id",
+            BATCH_ID: "batch_id",
+            JOB_ID_LIST: [],
+        }, False)
         with self.assertRaisesRegex(ValueError, ONE_INPUT_TYPE_ONLY_ERR):
             JobRequest(msg)
 
@@ -1433,82 +1460,6 @@ class JobRequestTestCase(unittest.TestCase):
             req.batch_id
         with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
             req.cell_id_list
-
-    def _check_rq_equal(self, rq0, rq1):
-        self.assertEqual(rq0.msg_id, rq1.msg_id)
-        self.assertEqual(rq0.rq_data, rq1.rq_data)
-        self.assertEqual(rq0.request_type, rq1.request_type)
-        self.assertEqual(rq0.job_id, rq1.job_id)
-
-    def test_convert_to_using_job_id_list(self):
-        rq_msg = make_comm_msg("a_request", "a", False)
-        rq = JobRequest._convert_to_using_job_id_list(rq_msg)
-        self.assertEqual(rq.request_type, "a_request")
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rq.job_id
-        self.assertEqual(rq.job_id_list, ["a"])
-
-    def test_split_request_by_job_id(self):
-        rq_msg = make_comm_msg("a_request", ["a", "b", "c"], False)
-        rqa0 = make_comm_msg("a_request", "a", True)
-        rqb0 = make_comm_msg("a_request", "b", True)
-        rqc0 = make_comm_msg("a_request", "c", True)
-        rqa1, rqb1, rqc1 = JobRequest._split_request_by_job_id(rq_msg)
-        self._check_rq_equal(rqa0, rqa1)
-        self._check_rq_equal(rqb0, rqb1)
-        self._check_rq_equal(rqc0, rqc1)
-
-    def test_translate_require_job_id(self):
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID[0], "a", False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        self.assertEqual(rqs[0].job_id, "a")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[0].job_id_list
-
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID[0], ["a", "b"], False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 2)
-        self.assertEqual(rqs[0].job_id, "a")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[0].job_id_list
-        self.assertEqual(rqs[1].job_id, "b")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[1].job_id_list
-
-    def test_translate_require_job_id_list(self):
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], "a", False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rqs[0].job_id
-        self.assertEqual(rqs[0].job_id_list, ["a"])
-
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], ["a", "b"], False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rqs[0].job_id
-        self.assertEqual(rqs[0].job_id_list, ["a", "b"])
-
-    def test_translate_doesnt_require_any_job_ids(self):
-        rq_msg = make_comm_msg(STATUS_ALL, None, False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-
-    def test_translate_both_inputs(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": STATUS,
-                    JOB_ID: "ababab",
-                    JOB_ID_LIST: [],
-                }
-            },
-        }
-        with self.assertRaisesRegex(ValueError, ONE_INPUT_TYPE_ONLY_ERR):
-            JobRequest.translate(msg)
 
 
 class exc_to_msgTestCase(unittest.TestCase):

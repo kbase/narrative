@@ -179,14 +179,14 @@ define([
             });
         }
 
-        function genericClientCall(call_params) {
+        function genericClientCall(callParams) {
             const swUrl = runtime.config('services.service_wizard.url'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken(),
                 });
             return genericClient.sync_call(
                 dd_options.service_function,
-                call_params,
+                callParams,
                 null,
                 null,
                 dd_options.service_version || 'release'
@@ -218,38 +218,42 @@ define([
                     }
                 );
             } else {
-                let call_params = JSON.stringify(dd_options.service_params).replace(
+                let callParams = JSON.stringify(dd_options.service_params).replace(
                     '{{dynamic_dropdown_input}}',
                     searchTerm
                 );
-                call_params = JSON.parse(call_params);
+                callParams = JSON.parse(callParams);
 
-                // TODO: wrap lines 228-250 in a check for dd_options.include_user_params and implement that in NMS
+                // TODO: wrap lines 228-252 in a check for dd_options.include_user_params and implement that in NMS
                 const params = await channel.request({}, { key: { type: 'get-parameters' } });
 
-                // replace dynamically set service_params with current parameter values in app
-                call_params = Object.entries(call_params).reduce((acc, [k, v]) => {
-                    if (typeof v === 'string') {
-                        // match dynamic user params that are {{in brackets}}
-                        const d_param = v.match(/[^{{]+(?=}\})/);
-                        if (d_param !== null) {
-                            if (!(d_param[0] in params)) {
-                                console.error(
-                                    `Parameter "{{${d_param[0]}}}" does not exist as a parameter for this method. ` +
-                                        `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
-                                );
-                                // dont include bad parameters that don't exist
+                // text replacement for any dynamic parameter values
+                callParams = callParams.map((callParam) => {
+                    return Object.entries(callParam).reduce((acc, [k, v]) => {
+                        if (typeof v === 'string') {
+                            // match dynamic user params that are {{in brackets}}
+                            const d_param = v.match(/[^{{]+(?=}\})/);
+                            if (d_param !== null) {
+                                if (!(d_param[0] in params)) {
+                                    console.error(
+                                        `Parameter "{{${d_param[0]}}}" does not exist as a parameter for this method. ` +
+                                            `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
+                                    );
+                                    // dont include bad parameters that don't exist
+                                    return acc;
+                                }
+                                // replace dynamic values with actual param values
+                                acc[k] = params[d_param[0]];
                                 return acc;
                             }
-                            // replace dynamic values with actual param values
-                            return Object.assign({}, acc, { [k]: params[d_param[0]] });
                         }
-                    }
-                    // return anything else as normal
-                    return Object.assign({}, acc, { [k]: v });
-                }, {});
+                        // return anything else as normal
+                        acc[k] = v;
+                        return;
+                    }, {});
+                });
 
-                return Promise.resolve(genericClientCall(call_params)).then((results) => {
+                return Promise.resolve(genericClientCall(callParams)).then((results) => {
                     let index = dd_options.result_array_index;
                     if (!index) {
                         index = 0;

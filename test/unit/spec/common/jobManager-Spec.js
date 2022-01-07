@@ -942,30 +942,46 @@ define([
                         JobsData.allJobsWithBatchParent
                     );
                     // create an update for the job
-                    const updatedJobState = Object.assign({}, jobState, {
+                    const updateOne = Object.assign({}, jobState, {
                             updated: jobState.updated + 10,
                         }),
-                        messageOne = { jobState, jobId },
-                        messageTwo = { jobState: updatedJobState, jobId };
+                        updateTwo = Object.assign({}, jobState, {
+                            retry_ids: [1, 2, 3],
+                        }),
+                        messageOne = { jobState },
+                        messageTwo = { jobState: updateOne },
+                        messageThree = { jobState: updateTwo };
 
                     spyOn(console, 'error');
                     spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
                     // the first message will not trigger `updateModel` as it is identical to the existing jobState
-                    // the second message will trigger `updateModel`
                     this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageOne, jobId);
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                         jobState
                     );
+                    expect(console.error).toHaveBeenCalledTimes(1);
+                    expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(0);
+
+                    // the second message will trigger `updateModel`
                     this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageTwo, jobId);
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
-                        updatedJobState
+                        updateOne
                     );
-
                     expect(console.error).toHaveBeenCalledTimes(2);
                     expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
-                    const updateModelCallArgs = this.jobManagerInstance.updateModel.calls.allArgs();
-                    // callArgs[0][0] and updateModel takes [jobState]
-                    expect(updateModelCallArgs).toEqual([[[updatedJobState]]]);
+                    let updateModelCallArgs = this.jobManagerInstance.updateModel.calls.allArgs();
+                    // updateModel takes [jobState] as an argument
+                    expect(updateModelCallArgs).toEqual([[[updateOne]]]);
+
+                    // third message will also trigger an update
+                    this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageThree, jobId);
+                    expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
+                        updateTwo
+                    );
+                    expect(console.error).toHaveBeenCalledTimes(3);
+                    expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(2);
+                    updateModelCallArgs = this.jobManagerInstance.updateModel.calls.allArgs();
+                    expect(updateModelCallArgs).toEqual([[[updateOne]], [[updateTwo]]]);
                 });
 
                 JobsData.allJobsWithBatchParent.forEach((jobState) => {

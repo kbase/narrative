@@ -224,30 +224,32 @@ define([
                 );
                 call_params = JSON.parse(call_params);
 
-                // TODO: wrap lines 228-250 in a check for dd_options.include_user_params and implement that in NMS
+                // TODO: wrap lines 228-252 in a check for dd_options.include_user_params and implement that in NMS
                 const params = await channel.request({}, { key: { type: 'get-parameters' } });
 
-                // replace dynamically set service_params with current parameter values in app
-                call_params = Object.entries(call_params).reduce((acc, [k, v]) => {
-                    if (typeof v === 'string') {
-                        // match dynamic user params that are {{in brackets}}
-                        const d_param = v.match(/[^{{]+(?=}\})/);
-                        if (d_param !== null) {
-                            if (!(d_param[0] in params)) {
-                                console.error(
-                                    `Parameter "{{${d_param[0]}}}" does not exist as a parameter for this method. ` +
-                                        `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
-                                );
-                                // dont include bad parameters that don't exist
-                                return acc;
+                // text replacement for any dynamic parameter values
+                call_params = call_params.map((call_param) => {
+                    return Object.entries(call_param).reduce((acc, [k, v]) => {
+                        if (typeof v === 'string') {
+                            // match dynamic user params that are {{in brackets}}
+                            const d_param = v.match(/[^{{]+(?=}\})/);
+                            if (d_param !== null) {
+                                if (!(d_param[0] in params)) {
+                                    console.error(
+                                        `Parameter "{{${d_param[0]}}}" does not exist as a parameter for this method. ` +
+                                            `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
+                                    );
+                                    // dont include bad parameters that don't exist
+                                    return acc;
+                                }
+                                // replace dynamic values with actual param values
+                                return Object.assign({}, acc, { [k]: params[d_param[0]] });
                             }
-                            // replace dynamic values with actual param values
-                            return Object.assign({}, acc, { [k]: params[d_param[0]] });
                         }
-                    }
-                    // return anything else as normal
-                    return Object.assign({}, acc, { [k]: v });
-                }, {});
+                        // return anything else as normal
+                        return Object.assign({}, acc, { [k]: v });
+                    }, {});
+                });
 
                 return Promise.resolve(genericClientCall(call_params)).then((results) => {
                     let index = dd_options.result_array_index;

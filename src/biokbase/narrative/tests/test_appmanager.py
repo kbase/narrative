@@ -1,12 +1,12 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP, timestamp
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job, JOB_ATTRS, JOB_ATTR_DEFAULTS
+from biokbase.narrative.jobs.job import Job
 from biokbase.narrative.tests.test_job import get_test_spec
 from IPython.display import HTML, Javascript
 import unittest
@@ -17,7 +17,6 @@ from .narrative_mock.mockclients import (
     WSID_STANDARD,
 )
 import os
-from typing import List
 import sys
 import io
 import copy

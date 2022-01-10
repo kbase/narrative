@@ -43,7 +43,7 @@ from biokbase.narrative.jobs.jobcomm import (
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
-    JobIDException,
+    JobRequestException,
 )
 
 from src.biokbase.narrative.jobs.jobmanager import DOES_NOT_EXIST
@@ -56,13 +56,14 @@ from .narrative_mock.mockclients import (
     generate_ee2_error,
     MockClients,
 )
-from .test_job import (
+
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
     JOB_ERROR,
-    JOB_NOT_FOUND,
     BATCH_PARENT,
     BATCH_COMPLETED,
     BATCH_TERMINATED,
@@ -71,26 +72,27 @@ from .test_job import (
     BATCH_RETRY_COMPLETED,
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
+    JOB_NOT_FOUND,
+    BAD_JOB_ID,
+    BAD_JOB_ID_2,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
-    ALL_JOBS,
     JOBS_TERMINALITY,
-    TERMINAL_JOBS,
+    ALL_JOBS,
     ACTIVE_JOBS,
+    BATCH_PARENT_CHILDREN,
     BATCH_CHILDREN,
     TEST_JOBS,
+)
+
+from .test_job import (
     get_test_job_states,
     get_cell_2_jobs,
 )
 
 from .test_jobmanager import get_test_job_info, get_test_job_infos
 
-BATCH_PARENT_CHILDREN = [BATCH_PARENT] + BATCH_CHILDREN
 APP_NAME = "The Best App in the World"
-BAD_JOB_ID = "a_bad_job_id"
-BAD_JOB_ID_2 = "another_bad_job_id"
-EXP_ALL_STATE_IDS = ALL_JOBS  # or ACTIVE_JOBS
-CLIENTS = "biokbase.narrative.clients.get"
 
 NO_JOBS_MAPPING = {
     "jobs": {},
@@ -209,7 +211,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = [None, ""]
         req_dict = make_comm_msg(request_type, job_id_list, False)
         req = make_comm_msg(request_type, job_id_list, True)
-        err = JobIDException(JOBS_MISSING_ERR, job_id_list)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
 
         # using handler
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
@@ -248,7 +250,7 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._comm.clear_message_cache()
             req_dict = make_comm_msg(request_type, {JOB_ID: job_id}, False)
             req = make_comm_msg(request_type, {JOB_ID: job_id}, True)
-            err = JobIDException(JOBS_MISSING_ERR, [job_id])
+            err = JobRequestException(JOBS_MISSING_ERR, [job_id])
             self.check_id_error(req_dict, err)
 
             # run directly
@@ -257,27 +259,23 @@ class JobCommTestCase(unittest.TestCase):
 
     def check_job_id__dne_test(self, request_type):
         req_dict = make_comm_msg(request_type, {JOB_ID: JOB_NOT_FOUND}, False)
-        err = JobIDException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
+        err = JobRequestException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
         self.check_id_error(req_dict, err)
 
     def check_batch_id__no_job_test(self, request_type):
         for job_id in [None, ""]:
             req_dict = make_comm_msg(request_type, {BATCH_ID: job_id}, False)
-            err = JobIDException(JOB_NOT_REG_ERR, job_id)
+            err = JobRequestException(JOB_NOT_REG_ERR, job_id)
             self.check_id_error(req_dict, err)
 
     def check_batch_id__dne_test(self, request_type):
-        req_dict = make_comm_msg(
-            request_type, {BATCH_ID: JOB_NOT_FOUND}, False
-        )
-        err = JobIDException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
+        req_dict = make_comm_msg(request_type, {BATCH_ID: JOB_NOT_FOUND}, False)
+        err = JobRequestException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
         self.check_id_error(req_dict, err)
 
     def check_batch_id__not_batch_test(self, request_type):
-        req_dict = make_comm_msg(
-            request_type, {BATCH_ID: BATCH_COMPLETED}, False
-        )
-        err = JobIDException(JOB_NOT_BATCH_ERR, BATCH_COMPLETED)
+        req_dict = make_comm_msg(request_type, {BATCH_ID: BATCH_COMPLETED}, False)
+        err = JobRequestException(JOB_NOT_BATCH_ERR, BATCH_COMPLETED)
         self.check_id_error(req_dict, err)
 
     # ---------------------
@@ -381,7 +379,7 @@ class JobCommTestCase(unittest.TestCase):
 
         for msg_type in functions:
             req_dict = make_comm_msg(msg_type, None, False)
-            err = JobIDException(ONE_INPUT_TYPE_ONLY_ERR)
+            err = JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
             with self.assertRaisesRegex(type(err), str(err)):
                 self.jc._handle_comm_message(req_dict)
             self.check_error_message(req_dict, err)
@@ -425,13 +423,6 @@ class JobCommTestCase(unittest.TestCase):
 
                 self.jc.start_job_status_loop(init_jobs=True, cell_list=combo)
                 msg = self.jc._comm.last_message
-                self.assertEqual(
-                    {
-                        "msg_type": STATUS_ALL,
-                        "content": get_test_job_states(EXP_ALL_STATE_IDS),
-                    },
-                    msg,
-                )
 
                 exp_job_ids = [
                     job_id
@@ -443,7 +434,7 @@ class JobCommTestCase(unittest.TestCase):
                     "msg_type": "job_status_all",
                     "content": get_test_job_states(exp_job_ids),
                 }
-                self.assertEqual(exp_msg, msg["data"])
+                self.assertEqual(exp_msg, msg)
 
                 if len(exp_job_ids):
                     self.assertTrue(self.jc._running_lookup_loop)
@@ -506,9 +497,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_all_job_states__ok(self):
         self.check_job_output_states(
-            request_type=STATUS_ALL,
-            response_type=STATUS_ALL,
-            ok_states=EXP_ALL_STATE_IDS,
+            request_type=STATUS_ALL, response_type=STATUS_ALL, ok_states=ALL_JOBS
         )
 
     # -----------------------
@@ -522,7 +511,7 @@ class JobCommTestCase(unittest.TestCase):
 
     def test_lookup_job_state__no_job(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[None]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[None]}")
         ):
             self.jc.lookup_job_state(None)
 
@@ -620,7 +609,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_by_cell_id__job_req_none(self):
         cell_id_list = None
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
-        err = ValueError(CELLS_NOT_PROVIDED_ERR)
+        err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
@@ -628,7 +617,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
         cell_id_list = []
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
-        err = ValueError(CELLS_NOT_PROVIDED_ERR)
+        err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
@@ -712,7 +701,7 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     JOB_NOT_FOUND: {
                         "job_id": JOB_NOT_FOUND,
-                        "error": "does_not_exist",
+                        "error": DOES_NOT_EXIST,
                     },
                 },
             },
@@ -751,7 +740,7 @@ class JobCommTestCase(unittest.TestCase):
                     JOB_COMPLETED: get_test_job_info(JOB_COMPLETED),
                     JOB_NOT_FOUND: {
                         "job_id": JOB_NOT_FOUND,
-                        "error": "does_not_exist",
+                        "error": DOES_NOT_EXIST,
                     },
                 },
             },
@@ -801,7 +790,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = [None, ""]
         for job_id in job_id_list:
             req_dict = make_comm_msg(CANCEL, {JOB_ID: job_id}, False)
-            err = JobIDException(JOBS_MISSING_ERR, [job_id])
+            err = JobRequestException(JOBS_MISSING_ERR, [job_id])
             with self.assertRaisesRegex(type(err), re.escape(str(err))):
                 self.jc._handle_comm_message(req_dict)
             self.check_error_message(req_dict, err)
@@ -825,13 +814,13 @@ class JobCommTestCase(unittest.TestCase):
     def test_cancel_jobs__job_id_list__no_jobs(self):
         job_id_list = None
         req_dict = make_comm_msg(CANCEL, {JOB_ID_LIST: job_id_list}, False)
-        err = TypeError(JOBS_TYPE_ERR)
+        err = JobRequestException(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
             self.jc._handle_comm_message(req_dict)
 
         job_id_list = [None, ""]
         req_dict = make_comm_msg(CANCEL, job_id_list, False)
-        err = JobIDException(JOBS_MISSING_ERR, job_id_list)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
@@ -867,16 +856,12 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = [JOB_RUNNING, BATCH_RETRY_RUNNING]
         req_dict = make_comm_msg(CANCEL, job_id_list, False)
         output = self.jc._handle_comm_message(req_dict)
+        print(output)
         expected = {
             JOB_RUNNING: self.job_states[JOB_RUNNING],
             BATCH_RETRY_RUNNING: {
                 **self.job_states[BATCH_RETRY_RUNNING],
-                "error": {
-                    "name": "JSONRPCError",
-                    "message": CANCEL + " failed",
-                    "code": -32000,
-                    "error": "Unable to cancel job",
-                },
+                "error": CANCEL + " failed",
             },
         }
 
@@ -1133,7 +1118,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_logs__job_id__no_job(self):
         job_id = None
         req_dict = make_comm_msg(LOGS, {JOB_ID: job_id}, False)
-        err = JobIDException(JOBS_MISSING_ERR, [job_id])
+        err = JobRequestException(JOBS_MISSING_ERR, [job_id])
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
@@ -1267,7 +1252,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_modify_job_update__job_id_list__no_jobs(self):
         job_id_list = [None]
         req_dict = make_comm_msg(START_UPDATE, job_id_list, False)
-        err = JobIDException(JOBS_MISSING_ERR, job_id_list)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
@@ -1382,20 +1367,20 @@ class JobCommTestCase(unittest.TestCase):
     # Handle bad comm messages
     # ------------------------
     def test_handle_comm_message_bad(self):
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
             self.jc._handle_comm_message({"foo": "bar"})
-        self.assertIn("Improperly formatted job channel message!", str(e.exception))
-        with self.assertRaises(ValueError) as e:
+
+        with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
             self.jc._handle_comm_message({"content": {"data": {"request_type": None}}})
-        self.assertIn("Missing request type in job channel message!", str(e.exception))
 
     def test_handle_comm_message_unknown(self):
         unknown = "NotAJobRequest"
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(
+            JobRequestException, re.escape(f"Unknown KBaseJobs message '{unknown}'")
+        ):
             self.jc._handle_comm_message(
                 {"content": {"data": {"request_type": unknown}}}
             )
-        self.assertIn(f"Unknown KBaseJobs message '{unknown}'", str(e.exception))
 
 
 class JobRequestTestCase(unittest.TestCase):
@@ -1415,21 +1400,21 @@ class JobRequestTestCase(unittest.TestCase):
         self.assertEqual(rq.request_type, "a_request")
         self.assertEqual(rq.raw_request, rq_msg)
         self.assertEqual(rq.rq_data, {"request_type": "a_request"})
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOB_NOT_PROVIDED_ERR):
             rq.job_id
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOBS_NOT_PROVIDED_ERR):
             rq.job_id_list
 
     def test_request_no_data(self):
         rq_msg = {"msg_id": "some_id", "content": {}}
-        with self.assertRaisesRegex(ValueError, INVALID_REQUEST_ERR):
+        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
             JobRequest(rq_msg)
 
     def test_request_no_req(self):
         rq_msg = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
         rq_msg2 = {"msg_id": "some_other_id", "content": {"data": {}}}
         for msg in [rq_msg, rq_msg2]:
-            with self.assertRaisesRegex(ValueError, MISSING_REQUEST_TYPE_ERR):
+            with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
                 JobRequest(msg)
 
     def test_request_more_than_one_input(self):
@@ -1444,29 +1429,33 @@ class JobRequestTestCase(unittest.TestCase):
         )
         for co in combos:
             msg = make_comm_msg(STATUS, {**co[0], **co[1]}, False)
-            with self.assertRaisesRegex(ValueError, ONE_INPUT_TYPE_ONLY_ERR):
+            with self.assertRaisesRegex(JobRequestException, ONE_INPUT_TYPE_ONLY_ERR):
                 JobRequest(msg)
 
         # all three
-        msg = make_comm_msg(STATUS, {
-            JOB_ID: "job_id",
-            BATCH_ID: "batch_id",
-            JOB_ID_LIST: [],
-        }, False)
-        with self.assertRaisesRegex(ValueError, ONE_INPUT_TYPE_ONLY_ERR):
+        msg = make_comm_msg(
+            STATUS,
+            {
+                JOB_ID: "job_id",
+                BATCH_ID: "batch_id",
+                JOB_ID_LIST: [],
+            },
+            False,
+        )
+        with self.assertRaisesRegex(JobRequestException, ONE_INPUT_TYPE_ONLY_ERR):
             JobRequest(msg)
 
     def test_request__no_input(self):
         msg = make_comm_msg(STATUS, {}, False)
         req = JobRequest(msg)
 
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOB_NOT_PROVIDED_ERR):
             req.job_id
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOBS_NOT_PROVIDED_ERR):
             req.job_id_list
-        with self.assertRaisesRegex(JobIDException, BATCH_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, BATCH_NOT_PROVIDED_ERR):
             req.batch_id
-        with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, CELLS_NOT_PROVIDED_ERR):
             req.cell_id_list
 
 
@@ -1581,7 +1570,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             msg,
         )
 
-    def test_JobIDException(self):
+    def test_JobRequestException(self):
         job_id = BATCH_PARENT
         req_type = INFO
         req = make_comm_msg(req_type, job_id, True)
@@ -1593,9 +1582,9 @@ class exc_to_msgTestCase(unittest.TestCase):
         )
 
         def f():
-            raise JobIDException(message, "a0a0a0")
+            raise JobRequestException(message, "a0a0a0")
 
-        with self.assertRaisesRegex(JobIDException, f"{message}: a0a0a0"):
+        with self.assertRaisesRegex(JobRequestException, f"{message}: a0a0a0"):
             self.foo(req, f)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -1604,7 +1593,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                 "content": {
                     "raw_request": req.raw_request,
                     "source": req_type,
-                    "name": "JobIDException",
+                    "name": "JobRequestException",
                     "message": f"{message}: a0a0a0",
                 },
             },

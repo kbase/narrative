@@ -222,6 +222,7 @@ class Job(object):
             run_id=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
+            # TODO: add the status attribute!
             tag=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("tag", JOB_ATTR_DEFAULTS["tag"]),
@@ -301,7 +302,7 @@ class Job(object):
     def parameters(self):
         """
         Returns the parameters used to start the job. Job tries to use its params field, but
-        if that's None, then it makes a call to njs.
+        if that's None, then it makes a call to EE2.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
         object fetched from ee2.get_job_params

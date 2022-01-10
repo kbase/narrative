@@ -14,7 +14,7 @@ from biokbase.narrative.common import kblogging
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception,
-    JobIDException,
+    JobRequestException,
 )
 
 """
@@ -153,10 +153,10 @@ class JobManager(object):
     def get_job(self, job_id):
         """
         Returns a Job with the given job_id.
-        Raises a JobIDException if not found.
+        Raises a JobRequestException if not found.
         """
         if job_id not in self._running_jobs:
-            raise JobIDException(JOB_NOT_REG_ERR, job_id)
+            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
         return self._running_jobs[job_id]["job"]
 
     def _create_jobs(self, job_ids) -> dict:
@@ -182,7 +182,7 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job_list(self, input_ids: List[str]) -> Tuple[List[str], List[str]]:
+    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order
         Any jobs not present in self._running_jobs are added to an error list
@@ -192,7 +192,7 @@ class JobManager(object):
         and "error_ids", for jobs that the narrative backend does not know about
         """
         if not isinstance(input_ids, list):
-            raise TypeError(f"{JOBS_TYPE_ERR}: {input_ids}")
+            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
 
         job_ids = []
         error_ids = []
@@ -204,19 +204,20 @@ class JobManager(object):
                     error_ids.append(input_id)
 
         if not len(job_ids) + len(error_ids):
-            raise JobIDException(JOBS_MISSING_ERR, input_ids)
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
 
         return job_ids, error_ids
 
     def _construct_job_output_state_set(
-        self, job_ids: list, states: dict = None
+        self, job_ids: List[str], states: dict = None
     ) -> dict:
         """
         Builds a set of job states for the list of job ids.
+        :param job_ids: list of job IDs (may be empty)
         :param states: dict, where each value is a state is from EE2
         """
         if not isinstance(job_ids, list):
-            raise ValueError("job_ids must be a list")
+            raise JobRequestException("job_ids must be a list")
 
         if not len(job_ids):
             return {}
@@ -278,7 +279,7 @@ class JobManager(object):
             job_params: dictionary,
             batch_id: string,
         }
-        Will set packet to "does_not_exist" if job_id doesn't exist.
+        Will set packet to DOES_NOT_EXIST if job_id doesn't exist.
         """
         job_ids, error_ids = self._check_job_list(job_ids)
 
@@ -307,7 +308,7 @@ class JobManager(object):
         job IDs associated with the cell.
         """
         if not cell_id_list:
-            raise ValueError(CELLS_NOT_PROVIDED_ERR)
+            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
             id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
@@ -449,7 +450,7 @@ class JobManager(object):
         Cancel a list of running jobs, placing them in a canceled state
         Does NOT delete the jobs.
         If the job_ids are not present or are not found in the Narrative,
-        a ValueError is raised.
+        a JobRequestException is raised.
 
         Results are returned as a dict of job status objects keyed by job id
 
@@ -461,9 +462,9 @@ class JobManager(object):
         error_states = dict()
         for job_id in job_ids:
             if not self.get_job(job_id).was_terminal():
-                cancel_err = self._cancel_job(job_id)
-                if cancel_err:
-                    error_states[job_id] = cancel_err
+                error = self._cancel_job(job_id)
+                if error:
+                    error_states[job_id] = error.message
 
         job_states = self._construct_job_output_state_set(job_ids)
 
@@ -471,13 +472,7 @@ class JobManager(object):
             job_states[job_id] = get_error_output_state(job_id)
 
         for job_id in error_states:
-            error = error_states[job_id]
-            job_states[job_id]["error"] = {
-                "name": error.name,
-                "message": error.message,
-                "error": error.error,
-                "code": error.code,
-            }
+            job_states[job_id]["error"] = error_states[job_id]
 
         return job_states
 
@@ -510,8 +505,8 @@ class JobManager(object):
             }
             ...
             {
-                "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
-                "error": "does_not_exist"
+                "job": {"state": {"job_id": job_id, "status": DOES_NOT_EXIST}},
+                "error": DOES_NOT_EXIST
             }
         ]
         where the innermost dictionaries are job states from ee2 and are within the
@@ -577,7 +572,7 @@ class JobManager(object):
         """
         batch_job = self.get_job(batch_id)
         if not batch_job.batch_job:
-            raise JobIDException(JOB_NOT_BATCH_ERR, batch_id)
+            raise JobRequestException(JOB_NOT_BATCH_ERR, batch_id)
 
         child_ids = batch_job.child_jobs
 

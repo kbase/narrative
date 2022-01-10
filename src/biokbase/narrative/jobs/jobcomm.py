@@ -7,7 +7,7 @@ from biokbase.narrative.jobs.jobmanager import (
     get_error_output_state,
     JobManager,
 )
-from biokbase.narrative.exception_util import NarrativeException, JobIDException
+from biokbase.narrative.exception_util import NarrativeException, JobRequestException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
@@ -99,28 +99,29 @@ class JobRequest:
     The IDs of the job(s) to perform the function on.
 
     """
+
     def __init__(self, rq: dict):
         self.raw_request = copy.deepcopy(rq)
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
         if self.rq_data is None:
-            raise ValueError(INVALID_REQUEST_ERR)
+            raise JobRequestException(INVALID_REQUEST_ERR)
         self.request_type = self.rq_data.get("request_type")
         if self.request_type is None:
-            raise ValueError(MISSING_REQUEST_TYPE_ERR)
+            raise JobRequestException(MISSING_REQUEST_TYPE_ERR)
 
         input_type_count = 0
         for input_type in [JOB_ID, JOB_ID_LIST, BATCH_ID]:
             if input_type in self.rq_data:
                 input_type_count += 1
         if input_type_count > 1:
-            raise ValueError(ONE_INPUT_TYPE_ONLY_ERR)
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
     def job_id(self):
         if JOB_ID in self.rq_data:
             return self.rq_data[JOB_ID]
-        raise JobIDException(JOB_NOT_PROVIDED_ERR)
+        raise JobRequestException(JOB_NOT_PROVIDED_ERR)
 
     @property
     def job_id_list(self):
@@ -128,13 +129,13 @@ class JobRequest:
             return self.rq_data[JOB_ID_LIST]
         if JOB_ID in self.rq_data:
             return [self.rq_data[JOB_ID]]
-        raise JobIDException(JOBS_NOT_PROVIDED_ERR)
+        raise JobRequestException(JOBS_NOT_PROVIDED_ERR)
 
     @property
     def batch_id(self):
         if BATCH_ID in self.rq_data:
             return self.rq_data[BATCH_ID]
-        raise JobIDException(BATCH_NOT_PROVIDED_ERR)
+        raise JobRequestException(BATCH_NOT_PROVIDED_ERR)
 
     def has_batch_id(self):
         return BATCH_ID in self.rq_data
@@ -143,7 +144,7 @@ class JobRequest:
     def cell_id_list(self):
         if CELL_ID_LIST in self.rq_data:
             return self.rq_data[CELL_ID_LIST]
-        raise ValueError(CELLS_NOT_PROVIDED_ERR)
+        raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
 
 class JobComm:
@@ -213,14 +214,13 @@ class JobComm:
             }
 
     def _get_job_ids(self, req: JobRequest = None):
-
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
 
         try:
             return req.job_id_list
         except Exception:
-            raise JobIDException(ONE_INPUT_TYPE_ONLY_ERR)
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     def start_job_status_loop(
         self,
@@ -360,16 +360,17 @@ class JobComm:
         no longer anything requesting job status.
 
         If the given job_id in the request doesn't exist in the current Narrative, or is None,
-        this raises a ValueError.
+        this raises a JobRequestException.
         """
         job_id_list = self._get_job_ids(req)
         update_type = req.request_type
-        if update_type == "start_job_update":
+        if update_type == START_UPDATE:
             update_refresh = True
-        elif update_type == "stop_job_update":
+        elif update_type == STOP_UPDATE:
             update_refresh = False
         else:
-            raise ValueError("Unknown request")
+            # this should be impossible
+            raise JobRequestException("Unknown request")
 
         self._jm.modify_job_refresh(job_id_list, update_refresh)
 
@@ -383,7 +384,7 @@ class JobComm:
     def _cancel_jobs(self, req: JobRequest) -> dict:
         """
         This cancels a running job.
-        If there are no valid jobs, this raises a ValueError.
+        If there are no valid jobs, this raises a JobRequestException.
         If there's an error while attempting to cancel, this raises a NarrativeError.
         In the end, after a successful cancel, this finishes up by fetching and returning the
         job state with the new status.
@@ -406,9 +407,7 @@ class JobComm:
         if len(retry_ids):
             self.send_comm_message(
                 NEW,
-                {
-                    JOB_ID_LIST: retry_ids
-                },
+                {JOB_ID_LIST: retry_ids},
             )
         return retry_results
 
@@ -435,26 +434,20 @@ class JobComm:
         A handler dictionary is created on JobComm creation.
 
         Any unknown request is returned over the channel with message type 'job_error', and a
-        ValueError is raised.
+        JobRequestException is raised.
         """
-        output = {}
         with exc_to_msg(msg):
-            requests = [JobRequest(msg)]
+            request = JobRequest(msg)
 
-            for request in requests:
-                kblogging.log_event(
-                    self._log, "handle_comm_message", {"msg": request.request_type}
+            kblogging.log_event(
+                self._log, "handle_comm_message", {"msg": request.request_type}
+            )
+            if request.request_type not in self._msg_map:
+                raise JobRequestException(
+                    f"Unknown KBaseJobs message '{request.request_type}'"
                 )
-                if request.request_type in self._msg_map:
-                    response = self._msg_map[request.request_type](request)
-                    if response:
-                        output.update(response)
-                else:
-                    raise ValueError(
-                        f"Unknown KBaseJobs message '{request.request_type}'"
-                    )
 
-        return output
+            return self._msg_map[request.request_type](request)
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """

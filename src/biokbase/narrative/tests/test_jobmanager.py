@@ -15,6 +15,7 @@ from biokbase.narrative.jobs.jobmanager import (
     JOB_NOT_BATCH_ERR,
     JOBS_MISSING_ERR,
     CELLS_NOT_PROVIDED_ERR,
+    DOES_NOT_EXIST,
     get_error_output_state,
 )
 from biokbase.narrative.jobs.job import (
@@ -25,12 +26,14 @@ from biokbase.narrative.jobs.job import (
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
-    JobIDException,
+    JobRequestException,
 )
 
 from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
 from .util import ConfigTests
-from .test_job import (
+
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
@@ -45,6 +48,8 @@ from .test_job import (
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
     JOB_NOT_FOUND,
+    BAD_JOB_ID,
+    BAD_JOB_ID_2,
     TEST_CELL_ID_LIST,
     JOBS_BY_CELL_ID,
     TEST_CELL_IDs,
@@ -52,14 +57,18 @@ from .test_job import (
     ALL_JOBS,
     TERMINAL_JOBS,
     ACTIVE_JOBS,
+    BATCH_PARENT_CHILDREN,
     BATCH_CHILDREN,
-    get_test_job,
-    get_test_job_state,
-    get_test_spec,
     TEST_JOBS,
+    get_test_job,
+)
+
+from .test_job import (
+    get_test_spec,
     get_test_job_states,
     get_cell_2_jobs,
 )
+
 from .narrative_mock.mockclients import (
     get_mock_client,
     get_failing_mock_client,
@@ -73,9 +82,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
-
 ERR_STR = "Some error occurred"
-CLIENTS = "biokbase.narrative.clients.get"
 
 
 def create_jm_message(r_type, job_id=None, data=None):
@@ -156,9 +163,8 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_failing_mock_client)
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
-        with self.assertRaises(NarrativeException) as e:
+        with self.assertRaisesRegex(NarrativeException, re.escape("Job lookup failed")):
             self.jm.initialize_jobs()
-        self.assertIn("Job lookup failed", str(e.exception))
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_initialize_jobs(self):
@@ -214,16 +220,16 @@ class JobManagerTest(unittest.TestCase):
                     )
 
     def test__check_job_list_fail(self):
-        with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
+        with self.assertRaisesRegex(JobRequestException, f"{JOBS_TYPE_ERR}: {None}"):
             self.jm._check_job_list(None)
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm._check_job_list([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
+            JobRequestException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm._check_job_list(["", "", None])
 
@@ -318,7 +324,9 @@ class JobManagerTest(unittest.TestCase):
         inputs = [None, "", JOB_NOT_FOUND]
 
         for input in inputs:
-            with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {input}"):
+            with self.assertRaisesRegex(
+                JobRequestException, f"{JOB_NOT_REG_ERR}: {input}"
+            ):
                 self.jm.get_job(input)
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -360,12 +368,12 @@ class JobManagerTest(unittest.TestCase):
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.cancel_jobs([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
+            JobRequestException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm.cancel_jobs(["", "", None])
 
@@ -417,7 +425,7 @@ class JobManagerTest(unittest.TestCase):
             JOB_NOT_FOUND: {
                 "jobState": {
                     "job_id": JOB_NOT_FOUND,
-                    "status": "does_not_exist",
+                    "status": DOES_NOT_EXIST,
                 }
             },
         }
@@ -473,7 +481,7 @@ class JobManagerTest(unittest.TestCase):
         dne_ids = [
             result["job"]["jobState"]["job_id"]
             for result in retry_results.values()
-            if result["job"]["jobState"]["status"] == "does_not_exist"
+            if result["job"]["jobState"]["status"] == DOES_NOT_EXIST
         ]
 
         for job_id in orig_ids + retry_ids:
@@ -534,7 +542,7 @@ class JobManagerTest(unittest.TestCase):
             JOB_NOT_FOUND: {
                 "job_id": JOB_NOT_FOUND,
                 "job": get_error_output_state(JOB_NOT_FOUND),
-                "error": "does_not_exist",
+                "error": DOES_NOT_EXIST,
             },
         }
 
@@ -613,13 +621,12 @@ class JobManagerTest(unittest.TestCase):
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__none_exist(self):
-        dne_id = "nope"
-        job_ids = ["", "", None, dne_id]
+        job_ids = ["", "", None, BAD_JOB_ID]
         expected = {
-            dne_id: {
-                "job_id": dne_id,
-                "job": get_error_output_state(dne_id),
-                "error": "does_not_exist",
+            BAD_JOB_ID: {
+                "job_id": BAD_JOB_ID,
+                "job": get_error_output_state(BAD_JOB_ID),
+                "error": DOES_NOT_EXIST,
             }
         }
 
@@ -628,12 +635,12 @@ class JobManagerTest(unittest.TestCase):
 
     def test_retry_jobs__bad_inputs(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.retry_jobs([])
 
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
+            JobRequestException, re.escape(f'{JOBS_MISSING_ERR}: {["", "", None]}')
         ):
             self.jm.retry_jobs(["", "", None])
 
@@ -655,12 +662,12 @@ class JobManagerTest(unittest.TestCase):
     ## lookup_job_states_by_cell_id
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__cell_id_list_None(self):
-        with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, CELLS_NOT_PROVIDED_ERR):
             self.jm.lookup_job_states_by_cell_id(cell_id_list=None)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__cell_id_list_empty(self):
-        with self.assertRaisesRegex(ValueError, CELLS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, CELLS_NOT_PROVIDED_ERR):
             self.jm.lookup_job_states_by_cell_id(cell_id_list=[])
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -764,24 +771,24 @@ class JobManagerTest(unittest.TestCase):
 
     def test_get_job_states__empty(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):
         with self.assertRaisesRegex(
-            JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
+            JobRequestException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
         ):
             self.jm.update_batch_job(JOB_NOT_FOUND)
 
     def test_update_batch_job__not_batch(self):
         with self.assertRaisesRegex(
-            JobIDException, f"{JOB_NOT_BATCH_ERR}: {JOB_CREATED}"
+            JobRequestException, f"{JOB_NOT_BATCH_ERR}: {JOB_CREATED}"
         ):
             self.jm.update_batch_job(JOB_CREATED)
 
         with self.assertRaisesRegex(
-            JobIDException, f"{JOB_NOT_BATCH_ERR}: {BATCH_TERMINATED}"
+            JobRequestException, f"{JOB_NOT_BATCH_ERR}: {BATCH_TERMINATED}"
         ):
             self.jm.update_batch_job(BATCH_TERMINATED)
 
@@ -804,7 +811,7 @@ class JobManagerTest(unittest.TestCase):
             elif job_id in TEST_JOBS:
                 return get_test_job(job_id)
             elif job_id == JOB_NOT_FOUND:
-                return {"job_id": job_id, "status": "does_not_exist"}
+                return {"job_id": job_id, "status": DOES_NOT_EXIST}
             else:
                 raise Exception()
 

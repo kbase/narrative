@@ -11,6 +11,12 @@ from biokbase.narrative.jobs.jobcomm import (
     RETRY,
 )
 
+from biokbase.narrative.tests.job_test_constants import (
+    JOB_CREATED,
+    BATCH_RETRY_RUNNING,
+    JOB_NOT_FOUND,
+)
+
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
@@ -18,9 +24,6 @@ WSID_STANDARD = 12345
 NARR_DATE = "2017-03-31T23:42:59+0000"
 NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
-BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
-JOB_CREATED = "5d64935cb215ad4128de94d7"
-JOB_NOT_FOUND = "job_not_found"
 
 
 def generate_ee2_error(fn):

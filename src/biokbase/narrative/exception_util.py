@@ -3,11 +3,12 @@ from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
-class JobIDException(ValueError):
+class JobRequestException(ValueError):
     """
-    Raised when a job ID is not provided, invalid (e.g., None, ""),
-    not registered in JobManager._running_jobs, or
-    not a batch ID as intended.
+    Raised when a job request is invalid in some way; for example,
+    if the required parameter(s) are empty (e.g. job_id or batch_id),
+    if a job ID is not registered in JobManager._running_jobs, or
+    it is not a batch ID as intended.
     Subclasses ValueError for except-clause backwards compatibility
     """
 

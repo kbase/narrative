@@ -11,8 +11,24 @@ define([
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
 
+    class SpreadsheetFetchError extends Error {
+        constructor(errors) {
+            super('Error while fetching CSV/TSV/Excel import data');
+            this.errors = errors;
+            this.name = 'SpreadsheetFetchError';
+        }
+    }
+
+    class SpreadsheetValidationError extends Error {
+        constructor(errors) {
+            super('Error while validating CSV/TSV/Excel import data');
+            this.errors = errors;
+            this.name = 'SpreadsheetValidationError';
+        }
+    }
+
     /**
-     *
+     * Fetches
      * @param {Array[string]} files - array of file names to treat as import specifications
      * @returns Promise that resolves into all the bulk upload stuff
      */
@@ -74,15 +90,27 @@ define([
             })
             .then((result) => {
                 // TODO - insert validation here
+                if (!result) {
+                    throw new SpreadsheetValidationError([
+                        {
+                            foo: 'bar',
+                        },
+                    ]);
+                }
                 return result;
             })
             .catch((error) => {
-                console.error(error);
-                console.error(JSON.parse(error.responseText));
-                return {};
+                const parsedError = JSON.parse(error.responseText);
+                // TODO - throw the parsed error again so the calling function can deal with it
+                throw new SpreadsheetFetchError(parsedError.errors);
             });
     }
 
+    /**
+     * Initializes and
+     * @param {Array} fileInfo
+     * @returns A Promise that resolves when all importer app cells are created
+     */
     function initSingleFileUploads(fileInfo) {
         const appInfos = uploaders.app_info;
         const tag = APIUtil.getAppVersionTag();
@@ -192,6 +220,13 @@ define([
             })
             .then(() => {
                 return initSingleFileUploads(singleFiles);
+            })
+            .catch(SpreadsheetFetchError, (error) => {
+                console.error(error);
+                alert(error.errors);
+            })
+            .catch(SpreadsheetValidationError, (error) => {
+                alert(error);
             });
     }
 

@@ -73,14 +73,128 @@ define([
                 );
             })
             .then((result) => {
-                // TODO - insert validation here
-                return result;
+                return processSpreadsheetFileData(result);
             })
             .catch((error) => {
                 console.error(error);
                 console.error(JSON.parse(error.responseText));
                 return {};
             });
+    }
+
+    /**
+     * Import data should look like this:
+     * {
+     *   types: {
+     *     dataType1: [{ input parameters }, { input parameters }, etc.]
+     *   },
+     *   files: {
+     *     dataType1: {
+     *       file: string,
+     *       tab: null or int
+     *     }
+     *   }
+     * }
+     *
+     * This gets processed to convert expected display values to actual parameter values
+     * that the app cell / app specs will use. Each of the dataTypes (keys of types or files)
+     * should map onto uploaders.app_info.
+     *
+     * TODO: also return the fetched app specs to avoid fetching them twice?
+     * @param {Object} data
+     */
+    async function processSpreadsheetFileData(data) {
+        // get the appIds
+        const appIdToType = Object.keys(data.types).reduce((appIdToType, dataType) => {
+            appIdToType[uploaders.app_info[dataType].app_id] = dataType;
+            return appIdToType;
+        }, {});
+
+        // get the app specs
+        const appSpecs = await APIUtil.getAppSpecs(Object.keys(appIdToType));
+        const appIdToSpec = appSpecs.reduce((appIdToSpec, appSpec) => {
+            appIdToSpec[appSpec.info.id] = appSpec;
+            return appIdToSpec;
+        }, {});
+
+        // go through all parameters and update values accordingly:
+        //
+        //   field_type = "dropdown" = display name -> value
+        //   field_type = "checkbox" = 0 or 1 -> unchecked_value / checked_value respectively
+        //   all others just pass through
+
+        // very specific set of parameters, only those that we want to modify as above
+        const typeToSpecParams = Object.entries(appIdToType).reduce(
+            (typeToSpecParams, [appId, dataType]) => {
+                const spec = appIdToSpec[appId];
+                /* make specParams look like:
+                 * {
+                 *   paramId1: {
+                 *     type: string (one of dropdown, checkbox),
+                 *     options: {  // iff type = dropdown
+                 *       display1: value1,
+                 *       display2: value2, ... etc
+                 *     }
+                 *     options: {  // iff type = checkbox
+                 *       unchecked: value,
+                 *       checked: value
+                 *     }
+                 *   }
+                 *   paramId2: { ... }
+                 * }
+                 */
+                const specParams = spec.parameters.reduce((processedParams, param) => {
+                    if (param.field_type === 'dropdown') {
+                        const options = param.dropdown_options.options.reduce(
+                            (ddOptions, option) => {
+                                ddOptions[option.display] = option.value;
+                                return ddOptions;
+                            },
+                            {}
+                        );
+                        processedParams[param.id] = {
+                            type: 'dropdown',
+                            options,
+                        };
+                    } else if (param.field_type === 'checkbox') {
+                        processedParams[param.id] = {
+                            type: 'checkbox',
+                            options: {
+                                unchecked: param.checkbox_options.unchecked_value,
+                                checked: param.checkbox_options.checked_value,
+                            },
+                        };
+                    }
+                    return processedParams;
+                }, {});
+                typeToSpecParams[dataType] = specParams;
+                return typeToSpecParams;
+            },
+            {}
+        );
+
+        Object.values(appIdToType).forEach((dataType) => {
+            const specParams = typeToSpecParams[dataType];
+            data.types[dataType] = data.types[dataType].map((parameterSet) => {
+                Object.keys(parameterSet).forEach((paramId) => {
+                    const value = parameterSet[paramId];
+                    if (specParams[paramId]) {
+                        const paramType = specParams[paramId].type;
+                        if (paramType === 'dropdown') {
+                            parameterSet[paramId] = specParams[paramId].options[value];
+                        } else if (paramType === 'checkbox') {
+                            if (String(value) === '1') {
+                                parameterSet[paramId] = specParams[paramId].options.checked;
+                            } else {
+                                parameterSet[paramId] = specParams[paramId].options.unchecked;
+                            }
+                        }
+                    }
+                });
+                return parameterSet;
+            });
+        });
+        return data;
     }
 
     function initSingleFileUploads(fileInfo) {

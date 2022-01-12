@@ -41,6 +41,8 @@ define([
      * "get_method_full_info" from the Narrative Method Store service.
      * @param {Array} idList - a list of app ids
      * @param {String} tag - a tag, one of 'release', 'beta', 'dev'
+     * @returns Promise that resolves into a list of app specs matching the order given
+     *   by idList
      */
     function getAppSpecs(idList, tag) {
         if (!tag) {

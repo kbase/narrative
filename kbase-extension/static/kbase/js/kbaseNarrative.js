@@ -15,7 +15,6 @@ define([
     'narrativeConfig',
     'common/jobCommChannel',
     'kbaseNarrativeSidePanel',
-    'kbaseNarrativeOutputCell',
     'kbaseNarrativeWorkspace',
     'kbaseNarrativeMethodCell',
     'kbaseAccordion',
@@ -33,8 +32,6 @@ define([
     'text!kbase/templates/update_dialog_body.html',
     'text!kbase/templates/document_version_change.html',
     'narrativeLogin',
-    'common/ui',
-    'common/html',
     'common/runtime',
     'narrativeTour',
     'kb_service/utils',
@@ -49,7 +46,6 @@ define([
     Config,
     JobComms,
     KBaseNarrativeSidePanel,
-    KBaseNarrativeOutputCell,
     KBaseNarrativeWorkspace,
     KBaseNarrativeMethodCell,
     KBaseAccordion,
@@ -67,8 +63,6 @@ define([
     UpdateDialogBodyTemplate,
     DocumentVersionDialogBodyTemplate,
     NarrativeLogin,
-    UI,
-    html,
     Runtime,
     Tour,
     ServiceUtils,
@@ -139,6 +133,7 @@ define([
         this.workspaceRef = null;
         this.workspaceId = this.runtime.workspaceId();
         this.workspaceInfo = {};
+
         this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
@@ -151,6 +146,10 @@ define([
         });
         return this;
     };
+
+    function workspaceClient(token) {
+        return new Workspace(Config.url('workspace'), { token });
+    }
 
     Narrative.prototype.isLoaded = () => {
         return Jupyter.notebook._fully_loaded;
@@ -166,29 +165,24 @@ define([
     };
 
     Narrative.prototype.getNarrativeRef = function () {
-        return Promise.try(() => {
-            if (this.workspaceRef) {
+        if (this.workspaceRef) {
+            return Promise.resolve(this.workspaceRef);
+        }
+        return workspaceClient(this.getAuthToken())
+            .get_workspace_info({ id: this.workspaceId })
+            .then((wsInfo) => {
+                const narrId = wsInfo[8]['narrative'];
+                this.workspaceRef = this.workspaceId + '/' + narrId;
                 return this.workspaceRef;
-            }
-            return new Workspace(Config.url('workspace'), {
-                token: this.getAuthToken(),
-            })
-                .get_workspace_info({ id: this.workspaceId })
-                .then((wsInfo) => {
-                    const narrId = wsInfo[8]['narrative'];
-                    this.workspaceRef = this.workspaceId + '/' + narrId;
-                    return this.workspaceRef;
-                });
-        });
+            });
     };
 
     Narrative.prototype.getUserPermissions = function () {
-        const ws = new Workspace(Config.url('workspace'), {
-            token: this.getAuthToken(),
-        });
-        return ws.get_workspace_info({ id: this.workspaceId }).then((wsInfo) => {
-            return wsInfo[5];
-        });
+        return workspaceClient(this.getAuthToken())
+            .get_workspace_info({ id: this.workspaceId })
+            .then((wsInfo) => {
+                return wsInfo[5];
+            });
     };
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
@@ -282,11 +276,14 @@ define([
         const self = this;
         $([Jupyter.events]).on('before_save.Notebook', () => {
             $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
+            $('#kb-save-btn').prop('disabled', true);
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', () => {
-            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-            self.stopVersionCheck = false;
-            self.updateDocumentVersion();
+            self.updateDocumentVersion().then(() => {
+                self.stopVersionCheck = false;
+                $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+                $('#kb-save-btn').prop('disabled', false);
+            });
         });
         $([Jupyter.events]).on('kernel_idle.Kernel', () => {
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
@@ -408,30 +405,25 @@ define([
      * we run get_object_info_new and fetch it ourselves. Note that it should have its metadata.
      */
     Narrative.prototype.updateDocumentVersion = function (docInfo) {
-        const self = this;
-        return Promise.try(() => {
-            if (docInfo) {
-                self.documentVersionInfo = docInfo;
-            } else {
-                const workspace = new Workspace(Config.url('workspace'), {
-                    token: self.getAuthToken(),
-                });
-                self.getNarrativeRef()
-                    .then((narrativeRef) => {
-                        return workspace.get_object_info_new({
-                            objects: [{ ref: narrativeRef }],
-                            includeMetadata: 1,
-                        });
-                    })
-                    .then((info) => {
-                        self.documentVersionInfo = info[0];
-                    })
-                    .catch((error) => {
-                        // no op for now.
-                        console.error(error);
+        if (docInfo) {
+            this.documentVersionInfo = docInfo;
+            return Promise.resolve();
+        } else {
+            return this.getNarrativeRef()
+                .then((narrativeRef) => {
+                    return workspaceClient(this.getAuthToken()).get_object_info_new({
+                        objects: [{ ref: narrativeRef }],
+                        includeMetadata: 1,
                     });
-            }
-        });
+                })
+                .then((info) => {
+                    this.documentVersionInfo = info[0];
+                })
+                .catch((error) => {
+                    // no op for now.
+                    console.error(error);
+                });
+        }
     };
 
     Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {
@@ -892,7 +884,12 @@ define([
     /**
      * @method
      * @public
-     * This triggers a save, but saves all cell states first.
+     * This is a wrapper around the Jupyter.notebook.save_checkpoint function. It also handles
+     * state management around checking Narrative versions. Mainly, it shuts off the version check.
+     * Once the `save_checkpoint` function finishes running, it triggers the notebook_saved.Notebook
+     * event, which is caught elsewhere, and used to reactivate the version check.
+     *
+     * This also disables the save button until the save completes to prevent spam and other issues.
      */
     Narrative.prototype.saveNarrative = function () {
         this.stopVersionCheck = true;

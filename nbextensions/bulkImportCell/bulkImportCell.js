@@ -926,7 +926,7 @@ define([
             cancelBatch = null;
             updateEditingState();
             switchToTab('configure');
-            Jupyter.notebook.save_checkpoint();
+            Jupyter.narrative.saveNarrative();
         }
 
         function resetRunStatusListener() {

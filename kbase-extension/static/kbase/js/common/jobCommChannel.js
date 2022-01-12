@@ -325,7 +325,7 @@ define([
                     break;
 
                 case 'new_job':
-                    Jupyter.notebook.save_checkpoint();
+                    Jupyter.narrative.saveNarrative();
                     break;
 
                 // CELL messages

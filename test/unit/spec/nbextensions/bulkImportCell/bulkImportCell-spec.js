@@ -128,6 +128,7 @@ define([
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
+                saveNarrative: () => {},
             };
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
@@ -590,7 +591,7 @@ define([
                     // wait for the cell to reset so the run button is visible
                     // expect the state to be editingComplete
                     Jupyter.notebook = Mocks.buildMockNotebook();
-                    spyOn(Jupyter.notebook, 'save_checkpoint');
+                    spyOn(Jupyter.narrative, 'saveNarrative');
                     spyOn(Date, 'now').and.returnValue(1234567890);
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
@@ -646,7 +647,7 @@ define([
                                 undefined
                             );
                             expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
-                            expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
+                            expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
@@ -667,7 +668,7 @@ define([
             xit('should cancel jobs between the batch job being submitted and the server response being returned', async () => {
                 const cellId = 'cancelDuringSubmit';
                 Jupyter.notebook = Mocks.buildMockNotebook();
-                spyOn(Jupyter.notebook, 'save_checkpoint');
+                spyOn(Jupyter.narrative, 'saveNarrative');
                 spyOn(Date, 'now').and.returnValue(1234567890);
                 const { cell, bulkImportCellInstance } = initCell({
                     cellId,
@@ -762,7 +763,7 @@ define([
                     ['request-job-updates-stop', { batchId }],
                     ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
                 ];
-                expect(Jupyter.notebook.save_checkpoint.calls.allArgs()).toEqual([[]]);
+                expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(
                     jasmine.arrayWithExactContents(callArgs)
                 );

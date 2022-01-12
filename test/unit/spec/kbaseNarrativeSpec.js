@@ -14,7 +14,7 @@ define([
         TEST_TOKEN = 'foo',
         TEST_USER = 'some_user';
 
-    describe('Test the kbaseNarrative module', () => {
+    fdescribe('Test the kbaseNarrative module', () => {
         let container;
         let narr;
 
@@ -208,5 +208,81 @@ define([
                     expect(narr.insertAndSelectCell).toHaveBeenCalled();
                 });
         });
+
+        it('should compare the Narrative document version on request', () => {
+            // start by mocking a version button that doesn't really do much except exist.
+            const verButton = document.createElement('button');
+            verButton.setAttribute('id', 'kb-narr-version-btn');
+            verButton.classList.add('kb-nav-btn-upgrade');
+            document.body.appendChild(verButton);
+            expect(verButton).toBeDefined();
+            // first test, should do nothing (don't expose the button)
+            narr.checkDocumentVersion();
+            expect(getComputedStyle(verButton).display).toBe('none');
+
+            // second test, should be different and expose the button
+            const wsId = 5,
+                objId = 1,
+                version = 10;
+            const objInfo = [
+                objId,
+                'SomeNarrative',
+                'KBaseNarrative.Narrative-4.0',
+                '2022-01-12T16:03:21+0000',
+                version,
+                'wjriehl',
+                wsId,
+                'wjriehl:narrative_1634933593954',
+                'caa15e90e772c76159be4d0eaca89714',
+                12345,
+                null,
+            ];
+            narr.checkDocumentVersion(objInfo);
+            expect(getComputedStyle(verButton).display).not.toBe('none');
+        });
+
+        it('should not compare the document version if the flag is set to false', () => {
+            // start by mocking a version button that doesn't really do much except exist.
+            const verButton = document.createElement('button');
+            verButton.setAttribute('id', 'kb-narr-version-btn');
+            verButton.classList.add('kb-nav-btn-upgrade');
+            document.body.appendChild(verButton);
+            expect(verButton).toBeDefined();
+            // first test, should do nothing (don't expose the button)
+            narr.checkDocumentVersion();
+            expect(getComputedStyle(verButton).display).toBe('none');
+
+            narr.stopVersionCheck = true;
+
+            // second test, should be different and expose the button
+            const wsId = 5,
+                objId = 1,
+                version = 10;
+            const objInfo = [
+                objId,
+                'SomeNarrative',
+                'KBaseNarrative.Narrative-4.0',
+                '2022-01-12T16:03:21+0000',
+                version,
+                'wjriehl',
+                wsId,
+                'wjriehl:narrative_1634933593954',
+                'caa15e90e772c76159be4d0eaca89714',
+                12345,
+                null,
+            ];
+            narr.checkDocumentVersion(objInfo);
+            expect(getComputedStyle(verButton).display).toBe('none');
+        });
+
+        it('should save the narrative on request by calling out to Jupyter.notebook.save_notebook', () => {
+            spyOn(Jupyter.notebook, 'save_checkpoint');
+            narr.saveNarrative();
+            expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+        });
+
+        it('should not check the document version while saving', () => {});
+
+        it('should update the document version after a successful save', () => {});
     });
 });

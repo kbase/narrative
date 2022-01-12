@@ -382,11 +382,12 @@ define([
     };
 
     /**
-     * Expects docInfo to be a workspace object info array, especially where the 4th element is
-     * an int > 0.
+     * This checks the loaded Narrative document version against the given value.
+     * If the loaded document version is not the same as the given version parameter,
+     * then the document version mismatch button should be shown.
      */
     Narrative.prototype.checkDocumentVersion = function (docInfo) {
-        if (docInfo.length < 5 || this.stopVersionCheck) {
+        if (this.stopVersionCheck || !docInfo || docInfo.length < 5) {
             return;
         }
         if (docInfo[4] !== this.documentVersionInfo[4]) {

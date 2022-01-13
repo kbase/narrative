@@ -402,29 +402,25 @@ define([
     };
 
     /**
-     * Expects the usual workspace object info array. If that's present, it's captured. If not,
-     * we run get_object_info_new and fetch it ourselves. Note that it should have its metadata.
+     * Fetches the current narrative ref info from the Workspace.
+     * @returns Promise that resolves when the latest narrative object info has been
+     * retrieved.
      */
-    Narrative.prototype.updateDocumentVersion = function (docInfo) {
-        if (docInfo) {
-            this.documentVersionInfo = docInfo;
-            return Promise.resolve();
-        } else {
-            return this.getNarrativeRef()
-                .then((narrativeRef) => {
-                    return workspaceClient(this.getAuthToken()).get_object_info_new({
-                        objects: [{ ref: narrativeRef }],
-                        includeMetadata: 1,
-                    });
-                })
-                .then((info) => {
-                    this.documentVersionInfo = info[0];
-                })
-                .catch((error) => {
-                    // no op for now.
-                    console.error(error);
+    Narrative.prototype.updateDocumentVersion = function () {
+        return this.getNarrativeRef()
+            .then((narrativeRef) => {
+                return workspaceClient(this.getAuthToken()).get_object_info_new({
+                    objects: [{ ref: narrativeRef }],
+                    includeMetadata: 1,
                 });
-        }
+            })
+            .then((info) => {
+                this.documentVersionInfo = info[0];
+            })
+            .catch((error) => {
+                // no op for now.
+                console.error(error);
+            });
     };
 
     Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {

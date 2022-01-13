@@ -14,7 +14,7 @@ define([
         TEST_TOKEN = 'foo',
         TEST_USER = 'some_user';
 
-    fdescribe('Test the kbaseNarrative module', () => {
+    describe('Test the kbaseNarrative module', () => {
         let container;
         let narr;
 
@@ -209,80 +209,125 @@ define([
                 });
         });
 
-        it('should compare the Narrative document version on request', () => {
-            // start by mocking a version button that doesn't really do much except exist.
-            const verButton = document.createElement('button');
-            verButton.setAttribute('id', 'kb-narr-version-btn');
-            verButton.classList.add('kb-nav-btn-upgrade');
-            document.body.appendChild(verButton);
-            expect(verButton).toBeDefined();
-            // first test, should do nothing (don't expose the button)
-            narr.checkDocumentVersion();
-            expect(getComputedStyle(verButton).display).toBe('none');
-
+        describe('tests for saving and version tracking', () => {
             // second test, should be different and expose the button
             const wsId = 5,
                 objId = 1,
-                version = 10;
-            const objInfo = [
-                objId,
-                'SomeNarrative',
-                'KBaseNarrative.Narrative-4.0',
-                '2022-01-12T16:03:21+0000',
-                version,
-                'wjriehl',
-                wsId,
-                'wjriehl:narrative_1634933593954',
-                'caa15e90e772c76159be4d0eaca89714',
-                12345,
-                null,
-            ];
-            narr.checkDocumentVersion(objInfo);
-            expect(getComputedStyle(verButton).display).not.toBe('none');
+                startVersion = 10,
+                updateVersion = 11;
+            function getObjInfo(version) {
+                return [
+                    objId,
+                    'SomeNarrative',
+                    'KBaseNarrative.Narrative-4.0',
+                    '2022-01-12T16:03:21+0000',
+                    version,
+                    'wjriehl',
+                    wsId,
+                    'wjriehl:narrative_1634933593954',
+                    'caa15e90e772c76159be4d0eaca89714',
+                    12345,
+                    null,
+                ];
+            }
+            const startInfo = getObjInfo(startVersion);
+            const updateInfo = getObjInfo(updateVersion);
+
+            beforeEach(function () {
+                this.verButton = document.createElement('button');
+                this.verButton.setAttribute('id', 'kb-narr-version-btn');
+                this.verButton.classList.add('kb-nav-btn-upgrade');
+                document.body.appendChild(this.verButton);
+                narr.documentVersionInfo = startInfo;
+            });
+
+            afterEach(function () {
+                this.verButton.remove();
+            });
+
+            it('should compare the Narrative document version on request', function () {
+                // start by mocking a version button that doesn't really do much except exist.
+                expect(this.verButton).toBeDefined();
+                // first test, should do nothing (don't expose the button)
+                narr.checkDocumentVersion();
+                expect(getComputedStyle(this.verButton).display).toBe('none');
+
+                narr.checkDocumentVersion(updateInfo);
+                expect(getComputedStyle(this.verButton).display).not.toBe('none');
+            });
+
+            it('should not compare the document version if the flag is set to false', function () {
+                expect(getComputedStyle(this.verButton).display).toBe('none');
+
+                narr.stopVersionCheck = true;
+
+                narr.checkDocumentVersion(updateInfo);
+                expect(getComputedStyle(this.verButton).display).toBe('none');
+            });
+
+            it('should save the narrative on request by calling out to Jupyter.notebook.save_notebook', () => {
+                spyOn(Jupyter.notebook, 'save_checkpoint');
+                narr.saveNarrative();
+                expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+            });
+
+            it('should not check the document version while saving', function () {
+                // This needs a hook in place so that we can force a document version check
+                // WHILE saving happens and ensure that it goes off before it completes.
+                // Kinda violates black-boxedness, but mock Jupyter.notebook.save_checkpoint
+                // so that it does the check before finishing.
+
+                Jupyter.notebook.save_checkpoint = () => {
+                    // checking with an updated version at this point shouldn't show the button
+                    narr.checkDocumentVersion(updateInfo);
+                    $([Jupyter.events]).trigger('notebook_saved.Notebook');
+                };
+
+                expect(getComputedStyle(this.verButton).display).toBe('none');
+            });
+
+            it('should update the document version after a successful save', () => {
+                // add the real event that's triggered after a save.
+                Jupyter.notebook.save_checkpoint = () => {
+                    $([Jupyter.events]).trigger('notebook_saved.Notebook');
+                };
+                spyOn(narr, 'updateDocumentVersion').and.returnValue(Promise.resolve());
+
+                narr.init(() => {});
+                narr.saveNarrative();
+                expect(narr.updateDocumentVersion).toHaveBeenCalled();
+            });
+
+            it('should update the document version on request', async () => {
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /get_workspace_info/,
+                    response: [
+                        wsId,
+                        'wsname',
+                        'username',
+                        'timestamp',
+                        10,
+                        'a',
+                        'n',
+                        'unlocked',
+                        {
+                            cell_count: '1',
+                            is_temporary: 'false',
+                            narrative: objId,
+                            narrative_nice_name: 'My Narrative',
+                            searchtags: 'narrative',
+                        },
+                    ],
+                });
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /get_object_info_new/,
+                    response: [updateInfo],
+                });
+                await narr.updateDocumentVersion();
+                expect(narr.documentVersionInfo).toEqual(updateInfo);
+            });
         });
-
-        it('should not compare the document version if the flag is set to false', () => {
-            // start by mocking a version button that doesn't really do much except exist.
-            const verButton = document.createElement('button');
-            verButton.setAttribute('id', 'kb-narr-version-btn');
-            verButton.classList.add('kb-nav-btn-upgrade');
-            document.body.appendChild(verButton);
-            expect(verButton).toBeDefined();
-            // first test, should do nothing (don't expose the button)
-            narr.checkDocumentVersion();
-            expect(getComputedStyle(verButton).display).toBe('none');
-
-            narr.stopVersionCheck = true;
-
-            // second test, should be different and expose the button
-            const wsId = 5,
-                objId = 1,
-                version = 10;
-            const objInfo = [
-                objId,
-                'SomeNarrative',
-                'KBaseNarrative.Narrative-4.0',
-                '2022-01-12T16:03:21+0000',
-                version,
-                'wjriehl',
-                wsId,
-                'wjriehl:narrative_1634933593954',
-                'caa15e90e772c76159be4d0eaca89714',
-                12345,
-                null,
-            ];
-            narr.checkDocumentVersion(objInfo);
-            expect(getComputedStyle(verButton).display).toBe('none');
-        });
-
-        it('should save the narrative on request by calling out to Jupyter.notebook.save_notebook', () => {
-            spyOn(Jupyter.notebook, 'save_checkpoint');
-            narr.saveNarrative();
-            expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
-        });
-
-        it('should not check the document version while saving', () => {});
-
-        it('should update the document version after a successful save', () => {});
     });
 });

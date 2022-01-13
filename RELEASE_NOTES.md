@@ -8,6 +8,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 - DATAUP-570 - Only use the Narrative configuration to set available import types in the Import area dropdowns
 - DATAUP-577 - Sanitize suggested output object names for bulk import jobs so they follow the rules
 - PTV-1717 - fix landing page links for modeling widgets
+- PTV-1726 - address issue where the "Narrative updated in another session" would appear with no other session open
 
 ### Version 5.0.0
 This new major version of the KBase Narrative Interface introduces a way to import data from your data staging area in large batches using a single Bulk Import cell. See more details about the new workflows here: [Bulk Import Guide](https://docs.kbase.us/data/upload-download-guide/bulk-import-guide)

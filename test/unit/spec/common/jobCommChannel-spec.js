@@ -60,11 +60,15 @@ define([
         beforeEach(() => {
             testBus = Runtime.make().bus();
             Jupyter.notebook = makeMockNotebook();
+            Jupyter.narrative = {
+                saveNarrative: () => {},
+            };
         });
 
         afterEach(() => {
             TestUtil.clearRuntime();
             Jupyter.notebook = null;
+            Jupyter.narrative = null;
             testBus = null;
         });
 
@@ -454,10 +458,10 @@ define([
 
         it('Should respond to new_job by saving the Narrative', () => {
             const comm = new JobCommChannel();
-            spyOn(Jupyter.notebook, 'save_checkpoint');
+            spyOn(Jupyter.narrative, 'saveNarrative');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(makeCommMsg('new_job', {}));
-                expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+                expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
             });
         });
 

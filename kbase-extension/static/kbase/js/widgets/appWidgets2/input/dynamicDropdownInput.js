@@ -249,7 +249,7 @@ define([
                         }
                         // return anything else as normal
                         acc[k] = v;
-                        return;
+                        return acc;
                     }, {});
                 });
 

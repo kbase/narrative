@@ -2,11 +2,7 @@ import copy
 import threading
 from typing import List, Union
 from ipykernel.comm import Comm
-from biokbase.narrative.jobs.jobmanager import (
-    JOBS_TYPE_ERR,
-    get_error_output_state,
-    JobManager,
-)
+from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.exception_util import NarrativeException, JobRequestException
 from biokbase.narrative.common import kblogging
 
@@ -204,7 +200,7 @@ class JobComm:
             self._msg_map = {
                 CANCEL: self._cancel_jobs,
                 CELL_JOB_STATUS: self._lookup_job_states_by_cell_id,
-                INFO: self._lookup_job_info,
+                INFO: self._get_job_info,
                 LOGS: self._get_job_logs,
                 RETRY: self._retry_jobs,
                 START_UPDATE: self._modify_job_updates,
@@ -308,7 +304,7 @@ class JobComm:
         self.send_comm_message(CELL_JOB_STATUS, cell_job_states)
         return cell_job_states
 
-    def _lookup_job_info(self, req: JobRequest) -> dict:
+    def _get_job_info(self, req: JobRequest) -> dict:
         """
         Look up job info. This is just some high-level generic information about the running
         job, including the app id, name, and job parameters.
@@ -321,7 +317,7 @@ class JobComm:
             - job_params - dict - the params that were passed to that particular job
         """
         job_id_list = self._get_job_ids(req)
-        job_info = self._jm.lookup_job_info(job_id_list)
+        job_info = self._jm.get_job_info(job_id_list)
         self.send_comm_message(INFO, job_info)
         return job_info
 
@@ -392,18 +388,18 @@ class JobComm:
     def _retry_jobs(self, req: JobRequest) -> dict:
         job_id_list = self._get_job_ids(req)
         retry_results = self._jm.retry_jobs(job_id_list)
-        self.send_comm_message(RETRY, retry_results)
         retry_ids = [
             result["retry"]["jobState"]["job_id"]
             for result in retry_results.values()
             if "retry" in result
         ]
-
         if len(retry_ids):
             self.send_comm_message(
                 NEW,
                 {JOB_ID_LIST: retry_ids},
             )
+        self.send_comm_message(RETRY, retry_results)
+
         return retry_results
 
     def _get_job_logs(self, req: JobRequest) -> dict:

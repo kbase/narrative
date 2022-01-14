@@ -14,7 +14,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         config = ConfigTests()
         os.environ[
             "KB_WORKSPACE_ID"
@@ -23,12 +23,12 @@ class WidgetManagerTestCase(unittest.TestCase):
         app_specs_dict = dict()
         for s in app_specs_list:
             app_specs_dict[s["info"]["id"]] = s
-        self.wm = WidgetManager()
-        self.good_widget = "kbaseTabTable"
-        self.bad_widget = "notAWidget"
-        self.good_tag = "release"
-        self.bad_tag = "notATag"
-        self.widget_with_consts = "kbaseContigSetView"
+        cls.wm = WidgetManager()
+        cls.good_widget = "kbaseTabTable"
+        cls.bad_widget = "notAWidget"
+        cls.good_tag = "release"
+        cls.bad_tag = "notATag"
+        cls.widget_with_consts = "kbaseContigSetView"
 
     def test_widgetmanager_reload(self):
         self.wm.load_widget_info(verbose=True)
@@ -127,10 +127,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         test mocks.
         """
         js_obj = self.wm.show_data_widget("18836/5/1", "some title", "no_id")
-        print(js_obj.data)
-        self.assertIsValidCellCode(
-            js_obj, {}, "viewer", "kbaseGenomeView", "no_id", "some title"
-        )
+        self.assertIsValidCellCode(js_obj)
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas(self):
@@ -232,7 +229,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.assertFalse(test_wm.widget_param_map)
         os.environ["NARRATIVE_DIR"] = backup_dir
 
-    def assertIsValidCellCode(self, js_obj, data, type, widget, cellId, title):
+    def assertIsValidCellCode(self, js_obj):
         code_lines = js_obj.data.strip().split("\n")
         self.assertTrue(
             code_lines[0].strip().startswith("element.html(\"<div id='kb-vis")

@@ -2,8 +2,21 @@ define([
     'kbase/js/widgets/narrative_core/upload/importSetup',
     'base/js/namespace',
     'narrativeConfig',
+    'narrativeMocks',
     'testUtil',
-], (ImportSetup, Jupyter, Config, TestUtil) => {
+    'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
+    'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.info.json',
+    'json!/test/data/kb_uploadmethods.import_fasta_as_assembly_from_staging.spec.json',
+], (
+    ImportSetup,
+    Jupyter,
+    Config,
+    Mocks,
+    TestUtil,
+    ImportFastqSpec,
+    ImportFastqInfo,
+    ImportAssemblySpec
+) => {
     'use strict';
 
     const uploaders = Config.get('uploaders');
@@ -178,16 +191,48 @@ define([
             });
 
             it('should load a happy path bulk specification file into a bulk import cell', async () => {
-                const dataType = 'assembly';
-                const importData = [
-                    {
-                        staging_file_subdir_path: 'Desulfovibrio_vulgaris_Hildenborough_C1.fasta',
-                        assembly_name: 'dvh_assembly',
-                        type: 'draft isolate',
-                        min_contig_length: 500,
-                    },
-                ];
-                const fileName = 'some_file.csv';
+                const readsDataType = 'fastq_reads_interleaved',
+                    assemblyDataType = 'assembly',
+                    importReadsData = [
+                        {
+                            fastq_fwd_staging_file_name: 'some_reads.fasta',
+                            name: 'some_reads',
+                            sequencing_tech: 'PacBio CLR',
+                            single_genome: '1',
+                            read_orientation_outward: '0',
+                            insert_size_std_dev: 6.66,
+                            insert_size_mean: 66.66,
+                        },
+                    ],
+                    processedReadsData = [
+                        {
+                            fastq_fwd_staging_file_name: 'some_reads.fasta',
+                            name: 'some_reads',
+                            sequencing_tech: 'PacBio CLR',
+                            single_genome: 1,
+                            read_orientation_outward: 0,
+                            insert_size_std_dev: 6.66,
+                            insert_size_mean: 66.66,
+                        },
+                    ],
+                    importAssemblyData = [
+                        {
+                            staging_file_subdir_path: 'some_assembly.fasta',
+                            assembly_name: 'some_assembly',
+                            type: 'Single amplified genome (SAG)',
+                            min_contig_length: 1000,
+                        },
+                    ],
+                    processedAssemblyData = [
+                        {
+                            staging_file_subdir_path: 'some_assembly.fasta',
+                            assembly_name: 'some_assembly',
+                            type: 'sag',
+                            min_contig_length: 1000,
+                        },
+                    ],
+                    readsCsv = 'some_reads_file.csv',
+                    assemblyCsv = 'some_assembly_file.csv';
 
                 jasmine.Ajax.stubRequest(
                     new RegExp(`${stagingServiceUrl}/bulk_specification`)
@@ -197,23 +242,51 @@ define([
                     contentType: 'text/plain',
                     responseHeaders: '',
                     responseText: JSON.stringify({
-                        types: { [dataType]: importData },
-                        files: { [dataType]: { file: fileName, tab: null } },
+                        types: {
+                            [readsDataType]: importReadsData,
+                            [assemblyDataType]: importAssemblyData,
+                        },
+                        files: {
+                            [readsDataType]: { file: readsCsv, tab: null },
+                            [assemblyDataType]: { file: assemblyCsv, tab: null },
+                        },
                     }),
+                });
+
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('narrative_method_store'),
+                    body: /get_method_spec/,
+                    response: [ImportFastqSpec, ImportAssemblySpec],
+                });
+
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('narrative_method_store'),
+                    body: /get_method_full_info/,
+                    response: [{}, {}],
                 });
 
                 await ImportSetup.setupImportCells([
                     {
-                        name: 'some_file.csv',
+                        name: 'some_reads_file.csv',
+                        type: 'import_specification',
+                    },
+                    {
+                        name: 'some_assembly_file.csv',
                         type: 'import_specification',
                     },
                 ]);
                 expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith({
-                    [dataType]: {
+                    [readsDataType]: {
                         files: [],
-                        appId: uploaders.app_info[dataType].app_id,
-                        outputSuffix: uploaders.app_info[dataType].app_output_suffix,
-                        appParameters: importData,
+                        appId: uploaders.app_info[readsDataType].app_id,
+                        outputSuffix: uploaders.app_info[readsDataType].app_output_suffix,
+                        appParameters: processedReadsData,
+                    },
+                    [assemblyDataType]: {
+                        files: [],
+                        appId: uploaders.app_info[assemblyDataType].app_id,
+                        outputSuffix: uploaders.app_info[assemblyDataType].app_output_suffix,
+                        appParameters: processedAssemblyData,
                     },
                 });
             });

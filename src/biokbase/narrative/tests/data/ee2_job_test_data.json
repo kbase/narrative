@@ -1,6 +1,6 @@
 {
-    "5d64935ab215ad4128de94d6": {
-        "job_id": "5d64935ab215ad4128de94d6",
+    "JOB_COMPLETED": {
+        "job_id": "JOB_COMPLETED",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
         "batch_id": null,
@@ -26,7 +26,7 @@
             "app_id": "NarrativeTest/test_editor",
             "source_ws_objects": [],
             "narrative_cell_info": {
-                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "cell_id": "NARRATIVE_CELL_1",
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d842"
             }
@@ -43,8 +43,8 @@
         "retry_ids": [],
         "retry_parent": null
     },
-    "5d64935cb215ad4128de94d7": {
-        "job_id": "5d64935cb215ad4128de94d7",
+    "JOB_CREATED": {
+        "job_id": "JOB_CREATED",
         "user": "tgu2",
         "authstrat": "kbaseworkspace",
         "batch_id": null,
@@ -69,7 +69,7 @@
             "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": "9998",
             "narrative_cell_info": {
-                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "cell_id": "NARRATIVE_CELL_1",
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d842"
             }
@@ -77,8 +77,8 @@
         "retry_ids": [],
         "retry_parent": null
     },
-    "5d64935cb215ad4128de94d8": {
-        "job_id": "5d64935cb215ad4128de94d8",
+    "JOB_RUNNING": {
+        "job_id": "JOB_RUNNING",
         "user": "wjriehl",
         "authstrat": "kbaseworkspace",
         "batch_id": null,
@@ -104,7 +104,7 @@
             "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": null,
             "narrative_cell_info": {
-                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
+                "cell_id": "NARRATIVE_CELL_2",
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
@@ -112,8 +112,8 @@
         "retry_ids": [],
         "retry_parent": null
     },
-    "5d64935cb215ad4128de94d9": {
-        "job_id": "5d64935cb215ad4128de94d9",
+    "JOB_TERMINATED": {
+        "job_id": "JOB_TERMINATED",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
         "batch_id": null,
@@ -139,7 +139,7 @@
             "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": null,
             "narrative_cell_info": {
-                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
+                "cell_id": "NARRATIVE_CELL_2",
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
@@ -147,8 +147,8 @@
         "retry_ids": [],
         "retry_parent": null
     },
-    "5d64935cb215ad4128de94e0": {
-        "job_id": "5d64935cb215ad4128de94e0",
+    "JOB_ERROR": {
+        "job_id": "JOB_ERROR",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
         "batch_id": null,
@@ -176,7 +176,7 @@
             ],
             "parent_job_id": null,
             "narrative_cell_info": {
-                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
+                "cell_id": "NARRATIVE_CELL_2",
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
@@ -184,20 +184,20 @@
         "retry_ids": [],
         "retry_parent": null
     },
-    "60e7112887b7e512a899c8f1": {
+    "BATCH_PARENT": {
         "authstrat": "kbaseworkspace",
         "batch_job": true,
         "child_jobs": [
-            "60e7112887b7e512a899c8f2",
-            "60e7112887b7e512a899c8f3",
-            "60e7112887b7e512a899c8f4",
-            "60e7112887b7e512a899c8f5",
-            "60e71159fce9347f2adeaac6",
-            "60e7165f3e91121969554d82",
-            "60e717d78ac80701062efe63"
+            "BATCH_COMPLETED",
+            "BATCH_TERMINATED",
+            "BATCH_TERMINATED_RETRIED",
+            "BATCH_ERROR_RETRIED",
+            "BATCH_RETRY_COMPLETED",
+            "BATCH_RETRY_RUNNING",
+            "BATCH_RETRY_ERROR"
         ],
         "created": 1625755944000,
-        "job_id": "60e7112887b7e512a899c8f1",
+        "job_id": "BATCH_PARENT",
         "job_input": {
             "app_id": "batch",
             "method": "batch",
@@ -213,19 +213,19 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e7112887b7e512a899c8f2": {
+    "BATCH_COMPLETED": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625755944000,
         "finished": 1625756074922,
-        "job_id": "60e7112887b7e512a899c8f2",
+        "job_id": "BATCH_COMPLETED",
         "job_input": {
             "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -250,7 +250,7 @@
             "wsid": 10538
         },
         "job_output": {
-            "id": "60e7112887b7e512a899c8f2",
+            "id": "BATCH_COMPLETED",
             "result": [
                 {
                     "obj_ref": "62425/2/12",
@@ -270,19 +270,19 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e7112887b7e512a899c8f3": {
+    "BATCH_TERMINATED": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625755944000,
         "finished": 1625755985250,
-        "job_id": "60e7112887b7e512a899c8f3",
+        "job_id": "BATCH_TERMINATED",
         "job_input": {
             "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -317,19 +317,19 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e7112887b7e512a899c8f4": {
+    "BATCH_TERMINATED_RETRIED": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625755944000,
         "finished": 1625755977130,
-        "job_id": "60e7112887b7e512a899c8f4",
+        "job_id": "BATCH_TERMINATED_RETRIED",
         "job_input": {
             "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -356,7 +356,7 @@
         },
         "queued": 1625755944519,
         "retry_count": 2,
-        "retry_ids": ["60e71159fce9347f2adeaac6", "60e7165f3e91121969554d82"],
+        "retry_ids": ["BATCH_RETRY_COMPLETED", "BATCH_RETRY_RUNNING"],
         "retry_saved_toggle": false,
         "running": 1625755952563,
         "status": "terminated",
@@ -365,9 +365,9 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e7112887b7e512a899c8f5": {
+    "BATCH_ERROR_RETRIED": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625755944000,
@@ -380,12 +380,12 @@
         "error_code": 1,
         "errormsg": "Job output contains an error",
         "finished": 1625755962015,
-        "job_id": "60e7112887b7e512a899c8f5",
+        "job_id": "BATCH_ERROR_RETRIED",
         "job_input": {
             "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -411,7 +411,7 @@
         },
         "queued": 1625755944590,
         "retry_count": 1,
-        "retry_ids": ["60e717d78ac80701062efe63"],
+        "retry_ids": ["BATCH_RETRY_ERROR"],
         "retry_saved_toggle": false,
         "running": 1625755952628,
         "status": "error",
@@ -419,19 +419,19 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e71159fce9347f2adeaac6": {
+    "BATCH_RETRY_COMPLETED": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625755993000,
         "finished": 1625756123416,
-        "job_id": "60e71159fce9347f2adeaac6",
+        "job_id": "BATCH_RETRY_COMPLETED",
         "job_input": {
             "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -457,7 +457,7 @@
             "wsid": 10538
         },
         "job_output": {
-            "id": "60e71159fce9347f2adeaac6",
+            "id": "BATCH_RETRY_COMPLETED",
             "result": [
                 {
                     "obj_ref": "62425/17/1",
@@ -470,7 +470,7 @@
         "queued": 1625755993355,
         "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": "60e7112887b7e512a899c8f4",
+        "retry_parent": "BATCH_TERMINATED_RETRIED",
         "retry_saved_toggle": true,
         "running": 1625756004391,
         "status": "completed",
@@ -478,18 +478,18 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e7165f3e91121969554d82": {
+    "BATCH_RETRY_RUNNING": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625757279000,
-        "job_id": "60e7165f3e91121969554d82",
+        "job_id": "BATCH_RETRY_RUNNING",
         "job_input": {
             "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb1",
+                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -517,7 +517,7 @@
         "queued": 1625757279744,
         "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": "60e7112887b7e512a899c8f4",
+        "retry_parent": "BATCH_TERMINATED_RETRIED",
         "retry_saved_toggle": true,
         "running": 1625757285899,
         "status": "running",
@@ -525,9 +525,9 @@
         "user": "alien_test_user",
         "wsid": 10538
     },
-    "60e717d78ac80701062efe63": {
+    "BATCH_RETRY_ERROR": {
         "authstrat": "kbaseworkspace",
-        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
         "created": 1625757655000,
@@ -540,12 +540,12 @@
         "error_code": 1,
         "errormsg": "Job output contains an error",
         "finished": 1625757676688,
-        "job_id": "60e717d78ac80701062efe63",
+        "job_id": "BATCH_RETRY_ERROR",
         "job_input": {
             "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
             "method": "kb_uploadmethods.import_reads_from_staging",
             "narrative_cell_info": {
-                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb1",
+                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "tag": "release",
                 "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
@@ -572,7 +572,7 @@
         "queued": 1625757655956,
         "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": "60e7112887b7e512a899c8f5",
+        "retry_parent": "BATCH_ERROR_RETRIED",
         "retry_saved_toggle": true,
         "running": 1625757662469,
         "status": "error",

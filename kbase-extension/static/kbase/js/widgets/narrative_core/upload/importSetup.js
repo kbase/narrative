@@ -83,6 +83,14 @@ define([
     }
 
     /**
+     * This function does some preprocessing on the spreadsheet file data. Specifically,
+     * those parameters that are static dropdowns or checkboxes need to translate their input
+     * to values accepted by the specs.
+     * For dropdowns, we expect to see the "display" value of an option as input, which gets
+     * translated to the actual value of that option.
+     * For checkboxes, we expect to see either a 0 or 1, which gets translated to the
+     * "checked_value" or "unchecked_value", respectively.
+     *
      * Import data should look like this:
      * {
      *   types: {
@@ -95,10 +103,7 @@ define([
      *     }
      *   }
      * }
-     *
-     * This gets processed to convert expected display values to actual parameter values
-     * that the app cell / app specs will use. Each of the dataTypes (keys of types or files)
-     * should map onto uploaders.app_info.
+     * and will have the same format on return.
      *
      * TODO: also return the fetched app specs to avoid fetching them twice?
      * @param {Object} data
@@ -112,57 +117,55 @@ define([
 
         // get the app specs
         const appSpecs = await APIUtil.getAppSpecs(Object.keys(appIdToType));
+        // translate results into an object keyed on app id
         const appIdToSpec = appSpecs.reduce((appIdToSpec, appSpec) => {
             appIdToSpec[appSpec.info.id] = appSpec;
             return appIdToSpec;
         }, {});
 
-        // go through all parameters and update values accordingly:
-        //
-        //   field_type = "dropdown" = display name -> value
-        //   field_type = "checkbox" = 0 or 1 -> unchecked_value / checked_value respectively
-        //   all others just pass through
+        /* go through all parameters and update values accordingly:
+         *
+         *   field_type = "dropdown" = display name -> value
+         *   field_type = "checkbox" = 0 or 1 -> unchecked_value / checked_value respectively
+         *   all others just pass through
+         */
 
-        // very specific set of parameters, only those that we want to modify as above
+        /* First, build a structure of out a very specific set of parameters, only those that we
+         * want to modify as above.
+         * thus, typeToSpecParams will look like:
+         * {
+         *   dataType: {
+         *     assembly_type: {  // a dropdown, just keep the display / values
+         *       'Single amplified genome (SAG)': 'sag',
+         *       'Metagenome-assembled genome (MAG)': 'mag',
+         *       'Virus': 'virus'
+         *       'Draft Isolate': 'draft isolate',
+         *       'Plasmid': 'plasmid',
+         *       'Construct': 'construct'
+         *     }
+         *     single_genome: {  // a checkbox, just map from 1/0 -> actual value
+         *        1: 'checked',
+         *        0: 'unchecked'
+         *     }
+         *   }
+         * }
+         */
         const typeToSpecParams = Object.entries(appIdToType).reduce(
             (typeToSpecParams, [appId, dataType]) => {
                 const spec = appIdToSpec[appId];
-                /* make specParams look like:
-                 * {
-                 *   paramId1: {
-                 *     type: string (one of dropdown, checkbox),
-                 *     options: {  // iff type = dropdown
-                 *       display1: value1,
-                 *       display2: value2, ... etc
-                 *     }
-                 *     options: {  // iff type = checkbox
-                 *       unchecked: value,
-                 *       checked: value
-                 *     }
-                 *   }
-                 *   paramId2: { ... }
-                 * }
-                 */
                 const specParams = spec.parameters.reduce((processedParams, param) => {
                     if (param.field_type === 'dropdown') {
-                        const options = param.dropdown_options.options.reduce(
-                            (ddOptions, option) => {
-                                ddOptions[option.display] = option.value;
-                                return ddOptions;
+                        processedParams[param.id] = param.dropdown_options.options.reduce(
+                            (optionSet, option) => {
+                                optionSet[option.display] = option.value;
+                                return optionSet;
                             },
                             {}
                         );
-                        processedParams[param.id] = {
-                            type: 'dropdown',
-                            options,
-                        };
                     } else if (param.field_type === 'checkbox') {
                         processedParams[param.id] = {
-                            type: 'checkbox',
-                            options: {
-                                unchecked: param.checkbox_options.unchecked_value,
-                                checked: param.checkbox_options.checked_value,
-                            },
+                            0: param.checkbox_options.unchecked_value,
+                            1: param.checkbox_options.checked_value,
                         };
                     }
                     return processedParams;
@@ -173,22 +176,18 @@ define([
             {}
         );
 
+        /*
+         * Now, update all parameters in place.
+         * For each set of parameters in each type, look at the translated spec parameters.
+         * If any of those are in the given parameter set, do the translation.
+         */
         Object.values(appIdToType).forEach((dataType) => {
             const specParams = typeToSpecParams[dataType];
             data.types[dataType] = data.types[dataType].map((parameterSet) => {
                 Object.keys(parameterSet).forEach((paramId) => {
                     const value = parameterSet[paramId];
                     if (specParams[paramId]) {
-                        const paramType = specParams[paramId].type;
-                        if (paramType === 'dropdown') {
-                            parameterSet[paramId] = specParams[paramId].options[value];
-                        } else if (paramType === 'checkbox') {
-                            if (String(value) === '1') {
-                                parameterSet[paramId] = specParams[paramId].options.checked;
-                            } else {
-                                parameterSet[paramId] = specParams[paramId].options.unchecked;
-                            }
-                        }
+                        parameterSet[paramId] = specParams[paramId][value];
                     }
                 });
                 return parameterSet;

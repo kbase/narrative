@@ -20,6 +20,11 @@ import sys
 import io
 import copy
 from .util import ConfigTests
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
+    READS_OBJ_1,
+    READS_OBJ_2,
+)
 
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
 TOKEN_ID = "ABCDE12345"
@@ -27,16 +32,12 @@ UNKNOWN_APP_ID = "Unknown app id"
 READS_FILE_1 = "reads file 1"
 READS_FILE_2 = "reads file 2"
 NEW_READS_SET = "New Reads Set"
-READS_OBJ_1 = "rhodobacterium.art.q20.int.PE.reads"
-READS_OBJ_2 = "rhodobacterium.art.q10.PE.reads"
-
 
 JOB_COMM_MOCK = "biokbase.narrative.jobs.appmanager.JobComm"
 GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"
 CLIENTS_AM = "biokbase.narrative.jobs.appmanager.clients.get"
 CLIENTS_AM_SM = "biokbase.narrative.jobs.appmanager.specmanager.clients.get"
 CLIENTS_SM = "biokbase.narrative.jobs.specmanager.clients.get"
-CLIENTS = "biokbase.narrative.clients.get"
 
 
 with mock.patch(CLIENTS, get_mock_client):

@@ -269,7 +269,7 @@ class JobManager(object):
 
         return output_states
 
-    def lookup_job_info(self, job_ids: List[str]) -> dict:
+    def get_job_info(self, job_ids: List[str]) -> dict:
         """
         Sends the info over the comm channel as these packets:
         {
@@ -279,7 +279,7 @@ class JobManager(object):
             job_params: dictionary,
             batch_id: string,
         }
-        Will set packet to DOES_NOT_EXIST if job_id doesn't exist.
+        Will set packet to the generic job not found message if job_id doesn't exist.
         """
         job_ids, error_ids = self._check_job_list(job_ids)
 
@@ -293,12 +293,7 @@ class JobManager(object):
                 "job_id": job_id,
                 "job_params": job.params,
             }
-        for error_id in error_ids:
-            infos[error_id] = {
-                "job_id": error_id,
-                "error": DOES_NOT_EXIST,
-            }
-        return infos
+        return self.add_errors_to_results(infos, error_ids)
 
     def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
         """
@@ -437,13 +432,7 @@ class JobManager(object):
         for job_id in job_ids:
             output[job_id] = self.get_job_logs(job_id, first_line, num_lines, latest)
 
-        for error_id in error_ids:
-            output[error_id] = {
-                "job_id": error_id,
-                "error": DOES_NOT_EXIST,
-            }
-
-        return output
+        return self.add_errors_to_results(output, error_ids)
 
     def cancel_jobs(self, job_id_list: List[str]) -> dict:
         """
@@ -467,14 +456,10 @@ class JobManager(object):
                     error_states[job_id] = error.message
 
         job_states = self._construct_job_output_state_set(job_ids)
-
-        for job_id in error_ids:
-            job_states[job_id] = get_error_output_state(job_id)
-
         for job_id in error_states:
             job_states[job_id]["error"] = error_states[job_id]
 
-        return job_states
+        return self.add_errors_to_results(job_states, error_ids)
 
     def _cancel_job(self, job_id: str) -> None:
         # Stop updating the job status while we try to cancel.
@@ -506,7 +491,7 @@ class JobManager(object):
             ...
             {
                 "job": {"state": {"job_id": job_id, "status": DOES_NOT_EXIST}},
-                "error": DOES_NOT_EXIST
+                "error": f"Cannot find job with ID {job_id}",
             }
         ]
         where the innermost dictionaries are job states from ee2 and are within the
@@ -540,20 +525,23 @@ class JobManager(object):
                 results_by_job_id[job_id]["retry"] = job_states[retry_id]
             if "error" in result:
                 results_by_job_id[job_id]["error"] = result["error"]
-        for job_id in error_ids:
-            results_by_job_id[job_id] = {
-                "job_id": job_id,
-                "job": get_error_output_state(job_id),
-                "error": DOES_NOT_EXIST,
+        return self.add_errors_to_results(results_by_job_id, error_ids)
+
+    def add_errors_to_results(self, results: dict, error_ids: List[str]) -> dict:
+        """
+        Add the generic "not found" error for each job_id in error_ids
+        """
+        for error_id in error_ids:
+            results[error_id] = {
+                "job_id": error_id,
+                "error": f"Cannot find job with ID {error_id}",
             }
-        return results_by_job_id
+        return results
 
     def get_job_states(self, job_ids: List[str]) -> dict:
         job_ids, error_ids = self._check_job_list(job_ids)
         output_states = self._construct_job_output_state_set(job_ids)
-        for error_id in error_ids:
-            output_states[error_id] = get_error_output_state(error_id)
-        return output_states
+        return self.add_errors_to_results(output_states, error_ids)
 
     def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:
         """

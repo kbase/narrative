@@ -13,6 +13,7 @@ from biokbase.narrative.jobs.job import (
 )
 from biokbase.narrative.jobs.jobmanager import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
 from biokbase.narrative.jobs.specmanager import SpecManager
+
 from .narrative_mock.mockclients import (
     get_mock_client,
     get_failing_mock_client,
@@ -24,7 +25,8 @@ from io import StringIO
 import sys
 
 from biokbase.narrative.tests.job_test_constants import (
-    TEST_JOBS,
+    CLIENTS,
+    TEST_JOB_IDS,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
@@ -33,10 +35,13 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_RETRY_RUNNING,
     JOBS_TERMINALITY,
     ALL_JOBS,
+    BAD_JOBS,
     TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
+    JOBS_BY_CELL_ID,
     get_test_job,
+    generate_error,
 )
 
 
@@ -51,17 +56,13 @@ def capture_stdout():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-sm = SpecManager()
-with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
-    sm.reload()
+with mock.patch(CLIENTS, get_mock_client):
+    sm = SpecManager()
     TEST_SPECS = copy.deepcopy(sm.app_specs)
-sm.reload()  # get live data
-LIVE_SPECS = copy.deepcopy(sm.app_specs)
 
 
-def get_test_spec(tag, app_id, live=False):
-    specs = LIVE_SPECS if live else TEST_SPECS
-    return copy.deepcopy(specs[tag][app_id])
+def get_test_spec(tag, app_id):
+    return copy.deepcopy(TEST_SPECS[tag][app_id])
 
 
 CLIENTS = "biokbase.narrative.jobs.job.clients.get"
@@ -119,10 +120,9 @@ def get_widget_info(job_id):
     if state.get("status") != COMPLETED_STATUS:
         return None
     job_input = state.get("job_input", {})
-    narr_cell_info = job_input.get("narrative_cell_info", {})
-    params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
-    tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
     app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
+    params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
+    tag = job_input.get("narrative_cell_info", {}).get("tag", JOB_ATTR_DEFAULTS["tag"])
     spec = get_test_spec(tag, app_id)
     with mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client):
         output_widget, widget_params = map_outputs_from_state(
@@ -132,12 +132,14 @@ def get_widget_info(job_id):
         )
     return {
         "name": output_widget,
-        "tag": narr_cell_info.get("tag", "release"),
+        "tag": tag,
         "params": widget_params,
     }
 
 
 def get_test_job_state(job_id):
+    if job_id in BAD_JOBS:
+        return {"job_id": job_id, "error": generate_error(job_id, "not_found")}
     state = get_test_job(job_id)
     job_input = state.get("job_input", {})
     narr_cell_info = job_input.get("narrative_cell_info", {})
@@ -164,7 +166,7 @@ def get_test_job_state(job_id):
     return output_state
 
 
-def get_test_job_states(job_ids=TEST_JOBS.keys()):
+def get_test_job_states(job_ids=TEST_JOB_IDS):
     # generate full job state objects
     return {job_id: get_test_job_state(job_id) for job_id in job_ids}
 
@@ -203,34 +205,6 @@ def get_all_jobs(return_list=False):
     return jobs
 
 
-def get_cell_2_jobs():
-    """
-    Returns a dict with keys being all the cell IDs
-    in the test data, and the values being a list of
-    jobs with that cell ID.
-
-    Batch jobs technically don't have cell IDs,
-    but they will take on the cell IDs of their children.
-    If their children are in different
-    cells, all children's cell IDs will map to the batch job
-    """
-    cell_and_jobs = []
-    for job_id, job in get_all_jobs().items():
-        if job.batch_job:
-            for child_job in job.children:
-                cell_and_jobs.append((child_job.cell_id, job_id))
-        else:
-            cell_and_jobs.append((job.cell_id, job_id))
-
-    cell_2_jobs = {}
-    for cell_id, job_id in cell_and_jobs:
-        if cell_id in cell_2_jobs and job_id not in cell_2_jobs[cell_id]:
-            cell_2_jobs[cell_id] += [job_id]
-        else:
-            cell_2_jobs[cell_id] = [job_id]
-    return cell_2_jobs
-
-
 class JobTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -252,10 +226,6 @@ class JobTest(unittest.TestCase):
         cls.retry_parent = job_state.get("retry_parent")
         cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
         cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
-
-        # load mock specs
-        with mock.patch(CLIENTS, get_mock_client):
-            SpecManager().reload()
 
     def check_jobs_equal(self, jobl, jobr):
         self.assertEqual(jobl._acc_state, jobr._acc_state)
@@ -796,8 +766,7 @@ class JobTest(unittest.TestCase):
 
     def test_in_cells(self):
         all_jobs = get_all_jobs()
-        cell_2_jobs = get_cell_2_jobs()
-        cell_ids = list(cell_2_jobs.keys())
+        cell_ids = list(JOBS_BY_CELL_ID.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
@@ -805,7 +774,7 @@ class JobTest(unittest.TestCase):
                 # Get jobs expected to be associated with the cell IDs
                 exp_job_ids = [
                     job_id
-                    for cell_id, job_ids in cell_2_jobs.items()
+                    for cell_id, job_ids in JOBS_BY_CELL_ID.items()
                     for job_id in job_ids
                     if cell_id in combo
                 ]

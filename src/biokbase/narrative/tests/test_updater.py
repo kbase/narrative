@@ -14,30 +14,19 @@ class KeyErrorTest(ValueError):
 
 class UpdaterTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         config = ConfigTests()
 
         # read in test file stuff from ./data/...
-        self.test_nar = config.load_json_file(config.get("narratives", "updater_file"))[
+        cls.test_nar = config.load_json_file(config.get("narratives", "updater_file"))[
             "data"
         ]
-        self.test_nar_big = config.load_json_file(
+        cls.test_nar_big = config.load_json_file(
             config.get("narratives", "updater_file_big")
         )["data"]
-        self.test_nar_poplar = config.load_json_file(
+        cls.test_nar_poplar = config.load_json_file(
             config.get("narratives", "updater_file_poplar")
         )["data"]
-
-        #
-        # f = open(config.get('narratives', 'updater_file'), 'r')
-        # self.test_nar = json.loads(f.read())['data']
-        # f.close()
-        # f = open(config.get('narratives', 'updater_file_big'), 'r')
-        # self.test_nar_big = json.loads(f.read())['data']
-        # f.close()
-        # f = open(config.get('narratives', 'updater_file_poplar'), 'r')
-        # self.test_nar_poplar = json.loads(f.read())['data']
-        # f.close()
 
     def validate_narrative(self, nar):
         """
@@ -120,19 +109,13 @@ class UpdaterTestCase(unittest.TestCase):
             raise ValueError("cell.source must be a string")
         if not isinstance(cell["cell_type"], str):
             raise ValueError("cell.cell_type must be a string")
-        if "metadata" in cell:
-            if "kbase" in cell["metadata"]:
-                # test stuff
-                if "app" in cell["metadata"]["kbase"]:
-                    return True
-                elif "appCell" in cell["metadata"]["kbase"]:
-                    # print(cell['metadata']['kbase']['appCell']['app']['tag'])
-                    return True
-                if (
-                    "old_app" not in cell["metadata"]["kbase"]
-                    and cell["cell_type"] != "code"
-                ):
-                    raise ValueError("KBase method can no longer be Markdown cells!")
+        if (
+            "metadata" in cell
+            and "kbase" in cell["metadata"]
+            and "old_app" not in cell["metadata"]["kbase"]
+            and cell["cell_type"] != "code"
+        ):
+            raise ValueError("KBase method can no longer be Markdown cells!")
         return True
 
     def test_update_narrative(self):

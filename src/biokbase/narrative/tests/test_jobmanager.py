@@ -123,7 +123,6 @@ def get_test_job_retries():
             job_retries[job_id] = {
                 "job_id": job_id,
                 "job": get_test_job_state(job_id),
-                # "retry_id": RETRIED_JOBS[job_id],
                 "retry": get_test_job_state(RETRIED_JOBS[job_id]),
             }
         elif job_id == BATCH_PARENT:

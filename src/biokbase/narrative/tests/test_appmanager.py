@@ -1,17 +1,16 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
-from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
-import biokbase.narrative.jobs.specmanager as specmanager
-import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job
-from biokbase.narrative.tests.test_job import get_test_spec
-from IPython.display import HTML, Javascript
 import unittest
 import mock
 from mock import MagicMock
+from biokbase.narrative.jobs.specmanager import SpecManager
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
+import biokbase.narrative.app_util as app_util
+from biokbase.narrative.jobs.job import Job
+from IPython.display import HTML, Javascript
 from .narrative_mock.mockclients import (
     get_mock_client,
     WSID_STANDARD,
@@ -24,19 +23,39 @@ from .util import ConfigTests
 
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
 TOKEN_ID = "ABCDE12345"
+UNKNOWN_APP_ID = "Unknown app id"
+READS_FILE_1 = "reads file 1"
+READS_FILE_2 = "reads file 2"
+NEW_READS_SET = "New Reads Set"
+READS_OBJ_1 = "rhodobacterium.art.q20.int.PE.reads"
+READS_OBJ_2 = "rhodobacterium.art.q10.PE.reads"
 
 
-def mock_agent_token(*args, **kwargs):
-    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+JOB_COMM_MOCK = "biokbase.narrative.jobs.appmanager.JobComm"
+GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"
+CLIENTS_AM = "biokbase.narrative.jobs.appmanager.clients.get"
+CLIENTS_AM_SM = "biokbase.narrative.jobs.appmanager.specmanager.clients.get"
+CLIENTS_SM = "biokbase.narrative.jobs.specmanager.clients.get"
+CLIENTS = "biokbase.narrative.clients.get"
 
 
-def get_method(tag, app_id, live=False):
-    spec = get_test_spec(tag, app_id, live=live)
+with mock.patch(CLIENTS, get_mock_client):
+    sm = SpecManager()
+    sm.reload()
+    TEST_SPECS = copy.deepcopy(sm.app_specs)
+
+
+def get_method(tag, app_id):
+    spec = copy.deepcopy(TEST_SPECS[tag][app_id])
     return (
         spec["behavior"]["kb_service_name"]
         + "."
         + spec["behavior"]["kb_service_method"]
     )
+
+
+def mock_agent_token(*args, **kwargs):
+    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
 
 
 def get_timestamp():
@@ -216,10 +235,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# Testing run_app #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__dry_run(self, auth, c):
@@ -239,10 +258,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(expected, output)
         self.assertEqual(mock_comm.call_count, 0)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__good_inputs(self, auth, c):
@@ -256,10 +275,10 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__from_gui_cell(self, auth, c):
@@ -277,7 +296,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -291,7 +310,7 @@ class AppManagerTestCase(unittest.TestCase):
             f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -305,7 +324,7 @@ class AppManagerTestCase(unittest.TestCase):
             f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
@@ -322,10 +341,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__missing_inputs(self, auth, c):
@@ -333,8 +352,8 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsNotNone(self.am.run_app(self.good_app_id, None, tag=self.good_tag))
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -346,7 +365,7 @@ class AppManagerTestCase(unittest.TestCase):
                 self.bad_app_id, self.test_app_params, tag=self.test_tag
             ),
             "run_app",
-            "Unknown app id",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -371,10 +390,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# Test run_app_batch #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_batch__dry_run_good_inputs(self, auth, c):
@@ -426,10 +445,10 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(job_runner_inputs, expected)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_batch__good_inputs(self, auth, c):
@@ -447,10 +466,10 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_batch__gui_cell(self, auth, c):
@@ -468,7 +487,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_batch__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -482,7 +501,7 @@ class AppManagerTestCase(unittest.TestCase):
             f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_batch__bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -496,7 +515,7 @@ class AppManagerTestCase(unittest.TestCase):
             f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_batch__bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
@@ -515,10 +534,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_batch__missing_inputs(self, auth, c):
@@ -528,8 +547,8 @@ class AppManagerTestCase(unittest.TestCase):
         )
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_batch__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -541,7 +560,7 @@ class AppManagerTestCase(unittest.TestCase):
                 self.bad_app_id, [self.test_app_params], tag=self.test_tag
             ),
             "run_app_batch",
-            "Unknown app id",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -565,10 +584,10 @@ class AppManagerTestCase(unittest.TestCase):
     ############# End tests for run_app_batch #############
 
     ############# Test run_local_app #############
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_local_app_ok(self, auth, c):
@@ -581,10 +600,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsInstance(result, Javascript)
         self.assertIn("KBaseNarrativeOutputCell", result.data)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_local_app_fail_cases(self, auth, c):
@@ -631,8 +650,8 @@ class AppManagerTestCase(unittest.TestCase):
                 test_case["expected_error"],
             )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_local_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -644,7 +663,7 @@ class AppManagerTestCase(unittest.TestCase):
                 self.bad_app_id, self.test_app_params, tag=self.test_tag
             ),
             "run_local_app",
-            "Unknown app id",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -669,10 +688,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# Test run_app_bulk #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_bulk__dry_run(self, auth, c):
@@ -702,9 +721,7 @@ class AppManagerTestCase(unittest.TestCase):
 
         exp_batch_run_params = [
             {
-                "method": get_method(
-                    test_input[i]["tag"], test_input[i]["app_id"], live=True
-                ),
+                "method": get_method(test_input[i]["tag"], test_input[i]["app_id"]),
                 "service_ver": test_input[i]["version"],
                 "params": [mod(test_input[i]["params"][j])],
                 "app_id": test_input[i]["app_id"],
@@ -723,10 +740,10 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(mock_comm.call_count, 0)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_bulk__good_inputs(self, auth, c):
@@ -763,10 +780,10 @@ class AppManagerTestCase(unittest.TestCase):
         for job in [parent_job] + child_jobs:
             self.assertEqual(False, self.jm._running_jobs[job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app_bulk__from_gui_cell(self, auth, c):
@@ -792,8 +809,8 @@ class AppManagerTestCase(unittest.TestCase):
             )
             comm_mock.reset_mock()
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_bulk__bad_inputs(self, c):
         no_info_error = (
             "app_info must be a list with at least one set of app information"
@@ -855,8 +872,8 @@ class AppManagerTestCase(unittest.TestCase):
                 test_case["expected_error"],
             )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app_bulk__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -885,8 +902,8 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_bulk_app_no_wsid(self, c):
         del os.environ["KB_WORKSPACE_ID"]
         comm_mock = MagicMock()
@@ -900,88 +917,77 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# End tests for run_app_bulk #############
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description(self):
         desc = self.am.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_tag(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.good_app_id, tag=self.bad_tag)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_name(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.bad_app_id)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
-    @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
     def test_validate_params(self):
         inputs = {
             "reads_tuple": [
                 {
-                    "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_label": READS_FILE_1,
+                    "input_reads_obj": READS_OBJ_1,
                     "input_reads_metadata": {"key1": "value1"},
                 },
                 {
-                    "input_reads_label": "reads file 2",
-                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_label": READS_FILE_2,
+                    "input_reads_obj": READS_OBJ_2,
                     "input_reads_metadata": {"key2": "value2"},
                 },
             ],
             "output_object": "MyReadsSet",
-            "description": "New Reads Set",
+            "description": NEW_READS_SET,
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
-        sm = specmanager.SpecManager()
-        spec = sm.get_spec(app_id, tag=tag)
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
         (params, ws_inputs) = app_util.validate_parameters(
-            app_id, tag, sm.app_params(spec), inputs
+            app_id, tag, spec_params, inputs
         )
         self.assertDictEqual(params, inputs)
         self.assertIn("12345/8/1", ws_inputs)
         self.assertIn("12345/7/1", ws_inputs)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
-    @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_input_mapping(self):
         self.maxDiff = None
         inputs = {
             "reads_tuple": [
                 {
-                    "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_label": READS_FILE_1,
+                    "input_reads_obj": READS_OBJ_1,
                     "input_reads_metadata": {"key1": "value1"},
                 },
                 {
-                    "input_reads_label": "reads file 2",
-                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_label": READS_FILE_2,
+                    "input_reads_obj": READS_OBJ_2,
                     "input_reads_metadata": {"key2": "value2"},
                 },
             ],
             "output_object": "MyReadsSet",
-            "description": "New Reads Set",
+            "description": NEW_READS_SET,
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
         ws_name = self.public_ws
-        sm = specmanager.SpecManager()
-        spec = sm.get_spec(app_id, tag=tag)
-        spec_params = sm.app_params(spec)
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
         spec_params_map = dict(
             (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
         )
@@ -994,17 +1000,17 @@ class AppManagerTestCase(unittest.TestCase):
                 "data": {
                     "items": [
                         {
-                            "label": "reads file 1",
+                            "label": READS_FILE_1,
                             "metadata": {"key1": "value1"},
                             "ref": "12345/7/1",
                         },
                         {
-                            "label": "reads file 2",
+                            "label": READS_FILE_2,
                             "metadata": {"key2": "value2"},
                             "ref": "12345/8/1",
                         },
                     ],
-                    "description": "New Reads Set",
+                    "description": NEW_READS_SET,
                 },
                 "workspace": ws_name,
             }
@@ -1016,9 +1022,7 @@ class AppManagerTestCase(unittest.TestCase):
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         self.assertEqual(ret, ws_name + "/MyReadsSet;18836/5/1")
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_generate_input(self):
         prefix = "pre"
         suffix = "suf"
@@ -1054,12 +1058,12 @@ class AppManagerTestCase(unittest.TestCase):
                 "expected": ws_name + "/" + "input_value",
             },
             {
-                "value": "rhodobacterium.art.q20.int.PE.reads",
+                "value": READS_OBJ_1,
                 "type": "resolved-ref",
                 "expected": "11635/9/1",
             },
             {
-                "value": ws_name + "/rhodobacterium.art.q20.int.PE.reads",
+                "value": ws_name + "/" + READS_OBJ_1,
                 "type": "resolved-ref",
                 "expected": "11635/9/1",
             },
@@ -1072,8 +1076,8 @@ class AppManagerTestCase(unittest.TestCase):
             },
             {
                 "value": [
-                    "rhodobacterium.art.q20.int.PE.reads",
-                    "rhodobacterium.art.q10.PE.reads",
+                    READS_OBJ_1,
+                    READS_OBJ_2,
                 ],
                 "type": "list<resolved-ref>",
                 "expected": ["11635/9/1", "11635/10/1"],
@@ -1082,7 +1086,7 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
             {"value": "bar", "type": None, "expected": "bar"},
             {
-                "value": "rhodobacterium.art.q20.int.PE.reads",
+                "value": READS_OBJ_1,
                 "type": "future-default",
                 "spec": {"is_output": 0, "allowed_types": ["Some.KnownType"]},
                 "expected": "11635/9/1",

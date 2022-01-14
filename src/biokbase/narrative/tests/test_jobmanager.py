@@ -347,7 +347,8 @@ class JobManagerTest(unittest.TestCase):
         jobs_html = self.jm.list_jobs()
         self.assertIsInstance(jobs_html, HTML)
         html = jobs_html.data
-        self.assertIn("<td>5d64935ab215ad4128de94d6</td>", html)
+        for job_id in TEST_JOB_IDS:
+            self.assertIn("<td>" + job_id + "</td>", html)
         self.assertIn("<td>NarrativeTest/test_editor</td>", html)
         self.assertIn("<td>2019-08-26 ", html)
         self.assertIn(":54:48</td>", html)

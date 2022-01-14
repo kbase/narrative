@@ -5,18 +5,8 @@ define([
     'narrativeMocks',
     'testUtil',
     'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
-    'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.info.json',
     'json!/test/data/kb_uploadmethods.import_fasta_as_assembly_from_staging.spec.json',
-], (
-    ImportSetup,
-    Jupyter,
-    Config,
-    Mocks,
-    TestUtil,
-    ImportFastqSpec,
-    ImportFastqInfo,
-    ImportAssemblySpec
-) => {
+], (ImportSetup, Jupyter, Config, Mocks, TestUtil, ImportFastqSpec, ImportAssemblySpec) => {
     'use strict';
 
     const uploaders = Config.get('uploaders');

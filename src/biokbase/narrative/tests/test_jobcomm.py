@@ -11,7 +11,6 @@ from biokbase.narrative.jobs.jobmanager import (
     JOB_NOT_BATCH_ERR,
     JOBS_TYPE_ERR,
     JOBS_MISSING_ERR,
-    get_error_output_state,
 )
 from biokbase.narrative.jobs.jobcomm import (
     JobRequest,

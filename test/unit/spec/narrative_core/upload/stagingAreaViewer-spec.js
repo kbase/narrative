@@ -264,8 +264,8 @@ define([
             const menuOptions = [
                 'SRA Reads',
                 'GenBank Genome',
-                'GFF Genome',
-                'GFF Metagenome',
+                'GFF/FASTA Genome',
+                'GFF/FASTA Metagenome',
                 'Expression Matrix',
                 'Media',
                 'FBA Model',

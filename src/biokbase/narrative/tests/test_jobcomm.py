@@ -45,7 +45,6 @@ from biokbase.narrative.exception_util import (
     transform_job_exception,
 )
 
-from biokbase.narrative.tests.generate_test_results import ALL_RESPONSE_DATA
 from .util import ConfigTests, validate_job_state
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
@@ -65,18 +64,22 @@ from biokbase.narrative.tests.job_test_constants import (
     JOB_NOT_FOUND,
     BAD_JOB_ID,
     BAD_JOB_ID_2,
-    TEST_CELL_ID_LIST,
-    TEST_CELL_IDs,
     JOBS_TERMINALITY,
     ALL_JOBS,
+    BAD_JOBS,
     ACTIVE_JOBS,
-    JOBS_BY_CELL_ID,
     BATCH_PARENT_CHILDREN,
     BATCH_CHILDREN,
-    TEST_JOB_IDS,
-    RETRIED_JOBS,
     generate_error,
 )
+from biokbase.narrative.tests.generate_test_results import (
+    ALL_RESPONSE_DATA,
+    RETRIED_JOBS,
+    TEST_CELL_ID_LIST,
+    TEST_CELL_IDs,
+    JOBS_BY_CELL_ID,
+)
+
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import (
     get_mock_client,
@@ -623,7 +626,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__all_results(self):
         cell_id_list = TEST_CELL_ID_LIST
-        expected_ids = TEST_JOB_IDS
+        expected_ids = ALL_JOBS
         expected_states = {id: ALL_RESPONSE_DATA[STATUS][id] for id in expected_ids}
 
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
@@ -849,8 +852,10 @@ class JobCommTestCase(unittest.TestCase):
         self.check_retry_jobs(job_id_list, job_id_list)
 
     def test_retry_jobs__job_id_list__all_jobs(self):
-        for job_id in TEST_JOB_IDS:
+        job_id_list = ALL_JOBS + BAD_JOBS
+        for job_id in job_id_list:
             self.check_retry_jobs({JOB_ID: job_id}, [job_id])
+        self.check_retry_jobs(job_id_list, job_id_list)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__job_id_list__all_bad_jobs(self):

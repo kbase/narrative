@@ -37,8 +37,11 @@ from biokbase.narrative.tests.job_test_constants import (
     TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
-    JOBS_BY_CELL_ID,
     get_test_job,
+)
+
+from biokbase.narrative.tests.generate_test_results import (
+    JOBS_BY_CELL_ID
 )
 
 
@@ -172,23 +175,6 @@ class JobTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-
-        job_state = get_test_job(JOB_COMPLETED)
-        job_input = job_state["job_input"]
-        cls.job_id = job_state["job_id"]
-        cls.app_id = job_input["app_id"]
-        cls.app_version = job_input.get("service_ver", "0.0.1")
-        cls.batch_id = None
-        cls.batch_job = False
-        cls.child_jobs = []
-        cls.cell_id = job_input.get("narrative_cell_info", {}).get("cell_id")
-        cls.extra_data = None
-        cls.user = job_state["user"]
-        cls.params = job_input["params"]
-        cls.retry_ids = job_state.get("retry_ids", [])
-        cls.retry_parent = job_state.get("retry_parent")
-        cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
-        cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
         cls.NEW_RETRY_IDS = ["hello", "goodbye"]
         cls.NEW_CHILD_JOBS = ["cerulean", "magenta"]
 
@@ -417,7 +403,15 @@ class JobTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_job_info(self):
         job = create_job_from_ee2(JOB_COMPLETED)
-        info_str = "App name (id): Test Editor (NarrativeTest/test_editor)\nVersion: 0.0.1\nStatus: completed\nInputs:\n------\n"
+
+        job_data = get_test_job(JOB_COMPLETED)
+        app_id = job_data.get("job_input", {}).get("app_id")
+        tag = job_data.get("job_input", {}).get("narrative_cell_info", {}).get("tag")
+        status = job_data["status"]
+        job_spec = get_test_spec(tag, app_id)
+        app_name = job_spec.get("info", {}).get("name")
+        version = job_spec.get("info", {}).get("ver")
+        info_str = f"App name (id): {app_name} ({app_id})\n" + f"Version: {version}\n" + f"Status: {status}\nInputs:\n------\n"
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())

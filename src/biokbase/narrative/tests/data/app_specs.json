@@ -4113,5 +4113,279 @@
             "input": "null",
             "output": "no-display"
         }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },
+                {
+                    "input_parameter": "text_input",
+                    "target_property": "text_input"
+                },
+                {
+                    "input_parameter": "checkbox_input",
+                    "target_property": "checkbox_input"
+                }
+            ],
+            "kb_service_method": "example_report",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_name"
+                    ],
+                    "target_property": "report_name"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_ref"
+                    ],
+                    "target_property": "report_ref"
+                },
+                {
+                    "constant_value": "16",
+                    "target_property": "report_window_line_height"
+                }
+            ],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/report_example",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "Example HTML Report",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "Show an example HTML Report",
+            "tooltip": "Show an example HTML Report",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "Some input test goes here",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "text_input",
+                "optional": 1,
+                "short_hint": "Add some text for your report",
+                "text_options": {
+                    "is_output_name": 0,
+                    "placeholder": "",
+                    "regex_constraint": []
+                },
+                "ui_class": "parameter",
+                "ui_name": "Text Input"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    "1"
+                ],
+                "description": "Your report will show this being checked or not",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "checkbox_input",
+                "optional": 0,
+                "short_hint": "Show this off in your report",
+                "ui_class": "parameter",
+                "ui_name": "Checkbox Input"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "no-display"
+        }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "input_parameter": "naptime",
+                    "target_property": "naptime"
+                },
+                {
+                    "input_parameter": "fail",
+                    "target_property": "fail"
+                }
+            ],
+            "kb_service_method": "app_sleep",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [
+                "active"
+            ],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/app_sleep",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "App Sleep",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "A simple test app that sleeps before succeeding or failing.",
+            "tooltip": "A simple test app that sleeps before succeeding or failing.",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "5"
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "naptime",
+                "optional": 0,
+                "short_hint": "How long to sleep in seconds before returning",
+                "text_options": {
+                    "is_output_name": 0,
+                    "min_int": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "valid_ws_types": [],
+                    "validate_as": "int"
+                },
+                "ui_class": "parameter",
+                "ui_name": "Nap length (sec)"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    ""
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "fail",
+                "optional": 0,
+                "short_hint": "If checked, this will raise on error after sleeping.",
+                "ui_class": "parameter",
+                "ui_name": "Fail on wake"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "no-display"
+        }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "input_parameter": "num_lines",
+                    "target_property": "num_lines"
+                }
+            ],
+            "kb_service_method": "app_logs",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "num_lines"
+                    ],
+                    "target_property": "num_lines"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "prefix"
+                    ],
+                    "target_property": "unique_string"
+                }
+            ],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [
+                "active"
+            ],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/app_logs",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "App Logs",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "A test app that generates a number of log lines with a unique string attached.",
+            "tooltip": "A test app that generates a number of log lines with a unique string attached.",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "100"
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "num_lines",
+                "optional": 0,
+                "short_hint": "Number of log lines to generates",
+                "text_options": {
+                    "is_output_name": 0,
+                    "min_int": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "valid_ws_types": [],
+                    "validate_as": "int"
+                },
+                "ui_class": "parameter",
+                "ui_name": "Number of lines"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "null"
+        }
     }
 ]

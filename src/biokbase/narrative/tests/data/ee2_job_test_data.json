@@ -1,191 +1,213 @@
 {
     "JOB_COMPLETED": {
-        "job_id": "JOB_COMPLETED",
-        "user": "fake_test_user",
-        "authstrat": "kbaseworkspace",
         "batch_id": null,
         "batch_job": false,
         "child_jobs": [],
-        "wsid": 9999,
-        "status": "completed",
-        "updated": 1566860098000,
-        "created": 1566860088000,
-        "finished": 1566860098000,
+        "created": 1642431805000,
+        "finished": 1642431852079,
+        "job_id": "JOB_COMPLETED",
         "job_input": {
-            "wsid": 123,
-            "method": "method",
-            "requested_release": "requested_release",
-            "params": [
-                {
-                    "k_list": [],
-                    "k_max": null,
-                    "output_contigset_name": "MEGAHIT.contigs"
-                }
-            ],
-            "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74",
-            "app_id": "NarrativeTest/test_editor",
-            "source_ws_objects": [],
+            "app_id": "NarrativeTest/report_example",
+            "method": "NarrativeTest.example_report",
             "narrative_cell_info": {
                 "cell_id": "NARRATIVE_CELL_1",
+                "run_id": "cd76b1cd-f6d7-438d-ac9c-121fa637cbdc",
                 "tag": "dev",
-                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
-            }
+                "token_id": "8c10679f-0ae8-4487-bd6b-581e463f50c9"
+            },
+            "params": [
+                {
+                    "checkbox_input": 1,
+                    "text_input": "Some text",
+                    "workspace_name": "ialarmedalien:narrative_1638480919860"
+                }
+            ],
+            "service_ver": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "source_ws_objects": [],
+            "wsid": 65854
         },
         "job_output": {
-            "version": "1.1",
+            "id": "JOB_COMPLETED",
             "result": [
                 {
-                    "new_number": 200
+                    "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                    "report_ref": "54321/60/1"
                 }
             ],
-            "id": "5d7024304446f0da4ac7eac4"
+            "version": "1.1"
         },
+        "queued": 1642431805791,
+        "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": null
+        "retry_saved_toggle": false,
+        "running": 1642431816870,
+        "status": "completed",
+        "updated": 1642431852275,
+        "user": "test_user",
+        "widget_info": {
+            "name": "no-display",
+            "params": {
+                "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                "report_ref": "54321/60/1",
+                "report_window_line_height": "16"
+            },
+            "tag": "dev"
+        },
+        "wsid": 54321
     },
     "JOB_CREATED": {
-        "job_id": "JOB_CREATED",
-        "user": "tgu2",
-        "authstrat": "kbaseworkspace",
         "batch_id": null,
         "batch_job": false,
         "child_jobs": [],
-        "wsid": 9999,
-        "status": "created",
-        "updated": 1572462965487,
-        "created": 1572462971988,
+        "created": 1642522053000,
+        "job_id": "JOB_CREATED",
         "job_input": {
-            "wsid": 9999,
-            "method": "AssemblyRAST.run_arast",
-            "params": [
-                {
-                    "k_list": [],
-                    "k_max": null,
-                    "output_contigset_name": "MEGAHIT.contigs"
-                }
-            ],
-            "service_ver": "1.2.3",
-            "app_id": "AssemblyRAST/run_arast",
-            "source_ws_objects": ["a/b/c", "e/d"],
-            "parent_job_id": "9998",
+            "app_id": "NarrativeTest/app_sleep",
+            "method": "NarrativeTest.app_sleep",
             "narrative_cell_info": {
                 "cell_id": "NARRATIVE_CELL_1",
+                "run_id": "45620f44-6045-482c-af54-d7c123854fe3",
                 "tag": "dev",
-                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
-            }
-        },
-        "retry_ids": [],
-        "retry_parent": null
-    },
-    "JOB_RUNNING": {
-        "job_id": "JOB_RUNNING",
-        "user": "wjriehl",
-        "authstrat": "kbaseworkspace",
-        "batch_id": null,
-        "batch_job": false,
-        "child_jobs": [],
-        "wsid": 9999,
-        "status": "running",
-        "updated": 1572462965490,
-        "created": 1572462971990,
-        "running": 1572462965490,
-        "job_input": {
-            "wsid": 9999,
-            "method": "AssemblyRAST.run_arast",
+                "token_id": "d5f340b9-c087-49f2-95e8-2fdba700bf97"
+            },
             "params": [
                 {
-                    "k_list": [],
-                    "k_max": null,
-                    "output_contigset_name": "MEGAHIT.contigs"
+                    "fail": 1,
+                    "naptime": 50000
                 }
             ],
-            "service_ver": "2.0.0",
-            "app_id": "AssemblyRAST/run_arast",
-            "source_ws_objects": ["a/b/c", "e/d"],
-            "parent_job_id": null,
-            "narrative_cell_info": {
-                "cell_id": "NARRATIVE_CELL_2",
-                "tag": "dev",
-                "run_id": "6546971e-757a-4a26-8439-325497c6d843"
-            }
+            "service_ver": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "source_ws_objects": [],
+            "wsid": 55555
         },
+        "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": null
+        "retry_saved_toggle": false,
+        "status": "created",
+        "updated": 1642522062069,
+        "user": "fake_test_user",
+        "wsid": 55555
     },
     "JOB_TERMINATED": {
-        "job_id": "JOB_TERMINATED",
-        "user": "fake_test_user",
-        "authstrat": "kbaseworkspace",
         "batch_id": null,
         "batch_job": false,
         "child_jobs": [],
-        "wsid": 9999,
-        "status": "terminated",
-        "updated": 1572462965495,
-        "created": 1572462971995,
-        "finished": 1572462965495,
+        "created": 1642521724000,
+        "finished": 1642521729372,
+        "job_id": "JOB_TERMINATED",
         "job_input": {
-            "wsid": 9999,
-            "method": "AssemblyRAST.run_arast",
-            "params": [
-                {
-                    "k_list": [],
-                    "k_max": null,
-                    "output_contigset_name": "MEGAHIT.contigs"
-                }
-            ],
-            "service_ver": "4.0.0",
-            "app_id": "AssemblyRAST/run_arast",
-            "source_ws_objects": ["a/b/c", "e/d"],
-            "parent_job_id": null,
+            "app_id": "NarrativeTest/app_logs",
+            "method": "NarrativeTest.app_logs",
             "narrative_cell_info": {
                 "cell_id": "NARRATIVE_CELL_2",
+                "run_id": "5f31a481-3ef6-45ff-b627-a5a0e90c212b",
                 "tag": "dev",
-                "run_id": "6546971e-757a-4a26-8439-325497c6d843"
-            }
+                "token_id": "a9f4cad3-1cde-4ac5-b3f8-615b47ce4ab4"
+            },
+            "params": [
+                {
+                    "num_lines": 100
+                }
+            ],
+            "service_ver": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "source_ws_objects": [],
+            "wsid": 54321
         },
+        "queued": 1642521724208,
+        "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": null
+        "retry_saved_toggle": false,
+        "status": "terminated",
+        "terminated_code": 0,
+        "updated": 1642521729372,
+        "user": "test_user",
+        "wsid": 54321
+    },
+    "JOB_RUNNING": {
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1642521765000,
+        "job_id": "JOB_RUNNING",
+        "job_input": {
+            "app_id": "NarrativeTest/app_logs",
+            "method": "NarrativeTest.app_logs",
+            "narrative_cell_info": {
+                "cell_id": "NARRATIVE_CELL_2",
+                "run_id": "b27bdcf3-98f8-4c62-8b5d-5b181cf46058",
+                "tag": "dev",
+                "token_id": "c5ce7f0c-0c13-447e-bed8-c69570f146c4"
+            },
+            "params": [
+                {
+                    "num_lines": 10000
+                }
+            ],
+            "service_ver": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "source_ws_objects": [],
+            "wsid": 54321
+        },
+        "queued": 1642521765842,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_saved_toggle": false,
+        "running": 1642521775867,
+        "status": "running",
+        "updated": 1642521775870,
+        "user": "test_user",
+        "wsid": 54321
     },
     "JOB_ERROR": {
-        "job_id": "JOB_ERROR",
-        "user": "fake_test_user",
-        "authstrat": "kbaseworkspace",
         "batch_id": null,
         "batch_job": false,
         "child_jobs": [],
-        "wsid": 9999,
-        "status": "error",
-        "updated": 1572462965495,
-        "created": 1572462971995,
+        "created": 1642431841000,
+        "error": {
+            "code": -32000,
+            "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/NarrativeTest/NarrativeTestServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/NarrativeTest/NarrativeTestImpl.py\", line 345, in app_sleep\n    raise RuntimeError('App woke up from its nap very cranky!')\nRuntimeError: App woke up from its nap very cranky!\n",
+            "message": "'App woke up from its nap very cranky!'",
+            "name": "Server error"
+        },
+        "error_code": 1,
+        "errormsg": "Job output contains an error",
+        "finished": 1642431856245,
+        "job_id": "JOB_ERROR",
         "job_input": {
-            "wsid": 9999,
-            "method": "AssemblyRAST.run_arast",
-            "params": [
-                {
-                    "k_list": [],
-                    "k_max": null,
-                    "output_contigset_name": "MEGAHIT.contigs"
-                }
-            ],
-            "service_ver": "3.6.9",
-            "app_id": "AssemblyRAST/run_arast",
-            "source_ws_objects": [
-                "a/b/c",
-                "e/d"
-            ],
-            "parent_job_id": null,
+            "app_id": "NarrativeTest/app_sleep",
+            "method": "NarrativeTest.app_sleep",
             "narrative_cell_info": {
                 "cell_id": "NARRATIVE_CELL_2",
+                "run_id": "c2ed67e1-4457-4aa0-8f10-88d5f530cbc7",
                 "tag": "dev",
-                "run_id": "6546971e-757a-4a26-8439-325497c6d843"
-            }
+                "token_id": "5ecc946b-e716-41b4-9b1f-c0b61c889192"
+            },
+            "params": [
+                {
+                    "fail": 1,
+                    "naptime": 5
+                }
+            ],
+            "requirements": {
+                "clientgroup": "njs",
+                "cpu": 2,
+                "disk": 100,
+                "memory": 23000
+            },
+            "service_ver": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "source_ws_objects": [],
+            "wsid": 65854
         },
+        "queued": 1642431841259,
+        "retry_count": 0,
         "retry_ids": [],
-        "retry_parent": null
+        "retry_saved_toggle": false,
+        "running": 1642431847689,
+        "status": "error",
+        "updated": 1642431856323,
+        "user": "ialarmedalien",
+        "wsid": 65854
     },
     "BATCH_PARENT": {
-        "authstrat": "kbaseworkspace",
         "batch_job": true,
         "child_jobs": [
             "BATCH_COMPLETED",
@@ -214,7 +236,6 @@
         "wsid": 10538
     },
     "BATCH_COMPLETED": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -268,10 +289,20 @@
         "status": "completed",
         "updated": 1625756075071,
         "user": "alien_test_user",
+        "widget_info": {
+            "name": "no-display",
+            "params": {
+                "obj_ref": "18836/5/1",
+                "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                "report_ref": "62425/18/1",
+                "report_window_line_height": "16",
+                "wsName": "wjriehl:1475006266615"
+            },
+            "tag": "release"
+        },
         "wsid": 10538
     },
     "BATCH_TERMINATED": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -318,7 +349,6 @@
         "wsid": 10538
     },
     "BATCH_TERMINATED_RETRIED": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -356,7 +386,10 @@
         },
         "queued": 1625755944519,
         "retry_count": 2,
-        "retry_ids": ["BATCH_RETRY_COMPLETED", "BATCH_RETRY_RUNNING"],
+        "retry_ids": [
+            "BATCH_RETRY_COMPLETED",
+            "BATCH_RETRY_RUNNING"
+        ],
         "retry_saved_toggle": false,
         "running": 1625755952563,
         "status": "terminated",
@@ -366,7 +399,6 @@
         "wsid": 10538
     },
     "BATCH_ERROR_RETRIED": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -411,7 +443,9 @@
         },
         "queued": 1625755944590,
         "retry_count": 1,
-        "retry_ids": ["BATCH_RETRY_ERROR"],
+        "retry_ids": [
+            "BATCH_RETRY_ERROR"
+        ],
         "retry_saved_toggle": false,
         "running": 1625755952628,
         "status": "error",
@@ -420,7 +454,6 @@
         "wsid": 10538
     },
     "BATCH_RETRY_COMPLETED": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -476,10 +509,20 @@
         "status": "completed",
         "updated": 1625756123553,
         "user": "alien_test_user",
+        "widget_info": {
+            "name": "no-display",
+            "params": {
+                "obj_ref": "18836/5/1",
+                "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                "report_ref": "62425/19/1",
+                "report_window_line_height": "16",
+                "wsName": "wjriehl:1475006266615"
+            },
+            "tag": "release"
+        },
         "wsid": 10538
     },
     "BATCH_RETRY_RUNNING": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],
@@ -526,7 +569,6 @@
         "wsid": 10538
     },
     "BATCH_RETRY_ERROR": {
-        "authstrat": "kbaseworkspace",
         "batch_id": "BATCH_PARENT",
         "batch_job": false,
         "child_jobs": [],

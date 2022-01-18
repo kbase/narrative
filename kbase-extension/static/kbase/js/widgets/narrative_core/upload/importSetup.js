@@ -11,18 +11,28 @@ define([
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
 
-    class SpreadsheetFetchError extends Error {
-        constructor(errors) {
-            super('Error while fetching CSV/TSV/Excel import data');
+    class ImportSetupError extends Error {
+        constructor(text, errors) {
+            super(text);
             this.errors = errors;
+            this.name = 'ImportSetupError';
+            this.text = text;
+        }
+
+        toString() {
+            return `${this.name} - ${this.text}: ${JSON.stringify(this.errors)}`;
+        }
+    }
+    class SpreadsheetFetchError extends ImportSetupError {
+        constructor(errors) {
+            super('Error while fetching CSV/TSV/Excel import data', errors);
             this.name = 'SpreadsheetFetchError';
         }
     }
 
-    class SpreadsheetValidationError extends Error {
+    class SpreadsheetValidationError extends ImportSetupError {
         constructor(errors) {
-            super('Error while validating CSV/TSV/Excel import data');
-            this.errors = errors;
+            super('Error while validating CSV/TSV/Excel import data', errors);
             this.name = 'SpreadsheetValidationError';
         }
     }
@@ -88,13 +98,16 @@ define([
                     { types: {}, files: {} }
                 );
             })
-            .then((result) => {
-                return processSpreadsheetFileData(result);
-            })
             .catch((error) => {
                 const parsedError = JSON.parse(error.responseText);
                 // TODO - throw the parsed error again so the calling function can deal with it
                 throw new SpreadsheetFetchError(parsedError.errors);
+            })
+            .then((result) => {
+                return processSpreadsheetFileData(result);
+            })
+            .catch((error) => {
+                throw new SpreadsheetValidationError(error);
             });
     }
 
@@ -326,18 +339,19 @@ define([
             })
             .then(() => {
                 return initSingleFileUploads(singleFiles);
-            })
-            .catch(SpreadsheetFetchError, (error) => {
-                console.error(error);
-                alert(error.errors);
-            })
-            .catch(SpreadsheetValidationError, (error) => {
-                alert(error);
             });
+        // .catch(SpreadsheetFetchError, (error) => {
+        //     console.error(error);
+        //     alert(error.errors);
+        // })
+        // .catch(SpreadsheetValidationError, (error) => {
+        //     alert(error);
+        // });
     }
 
     return {
         setupImportCells,
         setupWebUploadCell,
+        ImportSetupError,
     };
 });

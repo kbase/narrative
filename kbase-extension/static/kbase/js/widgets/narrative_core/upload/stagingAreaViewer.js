@@ -7,6 +7,7 @@ define([
     'narrativeConfig',
     'common/runtime',
     'common/html',
+    'common/ui',
     'base/js/namespace',
     'handlebars',
     'util/string',
@@ -29,6 +30,7 @@ define([
     Config,
     Runtime,
     html,
+    UI,
     Jupyter,
     Handlebars,
     StringUtil,
@@ -1145,9 +1147,22 @@ define([
                 });
             });
 
-            return Import.setupImportCells(fileInfo).then(() => {
-                Jupyter.narrative.hideOverlay();
-            });
+            return Import.setupImportCells(fileInfo)
+                .then(() => {
+                    Jupyter.narrative.hideOverlay();
+                })
+                .catch(Import.ImportSetupError, (error) => {
+                    console.error(error.toString());
+                    // make popup.
+                    UI.showInfoDialog({
+                        // TODO: title depends on error content
+                        title: 'Bulk Import Error',
+                        // TODO: format errors
+                        body: 'Stuff.<ul><li>and</li><li>things!</li></ul>',
+                        okLabel: 'OK',
+                        bsClass: 'danger',
+                    });
+                });
         },
 
         startTour: function () {

@@ -100,6 +100,18 @@ define([
                 };
             }
 
+            function stubBulkSpecificationRequest(status, statusText, responseText) {
+                jasmine.Ajax.stubRequest(
+                    new RegExp(`${stagingServiceUrl}/bulk_specification`)
+                ).andReturn({
+                    status,
+                    statusText,
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText,
+                });
+            }
+
             // multiple file types, multiple of each
             // not gonna make a permuter because that's just overkill.
             const typeCombos = [
@@ -224,14 +236,10 @@ define([
                     readsCsv = 'some_reads_file.csv',
                     assemblyCsv = 'some_assembly_file.csv';
 
-                jasmine.Ajax.stubRequest(
-                    new RegExp(`${stagingServiceUrl}/bulk_specification`)
-                ).andReturn({
-                    status: 200,
-                    statusText: 'success',
-                    contentType: 'text/plain',
-                    responseHeaders: '',
-                    responseText: JSON.stringify({
+                stubBulkSpecificationRequest(
+                    200,
+                    'success',
+                    JSON.stringify({
                         types: {
                             [readsDataType]: importReadsData,
                             [assemblyDataType]: importAssemblyData,
@@ -240,8 +248,8 @@ define([
                             [readsDataType]: { file: readsCsv, tab: null },
                             [assemblyDataType]: { file: assemblyCsv, tab: null },
                         },
-                    }),
-                });
+                    })
+                );
 
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
@@ -282,7 +290,27 @@ define([
             });
 
             // TODO
-            xit('should error properly when unable to find bulk specification info', async () => {});
+            it('should error properly when unable to find bulk specification info', async () => {
+                // see https://github.com/kbase/staging_service/tree/develop#error-response-12
+                // for error details
+                const filename = 'xsv_input.csv';
+                stubBulkSpecificationRequest(404, 'not found', {
+                    errors: [
+                        {
+                            type: 'cannot_find_file',
+                            file: filename,
+                        },
+                    ],
+                });
+
+                const importInputs = [
+                    {
+                        name: filename,
+                        type: 'import_specification',
+                    },
+                ];
+                await expectAsync(ImportSetup.setupImportCells(importInputs)).toThrow();
+            });
 
             xit('should error when given multiple bulk spec files with the same type', async () => {});
         });

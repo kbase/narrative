@@ -12,9 +12,15 @@ from biokbase.narrative.jobs.jobcomm import (
 )
 
 from biokbase.narrative.tests.job_test_constants import (
+    TEST_JOBS,
     JOB_CREATED,
     BATCH_RETRY_RUNNING,
     JOB_NOT_FOUND,
+    RETRIED_JOBS,
+    BATCH_PARENT,
+    READS_OBJ_1,
+    READS_OBJ_2,
+    generate_error,
 )
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
@@ -76,33 +82,20 @@ class MockClients:
     """
 
     config = ConfigTests()
-    _ee2_job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
+    _job_state_data = TEST_JOBS
 
     def __init__(self, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.job_info = self.config.load_json_file(
-            self.config.get("jobs", "job_info_file")
-        )
         self.test_job_id = self.config.get("app_tests", "test_job_id")
 
     @property
-    def ee2_job_info(self):
-        return copy.deepcopy(self._ee2_job_info)
+    def job_state_data(self):
+        return copy.deepcopy(self._job_state_data)
 
-    # ----- User and Job State functions -----
-
-    def list_jobs2(self, params):
-        return self.job_info.get("job_info")
-
-    def delete_job(self, job):
-        return "bar"
-
-    def check_workspace_jobs(self, params):
-        info = self.ee2_job_info
-        if params.get("return_list"):
-            info = list(info.values())
-        return info
+    @property
+    def initial_job_state_data(self):
+        return copy.deepcopy(self._initial_job_state_data)
 
     # ----- Narrative Method Store functions ------
 
@@ -113,7 +106,9 @@ class MockClients:
         return self.config.load_json_file(self.config.get("specs", "type_specs_file"))
 
     def get_method_full_info(self, params):
-        return self.config.load_json_file(self.config.get("specs", "app_infos_file"))
+        return self.config.load_json_file(
+            self.config.get("specs", "app_full_infos_file")
+        )
 
     # ----- Workspace functions -----
 
@@ -192,11 +187,11 @@ class MockClients:
         for obj_ident in params.get(
             "objects", [{"name": "Sbicolor2", "workspace": "whatever"}]
         ):
-            if obj_ident.get("name") == "rhodobacterium.art.q20.int.PE.reads":
+            if obj_ident.get("name") == READS_OBJ_1:
                 infos.append(
                     [
                         7,
-                        "rhodobacterium.art.q20.int.PE.reads",
+                        READS_OBJ_1,
                         "KBaseFile.PairedEndLibrary-2.1",
                         "2018-06-26T19:31:41+0000",
                         1,
@@ -208,11 +203,11 @@ class MockClients:
                         None,
                     ]
                 )
-            elif obj_ident.get("name") == "rhodobacterium.art.q10.PE.reads":
+            elif obj_ident.get("name") == READS_OBJ_2:
                 infos.append(
                     [
                         8,
-                        "rhodobacterium.art.q10.PE.reads",
+                        READS_OBJ_2,
                         "KBaseFile.PairedEndLibrary-2.1",
                         "2018-08-13T23:13:09+0000",
                         1,
@@ -252,7 +247,10 @@ class MockClients:
         ws_ids = params["ids"]
         return [get_nar_obj(int(id)) for id in ws_ids]
 
-    # ----- Narrative Job Service functions -----
+    # ----- Execution Engine (EE2) functions -----
+
+    def check_workspace_jobs(self, params):
+        return self.job_state_data
 
     def run_job(self, params):
         return self.test_job_id
@@ -268,25 +266,29 @@ class MockClients:
             raise generate_ee2_error(CANCEL)
         return {}
 
-    def retry_job(self, params):
-        job_id = params["job_id"]
-        return {"job_id": job_id, "retry_id": job_id[::-1]}
-
     def retry_jobs(self, params):
         job_ids = params["job_ids"]
         results = list()
         for job_id in job_ids:
-            results.append({"job_id": job_id, "retry_id": job_id[::-1]})
+            output = {"job_id": job_id}
+            if job_id in RETRIED_JOBS:
+                output["retry_id"] = RETRIED_JOBS[job_id]
+            elif job_id == BATCH_PARENT:
+                output["error"] = generate_error(job_id, "batch_parent_retry")
+            else:
+                output["error"] = generate_error(job_id, "retry_status")
+
+            results.append(output)
         return results
 
     def get_job_params(self, job_id):
-        return self.ee2_job_info.get(job_id, {}).get("job_input", {})
+        return self.job_state_data.get(job_id, {}).get("job_input", {})
 
     def check_job(self, params):
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        info = self.ee2_job_info.get(job_id, {"job_id": job_id, "status": "unmocked"})
+        info = self.job_state_data.get(job_id, {"job_id": job_id, "status": "unmocked"})
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
                 if f in info:

@@ -281,7 +281,6 @@ class JobManagerTest(unittest.TestCase):
             "app_id": {},
             "batch_id": {},
             "user": {},
-            # "incomplete": 0,
         }
 
         n_not_started = 0

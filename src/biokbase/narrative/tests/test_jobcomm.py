@@ -44,6 +44,8 @@ from biokbase.narrative.exception_util import (
     JobRequestException,
     transform_job_exception,
 )
+
+from biokbase.narrative.tests.generate_test_results import ALL_RESPONSE_DATA
 from .util import ConfigTests, validate_job_state
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
@@ -82,12 +84,6 @@ from .narrative_mock.mockclients import (
     generate_ee2_error,
     MockClients,
 )
-
-from .test_job import (
-    get_test_job_states,
-)
-
-from .test_jobmanager import get_test_job_retries, get_test_job_infos
 
 APP_NAME = "The Best App in the World"
 
@@ -140,9 +136,6 @@ class JobCommTestCase(unittest.TestCase):
         cls.jm = JobManager()
         cls.jc = JobComm()
         cls.jc._comm = MockComm()
-        cls.job_states = get_test_job_states()
-        cls.retry_job = get_test_job_retries()
-        cls.job_info = get_test_job_infos()
 
     @mock.patch(CLIENTS, get_mock_client)
     def setUp(self):
@@ -381,7 +374,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": STATUS_ALL,
-                "content": {id: self.job_states[id] for id in ALL_JOBS},
+                "content": {id: ALL_RESPONSE_DATA[STATUS][id] for id in ALL_JOBS},
             },
             msg,
         )
@@ -409,7 +402,9 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertEqual(
                     {
                         "msg_type": STATUS_ALL,
-                        "content": {id: self.job_states[id] for id in ALL_JOBS},
+                        "content": {
+                            id: ALL_RESPONSE_DATA[STATUS][id] for id in ALL_JOBS
+                        },
                     },
                     msg,
                 )
@@ -461,17 +456,12 @@ class JobCommTestCase(unittest.TestCase):
         )
 
         for job_id, state in output_states.items():
+            self.assertEqual(ALL_RESPONSE_DATA[STATUS][job_id], state)
             if job_id in ok_states:
-                self.assertEqual(self.job_states[job_id], state)
                 validate_job_state(state)
-            elif job_id in error_states:
-                self.assertEqual(
-                    state,
-                    {"job_id": job_id, "error": generate_error(job_id, "not_found")},
-                )
             else:
                 # every valid job ID should be in either error_states or ok_states
-                self.assertIn(job_id, error_states + ok_states)
+                self.assertIn(job_id, error_states)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_all_job_states__ok(self):
@@ -567,7 +557,7 @@ class JobCommTestCase(unittest.TestCase):
                 self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
 
-        expected = {id: copy.deepcopy(self.job_states[id]) for id in ALL_JOBS}
+        expected = {id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][id]) for id in ALL_JOBS}
         for job_id in ACTIVE_JOBS:
             # add in the ee2_error status and updated timestamp
             expected[job_id]["jobState"]["status"] = "ee2_error"
@@ -634,7 +624,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states_by_cell_id__all_results(self):
         cell_id_list = TEST_CELL_ID_LIST
         expected_ids = TEST_JOB_IDS
-        expected_states = {id: self.job_states[id] for id in expected_ids}
+        expected_states = {id: ALL_RESPONSE_DATA[STATUS][id] for id in expected_ids}
 
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         self.jc._handle_comm_message(req_dict)
@@ -657,7 +647,7 @@ class JobCommTestCase(unittest.TestCase):
         req_dict = make_comm_msg(INFO, job_args, False)
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        expected = {id: self.job_info[id] for id in job_id_list}
+        expected = {id: ALL_RESPONSE_DATA[INFO][id] for id in job_id_list}
         self.assertEqual(
             {
                 "msg_type": INFO,
@@ -790,9 +780,9 @@ class JobCommTestCase(unittest.TestCase):
         output = self.jc._handle_comm_message(req_dict)
         print(output)
         expected = {
-            JOB_RUNNING: self.job_states[JOB_RUNNING],
+            JOB_RUNNING: ALL_RESPONSE_DATA[STATUS][JOB_RUNNING],
             BATCH_RETRY_RUNNING: {
-                **self.job_states[BATCH_RETRY_RUNNING],
+                **ALL_RESPONSE_DATA[STATUS][BATCH_RETRY_RUNNING],
                 "error": CANCEL + " failed",
             },
         }
@@ -813,7 +803,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def check_retry_jobs(self, job_args, job_id_list):
         req_dict = make_comm_msg(RETRY, job_args, False)
-        expected = {id: self.retry_job[id] for id in job_id_list if id}
+        expected = {id: ALL_RESPONSE_DATA[RETRY][id] for id in job_id_list if id}
         retry_data = self.jc._handle_comm_message(req_dict)
         self.assertEqual(expected, retry_data)
         retry_msg = self.jc._comm.pop_message()

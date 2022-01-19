@@ -26,7 +26,6 @@ import sys
 
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
-    TEST_JOB_IDS,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
@@ -35,13 +34,11 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_RETRY_RUNNING,
     JOBS_TERMINALITY,
     ALL_JOBS,
-    BAD_JOBS,
     TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
     JOBS_BY_CELL_ID,
     get_test_job,
-    generate_error,
 )
 
 
@@ -137,40 +134,6 @@ def get_widget_info(job_id):
     }
 
 
-def get_test_job_state(job_id):
-    if job_id in BAD_JOBS:
-        return {"job_id": job_id, "error": generate_error(job_id, "not_found")}
-    state = get_test_job(job_id)
-    job_input = state.get("job_input", {})
-    narr_cell_info = job_input.get("narrative_cell_info", {})
-
-    state.update(
-        {
-            "batch_id": state.get(
-                "batch_id", job_id if state.get("batch_job", False) else None
-            ),
-            "cell_id": narr_cell_info.get("cell_id", None),
-            "run_id": narr_cell_info.get("run_id", None),
-            "job_output": state.get("job_output", {}),
-            "child_jobs": state.get("child_jobs", []),
-        }
-    )
-    for f in EXCLUDED_JOB_STATE_FIELDS:
-        if f in state:
-            del state[f]
-
-    output_state = {
-        "jobState": state,
-        "outputWidgetInfo": get_widget_info(job_id),
-    }
-    return output_state
-
-
-def get_test_job_states(job_ids=TEST_JOB_IDS):
-    # generate full job state objects
-    return {job_id: get_test_job_state(job_id) for job_id in job_ids}
-
-
 @mock.patch(CLIENTS, get_mock_client)
 def get_batch_family_jobs(return_list=False):
     """
@@ -226,6 +189,8 @@ class JobTest(unittest.TestCase):
         cls.retry_parent = job_state.get("retry_parent")
         cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
         cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
+        cls.NEW_RETRY_IDS = ["hello", "goodbye"]
+        cls.NEW_CHILD_JOBS = ["cerulean", "magenta"]
 
     def check_jobs_equal(self, jobl, jobr):
         self.assertEqual(jobl._acc_state, jobr._acc_state)
@@ -681,9 +646,6 @@ class JobTest(unittest.TestCase):
                 job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS
             )
             self.assertEqual(exp, got)
-
-    NEW_RETRY_IDS = ["hello", "goodbye"]
-    NEW_CHILD_JOBS = ["cerulean", "magenta"]
 
     def test_refresh_attrs__non_batch_active(self):
         """

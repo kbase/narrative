@@ -19,7 +19,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
             'error',
             'terminated',
             'does_not_exist',
-            'ee2_error',
         ],
         JOB = {};
     // JOB is an object with keys job status and values the string for that status
@@ -43,13 +42,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
             nice: 'does not exist',
             status: 'not found',
             statusBatch: 'not found',
-        },
-
-        ee2_error: {
-            action: null,
-            nice: 'connection error',
-            status: 'connection error',
-            statusBatch: 'connection error',
         },
 
         queued: {
@@ -113,6 +105,27 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
     }
 
     /**
+     * Job-related errors are returned in the following format:
+     *
+     * {
+     *      job_id:     str
+     *      error:      str
+     * }
+     *
+     * Job status, info, retries, and log requests all return data in this format
+     * @param {object} jobError
+     */
+    function isValidJobErrorObject(jobError) {
+        const required = ['job_id', 'error'];
+
+        return !!(
+            jobError !== null &&
+            Utils.objectToString(jobError) === 'Object' &&
+            required.every((prop) => prop in jobError)
+        );
+    }
+
+    /**
      * A job state object should have the minimal structure
      *
      * {
@@ -138,8 +151,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
             Utils.objectToString(jobState) === 'Object' &&
             required.every((prop) => prop in jobState) &&
             validJobStatuses.includes(jobState.status) &&
-            // require the 'created' key if the status is not 'does_not_exist' or 'ee2_error'
-            (jobState.status === JOB.does_not_exist || jobState.status === JOB.ee2_error
+            // require the 'created' key if the status is not 'does_not_exist'
+            (jobState.status === JOB.does_not_exist
                 ? true
                 : Object.prototype.hasOwnProperty.call(jobState, JOB.created))
         );
@@ -153,12 +166,17 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
      * @returns {boolean} true|false
      */
     function isValidBackendJobStateObject(backendJobState) {
-        return !!(
+        const required = ['jobState'];
+        if (
             backendJobState &&
             Utils.objectToString(backendJobState) === 'Object' &&
+            required.every((prop) => prop in backendJobState) &&
             backendJobState.jobState &&
             isValidJobStateObject(backendJobState.jobState)
-        );
+        ) {
+            return true;
+        }
+        return isValidJobErrorObject(backendJobState);
     }
 
     /**
@@ -200,17 +218,19 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
                 jobInfo !== null &&
                 Utils.objectToString(jobInfo) === 'Object' &&
                 required.every((key) => key in jobInfo) &&
-                Utils.objectToString(jobInfo.job_params) === 'Array' &&
-                // job_params is empty
-                (jobInfo.job_params.length === 0 ||
-                    // job params is populated with an object
-                    Utils.objectToString(jobInfo.job_params[0]) === 'Object')
+                // batch job: job params is null
+                (jobInfo.job_params === null ||
+                    (Utils.objectToString(jobInfo.job_params) === 'Array' &&
+                        // job_params is empty
+                        (jobInfo.job_params.length === 0 ||
+                            // job params is populated with an object
+                            Utils.objectToString(jobInfo.job_params[0]) === 'Object')))
             ) {
                 return true;
             }
             // eslint-disable-next-line no-empty
         } catch (err) {}
-        return false;
+        return isValidJobErrorObject(jobInfo);
     }
 
     /**
@@ -230,7 +250,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
      * @returns {boolean} true|false
      */
     function isValidJobRetryObject(jobRetry) {
-        const required = ['job'],
+        const required = ['job_id', 'job'],
             oneOf = ['retry', 'error'];
         try {
             if (
@@ -247,7 +267,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
             }
             // eslint-disable-next-line no-empty
         } catch (err) {}
-        return false;
+        return isValidJobErrorObject(jobRetry);
     }
 
     /**
@@ -264,6 +284,13 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
      *          { line: ..., is_error: bool },
      *          ...
      *      ]
+     * }
+     *
+     * If there is an error (e.g. logs not found), the job log object will look like this:
+     *
+     * {
+     *      job_id:     str
+     *      error:      str
      * }
      *
      * This function should be updated to stay in sync with ee2's output.
@@ -288,7 +315,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
             }
             // eslint-disable-next-line no-empty
         } catch (err) {}
-        return false;
+        return isValidJobErrorObject(jobLogs);
     }
 
     /**
@@ -604,9 +631,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         }
 
         const jobLines = [];
-        if (jobState.status === JOB.ee2_error) {
-            jobLines.push('Connection error');
-        }
         // Finished status
         if (jobState.finished) {
             // Amount of time it was in the queue

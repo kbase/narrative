@@ -15,7 +15,8 @@ define([
         jcm = JobComms.JobCommMessages;
 
     const TEST_JOB_ID = 'someJob',
-        TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'];
+        TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'],
+        ERROR_STR = 'Some error string';
 
     const JOB_ID = jcm.PARAMS.JOB_ID,
         JOB_ID_LIST = jcm.PARAMS.JOB_ID_LIST,
@@ -146,13 +147,13 @@ define([
         it('Should fail to initialize with a failed reply from the backend JobManager startup', async () => {
             Jupyter.notebook = makeMockNotebook(null, null, {
                 name: 'Failed to start',
-                evalue: 'Some error',
+                evalue: ERROR_STR,
                 error: 'Yes. Very yes.',
             });
             const comm = new JobCommChannel();
             expect(comm.comm).toBeUndefined();
             await expectAsync(comm.initCommChannel()).toBeRejectedWith(
-                new Error('Failed to start: Some error')
+                new Error(`Failed to start: ${ERROR_STR}`)
             );
         });
 
@@ -581,6 +582,26 @@ define([
                 ],
             },
             {
+                // log with message saying that the log cannot be found
+                type: jcm.RESPONSES.LOGS,
+                message: {
+                    [TEST_JOB_ID]: {
+                        job_id: TEST_JOB_ID,
+                        error: `Cannot find job log with id: {TEST_JOB_ID}`,
+                    },
+                },
+                expected: [
+                    {
+                        job_id: TEST_JOB_ID,
+                        error: `Cannot find job log with id: {TEST_JOB_ID}`,
+                    },
+                    {
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
+                        key: { type: jcm.RESPONSES.LOGS },
+                    },
+                ],
+            },
+            {
                 type: jcm.RESPONSES.RETRY,
                 message: (() => {
                     const retryData = {};
@@ -637,18 +658,24 @@ define([
                 type: jcm.RESPONSES.STATUS,
                 message: {
                     [TEST_JOB_ID]: {
+                        job_id: TEST_JOB_ID,
                         jobState: {
                             job_id: TEST_JOB_ID,
-                            status: 'ee2_error',
+                            status: 'running',
                         },
+                        outputWidgetInfo: {},
+                        error: ERROR_STR,
                     },
                 },
                 expected: [
                     {
+                        job_id: TEST_JOB_ID,
                         jobState: {
                             job_id: TEST_JOB_ID,
-                            status: 'ee2_error',
+                            status: 'running',
                         },
+                        outputWidgetInfo: {},
+                        error: ERROR_STR,
                     },
                     {
                         channel: { [JOB_CHANNEL]: TEST_JOB_ID },
@@ -714,31 +741,6 @@ define([
                     {
                         channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.ERROR },
-                    },
-                ],
-            },
-            {
-                type: jcm.RESPONSES.ERROR,
-                message: {
-                    job_id: TEST_JOB_ID,
-                    message: 'log error',
-                    source: 'job_logs',
-                    code: -32000,
-                },
-                expected: [
-                    {
-                        jobId: TEST_JOB_ID,
-                        error: {
-                            job_id: TEST_JOB_ID,
-                            message: 'log error',
-                            source: 'job_logs',
-                            code: -32000,
-                        },
-                        request: 'job_logs',
-                    },
-                    {
-                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                        key: { type: jcm.RESPONSES.LOGS },
                     },
                 ],
             },

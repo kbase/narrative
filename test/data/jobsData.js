@@ -85,7 +85,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             status: 'queued',
             created: t.created,
             queued: t.queued,
-            updated: 12345678910,
+            updated: t.queued,
             meta: {
                 canCancel: true,
                 canRetry: true,
@@ -109,7 +109,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             created: t.created,
             finished: t.finished,
             queued: t.queued,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -133,7 +133,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             created: t.created,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.running,
             meta: {
                 canCancel: true,
                 canRetry: true,
@@ -158,7 +158,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -193,7 +193,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             created: t.created,
             queued: t.queued,
             finished: t.finished,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -227,7 +227,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -254,7 +254,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: false,
@@ -272,12 +272,14 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
                 appCellFsm: { mode: 'success' },
             },
             job_output: {
+                id: 'job-finished-with-success',
                 result: [
                     {
                         report_name: 'kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e',
                         report_ref: '57373/16/1',
                     },
                 ],
+                version: '1.1',
             },
         },
     ];
@@ -301,30 +303,6 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
                 label: 'does not exist',
             },
             terminal: true,
-        },
-    };
-
-    const ee2ErrorJob = {
-        job_id: 'ee2-error',
-        status: 'ee2_error',
-        created: t.created,
-        queued: t.queued,
-        running: t.running,
-        updated: 12345678910,
-        meta: {
-            canCancel: false,
-            canRetry: false,
-            createJobStatusLines: {
-                line: jobStrings.conn_error,
-                history: [jobStrings.queueHistory, jobStrings.conn_error],
-            },
-            jobAction: null,
-            jobLabel: 'connection error',
-            niceState: {
-                class: 'kb-job-status__summary--ee2_error',
-                label: 'connection error',
-            },
-            terminal: false,
         },
     };
 
@@ -378,7 +356,6 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
     const invalidTypes = [null, undefined, 1, 'foo', [], ['a', 'list'], {}];
 
     const validJobStates = allJobsWithBatchParent.concat([
-        ee2ErrorJob,
         {
             job_id: 'zero_created',
             created: 0,
@@ -387,10 +364,6 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         {
             job_id: 'does_not_exist',
             status: 'does_not_exist',
-        },
-        {
-            job_id: 'ee2_error',
-            status: 'ee2_error',
         },
     ]);
 
@@ -548,8 +521,16 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
     ];
 
     const validRetry = [
-        { job: { jobState: validJobStates[0] }, retry: { jobState: validJobStates[1] } },
-        { job: { jobState: validJobStates[2] }, error: 'some error' },
+        {
+            job_id: validJobStates[0].job_id,
+            job: { jobState: validJobStates[0] },
+            retry: { jobState: validJobStates[1] },
+        },
+        {
+            job_id: validJobStates[2].job_id,
+            job: { jobState: validJobStates[2] },
+            error: 'some error',
+        },
     ];
     const invalidRetry = [
         ...invalidTypes,
@@ -560,7 +541,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         { job: { jobState: validJobStates[7] } },
     ];
 
-    const jobsByStatus = [ee2ErrorJob].concat(allJobs).reduce((acc, curr) => {
+    const jobsByStatus = allJobs.reduce((acc, curr) => {
         if (!acc[curr.status]) {
             acc[curr.status] = [];
         }
@@ -725,7 +706,6 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
     return {
         validJobs,
         unknownJob,
-        ee2ErrorJob,
         batchParentJob,
         allJobs,
         allJobsWithBatchParent,

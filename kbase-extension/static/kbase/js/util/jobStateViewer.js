@@ -373,7 +373,7 @@ define([
             listeners.push(
                 runtime.bus().listen({
                     channel: {
-                        jobId: jobId,
+                        [jcm.CHANNELS.JOB]: jobId,
                     },
                     key: {
                         type: jcm.RESPONSES.STATUS,

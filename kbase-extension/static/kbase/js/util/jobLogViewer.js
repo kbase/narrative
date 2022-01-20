@@ -1264,7 +1264,7 @@ define([
                     // ensure that the correct `this` context is bound
                     const handle = handlers[type].bind(this);
                     this.listenersByType[jcm.RESPONSES[type]] = this.bus.listen({
-                        channel: { jobId: this.jobId },
+                        channel: { [jcm.CHANNELS.JOB]: this.jobId },
                         key: { type: jcm.RESPONSES[type] },
                         handle,
                     });

@@ -5,22 +5,24 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter',
-], (Runtime, BusEventManager, Props, UI, html, JupyterInterop) => {
+    'common/jobCommChannel',
+], (Runtime, BusEventManager, Props, UI, html, JupyterInterop, JobComms) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        p = t('p');
+        p = t('p'),
+        jcm = JobComms.JobCommMessages;
 
     function factory(config) {
-        let cell = config.cell,
+        const cell = config.cell,
             runtime = Runtime.make(),
             eventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
-            bus = runtime.bus().makeChannelBus({ description: 'output cell bus' }),
-            // To be instantiated at attach()
-            ui,
+            bus = runtime.bus().makeChannelBus({ description: 'output cell bus' });
+        // To be instantiated at attach()
+        let ui,
             // To be instantiated in start()
             cellBus;
 
@@ -47,7 +49,7 @@ define([
                         },
                         {
                             channel: {
-                                cell: parentCellId,
+                                [jcm.CHANNELS.CELL]: parentCellId,
                             },
                             key: {
                                 type: 'output-cell-removed',
@@ -66,7 +68,6 @@ define([
 
         eventManager.add(
             bus.on('run', (message) => {
-                // container = message.node;
                 ui = UI.make({ node: message.node });
 
                 // Events for comm from the parent.
@@ -92,7 +93,7 @@ define([
         );
 
         return {
-            bus: bus,
+            bus,
         };
     }
 

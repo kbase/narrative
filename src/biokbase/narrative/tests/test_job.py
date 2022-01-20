@@ -2,7 +2,7 @@ import unittest
 import mock
 import copy
 import itertools
-from biokbase.workspace.baseclient import ServerError
+from biokbase.execution_engine2.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
     Job,
@@ -347,7 +347,7 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        with self.assertRaisesRegex(ServerError, "Check job failed"):
+        with self.assertRaisesRegex(ServerError, "check_job failed"):
             job.state()
 
     def test_state__returns_none(self):

@@ -215,6 +215,9 @@ class JobComm:
                     "name": getattr(e, "name", type(e).__name__),
                 }
                 self.send_comm_message(MESSAGE_TYPE["ERROR"], error)
+                # if job init failed, set the lookup loop var back to False and return
+                self._running_lookup_loop = False
+                return
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 

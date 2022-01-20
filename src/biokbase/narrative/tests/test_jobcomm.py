@@ -428,6 +428,25 @@ class JobCommTestCase(unittest.TestCase):
                     self.assertFalse(self.jc._running_lookup_loop)
                     self.assertIsNone(self.jc._lookup_timer)
 
+    @mock.patch(CLIENTS, get_failing_mock_client)
+    def test_start_job_status_loop__initialise_jobs_error(self):
+        # check_workspace_jobs throws an EEServerError
+        self.jc.start_job_status_loop(init_jobs=True)
+        self.assertEqual(
+            self.jc._comm.last_message,
+            {
+                "msg_type": ERROR,
+                "content": {
+                    "error": "Unable to get initial jobs list",
+                    "message": "check_workspace_jobs failed",
+                    "code": -32000,
+                    "source": "ee2",
+                    "name": "JSONRPCError",
+                }
+            }
+        )
+        self.assertFalse(self.jc._running_lookup_loop)
+
     # ---------------------
     # Lookup all job states
     # ---------------------
@@ -554,26 +573,25 @@ class JobCommTestCase(unittest.TestCase):
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states__job_id_list__ee2_error(self):
-        def mock_check_jobs(self, params):
-            raise Exception("Test exception")
+        exc = Exception("Test exception")
+        exc_message = str(exc)
+
+        def mock_check_jobs(params):
+            raise exc
 
         job_id_list = ALL_JOBS
         req_dict = make_comm_msg(STATUS, job_id_list, False)
 
-        TIME_NOW = 987654321
-        with mock.patch("time.time") as fake_time:
-            fake_time.return_value = TIME_NOW
-            with mock.patch.object(
-                MockClients, "check_jobs", side_effect=mock_check_jobs
-            ):
-                self.jc._handle_comm_message(req_dict)
+        with mock.patch.object(
+            MockClients, "check_jobs", side_effect=mock_check_jobs
+        ):
+            self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
 
         expected = {id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][id]) for id in ALL_JOBS}
         for job_id in ACTIVE_JOBS:
             # add in the ee2_error status and updated timestamp
-            expected[job_id]["jobState"]["status"] = "ee2_error"
-            expected[job_id]["jobState"]["updated"] = TIME_NOW
+            expected[job_id]["error"] = exc_message
 
         self.assertEqual(
             {

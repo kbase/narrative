@@ -249,8 +249,11 @@ class JobManager(object):
                     }
                 )
             except Exception as e:
+                error_message = str(e)
                 kblogging.log_event(
-                    self._log, "_construct_job_output_state_set", {"exception": str(e)}
+                    self._log,
+                    "_construct_job_output_state_set",
+                    {"exception": error_message},
                 )
 
             # fill in the output states for the missing jobs
@@ -263,9 +266,8 @@ class JobManager(object):
                 else:
                     # fetch the current state without updating it
                     output_states[job_id] = job.output_state({})
-                    # set the status to 'ee2_error' and the 'updated' timestamp to now
-                    output_states[job_id]["jobState"]["status"] = "ee2_error"
-                    output_states[job_id]["jobState"]["updated"] = int(time.time())
+                    # add an error field with the error message from the failed look up
+                    output_states[job_id]["error"] = error_message
 
         return output_states
 

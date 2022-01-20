@@ -1,0 +1,30 @@
+{
+    "params": {
+        "BATCH_ID": "batch_id",
+        "CELL_ID_LIST": "cell_id_list",
+        "JOB_ID": "job_id",
+        "JOB_ID_LIST": "job_id_list"
+    },
+    "requests": [
+        "CANCEL",
+        "CELL_JOB_STATUS",
+        "INFO",
+        "LOGS",
+        "RETRY",
+        "START_UPDATE",
+        "STATUS",
+        "STATUS_ALL",
+        "STOP_UPDATE"
+    ],
+    "responses": [
+        "CELL_JOB_STATUS",
+        "ERROR",
+        "INFO",
+        "LOGS",
+        "NEW",
+        "RETRY",
+        "RUN STATUS",
+        "STATUS",
+        "STATUS_ALL"
+    ]
+}

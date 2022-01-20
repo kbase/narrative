@@ -7,7 +7,7 @@ from mock import MagicMock
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.jobs.jobcomm import RUN_STATUS, NEW
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML, Javascript
@@ -1132,7 +1132,7 @@ class AppManagerTestCase(unittest.TestCase):
         """
         transformed_call_args_list = self._transform_comm_messages(comm_mock)
         expected_message = {
-            "msg_type": RUN_STATUS,
+            "msg_type": MESSAGE_TYPE["RUN_STATUS"],
             "content": {
                 "event": "error",
                 "event_at": get_timestamp(),
@@ -1156,7 +1156,7 @@ class AppManagerTestCase(unittest.TestCase):
 
         return [
             {
-                "msg_type": RUN_STATUS,
+                "msg_type": MESSAGE_TYPE["RUN_STATUS"],
                 "content": {
                     "event": "launched_job",
                     "event_at": get_timestamp(),
@@ -1166,7 +1166,7 @@ class AppManagerTestCase(unittest.TestCase):
                 },
             },
             {
-                "msg_type": NEW,
+                "msg_type": MESSAGE_TYPE["NEW"],
                 "content": {
                     "job_id": self.test_job_id,
                 },
@@ -1182,7 +1182,7 @@ class AppManagerTestCase(unittest.TestCase):
 
         return [
             {
-                "msg_type": RUN_STATUS,
+                "msg_type": MESSAGE_TYPE["RUN_STATUS"],
                 "content": {
                     "event": "launched_job_batch",
                     "event_at": get_timestamp(),
@@ -1193,7 +1193,7 @@ class AppManagerTestCase(unittest.TestCase):
                 },
             },
             {
-                "msg_type": NEW,
+                "msg_type": MESSAGE_TYPE["NEW"],
                 "content": {
                     "job_id_list": [self.test_job_id] + child_ids,
                 },

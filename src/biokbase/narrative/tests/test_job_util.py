@@ -1,7 +1,10 @@
-from biokbase.narrative.jobs.util import sanitize_all_states, sanitize_state
+from biokbase.narrative.jobs.util import (
+    load_job_constants,
+    sanitize_all_states,
+    sanitize_state,
+)
 import unittest
 from copy import deepcopy
-
 
 cancelled_state = {
     "awe_job_state": "cancelled",
@@ -41,6 +44,58 @@ queued_state = {
 
 
 class JobUtilTestCase(unittest.TestCase):
+    def test_load_job_constants__no_file(self):
+        file_path = [
+            "src",
+            "biokbase",
+            "narrative",
+            "tests",
+            "data",
+            "job_constants",
+            "does_not_exist.json",
+        ]
+        with self.assertRaises(FileNotFoundError):
+            load_job_constants(file_path)
+
+    def test_load_job_constants__missing_section(self):
+        file_path = [
+            "src",
+            "biokbase",
+            "narrative",
+            "tests",
+            "data",
+            "job_constants",
+            "job_config-missing-datatype.json",
+        ]
+        with self.assertRaisesRegex(
+            ValueError, "job_config.json is missing the 'message_types' config section"
+        ):
+            load_job_constants(file_path)
+
+    def test_load_job_constants__missing_value(self):
+        file_path = [
+            "src",
+            "biokbase",
+            "narrative",
+            "tests",
+            "data",
+            "job_constants",
+            "job_config-missing-item.json",
+        ]
+        with self.assertRaisesRegex(
+            ValueError,
+            "job_config.json is missing the following values for params: BATCH_ID, JOB_ID",
+        ):
+            load_job_constants(file_path)
+
+    def test_load_job_constants__valid(self):
+        # the live file!
+        (params, message_types) = load_job_constants()
+        for item in ["BATCH_ID", "JOB_ID"]:
+            self.assertIn(item, params)
+        for item in ["STATUS", "RETRY", "INFO", "ERROR"]:
+            self.assertIn(item, message_types)
+
     def test_sanitize_state(self):
         sani_state = sanitize_state(deepcopy(cancelled_state))
         self.assertEqual(sani_state["job_state"], "canceled")

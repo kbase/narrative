@@ -282,7 +282,7 @@ define([
                         {},
                         {
                             channel: {
-                                cell: cell.metadata.kbase.attributes.id,
+                                [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
                             },
                             key: {
                                 type: 'delete-cell',
@@ -384,7 +384,7 @@ define([
                             );
                             runtime.bus().send(message, {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
                                     type: jcm.RESPONSES.RUN_STATUS,
@@ -666,7 +666,7 @@ define([
                             },
                             {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
                                     type: jcm.RESPONSES.RUN_STATUS,

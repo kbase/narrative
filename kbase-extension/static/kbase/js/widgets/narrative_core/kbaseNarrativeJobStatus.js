@@ -143,7 +143,7 @@ define([
                 .then(() => {
                     this.busConnection.listen({
                         channel: {
-                            jobId: this.jobId,
+                            [jcm.CHANNELS.JOB]: this.jobId,
                         },
                         key: {
                             type: jcm.RESPONSES.INFO,
@@ -155,7 +155,7 @@ define([
 
                     this.busConnection.listen({
                         channel: {
-                            jobId: this.jobId,
+                            [jcm.CHANNELS.JOB]: this.jobId,
                         },
                         key: {
                             type: jcm.RESPONSES.STATUS,

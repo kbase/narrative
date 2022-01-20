@@ -630,7 +630,7 @@ define([
                     expect(allArgs.length).toEqual(1);
                     expect(allArgs[0].length).toEqual(1);
                     expect(allArgs[0][0].key).toEqual({ type: type });
-                    expect(allArgs[0][0].channel).toEqual({ jobId: jobId });
+                    expect(allArgs[0][0].channel).toEqual({ [jcm.CHANNELS.JOB]: jobId });
                     expect(allArgs[0][0].handle).toEqual(jasmine.any(Function));
                 });
 
@@ -666,7 +666,7 @@ define([
                     allArgs.forEach((arg, ix) => {
                         expect(arg.length).toEqual(1);
                         expect(arg[0].key).toEqual({ type: type });
-                        expect(arg[0].channel).toEqual({ jobId: jobIdList[ix] });
+                        expect(arg[0].channel).toEqual({ [jcm.CHANNELS.JOB]: jobIdList[ix] });
                         expect(arg[0].handle).toEqual(jasmine.any(Function));
                     });
                 });

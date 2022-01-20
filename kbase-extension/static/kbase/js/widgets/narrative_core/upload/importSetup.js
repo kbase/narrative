@@ -317,13 +317,6 @@ define([
             .then(() => {
                 return initSingleFileUploads(singleFiles);
             });
-        // .catch(SpreadsheetFetchError, (error) => {
-        //     console.error(error);
-        //     alert(error.errors);
-        // })
-        // .catch(SpreadsheetValidationError, (error) => {
-        //     alert(error);
-        // });
     }
 
     return {

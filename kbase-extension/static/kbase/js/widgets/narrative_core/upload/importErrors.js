@@ -143,18 +143,20 @@ define(['common/ui', 'common/html'], (UI, html) => {
         }
 
         _formatErrors() {
-            const div = html.tag('div'),
-                ul = html.tag('ul'),
-                li = html.tag('li');
+            const tag = html.tag,
+                div = tag('div'),
+                ul = tag('ul'),
+                li = tag('li'),
+                b = tag('b');
 
-            let title = 'OMG ERROR';
+            let title = 'Bulk import error';
             let body = '';
             // some branching based on how errors were parsed out.
 
             if (this.noFileError) {
                 title = 'No files given';
                 body =
-                    'No files were given, though the bulk import specification was chosen. Blame Gavin.';
+                    'No CSV/TSV/Excel files were provided, but "Import Specification" was selected.';
             } else if (this.serverErrors.length) {
                 title = 'Server error';
                 body = div([
@@ -162,11 +164,23 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     ul(this.serverErrors.map((err) => li(err))),
                 ]);
             } else {
+                let footer = '';
+                const numFiles = Object.keys(this.fileErrors).length;
+
                 const fileErrorText = Object.entries(this.fileErrors).map(([fileName, errors]) => {
                     const s = errors.length > 1 ? 's' : '';
-                    const header = `Error${s} in ${fileName}`;
+                    const header = b(`Error${s} in ${fileName}`);
                     return div([header, ul(errors.map((err) => li(err)))]);
                 });
+
+                if (numFiles === 1) {
+                    footer = `Check bulk import file ${
+                        Object.keys(this.fileErrors)[0]
+                    } and retry. `;
+                } else if (numFiles > 1) {
+                    footer = 'Check bulk import files and retry. ';
+                }
+                footer += 'Click OK to return to Staging.';
 
                 let unknownErrors = '';
                 if (this.unexpectedErrors.length) {
@@ -179,7 +193,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     ]);
                 }
 
-                body = div([fileErrorText, unknownErrors]);
+                body = div([fileErrorText, unknownErrors, footer]);
             }
 
             if (this.totalErrors > 1) {

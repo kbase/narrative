@@ -4,7 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
-from .jobcomm import JobComm, exc_to_msg, RUN_STATUS, NEW
+from .jobcomm import JobComm, exc_to_msg, MESSAGE_TYPE
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -75,7 +75,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
             for key in ["cell_id", "run_id"]:
                 if key in kwargs:
                     msg_info[key] = kwargs[key]
-            self._send_comm_message(RUN_STATUS, msg_info)
+            self._send_comm_message(MESSAGE_TYPE["RUN_STATUS"], msg_info)
             if "cell_id" not in kwargs:
                 print(
                     f"Error while trying to start your app ({app_func.__name__})!\n"
@@ -303,7 +303,7 @@ class AppManager(object):
         )
 
         self._send_comm_message(
-            RUN_STATUS,
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job",
                 "event_at": timestamp(),
@@ -313,7 +313,7 @@ class AppManager(object):
             },
         )
         self.register_new_job(new_job)
-        self._send_comm_message(NEW, {"job_id": job_id})
+        self._send_comm_message(MESSAGE_TYPE["NEW"], {"job_id": job_id})
         if cell_id is None:
             return new_job
 
@@ -393,7 +393,7 @@ class AppManager(object):
         new_job = Job.from_job_id(job_id)
 
         self._send_comm_message(
-            RUN_STATUS,
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job",
                 "event_at": timestamp(),
@@ -403,7 +403,7 @@ class AppManager(object):
             },
         )
         self.register_new_job(new_job)
-        self._send_comm_message(NEW, {"job_id": job_id})
+        self._send_comm_message(MESSAGE_TYPE["NEW"], {"job_id": job_id})
         if cell_id is not None:
             return
         else:
@@ -532,7 +532,7 @@ class AppManager(object):
         child_ids = batch_submission["child_job_ids"]
 
         self._send_comm_message(
-            RUN_STATUS,
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job_batch",
                 "event_at": timestamp(),
@@ -554,7 +554,9 @@ class AppManager(object):
         for new_job in child_jobs:
             self.register_new_job(new_job)
         self.register_new_job(parent_job)
-        self._send_comm_message(NEW, {"job_id_list": [batch_id] + child_ids})
+        self._send_comm_message(
+            MESSAGE_TYPE["NEW"], {"job_id_list": [batch_id] + child_ids}
+        )
 
         if cell_id is None:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
@@ -751,7 +753,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_local_app", log_info)
 
         self._send_comm_message(
-            RUN_STATUS,
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "success",
                 "event_at": timestamp(),

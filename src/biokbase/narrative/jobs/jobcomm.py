@@ -2,9 +2,13 @@ import copy
 import threading
 from typing import List, Union
 from ipykernel.comm import Comm
+from biokbase.narrative.jobs.util import load_job_constants
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.exception_util import NarrativeException, JobRequestException
 from biokbase.narrative.common import kblogging
+
+
+(PARAM, MESSAGE_TYPE) = load_job_constants()
 
 UNKNOWN_REASON = "Unknown reason"
 
@@ -18,38 +22,6 @@ INVALID_REQUEST_ERR = "Improperly formatted job channel message!"
 MISSING_REQUEST_TYPE_ERR = "Missing request type in job channel message!"
 
 LOOKUP_TIMER_INTERVAL = 5
-
-JOB_ID = "job_id"
-JOB_ID_LIST = "job_id_list"
-CELL_ID_LIST = "cell_id_list"
-BATCH_ID = "batch_id"
-
-# message types
-CANCEL = "cancel_job"
-CELL_JOB_STATUS = "cell_job_status"
-INFO = "job_info"
-LOGS = "job_logs"
-RETRY = "retry_job"
-START_UPDATE = "start_job_update"
-STATUS = "job_status"
-STATUS_ALL = "job_status_all"
-STOP_UPDATE = "stop_job_update"
-# these message types are for outgoing messages only
-ERROR = "job_error"
-NEW = "new_job"
-RUN_STATUS = "run_status"
-
-REQUESTS = [
-    CANCEL,
-    CELL_JOB_STATUS,
-    INFO,
-    LOGS,
-    RETRY,
-    START_UPDATE,
-    STATUS,
-    STATUS_ALL,
-    STOP_UPDATE,
-]
 
 
 class JobRequest:
@@ -107,7 +79,7 @@ class JobRequest:
             raise JobRequestException(MISSING_REQUEST_TYPE_ERR)
 
         input_type_count = 0
-        for input_type in [JOB_ID, JOB_ID_LIST, BATCH_ID]:
+        for input_type in [PARAM["JOB_ID"], PARAM["JOB_ID_LIST"], PARAM["BATCH_ID"]]:
             if input_type in self.rq_data:
                 input_type_count += 1
         if input_type_count > 1:
@@ -115,31 +87,31 @@ class JobRequest:
 
     @property
     def job_id(self):
-        if JOB_ID in self.rq_data:
-            return self.rq_data[JOB_ID]
+        if PARAM["JOB_ID"] in self.rq_data:
+            return self.rq_data[PARAM["JOB_ID"]]
         raise JobRequestException(JOB_NOT_PROVIDED_ERR)
 
     @property
     def job_id_list(self):
-        if JOB_ID_LIST in self.rq_data:
-            return self.rq_data[JOB_ID_LIST]
-        if JOB_ID in self.rq_data:
-            return [self.rq_data[JOB_ID]]
+        if PARAM["JOB_ID_LIST"] in self.rq_data:
+            return self.rq_data[PARAM["JOB_ID_LIST"]]
+        if PARAM["JOB_ID"] in self.rq_data:
+            return [self.rq_data[PARAM["JOB_ID"]]]
         raise JobRequestException(JOBS_NOT_PROVIDED_ERR)
 
     @property
     def batch_id(self):
-        if BATCH_ID in self.rq_data:
-            return self.rq_data[BATCH_ID]
+        if PARAM["BATCH_ID"] in self.rq_data:
+            return self.rq_data[PARAM["BATCH_ID"]]
         raise JobRequestException(BATCH_NOT_PROVIDED_ERR)
 
     def has_batch_id(self):
-        return BATCH_ID in self.rq_data
+        return PARAM["BATCH_ID"] in self.rq_data
 
     @property
     def cell_id_list(self):
-        if CELL_ID_LIST in self.rq_data:
-            return self.rq_data[CELL_ID_LIST]
+        if PARAM["CELL_ID_LIST"] in self.rq_data:
+            return self.rq_data[PARAM["CELL_ID_LIST"]]
         raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
 
@@ -198,15 +170,15 @@ class JobComm:
             self._jm = JobManager()
         if self._msg_map is None:
             self._msg_map = {
-                CANCEL: self._cancel_jobs,
-                CELL_JOB_STATUS: self._lookup_job_states_by_cell_id,
-                INFO: self._get_job_info,
-                LOGS: self._get_job_logs,
-                RETRY: self._retry_jobs,
-                START_UPDATE: self._modify_job_updates,
-                STATUS: self._lookup_job_states,
-                STATUS_ALL: self._lookup_all_job_states,
-                STOP_UPDATE: self._modify_job_updates,
+                MESSAGE_TYPE["CANCEL"]: self._cancel_jobs,
+                MESSAGE_TYPE["CELL_JOB_STATUS"]: self._lookup_job_states_by_cell_id,
+                MESSAGE_TYPE["INFO"]: self._get_job_info,
+                MESSAGE_TYPE["LOGS"]: self._get_job_logs,
+                MESSAGE_TYPE["RETRY"]: self._retry_jobs,
+                MESSAGE_TYPE["START_UPDATE"]: self._modify_job_updates,
+                MESSAGE_TYPE["STATUS"]: self._lookup_job_states,
+                MESSAGE_TYPE["STATUS_ALL"]: self._lookup_all_job_states,
+                MESSAGE_TYPE["STOP_UPDATE"]: self._modify_job_updates,
             }
 
     def _get_job_ids(self, req: JobRequest = None):
@@ -242,7 +214,7 @@ class JobComm:
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
                 }
-                self.send_comm_message(ERROR, error)
+                self.send_comm_message(MESSAGE_TYPE["ERROR"], error)
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
@@ -276,7 +248,7 @@ class JobComm:
         req can be None, as it's not used.
         """
         all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.send_comm_message(STATUS_ALL, all_job_states)
+        self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
         return all_job_states
 
     def _lookup_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
@@ -301,7 +273,7 @@ class JobComm:
         cell_job_states = self._jm.lookup_job_states_by_cell_id(
             cell_id_list=req.cell_id_list
         )
-        self.send_comm_message(CELL_JOB_STATUS, cell_job_states)
+        self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
         return cell_job_states
 
     def _get_job_info(self, req: JobRequest) -> dict:
@@ -318,7 +290,7 @@ class JobComm:
         """
         job_id_list = self._get_job_ids(req)
         job_info = self._jm.get_job_info(job_id_list)
-        self.send_comm_message(INFO, job_info)
+        self.send_comm_message(MESSAGE_TYPE["INFO"], job_info)
         return job_info
 
     def __job_states(self, job_id_list) -> dict:
@@ -328,7 +300,7 @@ class JobComm:
         Returns a dictionary of job state information indexed by job ID.
         """
         output_states = self._jm.get_job_states(job_id_list)
-        self.send_comm_message(STATUS, output_states)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
     def lookup_job_state(self, job_id: str) -> dict:
@@ -356,9 +328,9 @@ class JobComm:
         """
         job_id_list = self._get_job_ids(req)
         update_type = req.request_type
-        if update_type == START_UPDATE:
+        if update_type == MESSAGE_TYPE["START_UPDATE"]:
             update_adjust = 1
-        elif update_type == STOP_UPDATE:
+        elif update_type == MESSAGE_TYPE["STOP_UPDATE"]:
             update_adjust = -1
         else:
             # this should be impossible
@@ -369,7 +341,7 @@ class JobComm:
             self.start_job_status_loop()
 
         output_states = self._jm.get_job_states(job_id_list)
-        self.send_comm_message(STATUS, output_states)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
     def _cancel_jobs(self, req: JobRequest) -> dict:
@@ -382,7 +354,7 @@ class JobComm:
         """
         job_id_list = self._get_job_ids(req)
         cancel_results = self._jm.cancel_jobs(job_id_list)
-        self.send_comm_message(STATUS, cancel_results)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], cancel_results)
         return cancel_results
 
     def _retry_jobs(self, req: JobRequest) -> dict:
@@ -395,10 +367,10 @@ class JobComm:
         ]
         if len(retry_ids):
             self.send_comm_message(
-                NEW,
-                {JOB_ID_LIST: retry_ids},
+                MESSAGE_TYPE["NEW"],
+                {PARAM["JOB_ID_LIST"]: retry_ids},
             )
-        self.send_comm_message(RETRY, retry_results)
+        self.send_comm_message(MESSAGE_TYPE["RETRY"], retry_results)
 
         return retry_results
 
@@ -413,7 +385,7 @@ class JobComm:
             first_line=req.rq_data.get("first_line", 0),
             latest=req.rq_data.get("latest", False),
         )
-        self.send_comm_message(LOGS, log_output)
+        self.send_comm_message(MESSAGE_TYPE["LOGS"], log_output)
         return log_output
 
     def _handle_comm_message(self, msg: dict) -> dict:
@@ -482,7 +454,7 @@ class JobComm:
         if content is not None:
             error_content.update(content)
 
-        self.send_comm_message(ERROR, error_content)
+        self.send_comm_message(MESSAGE_TYPE["ERROR"], error_content)
 
 
 class exc_to_msg:

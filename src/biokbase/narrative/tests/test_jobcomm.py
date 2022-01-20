@@ -437,10 +437,27 @@ class JobCommTestCase(unittest.TestCase):
                     "code": -32000,
                     "source": "ee2",
                     "name": "JSONRPCError",
-                }
-            }
+                },
+            },
         )
         self.assertFalse(self.jc._running_lookup_loop)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_start_job_status_loop__no_jobs_stop_loop(self):
+        # reset the job manager so there are no jobs
+        self.jm._running_jobs = {}
+        self.jm._jobs_by_cell_id = {}
+        self.jm = JobManager()
+        self.assertEqual(self.jm._running_jobs, {})
+        # this will trigger a call to _lookup_all_job_states
+        # a message containing all jobs (i.e. {}) will be sent out
+        # when it returns 0 jobs, the JobComm will run stop_job_status_loop
+        self.jc.start_job_status_loop()
+        self.assertFalse(self.jc._running_lookup_loop)
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertEqual(
+            self.jc._comm.last_message, {"msg_type": STATUS_ALL, "content": {}}
+        )
 
     # ---------------------
     # Lookup all job states
@@ -577,15 +594,13 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = ALL_JOBS
         req_dict = make_comm_msg(STATUS, job_id_list, False)
 
-        with mock.patch.object(
-            MockClients, "check_jobs", side_effect=mock_check_jobs
-        ):
+        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
             self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
 
         expected = {id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][id]) for id in ALL_JOBS}
         for job_id in ACTIVE_JOBS:
-            # add in the ee2_error status and updated timestamp
+            # add in the ee2_error message
             expected[job_id]["error"] = exc_message
 
         self.assertEqual(

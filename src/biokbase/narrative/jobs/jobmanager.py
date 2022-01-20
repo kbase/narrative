@@ -2,7 +2,6 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 import copy
-import time
 from typing import List, Tuple
 import biokbase.narrative.clients as clients
 from .job import (
@@ -38,12 +37,6 @@ JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 DOES_NOT_EXIST = "does_not_exist"
-
-
-def get_error_output_state(job_id, error=DOES_NOT_EXIST):
-    if error not in [DOES_NOT_EXIST, "ee2_error"]:
-        raise ValueError(f"Unknown error type: {error}")
-    return {"jobState": {"job_id": job_id, "status": error}}
 
 
 class JobManager(object):
@@ -256,8 +249,8 @@ class JobManager(object):
                 )
 
             # fill in the output states for the missing jobs
-            # if the job fetch failed, set the job status to "ee2_error"
-            # without altering the cached job data
+            # if the job fetch failed, add an error message to the output
+            # and return the cached job state
             for job_id in jobs_to_lookup:
                 job = self.get_job(job_id)
                 if job_id in fetched_states:

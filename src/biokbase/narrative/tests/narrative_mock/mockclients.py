@@ -5,11 +5,7 @@ import copy
 import functools
 from unittest.mock import call
 
-from biokbase.narrative.jobs.jobcomm import (
-    CANCEL,
-    LOGS,
-    RETRY,
-)
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 
 from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
@@ -21,9 +17,7 @@ from biokbase.narrative.tests.job_test_constants import (
     READS_OBJ_2,
     generate_error,
 )
-from biokbase.narrative.tests.generate_test_results import (
-    RETRIED_JOBS
-)
+from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -261,7 +255,7 @@ class MockClients:
 
     def cancel_job(self, params):
         if params["job_id"] == BATCH_RETRY_RUNNING:
-            raise generate_ee2_error(CANCEL)
+            raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
         return {}
 
     def retry_jobs(self, params):
@@ -528,13 +522,13 @@ class FailingMockClient:
         raise ServerError("JSONRPCError", -32000, "Check job failed")
 
     def cancel_job(self, params):
-        raise generate_ee2_error(CANCEL)
+        raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
 
     def retry_jobs(self, params):
-        raise generate_ee2_error(RETRY)
+        raise generate_ee2_error(MESSAGE_TYPE["RETRY"])
 
     def get_job_logs(self, params):
-        raise generate_ee2_error(LOGS)
+        raise generate_ee2_error(MESSAGE_TYPE["LOGS"])
 
 
 class MockStagingHelper:

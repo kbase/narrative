@@ -70,6 +70,12 @@ class ConfigTests(object):
             f.close()
             return data
 
+    def write_json_file(self, filename, data):
+        json_file_path = self.file_path(filename)
+        with open(json_file_path, "w") as f:
+            f.write(json.dumps(data, indent=4, sort_keys=True))
+            f.close()
+
     def file_path(self, filename, from_root=False):
         """
         Returns the path to the filename, relative to this file's expected location.
@@ -277,8 +283,6 @@ class NarrativeMessageBufferer(socketserver.StreamRequestHandler):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         self.data = self.rfile.readline().strip()
-        # print("{} wrote:".format(self.client_address[0]))
-        # print(self.data)
         self.server.buf += self.data.decode("utf-8")
 
 

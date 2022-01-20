@@ -40,9 +40,7 @@ from biokbase.narrative.tests.job_test_constants import (
     get_test_job,
 )
 
-from biokbase.narrative.tests.generate_test_results import (
-    JOBS_BY_CELL_ID
-)
+from biokbase.narrative.tests.generate_test_results import JOBS_BY_CELL_ID
 
 
 @contextmanager
@@ -411,7 +409,11 @@ class JobTest(unittest.TestCase):
         job_spec = get_test_spec(tag, app_id)
         app_name = job_spec.get("info", {}).get("name")
         version = job_spec.get("info", {}).get("ver")
-        info_str = f"App name (id): {app_name} ({app_id})\n" + f"Version: {version}\n" + f"Status: {status}\nInputs:\n------\n"
+        info_str = (
+            f"App name (id): {app_name} ({app_id})\n"
+            + f"Version: {version}\n"
+            + f"Status: {status}\nInputs:\n------\n"
+        )
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())

@@ -37,66 +37,37 @@ define([
     'common/jobs',
     'services/kernels/comm',
     'common/semaphore',
-], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, JupyterComm, Semaphore) => {
+    'json!kbase/config/job_config.json',
+], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, JupyterComm, Semaphore, JobConfig) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
+        // channel types
         CELL = 'cell',
         JOB = 'jobId',
-        // frontend params
+        CHANNELS = {
+            CELL,
+            JOB,
+        },
+        // backend param names
+        BE_PARAMS = JobConfig.params,
+        // frontend param names
         PARAMS = {
             JOB_ID: 'jobId',
             JOB_ID_LIST: 'jobIdList',
             BATCH_ID: 'batchId',
             CELL_ID_LIST: 'cellIdList',
         },
-        // backend params
-        JOB_ID = 'job_id',
-        JOB_ID_LIST = 'job_id_list',
-        BATCH_ID = 'batch_id',
-        // commands
-        CANCEL = 'cancel_job',
-        CELL_JOB_STATUS = 'cell_job_status',
-        ERROR = 'job_error',
-        INFO = 'job_info',
-        LOGS = 'job_logs',
-        RETRY = 'retry_job',
-        RUN_STATUS = 'run_status',
-        START_UPDATE = 'start_job_update',
-        STATUS = 'job_status',
-        STATUS_ALL = 'job_status_all',
-        STOP_UPDATE = 'stop_job_update',
-        // messages to be sent to backend for job request types
-        REQUESTS = {
-            // Cancels the job
-            CANCEL,
-            // Requests status of all jobs in a cell or list of cells
-            CELL_JOB_STATUS,
-            // Fetches info (not state) about a job, including the app id, name, and inputs
-            INFO,
-            // Fetches job logs
-            LOGS,
-            // Retries the job
-            RETRY,
-            // Request regular job status updates for a job or list of jobs
-            START_UPDATE,
-            // Fetches job status
-            STATUS,
-            // Request status of all jobs
-            STATUS_ALL,
-            // Tells kernel to stop including a job in the regular job status updates
-            STOP_UPDATE,
-        },
-        RESPONSES = {
-            CELL_JOB_STATUS,
-            ERROR,
-            INFO,
-            LOGS,
-            RETRY,
-            RUN_STATUS,
-            STATUS,
-            STATUS_ALL,
-        };
+        REQUESTS = {},
+        RESPONSES = {};
+
+    JobConfig.requests.forEach((req) => {
+        REQUESTS[req] = JobConfig.message_types[req];
+    });
+
+    JobConfig.responses.forEach((resp) => {
+        RESPONSES[resp] = JobConfig.message_types[resp];
+    });
 
     const JobCommMessages = {
         validIncomingMessageTypes: function () {
@@ -108,6 +79,8 @@ define([
         RESPONSES,
         REQUESTS,
         PARAMS,
+        BE_PARAMS,
+        CHANNELS,
     };
 
     class JobCommChannel {
@@ -144,14 +117,14 @@ define([
         /**
          * Sends a message over the bus. The channel should have a single key of either
          * cell or jobId.
-         * @param {string} channelName - either CELL or JOB
+         * @param {string} channelType - either CELL or JOB
          * @param {string} channelId - id for the channel
          * @param {string} msgType - one of the msg types
          * @param {any} message
          */
-        sendBusMessage(channelName, channelId, msgType, message) {
+        sendBusMessage(channelType, channelId, msgType, message) {
             const channel = {
-                [channelName]: channelId,
+                [channelType]: channelId,
             };
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel,
@@ -159,7 +132,7 @@ define([
                     type: msgType,
                 },
             });
-            this.debug(`sending bus message: ${channelName} ${channelId} ${msgType}`);
+            this.debug(`sending bus message: ${channelType} ${channelId} ${msgType}`);
         }
 
         /**
@@ -198,9 +171,9 @@ define([
             };
 
             const translations = {
-                [PARAMS.BATCH_ID]: BATCH_ID,
-                [PARAMS.JOB_ID]: JOB_ID,
-                [PARAMS.JOB_ID_LIST]: JOB_ID_LIST,
+                [PARAMS.BATCH_ID]: BE_PARAMS.BATCH_ID,
+                [PARAMS.JOB_ID]: BE_PARAMS.JOB_ID,
+                [PARAMS.JOB_ID_LIST]: BE_PARAMS.JOB_ID_LIST,
             };
 
             for (const [key, value] of Object.entries(msgData)) {
@@ -299,7 +272,12 @@ define([
 
                 // CELL messages
                 case RESPONSES.RUN_STATUS:
-                    this.sendBusMessage(CELL, msgData.cell_id, RESPONSES.RUN_STATUS, msgData);
+                    this.sendBusMessage(
+                        CHANNELS.CELL,
+                        msgData.cell_id,
+                        RESPONSES.RUN_STATUS,
+                        msgData
+                    );
                     break;
 
                 // JOB messages
@@ -319,7 +297,9 @@ define([
                     }
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData[JOB_ID] ? [msgData[JOB_ID]] : msgData[JOB_ID_LIST];
+                    const jobIdList = msgData[BE_PARAMS.JOB_ID]
+                        ? [msgData[BE_PARAMS.JOB_ID]]
+                        : msgData[BE_PARAMS.JOB_ID_LIST];
                     if (msgData.source === REQUESTS.LOGS) {
                         msgTypeToSend = RESPONSES.LOGS;
                     } else {
@@ -327,7 +307,7 @@ define([
                     }
 
                     jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(JOB, _jobId, msgTypeToSend, {
+                        this.sendBusMessage(CHANNELS.JOB, _jobId, msgTypeToSend, {
                             jobId: _jobId,
                             error: msgData,
                             request: msgData.source,
@@ -340,7 +320,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.INFO, jobData);
+                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.INFO, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -351,7 +331,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.LOGS, jobData);
+                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.LOGS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -362,7 +342,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.RETRY, jobData);
+                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.RETRY, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -381,7 +361,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, jobData);
+                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.STATUS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }

@@ -20,9 +20,11 @@ define([
     const JOB_ID = jcm.PARAMS.JOB_ID,
         JOB_ID_LIST = jcm.PARAMS.JOB_ID_LIST,
         BATCH_ID = jcm.PARAMS.BATCH_ID,
-        BACKEND_JOB_ID = 'job_id',
-        BACKEND_JOB_ID_LIST = 'job_id_list',
-        BACKEND_BATCH_ID = 'batch_id';
+        BACKEND_JOB_ID = jcm.BE_PARAMS.JOB_ID,
+        BACKEND_JOB_ID_LIST = jcm.BE_PARAMS.JOB_ID_LIST,
+        BACKEND_BATCH_ID = jcm.BE_PARAMS.BATCH_ID,
+        JOB_CHANNEL = jcm.CHANNELS.JOB,
+        CELL_CHANNEL = jcm.CHANNELS.CELL;
 
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
@@ -59,7 +61,7 @@ define([
                 outputWidgetInfo: {},
             },
             {
-                channel: { jobId: job.job_id },
+                channel: { [JOB_CHANNEL]: job.job_id },
                 key: { type: jcm.RESPONSES.STATUS },
             },
         ];
@@ -163,9 +165,9 @@ define([
         });
 
         const messagesToSend = [
-            [jcm.REQUESTS.STATUS, { jobId: 0 }],
-            [jcm.REQUESTS.STATUS, { jobId: 1 }],
-            [jcm.REQUESTS.STATUS, { jobId: 2 }],
+            [jcm.REQUESTS.STATUS, { [JOB_CHANNEL]: 0 }],
+            [jcm.REQUESTS.STATUS, { [JOB_CHANNEL]: 1 }],
+            [jcm.REQUESTS.STATUS, { [JOB_CHANNEL]: 2 }],
         ];
         const messagesInQueue = messagesToSend.map((arg) => {
             return {
@@ -198,7 +200,7 @@ define([
                         'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
                     );
                     // resolve the promise on receiving the last message
-                    if (args[1].jobId === 2) {
+                    if (args[1][JOB_CHANNEL] === 2) {
                         resolve();
                     }
                 });
@@ -230,7 +232,7 @@ define([
                         }
                         return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
-                    const { jobId } = args[1];
+                    const jobId = args[1][JOB_CHANNEL];
                     // original function should throw an error
                     await expectAsync(
                         comm.sendCommMessage.and.originalFn.call(comm, ...args)
@@ -279,7 +281,7 @@ define([
                         }
                         return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                     }
-                    const { jobId } = args[1];
+                    const jobId = args[1][JOB_CHANNEL];
                     if (jobId < 2) {
                         // original function should throw an error
                         await expectAsync(
@@ -468,7 +470,7 @@ define([
             await comm.initCommChannel();
 
             await expectAsync(
-                comm.sendCommMessage('unknown', { jobId: TEST_JOB_ID })
+                comm.sendCommMessage('unknown', { [JOB_CHANNEL]: TEST_JOB_ID })
             ).toBeRejectedWithError(
                 'ERROR sending comm message: Ignoring unknown message type "unknown"'
             );
@@ -526,7 +528,7 @@ define([
                 expected: [
                     { job_id: TEST_JOB_ID, cell_id: 'bar' },
                     {
-                        channel: { cell: 'bar' },
+                        channel: { [CELL_CHANNEL]: 'bar' },
                         key: { type: jcm.RESPONSES.RUN_STATUS },
                     },
                 ],
@@ -542,7 +544,7 @@ define([
                 expected: [
                     JobsData.example.Info.valid[0],
                     {
-                        channel: { jobId: JobsData.example.Info.valid[0].job_id },
+                        channel: { [JOB_CHANNEL]: JobsData.example.Info.valid[0].job_id },
                         key: { type: jcm.RESPONSES.INFO },
                     },
                 ],
@@ -558,21 +560,22 @@ define([
                     return [
                         info,
                         {
-                            channel: { jobId: info.job_id },
+                            channel: { [JOB_CHANNEL]: info.job_id },
                             key: { type: jcm.RESPONSES.INFO },
                         },
                     ];
                 }),
             },
             {
+                // log with data
                 type: jcm.RESPONSES.LOGS,
                 message: {
-                    someJob: JobsData.example.Logs.valid[0],
+                    [TEST_JOB_ID]: JobsData.example.Logs.valid[0],
                 },
                 expected: [
                     JobsData.example.Logs.valid[0],
                     {
-                        channel: { jobId: TEST_JOB_ID },
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.LOGS },
                     },
                 ],
@@ -590,14 +593,18 @@ define([
                     [
                         JobsData.example.Retry.valid[0],
                         {
-                            channel: { jobId: JobsData.example.Retry.valid[0].job.jobState.job_id },
+                            channel: {
+                                [JOB_CHANNEL]: JobsData.example.Retry.valid[0].job.jobState.job_id,
+                            },
                             key: { type: jcm.RESPONSES.RETRY },
                         },
                     ],
                     [
                         JobsData.example.Retry.valid[1],
                         {
-                            channel: { jobId: JobsData.example.Retry.valid[1].job.jobState.job_id },
+                            channel: {
+                                [JOB_CHANNEL]: JobsData.example.Retry.valid[1].job.jobState.job_id,
+                            },
                             key: { type: jcm.RESPONSES.RETRY },
                         },
                     ],
@@ -620,7 +627,7 @@ define([
                         outputWidgetInfo: {},
                     },
                     {
-                        channel: { jobId: JobsData.allJobs[0].job_id },
+                        channel: { [JOB_CHANNEL]: JobsData.allJobs[0].job_id },
                         key: { type: jcm.RESPONSES.STATUS },
                     },
                 ],
@@ -629,7 +636,7 @@ define([
                 // single job status message, ee2 error
                 type: jcm.RESPONSES.STATUS,
                 message: {
-                    someJob: {
+                    [TEST_JOB_ID]: {
                         jobState: {
                             job_id: TEST_JOB_ID,
                             status: 'ee2_error',
@@ -644,7 +651,7 @@ define([
                         },
                     },
                     {
-                        channel: { jobId: TEST_JOB_ID },
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.STATUS },
                     },
                 ],
@@ -674,7 +681,7 @@ define([
                             outputWidgetInfo: {},
                         },
                         {
-                            channel: { jobId: '1234567890abcdef' },
+                            channel: { [JOB_CHANNEL]: '1234567890abcdef' },
                             key: { type: jcm.RESPONSES.STATUS },
                         },
                     ],
@@ -705,7 +712,7 @@ define([
                         request: 'cancel_job',
                     },
                     {
-                        channel: { jobId: TEST_JOB_ID },
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.ERROR },
                     },
                 ],
@@ -730,7 +737,7 @@ define([
                         request: 'job_logs',
                     },
                     {
-                        channel: { jobId: TEST_JOB_ID },
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.LOGS },
                     },
                 ],
@@ -756,7 +763,7 @@ define([
                         request: 'some-unknown-error',
                     },
                     {
-                        channel: { jobId: TEST_JOB_ID },
+                        channel: { [JOB_CHANNEL]: TEST_JOB_ID },
                         key: { type: jcm.RESPONSES.ERROR },
                     },
                 ],
@@ -790,7 +797,7 @@ define([
                             request: 'retry_job',
                         },
                         {
-                            channel: { jobId: 'job_1_RetryWithErrors' },
+                            channel: { [JOB_CHANNEL]: 'job_1_RetryWithErrors' },
                             key: { type: jcm.RESPONSES.ERROR },
                         },
                     ],
@@ -810,7 +817,7 @@ define([
                             request: 'retry_job',
                         },
                         {
-                            channel: { jobId: 'job_2_RetryWithErrors' },
+                            channel: { [JOB_CHANNEL]: 'job_2_RetryWithErrors' },
                             key: { type: jcm.RESPONSES.ERROR },
                         },
                     ],
@@ -830,7 +837,7 @@ define([
                             request: 'retry_job',
                         },
                         {
-                            channel: { jobId: 'job_3_RetryWithErrors' },
+                            channel: { [JOB_CHANNEL]: 'job_3_RetryWithErrors' },
                             key: { type: jcm.RESPONSES.ERROR },
                         },
                     ],

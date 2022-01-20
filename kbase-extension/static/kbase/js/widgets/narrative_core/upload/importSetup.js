@@ -6,36 +6,11 @@ define([
     'util/string',
     'common/runtime',
     'StagingServiceClient',
-], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient) => {
+    './importErrors',
+], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient, Error) => {
     'use strict';
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
-
-    class ImportSetupError extends Error {
-        constructor(text, errors) {
-            super(text);
-            this.errors = errors;
-            this.name = 'ImportSetupError';
-            this.text = text;
-        }
-
-        toString() {
-            return `${this.name} - ${this.text}: ${JSON.stringify(this.errors)}`;
-        }
-    }
-    class SpreadsheetFetchError extends ImportSetupError {
-        constructor(errors) {
-            super('Error while fetching CSV/TSV/Excel import data', errors);
-            this.name = 'SpreadsheetFetchError';
-        }
-    }
-
-    class SpreadsheetValidationError extends ImportSetupError {
-        constructor(errors) {
-            super('Error while validating CSV/TSV/Excel import data', errors);
-            this.name = 'SpreadsheetValidationError';
-        }
-    }
 
     /**
      * Fetches
@@ -99,15 +74,17 @@ define([
                 );
             })
             .catch((error) => {
-                const parsedError = JSON.parse(error.responseText);
-                // TODO - throw the parsed error again so the calling function can deal with it
-                throw new SpreadsheetFetchError(parsedError.errors);
+                let parsedError;
+                try {
+                    parsedError = JSON.parse(error.responseText).errors;
+                } catch (error) {
+                    // this would happen if the above isn't JSON, so send the error code instead
+                    parsedError = [{ type: 'server_error', message: error.responseText }];
+                }
+                throw new Error.SpreadsheetFetchError(parsedError);
             })
             .then((result) => {
                 return processSpreadsheetFileData(result);
-            })
-            .catch((error) => {
-                throw new SpreadsheetValidationError(error);
             });
     }
 
@@ -352,6 +329,5 @@ define([
     return {
         setupImportCells,
         setupWebUploadCell,
-        ImportSetupError,
     };
 });

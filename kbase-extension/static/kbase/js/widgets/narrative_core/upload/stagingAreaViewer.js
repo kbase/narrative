@@ -15,6 +15,7 @@ define([
     './uploadTour',
     'util/stagingFileCache',
     './importSetup',
+    './importErrors',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -38,6 +39,7 @@ define([
     UploadTour,
     StagingFileCache,
     Import,
+    Error,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
@@ -1151,17 +1153,10 @@ define([
                 .then(() => {
                     Jupyter.narrative.hideOverlay();
                 })
-                .catch(Import.ImportSetupError, (error) => {
+                .catch(Error.ImportSetupError, (error) => {
                     console.error(error.toString());
                     // make popup.
-                    UI.showInfoDialog({
-                        // TODO: title depends on error content
-                        title: 'Bulk Import Error',
-                        // TODO: format errors
-                        body: 'Stuff.<ul><li>and</li><li>things!</li></ul>',
-                        okLabel: 'OK',
-                        bsClass: 'danger',
-                    });
+                    error.showErrorDialog();
                 });
         },
 

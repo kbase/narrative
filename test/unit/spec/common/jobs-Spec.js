@@ -1,10 +1,13 @@
-define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
-    Jobs,
-    JobsData,
-    Props,
-    TestUtil
-) => {
+define([
+    'common/jobs',
+    '/test/data/jobsData',
+    'common/props',
+    'common/jobCommChannel',
+    'testUtil',
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (Jobs, JobsData, Props, JobComms, TestUtil, ResponseData) => {
     'use strict';
+    const jcm = JobComms.JobCommMessages;
 
     function arrayToHTML(array) {
         return array.map((item) => `<div>${item}</div>`).join('\n');
@@ -98,6 +101,23 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 });
             });
         });
+        const mapping = {
+            [jcm.RESPONSES.STATUS]: 'isValidBackendJobStateObject',
+            [jcm.RESPONSES.INFO]: 'isValidJobInfoObject',
+            [jcm.RESPONSES.LOGS]: 'isValidJobLogsObject',
+            [jcm.RESPONSES.RETRY]: 'isValidJobRetryObject',
+        };
+
+        Object.keys(ResponseData).forEach((respType) => {
+            const fn = mapping[respType];
+            describe(`the ${fn} function, contd`, () => {
+                Object.values(ResponseData[respType]).forEach((obj) => {
+                    it('asserts the validity of ' + JSON.stringify(obj), () => {
+                        expect(Jobs[fn](obj)).toBeTrue();
+                    });
+                });
+            });
+        });
     });
 
     ['canCancel', 'canRetry'].forEach((fn) => {
@@ -168,7 +188,6 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             ['error', 'failed'],
             ['terminated', 'cancelled'],
             ['running', 'running'],
-            ['ee2_error', 'connection error'],
         ];
         labelToState.forEach((entry) => {
             it(`should create an abbreviated label when given the job state ${entry[0]}`, () => {

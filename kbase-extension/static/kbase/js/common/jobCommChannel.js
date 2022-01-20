@@ -260,7 +260,6 @@ define([
                 return this.reportCommMessageError({ msgType, msgData });
             }
 
-            let msgTypeToSend = null;
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case 'start':
@@ -300,14 +299,9 @@ define([
                     const jobIdList = msgData[BE_PARAMS.JOB_ID]
                         ? [msgData[BE_PARAMS.JOB_ID]]
                         : msgData[BE_PARAMS.JOB_ID_LIST];
-                    if (msgData.source === REQUESTS.LOGS) {
-                        msgTypeToSend = RESPONSES.LOGS;
-                    } else {
-                        msgTypeToSend = RESPONSES.ERROR;
-                    }
 
                     jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(CHANNELS.JOB, _jobId, msgTypeToSend, {
+                        this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.ERROR, {
                             jobId: _jobId,
                             error: msgData,
                             request: msgData.source,

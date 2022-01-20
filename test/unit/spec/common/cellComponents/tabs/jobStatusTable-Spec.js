@@ -385,7 +385,7 @@ define([
             {
                 jobState: ctx.input,
             },
-            { jobId },
+            { [jcm.CHANNELS.JOB]: jobId },
             jcm.RESPONSES.STATUS
         );
     }
@@ -398,7 +398,7 @@ define([
      */
     function updateInfo(ctx) {
         const { jobId, jobInfo } = ctx;
-        sendBusMessage(ctx, jobInfo, { jobId }, jcm.RESPONSES.INFO);
+        sendBusMessage(ctx, jobInfo, { [jcm.CHANNELS.JOB]: jobId }, jcm.RESPONSES.INFO);
     }
 
     /**
@@ -420,7 +420,7 @@ define([
                     jobState: retry,
                 },
             },
-            { jobId: retryParent.job_id },
+            { [jcm.CHANNELS.JOB]: retryParent.job_id },
             jcm.RESPONSES.RETRY
         );
     }
@@ -440,7 +440,7 @@ define([
                 error,
                 request: error.source,
             },
-            { jobId },
+            { [jcm.CHANNELS.JOB]: jobId },
             jcm.RESPONSES.ERROR
         );
     }
@@ -1602,7 +1602,7 @@ define([
                                     () => {
                                         this.jobManager.bus.send(test.input, {
                                             channel: {
-                                                jobId: this.job.retry_parent,
+                                                [jcm.CHANNELS.JOB]: this.job.retry_parent,
                                             },
                                             key: { type: jcm.RESPONSES.INFO },
                                         });

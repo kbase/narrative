@@ -58,7 +58,7 @@ define([
         function startParamsListener() {
             paramsListener = runtime.bus().listen({
                 channel: {
-                    jobId: jobId,
+                    [jcm.CHANNELS.JOB]: jobId,
                 },
                 key: {
                     type: jcm.RESPONSES.INFO,

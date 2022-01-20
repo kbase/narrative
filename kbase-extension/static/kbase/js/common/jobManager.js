@@ -279,9 +279,9 @@ define([
                         this.listeners[channel] = {};
                     }
                     if (!this.listeners[channel][type]) {
-                        let channelObject = { jobId: channel };
+                        let channelObject = { [jcm.CHANNELS.JOB]: channel };
                         if (type === jcm.RESPONSES.CELL_JOB_STATUS) {
-                            channelObject = { cell: channel };
+                            channelObject = { [jcm.CHANNELS.CELL]: channel };
                         }
 
                         this.listeners[channel][type] = this.bus.listen({

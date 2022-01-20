@@ -68,7 +68,7 @@ define([
         function startParentListener() {
             parentListener = runtime.bus().listen({
                 channel: {
-                    jobId: parentJobId,
+                    [jcm.CHANNELS.JOB]: parentJobId,
                 },
                 key: {
                     type: jcm.RESPONSES.STATUS,

@@ -413,6 +413,7 @@ define([
         sendBusMessage(
             ctx,
             {
+                job_id: retryParent.job_id,
                 job: {
                     jobState: retryParent,
                 },

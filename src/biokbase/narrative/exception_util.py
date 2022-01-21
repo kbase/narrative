@@ -1,6 +1,5 @@
 from requests.exceptions import HTTPError
 from biokbase.execution_engine2.baseclient import ServerError as EEServerError
-from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
 class JobRequestException(ValueError):
@@ -48,8 +47,6 @@ def transform_job_exception(e, error=None):
     """
     if isinstance(e, EEServerError):
         return NarrativeException(e.code, e.message, e.name, "ee2", error)
-    elif isinstance(e, UJSServerError):
-        return NarrativeException(e.code, e.message, e.name, "ujs", error)
     elif isinstance(e, HTTPError):
         code = e.response.status_code
         if code == 404 or code == 502 or code == 503:

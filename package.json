@@ -112,6 +112,10 @@
         "*.js": [
             "eslint --fix",
             "prettier --ignore-unknown --write"
+        ],
+        "*.py": [
+            "npm run flake8",
+            "npm run black"
         ]
     },
     "dependencies": {

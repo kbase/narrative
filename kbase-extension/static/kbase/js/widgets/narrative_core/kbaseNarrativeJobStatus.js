@@ -141,6 +141,7 @@ define([
             Semaphore.make()
                 .when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(() => {
+                    // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
                             [jcm.CHANNELS.JOB]: this.jobId,
@@ -153,6 +154,7 @@ define([
                         }.bind(this),
                     });
 
+                    // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
                             [jcm.CHANNELS.JOB]: this.jobId,

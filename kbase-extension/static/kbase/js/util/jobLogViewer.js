@@ -1263,6 +1263,7 @@ define([
                 Object.keys(handlers).forEach((type) => {
                     // ensure that the correct `this` context is bound
                     const handle = handlers[type].bind(this);
+                    // listen for job-related bus messages
                     this.listenersByType[jcm.RESPONSES[type]] = this.bus.listen({
                         channel: { [jcm.CHANNELS.JOB]: this.jobId },
                         key: { type: jcm.RESPONSES[type] },

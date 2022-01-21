@@ -76,6 +76,7 @@ define(['bluebird', 'jquery', 'base/js/namespace', 'common/runtime', 'common/job
                         },
                     }
                 );
+                // listen for cell-related bus messages
                 runtime.bus().listen({
                     channel: {
                         [jcm.CHANNELS.CELL]: cellId,

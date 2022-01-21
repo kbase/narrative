@@ -5,7 +5,8 @@ define([
     '/test/data/jobsData',
     'testUtil',
     'narrativeMocks',
-], (JobComms, Jupyter, Runtime, JobsData, TestUtil, Mocks) => {
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (JobComms, Jupyter, Runtime, JobsData, TestUtil, Mocks, ResponseData) => {
     'use strict';
 
     // allow spies to be overwritten
@@ -553,11 +554,8 @@ define([
             {
                 // info multiple jobs
                 type: jcm.RESPONSES.INFO,
-                message: JobsData.example.Info.valid.reduce((acc, curr) => {
-                    acc[curr.job_id] = curr;
-                    return acc;
-                }, {}),
-                expectedMultiple: JobsData.example.Info.valid.map((info) => {
+                message: ResponseData[jcm.RESPONSES.INFO],
+                expectedMultiple: Object.values(ResponseData[jcm.RESPONSES.INFO]).map((info) => {
                     return [
                         info,
                         {
@@ -846,6 +844,25 @@ define([
                 ],
             },
         ];
+
+        Object.keys(ResponseData).forEach((respType) => {
+            busTests.push({
+                type: respType,
+                message: ResponseData[respType],
+                expectedMultiple: Object.values(ResponseData[respType]).map((response) => {
+                    if (response.jobState) {
+                        response.job_id = response.jobState.job_id;
+                    }
+                    return [
+                        response,
+                        {
+                            channel: { [JOB_CHANNEL]: response.job_id },
+                            key: { type: respType },
+                        },
+                    ];
+                }),
+            });
+        });
 
         busTests.forEach((test) => {
             it(`should send a ${test.type} message to the bus`, () => {

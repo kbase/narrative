@@ -66,6 +66,7 @@ define([
         }
 
         function startParentListener() {
+            // listen for job-related bus messages
             parentListener = runtime.bus().listen({
                 channel: {
                     [jcm.CHANNELS.JOB]: parentJobId,

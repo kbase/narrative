@@ -16,17 +16,19 @@
  *    request.
  * 2. This gets captured by one of the callbacks in handleBusMessages()
  * 3. These all invoke sendCommMessage(). This builds a message packet and sends it across the
- *    comm channel where it gets heard by a capturing function in biokbase.narrative.jobmanager.
- * ...that's it. These messages are asynchronous by design. They're meant to be requests that
- * get responses eventually.
+ *    comm channel where it gets heard by a capturing function in biokbase.narrative.jobs.jobcomm
+ *
+ * These messages are asynchronous by design. They're meant to be requests that get responses
+ * eventually.
  *
  * From the back end to the front, the flow is slightly different. On Comm channel creation time,
  * the handleCommMessages function is set up as the callback for anything that comes across the
  * channel to the front end. Each of these has a message type associated with it.
- * 1. The type is interepreted (a big ol' switch statement) and responded to.
- * 2. Most responses (job status updates, log messages) are parceled out to the App Cells that
- *    invoked them. Or, really, anything listening on the appropriate channel (either the cell,
- *    or the job id)
+ *
+ * 1. The type is interpreted (a big ol' switch statement) and responded to.
+ * 2. Responses (job status updates, log messages) are "addressed" using either a job or a cell
+ *    ID and a message type. Any frontend component with a listener of the appropriate type on
+ *    the appropriate channel can pick up and act upon the content of the messages.
  */
 define([
     'bluebird',
@@ -116,7 +118,7 @@ define([
 
         /**
          * Sends a message over the bus. The channel should have a single key of either
-         * cell or jobId.
+         * cell or job ID.
          * @param {string} channelType - either CELL or JOB
          * @param {string} channelId - id for the channel
          * @param {string} msgType - one of the msg types
@@ -136,9 +138,9 @@ define([
         }
 
         /**
-         * Registers callbacks for handling bus messages. This listens to the global runtime bus.
-         * Mostly, it relays bus messages into comm channel requests that are satisfied by the
-         * kernel.
+         * Registers callbacks for handling bus messages. This listens to the global runtime
+         * bus, and relays requests from frontend components to the narrative backend to be
+         * completed by the kernel.
          */
         handleBusMessages() {
             const bus = this.runtime.bus();
@@ -192,11 +194,12 @@ define([
          * If no arguments are supplied to sendCommMessage, the stored messages (if any)
          * will be sent.
          *
-         * @param {string} msgType - message type; will be one of the
-         *                 values in the REQUESTS object (optional)
+         * @param {string}  msgType - message type; will be one of the
+         *                  values in the REQUESTS object (optional)
          *
-         * @param {object} msgData - additional parameters for the request,
-         *                 such as jobId or jobIdList, or an 'options' object (optional)
+         * @param {object}  msgData - additional parameters for the request,
+         *                  such as one of the values in the PARAMS object or
+         *                  a request-specific param (optional)
          */
         sendCommMessage(msgType, msgData) {
             if (msgType && msgData) {
@@ -244,9 +247,7 @@ define([
          *     }
          *   }
          * }
-         * Where msg_type is one of:
-         * start, new_job, job_status, job_status_all, job_comm_err, job_init_err, job_init_lookup_err,
-         * or any of the values of RESPONSES
+         * where msg_type is one of the values of RESPONSES
          *
          * @param {object} msg
          */

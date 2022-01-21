@@ -284,6 +284,7 @@ define([
                             channelObject = { [jcm.CHANNELS.CELL]: channel };
                         }
 
+                        // listen for job-related bus messages
                         this.listeners[channel][type] = this.bus.listen({
                             channel: channelObject,
                             key: {

@@ -95,8 +95,8 @@ define(['util/util'], (Utils) => {
 
     /**
      * @method reformatISOTimeString
-     * Parses the user_and_job_state timestamp and returns it as a user-
-     * readable string in the UTC time.
+     * Parses a timestamp and returns it as a user-readable string
+     * in the UTC time.
      *
      * This assumes that the timestamp string is in the following format:
      *

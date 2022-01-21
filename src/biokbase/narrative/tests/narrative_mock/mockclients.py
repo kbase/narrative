@@ -16,11 +16,13 @@ from biokbase.narrative.tests.job_test_constants import (
     JOB_CREATED,
     BATCH_RETRY_RUNNING,
     JOB_NOT_FOUND,
-    RETRIED_JOBS,
     BATCH_PARENT,
     READS_OBJ_1,
     READS_OBJ_2,
     generate_error,
+)
+from biokbase.narrative.tests.generate_test_results import (
+    RETRIED_JOBS
 )
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
@@ -92,10 +94,6 @@ class MockClients:
     @property
     def job_state_data(self):
         return copy.deepcopy(self._job_state_data)
-
-    @property
-    def initial_job_state_data(self):
-        return copy.deepcopy(self._initial_job_state_data)
 
     # ----- Narrative Method Store functions ------
 

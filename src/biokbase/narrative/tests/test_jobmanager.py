@@ -47,9 +47,6 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_ERROR_RETRIED,
     JOB_NOT_FOUND,
     BAD_JOB_ID,
-    TEST_CELL_ID_LIST,
-    JOBS_BY_CELL_ID,
-    TEST_CELL_IDs,
     JOBS_TERMINALITY,
     ALL_JOBS,
     BAD_JOBS,
@@ -57,12 +54,16 @@ from biokbase.narrative.tests.job_test_constants import (
     ACTIVE_JOBS,
     BATCH_CHILDREN,
     TEST_JOBS,
-    TEST_JOB_IDS,
     get_test_job,
     generate_error,
 )
 
-from biokbase.narrative.tests.generate_test_results import ALL_RESPONSE_DATA
+from biokbase.narrative.tests.generate_test_results import (
+    ALL_RESPONSE_DATA,
+    JOBS_BY_CELL_ID,
+    TEST_CELL_ID_LIST,
+    TEST_CELL_IDs,
+)
 
 from .narrative_mock.mockclients import (
     get_mock_client,
@@ -121,7 +122,7 @@ class JobManagerTest(unittest.TestCase):
             set(TERMINAL_JOBS),
             set(terminal_ids),
         )
-        self.assertEqual(set(TEST_JOB_IDS), set(self.jm._running_jobs.keys()))
+        self.assertEqual(set(ALL_JOBS), set(self.jm._running_jobs.keys()))
 
         for job_id in TERMINAL_IDS:
             self.assertFalse(self.jm._running_jobs[job_id]["refresh"])
@@ -257,7 +258,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(self.jm._create_jobs(job_list), {})
 
     def test__get_job_good(self):
-        job_id = TEST_JOB_IDS[0]
+        job_id = ALL_JOBS[0]
         job = self.jm.get_job(job_id)
         self.assertEqual(job_id, job.job_id)
         self.assertIsInstance(job, Job)
@@ -277,15 +278,50 @@ class JobManagerTest(unittest.TestCase):
         jobs_html = self.jm.list_jobs()
         self.assertIsInstance(jobs_html, HTML)
         html = jobs_html.data
-        for job_id in TEST_JOB_IDS:
-            self.assertIn("<td>" + job_id + "</td>", html)
-        self.assertIn("<td>NarrativeTest/test_editor</td>", html)
-        self.assertIn("<td>2019-08-26 ", html)
-        self.assertIn(":54:48</td>", html)
-        self.assertIn("<td>fake_test_user</td>", html)
-        self.assertIn("<td>completed</td>", html)
-        self.assertIn("<td>Not started</td>", html)
-        self.assertIn("<td>Incomplete</td>", html)
+
+        counts = {
+            "status": {},
+            "app_id": {},
+            "batch_id": {},
+            "user": {},
+        }
+
+        n_not_started = 0
+        n_incomplete = 0
+        for job in TEST_JOBS.values():
+            for param in ["status", "user"]:
+                if param in job:
+                    value = job[param]
+                    if value not in counts[param]:
+                        counts[param][value] = 0
+                    counts[param][value] += 1
+
+            app_id = job["job_input"]["app_id"]
+            if app_id not in counts["app_id"]:
+                counts["app_id"][app_id] = 0
+            counts["app_id"][app_id] += 1
+
+            if "finished" not in job:
+                n_incomplete += 1
+            if "running" not in job:
+                n_not_started += 1
+
+        for job_id in ALL_JOBS:
+            self.assertIn(f"<td>{job_id}</td>", html)
+
+        for param in counts:
+            for value in counts[param]:
+                self.assertIn("<td>" + str(value) + "</td>", html)
+                value_count = html.count("<td>" + str(value) + "</td>")
+
+                self.assertEqual(counts[param][value], value_count)
+
+        if n_incomplete:
+            incomplete_count = html.count("<td>Incomplete</td>")
+            self.assertEqual(incomplete_count, n_incomplete)
+        if n_not_started:
+            not_started_count = html.count("<td>Not started</td>")
+            self.assertEqual(not_started_count, n_not_started)
 
     def test_list_jobs_twice(self):
         # with no jobs
@@ -484,8 +520,8 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.assertEqual(set(TEST_JOB_IDS), set(states.keys()))
-        self.assertEqual({id: ALL_RESPONSE_DATA[STATUS][id] for id in TEST_JOB_IDS}, states)
+        self.assertEqual(set(ALL_JOBS), set(states.keys()))
+        self.assertEqual({id: ALL_RESPONSE_DATA[STATUS][id] for id in ALL_JOBS}, states)
 
     ## lookup_job_states_by_cell_id
     @mock.patch(CLIENTS, get_mock_client)
@@ -521,7 +557,7 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__cell_id_list_all_results(self):
         cell_ids = TEST_CELL_ID_LIST
-        self.check_lookup_job_states_by_cell_id_results(cell_ids, TEST_JOB_IDS)
+        self.check_lookup_job_states_by_cell_id_results(cell_ids, ALL_JOBS)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_lookup_job_states_by_cell_id__cell_id_list__batch_job__one_cell(self):

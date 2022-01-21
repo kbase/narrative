@@ -80,9 +80,10 @@ class MockClients:
     config = ConfigTests()
     _job_state_data = TEST_JOBS
 
-    def __init__(self, token=None):
+    def __init__(self, client_name=None, token=None):
         if token is not None:
             assert isinstance(token, str)
+        self.client_name = client_name
         self.test_job_id = self.config.get("app_tests", "test_job_id")
 
     @property
@@ -504,7 +505,7 @@ class MockClients:
 
 
 def get_mock_client(client_name, token=None):
-    return MockClients(token=token)
+    return MockClients(client_name=client_name, token=token)
 
 
 def get_failing_mock_client(client_name, token=None):
@@ -516,10 +517,10 @@ class FailingMockClient:
         pass
 
     def check_workspace_jobs(self, params):
-        raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+        raise generate_ee2_error("check_workspace_jobs")
 
     def check_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Check job failed")
+        raise generate_ee2_error("check_job")
 
     def cancel_job(self, params):
         raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])

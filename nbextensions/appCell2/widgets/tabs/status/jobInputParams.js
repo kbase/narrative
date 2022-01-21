@@ -56,6 +56,7 @@ define([
         }
 
         function startParamsListener() {
+            // listen for job-related bus messages
             paramsListener = runtime.bus().listen({
                 channel: {
                     [jcm.CHANNELS.JOB]: jobId,

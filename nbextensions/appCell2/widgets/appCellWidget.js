@@ -1410,6 +1410,7 @@ define(
 
             function startListeningForJobMessages(jobId) {
                 jobListeners.push(
+                    // listen for job-related bus messages
                     runtime.bus().listen({
                         channel: {
                             jobId,

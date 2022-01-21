@@ -371,6 +371,7 @@ define([
          */
         function listenForJobStatus() {
             listeners.push(
+                // listen for job-related bus messages
                 runtime.bus().listen({
                     channel: {
                         [jcm.CHANNELS.JOB]: jobId,

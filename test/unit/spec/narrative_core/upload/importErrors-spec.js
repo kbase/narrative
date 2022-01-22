@@ -4,7 +4,7 @@ define(['kbase/js/widgets/narrative_core/upload/importErrors'], (Errors) => {
     const user = 'some_user';
     const filePath = (file) => `${user}/${file}`;
 
-    fdescribe('ImportSetupError module', () => {
+    describe('ImportSetupError module', () => {
         it('should have a set of bulk import spec errors', () => {
             expect(Errors.BULK_SPEC_ERRORS).toBeDefined();
         });

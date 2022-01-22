@@ -12,30 +12,41 @@ define(['common/ui', 'common/html'], (UI, html) => {
     };
 
     /**
-     *
+     * Expect to be given an Array of errors, each of which is a key-value pair.
+     * Each object in this structure can have the following fields,
+     * as taken from the Staging Service designs:
+     *   type, (this is the only required one, rest are dependent on it), should be one
+     *      of the strings in BULK_SPEC_ERRORS, or will be treated as 'unexpected_error'
+     *   file,
+     *   tab,
+     *   message,
+     *   file_1,
+     *   file_2,
+     *   tab_1,
+     *   tab_2,
+     *   code
      */
     class ImportSetupError extends Error {
         /**
-         * error structure = key-value pairs. all values are strings, keys are one or more of:
-         * {
-         *   type, (only required one, rest are dependent on it)
-         *   file,
-         *   tab,
-         *   message,
-         *   file_1,
-         *   file_2,
-         *   tab_1,
-         *   tab_2,
-         *   code
-         * }
-         * @param {string} text
-         * @param {Object} errors
+         * Builds the Error object. This pre-processes the errors to the following properties:
+         *   fileErrors - keyed on the filename and tab (where appropriate), each value is
+         *      a list of error strings
+         *   serverErrors - a list of error strings
+         *   unexpectedErrors - a list of error strings
+         *   noFileError - true if the BULK_SPEC_ERRORS.NO_FILES error type shows up
+         *      note that this should be the only error that appears when returned from the Staging Service
+         * @param {string} text string for the error
+         * @param {Object} errors Array of error objects, each is a key-value pair, with keys listed above
          */
         constructor(text, errors) {
             super(text);
             this.errors = errors;
             this.name = 'ImportSetupError';
             this.text = text;
+            this.fileErrors = {};
+            this.serverErrors = [];
+            this.unexpectedErrors = [];
+            this.noFileError = false;
             this._processErrors();
         }
 
@@ -44,9 +55,10 @@ define(['common/ui', 'common/html'], (UI, html) => {
         }
 
         /**
-         * Should take the list of errors, sort, and group them by file type as possible.
-         * Goal = go from list of errors of various formats to something more
-         * printable with some formatting.
+         * This takes the list of errors, sorts, and groups them by file type where possible.
+         * The goal is to convert from a list of errors of various formats to something more
+         * easily printable with some minor formatting.
+         *
          * i.e. from:
          * [{
          *   type: 'cannot_find_file',
@@ -89,7 +101,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
             const addFileError = (error) => {
                 let fileKey = error.file;
                 if (error.tab) {
-                    fileKey += ` tab ${error.tab}`;
+                    fileKey += ` tab "${error.tab}"`;
                 }
                 if (!this.fileErrors[fileKey]) {
                     this.fileErrors[fileKey] = [];
@@ -97,17 +109,14 @@ define(['common/ui', 'common/html'], (UI, html) => {
                 this.fileErrors[fileKey].push(error.message);
             };
 
-            this.fileErrors = {};
-            this.serverErrors = [];
-            this.unexpectedErrors = [];
-            this.noFileError = false;
-            this.totalErrors = 0;
             this.errors.forEach((error) => {
                 switch (error.type) {
-                    case BULK_SPEC_ERRORS.NOT_FOUND:
                     case BULK_SPEC_ERRORS.CANNOT_PARSE:
                     case BULK_SPEC_ERRORS.INCORRECT_COLUMN_COUNT:
                         addFileError(error);
+                        break;
+                    case BULK_SPEC_ERRORS.NOT_FOUND:
+                        addFileError(Object.assign({ message: 'File not found' }, error));
                         break;
                     case BULK_SPEC_ERRORS.MULTIPLE_SPECS:
                         addFileError({
@@ -128,17 +137,25 @@ define(['common/ui', 'common/html'], (UI, html) => {
                         if (error.file) {
                             addFileError(error);
                         } else {
-                            this.unexpectedErrors.push(error.message);
+                            this.unexpectedErrors.push(
+                                error.message || 'An unexpected error occurred!'
+                            );
                         }
                         break;
                     case BULK_SPEC_ERRORS.SERVER:
                         this.serverErrors.push(error.message);
                         break;
                     default:
-                        console.error('unknown file import error', error);
+                        if (error.message) {
+                            this.unexpectedErrors.push(error.message);
+                        } else if (error.type) {
+                            this.unexpectedErrors.push(`Unknown error of type "${error.type}"`);
+                        } else {
+                            this.unexpectedErrors.push(`An unknown error occurred!`);
+                        }
+                        console.error('Unexpected import setup error!', error);
                         break;
                 }
-                this.totalErrors++;
             });
         }
 
@@ -154,7 +171,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
             // some branching based on how errors were parsed out.
 
             if (this.noFileError) {
-                title = 'No files given';
+                title = 'No files provided';
                 body =
                     'No CSV/TSV/Excel files were provided, but "Import Specification" was selected.';
             } else if (this.serverErrors.length) {
@@ -169,7 +186,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
 
                 const fileErrorText = Object.entries(this.fileErrors).map(([fileName, errors]) => {
                     const s = errors.length > 1 ? 's' : '';
-                    const header = b(`Error${s} in ${fileName}`);
+                    const header = `Error${s} in ${b(fileName)}`;
                     return div([header, ul(errors.map((err) => li(err)))]);
                 });
 
@@ -194,44 +211,33 @@ define(['common/ui', 'common/html'], (UI, html) => {
                 }
 
                 body = div([fileErrorText, unknownErrors, footer]);
-            }
 
-            if (this.totalErrors > 1) {
-                title = 'Multiple Errors in bulk import';
+                if (this.errors.length > 1) {
+                    title = 'Multiple errors in bulk import';
+                }
             }
 
             return [title, body];
         }
 
-        showErrorDialog() {
+        /**
+         * @param {function} doThisFirst - a function to run as soon as the dialog opens, before it gets closed
+         * @returns {Promise} a Promise that resolves to false when the user closes the dialog.
+         */
+        showErrorDialog(doThisFirst) {
             const [title, body] = this._formatErrors();
 
-            UI.showInfoDialog({
+            return UI.showInfoDialog({
                 title,
                 body,
                 okLabel: 'OK',
                 bsClass: 'danger',
+                doThisFirst,
             });
         }
     }
 
-    class SpreadsheetFetchError extends ImportSetupError {
-        constructor(errors) {
-            super('Error while fetching CSV/TSV/Excel import data', errors);
-            this.name = 'SpreadsheetFetchError';
-        }
-    }
-
-    class SpreadsheetValidationError extends ImportSetupError {
-        constructor(errors) {
-            super('Error while validating CSV/TSV/Excel import data', errors);
-            this.name = 'SpreadsheetValidationError';
-        }
-    }
-
     return {
-        SpreadsheetFetchError,
-        SpreadsheetValidationError,
         ImportSetupError,
         BULK_SPEC_ERRORS,
     };

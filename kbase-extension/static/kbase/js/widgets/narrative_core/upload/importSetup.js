@@ -81,7 +81,10 @@ define([
                     // this would happen if the above isn't JSON, so send the error code instead
                     parsedError = [{ type: 'server_error', message: error.responseText }];
                 }
-                throw new Error.SpreadsheetFetchError(parsedError);
+                throw new Error.ImportSetupError(
+                    'Error while fetching CSV/TSV/Excel import data',
+                    parsedError
+                );
             })
             .then((result) => {
                 return processSpreadsheetFileData(result);

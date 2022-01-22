@@ -97,7 +97,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
          * }
          */
         _processErrors() {
-            // a little lambda-ish to handle file error formatting
+            // a little helper to handle file error formatting
             const addFileError = (error) => {
                 let fileKey = error.file;
                 if (error.tab) {
@@ -221,6 +221,8 @@ define(['common/ui', 'common/html'], (UI, html) => {
         }
 
         /**
+         * Shows an error dialog composed of the various errors used to initialize this object. It
+         * can optionally run an extra function once the dialog gets rendered.
          * @param {function} doThisFirst - a function to run as soon as the dialog opens, before it gets closed
          * @returns {Promise} a Promise that resolves to false when the user closes the dialog.
          */

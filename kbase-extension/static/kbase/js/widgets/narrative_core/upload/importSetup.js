@@ -79,7 +79,9 @@ define([
                     parsedError = JSON.parse(error.responseText).errors;
                 } catch (error) {
                     // this would happen if the above isn't JSON, so send the error code instead
-                    parsedError = [{ type: 'server_error', message: error.responseText }];
+                    parsedError = [
+                        { type: Error.BULK_SPEC_ERRORS.SERVER, message: error.responseText },
+                    ];
                 }
                 throw new Error.ImportSetupError(
                     'Error while fetching CSV/TSV/Excel import data',

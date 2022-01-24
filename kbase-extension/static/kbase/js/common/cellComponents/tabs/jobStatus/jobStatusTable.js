@@ -727,7 +727,8 @@ define([
          * @param {object} message
          */
         handleJobError(message) {
-            const { jobId, error } = message;
+            const jobId = message.job_id,
+                { error } = message;
             if (!error) {
                 return;
             }

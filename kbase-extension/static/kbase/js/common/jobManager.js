@@ -9,7 +9,7 @@ define([
 
     const jcm = JobComms.JobCommMessages;
 
-    const validOutgoingMessageTypes = jcm.validOutgoingMessageTypes();
+    const validOutgoingMessageTypes = Object.values(jcm.RESPONSES);
 
     const jobCommand = {
         cancel: {

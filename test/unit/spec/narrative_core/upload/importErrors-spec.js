@@ -190,7 +190,7 @@ define(['kbase/js/widgets/narrative_core/upload/importErrors'], (Errors) => {
                 {
                     error: { stuff: 'happened' },
                     label: 'with no usual keys',
-                    expected: 'An unknown error occurred!',
+                    expected: 'An unexpected error occurred.',
                 },
             ];
             unknownErrorCases.forEach((testCase) => {
@@ -372,7 +372,7 @@ define(['kbase/js/widgets/narrative_core/upload/importErrors'], (Errors) => {
                     const prefix = 'Unexpected errors found';
                     const errorList = [
                         errors[0].message,
-                        'An unexpected error occurred!',
+                        'An unexpected error occurred.',
                         `Unknown error of type "${errors[2].type}"`,
                         errors[2].message,
                     ];

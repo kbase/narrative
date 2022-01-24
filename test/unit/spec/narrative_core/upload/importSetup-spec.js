@@ -289,19 +289,22 @@ define([
                 });
             });
 
-            // TODO
             it('should error properly when unable to find bulk specification info', async () => {
                 // see https://github.com/kbase/staging_service/tree/develop#error-response-12
                 // for error details
                 const filename = 'xsv_input.csv';
-                stubBulkSpecificationRequest(404, 'not found', {
-                    errors: [
-                        {
-                            type: 'cannot_find_file',
-                            file: filename,
-                        },
-                    ],
-                });
+                stubBulkSpecificationRequest(
+                    404,
+                    'not found',
+                    JSON.stringify({
+                        errors: [
+                            {
+                                type: 'cannot_find_file',
+                                file: filename,
+                            },
+                        ],
+                    })
+                );
 
                 const importInputs = [
                     {
@@ -309,9 +312,10 @@ define([
                         type: 'import_specification',
                     },
                 ];
-                await expectAsync(ImportSetup.setupImportCells(importInputs)).toThrow();
+                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejected();
             });
 
+            // TODO
             xit('should error when given multiple bulk spec files with the same type', async () => {});
         });
 

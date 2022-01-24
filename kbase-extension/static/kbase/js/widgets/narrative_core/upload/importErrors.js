@@ -11,6 +11,11 @@ define(['common/ui', 'common/html'], (UI, html) => {
         SERVER: 'server_error',
     };
 
+    const DEFAULT_MESSAGES = {
+        UNKNOWN: 'An unexpected error occurred.',
+        FILE_NOT_FOUND: 'File not found',
+    };
+
     /**
      * Expect to be given an Array of errors, each of which is a key-value pair.
      * Each object in this structure can have the following fields,
@@ -116,7 +121,9 @@ define(['common/ui', 'common/html'], (UI, html) => {
                         addFileError(error);
                         break;
                     case BULK_SPEC_ERRORS.NOT_FOUND:
-                        addFileError(Object.assign({ message: 'File not found' }, error));
+                        addFileError(
+                            Object.assign({ message: DEFAULT_MESSAGES.FILE_NOT_FOUND }, error)
+                        );
                         break;
                     case BULK_SPEC_ERRORS.MULTIPLE_SPECS:
                         addFileError({
@@ -133,17 +140,18 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     case BULK_SPEC_ERRORS.NO_FILES:
                         this.noFileError = true;
                         break;
+                    case BULK_SPEC_ERRORS.SERVER:
+                        this.serverErrors.push(error.message);
+                        break;
                     case BULK_SPEC_ERRORS.UNKNOWN:
+                        if (!error.message) {
+                            error.message = DEFAULT_MESSAGES.UNKNOWN;
+                        }
                         if (error.file) {
                             addFileError(error);
                         } else {
-                            this.unexpectedErrors.push(
-                                error.message || 'An unexpected error occurred!'
-                            );
+                            this.unexpectedErrors.push(error.message);
                         }
-                        break;
-                    case BULK_SPEC_ERRORS.SERVER:
-                        this.serverErrors.push(error.message);
                         break;
                     default:
                         if (error.message) {
@@ -151,7 +159,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                         } else if (error.type) {
                             this.unexpectedErrors.push(`Unknown error of type "${error.type}"`);
                         } else {
-                            this.unexpectedErrors.push(`An unknown error occurred!`);
+                            this.unexpectedErrors.push(DEFAULT_MESSAGES.UNKNOWN);
                         }
                         console.error('Unexpected import setup error!', error);
                         break;
@@ -171,15 +179,18 @@ define(['common/ui', 'common/html'], (UI, html) => {
             // some branching based on how errors were parsed out.
 
             if (this.noFileError) {
-                title = 'No files provided';
-                body =
-                    'No CSV/TSV/Excel files were provided, but "Import Specification" was selected.';
+                return {
+                    title: 'No files provided',
+                    body: 'No CSV/TSV/Excel files were provided, but "Import Specification" was selected.',
+                };
             } else if (this.serverErrors.length) {
-                title = 'Server error';
-                body = div([
-                    'Server error encountered. Please retry import.',
-                    ul(this.serverErrors.map((err) => li(err))),
-                ]);
+                return {
+                    title: 'Server error',
+                    body: div([
+                        'Server error encountered. Please retry import.',
+                        ul(this.serverErrors.map((err) => li(err))),
+                    ]),
+                };
             } else {
                 let footer = '';
                 const numFiles = Object.keys(this.fileErrors).length;
@@ -217,7 +228,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                 }
             }
 
-            return [title, body];
+            return { title, body };
         }
 
         /**
@@ -227,7 +238,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
          * @returns {Promise} a Promise that resolves to false when the user closes the dialog.
          */
         showErrorDialog(doThisFirst) {
-            const [title, body] = this._formatErrors();
+            const { title, body } = this._formatErrors();
 
             return UI.showInfoDialog({
                 title,

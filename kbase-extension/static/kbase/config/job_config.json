@@ -1,6 +1,7 @@
 {
     "params": {
         "BATCH_ID": "batch_id",
+        "CELL_ID": "cell_id",
         "CELL_ID_LIST": "cell_id_list",
         "JOB_ID": "job_id",
         "JOB_ID_LIST": "job_id_list"
@@ -37,7 +38,7 @@
         "LOGS",
         "NEW",
         "RETRY",
-        "RUN STATUS",
+        "RUN_STATUS",
         "STATUS",
         "STATUS_ALL"
     ]

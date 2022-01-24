@@ -314,7 +314,7 @@ define([
                 });
 
                 it('can have numerous handlers', function () {
-                    const event = jcm.RESPONSES.INFO;
+                    const event = jcm.MESSAGE_TYPE.INFO;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     this.jobManagerInstance.addEventHandler(event, { scream, shout });
                     expectHandlersDefined(this.jobManagerInstance, event, true, [
@@ -324,7 +324,7 @@ define([
                 });
 
                 it('cannot add handlers that are not functions', function () {
-                    const event = jcm.RESPONSES.STATUS;
+                    const event = jcm.MESSAGE_TYPE.STATUS;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     expect(() => {
                         this.jobManagerInstance.addEventHandler(event, { shout: { key: 'value' } });
@@ -365,8 +365,8 @@ define([
                 });
 
                 it('adds an existing handler if null is supplied as the function', function () {
-                    const event = jcm.RESPONSES.LOGS,
-                        secondEvent = jcm.RESPONSES.STATUS;
+                    const event = jcm.MESSAGE_TYPE.LOGS,
+                        secondEvent = jcm.MESSAGE_TYPE.STATUS;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'warn');
                     this.jobManagerInstance.addEventHandler(event, { scream, shout });
@@ -382,8 +382,8 @@ define([
 
                 it('accepts an array of defined handler names', function () {
                     const event = 'modelUpdate',
-                        secondEvent = jcm.RESPONSES.ERROR,
-                        thirdEvent = jcm.RESPONSES.LOGS;
+                        secondEvent = jcm.MESSAGE_TYPE.ERROR,
+                        thirdEvent = jcm.MESSAGE_TYPE.LOGS;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     this.jobManagerInstance.addEventHandler(event, {
                         scream,
@@ -400,8 +400,8 @@ define([
                 });
 
                 it('throws an error if no handlers are supplied', function () {
-                    const event = jcm.RESPONSES.LOGS,
-                        secondEvent = jcm.RESPONSES.STATUS,
+                    const event = jcm.MESSAGE_TYPE.LOGS,
+                        secondEvent = jcm.MESSAGE_TYPE.STATUS,
                         context = this;
                     expect(() => {
                         context.jobManagerInstance.addEventHandler(event, {});
@@ -415,8 +415,8 @@ define([
 
                 it('throws an error if a saved function does not exist', function () {
                     const event = 'modelUpdate',
-                        secondEvent = jcm.RESPONSES.ERROR,
-                        thirdEvent = jcm.RESPONSES.LOGS,
+                        secondEvent = jcm.MESSAGE_TYPE.ERROR,
+                        thirdEvent = jcm.MESSAGE_TYPE.LOGS,
                         context = this;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'error');
@@ -446,8 +446,8 @@ define([
                 });
 
                 it('warns if the handler already exists', function () {
-                    const event = jcm.RESPONSES.LOGS,
-                        secondEvent = jcm.RESPONSES.STATUS;
+                    const event = jcm.MESSAGE_TYPE.LOGS,
+                        secondEvent = jcm.MESSAGE_TYPE.STATUS;
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'warn');
                     spyOn(console, 'error');
@@ -527,7 +527,7 @@ define([
 
             describe('removeEventHandler', () => {
                 it('can have handlers removed', function () {
-                    const event = jcm.RESPONSES.LOGS;
+                    const event = jcm.MESSAGE_TYPE.LOGS;
                     this.jobManagerInstance.handlers[event] = {
                         scream,
                     };
@@ -539,7 +539,7 @@ define([
                 });
 
                 it('does not die if the handler name does not exist', function () {
-                    const event = jcm.RESPONSES.LOGS;
+                    const event = jcm.MESSAGE_TYPE.LOGS;
                     expect(this.jobManagerInstance.handlers[event]).toBeUndefined();
                     this.jobManagerInstance.removeEventHandler(event, 'scream');
                     expectHandlersDefined(this.jobManagerInstance, event, false, ['scream']);
@@ -591,7 +591,7 @@ define([
 
                 it('warns if a handler throws an error', function () {
                     const extraArg = [1, 2, 3];
-                    const event = jcm.RESPONSES.LOGS;
+                    const event = jcm.MESSAGE_TYPE.LOGS;
                     this.jobManagerInstance.handlers[event] = {
                         handler_a: scream,
                         handler_b: () => {
@@ -619,7 +619,7 @@ define([
                 });
 
                 it('can have listeners added', function () {
-                    const type = jcm.RESPONSES.INFO,
+                    const type = jcm.MESSAGE_TYPE.INFO,
                         jobId = 'fakeJob';
                     expect(this.jobManagerInstance.listeners).toEqual({});
                     spyOn(this.bus, 'listen').and.returnValue(true);
@@ -630,7 +630,7 @@ define([
                     expect(allArgs.length).toEqual(1);
                     expect(allArgs[0].length).toEqual(1);
                     expect(allArgs[0][0].key).toEqual({ type: type });
-                    expect(allArgs[0][0].channel).toEqual({ [jcm.CHANNELS.JOB]: jobId });
+                    expect(allArgs[0][0].channel).toEqual({ [jcm.CHANNEL.JOB]: jobId });
                     expect(allArgs[0][0].handle).toEqual(jasmine.any(Function));
                 });
 
@@ -644,7 +644,7 @@ define([
 
                 it('will not add undefined or null listeners', function () {
                     expect(this.jobManagerInstance.listeners).toEqual({});
-                    this.jobManagerInstance.addListener(jcm.RESPONSES.STATUS, [
+                    this.jobManagerInstance.addListener(jcm.MESSAGE_TYPE.STATUS, [
                         null,
                         '',
                         undefined,
@@ -653,7 +653,7 @@ define([
                 });
 
                 it('will take a list of job IDs', function () {
-                    const type = jcm.RESPONSES.INFO,
+                    const type = jcm.MESSAGE_TYPE.INFO,
                         jobIdList = ['fee', 'fi', 'fo', 'fum'];
                     expect(this.jobManagerInstance.listeners).toEqual({});
                     spyOn(this.bus, 'listen').and.returnValue(true);
@@ -666,14 +666,14 @@ define([
                     allArgs.forEach((arg, ix) => {
                         expect(arg.length).toEqual(1);
                         expect(arg[0].key).toEqual({ type: type });
-                        expect(arg[0].channel).toEqual({ [jcm.CHANNELS.JOB]: jobIdList[ix] });
+                        expect(arg[0].channel).toEqual({ [jcm.CHANNEL.JOB]: jobIdList[ix] });
                         expect(arg[0].handle).toEqual(jasmine.any(Function));
                     });
                 });
 
                 it('will also add handlers', function () {
                     // add a mix of valid and invalid handlers
-                    const type = jcm.RESPONSES.INFO,
+                    const type = jcm.MESSAGE_TYPE.INFO,
                         jobIdList = ['this', 'that', 'the_other'];
                     expect(() => {
                         this.jobManagerInstance.addListener(type, jobIdList, {
@@ -698,23 +698,23 @@ define([
 
                 it('does not die if the job or listener does not exist', function () {
                     expect(() => {
-                        this.jobManagerInstance.removeListener('fakeJob', jcm.RESPONSES.INFO);
+                        this.jobManagerInstance.removeListener('fakeJob', jcm.MESSAGE_TYPE.INFO);
                     }).not.toThrow();
                 });
 
                 it('will remove a specified job ID / type listener combo', function () {
                     spyOn(this.bus, 'removeListener').and.returnValue(true);
                     const fakeJob = {
-                        [jcm.RESPONSES.INFO]: 'job-info-fake-job',
-                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
-                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                        [jcm.MESSAGE_TYPE.INFO]: 'job-info-fake-job',
+                        [jcm.MESSAGE_TYPE.STATUS]: 'job-status-fake-job',
+                        [jcm.MESSAGE_TYPE.LOGS]: 'job-logs-fake-job',
                     };
                     this.jobManagerInstance.listeners.fakeJob = fakeJob;
 
-                    this.jobManagerInstance.removeListener('fakeJob', jcm.RESPONSES.INFO);
+                    this.jobManagerInstance.removeListener('fakeJob', jcm.MESSAGE_TYPE.INFO);
                     const expected = {
-                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
-                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                        [jcm.MESSAGE_TYPE.STATUS]: 'job-status-fake-job',
+                        [jcm.MESSAGE_TYPE.LOGS]: 'job-logs-fake-job',
                     };
 
                     expect(this.jobManagerInstance.listeners.fakeJob).toEqual(expected);
@@ -731,9 +731,9 @@ define([
                 });
                 it('will remove all listeners from a certain job ID', function () {
                     const fakeJob = {
-                        [jcm.RESPONSES.INFO]: 'job-info-fake-job',
-                        [jcm.RESPONSES.STATUS]: 'job-status-fake-job',
-                        [jcm.RESPONSES.LOGS]: 'job-logs-fake-job',
+                        [jcm.MESSAGE_TYPE.INFO]: 'job-info-fake-job',
+                        [jcm.MESSAGE_TYPE.STATUS]: 'job-status-fake-job',
+                        [jcm.MESSAGE_TYPE.LOGS]: 'job-logs-fake-job',
                     };
                     this.jobManagerInstance.listeners.fakeJob = fakeJob;
 
@@ -765,9 +765,9 @@ define([
             const currentHandlers = jobManagerInstance.handlers;
             expect(Object.keys(currentHandlers)).toEqual(
                 jasmine.arrayWithExactContents([
-                    jcm.RESPONSES.INFO,
-                    jcm.RESPONSES.RETRY,
-                    jcm.RESPONSES.STATUS,
+                    jcm.MESSAGE_TYPE.INFO,
+                    jcm.MESSAGE_TYPE.RETRY,
+                    jcm.MESSAGE_TYPE.STATUS,
                 ])
             );
             Object.keys(currentHandlers).forEach((handlerName) => {
@@ -801,7 +801,7 @@ define([
             });
 
             describe('handleJobInfo', () => {
-                const event = jcm.RESPONSES.INFO,
+                const event = jcm.MESSAGE_TYPE.INFO,
                     jobId = 'testJobId';
                 it('handles successful job info requests', function () {
                     this.jobId = jobId;
@@ -822,7 +822,7 @@ define([
                     ).not.toBeDefined();
                     // rather than faffing around with sending messages over the bus,
                     // trigger the job handler directly
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.INFO, jobInfo, jobId);
+                    this.jobManagerInstance.runHandler(jcm.MESSAGE_TYPE.INFO, jobInfo, jobId);
 
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
@@ -838,8 +838,8 @@ define([
                     ).not.toBeDefined();
                     const error = 'Some made-up error';
                     this.jobManagerInstance.runHandler(
-                        jcm.RESPONSES.INFO,
-                        { error, [jcm.PARAMS.JOB_ID]: jobId },
+                        jcm.MESSAGE_TYPE.INFO,
+                        { error, [jcm.PARAM.JOB_ID]: jobId },
                         jobId
                     );
                     expect(
@@ -850,7 +850,7 @@ define([
             });
 
             describe('handleJobRetry', () => {
-                const event = jcm.RESPONSES.RETRY,
+                const event = jcm.MESSAGE_TYPE.RETRY,
                     jobState = JobsData.jobsByStatus.terminated[0],
                     jobId = jobState.job_id;
                 it('handles successful job retries', function () {
@@ -879,7 +879,7 @@ define([
                         this.jobManagerInstance.model.getItem(`exec.jobs.params.${newJobId}`)
                     ).not.toBeDefined();
                     expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.RETRY]
+                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
                     ).toBeDefined();
                     expect(this.jobManagerInstance.listeners[newJobId]).not.toBeDefined();
 
@@ -889,7 +889,7 @@ define([
                     this.jobManagerInstance.runHandler(
                         event,
                         {
-                            [jcm.PARAMS.JOB_ID]: this.jobId,
+                            [jcm.PARAM.JOB_ID]: this.jobId,
                             job: { jobState: updatedJobState },
                             retry: { jobState: retryJobState },
                         },
@@ -897,17 +897,17 @@ define([
                     );
 
                     expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.RETRY]
+                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
                     ).toBeDefined();
                     expect(
-                        this.jobManagerInstance.listeners[newJobId][jcm.RESPONSES.STATUS]
+                        this.jobManagerInstance.listeners[newJobId][jcm.MESSAGE_TYPE.STATUS]
                     ).toBeDefined();
                     const storedJobs = this.jobManagerInstance.model.getItem('exec.jobs.byId');
                     expect(storedJobs[jobId]).toEqual(updatedJobState);
                     expect(storedJobs[newJobId]).toEqual(retryJobState);
                     expect(this.bus.emit).toHaveBeenCalled();
                     expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
-                        [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.JOB_ID]: newJobId }],
+                        [jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.JOB_ID]: newJobId }],
                     ]);
                 });
 
@@ -919,7 +919,7 @@ define([
                         JobsData.allJobsWithBatchParent
                     );
                     expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.RETRY]
+                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
                     ).toBeDefined();
 
                     spyOn(this.bus, 'emit');
@@ -928,7 +928,7 @@ define([
                     this.jobManagerInstance.runHandler(
                         event,
                         {
-                            [jcm.PARAMS.JOB_ID]: this.jobId,
+                            [jcm.PARAM.JOB_ID]: this.jobId,
                             job: { jobState },
                             error: 'Could not execute action',
                         },
@@ -940,7 +940,7 @@ define([
             });
 
             describe('handleJobStatus', () => {
-                const event = jcm.RESPONSES.STATUS;
+                const event = jcm.MESSAGE_TYPE.STATUS;
 
                 it('can update the model if a job has been updated', function () {
                     // job to test
@@ -966,7 +966,7 @@ define([
                     spyOn(console, 'error');
                     spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
                     // the first message will not trigger `updateModel` as it is identical to the existing jobState
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageOne, jobId);
+                    this.jobManagerInstance.runHandler(jcm.MESSAGE_TYPE.STATUS, messageOne, jobId);
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                         jobState
                     );
@@ -974,7 +974,7 @@ define([
                     expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(0);
 
                     // the second message will trigger `updateModel`
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageTwo, jobId);
+                    this.jobManagerInstance.runHandler(jcm.MESSAGE_TYPE.STATUS, messageTwo, jobId);
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                         updateOne
                     );
@@ -985,7 +985,11 @@ define([
                     expect(updateModelCallArgs).toEqual([[[updateOne]]]);
 
                     // third message will also trigger an update
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.STATUS, messageThree, jobId);
+                    this.jobManagerInstance.runHandler(
+                        jcm.MESSAGE_TYPE.STATUS,
+                        messageThree,
+                        jobId
+                    );
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                         updateTwo
                     );
@@ -1017,8 +1021,8 @@ define([
 
                         // trigger the update
                         this.jobManagerInstance.runHandler(
-                            jcm.RESPONSES.STATUS,
-                            { jobState: updatedJobState, [jcm.PARAMS.JOB_ID]: jobId },
+                            jcm.MESSAGE_TYPE.STATUS,
+                            { jobState: updatedJobState, [jcm.PARAM.JOB_ID]: jobId },
                             jobId
                         );
                         expect(
@@ -1031,18 +1035,18 @@ define([
                         // the listener should still be in place
                         if (!jobState.meta.terminal || jobState.meta.canRetry) {
                             expect(
-                                this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.STATUS]
+                                this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
                             ).toBeDefined();
                             expect(this.bus.emit).not.toHaveBeenCalled();
                         } else {
                             expect(
-                                this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.STATUS]
+                                this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
                             ).not.toBeDefined();
-                            // jcm.REQUESTS.STOP_UPDATE should have been called
+                            // jcm.MESSAGE_TYPE.STOP_UPDATE should have been called
                             expect(this.bus.emit).toHaveBeenCalled();
                             const callArgs = this.bus.emit.calls.allArgs();
                             expect(callArgs).toEqual([
-                                [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.JOB_ID]: jobId }],
+                                [jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId }],
                             ]);
                         }
                     });
@@ -1060,13 +1064,13 @@ define([
                     batchParentUpdate.updated += 10;
                     setUpHandlerTest(this, event);
                     Jobs.populateModelFromJobArray(this.jobManagerInstance.model, [batchParent]);
-                    this.jobManagerInstance.addListener(jcm.RESPONSES.STATUS, [jobId]);
+                    this.jobManagerInstance.addListener(jcm.MESSAGE_TYPE.STATUS, [jobId]);
 
                     expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
                         batchParent
                     );
                     expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.STATUS]
+                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
                     ).toBeDefined();
 
                     spyOn(console, 'error');
@@ -1075,15 +1079,15 @@ define([
 
                     // trigger the update
                     this.jobManagerInstance.runHandler(
-                        jcm.RESPONSES.STATUS,
-                        { jobState: batchParentUpdate, [jcm.PARAMS.JOB_ID]: jobId },
+                        jcm.MESSAGE_TYPE.STATUS,
+                        { jobState: batchParentUpdate, [jcm.PARAM.JOB_ID]: jobId },
                         jobId
                     );
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                         batchParentUpdate
                     );
                     expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.RESPONSES.STATUS]
+                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
                     ).toBeDefined();
                     expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
                     expect(console.error).toHaveBeenCalledTimes(1);
@@ -1091,19 +1095,19 @@ define([
                     // all child jobs should have job status and job info listeners
                     batchParentUpdate.child_jobs.forEach((_jobId) => {
                         expect(
-                            this.jobManagerInstance.listeners[_jobId][jcm.RESPONSES.STATUS]
+                            this.jobManagerInstance.listeners[_jobId][jcm.MESSAGE_TYPE.STATUS]
                         ).toBeDefined();
                         expect(
-                            this.jobManagerInstance.listeners[_jobId][jcm.RESPONSES.INFO]
+                            this.jobManagerInstance.listeners[_jobId][jcm.MESSAGE_TYPE.INFO]
                         ).toBeDefined();
                     });
                     const callArgs = this.bus.emit.calls.allArgs();
                     expect(this.bus.emit).toHaveBeenCalledTimes(1);
                     expect(callArgs).toEqual([
                         [
-                            jcm.REQUESTS.START_UPDATE,
+                            jcm.MESSAGE_TYPE.START_UPDATE,
                             {
-                                [jcm.PARAMS.JOB_ID_LIST]: jasmine.arrayWithExactContents(
+                                [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(
                                     batchParentUpdate.child_jobs
                                 ),
                             },
@@ -1127,13 +1131,13 @@ define([
                     valid: Jobs.validStatusesForAction.cancel,
                     invalid: [],
                     request: 'cancel',
-                    jobRequest: jcm.REQUESTS.CANCEL,
+                    jobRequest: jcm.MESSAGE_TYPE.CANCEL,
                 },
                 retry: {
                     valid: Jobs.validStatusesForAction.retry,
                     invalid: [],
                     request: 'retry',
-                    jobRequest: jcm.REQUESTS.RETRY,
+                    jobRequest: jcm.MESSAGE_TYPE.RETRY,
                 },
             };
 
@@ -1170,7 +1174,7 @@ define([
                             const actionRequest = actionStatusMatrix[action].jobRequest;
                             expect(callArgs[0]).toEqual([
                                 actionRequest,
-                                { [jcm.PARAMS.JOB_ID_LIST]: [`${jobId}-v2`] },
+                                { [jcm.PARAM.JOB_ID_LIST]: [`${jobId}-v2`] },
                             ]);
                         });
                         it(`can ${action} a retried job in status ${status}`, function () {
@@ -1187,7 +1191,7 @@ define([
                             const actionJobId = action === 'retry' ? jobId : `${jobId}-retry`;
                             expect(callArgs[0]).toEqual([
                                 actionRequest,
-                                { [jcm.PARAMS.JOB_ID_LIST]: [actionJobId] },
+                                { [jcm.PARAM.JOB_ID_LIST]: [actionJobId] },
                             ]);
                         });
                     });
@@ -1255,7 +1259,7 @@ define([
                             );
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(requestType);
-                            expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST]).toEqual(
+                            expect(callArgs[0][1][jcm.PARAM.JOB_ID_LIST]).toEqual(
                                 jasmine.arrayWithExactContents(expectedJobIds)
                             );
                         });
@@ -1296,7 +1300,7 @@ define([
                                 .flat();
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(requestType);
-                            expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST]).toEqual(
+                            expect(callArgs[0][1][jcm.PARAM.JOB_ID_LIST]).toEqual(
                                 jasmine.arrayWithExactContents(expectedJobIds)
                             );
                         });
@@ -1374,12 +1378,12 @@ define([
                             .map((jobState) => jobState.job_id)
                             .forEach((jobId) => {
                                 expect(
-                                    callArgs[0][1][jcm.PARAMS.JOB_ID_LIST].includes(jobId)
+                                    callArgs[0][1][jcm.PARAM.JOB_ID_LIST].includes(jobId)
                                 ).toBeTrue();
                                 acc++;
                             });
                     });
-                    expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST].length).toEqual(acc);
+                    expect(callArgs[0][1][jcm.PARAM.JOB_ID_LIST].length).toEqual(acc);
                 });
 
                 it('does nothing if the user responds no to the modal', async function () {
@@ -1392,8 +1396,8 @@ define([
             });
 
             const resetJobsCallArgs = [
-                jcm.REQUESTS.STOP_UPDATE,
-                { [jcm.PARAMS.BATCH_ID]: JobsData.batchParentJob.job_id },
+                jcm.MESSAGE_TYPE.STOP_UPDATE,
+                { [jcm.PARAM.BATCH_ID]: JobsData.batchParentJob.job_id },
             ];
 
             describe('cancelBatchJob', () => {
@@ -1415,7 +1419,7 @@ define([
                         jasmine.arrayWithExactContents([
                             [
                                 actionRequest,
-                                { [jcm.PARAMS.JOB_ID_LIST]: [JobsData.batchParentJob.job_id] },
+                                { [jcm.PARAM.JOB_ID_LIST]: [JobsData.batchParentJob.job_id] },
                             ],
                         ])
                     );
@@ -1426,7 +1430,7 @@ define([
                     // there should be a status listener for the batch parent
                     expect(
                         this.jobManagerInstance.listeners[JobsData.batchParentJob.job_id]
-                    ).toEqual({ [jcm.RESPONSES.STATUS]: this.bus.listen() });
+                    ).toEqual({ [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen() });
                 });
             });
 
@@ -1473,7 +1477,7 @@ define([
          *          batchId         batch job ID
          *          allJobIds       IDs of batch job and all children
          *          listenerArray   listeners expected to be active; array of strings, e.g.
-         *                          [jcm.RESPONSES.STATUS, jcm.RESPONSES.INFO]
+         *                          [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.INFO]
          */
         function check_initJobs(ctx, args) {
             const { batchId, allJobIds, listenerArray } = args;
@@ -1488,9 +1492,11 @@ define([
                 );
             });
 
-            const busCallArgs = [[jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }]];
-            if (listenerArray.includes(jcm.RESPONSES.INFO)) {
-                busCallArgs.push([jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batchId }]);
+            const busCallArgs = [
+                [jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId }],
+            ];
+            if (listenerArray.includes(jcm.MESSAGE_TYPE.INFO)) {
+                busCallArgs.push([jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }]);
             }
 
             expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual(
@@ -1549,7 +1555,11 @@ define([
                 check_initJobs(this, {
                     batchId,
                     allJobIds: childIds.concat([batchId]),
-                    listenerArray: [jcm.RESPONSES.STATUS, jcm.RESPONSES.INFO, jcm.RESPONSES.ERROR],
+                    listenerArray: [
+                        jcm.MESSAGE_TYPE.STATUS,
+                        jcm.MESSAGE_TYPE.INFO,
+                        jcm.MESSAGE_TYPE.ERROR,
+                    ],
                 });
             });
 
@@ -1582,7 +1592,11 @@ define([
                 check_initJobs(this, {
                     batchId,
                     allJobIds: childIds.concat([batchId]),
-                    listenerArray: [jcm.RESPONSES.STATUS, jcm.RESPONSES.INFO, jcm.RESPONSES.ERROR],
+                    listenerArray: [
+                        jcm.MESSAGE_TYPE.STATUS,
+                        jcm.MESSAGE_TYPE.INFO,
+                        jcm.MESSAGE_TYPE.ERROR,
+                    ],
                 });
             });
         });
@@ -1621,7 +1635,7 @@ define([
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: [jcm.RESPONSES.STATUS, jcm.RESPONSES.ERROR],
+                    listenerArray: [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.ERROR],
                 });
             });
 
@@ -1638,7 +1652,7 @@ define([
                 check_initJobs(this, {
                     batchId: JobsData.batchParentJob.job_id,
                     allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: [jcm.RESPONSES.STATUS, jcm.RESPONSES.ERROR],
+                    listenerArray: [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.ERROR],
                 });
             });
         });

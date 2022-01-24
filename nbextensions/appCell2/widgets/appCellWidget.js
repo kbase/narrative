@@ -1199,8 +1199,8 @@ define(
              * narrative metadata.
              */
             function cancelJob(jobId) {
-                runtime.bus().emit(jcm.REQUESTS.CANCEL, {
-                    [jcm.PARAMS.JOB_ID]: jobId,
+                runtime.bus().emit(jcm.MESSAGE_TYPE.CANCEL, {
+                    [jcm.PARAM.JOB_ID]: jobId,
                 });
             }
 
@@ -1208,8 +1208,8 @@ define(
                 if (!jobId) {
                     return;
                 }
-                runtime.bus().emit(jcm.REQUESTS.STATUS, {
-                    [jcm.PARAMS.JOB_ID]: jobId,
+                runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: jobId,
                 });
             }
 
@@ -1416,14 +1416,14 @@ define(
                             jobId,
                         },
                         key: {
-                            type: jcm.RESPONSES.STATUS,
+                            type: jcm.MESSAGE_TYPE.STATUS,
                         },
                         handle: doJobStatus,
                     })
                 );
 
-                runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
-                    [jcm.PARAMS.JOB_ID]: jobId,
+                runtime.bus().emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                    [jcm.PARAM.JOB_ID]: jobId,
                 });
             }
 
@@ -1466,8 +1466,8 @@ define(
 
                 const jobId = model.getItem('exec.jobState.job_id');
                 if (jobId) {
-                    runtime.bus().emit(jcm.REQUESTS.STOP_UPDATE, {
-                        [jcm.PARAMS.JOB_ID]: jobId,
+                    runtime.bus().emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                        [jcm.PARAM.JOB_ID]: jobId,
                     });
                 }
             }
@@ -1756,7 +1756,7 @@ define(
 
                         // TODO: only turn this on when we need it!
                         busEventManager.add(
-                            cellBus.on(jcm.RESPONSES.RUN_STATUS, (message) => {
+                            cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, (message) => {
                                 updateFromLaunchEvent(message);
 
                                 model.setItem('exec.launchState', message);

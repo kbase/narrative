@@ -39,7 +39,7 @@ define([
             }
 
             function emit(key, message) {
-                bus.channel({ [jcm.CHANNELS.CELL]: config.cellId }).emit(key, message);
+                bus.channel({ [jcm.CHANNEL.CELL]: config.cellId }).emit(key, message);
             }
 
             return {

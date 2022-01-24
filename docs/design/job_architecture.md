@@ -23,8 +23,8 @@ define(['common/jobCommChannel'], (JobComms) => {
   // use the JobCommMessages object
   const jcm = JobComms.JobCommMessages;
 
-  console.log("job status message type: " + jcm.REQUESTS.STATUS)
-  console.log("job ID parameter: " + jcm.PARAMS.JOB_ID)
+  console.log("job status message type: " + jcm.MESSAGE_TYPE.STATUS)
+  console.log("job ID parameter: " + jcm.PARAM.JOB_ID)
 ```
 
 # Frontend messages
@@ -96,15 +96,15 @@ define(
       jcm = JobComms.JobCommMessages;
 
     // request the first 10 job log lines:
-    runtime.bus().emit(jcm.REQUESTS.LOGS, {
-      [jcm.PARAMS.JOB_ID]: 'some_job_id',
+    runtime.bus().emit(jcm.MESSAGE_TYPE.LOGS, {
+      [jcm.PARAM.JOB_ID]: 'some_job_id',
       first_line: 0,
       num_lines: 10
     });
 
     // request the status of all jobs in a batch:
-    runtime.bus().emit(jcm.REQUESTS.STATUS, {
-      [jcm.PARAMS.BATCH_ID]: 'some_batch_id',
+    runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
+      [jcm.PARAM.BATCH_ID]: 'some_batch_id',
     });
   }
 );
@@ -150,10 +150,10 @@ define(
 
     const listener = runtime.bus().listen({
       channel: {
-        [jcm.CHANNELS.JOB]: 'some_job_id'
+        [jcm.CHANNEL.JOB]: 'some_job_id'
       },
       key: {
-        type: jcm.RESPONSES.STATUS,
+        type: jcm.MESSAGE_TYPE.STATUS,
       },
       handle: (message) => {
         ...process the message...
@@ -176,7 +176,7 @@ const cellBus = runtime.bus().makeChannelBus({
         cell: 'some_cell_id'
       }
     });
-    const listenerId = cellBus.on(jcm.RESPONSES.RUN_STATUS, (message) => {
+    const listenerId = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, (message) => {
       // process the message...
     });
   }

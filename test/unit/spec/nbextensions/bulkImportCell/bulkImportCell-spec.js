@@ -363,7 +363,7 @@ define([
                         {},
                         {
                             channel: {
-                                [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
+                                [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                             },
                             key: {
                                 type: 'delete-cell',
@@ -465,10 +465,10 @@ define([
                             );
                             runtime.bus().send(message, {
                                 channel: {
-                                    [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: jcm.RESPONSES.RUN_STATUS,
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             });
                         }
@@ -655,9 +655,18 @@ define([
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
-                                    [jcm.REQUESTS.CANCEL, { [jcm.PARAMS.JOB_ID_LIST]: [batchId] }],
-                                    [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
+                                    [
+                                        jcm.MESSAGE_TYPE.START_UPDATE,
+                                        { [jcm.PARAM.BATCH_ID]: batchId },
+                                    ],
+                                    [
+                                        jcm.MESSAGE_TYPE.CANCEL,
+                                        { [jcm.PARAM.JOB_ID_LIST]: [batchId] },
+                                    ],
+                                    [
+                                        jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                        { [jcm.PARAM.BATCH_ID]: batchId },
+                                    ],
                                     [
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
@@ -747,10 +756,10 @@ define([
                             },
                             {
                                 channel: {
-                                    [jcm.CHANNELS.CELL]: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: jcm.RESPONSES.RUN_STATUS,
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             }
                         );
@@ -760,10 +769,10 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    [jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
-                    [jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batchId }],
-                    [jcm.REQUESTS.CANCEL, { [jcm.PARAMS.JOB_ID_LIST]: [batchId] }],
-                    [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] }],
+                    [jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

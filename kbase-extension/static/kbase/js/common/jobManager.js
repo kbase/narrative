@@ -13,12 +13,12 @@ define([
 
     const jobCommand = {
         cancel: {
-            command: jcm.REQUESTS.CANCEL,
-            listener: jcm.RESPONSES.STATUS,
+            command: jcm.MESSAGE_TYPE.CANCEL,
+            listener: jcm.MESSAGE_TYPE.STATUS,
         },
         retry: {
-            command: jcm.REQUESTS.RETRY,
-            listener: jcm.RESPONSES.RETRY,
+            command: jcm.MESSAGE_TYPE.RETRY,
+            listener: jcm.MESSAGE_TYPE.RETRY,
         },
     };
 
@@ -64,13 +64,13 @@ define([
 
         _isValidMessage(type, message) {
             switch (type) {
-                case jcm.RESPONSES.STATUS:
+                case jcm.MESSAGE_TYPE.STATUS:
                     return Jobs.isValidBackendJobStateObject(message);
-                case jcm.RESPONSES.INFO:
+                case jcm.MESSAGE_TYPE.INFO:
                     return Jobs.isValidJobInfoObject(message);
-                case jcm.RESPONSES.LOGS:
+                case jcm.MESSAGE_TYPE.LOGS:
                     return Jobs.isValidJobLogsObject(message);
-                case jcm.RESPONSES.RETRY:
+                case jcm.MESSAGE_TYPE.RETRY:
                     return Jobs.isValidJobRetryObject(message);
                 case type.indexOf('job') !== -1:
                     return !!message.jobId;
@@ -97,12 +97,12 @@ define([
          *              on the job manager already
          * Example:
          *
-         * jm.addEventListener(jcm.RESPONSES.STATUS, {
+         * jm.addEventListener(jcm.MESSAGE_TYPE.STATUS, {
          *      handlerA: () => {}, // this function gets added to the job manager
          *      handlerB: null,     // this handler function is expected to exist
          * })
          * // handlers assumed to already exist:
-         * jm.addEventListener(jcm.RESPONSES.ERROR, ['handlerA', 'handlerB']);
+         * jm.addEventListener(jcm.MESSAGE_TYPE.ERROR, ['handlerA', 'handlerB']);
          */
 
         addEventHandler(event, handlers) {
@@ -163,7 +163,7 @@ define([
          *
          * Example:
          *
-         * jm.addEventListener(jcm.RESPONSES.STATUS, {
+         * jm.addEventListener(jcm.MESSAGE_TYPE.STATUS, {
          *      handlerA: () => {}, // this function gets added to the job manager
          *      handlerB: null,     // this handler function is expected to exist
          * })
@@ -279,9 +279,9 @@ define([
                         this.listeners[channel] = {};
                     }
                     if (!this.listeners[channel][type]) {
-                        let channelObject = { [jcm.CHANNELS.JOB]: channel };
-                        if (type === jcm.RESPONSES.CELL_JOB_STATUS) {
-                            channelObject = { [jcm.CHANNELS.CELL]: channel };
+                        let channelObject = { [jcm.CHANNEL.JOB]: channel };
+                        if (type === jcm.MESSAGE_TYPE.CELL_JOB_STATUS) {
+                            channelObject = { [jcm.CHANNEL.CELL]: channel };
                         }
 
                         // listen for job-related bus messages
@@ -442,8 +442,8 @@ define([
 
                 Object.keys(defaultHandlers).forEach((event) => {
                     const toAdd = {};
-                    toAdd[`__default_${jcm.RESPONSES[event]}`] = defaultHandlers[event];
-                    this.addEventHandler(jcm.RESPONSES[event], toAdd);
+                    toAdd[`__default_${jcm.MESSAGE_TYPE[event]}`] = defaultHandlers[event];
+                    this.addEventHandler(jcm.MESSAGE_TYPE[event], toAdd);
                 }, this);
             }
 
@@ -458,7 +458,7 @@ define([
                 }
                 const jobId = message.job_id;
                 self.model.setItem(`exec.jobs.info.${jobId}`, message);
-                self.removeListener(jobId, jcm.RESPONSES.INFO);
+                self.removeListener(jobId, jcm.MESSAGE_TYPE.INFO);
             }
 
             handleJobRetry(self, message) {
@@ -469,10 +469,10 @@ define([
 
                 // request job updates for the new job
                 ['STATUS', 'ERROR'].forEach((type) => {
-                    self.addListener(jcm.RESPONSES[type], [retry.jobState.job_id]);
+                    self.addListener(jcm.MESSAGE_TYPE[type], [retry.jobState.job_id]);
                 });
-                self.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                    [jcm.PARAMS.JOB_ID]: retry.jobState.job_id,
+                self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                    [jcm.PARAM.JOB_ID]: retry.jobState.job_id,
                 });
                 // update the model with the job data
                 self.updateModel(
@@ -499,11 +499,11 @@ define([
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates
                 if (Jobs.isTerminalStatus(status) && !Jobs.canRetry(jobState)) {
-                    self.removeListener(jobId, jcm.RESPONSES.STATUS);
+                    self.removeListener(jobId, jcm.MESSAGE_TYPE.STATUS);
                     if (status === 'does_not_exist') {
                         self.removeJobListeners(jobId);
                     }
-                    self.bus.emit(jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.JOB_ID]: jobId });
+                    self.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId });
                     self.updateModel([jobState]);
                     return;
                 }
@@ -518,10 +518,10 @@ define([
                     });
                     if (missingJobIds.length) {
                         ['STATUS', 'ERROR', 'INFO'].forEach((type) => {
-                            self.addListener(jcm.RESPONSES[type], missingJobIds);
+                            self.addListener(jcm.MESSAGE_TYPE[type], missingJobIds);
                         });
-                        self.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                            [jcm.PARAMS.JOB_ID_LIST]: missingJobIds,
+                        self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                            [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
                         });
                     }
                 }
@@ -540,8 +540,8 @@ define([
              * @param {array[string]} jobIdList
              */
             requestJobInfo(jobIdList) {
-                this.addListener(jcm.RESPONSES.INFO, jobIdList);
-                this.bus.emit(jcm.REQUESTS.INFO, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
+                this.addListener(jcm.MESSAGE_TYPE.INFO, jobIdList);
+                this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
             }
 
             /**
@@ -549,8 +549,8 @@ define([
              * @param {array[string]} jobIdList
              */
             requestJobStatus(jobIdList) {
-                this.addListener(jcm.RESPONSES.STATUS, jobIdList);
-                this.bus.emit(jcm.REQUESTS.STATUS, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
+                this.addListener(jcm.MESSAGE_TYPE.STATUS, jobIdList);
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
             }
         };
 
@@ -565,7 +565,7 @@ define([
              * @param {array} jobIdList
              */
             doJobAction(action, jobIdList) {
-                this.bus.emit(jobCommand[action].command, { [jcm.PARAMS.JOB_ID_LIST]: jobIdList });
+                this.bus.emit(jobCommand[action].command, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
                 // add the appropriate listener
                 this.addListener(jobCommand[action].listener, jobIdList);
             }
@@ -712,7 +712,9 @@ define([
                     allJobs[batchJob.job_id] = batchJob;
                 }
 
-                this.bus.emit(jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchJob.job_id });
+                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
+                });
 
                 // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
@@ -779,18 +781,18 @@ define([
                 this._initJobs({ allJobIds, batchId: batch_id });
 
                 // request job info
-                this.addListener(jcm.RESPONSES.INFO, allJobIds);
-                this.bus.emit(jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batch_id });
+                this.addListener(jcm.MESSAGE_TYPE.INFO, allJobIds);
+                this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batch_id });
             }
 
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
                 ['STATUS', 'ERROR'].forEach((type) => {
-                    this.addListener(jcm.RESPONSES[type], allJobIds);
+                    this.addListener(jcm.MESSAGE_TYPE[type], allJobIds);
                 });
                 // request job updates
-                this.bus.emit(jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId });
+                this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId });
             }
 
             restoreFromSaved() {

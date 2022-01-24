@@ -842,7 +842,7 @@ define([
          * Then changes the global cell state to "launching".
          */
         function doRunCellAction() {
-            runStatusListener = cellBus.on(jcm.RESPONSES.RUN_STATUS, handleRunStatus);
+            runStatusListener = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, handleRunStatus);
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');

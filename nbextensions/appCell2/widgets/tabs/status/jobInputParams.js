@@ -59,10 +59,10 @@ define([
             // listen for job-related bus messages
             paramsListener = runtime.bus().listen({
                 channel: {
-                    [jcm.CHANNELS.JOB]: jobId,
+                    [jcm.CHANNEL.JOB]: jobId,
                 },
                 key: {
-                    type: jcm.RESPONSES.INFO,
+                    type: jcm.MESSAGE_TYPE.INFO,
                 },
                 handle: (message) => {
                     updateRowStatus(ui, message.job_params[0], container);
@@ -84,8 +84,8 @@ define([
                 isParentJob = arg.isParentJob;
 
                 startParamsListener();
-                runtime.bus().emit(jcm.REQUESTS.INFO, {
-                    [jcm.PARAMS.JOB_ID]: jobId,
+                runtime.bus().emit(jcm.MESSAGE_TYPE.INFO, {
+                    [jcm.PARAM.JOB_ID]: jobId,
                 });
                 params = arg.params;
                 updateRowStatus(ui, params, container);

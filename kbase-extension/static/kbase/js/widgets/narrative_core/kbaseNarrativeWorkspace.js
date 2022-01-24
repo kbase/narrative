@@ -553,7 +553,7 @@ define([
                 {},
                 {
                     channel: {
-                        [jcm.CHANNELS.CELL]: cellId,
+                        [jcm.CHANNEL.CELL]: cellId,
                     },
                     key: {
                         type: 'delete-cell',

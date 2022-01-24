@@ -266,8 +266,8 @@ define([
             Object.values(this.widgetsById).map((widget) => widget.stop());
             this.jobManager.removeEventHandler('modelUpdate', 'jobStatusTable_status');
             this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
-            this.jobManager.removeEventHandler(jcm.RESPONSES.INFO, 'jobStatusTable_info');
-            this.jobManager.removeEventHandler(jcm.RESPONSES.ERROR, 'jobStatusTable_error');
+            this.jobManager.removeEventHandler(jcm.MESSAGE_TYPE.INFO, 'jobStatusTable_info');
+            this.jobManager.removeEventHandler(jcm.MESSAGE_TYPE.ERROR, 'jobStatusTable_error');
             this.container.innerHTML = '';
             if (this.dropdownWidget) {
                 return this.dropdownWidget.stop();
@@ -618,12 +618,12 @@ define([
                     );
                 },
             });
-            this.jobManager.addEventHandler(jcm.RESPONSES.ERROR, {
+            this.jobManager.addEventHandler(jcm.MESSAGE_TYPE.ERROR, {
                 jobStatusTable_error: (_, jobError) => {
                     this.handleJobError.bind(self)(jobError);
                 },
             });
-            this.jobManager.addEventHandler(jcm.RESPONSES.INFO, {
+            this.jobManager.addEventHandler(jcm.MESSAGE_TYPE.INFO, {
                 jobStatusTable_info: (_, jobInfo) => {
                     this.handleJobInfo.bind(self)(jobInfo);
                 },
@@ -652,18 +652,18 @@ define([
             });
 
             ['STATUS', 'ERROR'].forEach((event) => {
-                this.jobManager.addListener(jcm.RESPONSES[event], [batchId].concat(jobIdList));
+                this.jobManager.addListener(jcm.MESSAGE_TYPE[event], [batchId].concat(jobIdList));
             });
 
             if (paramsRequired.length) {
-                this.jobManager.addListener(jcm.RESPONSES.INFO, paramsRequired);
+                this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, paramsRequired);
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
-                        ? { [jcm.PARAMS.BATCH_ID]: batchId }
-                        : { [jcm.PARAMS.JOB_ID_LIST]: paramsRequired };
-                this.jobManager.bus.emit(jcm.REQUESTS.INFO, jobInfoRequestParams);
+                        ? { [jcm.PARAM.BATCH_ID]: batchId }
+                        : { [jcm.PARAM.JOB_ID_LIST]: paramsRequired };
+                this.jobManager.bus.emit(jcm.MESSAGE_TYPE.INFO, jobInfoRequestParams);
             }
-            this.jobManager.bus.emit(jcm.REQUESTS.STATUS, { [jcm.PARAMS.BATCH_ID]: batchId });
+            this.jobManager.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId });
         }
 
         // HANDLERS

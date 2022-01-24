@@ -409,8 +409,8 @@ define([
 
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
-                this.bus.emit(jcm.REQUESTS.STATUS, {
-                    [jcm.PARAMS.JOB_ID]: this.jobId,
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: this.jobId,
                 });
                 this.state.listeningForJob = true;
             }).catch((err) => {
@@ -445,8 +445,8 @@ define([
          * request regular job status updates
          */
         startJobStatusUpdates() {
-            this.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                [jcm.PARAMS.JOB_ID]: this.jobId,
+            this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
             });
             this.state.listeningForJob = true;
         }
@@ -458,7 +458,7 @@ define([
             this.state.listeningForJob = false;
 
             if (this.state.awaitingLog) {
-                this.stopEventListeners([jcm.RESPONSES.STATUS]);
+                this.stopEventListeners([jcm.MESSAGE_TYPE.STATUS]);
             } else {
                 this.stopEventListeners();
             }
@@ -474,8 +474,8 @@ define([
         requestJobLog(firstLine) {
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit(jcm.REQUESTS.LOGS, {
-                [jcm.PARAMS.JOB_ID]: this.jobId,
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
                 first_line: firstLine,
             });
         }
@@ -488,8 +488,8 @@ define([
             this.state.scrollToEndOnNext = true;
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit(jcm.REQUESTS.LOGS, {
-                [jcm.PARAMS.JOB_ID]: this.jobId,
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
                 latest: true,
             });
         }
@@ -1264,9 +1264,9 @@ define([
                     // ensure that the correct `this` context is bound
                     const handle = handlers[type].bind(this);
                     // listen for job-related bus messages
-                    this.listenersByType[jcm.RESPONSES[type]] = this.bus.listen({
-                        channel: { [jcm.CHANNELS.JOB]: this.jobId },
-                        key: { type: jcm.RESPONSES[type] },
+                    this.listenersByType[jcm.MESSAGE_TYPE[type]] = this.bus.listen({
+                        channel: { [jcm.CHANNEL.JOB]: this.jobId },
+                        key: { type: jcm.MESSAGE_TYPE[type] },
                         handle,
                     });
                 }, this);

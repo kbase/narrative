@@ -324,8 +324,8 @@ define([
             if (listeningForJob) {
                 return;
             }
-            runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
-                [jcm.PARAMS.JOB_ID]: jobId,
+            runtime.bus().emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: jobId,
             });
             listeningForJob = true;
         }
@@ -374,10 +374,10 @@ define([
                 // listen for job-related bus messages
                 runtime.bus().listen({
                     channel: {
-                        [jcm.CHANNELS.JOB]: jobId,
+                        [jcm.CHANNEL.JOB]: jobId,
                     },
                     key: {
-                        type: jcm.RESPONSES.STATUS,
+                        type: jcm.MESSAGE_TYPE.STATUS,
                     },
                     handle: handleJobStatusUpdate,
                 })
@@ -413,8 +413,8 @@ define([
                     listenForJobStatus();
 
                     // request a new job status update from the kernel on start
-                    runtime.bus().emit(jcm.REQUESTS.STATUS, {
-                        [jcm.PARAMS.JOB_ID]: jobId,
+                    runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: jobId,
                     });
                     listeningForJob = true;
 

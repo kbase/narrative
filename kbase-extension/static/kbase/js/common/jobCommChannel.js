@@ -157,18 +157,14 @@ define([
                 throw new Error(`Ignoring unknown message type "${msgType}"`);
             }
 
-            const transformedMsg = {
-                target_name: COMM_NAME,
-                request_type: msgType,
-            };
-
-            return Object.assign({}, transformedMsg, msgData);
-
-            // return {
-            //     target_name: COMM_NAME,
-            //     request_type: msgType,
-            //     ...msgData
-            // };
+            return Object.assign(
+                {},
+                {
+                    target_name: COMM_NAME,
+                    request_type: msgType,
+                },
+                msgData
+            );
         }
 
         /**

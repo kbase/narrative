@@ -7,6 +7,7 @@ define([
     'narrativeConfig',
     'common/runtime',
     'common/html',
+    'common/ui',
     'base/js/namespace',
     'handlebars',
     'util/string',
@@ -14,6 +15,7 @@ define([
     './uploadTour',
     'util/stagingFileCache',
     './importSetup',
+    './importErrors',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -29,6 +31,7 @@ define([
     Config,
     Runtime,
     html,
+    UI,
     Jupyter,
     Handlebars,
     StringUtil,
@@ -36,6 +39,7 @@ define([
     UploadTour,
     StagingFileCache,
     Import,
+    Error,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
@@ -1145,9 +1149,15 @@ define([
                 });
             });
 
-            return Import.setupImportCells(fileInfo).then(() => {
-                Jupyter.narrative.hideOverlay();
-            });
+            return Import.setupImportCells(fileInfo)
+                .then(() => {
+                    Jupyter.narrative.hideOverlay();
+                })
+                .catch(Error.ImportSetupError, (error) => {
+                    console.error(error.toString());
+                    // make popup.
+                    error.showErrorDialog();
+                });
         },
 
         startTour: function () {

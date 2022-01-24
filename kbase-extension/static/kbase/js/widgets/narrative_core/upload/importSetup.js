@@ -6,15 +6,33 @@ define([
     'util/string',
     'common/runtime',
     'StagingServiceClient',
-], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient) => {
+    './importErrors',
+], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient, Error) => {
     'use strict';
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
 
     /**
-     *
-     * @param {Array[string]} files - array of file names to treat as import specifications
-     * @returns Promise that resolves into all the bulk upload stuff
+     * This makes a call to the Staging Service to fetch information from bulk specification files.
+     * This then gets processed through `processSpreadsheetFileData` before being returned.
+     * @param {Array[string]} files - array of file path names to treat as import specifications
+     * @returns Promise that resolves into information that can be used to open a bulk import cell.
+     * This has the format:
+     * {
+     *   types: {
+     *     dataType1: [{ import parameters }, { import parameters }, ...etc...],
+     *     dataType2: [{ ...etc... }]
+     *   },
+     *   files: {
+     *     dataType1: {
+     *       file: the given file path,
+     *       tab: null or the name of the excel file tab, if the file was an excel file
+     *     }
+     *     dataType2: { ...etc... }
+     *   }
+     * }
+     * @throws Error.ImportSetupError if an error occurs in either data fetching from the Staging
+     *   Service, or in the initial parsing done by `processSpreadsheetFileData`
      */
     function getSpreadsheetFileInfo(files) {
         if (!files || files.length === 0) {
@@ -59,6 +77,7 @@ define([
                         callResult = JSON.parse(callResult);
                         Object.keys(callResult.types).forEach((dataType) => {
                             // if we already have a file of that datatype, then throw an error.
+                            // TODO: cast this as an ImportSetupError
                             if (allCalls.files[dataType]) {
                                 throw new Error(
                                     'You cannot use multiple files to upload the same type.'
@@ -72,13 +91,23 @@ define([
                     { types: {}, files: {} }
                 );
             })
+            .catch((error) => {
+                let parsedError;
+                try {
+                    parsedError = JSON.parse(error.responseText).errors;
+                } catch (error) {
+                    // this would happen if the above isn't JSON, so send the error code instead
+                    parsedError = [
+                        { type: Error.BULK_SPEC_ERRORS.SERVER, message: error.responseText },
+                    ];
+                }
+                throw new Error.ImportSetupError(
+                    'Error while fetching CSV/TSV/Excel import data',
+                    parsedError
+                );
+            })
             .then((result) => {
                 return processSpreadsheetFileData(result);
-            })
-            .catch((error) => {
-                console.error(error);
-                console.error(JSON.parse(error.responseText));
-                return {};
             });
     }
 
@@ -196,6 +225,12 @@ define([
         return data;
     }
 
+    /**
+     * Creates a new non-bulk import app cell for each file in the fileInfo array.
+     * @param {Array} fileInfo each object in the array is expected to have 'type' and 'name' keys,
+     *   both of which are strings.
+     * @returns A Promise that resolves when all importer app cells are created
+     */
     function initSingleFileUploads(fileInfo) {
         const appInfos = uploaders.app_info;
         const tag = APIUtil.getAppVersionTag();

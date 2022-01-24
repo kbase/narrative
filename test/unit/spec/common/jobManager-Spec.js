@@ -816,7 +816,6 @@ define([
                             job_id: this.jobId,
                             job_params: [jobParams],
                         };
-                    this.jobId = jobId;
                     setUpHandlerTest(this, event);
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
@@ -838,7 +837,11 @@ define([
                         this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
                     ).not.toBeDefined();
                     const error = 'Some made-up error';
-                    this.jobManagerInstance.runHandler(jcm.RESPONSES.INFO, { error, jobId }, jobId);
+                    this.jobManagerInstance.runHandler(
+                        jcm.RESPONSES.INFO,
+                        { error, [jcm.PARAMS.JOB_ID]: jobId },
+                        jobId
+                    );
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
                     ).not.toBeDefined();
@@ -885,7 +888,11 @@ define([
 
                     this.jobManagerInstance.runHandler(
                         event,
-                        { job: { jobState: updatedJobState }, retry: { jobState: retryJobState } },
+                        {
+                            [jcm.PARAMS.JOB_ID]: this.jobId,
+                            job: { jobState: updatedJobState },
+                            retry: { jobState: retryJobState },
+                        },
                         jobId
                     );
 
@@ -920,7 +927,11 @@ define([
 
                     this.jobManagerInstance.runHandler(
                         event,
-                        { job: { jobState }, error: 'Could not execute action' },
+                        {
+                            [jcm.PARAMS.JOB_ID]: this.jobId,
+                            job: { jobState },
+                            error: 'Could not execute action',
+                        },
                         jobId
                     );
                     expect(this.bus.emit).not.toHaveBeenCalled();
@@ -1007,7 +1018,7 @@ define([
                         // trigger the update
                         this.jobManagerInstance.runHandler(
                             jcm.RESPONSES.STATUS,
-                            { jobState: updatedJobState, jobId },
+                            { jobState: updatedJobState, [jcm.PARAMS.JOB_ID]: jobId },
                             jobId
                         );
                         expect(
@@ -1030,7 +1041,9 @@ define([
                             // jcm.REQUESTS.STOP_UPDATE should have been called
                             expect(this.bus.emit).toHaveBeenCalled();
                             const callArgs = this.bus.emit.calls.allArgs();
-                            expect(callArgs).toEqual([[jcm.REQUESTS.STOP_UPDATE, { jobId }]]);
+                            expect(callArgs).toEqual([
+                                [jcm.REQUESTS.STOP_UPDATE, { [jcm.PARAMS.JOB_ID]: jobId }],
+                            ]);
                         }
                     });
                 });
@@ -1063,7 +1076,7 @@ define([
                     // trigger the update
                     this.jobManagerInstance.runHandler(
                         jcm.RESPONSES.STATUS,
-                        { jobState: batchParentUpdate, jobId },
+                        { jobState: batchParentUpdate, [jcm.PARAMS.JOB_ID]: jobId },
                         jobId
                     );
                     expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
@@ -1157,7 +1170,7 @@ define([
                             const actionRequest = actionStatusMatrix[action].jobRequest;
                             expect(callArgs[0]).toEqual([
                                 actionRequest,
-                                { jobIdList: [`${jobId}-v2`] },
+                                { [jcm.PARAMS.JOB_ID_LIST]: [`${jobId}-v2`] },
                             ]);
                         });
                         it(`can ${action} a retried job in status ${status}`, function () {
@@ -1174,7 +1187,7 @@ define([
                             const actionJobId = action === 'retry' ? jobId : `${jobId}-retry`;
                             expect(callArgs[0]).toEqual([
                                 actionRequest,
-                                { jobIdList: [actionJobId] },
+                                { [jcm.PARAMS.JOB_ID_LIST]: [actionJobId] },
                             ]);
                         });
                     });
@@ -1242,7 +1255,7 @@ define([
                             );
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(requestType);
-                            expect(callArgs[0][1].jobIdList).toEqual(
+                            expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST]).toEqual(
                                 jasmine.arrayWithExactContents(expectedJobIds)
                             );
                         });
@@ -1283,7 +1296,7 @@ define([
                                 .flat();
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(requestType);
-                            expect(callArgs[0][1].jobIdList).toEqual(
+                            expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST]).toEqual(
                                 jasmine.arrayWithExactContents(expectedJobIds)
                             );
                         });
@@ -1360,11 +1373,13 @@ define([
                         Object.values(JobsData.jobsByStatus[status])
                             .map((jobState) => jobState.job_id)
                             .forEach((jobId) => {
-                                expect(callArgs[0][1].jobIdList.includes(jobId)).toBeTrue();
+                                expect(
+                                    callArgs[0][1][jcm.PARAMS.JOB_ID_LIST].includes(jobId)
+                                ).toBeTrue();
                                 acc++;
                             });
                     });
-                    expect(callArgs[0][1].jobIdList.length).toEqual(acc);
+                    expect(callArgs[0][1][jcm.PARAMS.JOB_ID_LIST].length).toEqual(acc);
                 });
 
                 it('does nothing if the user responds no to the modal', async function () {
@@ -1378,7 +1393,7 @@ define([
 
             const resetJobsCallArgs = [
                 jcm.REQUESTS.STOP_UPDATE,
-                { batchId: JobsData.batchParentJob.job_id },
+                { [jcm.PARAMS.BATCH_ID]: JobsData.batchParentJob.job_id },
             ];
 
             describe('cancelBatchJob', () => {
@@ -1398,7 +1413,10 @@ define([
                     const actionRequest = actionStatusMatrix.cancel.jobRequest;
                     expect(callArgs).toEqual(
                         jasmine.arrayWithExactContents([
-                            [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
+                            [
+                                actionRequest,
+                                { [jcm.PARAMS.JOB_ID_LIST]: [JobsData.batchParentJob.job_id] },
+                            ],
                         ])
                     );
                     // the job model should be unchanged
@@ -1470,9 +1488,9 @@ define([
                 );
             });
 
-            const busCallArgs = [[jcm.REQUESTS.START_UPDATE, { batchId }]];
+            const busCallArgs = [[jcm.REQUESTS.START_UPDATE, { [jcm.PARAMS.BATCH_ID]: batchId }]];
             if (listenerArray.includes(jcm.RESPONSES.INFO)) {
-                busCallArgs.push([jcm.REQUESTS.INFO, { batchId }]);
+                busCallArgs.push([jcm.REQUESTS.INFO, { [jcm.PARAMS.BATCH_ID]: batchId }]);
             }
 
             expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual(

@@ -383,6 +383,7 @@ define([
         sendBusMessage(
             ctx,
             {
+                [jcm.PARAMS.JOB_ID]: jobId,
                 jobState: ctx.input,
             },
             { [jcm.CHANNELS.JOB]: jobId },
@@ -413,7 +414,7 @@ define([
         sendBusMessage(
             ctx,
             {
-                job_id: retryParent.job_id,
+                [jcm.PARAMS.JOB_ID]: retryParent.job_id,
                 job: {
                     jobState: retryParent,
                 },
@@ -437,7 +438,7 @@ define([
         sendBusMessage(
             ctx,
             {
-                jobId,
+                [jcm.PARAMS.JOB_ID]: jobId,
                 error,
                 request: error.source,
             },

@@ -51,15 +51,8 @@ define([
             CELL,
             JOB,
         },
-        // backend param names
-        BE_PARAMS = JobConfig.params,
-        // frontend param names
-        PARAMS = {
-            JOB_ID: 'jobId',
-            JOB_ID_LIST: 'jobIdList',
-            BATCH_ID: 'batchId',
-            CELL_ID_LIST: 'cellIdList',
-        },
+        // param names
+        PARAMS = JobConfig.params,
         REQUESTS = {},
         RESPONSES = {};
 
@@ -72,16 +65,13 @@ define([
     });
 
     const JobCommMessages = {
-        validIncomingMessageTypes: function () {
-            return Object.values(REQUESTS);
-        },
-        validOutgoingMessageTypes: function () {
-            return Object.values(RESPONSES);
-        },
+        // message types
+        MESSAGE_TYPES: JobConfig.message_types,
         RESPONSES,
         REQUESTS,
+        // standardised params
         PARAMS,
-        BE_PARAMS,
+        // channel types
         CHANNELS,
     };
 
@@ -172,18 +162,13 @@ define([
                 request_type: msgType,
             };
 
-            const translations = {
-                [PARAMS.BATCH_ID]: BE_PARAMS.BATCH_ID,
-                [PARAMS.JOB_ID]: BE_PARAMS.JOB_ID,
-                [PARAMS.JOB_ID_LIST]: BE_PARAMS.JOB_ID_LIST,
-            };
+            return Object.assign({}, transformedMsg, msgData);
 
-            for (const [key, value] of Object.entries(msgData)) {
-                const msgKey = translations[key] || key;
-                transformedMsg[msgKey] = value;
-            }
-
-            return transformedMsg;
+            // return {
+            //     target_name: COMM_NAME,
+            //     request_type: msgType,
+            //     ...msgData
+            // };
         }
 
         /**
@@ -297,13 +282,13 @@ define([
                     }
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData[BE_PARAMS.JOB_ID]
-                        ? [msgData[BE_PARAMS.JOB_ID]]
-                        : msgData[BE_PARAMS.JOB_ID_LIST];
+                    const jobIdList = msgData[PARAMS.JOB_ID]
+                        ? [msgData[PARAMS.JOB_ID]]
+                        : msgData[PARAMS.JOB_ID_LIST];
 
                     jobIdList.forEach((_jobId) => {
                         this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.ERROR, {
-                            jobId: _jobId,
+                            [PARAMS.JOB_ID]: _jobId,
                             error: msgData,
                             request: msgData.source,
                         });

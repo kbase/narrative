@@ -18,11 +18,9 @@ The narrative backend uses the JobComm module to send and receive messages from 
 The front- and backend have a shared vocabulary of message types and parameters, loaded from the file `kbase-extension/static/kbase/config/job_config.json`. In the frontend, the message param and type names are stored in the JobCommMessages object exported by `jobCommChannel.js`:
 
 ```js
-define(['common/jobCommChannel'], (JobComms) => {
+define(['common/jobCommMessages'], (jcm) => {
 
   // use the JobCommMessages object
-  const jcm = JobComms.JobCommMessages;
-
   console.log("job status message type: " + jcm.MESSAGE_TYPE.STATUS)
   console.log("job ID parameter: " + jcm.PARAM.JOB_ID)
 ```
@@ -90,10 +88,9 @@ define(
 Some more specific examples:
 ```Javascript
 define(
-  ['common/runtime', 'common/jobCommChannel'],
-  function(Runtime, JobComms) {
-    const runtime = Runtime.make(),
-      jcm = JobComms.JobCommMessages;
+  ['common/runtime', 'common/jobCommMessages'],
+  function(Runtime, jcm) {
+    const runtime = Runtime.make();
 
     // request the first 10 job log lines:
     runtime.bus().emit(jcm.MESSAGE_TYPE.LOGS, {
@@ -143,10 +140,9 @@ The `listen` function takes an object with three attributes as input - a channel
 
 ```Javascript
 define(
-  ['common/runtime', 'common/jobCommChannel'],
-  function(Runtime, JobComms) {
-    const runtime = Runtime.make(),
-      jcm = JobComms.JobCommMessages;
+  ['common/runtime', 'common/jobCommMessages'],
+  function(Runtime, jcm) {
+    const runtime = Runtime.make();
 
     const listener = runtime.bus().listen({
       channel: {
@@ -166,10 +162,9 @@ define(
 The `on` function requires a constructed channel bus, premade and reusable for a given channel. So you would make a channel bus that would always receive messages for that channel, and instruct it on what to do when a message of a given type arrives. That looks like this:
 ```Javascript
 define(
-  ['common/runtime', 'common/jobCommChannel'],
-  function(Runtime, JobComms) {
-    const runtime = Runtime.make(),
-      jcm = JobComms.JobCommMessages;
+  ['common/runtime', 'common/jobCommMessages'],
+  function(Runtime, jcm) {
+    const runtime = Runtime.make();
 
 const cellBus = runtime.bus().makeChannelBus({
       name: {

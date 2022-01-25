@@ -19,12 +19,12 @@ define([
     'common/ui',
     'common/fsm',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/html',
     'common/runClock',
     'common/errorDisplay',
     'util/developerMode',
-], (Promise, Runtime, Props, UI, Fsm, Jobs, JobComms, html, RunClock, ErrorDisplay, devMode) => {
+], (Promise, Runtime, Props, UI, Fsm, Jobs, jcm, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -38,8 +38,7 @@ define([
         logContentExpandedClass = `${logContentStandardClass}--expanded`,
         LOG_CONTAINER = 'log-container',
         LOG_PANEL = 'log-panel',
-        LOG_LINES = 'log-lines',
-        jcm = JobComms.JobCommMessages;
+        LOG_LINES = 'log-lines';
 
     let logContentClass = logContentStandardClass;
 

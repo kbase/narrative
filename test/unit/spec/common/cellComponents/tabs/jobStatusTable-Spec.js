@@ -4,7 +4,7 @@ define([
     'util/appCellUtil',
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/jobManager',
     'common/props',
     'common/runtime',
@@ -16,7 +16,7 @@ define([
     AppCellUtil,
     JobStatusTableModule,
     Jobs,
-    JobComms,
+    jcm,
     JobManagerModule,
     Props,
     Runtime,
@@ -26,9 +26,6 @@ define([
     'use strict';
     const { JobManager } = JobManagerModule,
         { cssBaseClass, JobStatusTable } = JobStatusTableModule;
-
-    const jcm = JobComms.JobCommMessages;
-
     const allJobsWithBatchParent = JobsData.allJobsWithBatchParent;
     const allJobsNoBatchParent = JobsData.allJobs;
     const batchId = JobsData.batchParentJob.job_id;

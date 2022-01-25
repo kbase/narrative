@@ -23,7 +23,7 @@ define(
         'common/spec',
         'common/semaphore',
         'common/jobs',
-        'common/jobCommChannel',
+        'common/jobCommMessages',
         'common/cellComponents/actionButtons',
         'narrativeConfig',
         'google-code-prettify/prettify',
@@ -61,7 +61,7 @@ define(
         Spec,
         Semaphore,
         Jobs,
-        JobComms,
+        jcm,
         ActionButtons,
         Config,
         PR,
@@ -81,8 +81,7 @@ define(
             span = t('span'),
             a = t('a'),
             p = t('p'),
-            cssCellType = 'kb-app-cell',
-            jcm = JobComms.JobCommMessages;
+            cssCellType = 'kb-app-cell';
 
         function factory(config) {
             const runtime = Runtime.make(),

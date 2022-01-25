@@ -1,19 +1,17 @@
 define([
     'common/jobManager',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/props',
     'common/runtime',
     'common/ui',
     'testUtil',
     '/test/data/jobsData',
-], (JobManagerModule, Jobs, JobComms, Props, Runtime, UI, TestUtil, JobsData) => {
+], (JobManagerModule, Jobs, jcm, Props, Runtime, UI, TestUtil, JobsData) => {
     'use strict';
 
     const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchInitMixin, JobManager } =
         JobManagerModule;
-
-    const jcm = JobComms.JobCommMessages;
 
     function createJobManagerInstance(context, jmClass = JobManager) {
         return new jmClass({

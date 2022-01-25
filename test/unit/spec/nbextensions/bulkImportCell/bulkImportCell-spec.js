@@ -4,7 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -19,7 +19,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
-    JobComms,
+    jcm,
     Runtime,
     Mocks,
     TestUtil,
@@ -30,7 +30,6 @@ define([
     SimpleAppSpec
 ) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],

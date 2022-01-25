@@ -10,15 +10,14 @@ define([
     'common/format',
     'common/html',
     'common/jobs',
-    'common/jobCommChannel',
-], (Promise, Runtime, UI, format, html, Jobs, JobComms) => {
+    'common/jobCommMessages',
+], (Promise, Runtime, UI, format, html, Jobs, jcm) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
         p = t('p'),
-        span = t('span'),
-        jcm = JobComms.JobCommMessages;
+        span = t('span');
 
     /**
      * Updates the view stats.

@@ -37,43 +37,14 @@ define([
     'base/js/namespace',
     'common/runtime',
     'common/jobs',
+    'common/jobCommMessages',
     'services/kernels/comm',
     'common/semaphore',
-    'json!kbase/config/job_config.json',
-], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, JupyterComm, Semaphore, JobConfig) => {
+], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, jcm, JupyterComm, Semaphore) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
-        // channel types
-        CELL = 'cell',
-        JOB = 'jobId',
-        CHANNEL = {
-            CELL,
-            JOB,
-        },
-        // param names
-        PARAM = JobConfig.params,
-        REQUESTS = {},
-        RESPONSES = {};
-
-    JobConfig.requests.forEach((req) => {
-        REQUESTS[req] = JobConfig.message_types[req];
-    });
-
-    JobConfig.responses.forEach((resp) => {
-        RESPONSES[resp] = JobConfig.message_types[resp];
-    });
-
-    const JobCommMessages = {
-        // message types
-        MESSAGE_TYPE: JobConfig.message_types,
-        RESPONSES,
-        REQUESTS,
-        // standardised params
-        PARAM,
-        // channel types
-        CHANNEL,
-    };
+        { CHANNEL, PARAM, REQUESTS, RESPONSES } = jcm;
 
     class JobCommChannel {
         /**
@@ -176,10 +147,10 @@ define([
          * will be sent.
          *
          * @param {string}  msgType - message type; will be one of the
-         *                  values in the REQUESTS object (optional)
+         *                  values in the jcm.REQUESTS object (optional)
          *
          * @param {object}  msgData - additional parameters for the request,
-         *                  such as one of the values in the PARAM object or
+         *                  such as one of the values in the jcm.PARAM object or
          *                  a request-specific param (optional)
          */
         sendCommMessage(msgType, msgData) {
@@ -228,7 +199,7 @@ define([
          *     }
          *   }
          * }
-         * where msg_type is one of the values of RESPONSES
+         * where msg_type is one of the values of jcm.RESPONSES
          *
          * @param {object} msg
          */
@@ -247,7 +218,7 @@ define([
                 case 'start':
                     break;
 
-                case 'new_job':
+                case RESPONSES.NEW:
                     Jupyter.narrative.saveNarrative();
                     break;
 
@@ -283,7 +254,7 @@ define([
                         : msgData[PARAM.JOB_ID_LIST];
 
                     jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.ERROR, {
+                        this.sendBusMessage(CHANNEL.JOB, _jobId, msgType, {
                             [PARAM.JOB_ID]: _jobId,
                             error: msgData,
                             request: msgData.source,
@@ -293,51 +264,20 @@ define([
 
                 // job information for one or more jobs
                 case RESPONSES.INFO:
-                    Object.keys(msgData).forEach((_jobId) => {
-                        const jobData = msgData[_jobId];
-                        if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.INFO, jobData);
-                        } else {
-                            this.reportCommMessageError({ msgType, msgData: jobData });
-                        }
-                    });
-                    break;
-
                 case RESPONSES.LOGS:
-                    Object.keys(msgData).forEach((_jobId) => {
-                        const jobData = msgData[_jobId];
-                        if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.LOGS, jobData);
-                        } else {
-                            this.reportCommMessageError({ msgType, msgData: jobData });
-                        }
-                    });
-                    break;
-
                 case RESPONSES.RETRY:
-                    Object.keys(msgData).forEach((_jobId) => {
-                        const jobData = msgData[_jobId];
-                        if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.RETRY, jobData);
-                        } else {
-                            this.reportCommMessageError({ msgType, msgData: jobData });
-                        }
-                    });
-                    break;
-
-                /*
-                 * The job status for one or more jobs.
-                 * The job_status_all message covers all active jobs.
-                 *
-                 * data structure: object with key jobId and value
-                 * { jobState: job.jobState, outputWidgetInfo: job.outputWidgetInfo }
-                 */
                 case RESPONSES.STATUS:
                 case RESPONSES.STATUS_ALL:
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.STATUS, jobData);
+                            this.sendBusMessage(
+                                CHANNEL.JOB,
+                                _jobId,
+                                // send out STATUS messages from a STATUS_ALL message
+                                msgType === RESPONSES.STATUS_ALL ? RESPONSES.STATUS : msgType,
+                                msgData[_jobId]
+                            );
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -463,5 +403,5 @@ define([
         }
     }
 
-    return { JobCommChannel, JobCommMessages };
+    return JobCommChannel;
 });

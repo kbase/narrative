@@ -8,7 +8,7 @@ define([
     'common/html',
     'common/jobManager',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -39,7 +39,7 @@ define([
     html,
     JobManagerModule,
     Jobs,
-    JobComms,
+    jcm,
     Props,
     Runtime,
     Spec,
@@ -62,9 +62,7 @@ define([
     DevMode
 ) => {
     'use strict';
-    const { JobManager } = JobManagerModule,
-        jcm = JobComms.JobCommMessages;
-
+    const { JobManager } = JobManagerModule;
     const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';

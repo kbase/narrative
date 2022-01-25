@@ -14,7 +14,7 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/runtime',
     'common/semaphore',
     'common/cellUtils',
@@ -39,7 +39,7 @@ define([
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
-    JobComms,
+    jcm,
     Runtime,
     Semaphore,
     utils,
@@ -51,8 +51,7 @@ define([
 ) => {
     'use strict';
 
-    const { JobLogViewer } = JobLogViewerModule,
-        jcm = JobComms.JobCommMessages;
+    const { JobLogViewer } = JobLogViewerModule;
 
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',

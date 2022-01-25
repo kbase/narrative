@@ -1,19 +1,17 @@
 define([
     'common/jobCommChannel',
+    'common/jobCommMessages',
     'base/js/namespace',
     'common/runtime',
     '/test/data/jobsData',
     'testUtil',
     'narrativeMocks',
     'json!/src/biokbase/narrative/tests/data/response_data.json',
-], (JobComms, Jupyter, Runtime, JobsData, TestUtil, Mocks, ResponseData) => {
+], (JobCommChannel, jcm, Jupyter, Runtime, JobsData, TestUtil, Mocks, ResponseData) => {
     'use strict';
 
     // allow spies to be overwritten
     jasmine.getEnv().allowRespy(true);
-
-    const JobCommChannel = JobComms.JobCommChannel,
-        jcm = JobComms.JobCommMessages;
 
     const TEST_JOB_ID = 'someJob',
         TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'],

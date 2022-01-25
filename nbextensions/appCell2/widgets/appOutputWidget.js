@@ -3,9 +3,9 @@ define([
     'common/events',
     'common/ui',
     'common/html',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'base/js/namespace',
-], (Runtime, Events, UI, html, JobComms, Jupyter) => {
+], (Runtime, Events, UI, html, jcm, Jupyter) => {
     'use strict';
 
     const t = html.tag,
@@ -17,8 +17,7 @@ define([
         td = t('td'),
         p = t('p'),
         ul = t('ul'),
-        li = t('li'),
-        jcm = JobComms.JobCommMessages;
+        li = t('li');
 
     function factory(config) {
         const runtime = Runtime.make(),

@@ -47,7 +47,7 @@ define([
     Promise,
     Handlebars,
     Config,
-    JobComms,
+    JobCommChannel,
     KBaseNarrativeSidePanel,
     KBaseNarrativeOutputCell,
     KBaseNarrativeWorkspace,
@@ -835,7 +835,7 @@ define([
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
             this.loadingWidget.updateProgress('kernel', true);
-            this.jobCommChannel = new JobComms.JobCommChannel();
+            this.jobCommChannel = new JobCommChannel();
             this.jobCommChannel
                 .initCommChannel()
                 .then(() => {

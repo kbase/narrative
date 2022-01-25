@@ -4,14 +4,13 @@ define([
     'common/ui',
     'common/html',
     './jobStateListRow',
-    'common/jobCommChannel',
-], (Promise, Runtime, UI, html, JobStateListRow, JobComms) => {
+    'common/jobCommMessages',
+], (Promise, Runtime, UI, html, JobStateListRow, jcm) => {
     'use strict';
 
     const t = html.tag,
         table = t('table'),
-        tbody = t('tbody'),
-        jcm = JobComms.JobCommMessages;
+        tbody = t('tbody');
 
     function renderTable() {
         return table({ class: 'table' }, [tbody()]);

@@ -1,13 +1,11 @@
 define([
     'underscore',
     'common/dialogMessages',
+    'common/jobCommMessages',
     'common/jobs',
-    'common/jobCommChannel',
     'util/util',
-], (_, DialogMessages, Jobs, JobComms, Utils) => {
+], (_, DialogMessages, jcm, Jobs, Utils) => {
     'use strict';
-
-    const jcm = JobComms.JobCommMessages;
 
     const validOutgoingMessageTypes = Object.values(jcm.RESPONSES);
 

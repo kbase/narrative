@@ -3,13 +3,13 @@ define([
     'bluebird',
     'common/html',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     './jobActionDropdown',
     'util/jobLogViewer',
     'util/appCellUtil',
     'util/string',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, JobComms, JobActionDropdown, JobLogViewerModule, Util, String) => {
+], ($, Promise, html, Jobs, jcm, JobActionDropdown, JobLogViewerModule, Util, String) => {
     'use strict';
 
     const { JobLogViewer } = JobLogViewerModule;
@@ -25,8 +25,7 @@ define([
         button = t('button'),
         span = t('span'),
         dataTablePageLength = 50,
-        cssBaseClass = 'kb-job-status',
-        jcm = JobComms.JobCommMessages;
+        cssBaseClass = 'kb-job-status';
 
     function createTable() {
         return table(

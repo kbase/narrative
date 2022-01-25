@@ -4,14 +4,13 @@ define([
     'util/jobLogViewer',
     'common/runtime',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     '/test/data/jobsData',
     'testUtil',
-], ($, Promise, JobLogViewerModule, Runtime, Jobs, JobComms, JobsData, TestUtil) => {
+], ($, Promise, JobLogViewerModule, Runtime, Jobs, jcm, JobsData, TestUtil) => {
     'use strict';
 
-    const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule,
-        jcm = JobComms.JobCommMessages;
+    const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule;
 
     const jobsByStatus = JobsData.jobsByStatus;
 

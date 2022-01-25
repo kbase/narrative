@@ -3,10 +3,9 @@ define([
     'common/jupyter',
     'common/cellUtils',
     'common/runtime',
-    'common/jobCommChannel',
-], (require, jupyter, utils, Runtime, JobComms) => {
+    'common/jobCommMessages',
+], (require, jupyter, utils, Runtime, jcm) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
     /*
      id: '{{input_id}}',
                     data: {{input_data}},

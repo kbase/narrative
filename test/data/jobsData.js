@@ -543,6 +543,15 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     ];
 
     const runStatusCore = { event_at: SOME_VALUE, cell_id: SOME_VALUE, run_id: SOME_VALUE };
+    const extraKeys = {
+        error: ['code', 'message', 'source', 'stacktrace', 'type'].map((key) => {
+            return `error_${key}`;
+        }),
+        launched_job: ['cell_id', 'run_id', 'job_id'],
+        launched_job_batch: ['cell_id', 'run_id', 'batch_id', 'child_job_ids'],
+        success: ['cell_id', 'run_id'],
+    };
+
     const runStatusMessages = {
         success: { ...runStatusCore, event: 'success' },
         launched_job: {
@@ -559,11 +568,11 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         error: {
             ...runStatusCore,
             event: 'error',
-            error_message: SOME_VALUE,
-            error_type: SOME_VALUE,
             error_code: SOME_VALUE,
+            error_message: SOME_VALUE,
             error_source: SOME_VALUE,
             error_stacktrace: SOME_VALUE,
+            error_type: SOME_VALUE,
         },
     };
     const validRunStatus = Object.values(runStatusMessages);
@@ -576,18 +585,9 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         { event: 'launch_job', ...runStatusCore, job_id: SOME_VALUE },
     ];
 
-    const keysToRemove = {
-        error: ['message', 'type', 'stacktrace', 'code', 'source'].map((key) => {
-            return `error_${key}`;
-        }),
-        launched_job: ['cell_id', 'run_id', 'job_id'],
-        launched_job_batch: ['cell_id', 'run_id', 'batch_id', 'child_job_ids'],
-        success: ['cell_id', 'run_id'],
-    };
-
     // add invalid run status messages with one key missing
-    for (const eventType in keysToRemove) {
-        for (const key of keysToRemove[eventType]) {
+    for (const eventType in extraKeys) {
+        for (const key of extraKeys[eventType]) {
             const dupe = TestUtil.JSONcopy(runStatusMessages[eventType]);
             delete dupe[key];
             invalidRunStatus.push(dupe);
@@ -666,7 +666,8 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
      */
 
     function createBatchJob() {
-        const BATCH_ID = 'job-created';
+        const BATCH_ID = 'batch-parent', // the ID that the batch parent will have
+            batchParentId = 'job-created'; // the job to use as the batch parent
         const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));
         const jobIdIndex = {};
         let thisJob, parentJob;
@@ -677,12 +678,17 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         });
 
         // batch parent
-        jobIdIndex[BATCH_ID].batch_job = true;
-        jobIdIndex[BATCH_ID].child_jobs = Object.keys(jobIdIndex).filter(
-            (job_id) => job_id !== BATCH_ID
+        const batchParent = jobIdIndex[batchParentId];
+        batchParent.job_id = BATCH_ID;
+        batchParent.batch_job = true;
+        batchParent.child_jobs = Object.keys(jobIdIndex).filter(
+            (job_id) => job_id !== batchParentId
         );
-        jobIdIndex[BATCH_ID].meta.canRetry = false;
-        delete jobIdIndex[BATCH_ID].meta.retryTarget;
+        batchParent.meta.canRetry = false;
+        delete batchParent.meta.retryTarget;
+        // add the batchParent under the index BATCH_ID and delete the old key
+        jobIdIndex[BATCH_ID] = batchParent;
+        delete jobIdIndex[batchParentId];
 
         // no retries of 'job-in-the-queue'
         parentJob = 'job-in-the-queue';
@@ -722,6 +728,136 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 10);
 
+        const originalJobs = [
+                'job-in-the-queue',
+                'job-cancelled-whilst-in-the-queue',
+                'job-cancelled-during-run',
+                'job-died-whilst-queueing',
+            ].reduce((acc, jobId) => {
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {}),
+            currentJobs = [
+                'job-in-the-queue',
+                'job-running',
+                'job-finished-with-success',
+                'job-estimating',
+            ].reduce((acc, jobId) => {
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {});
+
+        function generateStatusMessage(childJobIds) {
+            const jobStates = {
+                [BATCH_ID]: {
+                    [jcm.PARAM.JOB_ID]: BATCH_ID,
+                    jobState: TestUtil.JSONcopy(batchParent),
+                },
+            };
+            // replace the existing child_jobs with the current array
+            jobStates[BATCH_ID].jobState.child_jobs = TestUtil.JSONcopy(childJobIds);
+            // add job states for the child jobs
+            childJobIds.forEach((jobId) => {
+                jobStates[jobId] = {
+                    [jcm.PARAM.JOB_ID]: jobId,
+                    jobState: jobIdIndex[jobId],
+                };
+            });
+            return {
+                type: jcm.MESSAGE_TYPE.STATUS,
+                msg: jobStates,
+                allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+            };
+        }
+
+        function generateRetryMessage(retryList, childJobIds) {
+            const msg = {};
+            retryList.forEach((item) => {
+                const { retry, retryParent } = item;
+                childJobIds.push(retry);
+                msg[retryParent] = {
+                    [jcm.PARAM.JOB_ID]: retryParent,
+                    job: {
+                        [jcm.PARAM.JOB_ID]: retryParent,
+                        jobState: jobIdIndex[retryParent],
+                    },
+                    retry: {
+                        [jcm.PARAM.JOB_ID]: retry,
+                        jobState: jobIdIndex[retry],
+                    },
+                };
+            });
+            return {
+                type: jcm.MESSAGE_TYPE.RETRY,
+                msg,
+                allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+            };
+        }
+
+        function generateUpdateSeries() {
+            // this maintains an array containing all the child IDs
+            const childJobIds = Object.keys(originalJobs);
+
+            // create a series of job messages that mimic running a batch job and
+            // retrying some of the jobs in the batch
+            const jobUpdateSeries = [
+                // start with run status for the original jobs
+                {
+                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
+                    msg: {
+                        ...runStatusCore,
+                        event: 'launched_job_batch',
+                        batch_id: BATCH_ID,
+                        child_job_ids: TestUtil.JSONcopy(childJobIds),
+                    },
+                    allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+                },
+            ];
+
+            // status update for the current jobs
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // retry of 'job-cancelled-whilst-in-the-queue'
+            let retry = 'job-running',
+                retryParent = 'job-cancelled-whilst-in-the-queue';
+            jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // retry 1 of 'job-died-whilst-queueing'
+            retry = 'job-died-with-error';
+            retryParent = 'job-died-whilst-queueing';
+            jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // two retries at once
+            // retry of 'job-cancelled-during-run'
+            // retry 2 of 'job-died-whilst-queueing'
+            jobUpdateSeries.push(
+                generateRetryMessage(
+                    [
+                        {
+                            retry: 'job-finished-with-success',
+                            retryParent: 'job-cancelled-during-run',
+                        },
+                        { retry: 'job-estimating', retryParent: 'job-died-whilst-queueing' },
+                    ],
+                    childJobIds
+                )
+            );
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            return jobUpdateSeries;
+        }
+
         return {
             jobArray: Object.values(jobIdIndex),
             jobsById: jobIdIndex,
@@ -730,24 +866,9 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
                 'job-cancelled-during-run',
                 'job-died-whilst-queueing',
             ],
-            originalJobs: [
-                'job-in-the-queue',
-                'job-cancelled-whilst-in-the-queue',
-                'job-cancelled-during-run',
-                'job-died-whilst-queueing',
-            ].reduce((acc, jobId) => {
-                acc[jobId] = jobIdIndex[jobId];
-                return acc;
-            }, {}),
-            currentJobs: [
-                'job-in-the-queue',
-                'job-running',
-                'job-finished-with-success',
-                'job-estimating',
-            ].reduce((acc, jobId) => {
-                acc[jobId] = jobIdIndex[jobId];
-                return acc;
-            }, {}),
+            originalJobs,
+            currentJobs,
+            jobUpdateSeries: generateUpdateSeries(),
             batchId: BATCH_ID,
             expectedButtonState: [
                 ['.dropdown [data-action="cancel"]', false],

@@ -1,12 +1,11 @@
-define(['bluebird', 'jquery', 'base/js/namespace', 'common/runtime', 'common/jobCommChannel'], (
+define(['bluebird', 'jquery', 'base/js/namespace', 'common/runtime', 'common/jobCommMessages'], (
     Promise,
     $,
     Jupyter,
     Runtime,
-    JobComms
+    jcm
 ) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
 
     function factory(config) {
         const cellId = config.cellId,

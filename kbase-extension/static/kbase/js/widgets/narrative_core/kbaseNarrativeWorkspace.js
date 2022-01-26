@@ -19,7 +19,7 @@ define([
     'util/bootstrapDialog',
     'handlebars',
     'common/props',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'text!kbase/templates/report_error_button.html',
     'bootstrap',
 ], (
@@ -33,11 +33,10 @@ define([
     BootstrapDialog,
     Handlebars,
     Props,
-    JobComms,
+    jcm,
     ReportErrorBtnTmpl
 ) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
 
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',

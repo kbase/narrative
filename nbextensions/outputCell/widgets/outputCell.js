@@ -5,14 +5,13 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter',
-    'common/jobCommChannel',
-], (Runtime, BusEventManager, Props, UI, html, JupyterInterop, JobComms) => {
+    'common/jobCommMessages',
+], (Runtime, BusEventManager, Props, UI, html, JupyterInterop, jcm) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        p = t('p'),
-        jcm = JobComms.JobCommMessages;
+        p = t('p');
 
     function factory(config) {
         const cell = config.cell,

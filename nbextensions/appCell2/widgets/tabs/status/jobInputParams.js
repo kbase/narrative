@@ -4,16 +4,15 @@ define([
     'common/ui',
     'common/format',
     'kb_common/html',
-    'common/jobCommChannel',
-], (Promise, Runtime, UI, format, html, JobComms) => {
+    'common/jobCommMessages',
+], (Promise, Runtime, UI, format, html, jcm) => {
     'use strict';
 
     const t = html.tag,
         table = t('table'),
         tr = t('tr'),
         td = t('td'),
-        th = t('th'),
-        jcm = JobComms.JobCommMessages;
+        th = t('th');
 
     function renderTable() {
         return table({ class: 'table' }, [tr([th('Input'), th('Value')])]);

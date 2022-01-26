@@ -2,12 +2,11 @@ define([
     'common/jobs',
     '/test/data/jobsData',
     'common/props',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'testUtil',
     'json!/src/biokbase/narrative/tests/data/response_data.json',
-], (Jobs, JobsData, Props, JobComms, TestUtil, ResponseData) => {
+], (Jobs, JobsData, Props, jcm, TestUtil, ResponseData) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
 
     function arrayToHTML(array) {
         return array.map((item) => `<div>${item}</div>`).join('\n');

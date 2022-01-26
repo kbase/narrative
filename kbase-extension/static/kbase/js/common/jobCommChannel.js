@@ -64,8 +64,12 @@ define([
                       /* no op */
                   };
 
-            this.messageQueue = [];
             this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
+
+            this.messageQueue = [];
+
+            // maintain a mapping of job IDs and dispatch information
+            this._jobMapping = {};
         }
 
         /**
@@ -179,6 +183,41 @@ define([
         }
 
         /**
+         * Extract the job ID <-> batch ID relationship from a job state object,
+         * and store it in the _jobMapping table in the format
+         *
+         * _jobMapping: {
+         *      [job_id]: { [jcm.PARAM.BATCH_ID]: batch_id }
+         * }
+         *
+         * If a batch ID does not exist, a job ID mapping is made instead:
+         *
+         * _jobMapping: {
+         *      [job_id]: { [jcm.PARAM.JOB_ID: job_id }
+         * }
+         *
+         * @param {object} jobStateObj
+         */
+        _extractMapping(jobStateObj) {
+            if (!jobStateObj.jobState) {
+                if (jobStateObj[jcm.PARAM.JOB_ID]) {
+                    this._jobMapping[jobStateObj[jcm.PARAM.JOB_ID]] = {
+                        [jcm.PARAM.JOB_ID]: jobStateObj[jcm.PARAM.JOB_ID],
+                    };
+                }
+                return;
+            }
+            const jobId = jobStateObj.jobState.job_id;
+            if (jobStateObj.jobState.batch_id) {
+                this._jobMapping[jobId] = {
+                    [jcm.PARAM.BATCH_ID]: jobStateObj.jobState.batch_id,
+                };
+            } else {
+                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+            }
+        }
+
+        /**
          * Callback attached to the comm channel. This gets called with the message when
          * a message is passed.
          * The message is expected to have the following structure (at a minimum):
@@ -221,6 +260,16 @@ define([
 
                 // CELL messages
                 case RESPONSES.RUN_STATUS:
+                    if (msgData.event === 'launched_job_batch') {
+                        const batchId = msgData.batch_id;
+                        msgData.child_job_ids.forEach((jobId) => {
+                            this._jobMapping[jobId] = { [jcm.PARAM.BATCH_ID]: batchId };
+                        });
+                        this._jobMapping[batchId] = { [jcm.PARAM.BATCH_ID]: batchId };
+                    } else if (msgData.event === 'launched_job') {
+                        this._jobMapping[msgData.job_id] = { [jcm.PARAM.JOB_ID]: msgData.job_id };
+                    }
+
                     this.sendBusMessage(
                         CHANNEL.CELL,
                         msgData.cell_id,
@@ -250,9 +299,9 @@ define([
                         ? [msgData[PARAM.JOB_ID]]
                         : msgData[PARAM.JOB_ID_LIST];
 
-                    jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(CHANNEL.JOB, _jobId, msgType, {
-                            [PARAM.JOB_ID]: _jobId,
+                    jobIdList.forEach((jobId) => {
+                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
+                            [PARAM.JOB_ID]: jobId,
                             error: msgData,
                             request: msgData.source,
                         });
@@ -261,17 +310,56 @@ define([
 
                 // job information for one or more jobs
                 case RESPONSES.INFO:
+                    Object.keys(msgData).forEach((jobId) => {
+                        // get the job mapping if it doesn't exist
+                        if (!this._jobMapping[jobId]) {
+                            if (msgData[jobId].batch_id) {
+                                this._jobMapping[jobId] = {
+                                    [jcm.PARAM.BATCH_ID]: msgData[jobId].batch_id,
+                                };
+                            } else {
+                                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+                            }
+                        }
+                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
+                    });
+                    break;
+
                 case RESPONSES.LOGS:
+                    Object.keys(msgData).forEach((jobId) => {
+                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
+                    });
+                    break;
+
                 case RESPONSES.RETRY:
+                    Object.keys(msgData).forEach((jobId) => {
+                        const jobData = msgData[jobId];
+                        if (jobData.retry) {
+                            this._extractMapping(jobData.retry);
+                        }
+                        if (!this._jobMapping[jobId]) {
+                            if (jobData.job) {
+                                this._extractMapping(jobData.job);
+                            } else {
+                                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+                            }
+                        }
+                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
+                    });
+                    break;
+
                 case RESPONSES.STATUS:
                 case RESPONSES.STATUS_ALL:
-                    Object.keys(msgData).forEach((_jobId) => {
+                    Object.keys(msgData).forEach((jobId) => {
+                        if (!this._jobMapping[jobId]) {
+                            this._extractMapping(msgData[jobId]);
+                        }
                         this.sendBusMessage(
                             CHANNEL.JOB,
-                            _jobId,
+                            jobId,
                             // send out STATUS messages from a STATUS_ALL message
-                            msgType === RESPONSES.STATUS_ALL ? RESPONSES.STATUS : msgType,
-                            msgData[_jobId]
+                            RESPONSES.STATUS,
+                            msgData[jobId]
                         );
                     });
                     break;

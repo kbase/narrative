@@ -250,6 +250,15 @@ define([
                     });
                 });
 
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: (message) => {
+                        return bus.request(message, { key: { type: 'get-parameters' } });
+                    },
+                });
+
                 return {
                     id: id,
                     fieldName: fieldSpec.id,

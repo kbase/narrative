@@ -49,7 +49,7 @@ define([
                         },
                         {
                             channel: {
-                                [jcm.CHANNELS.CELL]: parentCellId,
+                                [jcm.CHANNEL.CELL]: parentCellId,
                             },
                             key: {
                                 type: 'output-cell-removed',

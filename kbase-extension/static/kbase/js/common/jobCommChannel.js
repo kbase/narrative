@@ -47,12 +47,12 @@ define([
         // channel types
         CELL = 'cell',
         JOB = 'jobId',
-        CHANNELS = {
+        CHANNEL = {
             CELL,
             JOB,
         },
         // param names
-        PARAMS = JobConfig.params,
+        PARAM = JobConfig.params,
         REQUESTS = {},
         RESPONSES = {};
 
@@ -66,13 +66,13 @@ define([
 
     const JobCommMessages = {
         // message types
-        MESSAGE_TYPES: JobConfig.message_types,
+        MESSAGE_TYPE: JobConfig.message_types,
         RESPONSES,
         REQUESTS,
         // standardised params
-        PARAMS,
+        PARAM,
         // channel types
-        CHANNELS,
+        CHANNEL,
     };
 
     class JobCommChannel {
@@ -179,7 +179,7 @@ define([
          *                  values in the REQUESTS object (optional)
          *
          * @param {object}  msgData - additional parameters for the request,
-         *                  such as one of the values in the PARAMS object or
+         *                  such as one of the values in the PARAM object or
          *                  a request-specific param (optional)
          */
         sendCommMessage(msgType, msgData) {
@@ -254,7 +254,7 @@ define([
                 // CELL messages
                 case RESPONSES.RUN_STATUS:
                     this.sendBusMessage(
-                        CHANNELS.CELL,
+                        CHANNEL.CELL,
                         msgData.cell_id,
                         RESPONSES.RUN_STATUS,
                         msgData
@@ -278,13 +278,13 @@ define([
                     }
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData[PARAMS.JOB_ID]
-                        ? [msgData[PARAMS.JOB_ID]]
-                        : msgData[PARAMS.JOB_ID_LIST];
+                    const jobIdList = msgData[PARAM.JOB_ID]
+                        ? [msgData[PARAM.JOB_ID]]
+                        : msgData[PARAM.JOB_ID_LIST];
 
                     jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.ERROR, {
-                            [PARAMS.JOB_ID]: _jobId,
+                        this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.ERROR, {
+                            [PARAM.JOB_ID]: _jobId,
                             error: msgData,
                             request: msgData.source,
                         });
@@ -296,7 +296,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.INFO, jobData);
+                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.INFO, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -307,7 +307,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.LOGS, jobData);
+                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.LOGS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -318,7 +318,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.RETRY, jobData);
+                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.RETRY, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }
@@ -337,7 +337,7 @@ define([
                     Object.keys(msgData).forEach((_jobId) => {
                         const jobData = msgData[_jobId];
                         if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(CHANNELS.JOB, _jobId, RESPONSES.STATUS, jobData);
+                            this.sendBusMessage(CHANNEL.JOB, _jobId, RESPONSES.STATUS, jobData);
                         } else {
                             this.reportCommMessageError({ msgType, msgData: jobData });
                         }

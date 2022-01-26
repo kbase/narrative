@@ -69,10 +69,10 @@ define([
             // listen for job-related bus messages
             parentListener = runtime.bus().listen({
                 channel: {
-                    [jcm.CHANNELS.JOB]: parentJobId,
+                    [jcm.CHANNEL.JOB]: parentJobId,
                 },
                 key: {
-                    type: jcm.RESPONSES.STATUS,
+                    type: jcm.MESSAGE_TYPE.STATUS,
                 },
                 handle: handleJobStatusUpdate,
             });

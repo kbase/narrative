@@ -144,10 +144,10 @@ define([
                     // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
-                            [jcm.CHANNELS.JOB]: this.jobId,
+                            [jcm.CHANNEL.JOB]: this.jobId,
                         },
                         key: {
-                            type: jcm.RESPONSES.INFO,
+                            type: jcm.MESSAGE_TYPE.INFO,
                         },
                         handle: function (message) {
                             this.handleJobInfo(message);
@@ -157,22 +157,22 @@ define([
                     // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
-                            [jcm.CHANNELS.JOB]: this.jobId,
+                            [jcm.CHANNEL.JOB]: this.jobId,
                         },
                         key: {
-                            type: jcm.RESPONSES.STATUS,
+                            type: jcm.MESSAGE_TYPE.STATUS,
                         },
                         handle: function (message) {
                             this.handleJobStatus(message);
                         }.bind(this),
                     });
 
-                    this.channel.emit(jcm.REQUESTS.INFO, {
-                        [jcm.PARAMS.JOB_ID]: this.jobId,
+                    this.channel.emit(jcm.MESSAGE_TYPE.INFO, {
+                        [jcm.PARAM.JOB_ID]: this.jobId,
                     });
 
-                    this.channel.emit(jcm.REQUESTS.STATUS, {
-                        [jcm.PARAMS.JOB_ID]: this.jobId,
+                    this.channel.emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: this.jobId,
                     });
                 })
                 .catch((err) => {
@@ -498,8 +498,8 @@ define([
                 case 'completed':
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
-                        this.channel.emit(jcm.REQUESTS.STOP_UPDATE, {
-                            [jcm.PARAMS.JOB_ID]: this.jobId,
+                        this.channel.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                            [jcm.PARAM.JOB_ID]: this.jobId,
                         });
                     }
                     // TODO: we need to remove all of the job listeners at this point, but
@@ -522,15 +522,15 @@ define([
         },
 
         requestJobInfo: function () {
-            this.channel.emit(jcm.REQUESTS.INFO, {
-                [jcm.PARAMS.JOB_ID]: this.jobId,
+            this.channel.emit(jcm.MESSAGE_TYPE.INFO, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
             });
         },
 
         requestJobStatus: function () {
             window.setTimeout(() => {
-                this.channel.emit(jcm.REQUESTS.STATUS, {
-                    [jcm.PARAMS.JOB_ID]: this.jobId,
+                this.channel.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: this.jobId,
                 });
             }, this.statusRequestInterval);
         },

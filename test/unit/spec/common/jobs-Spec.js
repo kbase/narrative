@@ -102,10 +102,10 @@ define([
             });
         });
         const mapping = {
-            [jcm.RESPONSES.STATUS]: 'isValidBackendJobStateObject',
-            [jcm.RESPONSES.INFO]: 'isValidJobInfoObject',
-            [jcm.RESPONSES.LOGS]: 'isValidJobLogsObject',
-            [jcm.RESPONSES.RETRY]: 'isValidJobRetryObject',
+            [jcm.MESSAGE_TYPE.STATUS]: 'isValidBackendJobStateObject',
+            [jcm.MESSAGE_TYPE.INFO]: 'isValidJobInfoObject',
+            [jcm.MESSAGE_TYPE.LOGS]: 'isValidJobLogsObject',
+            [jcm.MESSAGE_TYPE.RETRY]: 'isValidJobRetryObject',
         };
 
         Object.keys(ResponseData).forEach((respType) => {

@@ -104,7 +104,7 @@ define([
                         },
                         {
                             channel: {
-                                [jcm.CHANNELS.CELL]: cellId,
+                                [jcm.CHANNEL.CELL]: cellId,
                             },
                             key: {
                                 type: 'output-cell-removed',

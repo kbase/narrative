@@ -1,4 +1,4 @@
-define(['common/format', 'testUtil'], (format, TestUtil) => {
+define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, TestUtil) => {
     'use strict';
     const t = {
         created: 1610065000000,
@@ -7,7 +7,8 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         finished: 1610065800000,
     };
 
-    const TEST_JOB_ID = 'someJob';
+    const TEST_JOB_ID = 'someJob',
+        SOME_VALUE = 'some unimportant value';
 
     const jobStrings = {
         unknown: 'Awaiting job data...',
@@ -541,6 +542,58 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         { job: { jobState: validJobStates[7] } },
     ];
 
+    const runStatusCore = { event_at: SOME_VALUE, cell_id: SOME_VALUE, run_id: SOME_VALUE };
+    const runStatusMessages = {
+        success: { ...runStatusCore, event: 'success' },
+        launched_job: {
+            ...runStatusCore,
+            event: 'launched_job',
+            job_id: SOME_VALUE,
+        },
+        launched_job_batch: {
+            ...runStatusCore,
+            event: 'launched_job_batch',
+            batch_id: SOME_VALUE,
+            child_job_ids: [SOME_VALUE],
+        },
+        error: {
+            ...runStatusCore,
+            event: 'error',
+            error_message: SOME_VALUE,
+            error_type: SOME_VALUE,
+            error_code: SOME_VALUE,
+            error_source: SOME_VALUE,
+            error_stacktrace: SOME_VALUE,
+        },
+    };
+    const validRunStatus = Object.values(runStatusMessages);
+    const invalidRunStatus = [
+        ...invalidTypes,
+        // no event
+        { job_id: TEST_JOB_ID },
+        // invalid event
+        { event: '', event_at: 'string' },
+        { event: 'launch_job', ...runStatusCore, job_id: SOME_VALUE },
+    ];
+
+    const keysToRemove = {
+        error: ['message', 'type', 'stacktrace', 'code', 'source'].map((key) => {
+            return `error_${key}`;
+        }),
+        launched_job: ['cell_id', 'run_id', 'job_id'],
+        launched_job_batch: ['cell_id', 'run_id', 'batch_id', 'child_job_ids'],
+        success: ['cell_id', 'run_id'],
+    };
+
+    // add invalid run status messages with one key missing
+    for (const eventType in keysToRemove) {
+        for (const key of keysToRemove[eventType]) {
+            const dupe = TestUtil.JSONcopy(runStatusMessages[eventType]);
+            delete dupe[key];
+            invalidRunStatus.push(dupe);
+        }
+    }
+
     const jobsByStatus = allJobs.reduce((acc, curr) => {
         if (!acc[curr.status]) {
             acc[curr.status] = [];
@@ -703,6 +756,39 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         };
     }
 
+    const example = {
+        BackendJobState: {
+            valid: validBackendJobStates,
+            invalid: invalidBackendJobStates,
+        },
+        Info: {
+            valid: validInfo,
+            invalid: invalidInfo,
+        },
+        JobState: {
+            valid: validJobStates,
+            invalid: invalidJobStates,
+        },
+        Logs: {
+            valid: validLogs,
+            invalid: invalidLogs,
+        },
+        Retry: {
+            valid: validRetry,
+            invalid: invalidRetry,
+        },
+        RunStatus: {
+            valid: validRunStatus,
+            invalid: invalidRunStatus,
+        },
+    };
+
+    example.STATUS = example.BackendJobState;
+    example.INFO = example.Info;
+    example.RETRY = example.Retry;
+    example.LOGS = example.Logs;
+    example.RUN_STATUS = example.RunStatus;
+
     return {
         validJobs,
         unknownJob,
@@ -713,28 +799,7 @@ define(['common/format', 'testUtil'], (format, TestUtil) => {
         jobsByStatus,
         jobsById,
         jobStrings,
-        example: {
-            BackendJobState: {
-                valid: validBackendJobStates,
-                invalid: invalidBackendJobStates,
-            },
-            Info: {
-                valid: validInfo,
-                invalid: invalidInfo,
-            },
-            JobState: {
-                valid: validJobStates,
-                invalid: invalidJobStates,
-            },
-            Logs: {
-                valid: validLogs,
-                invalid: invalidLogs,
-            },
-            Retry: {
-                valid: validRetry,
-                invalid: invalidRetry,
-            },
-        },
+        example,
         validJobStates,
         invalidJobStates,
         validInfo,

@@ -1,10 +1,11 @@
-define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'util/util'], (
-    ErrorDisplay,
-    Format,
-    html,
-    UI,
-    Utils
-) => {
+define([
+    'common/errorDisplay',
+    'common/format',
+    'common/html',
+    'common/jobCommMessages',
+    'common/ui',
+    'util/util',
+], (ErrorDisplay, Format, html, jcm, UI, Utils) => {
     'use strict';
 
     const t = html.tag,
@@ -105,6 +106,92 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
     }
 
     /**
+     *
+     * @param {object} args with keys
+     *  message - the message for validation
+     *  type    - the message type (one of jcm.MESSAGE_TYPEs)
+     *
+     * @returns {object} with keys 'valid' and 'invalid' containing valid/invalid data
+     *                  if the whole message is invalid, there will be no 'valid' key,
+     *                  and vice versa for a valid message
+     */
+    function validateMessage(args) {
+        const { message, type } = args;
+
+        const validationFn = {
+            [jcm.RESPONSES.INFO]: isValidJobInfoObject,
+            [jcm.RESPONSES.LOGS]: isValidJobLogsObject,
+            [jcm.RESPONSES.STATUS]: isValidBackendJobStateObject,
+            [jcm.RESPONSES.STATUS_ALL]: isValidBackendJobStateObject,
+            [jcm.RESPONSES.RETRY]: isValidJobRetryObject,
+            [jcm.RESPONSES.RUN_STATUS]: isValidRunStatusObject,
+        };
+
+        // if the message type is invalid, return
+        if (!Object.values(jcm.RESPONSES).includes(type)) {
+            return { invalid: message };
+        }
+
+        // if there's no validator, return
+        if (!validationFn[type]) {
+            return { valid: message };
+        }
+
+        const msgDataType = Utils.objectToString(message);
+        // message data should be an object
+        if (msgDataType !== 'Object') {
+            return { invalid: message };
+        }
+
+        // run status messages can be validated as-is
+        if (type === jcm.RESPONSES.RUN_STATUS) {
+            return isValidRunStatusObject(message) ? { valid: message } : { invalid: message };
+        }
+
+        // other message types are composed of an object with job IDs as keys
+        // and data objects as values
+        const response = { valid: {}, invalid: {} };
+        for (const key in message) {
+            const status = validationFn[type](message[key]) ? 'valid' : 'invalid';
+            response[status][key] = message[key];
+        }
+        Object.keys(response).forEach((key) => {
+            if (!Object.keys(response[key]).length) {
+                delete response[key];
+            }
+        });
+        return response;
+    }
+
+    /**
+     * Validate the format of run status messages from the kernel
+     *
+     * @param {object} runStatus - message from the kernel
+     * @returns {boolean} true|false
+     */
+    function isValidRunStatusObject(runStatus) {
+        const required = ['event', 'event_at'],
+            eventTypeFields = {
+                error: ['message', 'type', 'stacktrace', 'code', 'source'].map((key) => {
+                    return `error_${key}`;
+                }),
+                launched_job: ['cell_id', 'run_id', 'job_id'],
+                launched_job_batch: ['cell_id', 'run_id', 'batch_id', 'child_job_ids'],
+                success: ['cell_id', 'run_id'],
+            };
+
+        return !!(
+            runStatus !== null &&
+            Utils.objectToString(runStatus) === 'Object' &&
+            required.every((prop) => prop in runStatus) &&
+            // the runStatus event is valid
+            eventTypeFields[runStatus.event] &&
+            // the correct fields are present for that event
+            eventTypeFields[runStatus.event].every((prop) => prop in runStatus)
+        );
+    }
+
+    /**
      * Job-related errors are returned in the following format:
      *
      * {
@@ -114,6 +201,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
      *
      * Job status, info, retries, and log requests all return data in this format
      * @param {object} jobError
+     * @returns {boolean} true|false
      */
     function isValidJobErrorObject(jobError) {
         const required = ['job_id', 'error'];
@@ -1023,6 +1111,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         isValidJobInfoObject,
         isValidJobLogsObject,
         isValidJobRetryObject,
+        isValidRunStatusObject,
         jobAction,
         jobArrayToIndexedObject,
         jobLabel,
@@ -1032,6 +1121,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui', 'uti
         niceState,
         populateModelFromJobArray,
         updateJobModel,
+        validateMessage,
         validJobStatuses,
         validStatusesForAction,
     };

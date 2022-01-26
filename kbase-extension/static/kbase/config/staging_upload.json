@@ -49,10 +49,6 @@
             "name": "Sample Set"
         },
         {
-            "id": "import_specification",
-            "name": "Import Specification"
-        },
-        {
             "id": "decompress",
             "name": "Decompress/Unpack"
         }
@@ -68,9 +64,6 @@
     "app_info": {
         "web_upload": {
             "app_id": "kb_uploadmethods/upload_web_file"
-        },
-        "import_specification": {
-
         },
         "test_fastq_reads": {
             "app_id": "NarrativeTest/example_reads_upload",

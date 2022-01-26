@@ -30,12 +30,12 @@ define([
         });
     }
 
-    function makeCommMsg(msgType, content) {
+    function makeCommMsg(msg_type, content) {
         return {
             content: {
                 data: {
-                    msg_type: msgType,
-                    content: content,
+                    msg_type,
+                    content,
                 },
             },
         };
@@ -473,26 +473,29 @@ define([
             );
         });
 
-        /* Mocking out comm messages coming back over the channel is gruesome. Just
+        /*
+         * Mocking out comm messages coming back over the channel is gruesome. Just
          * calling the handleCommMessage function directly.
          */
-        it('Should handle a start message', () => {
+        it(`Should respond to ${jcm.MESSAGE_TYPE.NEW} by saving the Narrative`, () => {
             const comm = new JobCommChannel();
-            spyOn(console, 'warn');
+            spyOn(Jupyter.notebook, 'save_checkpoint');
             return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(makeCommMsg('start', {}));
-                // this one's basically a no-op right now, just make sure that
-                // console.warn wasn't called.
-                expect(console.warn).not.toHaveBeenCalled();
+                comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.NEW, {}));
+                expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
             });
         });
 
-        it('Should respond to new_job by saving the Narrative', () => {
-            const comm = new JobCommChannel();
-            spyOn(Jupyter.narrative, 'saveNarrative');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(makeCommMsg('new_job', {}));
-                expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+        ['job-status', 'start', 'error', 'NEW', jcm.MESSAGE_TYPE.CANCEL].forEach((type) => {
+            it(`should reject invalid message type ${type}`, () => {
+                const comm = new JobCommChannel();
+                spyOn(comm, 'reportCommMessageError');
+                return comm.initCommChannel().then(() => {
+                    comm.handleCommMessages(makeCommMsg(type, null));
+                    expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
+                        [{ msgType: type, msgData: null }],
+                    ]);
+                });
             });
         });
 
@@ -510,9 +513,9 @@ define([
                 const comm = new JobCommChannel();
                 spyOn(comm, 'reportCommMessageError');
                 return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.JOB_STATUS, sample));
+                    comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.STATUS, sample));
                     expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
-                        [{ msgType: jcm.MESSAGE_TYPE.JOB_STATUS, msgData: sample }],
+                        [{ msgType: jcm.MESSAGE_TYPE.STATUS, msgData: sample }],
                     ]);
                 });
             });
@@ -521,9 +524,21 @@ define([
         const busTests = [
             {
                 type: jcm.MESSAGE_TYPE.RUN_STATUS,
-                message: { job_id: TEST_JOB_ID, cell_id: 'bar' },
+                message: {
+                    event: 'launched_job',
+                    event_at: 12345,
+                    job_id: TEST_JOB_ID,
+                    cell_id: 'bar',
+                    run_id: 54321,
+                },
                 expected: [
-                    { job_id: TEST_JOB_ID, cell_id: 'bar' },
+                    {
+                        event: 'launched_job',
+                        event_at: 12345,
+                        job_id: TEST_JOB_ID,
+                        cell_id: 'bar',
+                        run_id: 54321,
+                    },
                     {
                         channel: { [CELL_CHANNEL]: 'bar' },
                         key: { type: jcm.MESSAGE_TYPE.RUN_STATUS },
@@ -880,57 +895,79 @@ define([
             });
         });
 
-        ['JobState', 'Info', 'Retry', 'Logs'].forEach((type) => {
-            const ucType = type === 'JobState' ? 'STATUS' : type.toUpperCase();
-            const msgType = jcm.MESSAGE_TYPE[ucType];
-            const values = JobsData.example[type].invalid;
+        ['STATUS', 'INFO', 'RETRY', 'LOGS'].forEach((type) => {
+            const msgType = jcm.MESSAGE_TYPE[type];
+            const validAndInvalidData = {},
+                expected = {};
+            let i = 0;
+            ['valid', 'invalid'].forEach((validity) => {
+                expected[validity] = {};
+                JobsData.example[type][validity].forEach((elem) => {
+                    validAndInvalidData[`job_${i}`] = elem;
+                    expected[validity][`job_${i}`] = elem;
+                    i++;
+                });
+            });
 
-            values.forEach((value) => {
-                it(`should not send a ${msgType} message if the data is invalid`, () => {
-                    const jobData = {};
-                    jobData[TEST_JOB_ID] = value;
-                    const msg = makeCommMsg(msgType, jobData),
-                        comm = new JobCommChannel();
+            // message containing data for one job
+            JobsData.example[type].invalid.forEach((value) => {
+                it(`should not send a ${msgType} message, one job, invalid`, () => {
+                    const comm = new JobCommChannel(),
+                        msgData = { [TEST_JOB_ID]: value },
+                        msg = makeCommMsg(msgType, msgData);
+
                     return comm.initCommChannel().then(() => {
                         spyOn(comm, 'reportCommMessageError');
                         spyOn(console, 'error');
                         comm.handleCommMessages(msg);
                         expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
-                            [{ msgType, msgData: value }],
+                            [{ msgType, msgData }],
                         ]);
                     });
                 });
             });
 
-            if (type !== 'Logs') {
-                it(`should not send a ${msgType} message with invalid data`, () => {
-                    const allMsgData = {};
-                    values.forEach((val, ix) => {
-                        allMsgData[`test_job_${ix}`] = val;
-                    });
-                    const msg = makeCommMsg(msgType, allMsgData),
-                        comm = new JobCommChannel();
-                    return comm.initCommChannel().then(() => {
-                        spyOn(comm, 'reportCommMessageError');
-                        spyOn(console, 'error');
-                        comm.handleCommMessages(msg);
-                        expect(comm.reportCommMessageError.calls.allArgs()).toEqual(
-                            values.map((msgData) => {
-                                return [{ msgType, msgData }];
-                            })
-                        );
-                    });
+            // message where all data is invalid
+            it(`should not send a ${msgType} message, many jobs, invalid`, () => {
+                const msg = makeCommMsg(msgType, expected.invalid),
+                    comm = new JobCommChannel();
+                return comm.initCommChannel().then(() => {
+                    spyOn(comm, 'reportCommMessageError');
+                    spyOn(console, 'error');
+                    comm.handleCommMessages(msg);
+                    expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
+                        [{ msgType, msgData: expected.invalid }],
+                    ]);
                 });
-            }
-        });
+            });
 
-        it('Should handle unknown messages with console warnings', () => {
-            const comm = new JobCommChannel(),
-                msg = makeCommMsg('unknown_weird_msg', {});
-            return comm.initCommChannel().then(() => {
-                spyOn(console, 'warn');
-                comm.handleCommMessages(msg);
-                expect(console.warn).toHaveBeenCalled();
+            // message with a mix of valid and invalid data
+            it(`should separate out valid and invalid ${type} data`, () => {
+                const msg = makeCommMsg(msgType, validAndInvalidData),
+                    comm = new JobCommChannel();
+                return comm.initCommChannel().then(() => {
+                    spyOn(comm, 'reportCommMessageError');
+                    spyOn(console, 'error');
+                    spyOn(testBus, 'send');
+                    comm.handleCommMessages(msg);
+                    expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
+                        [{ msgType, msgData: expected.invalid }],
+                    ]);
+
+                    const expectedMessages = Object.keys(expected.valid).map((key) => {
+                        return [
+                            expected.valid[key],
+                            {
+                                channel: { [JOB_CHANNEL]: key },
+                                key: { type: msgType },
+                            },
+                        ];
+                    });
+
+                    expect(testBus.send.calls.allArgs()).toEqual(
+                        jasmine.arrayWithExactContents(expectedMessages)
+                    );
+                });
             });
         });
     });

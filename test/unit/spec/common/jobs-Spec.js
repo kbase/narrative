@@ -3,9 +3,10 @@ define([
     '/test/data/jobsData',
     'common/props',
     'common/jobCommMessages',
+    'util/util',
     'testUtil',
     'json!/src/biokbase/narrative/tests/data/response_data.json',
-], (Jobs, JobsData, Props, jcm, TestUtil, ResponseData) => {
+], (Jobs, JobsData, Props, jcm, Utils, TestUtil, ResponseData) => {
     'use strict';
 
     function arrayToHTML(array) {
@@ -14,8 +15,10 @@ define([
 
     const jobsModuleExports = [
         'canCancel',
+        'canDo',
         'canRetry',
         'createCombinedJobState',
+        'createCombinedJobStateSummary',
         'createJobStatusFromFsm',
         'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
@@ -23,8 +26,13 @@ define([
         'getCurrentJobs',
         'getFsmStateFromJobs',
         'isTerminalStatus',
+        'isValidBackendJobStateObject',
+        'isValidJobStatus',
         'isValidJobStateObject',
         'isValidJobInfoObject',
+        'isValidJobLogsObject',
+        'isValidJobRetryObject',
+        'isValidRunStatusObject',
         'jobAction',
         'jobArrayToIndexedObject',
         'jobLabel',
@@ -32,11 +40,24 @@ define([
         'jobStatusUnknown',
         'jobStrings',
         'niceState',
+        'populateModelFromJobArray',
         'updateJobModel',
+        'validateMessage',
         'validJobStatuses',
         'validStatusesForAction',
     ];
 
+    const invalidTypes = [
+        null,
+        undefined,
+        1,
+        'foo',
+        [],
+        ['a', 'list'],
+        () => {
+            /* no op */
+        },
+    ];
     describe('Test Jobs module', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
@@ -73,14 +94,13 @@ define([
     });
 
     describe('Job data validation', () => {
-        ['BackendJobState', 'JobState', 'Info', 'Retry', 'Logs'].forEach((type) => {
+        ['BackendJobState', 'JobState', 'Info', 'Retry', 'Logs', 'RunStatus'].forEach((type) => {
             let fn;
             switch (type) {
                 case 'BackendJobState':
-                    fn = 'isValidBackendJobStateObject';
-                    break;
                 case 'JobState':
-                    fn = 'isValidJobStateObject';
+                case 'RunStatus':
+                    fn = `isValid${type}Object`;
                     break;
                 default:
                     fn = `isValidJob${type}Object`;
@@ -100,20 +120,73 @@ define([
                 });
             });
         });
-        const mapping = {
-            [jcm.MESSAGE_TYPE.STATUS]: 'isValidBackendJobStateObject',
-            [jcm.MESSAGE_TYPE.INFO]: 'isValidJobInfoObject',
-            [jcm.MESSAGE_TYPE.LOGS]: 'isValidJobLogsObject',
-            [jcm.MESSAGE_TYPE.RETRY]: 'isValidJobRetryObject',
-        };
 
-        Object.keys(ResponseData).forEach((respType) => {
-            const fn = mapping[respType];
-            describe(`the ${fn} function, contd`, () => {
-                Object.values(ResponseData[respType]).forEach((obj) => {
-                    it('asserts the validity of ' + JSON.stringify(obj), () => {
-                        expect(Jobs[fn](obj)).toBeTrue();
+        describe('the validateMessage function', () => {
+            Object.keys(ResponseData).forEach((respType) => {
+                it(`should validate a multi-job ${respType} message`, () => {
+                    expect(
+                        Jobs.validateMessage({
+                            message: ResponseData[respType],
+                            type: respType,
+                        })
+                    ).toEqual({
+                        valid: ResponseData[respType],
                     });
+                });
+            });
+
+            ['job-status', 'greetings', 'error', 'NEW', jcm.MESSAGE_TYPE.CANCEL].forEach((type) => {
+                it(`should reject invalid message type ${type}`, () => {
+                    expect(Jobs.validateMessage({ message: null, type })).toEqual({
+                        invalid: null,
+                    });
+                });
+            });
+
+            invalidTypes.forEach((dataType) => {
+                it(`should reject message with an invalid data type ${Utils.objectToString(
+                    dataType
+                )}`, () => {
+                    expect(
+                        Jobs.validateMessage({ message: dataType, type: jcm.MESSAGE_TYPE.INFO })
+                    ).toEqual({ invalid: dataType });
+                });
+            });
+
+            const gotValidator = ['INFO', 'LOGS', 'RETRY', 'RUN_STATUS', 'STATUS', 'STATUS_ALL'];
+            Object.keys(jcm.RESPONSES).forEach((type) => {
+                if (!gotValidator.includes(type)) {
+                    it(`should validate ${type} messages (no validator)`, () => {
+                        expect(
+                            Jobs.validateMessage({
+                                message: {},
+                                type: jcm.RESPONSES[type],
+                            })
+                        ).toEqual({
+                            valid: {},
+                        });
+                    });
+                }
+            });
+
+            ['INFO', 'LOGS', 'RETRY', 'STATUS'].forEach((type) => {
+                // combine valid and invalid data type
+                it(`should separate out valid and invalid ${type} data`, () => {
+                    const dataBlob = {},
+                        expected = {};
+                    let i = 0;
+
+                    ['valid', 'invalid'].forEach((validity) => {
+                        expected[validity] = {};
+                        JobsData.example[type][validity].forEach((elem) => {
+                            dataBlob[`job_${i}`] = elem;
+                            expected[validity][`job_${i}`] = elem;
+                            i++;
+                        });
+                    });
+                    expect(
+                        Jobs.validateMessage({ message: dataBlob, type: jcm.MESSAGE_TYPE[type] })
+                    ).toEqual(expected);
                 });
             });
         });

@@ -66,15 +66,6 @@ define([
 
             this.messageQueue = [];
             this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
-
-            // set up validators for incoming backend job messages
-            this.validationFn = {
-                [RESPONSES.INFO]: Jobs.isValidJobInfoObject,
-                [RESPONSES.LOGS]: Jobs.isValidJobLogsObject,
-                [RESPONSES.STATUS]: Jobs.isValidBackendJobStateObject,
-                [RESPONSES.STATUS_ALL]: Jobs.isValidBackendJobStateObject,
-                [RESPONSES.RETRY]: Jobs.isValidJobRetryObject,
-            };
         }
 
         /**
@@ -205,19 +196,25 @@ define([
          */
         handleCommMessages(msg) {
             const msgType = msg.content.data.msg_type;
-            const msgData = msg.content.data.content;
-            const msgDataType = Utils.objectToString(msgData);
+            let msgData = msg.content.data.content;
 
-            // message data should be an object
-            if (msgDataType !== 'Object') {
-                return this.reportCommMessageError({ msgType, msgData });
+            // validate and discard any invalid messages
+            const validated = Jobs.validateMessage({ type: msgType, message: msgData });
+            // report any invalid data
+            if ('invalid' in validated) {
+                this.reportCommMessageError({ msgType, msgData: validated.invalid });
             }
+            // if there is no valid data, abort
+            if (!('valid' in validated)) {
+                this.debug('no valid data in backend message');
+                return;
+            }
+
+            // replace msgData with the validated messages
+            msgData = validated.valid;
 
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
-                case 'start':
-                    break;
-
                 case RESPONSES.NEW:
                     Jupyter.narrative.saveNarrative();
                     break;
@@ -269,18 +266,13 @@ define([
                 case RESPONSES.STATUS:
                 case RESPONSES.STATUS_ALL:
                     Object.keys(msgData).forEach((_jobId) => {
-                        const jobData = msgData[_jobId];
-                        if (this.validationFn[msgType](jobData)) {
-                            this.sendBusMessage(
-                                CHANNEL.JOB,
-                                _jobId,
-                                // send out STATUS messages from a STATUS_ALL message
-                                msgType === RESPONSES.STATUS_ALL ? RESPONSES.STATUS : msgType,
-                                msgData[_jobId]
-                            );
-                        } else {
-                            this.reportCommMessageError({ msgType, msgData: jobData });
-                        }
+                        this.sendBusMessage(
+                            CHANNEL.JOB,
+                            _jobId,
+                            // send out STATUS messages from a STATUS_ALL message
+                            msgType === RESPONSES.STATUS_ALL ? RESPONSES.STATUS : msgType,
+                            msgData[_jobId]
+                        );
                     });
                     break;
 

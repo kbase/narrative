@@ -1,4 +1,4 @@
-define(['common/ui', 'common/html'], (UI, html) => {
+define(['common/ui', 'common/html', 'util/string'], (UI, html, StringUtil) => {
     'use strict';
 
     const BULK_SPEC_ERRORS = {
@@ -215,7 +215,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     title: 'Server error',
                     body: div([
                         'Server error encountered. Please retry import.',
-                        ul(this.serverErrors.map((err) => li(err))),
+                        ul(this.serverErrors.map((err) => li(StringUtil.escape(err)))),
                     ]),
                 };
             } else {
@@ -224,13 +224,13 @@ define(['common/ui', 'common/html'], (UI, html) => {
 
                 const fileErrorText = Object.entries(this.fileErrors).map(([fileName, errors]) => {
                     const s = errors.length > 1 ? 's' : '';
-                    const header = `Error${s} in ${b(fileName)}`;
-                    return div([header, ul(errors.map((err) => li(err)))]);
+                    const header = `Error${s} in ${b(StringUtil.escape(fileName))}`;
+                    return div([header, ul(errors.map((err) => li(StringUtil.escape(err))))]);
                 });
 
                 if (numFiles === 1) {
                     footer = `Check bulk import file ${b(
-                        Object.keys(this.fileErrors)[0]
+                        StringUtil.escape(Object.keys(this.fileErrors)[0])
                     )} and retry. `;
                 } else if (numFiles > 1) {
                     footer = 'Check bulk import files and retry. ';
@@ -244,7 +244,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     const unknownString = `${prefix}nexpected error${s} found`;
                     unknownErrors = div([
                         unknownString,
-                        ul([this.unexpectedErrors.map((err) => li(err))]),
+                        ul([this.unexpectedErrors.map((err) => li(StringUtil.escape(err)))]),
                     ]);
                 }
 

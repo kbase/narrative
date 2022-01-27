@@ -483,6 +483,8 @@ define([
                                     );
                                 }
 
+                                data = StringUtil.escape(data);
+
                                 if (full.isFolder) {
                                     data = span(
                                         {

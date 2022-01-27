@@ -434,6 +434,22 @@ define(['kbase/js/widgets/narrative_core/upload/importErrors'], (Errors) => {
                     );
                 });
             });
+
+            it('should properly escape html in server-generated strings', async () => {
+                const fileName = '<some>`weird`_file.csv';
+                const errors = [
+                    {
+                        type: SPEC_ERRORS.CANNOT_PARSE,
+                        file: fileName,
+                        message: 'cannot parse: <this stuff>',
+                    },
+                ];
+                const error = new Errors.ImportSetupError('weird language happened', errors);
+                await testErrorDialog(error, 'Bulk import error', (body) => {
+                    expect(body).toContain(fileName);
+                    expect(body).toContain(errors[0].message);
+                });
+            });
         });
     });
 });

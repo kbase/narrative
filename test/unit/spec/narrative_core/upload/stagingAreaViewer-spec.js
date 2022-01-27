@@ -46,8 +46,8 @@ define([
                         isFolder: false,
                     },
                     {
-                        name: 'unknown_file.txt',
-                        path: fakeUser + '/unknown_file.txt',
+                        name: '<some>unknown_file.txt',
+                        path: fakeUser + '/<some>unknown_file.txt',
                         mtime: 1532738637555,
                         size: 100,
                         source: 'KBase upload',
@@ -491,7 +491,7 @@ define([
                 },
                 {
                     subdir: null,
-                    filename: 'unknown_file.txt',
+                    filename: '<some>unknown_file.txt',
                     isBulk: false,
                 },
                 {
@@ -542,7 +542,7 @@ define([
                     } else {
                         const fileInputs = {
                             staging_file_subdir_path: filePath,
-                            matrix_name: testCase.filename + '_matrix',
+                            matrix_name: testCase.filename.replaceAll(/[<>]/g, '_') + '_matrix',
                         };
                         expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
                             nonBulkAppId,
@@ -611,7 +611,7 @@ define([
 
                 // filename -> 3rd row
                 // otherFileName -> 4th row
-                const otherFileName = 'unknown_file.txt';
+                const otherFileName = '<some>unknown_file.txt';
                 const [$thirdSelect, $fourthSelect] = [filename, otherFileName].map((name) =>
                     $container.find(`[data-download="${name}"]`).siblings('select')
                 );

@@ -49,7 +49,7 @@ define([
         // into multiple calls.
 
         // a little cheating here to figure out the length allowance. Maybe it should be in the client?
-        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification?files='.length;
+        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification/?files='.length;
         const bulkSpecProms = [];
 
         while (files.length) {
@@ -69,27 +69,43 @@ define([
                 })
             );
         }
+
         return Promise.all(bulkSpecProms)
             .then((result) => {
                 // join results of all calls together
-                return result.reduce(
+                const errors = [];
+                const parsed = result.reduce(
                     (allCalls, callResult) => {
                         callResult = JSON.parse(callResult);
                         Object.keys(callResult.types).forEach((dataType) => {
                             // if we already have a file of that datatype, then throw an error.
-                            // TODO: cast this as an ImportSetupError
+                            // see Staging Service docs for format
                             if (allCalls.files[dataType]) {
-                                throw new Error(
-                                    'You cannot use multiple files to upload the same type.'
-                                );
+                                errors.push({
+                                    type: Errors.BULK_SPEC_ERRORS.MULTIPLE_SPECS,
+                                    file_1: callResult.files[dataType].file,
+                                    tab_1: callResult.files[dataType].tab,
+                                    file_2: allCalls.files[dataType].file,
+                                    tab_2: allCalls.files[dataType].tab,
+                                    message: `Data type ${dataType} appears in multiple importer specification sources`,
+                                });
+                            } else {
+                                allCalls.types[dataType] = callResult.types[dataType];
+                                allCalls.files[dataType] = callResult.files[dataType];
                             }
-                            allCalls.types[dataType] = callResult.types[dataType];
-                            allCalls.files[dataType] = callResult.files[dataType];
                         });
                         return allCalls;
                     },
                     { types: {}, files: {} }
                 );
+                if (errors.length) {
+                    // cast this case into a service call error, so the catcher below can deal with it
+                    // otherwise, it'll just catch the ImportSetupError and make wrong things happen.
+                    // this could be avoided by setting the error capture type below, but we don't have
+                    // a custom error type for the client call errors.
+                    throw { responseText: JSON.stringify({ errors }) };
+                }
+                return parsed;
             })
             .catch((error) => {
                 let parsedError;

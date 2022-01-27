@@ -117,81 +117,88 @@ define([
         },
     };
 
-    const paramTestsJobArray = [
-            {
-                job_id: 'job_update_test',
-                status: 'created',
-                created: 50,
-                retry_parent: 'generic_retry_parent',
-                batch_id: 'batch_job',
-                meta: {
-                    jobAction: 'cancel',
-                    jobLabel: 'queued',
-                    retryTarget: 'generic_retry_parent',
-                    row_id: 'generic_retry_parent',
-                },
-            },
-            {
-                job_id: 'generic_retry_parent',
-                status: 'terminated',
-                batch_id: 'batch_job',
-                created: 10,
-            },
-            {
-                batch_id: 'batch_job',
-                job_id: 'batch_job',
-                batch_job: true,
-                child_jobs: ['generic_retry_parent', 'job_update_test'],
-            },
-        ],
-        paramTests = [
-            {
-                input: {
-                    app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
-                    app_name: 'Import FASTQ',
-                    batch_id: null,
-                    job_id: 'something',
-                    job_params: [
-                        {
-                            name: 'some_old_file',
-                            workspace_id: 'some_workspace_id',
-                        },
-                    ],
-                },
-                type: 'FASTQ Reads Interleaved',
-                object: /Reads Object Name: some_old_file/,
-                displayData: paramDisplayData.fastq_reads_interleaved,
-            },
-            {
-                input: {
-                    app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
-                    app_name: 'Import FASTA',
-                    batch_id: null,
-                    job_id: 'something',
-                    job_params: [
-                        {
-                            assembly_name: 'assembly_file.fa',
-                            staging_file_subdir_path: '/path/to/dir',
-                            type: 'draft isolate',
-                            workspace_id: 'whatever',
-                        },
-                    ],
-                },
-                type: 'Assembly',
-                object: /Assembly object name: assembly_file.fa/,
-                displayData: paramDisplayData.assembly,
-            },
-        ],
-        jobUpdateTestJob = {
-            job_id: 'job_update_test',
+    const BATCH_PARENT_ID = 'batch_parent',
+        TEST_JOB_ID = 'job_update_test_job',
+        RETRIED_JOB_ID = 'generic_job_retry',
+        RETRY_PARENT_ID = 'generic_retry_parent';
+
+    const TEST_JOB = {
+            job_id: TEST_JOB_ID,
             status: 'created',
             created: 0,
             meta: {
                 jobAction: 'cancel',
                 jobLabel: 'queued',
-                retryTarget: 'job_update_test',
+                retryTarget: TEST_JOB_ID,
             },
+        },
+        RETRIED_JOB = {
+            job_id: RETRIED_JOB_ID,
+            status: 'created',
+            created: 50,
+            retry_parent: RETRY_PARENT_ID,
+            batch_id: BATCH_PARENT_ID,
+            meta: {
+                jobAction: 'cancel',
+                jobLabel: 'queued',
+                retryTarget: RETRY_PARENT_ID,
+                row_id: RETRY_PARENT_ID,
+            },
+        },
+        RETRY_PARENT = {
+            job_id: RETRY_PARENT_ID,
+            status: 'terminated',
+            batch_id: BATCH_PARENT_ID,
+            created: 10,
+        },
+        BATCH_PARENT = {
+            batch_id: BATCH_PARENT_ID,
+            job_id: BATCH_PARENT_ID,
+            batch_job: true,
+            child_jobs: [RETRY_PARENT_ID, RETRIED_JOB_ID],
         };
+
+    // RETRIED_JOB should be first for createJobStatusTableWithContext
+    const BATCH_WITH_RETRY = [RETRIED_JOB, RETRY_PARENT, BATCH_PARENT];
+
+    const paramTests = [
+        {
+            input: {
+                app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
+                app_name: 'Import FASTQ',
+                batch_id: null,
+                job_id: 'something',
+                job_params: [
+                    {
+                        name: 'some_old_file',
+                        workspace_id: 'some_workspace_id',
+                    },
+                ],
+            },
+            type: 'FASTQ Reads Interleaved',
+            object: /Reads Object Name: some_old_file/,
+            displayData: paramDisplayData.fastq_reads_interleaved,
+        },
+        {
+            input: {
+                app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+                app_name: 'Import FASTA',
+                batch_id: null,
+                job_id: 'something',
+                job_params: [
+                    {
+                        assembly_name: 'assembly_file.fa',
+                        staging_file_subdir_path: '/path/to/dir',
+                        type: 'draft isolate',
+                        workspace_id: 'whatever',
+                    },
+                ],
+            },
+            type: 'Assembly',
+            object: /Assembly object name: assembly_file.fa/,
+            displayData: paramDisplayData.assembly,
+        },
+    ];
 
     function makeModel(jobs) {
         const tempModel = Props.make({
@@ -370,12 +377,13 @@ define([
     }
 
     /**
+     * send a jcm.MESSAGE_TYPE.STATUS message over the bus
      *
      * @param {object} ctx - `this` context, containing keys
      *      {string} jobId - the job to be updated
      *      {object} input - the jobState object to be sent
      */
-    function updateState(ctx) {
+    function send_STATUS(ctx) {
         const { jobId } = ctx;
         sendBusMessage(
             ctx,
@@ -389,23 +397,26 @@ define([
     }
 
     /**
+     * send a jcm.MESSAGE_TYPE.INFO message over the bus
      *
      * @param {object} ctx - `this` context, containing keys
      *      {string} jobId
      *      {object} jobInfo
      */
-    function updateInfo(ctx) {
+    function send_INFO(ctx) {
         const { jobId, jobInfo } = ctx;
         sendBusMessage(ctx, jobInfo, { [jcm.CHANNEL.JOB]: jobId }, jcm.MESSAGE_TYPE.INFO);
     }
 
     /**
+     * send a jcm.MESSAGE_TYPE.RETRY message over the bus
+     *
      * @param {object} ctx - `this` context, containing keys
      *      {object} retryParent    - the parent of the retried job
      *      {object} retry          - the new job
      *      {object} bus            - the bus to send the message on
      */
-    function retryResponse(ctx) {
+    function send_RETRY(ctx) {
         const { retryParent, retry } = ctx;
         // send the retry response and the update for the batch parent
         sendBusMessage(
@@ -425,12 +436,14 @@ define([
     }
 
     /**
+     * send a jcm.MESSAGE_TYPE.ERROR message over the bus
+     *
      * @param {object} ctx - `this` context, containing keys
      *      {object} jobId          - the job in question
      *      {object} error          - error object from the backend
      *      {object} bus            - the bus to send the message on
      */
-    function jobError(ctx) {
+    function send_ERROR(ctx) {
         const { jobId, error } = ctx;
         sendBusMessage(
             ctx,
@@ -816,15 +829,16 @@ define([
                 describe('table init with job info', () => {
                     beforeEach(function () {
                         container = document.createElement('div');
-                        this.job = TestUtil.JSONcopy(paramTestsJobArray[0]);
+                        this.job = TestUtil.JSONcopy(RETRIED_JOB);
                         this.jobManager = new JobManager({
-                            model: makeModel(paramTestsJobArray),
+                            model: makeModel(BATCH_WITH_RETRY),
                             bus: Runtime.make().bus(),
                         });
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, [
-                            'job_update_test',
-                            'generic_retry_parent',
-                        ]);
+                        this.jobManager.addListener(
+                            jcm.MESSAGE_TYPE.INFO,
+                            jcm.CHANNEL.JOB,
+                            BATCH_WITH_RETRY
+                        );
                     });
 
                     async function runParamUpdateTest(ctx, test, jobInfo) {
@@ -846,7 +860,7 @@ define([
                                 JSON.stringify(test.input),
                             async function () {
                                 const jobInfo = {
-                                    job_update_test: test.displayData,
+                                    [RETRIED_JOB_ID]: test.displayData,
                                 };
                                 await runParamUpdateTest(this, test, jobInfo);
                             }
@@ -858,7 +872,7 @@ define([
                                 JSON.stringify(test.input),
                             async function () {
                                 const jobInfo = {
-                                    generic_retry_parent: test.displayData,
+                                    [RETRY_PARENT_ID]: test.displayData,
                                 };
                                 await runParamUpdateTest(this, test, jobInfo);
                             }
@@ -1021,7 +1035,7 @@ define([
             describe('job state:', () => {
                 describe('valid', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     JobsData.allJobs.forEach((state) => {
                         it(`with status ${state.status}`, async function () {
@@ -1039,7 +1053,7 @@ define([
                             this.input.meta.retryTarget = this.job.job_id;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateState(this);
+                                send_STATUS(this);
                             });
 
                             _checkRowStructure(this.row, this.job, this.input);
@@ -1074,7 +1088,7 @@ define([
 
                 describe('valid, retried job', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     JobsData.validJobs.forEach((state) => {
                         it(`with status ${state.status}`, async function () {
@@ -1086,7 +1100,7 @@ define([
                             this.input.meta.retryTarget = this.job.job_id;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateState(this);
+                                send_STATUS(this);
                             });
 
                             _checkRowStructure(this.row, this.job, this.input);
@@ -1100,7 +1114,7 @@ define([
 
                 describe('invalid', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     JobsData.example.JobState.invalid.forEach((invalidJob) => {
                         it(`should not update with invalid job ${JSON.stringify(
@@ -1119,7 +1133,7 @@ define([
                                 this.row.classList.add('BOOP!');
                             });
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateState(this);
+                                send_STATUS(this);
                             });
                             expect(this.jobManager._isValidMessage).toHaveBeenCalled();
                             expect(this.jobManager.updateModel).not.toHaveBeenCalled();
@@ -1130,7 +1144,7 @@ define([
 
                 describe('incorrect job ID', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     JobsData.allJobs.forEach((state) => {
                         it('should not update with incorrect job ID', function () {
@@ -1142,7 +1156,7 @@ define([
                             _checkRowStructure(this.row, this.job);
                             this.input = state;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
-                            updateState(this);
+                            send_STATUS(this);
                             _checkRowStructure(this.row, this.job);
                             expect(this.jobManager.updateModel).not.toHaveBeenCalled();
                         });
@@ -1156,7 +1170,7 @@ define([
                             errorText: 'Could not cancel job.',
                             message: {
                                 source: 'cancel_job',
-                                job_id_list: ['job_update_test', 'job_1', 'job_2', 'job_3'],
+                                job_id_list: [TEST_JOB_ID, 'job_1', 'job_2', 'job_3'],
                                 error: 'Unable to cancel job',
                                 message:
                                     "HTTPSConnectionPool(host='ci.kbase.us', port=443): Max retries exceeded with url: /services/ee2 (Caused by NewConnectionError('<urllib3.connection.VerifiedHTTPSConnection object at 0x7fca286681f0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))",
@@ -1169,7 +1183,7 @@ define([
                             errorText: 'Could not retry job.',
                             message: {
                                 source: 'retry_job',
-                                job_id_list: ['job_update_test'],
+                                job_id_list: [TEST_JOB_ID],
                                 error: 'Unable to retry job(s)',
                                 message:
                                     "HTTPSConnectionPool(host='ci.kbase.us', port=443): Max retries exceeded with url: /services/ee2 (Caused by NewConnectionError('<urllib3.connection.VerifiedHTTPSConnection object at 0x7fca28668940>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))",
@@ -1198,7 +1212,7 @@ define([
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             // fake error response
                             await TestUtil.waitForElementChange(this.row, () => {
-                                jobError({
+                                send_ERROR({
                                     bus: this.jobManager.bus,
                                     jobId: this.job.job_id,
                                     error: errorTest.message,
@@ -1377,20 +1391,20 @@ define([
                                         container
                                             .querySelector(`[data-target="${input.retry_parent}"]`)
                                             .click();
-                                        retryResponse({
+                                        send_RETRY({
                                             bus: ctx.jobManager.bus,
                                             retryParent,
                                             retry: input,
                                         });
                                     } else {
-                                        updateState({
+                                        send_STATUS({
                                             bus: ctx.jobManager.bus,
                                             input,
                                             jobId: input.job_id,
                                         });
                                     }
                                     // send the update for the batch parent
-                                    updateState({
+                                    send_STATUS({
                                         bus: ctx.jobManager.bus,
                                         input: updatedBatchJob,
                                         jobId: updatedBatchJob.job_id,
@@ -1462,7 +1476,7 @@ define([
                 paramTests.forEach((test) => {
                     describe('valid', () => {
                         beforeEach(async function () {
-                            await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                            await createJobStatusTableWithContext(this, TEST_JOB);
                         });
                         it('will update the info ' + JSON.stringify(test.input), async function () {
                             _checkRowStructure(this.row, this.job);
@@ -1475,7 +1489,7 @@ define([
                             spyOn(this.jobManager, 'removeListener').and.callThrough();
                             spyOn(this.jobManager, 'runHandler').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateInfo({ ...this, jobInfo: test.input });
+                                send_INFO({ ...this, jobInfo: test.input });
                             });
                             expect(this.jobManager.removeListener).toHaveBeenCalledTimes(1);
                             expect(this.jobManager.removeListener.calls.allArgs()).toEqual([
@@ -1489,14 +1503,14 @@ define([
 
                 describe('incorrect job ID', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     it('will not update', function () {
                         _checkRowStructure(this.row, this.job);
                         const invalidId = 'a random and incorrect job ID';
                         spyOn(this.jobManager, 'removeListener').and.callThrough();
                         spyOn(this.jobManager, 'runHandler').and.callThrough();
-                        updateInfo({
+                        send_INFO({
                             bus: this.jobManager.bus,
                             jobId: invalidId,
                             jobInfo: {
@@ -1512,7 +1526,7 @@ define([
 
                 describe('invalid', () => {
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, jobUpdateTestJob);
+                        await createJobStatusTableWithContext(this, TEST_JOB);
                     });
                     JobsData.example.Info.invalid.forEach((invalidInfo) => {
                         it('will be ignored', async function () {
@@ -1528,7 +1542,7 @@ define([
                                 this.row.classList.add('BOOP!');
                             });
                             await TestUtil.waitForElementChange(this.row, () => {
-                                updateInfo({
+                                send_INFO({
                                     ...this,
                                     jobInfo: {
                                         job_id: this.job.job_id,
@@ -1572,12 +1586,13 @@ define([
                     }
 
                     beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, paramTestsJobArray);
-                        this.job = TestUtil.JSONcopy(paramTestsJobArray[0]);
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, [
-                            'job_update_test',
-                            'generic_retry_parent',
-                        ]);
+                        await createJobStatusTableWithContext(this, BATCH_WITH_RETRY);
+                        this.job = TestUtil.JSONcopy(RETRIED_JOB);
+                        this.jobManager.addListener(
+                            jcm.MESSAGE_TYPE.INFO,
+                            jcm.CHANNEL.JOB,
+                            BATCH_WITH_RETRY
+                        );
                         this.indicatorDiv = document.createElement('div');
                         this.indicatorDiv.id = indicatorId;
                         this.container.append(this.indicatorDiv);
@@ -1594,14 +1609,14 @@ define([
                             async function () {
                                 prepareForUpdate(this, test);
                                 await TestUtil.waitForElementChange(this.indicatorDiv, () => {
-                                    updateInfo({ ...this, jobInfo: test.input });
+                                    send_INFO({ ...this, jobInfo: test.input });
                                 });
                                 const expectedCallArgs = [
                                     jcm.MESSAGE_TYPE.INFO,
-                                    { job_id: 'job_update_test', ...test.input },
+                                    { job_id: RETRIED_JOB_ID, ...test.input },
                                     {
                                         channelType: jcm.CHANNEL.JOB,
-                                        channelId: 'job_update_test',
+                                        channelId: RETRIED_JOB_ID,
                                     },
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);
@@ -1617,11 +1632,10 @@ define([
                                 await TestUtil.waitForElementChange(
                                     this.container.querySelector('#' + indicatorId),
                                     () => {
-                                        this.jobManager.bus.send(test.input, {
-                                            channel: {
-                                                [jcm.CHANNEL.JOB]: this.job.retry_parent,
-                                            },
-                                            key: { type: jcm.MESSAGE_TYPE.INFO },
+                                        send_INFO({
+                                            ...this,
+                                            jobInfo: test.input,
+                                            jobId: this.job.retry_parent,
                                         });
                                     }
                                 );

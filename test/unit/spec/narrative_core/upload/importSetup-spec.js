@@ -1,19 +1,20 @@
 define([
     'kbase/js/widgets/narrative_core/upload/importSetup',
+    'kbase/js/widgets/narrative_core/upload/importErrors',
     'base/js/namespace',
     'narrativeConfig',
     'narrativeMocks',
     'testUtil',
     'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
     'json!/test/data/kb_uploadmethods.import_fasta_as_assembly_from_staging.spec.json',
-], (ImportSetup, Jupyter, Config, Mocks, TestUtil, ImportFastqSpec, ImportAssemblySpec) => {
+], (ImportSetup, Errors, Jupyter, Config, Mocks, TestUtil, ImportFastqSpec, ImportAssemblySpec) => {
     'use strict';
 
     const uploaders = Config.get('uploaders');
     const stagingServiceUrl = Config.url('staging_api_url');
     const RELEASE_TAG = 'release';
 
-    describe('ImportSetup module tests', () => {
+    fdescribe('ImportSetup module tests', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 sidePanel: {
@@ -100,7 +101,7 @@ define([
                 };
             }
 
-            function stubBulkSpecificationRequest(status, statusText, responseText) {
+            function stubBulkSpecificationRequest(status, statusText, response) {
                 jasmine.Ajax.stubRequest(
                     new RegExp(`${stagingServiceUrl}/bulk_specification`)
                 ).andReturn({
@@ -108,7 +109,7 @@ define([
                     statusText,
                     contentType: 'text/plain',
                     responseHeaders: '',
-                    responseText,
+                    responseText: JSON.stringify(response),
                 });
             }
 
@@ -236,20 +237,16 @@ define([
                     readsCsv = 'some_reads_file.csv',
                     assemblyCsv = 'some_assembly_file.csv';
 
-                stubBulkSpecificationRequest(
-                    200,
-                    'success',
-                    JSON.stringify({
-                        types: {
-                            [readsDataType]: importReadsData,
-                            [assemblyDataType]: importAssemblyData,
-                        },
-                        files: {
-                            [readsDataType]: { file: readsCsv, tab: null },
-                            [assemblyDataType]: { file: assemblyCsv, tab: null },
-                        },
-                    })
-                );
+                stubBulkSpecificationRequest(200, 'success', {
+                    types: {
+                        [readsDataType]: importReadsData,
+                        [assemblyDataType]: importAssemblyData,
+                    },
+                    files: {
+                        [readsDataType]: { file: readsCsv, tab: null },
+                        [assemblyDataType]: { file: assemblyCsv, tab: null },
+                    },
+                });
 
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
@@ -289,30 +286,68 @@ define([
                 });
             });
 
+            /**
+             * stagingResponse is optional. If present, this will start with mocking a call to the
+             * bulk_specification endpoint of the staging area, expecting a 200 response with the
+             * given data.
+             * @param {string} fileName
+             * @param {Object} stagingResponse expected response from a happy staging area call
+             */
+            async function testWithExpectedImportErrors(fileNames, stagingResponse) {
+                if (stagingResponse) {
+                    stubBulkSpecificationRequest(200, 'ok', stagingResponse);
+                }
+
+                const importInputs = fileNames.map((fileName) => ({
+                    name: fileName,
+                    type: 'import_specification',
+                }));
+                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejectedWithError(
+                    Errors.ImportSetupError
+                );
+            }
+
             it('should error properly when unable to find bulk specification info', async () => {
                 // see https://github.com/kbase/staging_service/tree/develop#error-response-12
                 // for error details
                 const filename = 'xsv_input.csv';
-                stubBulkSpecificationRequest(
-                    404,
-                    'not found',
-                    JSON.stringify({
-                        errors: [
-                            {
-                                type: 'cannot_find_file',
-                                file: filename,
-                            },
-                        ],
-                    })
-                );
+                stubBulkSpecificationRequest(404, 'not found', {
+                    errors: [
+                        {
+                            type: 'cannot_find_file',
+                            file: filename,
+                        },
+                    ],
+                });
+                await testWithExpectedImportErrors([filename]);
+            });
 
-                const importInputs = [
-                    {
-                        name: filename,
-                        type: 'import_specification',
-                    },
-                ];
-                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejected();
+            const wrongDataTypes = [
+                {
+                    dataType: 'not_a_real_datatype',
+                    label: 'bad',
+                },
+                {
+                    dataType: 'media',
+                    label: 'non-bulk',
+                },
+            ];
+            wrongDataTypes.forEach((testCase) => {
+                it(`should error when retrieving data with a ${testCase.label} data type`, async () => {
+                    const fileName = `${testCase.dataType}_data.csv`;
+                    const stagingResponse = {
+                        types: {
+                            [testCase.dataType]: [{ some: 'input' }],
+                        },
+                        files: {
+                            [testCase.dataType]: {
+                                file: fileName,
+                                tab: null,
+                            },
+                        },
+                    };
+                    await testWithExpectedImportErrors([fileName], stagingResponse);
+                });
             });
 
             // TODO

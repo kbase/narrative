@@ -18,6 +18,11 @@ define(['common/ui', 'common/html'], (UI, html) => {
         FILE_NOT_FOUND: 'File not found',
     };
 
+    const TEMPLATE_MESSAGES = {
+        UNKNOWN_TYPE: (dataType) => `Unknown importer type "${dataType}"`,
+        NOT_BULK_TYPE: (dataType) => `Importer type "${dataType}" is not usable for bulk import`,
+    };
+
     /**
      * Expect to be given an Array of errors, each of which is a key-value pair.
      * Each object in this structure can have the following fields,
@@ -143,7 +148,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                         addFileError(
                             Object.assign(
                                 {
-                                    message: `Importer type "${error.dataType}" is not usable for bulk import`,
+                                    message: TEMPLATE_MESSAGES.NOT_BULK_TYPE(error.dataType),
                                 },
                                 error
                             )
@@ -153,7 +158,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                         addFileError(
                             Object.assign(
                                 {
-                                    message: `Unknown importer type "${error.dataType}"`,
+                                    message: TEMPLATE_MESSAGES.UNKNOWN_TYPE(error.dataType),
                                 },
                                 error
                             )

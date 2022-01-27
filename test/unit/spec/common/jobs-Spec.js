@@ -456,10 +456,10 @@ define([
             {
                 desc: 'jobs with retries',
                 jobs: { byId: JobsData.batchJob.jobsById },
-                expected: `${batch} in progress: 2 queued, 1 running, 1 success (3 jobs retried)`,
+                expected: `${batch} in progress: 3 queued, 1 running, 1 success (3 jobs retried)`,
                 fsmState: 'inProgressResultsAvailable',
                 statusBarSummary: summary.running,
-                statuses: { queued: 2, running: 1, completed: 1, retried: 3 },
+                statuses: { queued: 3, running: 1, completed: 1, retried: 3 },
             },
             {
                 desc: 'jobs with retries, original jobs only',
@@ -469,10 +469,10 @@ define([
                         retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
                     },
                 },
-                expected: `${batch} in progress: 1 queued, 1 failed, 2 cancelled`,
+                expected: `${batch} in progress: 2 queued, 1 failed, 2 cancelled`,
                 fsmState: 'inProgress',
                 statusBarSummary: summary.queued,
-                statuses: { queued: 1, error: 1, terminated: 2 },
+                statuses: { queued: 2, error: 1, terminated: 2 },
             },
             {
                 desc: 'all jobs queued',

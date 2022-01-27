@@ -1333,6 +1333,7 @@ define([
                         );
                         jobDiedWithErrorUpdate.updated += 15;
                         const rowIds = [
+                            'job-created',
                             'job-cancelled-whilst-in-the-queue',
                             'job-died-whilst-queueing',
                             'job-in-the-queue',

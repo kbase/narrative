@@ -8,7 +8,8 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     };
 
     const TEST_JOB_ID = 'someJob',
-        SOME_VALUE = 'some unimportant value';
+        SOME_VALUE = 'some unimportant value',
+        BATCH_ID = 'batch-parent';
 
     const jobStrings = {
         unknown: 'Awaiting job data...',
@@ -308,8 +309,8 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     };
 
     const batchParentJob = {
-        job_id: 'batch-parent-job',
-        batch_id: 'batch-parent-job',
+        job_id: BATCH_ID,
+        batch_id: BATCH_ID,
         batch_job: true,
         child_jobs: ['unknown-job'].concat(
             validJobs.map((job) => {
@@ -339,7 +340,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         if (job.meta.canRetry) {
             job.meta.retryTarget = job.job_id;
         }
-        job.batch_id = 'batch-parent-job';
+        job.batch_id = BATCH_ID;
         job.batch_job = false;
     });
 
@@ -666,10 +667,9 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
      */
 
     function createBatchJob() {
-        const BATCH_ID = 'batch-parent', // the ID that the batch parent will have
-            batchParentId = 'job-created'; // the job to use as the batch parent
-        const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));
+        const jobsWithRetries = TestUtil.JSONcopy(validJobs);
         const jobIdIndex = {};
+
         let thisJob, parentJob;
         jobsWithRetries.forEach((job) => {
             job.batch_id = BATCH_ID;
@@ -678,22 +678,18 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         });
 
         // batch parent
-        const batchParent = jobIdIndex[batchParentId];
-        batchParent.job_id = BATCH_ID;
-        batchParent.batch_job = true;
-        batchParent.child_jobs = Object.keys(jobIdIndex).filter(
-            (job_id) => job_id !== batchParentId
-        );
-        batchParent.meta.canRetry = false;
-        delete batchParent.meta.retryTarget;
+        const batchParent = TestUtil.JSONcopy(batchParentJob);
+        batchParent.child_jobs = validJobs.map((job) => {
+            return job.job_id;
+        });
         // add the batchParent under the index BATCH_ID and delete the old key
         jobIdIndex[BATCH_ID] = batchParent;
-        delete jobIdIndex[batchParentId];
 
-        // no retries of 'job-in-the-queue'
-        parentJob = 'job-in-the-queue';
-        convertToRetryParent(jobIdIndex[parentJob]);
-        jobIdIndex[parentJob].meta.currentJob = true;
+        // no retries of 'job-in-the-queue' or 'job-created'
+        ['job-in-the-queue', 'job-created'].forEach((jobId) => {
+            convertToRetryParent(jobIdIndex[jobId]);
+            jobIdIndex[jobId].meta.currentJob = true;
+        });
 
         // these jobs have been retried
 
@@ -729,6 +725,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         passTime(jobIdIndex[thisJob], 10);
 
         const originalJobs = [
+                'job-created',
                 'job-in-the-queue',
                 'job-cancelled-whilst-in-the-queue',
                 'job-cancelled-during-run',
@@ -738,6 +735,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
                 return acc;
             }, {}),
             currentJobs = [
+                'job-created',
                 'job-in-the-queue',
                 'job-running',
                 'job-finished-with-success',

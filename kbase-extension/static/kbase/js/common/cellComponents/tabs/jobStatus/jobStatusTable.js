@@ -651,11 +651,15 @@ define([
             });
 
             ['STATUS', 'ERROR'].forEach((event) => {
-                this.jobManager.addListener(jcm.MESSAGE_TYPE[event], [batchId].concat(jobIdList));
+                this.jobManager.addListener(
+                    jcm.MESSAGE_TYPE[event],
+                    jcm.CHANNEL.JOB,
+                    [batchId].concat(jobIdList)
+                );
             });
 
             if (paramsRequired.length) {
-                this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, paramsRequired);
+                this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, paramsRequired);
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
                         ? { [jcm.PARAM.BATCH_ID]: batchId }

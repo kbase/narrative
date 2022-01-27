@@ -52,7 +52,7 @@ define([
             this.__handlerFns = {};
             // an object containing event handlers, categorised by event name
             this.handlers = {};
-            // bus listeners, indexed by job ID then message type
+            // bus listeners, indexed by channel ID then message msgType
             this.listeners = {};
         }
 
@@ -60,8 +60,8 @@ define([
             return event && validOutgoingMessageTypes.concat('modelUpdate').includes(event);
         }
 
-        _isValidMessage(type, message) {
-            switch (type) {
+        _isValidMessage(msgType, message) {
+            switch (msgType) {
                 case jcm.MESSAGE_TYPE.STATUS:
                     return Jobs.isValidBackendJobStateObject(message);
                 case jcm.MESSAGE_TYPE.INFO:
@@ -70,7 +70,9 @@ define([
                     return Jobs.isValidJobLogsObject(message);
                 case jcm.MESSAGE_TYPE.RETRY:
                     return Jobs.isValidJobRetryObject(message);
-                case type.indexOf('job') !== -1:
+                case jcm.MESSAGE_TYPE.RUN_STATUS:
+                    return Jobs.isValidRunStatusObject(message);
+                case msgType.indexOf('job') !== -1:
                     return !!message.jobId;
                 default:
                     return true;
@@ -255,13 +257,18 @@ define([
         /**
          * Add a bus listener for ${event} messages
          *
-         * @param {string} type - a valid message type to listen for (see validOutgoingMessageTypes)
+         * @param {string} msgType - a valid message type to listen for (see validOutgoingMessageTypes)
+         * @param {string} channelType - the channel type to listen to (one of the values in jcm.CHANNEL)
          * @param {array}  channelList - array of channels (job or cell IDs) to apply the listener to
          * @param {object} handlerObject (optional) - object with key(s) handler name and value(s) function to execute on receiving a message
          */
-        addListener(type, channelList, handlerObject) {
-            if (!validOutgoingMessageTypes.includes(type)) {
-                throw new Error(`addListener: invalid listener ${type} supplied`);
+        addListener(msgType, channelType, channelList, handlerObject) {
+            if (!validOutgoingMessageTypes.includes(msgType)) {
+                throw new Error(`addListener: invalid listener ${msgType} supplied`);
+            }
+
+            if (!Object.values(jcm.CHANNEL).includes(channelType)) {
+                throw new Error(`addListener: invalid channel type ${channelType} supplied`);
             }
 
             if (Utils.objectToString(channelList) !== 'Array') {
@@ -276,23 +283,23 @@ define([
                     if (!this.listeners[channel]) {
                         this.listeners[channel] = {};
                     }
-                    if (!this.listeners[channel][type]) {
-                        let channelObject = { [jcm.CHANNEL.JOB]: channel };
-                        if (type === jcm.MESSAGE_TYPE.CELL_JOB_STATUS) {
-                            channelObject = { [jcm.CHANNEL.CELL]: channel };
-                        }
+                    if (!this.listeners[channel][msgType]) {
+                        const channelObject = { [channelType]: channel };
 
                         // listen for job-related bus messages
-                        this.listeners[channel][type] = this.bus.listen({
+                        this.listeners[channel][msgType] = this.bus.listen({
                             channel: channelObject,
                             key: {
-                                type,
+                                type: msgType,
                             },
                             handle: (message) => {
-                                if (!this._isValidMessage(type, message)) {
+                                if (!this._isValidMessage(msgType, message)) {
                                     return;
                                 }
-                                this.runHandler(type, message, channel);
+                                this.runHandler(msgType, message, {
+                                    channelType,
+                                    channelId: channel,
+                                });
                             },
                         });
                     }
@@ -300,20 +307,20 @@ define([
 
             // add the handler -- the message type is used as the event
             if (handlerObject) {
-                this.addEventHandler(type, handlerObject);
+                this.addEventHandler(msgType, handlerObject);
             }
         }
 
         /**
-         * Remove the listener for ${type} messages for a channel
+         * Remove the listener for ${msgType} messages for a channel
          *
          * @param {string} channel
-         * @param {string} type - the type of the listener
+         * @param {string} msgType - the msgType of the listener
          */
-        removeListener(channel, type) {
+        removeListener(channel, msgType) {
             try {
-                this.bus.removeListener(this.listeners[channel][type]);
-                delete this.listeners[channel][type];
+                this.bus.removeListener(this.listeners[channel][msgType]);
+                delete this.listeners[channel][msgType];
             } catch (err) {
                 // do nothing
             }
@@ -323,10 +330,10 @@ define([
          * Remove all listeners associated with a certain channel ID
          * @param {string} channel
          */
-        removeJobListeners(channel) {
+        removeChannelListeners(channel) {
             if (this.listeners[channel] && Object.keys(this.listeners[channel]).length) {
-                Object.keys(this.listeners[channel]).forEach((type) => {
-                    this.removeListener(channel, type);
+                Object.keys(this.listeners[channel]).forEach((msgType) => {
+                    this.removeListener(channel, msgType);
                 });
                 delete this.listeners[channel];
             }
@@ -466,8 +473,10 @@ define([
                 }
 
                 // request job updates for the new job
-                ['STATUS', 'ERROR'].forEach((type) => {
-                    self.addListener(jcm.MESSAGE_TYPE[type], [retry.jobState.job_id]);
+                ['STATUS', 'ERROR'].forEach((msgType) => {
+                    self.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, [
+                        retry.jobState.job_id,
+                    ]);
                 });
                 self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
                     [jcm.PARAM.JOB_ID]: retry.jobState.job_id,
@@ -499,7 +508,7 @@ define([
                 if (Jobs.isTerminalStatus(status) && !Jobs.canRetry(jobState)) {
                     self.removeListener(jobId, jcm.MESSAGE_TYPE.STATUS);
                     if (status === 'does_not_exist') {
-                        self.removeJobListeners(jobId);
+                        self.removeChannelListeners(jobId);
                     }
                     self.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId });
                     self.updateModel([jobState]);
@@ -515,8 +524,12 @@ define([
                         }
                     });
                     if (missingJobIds.length) {
-                        ['STATUS', 'ERROR', 'INFO'].forEach((type) => {
-                            self.addListener(jcm.MESSAGE_TYPE[type], missingJobIds);
+                        ['STATUS', 'ERROR', 'INFO'].forEach((msgType) => {
+                            self.addListener(
+                                jcm.MESSAGE_TYPE[msgType],
+                                jcm.CHANNEL.JOB,
+                                missingJobIds
+                            );
                         });
                         self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
                             [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
@@ -538,7 +551,7 @@ define([
              * @param {array[string]} jobIdList
              */
             requestJobInfo(jobIdList) {
-                this.addListener(jcm.MESSAGE_TYPE.INFO, jobIdList);
+                this.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, jobIdList);
                 this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
             }
 
@@ -547,7 +560,7 @@ define([
              * @param {array[string]} jobIdList
              */
             requestJobStatus(jobIdList) {
-                this.addListener(jcm.MESSAGE_TYPE.STATUS, jobIdList);
+                this.addListener(jcm.MESSAGE_TYPE.STATUS, jcm.CHANNEL.JOB, jobIdList);
                 this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
             }
         };
@@ -565,7 +578,7 @@ define([
             doJobAction(action, jobIdList) {
                 this.bus.emit(jobCommand[action].command, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
                 // add the appropriate listener
-                this.addListener(jobCommand[action].listener, jobIdList);
+                this.addListener(jobCommand[action].listener, jcm.CHANNEL.JOB, jobIdList);
             }
 
             /**
@@ -716,7 +729,7 @@ define([
 
                 // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
-                    this.removeJobListeners(jobId);
+                    this.removeChannelListeners(jobId);
                 });
 
                 this.model.deleteItem('exec');
@@ -779,15 +792,15 @@ define([
                 this._initJobs({ allJobIds, batchId: batch_id });
 
                 // request job info
-                this.addListener(jcm.MESSAGE_TYPE.INFO, allJobIds);
+                this.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, allJobIds);
                 this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batch_id });
             }
 
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
-                ['STATUS', 'ERROR'].forEach((type) => {
-                    this.addListener(jcm.MESSAGE_TYPE[type], allJobIds);
+                ['STATUS', 'ERROR'].forEach((msgType) => {
+                    this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, allJobIds);
                 });
                 // request job updates
                 this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId });

@@ -821,7 +821,7 @@ define([
                             model: makeModel(paramTestsJobArray),
                             bus: Runtime.make().bus(),
                         });
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, [
+                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, [
                             'job_update_test',
                             'generic_retry_parent',
                         ]);
@@ -1134,7 +1134,11 @@ define([
                     });
                     JobsData.allJobs.forEach((state) => {
                         it('should not update with incorrect job ID', function () {
-                            this.jobManager.addListener(jcm.MESSAGE_TYPE.STATUS, state.job_id);
+                            this.jobManager.addListener(
+                                jcm.MESSAGE_TYPE.STATUS,
+                                jcm.CHANNEL.JOB,
+                                state.job_id
+                            );
                             _checkRowStructure(this.row, this.job);
                             this.input = state;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
@@ -1228,7 +1232,11 @@ define([
                             jobManager: this.jobManager,
                         });
 
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.RETRY, originalJobsIds);
+                        this.jobManager.addListener(
+                            jcm.MESSAGE_TYPE.RETRY,
+                            jcm.CHANNEL.JOB,
+                            originalJobsIds
+                        );
                     });
 
                     it('sets up a table correctly', function () {
@@ -1566,7 +1574,7 @@ define([
                     beforeEach(async function () {
                         await createJobStatusTableWithContext(this, paramTestsJobArray);
                         this.job = TestUtil.JSONcopy(paramTestsJobArray[0]);
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, [
+                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, [
                             'job_update_test',
                             'generic_retry_parent',
                         ]);
@@ -1591,7 +1599,10 @@ define([
                                 const expectedCallArgs = [
                                     jcm.MESSAGE_TYPE.INFO,
                                     { job_id: 'job_update_test', ...test.input },
-                                    'job_update_test',
+                                    {
+                                        channelType: jcm.CHANNEL.JOB,
+                                        channelId: 'job_update_test',
+                                    },
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);
                             }
@@ -1621,7 +1632,10 @@ define([
                                         job_id: this.job.retry_parent,
                                         ...test.input,
                                     },
-                                    this.job.retry_parent,
+                                    {
+                                        channelType: jcm.CHANNEL.JOB,
+                                        channelId: this.job.retry_parent,
+                                    },
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);
                             }

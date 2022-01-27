@@ -123,6 +123,38 @@ define(['kbase/js/widgets/narrative_core/upload/importErrors'], (Errors) => {
                 expect(error.fileErrors).toEqual(expectedFileErrors);
             });
 
+            it('should handle errors for bad data types', () => {
+                const badDataType = 'notARealType';
+                const fileName = 'badDataType.csv';
+                const error = new Errors.ImportSetupError('Data type error', [
+                    {
+                        type: 'unknown_data_type',
+                        dataType: badDataType,
+                        file: fileName,
+                        tab: null,
+                    },
+                ]);
+                expect(error.fileErrors).toEqual({
+                    [fileName]: [`Unknown importer type "${badDataType}"`],
+                });
+            });
+
+            it('should handle errors for non-bulk data types', () => {
+                const badDataType = 'notABulkType';
+                const fileName = 'badDataType.csv';
+                const error = new Errors.ImportSetupError('Data type error', [
+                    {
+                        type: 'non_bulk_import_data_type',
+                        dataType: badDataType,
+                        file: fileName,
+                        tab: null,
+                    },
+                ]);
+                expect(error.fileErrors).toEqual({
+                    [fileName]: [`Importer type "${badDataType}" is not usable for bulk import`],
+                });
+            });
+
             it('should handle server errors', () => {
                 const serverErrorMsg = '500 internal service error',
                     serverError = [

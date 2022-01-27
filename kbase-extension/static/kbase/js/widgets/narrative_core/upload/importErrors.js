@@ -9,11 +9,18 @@ define(['common/ui', 'common/html'], (UI, html) => {
         NO_FILES: 'no_files_provided',
         UNKNOWN: 'unexpected_error',
         SERVER: 'server_error',
+        UNKNOWN_TYPE: 'unknown_data_type',
+        NOT_BULK_TYPE: 'non_bulk_import_data_type',
     };
 
     const DEFAULT_MESSAGES = {
         UNKNOWN: 'An unexpected error occurred.',
         FILE_NOT_FOUND: 'File not found',
+    };
+
+    const TEMPLATE_MESSAGES = {
+        UNKNOWN_TYPE: (dataType) => `Unknown importer type "${dataType}"`,
+        NOT_BULK_TYPE: (dataType) => `Importer type "${dataType}" is not usable for bulk import`,
     };
 
     /**
@@ -137,6 +144,26 @@ define(['common/ui', 'common/html'], (UI, html) => {
                             message: error.message,
                         });
                         break;
+                    case BULK_SPEC_ERRORS.NOT_BULK_TYPE:
+                        addFileError(
+                            Object.assign(
+                                {
+                                    message: TEMPLATE_MESSAGES.NOT_BULK_TYPE(error.dataType),
+                                },
+                                error
+                            )
+                        );
+                        break;
+                    case BULK_SPEC_ERRORS.UNKNOWN_TYPE:
+                        addFileError(
+                            Object.assign(
+                                {
+                                    message: TEMPLATE_MESSAGES.UNKNOWN_TYPE(error.dataType),
+                                },
+                                error
+                            )
+                        );
+                        break;
                     case BULK_SPEC_ERRORS.NO_FILES:
                         this.noFileError = true;
                         break;
@@ -202,9 +229,9 @@ define(['common/ui', 'common/html'], (UI, html) => {
                 });
 
                 if (numFiles === 1) {
-                    footer = `Check bulk import file ${
+                    footer = `Check bulk import file ${b(
                         Object.keys(this.fileErrors)[0]
-                    } and retry. `;
+                    )} and retry. `;
                 } else if (numFiles > 1) {
                     footer = 'Check bulk import files and retry. ';
                 }

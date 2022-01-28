@@ -473,10 +473,7 @@ define([
     function sendBusMessage(ctx, message, channelType, channelId, type) {
         const bus = ctx.bus || ctx.jobManager.bus;
 
-        bus.send(
-            { [channelId]: message },
-            { channel: { [channelType]: channelId }, key: { type } }
-        );
+        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
     }
 
     describe('The JobStatusTable module', () => {

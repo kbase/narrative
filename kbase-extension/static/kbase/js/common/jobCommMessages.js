@@ -3,13 +3,14 @@ define(['json!kbase/config/job_config.json'], (JobConfig) => {
 
     const REQUESTS = {},
         RESPONSES = {},
+        // param names
+        PARAM = JobConfig.params,
         // channel types
         CHANNEL = {
             CELL: 'cell',
             JOB: 'jobId',
-        },
-        // param names
-        PARAM = JobConfig.params;
+            BATCH: JobConfig.params.BATCH_ID,
+        };
 
     JobConfig.requests.forEach((req) => {
         REQUESTS[req] = JobConfig.message_types[req];

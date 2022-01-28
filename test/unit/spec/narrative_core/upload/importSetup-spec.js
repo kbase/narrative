@@ -350,8 +350,76 @@ define([
                 });
             });
 
-            // TODO
-            xit('should error when given multiple bulk spec files with the same type', async () => {});
+            it('should error when receiving the same type of dataType from splitting service calls', async () => {
+                // really, the only way this gets triggered is when two conditions happen:
+                // 1. there are enough files, or files with long enough path names, to require multiple GET calls
+                // 2. two or more of those files have data for the same data type
+                // so let's play with some crazy long, generated file names. The allowed URL length
+                // is 2048 characters, so a couple files of length ~1500 should do it, right?
+                // Mocking calls to the service will need to be done manually here, too.
+                const file1 = `${'a'.repeat(1500)}.csv`,
+                    file2 = `${'b'.repeat(1500)}.csv`,
+                    dataType = 'assembly',
+                    response1 = {
+                        types: {
+                            [dataType]: { some: 'data' },
+                        },
+                        files: {
+                            [dataType]: { file: file1, tab: null },
+                        },
+                    },
+                    response2 = {
+                        types: {
+                            [dataType]: { some: 'more_data' },
+                        },
+                        files: {
+                            [dataType]: { file: file2, tab: null },
+                        },
+                    };
+
+                jasmine.Ajax.stubRequest(
+                    `${stagingServiceUrl}/bulk_specification/?files=${file1}`
+                ).andReturn({
+                    status: 200,
+                    statusText: 'ok',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(response1),
+                });
+                jasmine.Ajax.stubRequest(
+                    `${stagingServiceUrl}/bulk_specification/?files=${file2}`
+                ).andReturn({
+                    status: 200,
+                    statusText: 'ok',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(response2),
+                });
+
+                const importInputs = [
+                    {
+                        name: file1,
+                        type: 'import_specification',
+                    },
+                    {
+                        name: file2,
+                        type: 'import_specification',
+                    },
+                ];
+
+                let error;
+                try {
+                    await ImportSetup.setupImportCells(importInputs);
+                } catch (e) {
+                    error = e;
+                }
+                // make sure we get the right list, and that the fileErrors
+                // look like : { file1: [error], file2: [error] }
+                expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
+                [file1, file2].forEach((fileName) => {
+                    expect(error.fileErrors[fileName]).toEqual(jasmine.any(Array));
+                });
+            });
         });
 
         describe('setupWebUploadCell tests', () => {

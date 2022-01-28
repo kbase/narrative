@@ -852,8 +852,7 @@ define([
                             batch_id: null,
                             job_id: this.jobId,
                             job_params: [jobParams],
-                        },
-                        message = { [jobId]: jobInfo };
+                        };
                     setUpHandlerTest(this, event);
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
@@ -870,13 +869,13 @@ define([
                                 zzz_resolve_promise: (...args) => {
                                     // eslint-disable-next-line no-unused-vars
                                     const [_, msg, channel] = args;
-                                    expect(msg).toEqual(message);
+                                    expect(msg).toEqual(jobInfo);
                                     expect(channel).toEqual(channelData);
                                     resolve();
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, message, messageAddress);
+                        sendBusMessage(this.bus, jobInfo, messageAddress);
                     }).then(() => {
                         expect(
                             this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
@@ -891,10 +890,8 @@ define([
                     expect(
                         this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
                     ).not.toBeDefined();
-                    const message = {
-                        [jobId]: { job_id: jobId, error },
-                    };
                     const error = 'Some made-up error';
+                    const message = { job_id: jobId, error };
                     return new Promise((resolve) => {
                         this.jobManagerInstance.addListener(
                             jcm.MESSAGE_TYPE.INFO,
@@ -961,11 +958,10 @@ define([
                     spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
                     return new Promise((resolve) => {
                         const message = {
-                            [jobId]: {
-                                [jcm.PARAM.JOB_ID]: this.jobId,
-                                job: { jobState: updatedJobState },
-                                retry: { jobState: retryJobState },
-                            },
+                            [jcm.PARAM.JOB_ID]: this.jobId,
+                            job: { jobState: updatedJobState },
+                            retry_id: retryJobState.job_id,
+                            retry: { jobState: retryJobState },
                         };
 
                         this.jobManagerInstance.addListener(
@@ -1017,11 +1013,9 @@ define([
 
                     return new Promise((resolve) => {
                         const message = {
-                            [jobId]: {
-                                [jcm.PARAM.JOB_ID]: this.jobId,
-                                job: { jobState: jobState },
-                                error: 'could not execute action',
-                            },
+                            [jcm.PARAM.JOB_ID]: this.jobId,
+                            job: { jobState: jobState },
+                            error: 'could not execute action',
                         };
                         this.jobManagerInstance.addListener(
                             jcm.MESSAGE_TYPE.RETRY,
@@ -1066,13 +1060,9 @@ define([
                         updateTwo = Object.assign({}, jobState, {
                             retry_ids: [1, 2, 3],
                         }),
-                        messageOne = { [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState } },
-                        messageTwo = {
-                            [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState: updateOne },
-                        },
-                        messageThree = {
-                            [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState: updateTwo },
-                        };
+                        messageOne = { [jcm.PARAM.JOB_ID]: jobId, jobState },
+                        messageTwo = { [jcm.PARAM.JOB_ID]: jobId, jobState: updateOne },
+                        messageThree = { [jcm.PARAM.JOB_ID]: jobId, jobState: updateTwo };
 
                     spyOn(console, 'error');
                     spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
@@ -1173,7 +1163,8 @@ define([
 
                         return new Promise((resolve) => {
                             const message = {
-                                [jobId]: { jobState: updatedJobState, [jcm.PARAM.JOB_ID]: jobId },
+                                jobState: updatedJobState,
+                                [jcm.PARAM.JOB_ID]: jobId,
                             };
                             this.jobManagerInstance.addListener(
                                 jcm.MESSAGE_TYPE.STATUS,
@@ -1251,9 +1242,7 @@ define([
 
                     // trigger the update
                     return new Promise((resolve) => {
-                        const message = {
-                            jobId: { jobState: batchParentUpdate, [jcm.PARAM.JOB_ID]: jobId },
-                        };
+                        const message = { jobState: batchParentUpdate, [jcm.PARAM.JOB_ID]: jobId };
                         this.jobManagerInstance.addListener(
                             jcm.MESSAGE_TYPE.STATUS,
                             jcm.CHANNEL.JOB,

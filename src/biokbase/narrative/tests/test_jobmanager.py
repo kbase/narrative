@@ -438,12 +438,12 @@ class JobManagerTest(unittest.TestCase):
     ):
         self.assertEqual(expected, retry_results)
         orig_ids = [
-            result["job"]["jobState"]["job_id"]
+            result["job_id"]
             for result in retry_results.values()
             if "error" not in result
         ]
         retry_ids = [
-            result["retry"]["jobState"]["job_id"]
+            result["retry_id"]
             for result in retry_results.values()
             if "error" not in result
         ]

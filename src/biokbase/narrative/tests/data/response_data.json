@@ -933,7 +933,8 @@
                     "wsid": 10538
                 },
                 "outputWidgetInfo": null
-            }
+            },
+            "retry_id": "BATCH_RETRY_ERROR"
         },
         "BATCH_PARENT": {
             "error": "Cannot retry batch job parents. Must retry individual jobs",
@@ -1200,7 +1201,8 @@
                     },
                     "tag": "release"
                 }
-            }
+            },
+            "retry_id": "BATCH_RETRY_COMPLETED"
         },
         "JOB_COMPLETED": {
             "error": "Error retrying job JOB_COMPLETED with status completed: can only retry jobs with status 'error' or 'terminated'",

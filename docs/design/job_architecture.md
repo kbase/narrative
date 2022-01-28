@@ -429,6 +429,7 @@ Dictionary with key(s) original job ID and value dictionaries with the following
   "job_id_1": {
     "job_id": "job_id_1",
     "job": {"jobState": {"job_id": "job_id_1", "status": status, ...} ...},
+    "retry_id": "retry_id_1",
     "retry": {"jobState": {"job_id": "retry_id_1", "status": status, ...} ...}
   },
   "job_id_2": {
@@ -445,8 +446,9 @@ Dictionary with key(s) original job ID and value dictionaries with the following
 ```
 Where the dict values corresponding to "job" or "retry" are the same data structures as for `job_status`
 Outer keys:
-  * `job_id` - string, ID of the retried job
-  * `job` - string, the job state object of the retried job
+  * `job_id` - string, ID of the job that was retried (the retry parent)
+  * `job` - string, the job state object of that job
+  * `retry_id` - string, ID of the new job
   * `retry` - string, the job state object of the new job that was launched
 
 In case of error, the response has the keys:

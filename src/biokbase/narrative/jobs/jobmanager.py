@@ -475,8 +475,10 @@ class JobManager(object):
         Returns
         [
             {
+                "job_id": job_id,
                 "job": {"state": {"job_id": job_id, "status": status, ...} ...},
-                "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
+                "retry_id": retry_id,
+                "retry": {"state": {"job_id": retry_id, "status": status, ...} ...}
             },
             {
                 "job": {"state": {"job_id": job_id, "status": status, ...} ...},
@@ -516,6 +518,7 @@ class JobManager(object):
             results_by_job_id[job_id] = {"job_id": job_id, "job": job_states[job_id]}
             if "retry_id" in result:
                 retry_id = result["retry_id"]
+                results_by_job_id[job_id]["retry_id"] = retry_id
                 results_by_job_id[job_id]["retry"] = job_states[retry_id]
             if "error" in result:
                 results_by_job_id[job_id]["error"] = result["error"]

@@ -391,7 +391,8 @@ define([
                 [jcm.PARAM.JOB_ID]: jobId,
                 jobState: ctx.input,
             },
-            { [jcm.CHANNEL.JOB]: jobId },
+            [jcm.CHANNEL.JOB],
+            jobId,
             jcm.MESSAGE_TYPE.STATUS
         );
     }
@@ -405,7 +406,7 @@ define([
      */
     function send_INFO(ctx) {
         const { jobId, jobInfo } = ctx;
-        sendBusMessage(ctx, jobInfo, { [jcm.CHANNEL.JOB]: jobId }, jcm.MESSAGE_TYPE.INFO);
+        sendBusMessage(ctx, jobInfo, [jcm.CHANNEL.JOB], jobId, jcm.MESSAGE_TYPE.INFO);
     }
 
     /**
@@ -426,11 +427,13 @@ define([
                 job: {
                     jobState: retryParent,
                 },
+                retry_id: retry.job_id,
                 retry: {
                     jobState: retry,
                 },
             },
-            { [jcm.CHANNEL.JOB]: retryParent.job_id },
+            [jcm.CHANNEL.JOB],
+            retryParent.job_id,
             jcm.MESSAGE_TYPE.RETRY
         );
     }
@@ -452,15 +455,28 @@ define([
                 error,
                 request: error.source,
             },
-            { [jcm.CHANNEL.JOB]: jobId },
+            [jcm.CHANNEL.JOB],
+            jobId,
             jcm.MESSAGE_TYPE.ERROR
         );
     }
 
-    function sendBusMessage(ctx, message, channel, type) {
+    /**
+     * send a jcm.MESSAGE_TYPE.<type> message over the bus
+     *
+     * @param {object} ctx - `this` context, with key 'bus' or 'jobManager.bus'
+     *      {object} message        - the message
+     *      {string} channelType    - jcm.CHANNEL.<type>
+     *      {string} channelId      - ID for the channel
+     *      {string} type           - jcm.MESSAGE_TYPE.<type>
+     */
+    function sendBusMessage(ctx, message, channelType, channelId, type) {
         const bus = ctx.bus || ctx.jobManager.bus;
 
-        bus.send(message, { channel, key: { type } });
+        bus.send(
+            { [channelId]: message },
+            { channel: { [channelType]: channelId }, key: { type } }
+        );
     }
 
     describe('The JobStatusTable module', () => {

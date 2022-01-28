@@ -161,6 +161,7 @@ def generate_job_retries(all_jobs, retried_jobs):
             job_retries[job_id] = {
                 "job_id": job_id,
                 "job": _generate_job_output(job_id),
+                "retry_id": retried_jobs[job_id],
                 "retry": _generate_job_output(retried_jobs[job_id]),
             }
         elif "batch_job" in all_jobs[job_id] and all_jobs[job_id]["batch_job"]:

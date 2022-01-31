@@ -90,12 +90,12 @@ def _generate_job_output(job_id):
             del state[f]
 
     if state["status"] != COMPLETED_STATUS:
-        return {"jobState": state, "outputWidgetInfo": widget_info}
+        return {"job_id": job_id, "jobState": state, "outputWidgetInfo": widget_info}
 
     if not widget_info:
         widget_info = {}
 
-    return {"jobState": state, "outputWidgetInfo": widget_info}
+    return {"job_id": job_id, "jobState": state, "outputWidgetInfo": widget_info}
 
 
 def generate_bad_jobs():

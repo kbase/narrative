@@ -426,6 +426,7 @@ class Job(object):
                 state.update({"updated": int(time.time())})
 
         return {
+            "job_id": self.job_id,
             "jobState": state,
             "outputWidgetInfo": widget_info,
         }

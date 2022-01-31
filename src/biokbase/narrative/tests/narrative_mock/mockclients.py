@@ -281,23 +281,25 @@ class MockClients:
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        info = self.job_state_data.get(job_id, {"job_id": job_id, "status": "unmocked"})
+        job_state = self.job_state_data.get(
+            job_id, {"job_id": job_id, "status": "unmocked"}
+        )
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
-                if f in info:
-                    del info[f]
-        return info
+                if f in job_state:
+                    del job_state[f]
+        return job_state
 
     def check_jobs(self, params):
         job_ids = params.get("job_ids")
-        infos = dict()
+        job_states = dict()
         for job in job_ids:
-            infos[job] = self.check_job(
+            job_states[job] = self.check_job(
                 {"job_id": job, "exclude_fields": params.get("exclude_fields", [])}
             )
         if params.get("return_list"):
-            infos = list(infos.values())
-        return infos
+            job_states = list(job_states.values())
+        return job_states
 
     def get_job_logs(self, params):
         """

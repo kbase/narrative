@@ -5,7 +5,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Version 5.0.2
-- SAM-73 - Extends the ability to use app Params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
+- SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
 
 ### Version 5.0.1
 - SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.

@@ -114,10 +114,13 @@ define([
                 url: nsUrl,
             });
 
-            Mocks.mockJsonRpc1Call({
+            const mockJsonBody = {
                 url: nsUrl,
                 body: new RegExp(`${service}.${method}`),
                 response: [
+                    {
+                        field: 'value0',
+                    },
                     {
                         field: 'value1',
                     },
@@ -125,7 +128,8 @@ define([
                         field: 'value2',
                     },
                 ],
-            });
+            };
+            Mocks.mockJsonRpc1Call(mockJsonBody);
 
             let busResponseCalls = 0;
             bus.respond({
@@ -149,6 +153,7 @@ define([
             const selector = 'select.form-control[data-element="input"]';
             const selectElem = container.querySelector(selector);
             const select2Elem = container.querySelector('span.select2');
+
             await TestUtil.waitForElementChange(select2Elem, () => {
                 $(selectElem).select2('open');
                 $(selectElem).val('foo').trigger('change');
@@ -165,7 +170,11 @@ define([
             // verify that the bus was called exactly once
             expect(busResponseCalls).toBe(1);
 
-            // TODO: verify that the dropdown gets populated with results
+            // verify that the dropdown gets populated with results
+            const optionsBoxChildren = document.querySelector('.select2-results__options').children;
+            const options = document.querySelectorAll('.select2-results__option');
+            expect(optionsBoxChildren.length).toBe(3);
+            expect(options[1].innerText).toBe('foo value1 bar');
         });
     });
 });

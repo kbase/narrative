@@ -425,10 +425,12 @@ define([
             {
                 [jcm.PARAM.JOB_ID]: retryParent.job_id,
                 job: {
+                    [jcm.PARAM.JOB_ID]: retryParent.job_id,
                     jobState: retryParent,
                 },
                 retry_id: retry.job_id,
                 retry: {
+                    [jcm.PARAM.JOB_ID]: retry.job_id,
                     jobState: retry,
                 },
             },
@@ -996,7 +998,7 @@ define([
 
                         await createJobStatusTableWithContext(
                             this,
-                            TestUtil.JSONcopy(JobsData.jobsById['job-finished-with-success'])
+                            TestUtil.JSONcopy(JobsData.jobsById['JOB_COMPLETED'])
                         );
                         container = this.container;
                     });
@@ -1011,8 +1013,8 @@ define([
                 });
 
                 const cancelRetryArgs = {
-                    cancel: 'job-in-the-queue',
-                    retry: 'job-cancelled-during-run',
+                    cancel: 'JOB_QUEUED',
+                    retry: 'JOB_TERMINATED_WHILST_RUNNING',
                 };
 
                 Object.keys(cancelRetryArgs).forEach((action) => {
@@ -1190,7 +1192,7 @@ define([
                                 code: -1,
                                 name: 'Exception',
                             },
-                            job: 'job-in-the-queue',
+                            job: 'JOB_QUEUED',
                         },
                         {
                             errorText: 'Could not retry job.',
@@ -1203,7 +1205,7 @@ define([
                                 code: -1,
                                 name: 'Exception',
                             },
-                            job: 'job-died-whilst-queueing',
+                            job: 'JOB_DIED_WHILST_QUEUED',
                         },
                     ];
 
@@ -1336,49 +1338,43 @@ define([
                         });
 
                         const estimatingUpdate = TestUtil.JSONcopy(
-                            batchJobData.jobsById['job-estimating']
+                            batchJobData.jobsById['JOB_ESTIMATING']
                         );
                         estimatingUpdate.updated += 10;
                         estimatingUpdate.status = 'queued';
 
                         const jobDiedWithErrorUpdate = TestUtil.JSONcopy(
-                            batchJobData.jobsById['job-died-with-error']
+                            batchJobData.jobsById['JOB_DIED_WHILST_RUNNING']
                         );
                         jobDiedWithErrorUpdate.updated += 15;
-                        const rowIds = [
-                            'job-created',
-                            'job-cancelled-whilst-in-the-queue',
-                            'job-died-whilst-queueing',
-                            'job-in-the-queue',
-                            'job-cancelled-during-run',
-                        ];
+                        const rowIds = Object.keys(batchJobData.originalJobs);
 
                         const updates = [
                             {
-                                // retry of 'job-cancelled-whilst-in-the-queue'
-                                retry: batchJobData.jobsById['job-running'],
+                                // retry of 'JOB_TERMINATED_WHILST_QUEUED'
+                                retry: batchJobData.jobsById['JOB_RUNNING'],
                             },
                             {
-                                // retry 1 of 'job-died-whilst-queueing'
-                                retry: batchJobData.jobsById['job-died-with-error'],
+                                // retry 1 of 'JOB_DIED_WHILST_QUEUED'
+                                retry: batchJobData.jobsById['JOB_DIED_WHILST_RUNNING'],
                             },
                             {
-                                // retry of 'job-cancelled-during-run'
-                                retry: batchJobData.jobsById['job-finished-with-success'],
+                                // retry of 'JOB_TERMINATED_WHILST_RUNNING'
+                                retry: batchJobData.jobsById['JOB_COMPLETED'],
                             },
                             {
-                                // retry 2 of 'job-died-whilst-queueing'
-                                retry: batchJobData.jobsById['job-estimating'],
+                                // retry 2 of 'JOB_DIED_WHILST_QUEUED'
+                                retry: batchJobData.jobsById['JOB_ESTIMATING'],
                             },
                             {
-                                // update of 'job-died-with-error'
-                                // this job started before job-estimating
-                                // so the table row will continue to show the job-estimating info
+                                // update of 'JOB_DIED_WHILST_RUNNING'
+                                // this job started before JOB_ESTIMATING
+                                // so the table row will continue to show the JOB_ESTIMATING info
                                 update: jobDiedWithErrorUpdate,
-                                expectedRow: batchJobData.jobsById['job-estimating'],
+                                expectedRow: batchJobData.jobsById['JOB_ESTIMATING'],
                             },
                             {
-                                // update of 'job-estimating'
+                                // update of 'JOB_ESTIMATING'
                                 update: estimatingUpdate,
                             },
                         ];

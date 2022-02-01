@@ -959,9 +959,9 @@ define([
                     return new Promise((resolve) => {
                         const message = {
                             [jcm.PARAM.JOB_ID]: this.jobId,
-                            job: { jobState: updatedJobState },
+                            job: { job_id: this.jobId, jobState: updatedJobState },
                             retry_id: retryJobState.job_id,
-                            retry: { jobState: retryJobState },
+                            retry: { job_id: retryJobState.job_id, jobState: retryJobState },
                         };
 
                         this.jobManagerInstance.addListener(

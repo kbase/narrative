@@ -26,6 +26,7 @@ import sys
 
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
+    MAX_LOG_LINES,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
@@ -454,10 +455,10 @@ class JobTest(unittest.TestCase):
         # Things set up by the mock:
         # 1. There's 100 total log lines
         # 2. Each line has its line number embedded in it
-        total_lines = 100
+        total_lines = MAX_LOG_LINES
         job = create_job_from_ee2(JOB_COMPLETED)
         logs = job.log()
-        # we know there's 100 lines total, so roll with it that way.
+        # we know there's MAX_LOG_LINES lines total, so roll with it that way.
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), total_lines)
         for i in range(len(logs[1])):
@@ -466,14 +467,14 @@ class JobTest(unittest.TestCase):
             self.assertIn("line", line)
             self.assertIn(str(i), line["line"])
         # grab the last half
-        offset = 50
+        offset = int(MAX_LOG_LINES / 2)
         logs = job.log(first_line=offset)
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), offset)
         for i in range(total_lines - offset):
             self.assertIn(str(i + offset), logs[1][i]["line"])
         # grab a bite from the middle
-        num_fetch = 20
+        num_fetch = int(MAX_LOG_LINES / 5)
         logs = job.log(first_line=offset, num_lines=num_fetch)
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), num_fetch)

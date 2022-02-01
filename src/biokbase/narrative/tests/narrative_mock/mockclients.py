@@ -6,6 +6,7 @@ import functools
 from unittest.mock import call
 
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.narrative.jobs.job import COMPLETED_STATUS
 
 from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
@@ -312,24 +313,37 @@ class MockClients:
         }
         there are only 100 "log lines" in total.
         """
-        if params["job_id"] == JOB_CREATED:
+        job_id = params["job_id"]
+
+        def log_gen(log_params, total_lines=100):
+            skip = log_params.get("skip_lines", 0)
+            lines = list()
+            if skip < total_lines:
+                for i in range(total_lines - skip):
+                    lines.append(
+                        {"is_error": 0, "line": "This is line {}".format(i + skip)}
+                    )
+            return {"last_line_number": max(total_lines, skip), "lines": lines}
+
+        if job_id == "JOB_LOG_TEST":
+            return log_gen(params, total_lines=100)
+
+        job = self.job_state_data.get(
+            job_id, {"job_id": job_id, "status": "does_not_exist"}
+        )
+
+        if job["status"] == "does_not_exist":
             raise ServerError(
-                "JSONRPCError", 2, "Cannot find job log with id: " + JOB_CREATED
-            )
-        if params["job_id"] == JOB_NOT_FOUND:
-            raise ServerError(
-                "JSONRPCError", 99, "Job ID is not registered: " + JOB_NOT_FOUND
+                "JSONRPCError", 99, "Job ID is not registered: " + job["job_id"]
             )
 
-        total_lines = 100
-        skip = params.get("skip_lines", 0)
-        lines = list()
-        if skip < total_lines:
-            for i in range(total_lines - skip):
-                lines.append(
-                    {"is_error": 0, "line": "This is line {}".format(i + skip)}
-                )
-        return {"last_line_number": max(total_lines, skip), "lines": lines}
+        if job["status"] != COMPLETED_STATUS:
+            raise ServerError(
+                "JSONRPCError", 2, "Cannot find job log with id: " + job["job_id"]
+            )
+
+        # otherwise, return five lines of logs
+        return log_gen(params, total_lines=5)
 
     # ----- Service Wizard functions -----
     def sync_call(self, call, params):

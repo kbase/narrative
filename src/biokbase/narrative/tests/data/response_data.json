@@ -258,7 +258,7 @@
             "job_id": "BATCH_ERROR_RETRIED"
         },
         "BATCH_PARENT": {
-            "batch_id": null,
+            "batch_id": "BATCH_PARENT",
             "error": "Cannot find job log with id: BATCH_PARENT",
             "job_id": "BATCH_PARENT"
         },

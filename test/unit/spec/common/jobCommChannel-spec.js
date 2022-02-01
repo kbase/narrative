@@ -551,23 +551,6 @@ define([
                     ],
                 },
                 {
-                    // info for a single job
-                    type: jcm.MESSAGE_TYPE.INFO,
-                    message: (() => {
-                        const output = {};
-                        output[JobsData.example.Info.valid[0].job_id] =
-                            JobsData.example.Info.valid[0];
-                        return output;
-                    })(),
-                    expected: [
-                        JobsData.example.Info.valid[0],
-                        {
-                            channel: { [JOB_CHANNEL]: JobsData.example.Info.valid[0].job_id },
-                            key: { type: jcm.MESSAGE_TYPE.INFO },
-                        },
-                    ],
-                },
-                {
                     // info multiple jobs
                     type: jcm.MESSAGE_TYPE.INFO,
                     message: ResponseData[jcm.MESSAGE_TYPE.INFO],
@@ -584,156 +567,52 @@ define([
                     ),
                 },
                 {
-                    // log with data
-                    type: jcm.MESSAGE_TYPE.LOGS,
-                    message: {
-                        [TEST_JOB_ID]: JobsData.example.Logs.valid[0],
-                    },
-                    expected: [
-                        JobsData.example.Logs.valid[0],
-                        {
-                            channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                            key: { type: jcm.MESSAGE_TYPE.LOGS },
-                        },
-                    ],
+                    // status for multiple jobs
+                    type: jcm.MESSAGE_TYPE.STATUS,
+                    message: ResponseData[jcm.MESSAGE_TYPE.STATUS],
+                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.STATUS]).map(
+                        (status) => {
+                            return [
+                                status,
+                                {
+                                    channel: { [JOB_CHANNEL]: status.job_id },
+                                    key: { type: jcm.MESSAGE_TYPE.STATUS },
+                                },
+                            ];
+                        }
+                    ),
                 },
                 {
-                    // log with message saying that the log cannot be found
+                    // logs for multiple jobs
                     type: jcm.MESSAGE_TYPE.LOGS,
-                    message: {
-                        [TEST_JOB_ID]: {
-                            [JOB_ID]: TEST_JOB_ID,
-                            error: `Cannot find job log with id: {TEST_JOB_ID}`,
-                        },
-                    },
-                    expected: [
-                        {
-                            [JOB_ID]: TEST_JOB_ID,
-                            error: `Cannot find job log with id: {TEST_JOB_ID}`,
-                        },
-                        {
-                            channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                            key: { type: jcm.MESSAGE_TYPE.LOGS },
-                        },
-                    ],
+                    message: ResponseData[jcm.MESSAGE_TYPE.LOGS],
+                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.LOGS]).map(
+                        (logs) => {
+                            return [
+                                logs,
+                                {
+                                    channel: { [JOB_CHANNEL]: logs.job_id },
+                                    key: { type: jcm.MESSAGE_TYPE.LOGS },
+                                },
+                            ];
+                        }
+                    ),
                 },
                 {
+                    // retry multiple jobs
                     type: jcm.MESSAGE_TYPE.RETRY,
-                    message: (() => {
-                        const retryData = {};
-                        JobsData.example.Retry.valid.forEach((retry) => {
-                            retryData[retry.job.jobState.job_id] = retry;
-                        });
-                        return retryData;
-                    })(),
-                    expectedMultiple: [
-                        [
-                            JobsData.example.Retry.valid[0],
-                            {
-                                channel: {
-                                    [JOB_CHANNEL]:
-                                        JobsData.example.Retry.valid[0].job.jobState.job_id,
+                    message: ResponseData[jcm.MESSAGE_TYPE.RETRY],
+                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.RETRY]).map(
+                        (retry) => {
+                            return [
+                                retry,
+                                {
+                                    channel: { [JOB_CHANNEL]: retry.job_id },
+                                    key: { type: jcm.MESSAGE_TYPE.RETRY },
                                 },
-                                key: { type: jcm.MESSAGE_TYPE.RETRY },
-                            },
-                        ],
-                        [
-                            JobsData.example.Retry.valid[1],
-                            {
-                                channel: {
-                                    [JOB_CHANNEL]:
-                                        JobsData.example.Retry.valid[1].job.jobState.job_id,
-                                },
-                                key: { type: jcm.MESSAGE_TYPE.RETRY },
-                            },
-                        ],
-                    ],
-                },
-                {
-                    // single job status message
-                    type: jcm.MESSAGE_TYPE.STATUS,
-                    message: (() => {
-                        const output = {};
-                        output[JobsData.allJobs[0].job_id] = {
-                            [JOB_ID]: JobsData.allJobs[0].job_id,
-                            jobState: JobsData.allJobs[0],
-                            outputWidgetInfo: {},
-                        };
-                        return output;
-                    })(),
-                    expected: [
-                        {
-                            [JOB_ID]: JobsData.allJobs[0].job_id,
-                            jobState: JobsData.allJobs[0],
-                            outputWidgetInfo: {},
-                        },
-                        {
-                            channel: { [JOB_CHANNEL]: JobsData.allJobs[0].job_id },
-                            key: { type: jcm.MESSAGE_TYPE.STATUS },
-                        },
-                    ],
-                },
-                {
-                    // single job status message, ee2 error
-                    type: jcm.MESSAGE_TYPE.STATUS,
-                    message: {
-                        [TEST_JOB_ID]: {
-                            [JOB_ID]: TEST_JOB_ID,
-                            jobState: {
-                                job_id: TEST_JOB_ID,
-                                status: 'running',
-                            },
-                            outputWidgetInfo: {},
-                            error: ERROR_STR,
-                        },
-                    },
-                    expected: [
-                        {
-                            [JOB_ID]: TEST_JOB_ID,
-                            jobState: {
-                                job_id: TEST_JOB_ID,
-                                status: 'running',
-                            },
-                            outputWidgetInfo: {},
-                            error: ERROR_STR,
-                        },
-                        {
-                            channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                            key: { type: jcm.MESSAGE_TYPE.STATUS },
-                        },
-                    ],
-                },
-                {
-                    // more than one job, indexed by job ID
-                    type: jcm.MESSAGE_TYPE.STATUS,
-                    message: JobsData.allJobs.reduce(convertToJobState, {}),
-                    expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage),
-                },
-                {
-                    // OK job and an errored job
-                    type: jcm.MESSAGE_TYPE.STATUS,
-                    message: JobsData.allJobs
-                        .concat({
-                            job_id: '1234567890abcdef',
-                            status: 'does_not_exist',
-                        })
-                        .reduce(convertToJobState, {}),
-                    expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage).concat([
-                        [
-                            {
-                                [JOB_ID]: '1234567890abcdef',
-                                jobState: {
-                                    job_id: '1234567890abcdef',
-                                    status: 'does_not_exist',
-                                },
-                                outputWidgetInfo: {},
-                            },
-                            {
-                                channel: { [JOB_CHANNEL]: '1234567890abcdef' },
-                                key: { type: jcm.MESSAGE_TYPE.STATUS },
-                            },
-                        ],
-                    ]),
+                            ];
+                        }
+                    ),
                 },
                 {
                     type: jcm.MESSAGE_TYPE.STATUS_ALL,
@@ -869,25 +748,6 @@ define([
                     ],
                 },
             ];
-
-            Object.keys(ResponseData).forEach((respType) => {
-                busTests.push({
-                    type: respType,
-                    message: ResponseData[respType],
-                    expectedMultiple: Object.values(ResponseData[respType]).map((response) => {
-                        if (response.jobState) {
-                            response.job_id = response.jobState.job_id;
-                        }
-                        return [
-                            response,
-                            {
-                                channel: { [JOB_CHANNEL]: response.job_id },
-                                key: { type: respType },
-                            },
-                        ];
-                    }),
-                });
-            });
 
             busTests.forEach((test) => {
                 it(`should send a ${test.type} message to the bus`, () => {

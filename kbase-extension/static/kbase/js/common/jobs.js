@@ -254,7 +254,7 @@ define([
      * @returns {boolean} true|false
      */
     function isValidBackendJobStateObject(backendJobState) {
-        const required = ['jobState'];
+        const required = ['job_id', 'jobState'];
         if (
             backendJobState &&
             Utils.objectToString(backendJobState) === 'Object' &&
@@ -334,7 +334,7 @@ define([
      *
      * This function should be updated to stay in sync with ee2's output.
      *
-     * @param {object} jobLogs
+     * @param {object} jobRetry
      * @returns {boolean} true|false
      */
     function isValidJobRetryObject(jobRetry) {

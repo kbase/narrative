@@ -192,10 +192,13 @@ def generate_job_logs(all_jobs):
     """
     job_logs = generate_bad_jobs()
     for job_id in all_jobs:
+        test_job = get_test_job(job_id)
+        batch_job = test_job.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
+        batch_id = job_id if batch_job else get_test_job(job_id).get("batch_id", None)
         if all_jobs[job_id]["status"] == COMPLETED_STATUS:
             job_logs[job_id] = {
                 "job_id": job_id,
-                "batch_id": get_test_job(job_id).get("batch_id", None),
+                "batch_id": batch_id,
                 "first": 0,
                 "latest": False,
                 "max_lines": 50,
@@ -203,7 +206,7 @@ def generate_job_logs(all_jobs):
             }
         else:
             job_logs[job_id] = {
-                "batch_id": get_test_job(job_id).get("batch_id", None),
+                "batch_id": batch_id,
                 "error": generate_error(job_id, "no_logs"),
                 "job_id": job_id,
             }

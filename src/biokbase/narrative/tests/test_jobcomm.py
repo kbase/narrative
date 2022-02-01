@@ -103,6 +103,8 @@ STATUS = MESSAGE_TYPE["STATUS"]
 STATUS_ALL = MESSAGE_TYPE["STATUS_ALL"]
 STOP_UPDATE = MESSAGE_TYPE["STOP_UPDATE"]
 
+LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(5)]
+
 
 def make_comm_msg(
     msg_type: str, job_id_like, as_job_request: bool, content: dict = None
@@ -936,7 +938,7 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__job_id__ok(self):
-        job_id = JOB_COMPLETED
+        job_id = "JOB_LOG_TEST"
         lines_available = 100  # just for convenience if the mock changes
         # first_line, num_lines, latest, number of lines in output
         cases = [
@@ -1033,40 +1035,52 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(LOGS, msg["msg_type"])
 
         self.assertEqual(
-            set(list(msg["content"][JOB_COMPLETED].keys())),
-            set(["job_id", "batch_id", "first", "latest", "max_lines", "lines"]),
-        )
-        self.assertEqual(
+            msg["content"],
             {
-                "job_id": JOB_CREATED,
-                "batch_id": None,
-                "error": generate_error(JOB_CREATED, "no_logs"),
+                JOB_COMPLETED: {
+                    "job_id": JOB_COMPLETED,
+                    "first": 0,
+                    "max_lines": 5,
+                    "latest": False,
+                    "batch_id": None,
+                    "lines": LOG_LINES,
+                },
+                JOB_CREATED: {
+                    "job_id": JOB_CREATED,
+                    "batch_id": None,
+                    "error": generate_error(JOB_CREATED, "no_logs"),
+                },
+                JOB_NOT_FOUND: {
+                    "job_id": JOB_NOT_FOUND,
+                    "error": generate_error(JOB_NOT_FOUND, "not_found"),
+                },
             },
-            msg["content"][JOB_CREATED],
-        )
-        self.assertEqual(
-            {
-                "job_id": JOB_NOT_FOUND,
-                "error": generate_error(JOB_NOT_FOUND, "not_found"),
-            },
-            msg["content"][JOB_NOT_FOUND],
         )
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__job_id__latest(self):
         job_id = JOB_COMPLETED
         req_dict = make_comm_msg(
-            LOGS, job_id, False, content={"num_lines": 10, "latest": True}
+            LOGS, job_id, False, content={"num_lines": 2, "latest": True}
         )
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        msg_content = msg["content"][job_id]
-        self.assertEqual(msg["msg_type"], LOGS)
-        self.assertEqual(msg_content["job_id"], job_id)
-        self.assertTrue(msg_content["latest"])
-        self.assertEqual(msg_content["first"], 90)
-        self.assertEqual(msg_content["max_lines"], 100)
-        self.assertEqual(len(msg_content["lines"]), 10)
+        self.assertEqual(
+            msg,
+            {
+                "msg_type": LOGS,
+                "content": {
+                    JOB_COMPLETED: {
+                        "job_id": JOB_COMPLETED,
+                        "first": 3,
+                        "max_lines": 5,
+                        "latest": True,
+                        "batch_id": None,
+                        "lines": [LOG_LINES[3], LOG_LINES[4]],
+                    }
+                },
+            },
+        )
 
     # ------------------------
     # Modify job update

@@ -10,9 +10,9 @@ from biokbase.narrative.jobs.job import COMPLETED_STATUS
 
 from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
-    JOB_CREATED,
+    MAX_LOG_LINES,
+    JOB_COMPLETED,
     BATCH_RETRY_RUNNING,
-    JOB_NOT_FOUND,
     BATCH_PARENT,
     READS_OBJ_1,
     READS_OBJ_2,
@@ -311,11 +311,10 @@ class MockClients:
             is_error 0,1
             line: string
         }
-        there are only 100 "log lines" in total.
         """
         job_id = params["job_id"]
 
-        def log_gen(log_params, total_lines=100):
+        def log_gen(log_params, total_lines=MAX_LOG_LINES):
             skip = log_params.get("skip_lines", 0)
             lines = list()
             if skip < total_lines:
@@ -325,8 +324,8 @@ class MockClients:
                     )
             return {"last_line_number": max(total_lines, skip), "lines": lines}
 
-        if job_id == "JOB_LOG_TEST":
-            return log_gen(params, total_lines=100)
+        if job_id == JOB_COMPLETED:
+            return log_gen(params, total_lines=MAX_LOG_LINES)
 
         job = self.job_state_data.get(
             job_id, {"job_id": job_id, "status": "does_not_exist"}

@@ -35,6 +35,7 @@ from biokbase.narrative.exception_util import (
 from .util import ConfigTests, validate_job_state
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
+    MAX_LOG_LINES,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
@@ -103,7 +104,7 @@ STATUS = MESSAGE_TYPE["STATUS"]
 STATUS_ALL = MESSAGE_TYPE["STATUS_ALL"]
 STOP_UPDATE = MESSAGE_TYPE["STOP_UPDATE"]
 
-LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(5)]
+LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG_LINES)]
 
 
 def make_comm_msg(
@@ -933,22 +934,22 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__job_id__ok(self):
-        job_id = "JOB_LOG_TEST"
-        lines_available = 100  # just for convenience if the mock changes
+        job_id = JOB_COMPLETED
+        lines_available = MAX_LOG_LINES  # just for convenience if the mock changes
         # first_line, num_lines, latest, number of lines in output
         cases = [
-            (0, 10, False, 10),
-            (-100, 10, False, 10),
-            (50, 20, False, 20),
+            (0, 1, False, 1),
+            (-100, 1, False, 1),
+            (5, 2, False, 2),
             (0, 5000, False, lines_available),
             (0, None, False, lines_available),
-            (80, None, False, 20),
-            (0, 10, True, 10),
-            (-100, 10, True, 10),
-            (50, 20, True, 20),
+            (8, None, False, 2),
+            (0, 1, True, 1),
+            (-100, 1, True, 1),
+            (5, 2, True, 2),
             (0, 5000, True, lines_available),
             (0, None, True, lines_available),
-            (80, None, True, lines_available),
+            (8, None, True, lines_available),
         ]
         for c in cases:
             content = {"first_line": c[0], "num_lines": c[1], "latest": c[2]}
@@ -1035,7 +1036,7 @@ class JobCommTestCase(unittest.TestCase):
                 JOB_COMPLETED: {
                     "job_id": JOB_COMPLETED,
                     "first": 0,
-                    "max_lines": 5,
+                    "max_lines": MAX_LOG_LINES,
                     "latest": False,
                     "batch_id": None,
                     "lines": LOG_LINES,
@@ -1053,26 +1054,42 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_get_job_logs__job_id__latest(self):
-        job_id = JOB_COMPLETED
+    def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail__with_params(
+        self,
+    ):
+        num_lines = int(MAX_LOG_LINES / 5)
+        first = MAX_LOG_LINES - num_lines
+        lines = LOG_LINES[-num_lines::]
+
         req_dict = make_comm_msg(
-            LOGS, job_id, False, content={"num_lines": 2, "latest": True}
+            LOGS,
+            [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND],
+            False,
+            content={"num_lines": num_lines, "latest": True},
         )
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
+        self.assertEqual(LOGS, msg["msg_type"])
+
         self.assertEqual(
-            msg,
+            msg["content"],
             {
-                "msg_type": LOGS,
-                "content": {
-                    JOB_COMPLETED: {
-                        "job_id": JOB_COMPLETED,
-                        "first": 3,
-                        "max_lines": 5,
-                        "latest": True,
-                        "batch_id": None,
-                        "lines": [LOG_LINES[3], LOG_LINES[4]],
-                    }
+                JOB_COMPLETED: {
+                    "job_id": JOB_COMPLETED,
+                    "first": first,
+                    "max_lines": MAX_LOG_LINES,
+                    "latest": True,
+                    "batch_id": None,
+                    "lines": lines,
+                },
+                JOB_CREATED: {
+                    "job_id": JOB_CREATED,
+                    "batch_id": None,
+                    "error": generate_error(JOB_CREATED, "no_logs"),
+                },
+                JOB_NOT_FOUND: {
+                    "job_id": JOB_NOT_FOUND,
+                    "error": generate_error(JOB_NOT_FOUND, "not_found"),
                 },
             },
         )

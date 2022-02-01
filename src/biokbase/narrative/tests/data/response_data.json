@@ -416,6 +416,7 @@
                 },
                 "wsid": 10538
             },
+            "job_id": "BATCH_COMPLETED",
             "outputWidgetInfo": {
                 "name": "no-display",
                 "params": {
@@ -459,6 +460,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_ERROR_RETRIED",
             "outputWidgetInfo": null
         },
         "BATCH_PARENT": {
@@ -487,6 +489,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_PARENT",
             "outputWidgetInfo": null
         },
         "BATCH_RETRY_COMPLETED": {
@@ -532,6 +535,7 @@
                 },
                 "wsid": 10538
             },
+            "job_id": "BATCH_RETRY_COMPLETED",
             "outputWidgetInfo": {
                 "name": "no-display",
                 "params": {
@@ -574,6 +578,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_RETRY_ERROR",
             "outputWidgetInfo": null
         },
         "BATCH_RETRY_RUNNING": {
@@ -597,6 +602,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_RETRY_RUNNING",
             "outputWidgetInfo": null
         },
         "BATCH_TERMINATED": {
@@ -621,6 +627,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_TERMINATED",
             "outputWidgetInfo": null
         },
         "BATCH_TERMINATED_RETRIED": {
@@ -648,6 +655,7 @@
                 "user": "alien_test_user",
                 "wsid": 10538
             },
+            "job_id": "BATCH_TERMINATED_RETRIED",
             "outputWidgetInfo": null
         },
         "JOB_COMPLETED": {
@@ -689,6 +697,7 @@
                 },
                 "wsid": 54321
             },
+            "job_id": "JOB_COMPLETED",
             "outputWidgetInfo": {
                 "name": "no-display",
                 "params": {
@@ -717,6 +726,7 @@
                 "user": "fake_test_user",
                 "wsid": 55555
             },
+            "job_id": "JOB_CREATED",
             "outputWidgetInfo": null
         },
         "JOB_ERROR": {
@@ -748,6 +758,7 @@
                 "user": "ialarmedalien",
                 "wsid": 65854
             },
+            "job_id": "JOB_ERROR",
             "outputWidgetInfo": null
         },
         "JOB_RUNNING": {
@@ -770,6 +781,7 @@
                 "user": "test_user",
                 "wsid": 54321
             },
+            "job_id": "JOB_RUNNING",
             "outputWidgetInfo": null
         },
         "JOB_TERMINATED": {
@@ -793,6 +805,7 @@
                 "user": "test_user",
                 "wsid": 54321
             },
+            "job_id": "JOB_TERMINATED",
             "outputWidgetInfo": null
         },
         "a_bad_job_id": {
@@ -853,6 +866,7 @@
                     },
                     "wsid": 10538
                 },
+                "job_id": "BATCH_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
@@ -899,6 +913,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_ERROR_RETRIED",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_ERROR_RETRIED",
@@ -932,6 +947,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
             },
             "retry_id": "BATCH_RETRY_ERROR"
@@ -964,6 +980,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_PARENT",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_PARENT"
@@ -1013,6 +1030,7 @@
                     },
                     "wsid": 10538
                 },
+                "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
@@ -1059,6 +1077,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_RETRY_ERROR"
@@ -1086,6 +1105,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_RETRY_RUNNING",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_RETRY_RUNNING"
@@ -1114,6 +1134,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_TERMINATED",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_TERMINATED"
@@ -1144,6 +1165,7 @@
                     "user": "alien_test_user",
                     "wsid": 10538
                 },
+                "job_id": "BATCH_TERMINATED_RETRIED",
                 "outputWidgetInfo": null
             },
             "job_id": "BATCH_TERMINATED_RETRIED",
@@ -1190,6 +1212,7 @@
                     },
                     "wsid": 10538
                 },
+                "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
@@ -1245,6 +1268,7 @@
                     },
                     "wsid": 54321
                 },
+                "job_id": "JOB_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
@@ -1277,6 +1301,7 @@
                     "user": "fake_test_user",
                     "wsid": 55555
                 },
+                "job_id": "JOB_CREATED",
                 "outputWidgetInfo": null
             },
             "job_id": "JOB_CREATED"
@@ -1312,6 +1337,7 @@
                     "user": "ialarmedalien",
                     "wsid": 65854
                 },
+                "job_id": "JOB_ERROR",
                 "outputWidgetInfo": null
             },
             "job_id": "JOB_ERROR"
@@ -1338,6 +1364,7 @@
                     "user": "test_user",
                     "wsid": 54321
                 },
+                "job_id": "JOB_RUNNING",
                 "outputWidgetInfo": null
             },
             "job_id": "JOB_RUNNING"
@@ -1365,6 +1392,7 @@
                     "user": "test_user",
                     "wsid": 54321
                 },
+                "job_id": "JOB_TERMINATED",
                 "outputWidgetInfo": null
             },
             "job_id": "JOB_TERMINATED"

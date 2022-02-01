@@ -1,4 +1,9 @@
-define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, TestUtil) => {
+define([
+    'common/format',
+    'common/jobCommMessages',
+    'testUtil',
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (format, jcm, TestUtil, ResponseData) => {
     'use strict';
     const t = {
         created: 1610065000000,
@@ -9,7 +14,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
 
     const TEST_JOB_ID = 'someJob',
         SOME_VALUE = 'some unimportant value',
-        BATCH_ID = 'batch-parent';
+        BATCH_ID = 'BATCH_PARENT';
 
     const jobStrings = {
         unknown: 'Awaiting job data...',
@@ -30,6 +35,20 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         },
     };
 
+    const JOB = {
+        CREATED: 'JOB_CREATED',
+        ESTIMATING: 'JOB_ESTIMATING',
+        QUEUED: 'JOB_QUEUED',
+        TERMINATED_WHILST_QUEUED: 'JOB_TERMINATED_WHILST_QUEUED',
+        DIED_WHILST_QUEUED: 'JOB_DIED_WHILST_QUEUED',
+        RUNNING: 'JOB_RUNNING',
+        TERMINATED_WHILST_RUNNING: 'JOB_TERMINATED_WHILST_RUNNING',
+        DIED_WHILST_RUNNING: 'JOB_DIED_WHILST_RUNNING',
+        COMPLETED: 'JOB_COMPLETED',
+        UNKNOWN: 'JOB_UNKNOWN',
+        BATCH_PARENT: BATCH_ID,
+    };
+
     /*
         The following are valid job state objects as would be received from ee2.
 
@@ -39,7 +58,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
 
     const validJobs = [
         {
-            job_id: 'job-created',
+            job_id: JOB.CREATED,
             status: 'created',
             created: t.created,
             updated: t.created,
@@ -61,7 +80,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-estimating',
+            job_id: JOB.ESTIMATING,
             status: 'estimating',
             created: t.created,
             updated: t.created,
@@ -83,7 +102,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-in-the-queue',
+            job_id: JOB.QUEUED,
             status: 'queued',
             created: t.created,
             queued: t.queued,
@@ -106,7 +125,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-cancelled-whilst-in-the-queue',
+            job_id: JOB.TERMINATED_WHILST_QUEUED,
             status: 'terminated',
             created: t.created,
             finished: t.finished,
@@ -130,60 +149,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-running',
-            status: 'running',
-            created: t.created,
-            queued: t.queued,
-            running: t.running,
-            updated: t.running,
-            meta: {
-                canCancel: true,
-                canRetry: true,
-                createJobStatusLines: {
-                    line: jobStrings.running,
-                    history: [jobStrings.queueHistory, jobStrings.running],
-                },
-                jobAction: jobStrings.action.cancel,
-                jobLabel: 'running',
-                niceState: {
-                    class: 'kb-job-status__summary',
-                    label: 'running',
-                },
-                terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'running' },
-            },
-        },
-        {
-            job_id: 'job-cancelled-during-run',
-            status: 'terminated',
-            created: t.created,
-            finished: t.finished,
-            queued: t.queued,
-            running: t.running,
-            updated: t.finished,
-            meta: {
-                canCancel: false,
-                canRetry: true,
-                createJobStatusLines: {
-                    line: jobStrings.termination,
-                    history: [
-                        jobStrings.queueHistory,
-                        jobStrings.runHistory,
-                        jobStrings.termination,
-                    ],
-                },
-                jobAction: jobStrings.action.retry,
-                jobLabel: 'cancelled',
-                niceState: {
-                    class: 'kb-job-status__summary--terminated',
-                    label: 'cancellation',
-                },
-                terminal: true,
-                appCellFsm: { mode: 'canceled' },
-            },
-        },
-        {
-            job_id: 'job-died-whilst-queueing',
+            job_id: JOB.DIED_WHILST_QUEUED,
             status: 'error',
             error: {
                 code: 666,
@@ -216,7 +182,60 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-died-with-error',
+            job_id: JOB.RUNNING,
+            status: 'running',
+            created: t.created,
+            queued: t.queued,
+            running: t.running,
+            updated: t.running,
+            meta: {
+                canCancel: true,
+                canRetry: true,
+                createJobStatusLines: {
+                    line: jobStrings.running,
+                    history: [jobStrings.queueHistory, jobStrings.running],
+                },
+                jobAction: jobStrings.action.cancel,
+                jobLabel: 'running',
+                niceState: {
+                    class: 'kb-job-status__summary',
+                    label: 'running',
+                },
+                terminal: false,
+                appCellFsm: { mode: 'processing', stage: 'running' },
+            },
+        },
+        {
+            job_id: JOB.TERMINATED_WHILST_RUNNING,
+            status: 'terminated',
+            created: t.created,
+            finished: t.finished,
+            queued: t.queued,
+            running: t.running,
+            updated: t.finished,
+            meta: {
+                canCancel: false,
+                canRetry: true,
+                createJobStatusLines: {
+                    line: jobStrings.termination,
+                    history: [
+                        jobStrings.queueHistory,
+                        jobStrings.runHistory,
+                        jobStrings.termination,
+                    ],
+                },
+                jobAction: jobStrings.action.retry,
+                jobLabel: 'cancelled',
+                niceState: {
+                    class: 'kb-job-status__summary--terminated',
+                    label: 'cancellation',
+                },
+                terminal: true,
+                appCellFsm: { mode: 'canceled' },
+            },
+        },
+        {
+            job_id: JOB.DIED_WHILST_RUNNING,
             status: 'error',
             error: {
                 code: -32000,
@@ -250,7 +269,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             },
         },
         {
-            job_id: 'job-finished-with-success',
+            job_id: JOB.COMPLETED,
             status: 'completed',
             created: t.created,
             finished: t.finished,
@@ -274,7 +293,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
                 appCellFsm: { mode: 'success' },
             },
             job_output: {
-                id: 'job-finished-with-success',
+                id: 'JOB_COMPLETED',
                 result: [
                     {
                         report_name: 'kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e',
@@ -287,7 +306,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     ];
 
     const unknownJob = {
-        job_id: 'unknown-job',
+        job_id: JOB.UNKNOWN,
         status: 'does_not_exist',
         other: 'key',
         another: 'key',
@@ -312,7 +331,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         job_id: BATCH_ID,
         batch_id: BATCH_ID,
         batch_job: true,
-        child_jobs: ['unknown-job'].concat(
+        child_jobs: [unknownJob.job_id].concat(
             validJobs.map((job) => {
                 return job.job_id;
             })
@@ -372,7 +391,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     const invalidJobStates = [
         ...invalidTypes,
         {
-            job_id: 'somejob',
+            job_id: TEST_JOB_ID,
             other: 'key',
         },
         {
@@ -380,73 +399,37 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             other: 'key',
         },
         {
-            job_id: 'baz',
+            job_id: TEST_JOB_ID,
             create: 12345,
         },
         {
-            job_id: 'whatever',
+            job_id: TEST_JOB_ID,
             status: 'running',
         },
         {
-            job_id: 'invalid job status',
+            job_id: TEST_JOB_ID,
             created: 12345678,
             status: 'who cares?',
         },
     ];
 
-    const validBackendJobStates = [
-        {
-            jobState: validJobStates[0],
-        },
-        {
-            jobState: validJobStates[1],
-            outputWidgetInfo: {},
-        },
-        {
-            jobState: validJobStates[2],
-            outputWidgetInfo: {
-                ping: 'pong',
-            },
-        },
-    ];
+    const validBackendJobStates = Object.values(ResponseData[jcm.MESSAGE_TYPE.STATUS]);
 
     const invalidBackendJobStates = [
         ...invalidJobStates,
         ...invalidJobStates.map((item) => {
             return { jobState: item };
         }),
+        {
+            jobState: validJobStates[0],
+        },
+        {
+            jobState: validJobStates[1],
+            outputWidgetInfo: null,
+        },
     ];
 
-    const validInfo = [
-        {
-            job_params: [{ this: 'that' }],
-            job_id: 'job_with_single_param',
-            app_id: 'NarrativeTest/app_sleep',
-            app_name: 'App Sleep',
-            batch_id: 'batch-parent-job',
-        },
-        {
-            job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
-            job_id: 'job_with_multiple_params',
-            batch_id: null,
-            app_name: 'some app',
-            app_id: 'some/app',
-        },
-        {
-            job_id: 'batch-parent-job',
-            batch_id: 'batch-parent-job',
-            app_name: 'batch',
-            app_id: 'batch',
-            job_params: [],
-        },
-        {
-            job_id: 'some-crappy-job',
-            batch_id: null,
-            app_name: 'Some Crappy App',
-            app_id: 'some/crappy-app',
-            job_params: [{}],
-        },
-    ];
+    const validInfo = Object.values(ResponseData[jcm.MESSAGE_TYPE.INFO]);
 
     const invalidInfo = [
         ...invalidTypes,
@@ -490,24 +473,7 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         },
     ];
 
-    const validLogs = [
-        {
-            job_id: TEST_JOB_ID,
-            batch_id: 'batch_parent_job',
-            first: 0,
-            latest: false,
-            max_lines: 0,
-            lines: [],
-        },
-        {
-            job_id: TEST_JOB_ID,
-            batch_id: 'batch_parent_job',
-            first: 500,
-            latest: true,
-            max_lines: 500,
-            lines: [],
-        },
-    ];
+    const validLogs = Object.values(ResponseData[jcm.MESSAGE_TYPE.LOGS]);
 
     const invalidLogs = [
         ...invalidTypes,
@@ -522,18 +488,8 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         },
     ];
 
-    const validRetry = [
-        {
-            job_id: validJobStates[0].job_id,
-            job: { jobState: validJobStates[0] },
-            retry: { jobState: validJobStates[1] },
-        },
-        {
-            job_id: validJobStates[2].job_id,
-            job: { jobState: validJobStates[2] },
-            error: 'some error',
-        },
-    ];
+    const validRetry = Object.values(ResponseData[jcm.MESSAGE_TYPE.RETRY]);
+
     const invalidRetry = [
         ...invalidTypes,
         // no jobState
@@ -642,24 +598,25 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
     /**
      * output of createBatchJob:
      *
-     * batch parent: 'job-created'
+     * batch parent:
      *
      * initial children:
-     * 'job-cancelled-whilst-in-the-queue'
-     * 'job-cancelled-during-run'
-     * 'job-died-whilst-queueing'
-     * 'job-in-the-queue' --> can cancel, can retry
+     * JOB.CREATED  --> can cancel, can retry
+     * JOB.QUEUED   --> can cancel, can retry
+     * JOB.DIED_WHILST_QUEUED
+     * JOB.TERMINATED_WHILST_QUEUED
+     * JOB.TERMINATED_WHILST_RUNNING
      *
      * job retries:
-     * 'job-cancelled-whilst-in-the-queue'
-     *  - retry 1: 'job-running' --> can cancel, can retry
+     * JOB.TERMINATED_WHILST_QUEUED
+     *  - retry 1: JOB.RUNNING --> can cancel, can retry
      *
-     * 'job-cancelled-during-run'
-     *  - retry 1: 'job-finished-with-success' --> cannot cancel or retry
+     * JOB.TERMINATED_WHILST_RUNNING
+     *  - retry 1: JOB.COMPLETED --> cannot cancel or retry
      *
-     * 'job-died-whilst-queueing'
-     *  - retry 1: 'job-died-with-error'
-     *  - retry 2: 'job-estimating' (most recent retry) --> can cancel, can retry
+     * JOB.DIED_WHILST_QUEUED
+     *  - retry 1: JOB.DIED_WHILST_RUNNING
+     *  - retry 2: JOB.ESTIMATING (most recent retry) --> can cancel, can retry
      *
      * Extra metadata for batch jobs:
      * meta.currentJob: true/false -- this is the most recent job (including retries)
@@ -685,61 +642,61 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
         // add the batchParent under the index BATCH_ID and delete the old key
         jobIdIndex[BATCH_ID] = batchParent;
 
-        // no retries of 'job-in-the-queue' or 'job-created'
-        ['job-in-the-queue', 'job-created'].forEach((jobId) => {
+        // no retries of JOB.QUEUED or JOB.CREATED
+        [JOB.QUEUED, JOB.CREATED].forEach((jobId) => {
             convertToRetryParent(jobIdIndex[jobId]);
             jobIdIndex[jobId].meta.currentJob = true;
         });
 
         // these jobs have been retried
 
-        // retries of 'job-cancelled-whilst-in-the-queue'
-        parentJob = 'job-cancelled-whilst-in-the-queue';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-running']);
+        // retries of JOB.TERMINATED_WHILST_QUEUED
+        parentJob = JOB.TERMINATED_WHILST_QUEUED;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.RUNNING]);
 
-        thisJob = 'job-running';
+        thisJob = JOB.RUNNING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 15);
 
-        // retries of 'job-cancelled-during-run'
-        parentJob = 'job-cancelled-during-run';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-cancelled-during-run']);
+        // retries of JOB.TERMINATED_WHILST_RUNNING
+        parentJob = JOB.TERMINATED_WHILST_RUNNING;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.TERMINATED_WHILST_RUNNING]);
 
-        thisJob = 'job-finished-with-success';
+        thisJob = JOB.COMPLETED;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 20);
 
-        // two retries of 'job-died-whilst-queueing'
-        parentJob = 'job-died-whilst-queueing';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-died-with-error', 'job-estimating']);
+        // two retries of JOB.DIED_WHILST_QUEUED
+        parentJob = JOB.DIED_WHILST_QUEUED;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.DIED_WHILST_RUNNING, JOB.ESTIMATING]);
 
-        thisJob = 'job-died-with-error';
+        thisJob = JOB.DIED_WHILST_RUNNING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         passTime(jobIdIndex[thisJob], 5);
 
-        thisJob = 'job-estimating';
+        thisJob = JOB.ESTIMATING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 10);
 
         const originalJobs = [
-                'job-created',
-                'job-in-the-queue',
-                'job-cancelled-whilst-in-the-queue',
-                'job-cancelled-during-run',
-                'job-died-whilst-queueing',
+                JOB.CREATED,
+                JOB.QUEUED,
+                JOB.TERMINATED_WHILST_QUEUED,
+                JOB.TERMINATED_WHILST_RUNNING,
+                JOB.DIED_WHILST_QUEUED,
             ].reduce((acc, jobId) => {
                 acc[jobId] = jobIdIndex[jobId];
                 return acc;
             }, {}),
             currentJobs = [
-                'job-created',
-                'job-in-the-queue',
-                'job-running',
-                'job-finished-with-success',
-                'job-estimating',
+                JOB.CREATED,
+                JOB.QUEUED,
+                JOB.RUNNING,
+                JOB.COMPLETED,
+                JOB.ESTIMATING,
             ].reduce((acc, jobId) => {
                 acc[jobId] = jobIdIndex[jobId];
                 return acc;
@@ -815,33 +772,33 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             // status update for the current jobs
             jobUpdateSeries.push(generateStatusMessage(childJobIds));
 
-            // retry of 'job-cancelled-whilst-in-the-queue'
-            let retry = 'job-running',
-                retryParent = 'job-cancelled-whilst-in-the-queue';
+            // retry of 'JOB_CANCELLED-WHILST-IN-THE-QUEUE'
+            let retry = JOB.RUNNING,
+                retryParent = JOB.TERMINATED_WHILST_QUEUED;
             jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
 
             // status message
             jobUpdateSeries.push(generateStatusMessage(childJobIds));
 
-            // retry 1 of 'job-died-whilst-queueing'
-            retry = 'job-died-with-error';
-            retryParent = 'job-died-whilst-queueing';
+            // retry 1 of JOB.DIED_WHILST_QUEUED
+            retry = JOB.DIED_WHILST_RUNNING;
+            retryParent = JOB.DIED_WHILST_QUEUED;
             jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
 
             // status message
             jobUpdateSeries.push(generateStatusMessage(childJobIds));
 
             // two retries at once
-            // retry of 'job-cancelled-during-run'
-            // retry 2 of 'job-died-whilst-queueing'
+            // retry of JOB.TERMINATED_WHILST_RUNNING
+            // retry 2 of JOB.DIED_WHILST_QUEUED
             jobUpdateSeries.push(
                 generateRetryMessage(
                     [
                         {
-                            retry: 'job-finished-with-success',
-                            retryParent: 'job-cancelled-during-run',
+                            retry: JOB.COMPLETED,
+                            retryParent: JOB.TERMINATED_WHILST_RUNNING,
                         },
-                        { retry: 'job-estimating', retryParent: 'job-died-whilst-queueing' },
+                        { retry: JOB.ESTIMATING, retryParent: JOB.DIED_WHILST_QUEUED },
                     ],
                     childJobIds
                 )
@@ -860,9 +817,9 @@ define(['common/format', 'common/jobCommMessages', 'testUtil'], (format, jcm, Te
             jobArray: Object.values(jobIdIndex),
             jobsById: jobIdIndex,
             jobsWithRetries: [
-                'job-cancelled-whilst-in-the-queue',
-                'job-cancelled-during-run',
-                'job-died-whilst-queueing',
+                JOB.TERMINATED_WHILST_QUEUED,
+                JOB.TERMINATED_WHILST_RUNNING,
+                JOB.DIED_WHILST_QUEUED,
             ],
             originalJobs,
             currentJobs,

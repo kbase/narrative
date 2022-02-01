@@ -724,7 +724,7 @@ define([
                 const allCalls = console.error.calls.allArgs();
                 expect(allCalls.length).toEqual(1);
                 expect(allCalls[0].length).toEqual(1);
-                expect(allCalls[0][0]).toMatch(/Error retrieving log for job.*?summat went wrong/);
+                expect(allCalls[0][0]).toMatch(/Error retrieving log for JOB_.*?summat went wrong/);
             });
 
             endStates.forEach((endState) => {
@@ -788,7 +788,7 @@ define([
                     const allCalls = console.error.calls.allArgs();
                     expect(allCalls.length).toEqual(1);
                     expect(allCalls[0].length).toEqual(1);
-                    expect(allCalls[0][0]).toMatch(/Error retrieving log for job.*?DANGER!/);
+                    expect(allCalls[0][0]).toMatch(/Error retrieving log for JOB_.*?DANGER!/);
                 });
             });
         });

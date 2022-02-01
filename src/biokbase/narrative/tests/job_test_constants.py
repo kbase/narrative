@@ -37,6 +37,8 @@ def get_test_job(job_id):
 
 CLIENTS = "biokbase.narrative.clients.get"
 
+MAX_LOG_LINES = 10
+
 # test_jobs contains jobs in the following states
 JOB_COMPLETED = "JOB_COMPLETED"
 JOB_CREATED = "JOB_CREATED"

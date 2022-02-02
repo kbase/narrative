@@ -29,7 +29,7 @@ define(
         'google-code-prettify/prettify',
         './appCellWidget-fsm',
         './tabs/resultsTab',
-        './tabs/status/logTab',
+        './tabs/logTab',
         'common/errorDisplay',
         'common/cellComponents/tabs/infoTab',
         'common/cellComponents/fsmBar',

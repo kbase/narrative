@@ -9,10 +9,7 @@ define([
     'use strict';
 
     describe('Struct Input Widget', () => {
-        const runtime = Runtime.make();
-        const bus = runtime.bus();
         const testConfig = {
-                bus: bus,
                 parameterSpec: {
                     data: {
                         defaultValue: '',
@@ -21,25 +18,30 @@ define([
                             required: false,
                         },
                     },
-                    original: {
-                        dynamic_dropdown_options: {},
-                    },
                     ui: {
                         layout: {},
                     },
+                    parameters: {
+                        spec: {},
+                    },
                 },
-                channelName: 'foo',
+                initialValue: 'bar',
             },
             AUTH_TOKEN = 'fakeAuthToken';
-        let container;
+        let container, runtime, bus;
 
         beforeEach(() => {
             container = document.createElement('div');
+            runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
                 userId: 'test_user',
             };
+            bus = runtime.bus().makeChannelBus({
+                description: 'float testing',
+            });
+            testConfig.paramsChannelName = bus.paramsChannelName;
         });
 
         afterEach(() => {
@@ -47,6 +49,7 @@ define([
             Mocks.clearAuthToken();
             Jupyter.narrative = null;
             TestUtil.clearRuntime();
+            bus.stop();
         });
 
         it('should be defined', () => {

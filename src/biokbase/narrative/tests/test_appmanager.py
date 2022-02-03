@@ -245,7 +245,7 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(self.jm.get_job(self.test_job_id), new_job)
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-        self.assertEqual(1, self.jm._running_jobs[new_job.job_id]["refresh"])
+        self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
@@ -429,7 +429,7 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(self.jm.get_job(self.test_job_id), new_job)
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-        self.assertEqual(1, self.jm._running_jobs[new_job.job_id]["refresh"])
+        self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
@@ -731,7 +731,7 @@ class AppManagerTestCase(unittest.TestCase):
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 
         for job in [parent_job] + child_jobs:
-            self.assertEqual(1, self.jm._running_jobs[job.job_id]["refresh"])
+            self.assertEqual(False, self.jm._running_jobs[job.job_id]["refresh"])
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")

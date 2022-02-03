@@ -63,10 +63,6 @@ from .narrative_mock.mockclients import (
     MockClients,
 )
 
-
-__author__ = "Bill Riehl <wjriehl@lbl.gov>"
-
-
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
@@ -222,7 +218,7 @@ class JobManagerTest(unittest.TestCase):
                     refresh = d["refresh"]
 
                     self.assertEqual(
-                        int(job_id in exp_job_ids and not JOBS_TERMINALITY[job_id]),
+                        job_id in exp_job_ids and not JOBS_TERMINALITY[job_id],
                         refresh,
                     )
 
@@ -430,11 +426,11 @@ class JobManagerTest(unittest.TestCase):
             },
         }
 
-        self.jm._running_jobs[JOB_RUNNING]["refresh"] = 1
-        self.jm._running_jobs[JOB_CREATED]["refresh"] = 1
+        self.jm._running_jobs[JOB_RUNNING]["refresh"] = True
+        self.jm._running_jobs[JOB_CREATED]["refresh"] = True
 
         def check_state(arg):
-            self.assertEqual(self.jm._running_jobs[arg["job_id"]]["refresh"], 0)
+            self.assertFalse(self.jm._running_jobs[arg["job_id"]]["refresh"])
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["canceling"], True)
 
         # patch MockClients.cancel_job so we can test the input
@@ -446,8 +442,8 @@ class JobManagerTest(unittest.TestCase):
             results = self.jm.cancel_jobs(jobs)
             self.assertNotIn("canceling", self.jm._running_jobs[JOB_RUNNING])
             self.assertNotIn("canceling", self.jm._running_jobs[JOB_CREATED])
-            self.assertEqual(self.jm._running_jobs[JOB_RUNNING]["refresh"], 1)
-            self.assertEqual(self.jm._running_jobs[JOB_CREATED]["refresh"], 1)
+            self.assertTrue(self.jm._running_jobs[JOB_RUNNING]["refresh"])
+            self.assertTrue(self.jm._running_jobs[JOB_CREATED]["refresh"])
             self.assertEqual(results.keys(), expected.keys())
             self.assertEqual(results, expected)
             mock_cancel_job.assert_has_calls(
@@ -804,18 +800,18 @@ class JobManagerTest(unittest.TestCase):
     def test_modify_job_refresh(self):
         for job_id, terminality in JOBS_TERMINALITY.items():
             self.assertEqual(
-                self.jm._running_jobs[job_id]["refresh"], int(not terminality)
+                self.jm._running_jobs[job_id]["refresh"], not terminality
             )
-            self.jm.modify_job_refresh([job_id], -1)  # stop
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 0)
-            self.jm.modify_job_refresh([job_id], -1)  # stop
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 0)
-            self.jm.modify_job_refresh([job_id], 1)  # start
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 1)
-            self.jm.modify_job_refresh([job_id], 1)  # start
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 2)
-            self.jm.modify_job_refresh([job_id], -1)  # stop
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 1)
+            self.jm.modify_job_refresh([job_id], False)  # stop
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
+            self.jm.modify_job_refresh([job_id], False)  # stop harder
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
+            self.jm.modify_job_refresh([job_id], True)  # start
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], True)
+            self.jm.modify_job_refresh([job_id], True)  # start some more
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], True)
+            self.jm.modify_job_refresh([job_id], False)  # stop
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
 
     @mock.patch("biokbase.narrative.clients.get", get_mock_client)
     def test_lookup_job_info(self):

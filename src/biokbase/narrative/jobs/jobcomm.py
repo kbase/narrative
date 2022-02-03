@@ -1,6 +1,7 @@
 import copy
 import threading
 from typing import List, Union
+from xmlrpc.client import Boolean
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR
@@ -217,6 +218,7 @@ class JobComm:
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
             }
+        self._lookup_all_job_states(ignore_refresh_flag=True)
 
     def start_job_status_loop(
         self,
@@ -270,12 +272,12 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(self, req: JobRequest = None) -> dict:
+    def _lookup_all_job_states(self, req: JobRequest = None, ignore_refresh_flag: bool = False) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
+        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=ignore_refresh_flag)
         self.send_comm_message("job_status_all", all_job_states)
         return all_job_states
 
@@ -357,16 +359,16 @@ class JobComm:
         this raises a ValueError.
         """
         if req.request == "start_job_update":
-            update_adjust = 1
+            update_refresh = True
         elif req.request == "stop_job_update":
-            update_adjust = -1
+            update_refresh = False
         else:
             raise ValueError("Unknown request")
 
-        self._jm.modify_job_refresh(req.job_id_list, update_adjust)
+        self._jm.modify_job_refresh(req.job_id_list, update_refresh)
         output_states = self._jm.get_job_states(req.job_id_list)
 
-        if update_adjust == 1:
+        if update_refresh:
             self.start_job_status_loop()
             self.send_comm_message("job_status", output_states)
 

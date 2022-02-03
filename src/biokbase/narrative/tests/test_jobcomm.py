@@ -265,7 +265,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(EXP_ALL_STATE_IDS),
+                "content": get_test_job_states(ACTIVE_JOBS),
             },
             msg["data"],
         )
@@ -293,22 +293,26 @@ class JobCommTestCase(unittest.TestCase):
 
                 self.jc.start_job_status_loop(init_jobs=True, cell_list=combo)
                 msg = self.jc._comm.last_message
+
+                exp_job_ids = [ job_id for cell_id, job_ids in cell_2_jobs.items() for job_id in job_ids if cell_id in combo and not JOBS_TERMINALITY[job_id] ]
+                exp_msg = {
+                    "msg_type": "job_status_all",
+                    "content": get_test_job_states(exp_job_ids)
+                }
                 self.assertEqual(
-                    {
-                        "msg_type": "job_status_all",
-                        "content": get_test_job_states(
-                            EXP_ALL_STATE_IDS
-                        ),  # consult version history for when this was exp_job_ids
-                    },
-                    msg["data"],
+                    exp_msg,
+                    msg["data"]
                 )
 
-                self.assertTrue(self.jc._running_lookup_loop)
-                self.assertTrue(self.jc._lookup_timer)
+                if len(exp_job_ids):
+                    self.assertTrue(self.jc._running_lookup_loop)
+                    self.assertTrue(self.jc._lookup_timer)
 
-                self.jc.stop_job_status_loop()
-                self.assertFalse(self.jc._running_lookup_loop)
-                self.assertIsNone(self.jc._lookup_timer)
+                    self.jc.stop_job_status_loop()
+
+                    self.assertFalse(self.jc._running_lookup_loop)
+                    self.assertIsNone(self.jc._lookup_timer)
+
 
     # ---------------------
     # Lookup all job states
@@ -317,13 +321,14 @@ class JobCommTestCase(unittest.TestCase):
         "biokbase.narrative.clients.get", get_mock_client
     )
     def test_lookup_all_job_states__ok(self):
+
         req = make_comm_msg("all_status", None, True)
         states = self.jc._lookup_all_job_states(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(EXP_ALL_STATE_IDS),
+                "content": get_test_job_states(ACTIVE_JOBS),
             },
             msg["data"],
         )
@@ -899,12 +904,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1,
+                    True
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1000,12 +1005,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1,
+                    True
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1088,8 +1093,6 @@ class JobCommTestCase(unittest.TestCase):
         states = msg["data"]["content"]
         self.assertIsInstance(states, dict)
         for job_id in states:
-            print("ALL JOB STATE TESTING")
-            print(states[job_id])
             validate_job_state(states[job_id])
 
     def test_handle_job_status_msg(self):
@@ -1171,12 +1174,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1,
+                    True,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1192,12 +1195,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
+                    False #not JOBS_TERMINALITY[job_id],
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
@@ -1219,12 +1222,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1,
+                    True,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1241,12 +1244,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
+                    False
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    not JOBS_TERMINALITY[job_id],
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)

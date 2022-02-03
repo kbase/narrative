@@ -118,7 +118,7 @@ class JobManager(object):
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 
-            self.register_new_job(job, int(refresh))
+            self.register_new_job(job, refresh) #int(refresh))
 
     def _create_jobs(self, job_ids) -> dict:
         """
@@ -137,8 +137,9 @@ class JobManager(object):
             }
         )
         for job_state in job_states.values():
-            # set new jobs to be automatically refreshed
-            self.register_new_job(job=Job(job_state), refresh=1)
+            # do not set new jobs to be automatically refreshed - if the front end wants them
+            # refreshed, it'll make a request.
+            self.register_new_job(job=Job(job_state), refresh=False)
 
         return job_states
 
@@ -336,13 +337,13 @@ class JobManager(object):
         jobs_to_lookup = list()
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
-            if self._running_jobs[job_id]["refresh"] > 0 or ignore_refresh_flag:
+            if self._running_jobs[job_id]["refresh"] or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
         if len(jobs_to_lookup) > 0:
             return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
 
-    def register_new_job(self, job: Job, refresh: int = None) -> None:
+    def register_new_job(self, job: Job, refresh: bool = None) -> None:
         """
         Registers a new Job with the manager and stores the job locally.
         This should only be invoked when a new Job gets started.
@@ -355,7 +356,7 @@ class JobManager(object):
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
 
         if refresh is None:
-            refresh = int(not job.was_terminal())
+            refresh = not job.was_terminal()
         self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
     def get_job(self, job_id):
@@ -453,8 +454,8 @@ class JobManager(object):
     def _cancel_job(self, job_id: str) -> None:
         # Stop updating the job status while we try to cancel.
         # Set the job to a special state of 'canceling' while we're doing the cancel
-        is_refreshing = self._running_jobs[job_id].get("refresh", 0)
-        self._running_jobs[job_id]["refresh"] = 0
+        is_refreshing = self._running_jobs[job_id].get("refresh", False)
+        self._running_jobs[job_id]["refresh"] = False
         self._running_jobs[job_id]["canceling"] = True
 
         try:
@@ -527,7 +528,7 @@ class JobManager(object):
             output_states[error_id] = get_error_output_state(error_id)
         return output_states
 
-    def modify_job_refresh(self, job_ids: List[str], update_adjust: int) -> None:
+    def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:
         """
         Modifies how many things want to get the job updated.
         If this sets the current "refresh" key to be less than 0, it gets reset to 0.
@@ -536,9 +537,7 @@ class JobManager(object):
         job_ids, _ = self._check_job_list(job_ids)
 
         for job_id in job_ids:
-            self._running_jobs[job_id]["refresh"] += update_adjust
-            if self._running_jobs[job_id]["refresh"] < 0:
-                self._running_jobs[job_id]["refresh"] = 0
+            self._running_jobs[job_id]["refresh"] = update_refresh
 
     def update_batch_job(self, batch_id: str) -> List[str]:
         """
@@ -564,7 +563,7 @@ class JobManager(object):
             for job in unreg_child_jobs:
                 self.register_new_job(
                     job=job,
-                    refresh=int(not job.was_terminal()),
+                    refresh=not job.was_terminal(),
                 )
 
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)

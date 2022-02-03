@@ -1,6 +1,5 @@
 define(
     [
-        'require',
         'jquery',
         'underscore',
         'bluebird',
@@ -33,12 +32,12 @@ define(
         'common/errorDisplay',
         'common/cellComponents/tabs/infoTab',
         'common/cellComponents/fsmBar',
+        'util/developerMode',
         './appParamsWidget',
         './appParamsViewWidget',
         'css!google-code-prettify/prettify',
     ],
     (
-        require,
         $,
         _,
         Promise,
@@ -71,6 +70,7 @@ define(
         errorTabWidget,
         infoTabWidget,
         FSMBar,
+        DevMode,
         AppParamsWidget,
         AppParamsViewWidget
     ) => {
@@ -181,7 +181,17 @@ define(
                 }),
                 spec = Spec.make({
                     appSpec: model.getItem('app.spec'),
-                });
+                }),
+                jobListeners = [],
+                api = {
+                    init,
+                    attach,
+                    start,
+                    stop,
+                    detach,
+                    run,
+                },
+                developerMode = config.devMode || DevMode.mode;
 
             let hostNode,
                 container,
@@ -1162,10 +1172,10 @@ define(
             }
 
             /*
-        setReadOnly is called to put the cell into read-only mode when it is loaded.
-        This is different than view-only, which for read/write mode is toggleable.
-        Read-only does imply view-only as well!
-         */
+            setReadOnly is called to put the cell into read-only mode when it is loaded.
+            This is different than view-only, which for read/write mode is toggleable.
+            Read-only does imply view-only as well!
+            */
             function setReadOnly() {
                 readOnly = true;
                 cell.code_mirror.setOption('readOnly', 'nocursor');
@@ -1280,6 +1290,7 @@ define(
                     switch (message.event) {
                         case 'launched_job':
                             // start listening for jobs.
+                            model.setItem('exec.jobState', { job_id: message.job_id });
                             startListeningForJobMessages(message.job_id);
                             return fsmState.PROCESSING_LAUNCHED;
                         case 'error':
@@ -1387,14 +1398,12 @@ define(
                 });
             }
 
-            let jobListeners = [];
-
             function startListeningForJobMessages(jobId) {
                 jobListeners.push(
                     // listen for job-related bus messages
                     runtime.bus().listen({
                         channel: {
-                            jobId,
+                            [jcm.CHANNEL.JOB]: jobId,
                         },
                         key: {
                             type: jcm.MESSAGE_TYPE.STATUS,
@@ -1420,30 +1429,17 @@ define(
                     if (outputWidgetInfo) {
                         model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
                     }
-
-                    // Now we send the job state on the cell bus, generally.
-                    // The model is that a cell can only have one job active at a time.
-                    // Thus we can just emit the state of the current job globally
-                    // on the cell bus for those widgets interested.
-                    cellBus.emit('job-state', {
-                        jobState: newJobState,
-                    });
-                } else {
-                    cellBus.emit('job-state-updated', {
-                        jobId: newJobState.job_id,
-                    });
                 }
-
                 model.setItem('exec.jobStateUpdated', new Date().getTime());
 
                 updateFromJobState(newJobState, forceRender);
             }
 
             function stopListeningForJobMessages() {
-                jobListeners.forEach((listener) => {
+                while (jobListeners.length) {
+                    const listener = jobListeners.pop();
                     runtime.bus().removeListener(listener);
-                });
-                jobListeners = [];
+                }
 
                 const jobId = model.getItem('exec.jobState.job_id');
                 if (jobId) {
@@ -1557,7 +1553,7 @@ define(
                     };
                 }
 
-                // Record the ouptput cell info by the job id.
+                // Record the output cell info by the job id.
                 // This serves to "stamp" the ouput cell in to the app cell
                 // TODO: this logic is probably no longer required. This used to be linked
                 // to functionality which allowed a user to re-insert an output cell if it
@@ -2051,20 +2047,18 @@ define(
                     });
             }
 
-            return {
-                init,
-                attach,
-                start,
-                stop,
-                detach,
-                run,
-            };
+            function __fsm() {
+                return fsm;
+            }
+
+            return developerMode ? { ...api, __fsm, busEventManager, model } : api;
         }
 
         return {
             make: function (config) {
                 return factory(config);
             },
+            cssCellType,
         };
     },
     (err) => {

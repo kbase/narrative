@@ -118,7 +118,7 @@ class JobManager(object):
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 
-            self.register_new_job(job, refresh)  # int(refresh))
+            self.register_new_job(job, refresh)
 
     def _create_jobs(self, job_ids) -> dict:
         """

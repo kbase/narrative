@@ -7,7 +7,7 @@ define([
     'common/runtime',
     'StagingServiceClient',
     './importErrors',
-], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient, Error) => {
+], (Promise, Jupyter, Config, APIUtil, StringUtil, Runtime, StagingServiceClient, Errors) => {
     'use strict';
     const uploaders = Config.get('uploaders');
     const bulkIds = new Set(uploaders.bulk_import_types);
@@ -31,7 +31,7 @@ define([
      *     dataType2: { ...etc... }
      *   }
      * }
-     * @throws Error.ImportSetupError if an error occurs in either data fetching from the Staging
+     * @throws Errors.ImportSetupError if an error occurs in either data fetching from the Staging
      *   Service, or in the initial parsing done by `processSpreadsheetFileData`
      */
     function getSpreadsheetFileInfo(files) {
@@ -49,7 +49,7 @@ define([
         // into multiple calls.
 
         // a little cheating here to figure out the length allowance. Maybe it should be in the client?
-        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification?files='.length;
+        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification/?files='.length;
         const bulkSpecProms = [];
 
         while (files.length) {
@@ -69,27 +69,43 @@ define([
                 })
             );
         }
+
         return Promise.all(bulkSpecProms)
             .then((result) => {
                 // join results of all calls together
-                return result.reduce(
+                const errors = [];
+                const parsed = result.reduce(
                     (allCalls, callResult) => {
                         callResult = JSON.parse(callResult);
                         Object.keys(callResult.types).forEach((dataType) => {
                             // if we already have a file of that datatype, then throw an error.
-                            // TODO: cast this as an ImportSetupError
+                            // see Staging Service docs for format
                             if (allCalls.files[dataType]) {
-                                throw new Error(
-                                    'You cannot use multiple files to upload the same type.'
-                                );
+                                errors.push({
+                                    type: Errors.BULK_SPEC_ERRORS.MULTIPLE_SPECS,
+                                    file_1: callResult.files[dataType].file,
+                                    tab_1: callResult.files[dataType].tab,
+                                    file_2: allCalls.files[dataType].file,
+                                    tab_2: allCalls.files[dataType].tab,
+                                    message: `Data type ${dataType} appears in multiple importer specification sources`,
+                                });
+                            } else {
+                                allCalls.types[dataType] = callResult.types[dataType];
+                                allCalls.files[dataType] = callResult.files[dataType];
                             }
-                            allCalls.types[dataType] = callResult.types[dataType];
-                            allCalls.files[dataType] = callResult.files[dataType];
                         });
                         return allCalls;
                     },
                     { types: {}, files: {} }
                 );
+                if (errors.length) {
+                    // cast this case into a service call error, so the catcher below can deal with it
+                    // otherwise, it'll just catch the ImportSetupError and make wrong things happen.
+                    // this could be avoided by setting the error capture type below, but we don't have
+                    // a custom error type for the client call errors.
+                    throw { responseText: JSON.stringify({ errors }) };
+                }
+                return parsed;
             })
             .catch((error) => {
                 let parsedError;
@@ -98,10 +114,10 @@ define([
                 } catch (error) {
                     // this would happen if the above isn't JSON, so send the error code instead
                     parsedError = [
-                        { type: Error.BULK_SPEC_ERRORS.SERVER, message: error.responseText },
+                        { type: Errors.BULK_SPEC_ERRORS.SERVER, message: error.responseText },
                     ];
                 }
-                throw new Error.ImportSetupError(
+                throw new Errors.ImportSetupError(
                     'Error while fetching CSV/TSV/Excel import data',
                     parsedError
                 );
@@ -138,11 +154,35 @@ define([
      * @param {Object} data
      */
     async function processSpreadsheetFileData(data) {
-        // get the appIds
-        const appIdToType = Object.keys(data.types).reduce((appIdToType, dataType) => {
-            appIdToType[uploaders.app_info[dataType].app_id] = dataType;
-            return appIdToType;
-        }, {});
+        // map from given datatype to app id.
+        // if any data types are missing, record that
+        // if any data types are not bulk import ready, record that, too.
+        const appIdToType = {};
+        const dataTypeErrors = [];
+        Object.keys(data.types).forEach((dataType) => {
+            if (!(dataType in uploaders.app_info)) {
+                dataTypeErrors.push({
+                    type: Errors.BULK_SPEC_ERRORS.UNKNOWN_TYPE,
+                    dataType,
+                    file: data.files[dataType].file,
+                    tab: data.files[dataType].tab,
+                });
+            } else if (!uploaders.bulk_import_types.includes(dataType)) {
+                dataTypeErrors.push({
+                    type: Errors.BULK_SPEC_ERRORS.NOT_BULK_TYPE,
+                    dataType,
+                    file: data.files[dataType].file,
+                    tab: data.files[dataType].tab,
+                });
+            } else {
+                appIdToType[uploaders.app_info[dataType].app_id] = dataType;
+            }
+        });
+
+        // throw errors now if there are incorrect data types
+        if (dataTypeErrors.length) {
+            throw new Errors.ImportSetupError('Data type error', dataTypeErrors);
+        }
 
         // get the app specs
         const appSpecs = await APIUtil.getAppSpecs(Object.keys(appIdToType));

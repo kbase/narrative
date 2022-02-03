@@ -1,4 +1,4 @@
-define(['common/ui', 'common/html'], (UI, html) => {
+define(['common/ui', 'common/html', 'util/string'], (UI, html, StringUtil) => {
     'use strict';
 
     const BULK_SPEC_ERRORS = {
@@ -9,11 +9,18 @@ define(['common/ui', 'common/html'], (UI, html) => {
         NO_FILES: 'no_files_provided',
         UNKNOWN: 'unexpected_error',
         SERVER: 'server_error',
+        UNKNOWN_TYPE: 'unknown_data_type',
+        NOT_BULK_TYPE: 'non_bulk_import_data_type',
     };
 
     const DEFAULT_MESSAGES = {
         UNKNOWN: 'An unexpected error occurred.',
         FILE_NOT_FOUND: 'File not found',
+    };
+
+    const TEMPLATE_MESSAGES = {
+        UNKNOWN_TYPE: (dataType) => `Unknown importer type "${dataType}"`,
+        NOT_BULK_TYPE: (dataType) => `Importer type "${dataType}" is not usable for bulk import`,
     };
 
     /**
@@ -137,6 +144,26 @@ define(['common/ui', 'common/html'], (UI, html) => {
                             message: error.message,
                         });
                         break;
+                    case BULK_SPEC_ERRORS.NOT_BULK_TYPE:
+                        addFileError(
+                            Object.assign(
+                                {
+                                    message: TEMPLATE_MESSAGES.NOT_BULK_TYPE(error.dataType),
+                                },
+                                error
+                            )
+                        );
+                        break;
+                    case BULK_SPEC_ERRORS.UNKNOWN_TYPE:
+                        addFileError(
+                            Object.assign(
+                                {
+                                    message: TEMPLATE_MESSAGES.UNKNOWN_TYPE(error.dataType),
+                                },
+                                error
+                            )
+                        );
+                        break;
                     case BULK_SPEC_ERRORS.NO_FILES:
                         this.noFileError = true;
                         break;
@@ -188,7 +215,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     title: 'Server error',
                     body: div([
                         'Server error encountered. Please retry import.',
-                        ul(this.serverErrors.map((err) => li(err))),
+                        ul(this.serverErrors.map((err) => li(StringUtil.escape(err)))),
                     ]),
                 };
             } else {
@@ -197,14 +224,14 @@ define(['common/ui', 'common/html'], (UI, html) => {
 
                 const fileErrorText = Object.entries(this.fileErrors).map(([fileName, errors]) => {
                     const s = errors.length > 1 ? 's' : '';
-                    const header = `Error${s} in ${b(fileName)}`;
-                    return div([header, ul(errors.map((err) => li(err)))]);
+                    const header = `Error${s} in ${b(StringUtil.escape(fileName))}`;
+                    return div([header, ul(errors.map((err) => li(StringUtil.escape(err))))]);
                 });
 
                 if (numFiles === 1) {
-                    footer = `Check bulk import file ${
-                        Object.keys(this.fileErrors)[0]
-                    } and retry. `;
+                    footer = `Check bulk import file ${b(
+                        StringUtil.escape(Object.keys(this.fileErrors)[0])
+                    )} and retry. `;
                 } else if (numFiles > 1) {
                     footer = 'Check bulk import files and retry. ';
                 }
@@ -217,7 +244,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
                     const unknownString = `${prefix}nexpected error${s} found`;
                     unknownErrors = div([
                         unknownString,
-                        ul([this.unexpectedErrors.map((err) => li(err))]),
+                        ul([this.unexpectedErrors.map((err) => li(StringUtil.escape(err)))]),
                     ]);
                 }
 

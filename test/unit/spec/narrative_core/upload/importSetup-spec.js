@@ -1,12 +1,13 @@
 define([
     'kbase/js/widgets/narrative_core/upload/importSetup',
+    'kbase/js/widgets/narrative_core/upload/importErrors',
     'base/js/namespace',
     'narrativeConfig',
     'narrativeMocks',
     'testUtil',
     'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
     'json!/test/data/kb_uploadmethods.import_fasta_as_assembly_from_staging.spec.json',
-], (ImportSetup, Jupyter, Config, Mocks, TestUtil, ImportFastqSpec, ImportAssemblySpec) => {
+], (ImportSetup, Errors, Jupyter, Config, Mocks, TestUtil, ImportFastqSpec, ImportAssemblySpec) => {
     'use strict';
 
     const uploaders = Config.get('uploaders');
@@ -100,7 +101,7 @@ define([
                 };
             }
 
-            function stubBulkSpecificationRequest(status, statusText, responseText) {
+            function stubBulkSpecificationRequest(status, statusText, response) {
                 jasmine.Ajax.stubRequest(
                     new RegExp(`${stagingServiceUrl}/bulk_specification`)
                 ).andReturn({
@@ -108,7 +109,7 @@ define([
                     statusText,
                     contentType: 'text/plain',
                     responseHeaders: '',
-                    responseText,
+                    responseText: JSON.stringify(response),
                 });
             }
 
@@ -236,20 +237,16 @@ define([
                     readsCsv = 'some_reads_file.csv',
                     assemblyCsv = 'some_assembly_file.csv';
 
-                stubBulkSpecificationRequest(
-                    200,
-                    'success',
-                    JSON.stringify({
-                        types: {
-                            [readsDataType]: importReadsData,
-                            [assemblyDataType]: importAssemblyData,
-                        },
-                        files: {
-                            [readsDataType]: { file: readsCsv, tab: null },
-                            [assemblyDataType]: { file: assemblyCsv, tab: null },
-                        },
-                    })
-                );
+                stubBulkSpecificationRequest(200, 'success', {
+                    types: {
+                        [readsDataType]: importReadsData,
+                        [assemblyDataType]: importAssemblyData,
+                    },
+                    files: {
+                        [readsDataType]: { file: readsCsv, tab: null },
+                        [assemblyDataType]: { file: assemblyCsv, tab: null },
+                    },
+                });
 
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
@@ -289,34 +286,140 @@ define([
                 });
             });
 
+            /**
+             * stagingResponse is optional. If present, this will start with mocking a call to the
+             * bulk_specification endpoint of the staging area, expecting a 200 response with the
+             * given data.
+             * @param {string} fileName
+             * @param {Object} stagingResponse expected response from a happy staging area call
+             */
+            async function testWithExpectedImportErrors(fileNames, stagingResponse) {
+                if (stagingResponse) {
+                    stubBulkSpecificationRequest(200, 'ok', stagingResponse);
+                }
+
+                const importInputs = fileNames.map((fileName) => ({
+                    name: fileName,
+                    type: 'import_specification',
+                }));
+                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejectedWithError(
+                    Errors.ImportSetupError
+                );
+            }
+
             it('should error properly when unable to find bulk specification info', async () => {
                 // see https://github.com/kbase/staging_service/tree/develop#error-response-12
                 // for error details
                 const filename = 'xsv_input.csv';
-                stubBulkSpecificationRequest(
-                    404,
-                    'not found',
-                    JSON.stringify({
-                        errors: [
-                            {
-                                type: 'cannot_find_file',
-                                file: filename,
+                stubBulkSpecificationRequest(404, 'not found', {
+                    errors: [
+                        {
+                            type: 'cannot_find_file',
+                            file: filename,
+                        },
+                    ],
+                });
+                await testWithExpectedImportErrors([filename]);
+            });
+
+            const wrongDataTypes = [
+                {
+                    dataType: 'not_a_real_datatype',
+                    label: 'bad',
+                },
+                {
+                    dataType: 'media',
+                    label: 'non-bulk',
+                },
+            ];
+            wrongDataTypes.forEach((testCase) => {
+                it(`should error when retrieving data with a ${testCase.label} data type`, async () => {
+                    const fileName = `${testCase.dataType}_data.csv`;
+                    const stagingResponse = {
+                        types: {
+                            [testCase.dataType]: [{ some: 'input' }],
+                        },
+                        files: {
+                            [testCase.dataType]: {
+                                file: fileName,
+                                tab: null,
                             },
-                        ],
-                    })
-                );
+                        },
+                    };
+                    await testWithExpectedImportErrors([fileName], stagingResponse);
+                });
+            });
+
+            it('should error when receiving the same type of dataType from splitting service calls', async () => {
+                // really, the only way this gets triggered is when two conditions happen:
+                // 1. there are enough files, or files with long enough path names, to require multiple GET calls
+                // 2. two or more of those files have data for the same data type
+                // so let's play with some crazy long, generated file names. The allowed URL length
+                // is 2048 characters, so a couple files of length ~1500 should do it, right?
+                // Mocking calls to the service will need to be done manually here, too.
+                const file1 = `${'a'.repeat(1500)}.csv`,
+                    file2 = `${'b'.repeat(1500)}.csv`,
+                    dataType = 'assembly',
+                    response1 = {
+                        types: {
+                            [dataType]: { some: 'data' },
+                        },
+                        files: {
+                            [dataType]: { file: file1, tab: null },
+                        },
+                    },
+                    response2 = {
+                        types: {
+                            [dataType]: { some: 'more_data' },
+                        },
+                        files: {
+                            [dataType]: { file: file2, tab: null },
+                        },
+                    };
+
+                jasmine.Ajax.stubRequest(
+                    `${stagingServiceUrl}/bulk_specification/?files=${file1}`
+                ).andReturn({
+                    status: 200,
+                    statusText: 'ok',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(response1),
+                });
+                jasmine.Ajax.stubRequest(
+                    `${stagingServiceUrl}/bulk_specification/?files=${file2}`
+                ).andReturn({
+                    status: 200,
+                    statusText: 'ok',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(response2),
+                });
 
                 const importInputs = [
                     {
-                        name: filename,
+                        name: file1,
+                        type: 'import_specification',
+                    },
+                    {
+                        name: file2,
                         type: 'import_specification',
                     },
                 ];
-                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejected();
-            });
 
-            // TODO
-            xit('should error when given multiple bulk spec files with the same type', async () => {});
+                let error;
+                try {
+                    await ImportSetup.setupImportCells(importInputs);
+                } catch (e) {
+                    error = e;
+                }
+                // make sure we get the right list, and that the fileErrors
+                // look like : { file1: [error], file2: [error] }
+                expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
+                [file1, file2].forEach((fileName) => {
+                    expect(error.fileErrors[fileName]).toEqual(jasmine.any(Array));
+                });
+            });
         });
 
         describe('setupWebUploadCell tests', () => {

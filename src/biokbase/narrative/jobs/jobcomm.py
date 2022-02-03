@@ -272,12 +272,16 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(self, req: JobRequest = None, ignore_refresh_flag: bool = False) -> dict:
+    def _lookup_all_job_states(
+        self, req: JobRequest = None, ignore_refresh_flag: bool = False
+    ) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=ignore_refresh_flag)
+        all_job_states = self._jm.lookup_all_job_states(
+            ignore_refresh_flag=ignore_refresh_flag
+        )
         self.send_comm_message("job_status_all", all_job_states)
         return all_job_states
 
@@ -502,6 +506,7 @@ class exc_to_msg:
     """
     This is a context manager to wrap around JC code
     """
+
     jc = JobComm()
 
     def __init__(self, req: Union[JobRequest, dict, str] = None):
@@ -543,7 +548,7 @@ class exc_to_msg:
                     "message": exc_value.message,
                     "error": exc_value.error,
                     "code": exc_value.code,
-                }
+                },
             )
         elif exc_type:
             self.jc.send_error_message(
@@ -552,5 +557,5 @@ class exc_to_msg:
                 {
                     "name": exc_type.__name__,
                     "message": str(exc_value),
-                }
+                },
             )

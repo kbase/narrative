@@ -158,9 +158,7 @@ class JobManagerTest(unittest.TestCase):
             return False
         return True
 
-    @mock.patch(
-        "biokbase.narrative.clients.get", get_failing_mock_client
-    )
+    @mock.patch("biokbase.narrative.clients.get", get_failing_mock_client)
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
         with self.assertRaises(NarrativeException) as e:
@@ -230,17 +228,23 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {None}"):
             self.jm._check_job(None)
 
-        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"):
+        with self.assertRaisesRegex(
+            JobIDException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
+        ):
             self.jm._check_job(JOB_NOT_FOUND)
 
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(TypeError, f"{JOBS_TYPE_ERR}: {None}"):
             self.jm._check_job_list(None)
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+        ):
             self.jm._check_job_list([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+        ):
             self.jm._check_job_list(["", "", None])
 
     def test__check_job_list(self):
@@ -305,9 +309,9 @@ class JobManagerTest(unittest.TestCase):
                 **{
                     job_id: get_error_output_state(job_id, "ee2_error")
                     for job_id in ACTIVE_JOBS
-                }
+                },
             },
-            job_states
+            job_states,
         )
 
     def test__create_jobs__empty_list(self):
@@ -324,9 +328,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIsInstance(job, Job)
 
     def test_get_job_bad(self):
-        with self.assertRaisesRegex(
-            JobIDException, f"{JOB_NOT_REG_ERR}: not_a_job_id"
-        ):
+        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_REG_ERR}: not_a_job_id"):
             self.jm.get_job("not_a_job_id")
 
     @mock.patch("biokbase.narrative.clients.get", get_mock_client)
@@ -351,9 +353,7 @@ class JobManagerTest(unittest.TestCase):
             self.assertEqual(self.jm.list_jobs(), expected)
 
         # with some jobs
-        with mock.patch(
-            "biokbase.narrative.clients.get", get_mock_client
-        ):
+        with mock.patch("biokbase.narrative.clients.get", get_mock_client):
             jobs_html_0 = self.jm.list_jobs().data
             jobs_html_1 = self.jm.list_jobs().data
 
@@ -369,14 +369,20 @@ class JobManagerTest(unittest.TestCase):
                 self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+        ):
             self.jm.cancel_jobs([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+        ):
             self.jm.cancel_jobs(["", "", None])
 
         job_states = self.jm.cancel_jobs([JOB_NOT_FOUND])
-        self.assertEqual({JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND)}, job_states)
+        self.assertEqual(
+            {JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND)}, job_states
+        )
 
     def test_cancel_jobs__job_already_finished(self):
         self.assertEqual(get_test_job(JOB_COMPLETED)["status"], "completed")
@@ -613,10 +619,14 @@ class JobManagerTest(unittest.TestCase):
         self._check_retry_jobs(expected, retry_results)
 
     def test_retry_jobs__bad_inputs(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+        ):
             self.jm.retry_jobs([])
 
-        with self.assertRaisesRegex(JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f'{JOBS_MISSING_FALSY_ERR}: {["", "", None]}')
+        ):
             self.jm.retry_jobs(["", "", None])
 
     @mock.patch("biokbase.narrative.clients.get", get_mock_client)
@@ -720,7 +730,9 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(exp, res)
 
     def test_get_job_states__empty(self):
-        with self.assertRaisesRegex(JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")):
+        with self.assertRaisesRegex(
+            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[]}")
+        ):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):
@@ -730,10 +742,14 @@ class JobManagerTest(unittest.TestCase):
             self.jm.update_batch_job(JOB_NOT_FOUND)
 
     def test_update_batch_job__not_batch(self):
-        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_BATCH_ERR}: {JOB_CREATED}"):
+        with self.assertRaisesRegex(
+            JobIDException, f"{JOB_NOT_BATCH_ERR}: {JOB_CREATED}"
+        ):
             self.jm.update_batch_job(JOB_CREATED)
 
-        with self.assertRaisesRegex(JobIDException, f"{JOB_NOT_BATCH_ERR}: {BATCH_TERMINATED}"):
+        with self.assertRaisesRegex(
+            JobIDException, f"{JOB_NOT_BATCH_ERR}: {BATCH_TERMINATED}"
+        ):
             self.jm.update_batch_job(BATCH_TERMINATED)
 
     @mock.patch("biokbase.narrative.clients.get", get_mock_client)
@@ -799,9 +815,7 @@ class JobManagerTest(unittest.TestCase):
 
     def test_modify_job_refresh(self):
         for job_id, terminality in JOBS_TERMINALITY.items():
-            self.assertEqual(
-                self.jm._running_jobs[job_id]["refresh"], not terminality
-            )
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], not terminality)
             self.jm.modify_job_refresh([job_id], False)  # stop
             self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
             self.jm.modify_job_refresh([job_id], False)  # stop harder

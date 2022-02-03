@@ -118,7 +118,7 @@ class JobManager(object):
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 
-            self.register_new_job(job, refresh) #int(refresh))
+            self.register_new_job(job, refresh)  # int(refresh))
 
     def _create_jobs(self, job_ids) -> dict:
         """
@@ -243,7 +243,9 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
             raise
 
-    def _construct_job_output_state_set(self, job_ids: list, states: dict = None) -> dict:
+    def _construct_job_output_state_set(
+        self, job_ids: list, states: dict = None
+    ) -> dict:
         """
         Builds a set of job states for the list of job ids.
         :param states: dict, where each value is a state is from EE2

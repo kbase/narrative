@@ -217,7 +217,6 @@ class JobComm:
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
             }
-        self._lookup_all_job_states(ignore_refresh_flag=True)
 
     def start_job_status_loop(
         self,

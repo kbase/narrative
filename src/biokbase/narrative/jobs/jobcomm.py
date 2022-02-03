@@ -1,7 +1,6 @@
 import copy
 import threading
 from typing import List, Union
-from xmlrpc.client import Boolean
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.jobs.jobmanager import JOBS_TYPE_ERR

@@ -1301,19 +1301,6 @@ define(
                         case 'queued':
                             return { mode: 'processing', stage: 'queued' };
                         case 'running':
-                            // see if any subjobs are done, if so, set the stage to 'partial-complete'
-                            if (jobState.child_jobs && jobState.child_jobs.length) {
-                                const childDone = jobState.child_jobs.some((childState) => {
-                                    return (
-                                        ['completed', 'terminated', 'error'].indexOf(
-                                            childState.status
-                                        ) !== -1
-                                    );
-                                });
-                                if (childDone) {
-                                    return { mode: 'processing', stage: 'partial-complete' };
-                                }
-                            }
                             return { mode: 'processing', stage: 'running' };
                         case 'completed':
                             stopListeningForJobMessages();

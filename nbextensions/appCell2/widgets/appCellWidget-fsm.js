@@ -252,10 +252,6 @@ define([], () => {
                     stage: 'running',
                 },
                 {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
                     mode: 'success',
                 },
                 {
@@ -345,10 +341,6 @@ define([], () => {
                 {
                     mode: 'processing',
                     stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
                 },
                 {
                     mode: 'success',
@@ -448,10 +440,6 @@ define([], () => {
                     stage: 'running',
                 },
                 {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
                     mode: 'canceled',
                 },
                 {
@@ -544,10 +532,6 @@ define([], () => {
                     stage: 'running',
                 },
                 {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
                     mode: 'canceled',
                 },
                 {
@@ -613,10 +597,6 @@ define([], () => {
                 {
                     mode: 'processing',
                     stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
                 },
                 {
                     mode: 'canceled',
@@ -685,95 +665,6 @@ define([], () => {
                 {
                     mode: 'processing',
                     stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
-        },
-        // processing - partial complete
-        {
-            state: {
-                mode: 'processing',
-                stage: 'partial-complete',
-            },
-            ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    jobStatus: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: true,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
-                actionButton: {
-                    name: 'cancel',
-                },
-            },
-            on: {
-                enter: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
-                },
-                resume: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
-                },
-                exit: {
-                    messages: [
-                        {
-                            emit: 'stop-running',
-                        },
-                    ],
-                },
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
                 },
                 {
                     mode: 'canceled',

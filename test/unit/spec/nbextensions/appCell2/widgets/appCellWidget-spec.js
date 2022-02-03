@@ -1,13 +1,90 @@
 define([
+    'bluebird',
     '/narrative/nbextensions/appCell2/widgets/appCellWidget',
+    '/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm',
+    'common/jobCommMessages',
+    'common/jobs',
+    'common/jupyter',
     'common/runtime',
     'common/semaphore',
     'testUtil',
     'narrativeMocks',
+    '/test/data/jobsData',
     'base/js/namespace',
     'uuid',
-], (AppCellWidget, Runtime, Semaphore, TestUtil, Mocks, Jupyter, UUID) => {
+], (
+    Promise,
+    AppCellWidget,
+    AppStates,
+    jcm,
+    Jobs,
+    Narrative,
+    Runtime,
+    Semaphore,
+    TestUtil,
+    Mocks,
+    JobsData,
+    Jupyter,
+    UUID
+) => {
     'use strict';
+
+    const fsmState = AppStates.STATE;
+
+    /**
+     * send a jcm.MESSAGE_TYPE.RUN_STATUS message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} runStatusArgs - object with keys for a valid run_status message
+     *      {object} bus
+     */
+    function send_RUN_STATUS(ctx) {
+        const { runStatusArgs } = ctx;
+        const coreMessage = { event_at: 1234567890, ...runStatusArgs };
+        sendBusMessage(
+            ctx,
+            coreMessage,
+            [jcm.CHANNEL.CELL],
+            runStatusArgs.cell_id,
+            jcm.MESSAGE_TYPE.RUN_STATUS
+        );
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.STATUS message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {string} jobId - the job to be updated
+     *      {object} jobState - the jobState object to be sent
+     */
+    function send_STATUS(ctx) {
+        const { jobId, jobState } = ctx;
+        sendBusMessage(
+            ctx,
+            {
+                [jcm.PARAM.JOB_ID]: jobId,
+                jobState,
+            },
+            [jcm.CHANNEL.JOB],
+            jobId,
+            jcm.MESSAGE_TYPE.STATUS
+        );
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.<type> message over the bus
+     *
+     * @param {object} ctx - `this` context, with key 'bus'
+     * @param {object} message        - the message
+     * @param {string} channelType    - jcm.CHANNEL.<type>
+     * @param {string} channelId      - ID for the channel
+     * @param {string} type           - jcm.MESSAGE_TYPE.<type>
+     */
+    function sendBusMessage(ctx, message, channelType, channelId, type) {
+        const bus = ctx.bus;
+
+        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
+    }
 
     const appSpec = {
         id: 'NarrativeTest/app_succeed',
@@ -171,7 +248,6 @@ define([
         return ctx.appCellWidgetInstance;
     }
 
-    // Can only test the public functions...
     describe('The AppCellWidget module', () => {
         it('Should load and return a make function', () => {
             expect(AppCellWidget).toEqual(jasmine.any(Object));
@@ -195,6 +271,7 @@ define([
             const cell = generateCellData();
             this.bus = Runtime.make().bus();
             this.cell = cell;
+            this.cell_id = cell.metadata.kbase.attributes.id;
             this.cell.code_mirror = {
                 options: { readOnly: false },
                 setOption: function (p, v) {
@@ -219,11 +296,11 @@ define([
                 });
             });
 
-            it('Can be instantiated', function () {
+            it('is successful', function () {
                 expect(this.appCellWidgetInstance).not.toBe(null);
             });
 
-            it('Has expected functions when instantiated', function () {
+            it('produces an instance with the expected methods', function () {
                 ['init', 'attach', 'start', 'stop', 'detach'].forEach((fn) => {
                     expect(this.appCellWidgetInstance[fn]).toBeDefined();
                 });
@@ -231,21 +308,6 @@ define([
         });
 
         describe('init method', () => {
-            it('has a method "init" which sets up the code area and FSM', function () {
-                this.appCellWidgetInstance = AppCellWidget.make({
-                    bus: Runtime.make().bus(),
-                    cell: this.cell,
-                    devMode: true,
-                });
-                expect(this.appCellWidgetInstance.__fsm()).toBeUndefined();
-                return this.appCellWidgetInstance.init().then(() => {
-                    expect(this.appCellWidgetInstance.__fsm()).toEqual(jasmine.any(Object));
-                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual({
-                        mode: 'new',
-                    });
-                });
-            });
-
             const rwOptions = [
                 // notebook.writable, narrative.readonly
                 [true, false],
@@ -272,9 +334,9 @@ define([
                         expect(initReturn).toBeNull();
                         expect(this.appCellWidgetInstance.model).toBeDefined();
                         expect(this.appCellWidgetInstance.__fsm()).toEqual(jasmine.any(Object));
-                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual({
-                            mode: 'new',
-                        });
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            fsmState.NEW
+                        );
                         const rawModel = this.appCellWidgetInstance.model.getRawObject();
                         expect(rawModel['user-settings']).toEqual({
                             showCodeInputArea: false,
@@ -292,6 +354,15 @@ define([
         describe('cell start up', () => {
             beforeEach(function () {
                 cellStartUp(this);
+            });
+
+            it('inits, setting up the FSM', async function () {
+                expect(this.appCellWidgetInstance.__fsm()).toBeUndefined();
+                await this.appCellWidgetInstance.init();
+                expect(this.appCellWidgetInstance.__fsm()).toEqual(jasmine.any(Object));
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                    fsmState.NEW
+                );
             });
 
             it('attaches to the DOM', async function () {
@@ -335,9 +406,9 @@ define([
                 expect(
                     this.appCellWidgetInstance.busEventManager.add.calls.allArgs().length
                 ).toBeGreaterThan(10);
-                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual({
-                    mode: 'new',
-                });
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                    fsmState.NEW
+                );
             });
 
             it('runs', async function () {
@@ -349,9 +420,9 @@ define([
 
                 // app spec should have been checked
                 // FSM should have changed state
-                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).not.toEqual({
-                    mode: 'new',
-                });
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).not.toEqual(
+                    fsmState.NEW
+                );
                 // UI should have been rendered; only one action button visible
                 const actionButtons = this.kbaseNode.querySelectorAll(`.kb-rcp__action-button`);
                 const hiddenButtons = this.kbaseNode.querySelectorAll(
@@ -371,9 +442,9 @@ define([
             });
 
             it('stops, removing event listeners', async function () {
-                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).not.toEqual({
-                    mode: 'new',
-                });
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).not.toEqual(
+                    fsmState.NEW
+                );
                 spyOn(this.appCellWidgetInstance.busEventManager, 'removeAll');
                 await this.appCellWidgetInstance.stop();
                 expect(this.appCellWidgetInstance.busEventManager.removeAll).toHaveBeenCalled();
@@ -384,6 +455,209 @@ define([
                 expect(this.kbaseNode.childNodes.length).toEqual(1);
                 await this.appCellWidgetInstance.detach();
                 expect(this.kbaseNode.childNodes.length).toEqual(0);
+            });
+        });
+
+        describe('the running cell', () => {
+            describe('run status messages', () => {
+                beforeEach(async function () {
+                    const currentState = fsmState.EDITING_COMPLETE;
+                    cellStartUp(this);
+                    // add a valid param so the cell starts up ready to run
+                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
+                    this.cell.metadata.kbase.appCell.fsm = { currentState };
+                    await this.appCellWidgetInstance.init();
+                    await this.appCellWidgetInstance.attach(this.kbaseNode);
+                    await this.appCellWidgetInstance.start();
+                    await this.appCellWidgetInstance.run();
+                    // ensure that the app cell is in the correct state
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        currentState
+                    );
+                    return new Promise((resolve) => {
+                        this.cell.execute = () => {
+                            resolve();
+                        };
+                        this.kbaseNode.querySelector('.kb-rcp__action-button.-run').click();
+                    });
+                });
+
+                const TEST_JOB = 'test_job_id';
+
+                it('responds to the run button being clicked', function () {
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.EXECUTE_REQUESTED
+                    );
+                    expect(
+                        this.kbaseNode.querySelector(`.kb-rcp__action-button.-cancel`)
+                    ).not.toHaveClass('hidden');
+                });
+
+                it('responds to job launch', function () {
+                    const runStatusArgs = {
+                        event: 'launched_job',
+                        cell_id: this.cell_id,
+                        job_id: TEST_JOB,
+                    };
+                    const channelKeys = Array.from(Object.keys(this.bus.channels));
+                    return new Promise((resolve) => {
+                        spyOn(Narrative, 'saveNotebook').and.callFake(() => {
+                            resolve();
+                        });
+                        spyOn(this.bus, 'emit');
+                        send_RUN_STATUS({
+                            bus: this.bus,
+                            runStatusArgs,
+                        });
+                    }).then(() => {
+                        // FSM state to { mode: 'processing', stage: 'launched' }
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            fsmState.PROCESSING_LAUNCHED
+                        );
+                        const exec = this.appCellWidgetInstance.model.getItem('exec');
+
+                        expect(exec.jobState).toEqual({ job_id: TEST_JOB });
+                        expect(exec.launchState).toEqual({
+                            ...runStatusArgs,
+                            event_at: 1234567890,
+                        });
+                        // action button: cancel
+                        expect(
+                            this.kbaseNode.querySelector(`.kb-rcp__action-button.-cancel`)
+                        ).not.toHaveClass('hidden');
+                        // expect the status tab to be available
+                        expect(
+                            this.kbaseNode.querySelector(
+                                `.kb-rcp__tab-button[data-button="jobStatus"]`
+                            )
+                        ).not.toHaveClass('hidden');
+
+                        // a channel should have been added to listen for job updates
+                        expect(Object.keys(this.bus.channels).length).toBeGreaterThan(
+                            channelKeys.length
+                        );
+                        expect(Object.keys(this.bus.channels)).toEqual(
+                            jasmine.arrayContaining(channelKeys)
+                        );
+                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
+                            return call[0] !== 'clock-tick';
+                        });
+                        expect(busEmissions).toContain([
+                            jcm.MESSAGE_TYPE.START_UPDATE,
+                            { [jcm.PARAM.JOB_ID]: TEST_JOB },
+                        ]);
+                    });
+                });
+
+                it('responds to launch errors', function () {
+                    const runStatusArgs = { event: 'error', cell_id: this.cell_id };
+
+                    return new Promise((resolve) => {
+                        spyOn(Narrative, 'saveNotebook').and.callFake(() => {
+                            resolve();
+                        });
+                        send_RUN_STATUS({ bus: this.bus, runStatusArgs });
+                    }).then(() => {
+                        // FSM state to { mode: 'error', stage: 'launching' }
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            fsmState.LAUNCH_ERROR
+                        );
+                        const exec = this.appCellWidgetInstance.model.getItem('exec');
+                        expect(exec.launchState).toEqual({
+                            ...runStatusArgs,
+                            event_at: 1234567890,
+                        });
+                        // action button should be reRunApp
+                        expect(
+                            this.kbaseNode.querySelector(`.kb-rcp__action-button.-rerun`)
+                        ).not.toHaveClass('hidden');
+                        // expect the error tab to be visible
+                        expect(
+                            this.kbaseNode.querySelector(`.kb-rcp__tab-button[data-button="error"]`)
+                        ).not.toHaveClass('hidden');
+                    });
+                });
+
+                // TODO: ATM the app cell doesn't respond to invalid messages
+                xit('responds to crazy messages', function () {
+                    const runStatusArgs = { event: 'THE APOCALYPSE', cell_id: this.cell_id };
+                    send_RUN_STATUS({
+                        bus: this.bus,
+                        runStatusArgs,
+                    });
+                    // message doesn't get saved and there's no narrative save, so how to know when
+                    // message is processed?
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.EDITING_COMPLETE
+                    );
+                });
+            });
+
+            describe('job status updates', () => {
+                // ensure that the app cell goes from { mode: 'processing', stage: 'launched', }
+                // to the appropriate state on receiving a job status message
+                Object.keys(JobsData.jobsById).forEach((jobId) => {
+                    it(`processes a ${jobId} update`, async function () {
+                        const jobState = JobsData.jobsById[jobId];
+                        const currentState = fsmState.PROCESSING_LAUNCHED;
+                        cellStartUp(this);
+                        // start up cell as if it just received the job launched message
+                        this.cell.metadata.kbase.appCell.fsm = { currentState };
+                        this.cell.metadata.kbase.appCell.exec = {
+                            jobState: { job_id: jobId },
+                            launchState: { event: 'launched_job', job_id: jobId },
+                        };
+
+                        spyOn(this.bus, 'emit');
+                        await this.appCellWidgetInstance.init();
+                        await this.appCellWidgetInstance.attach(this.kbaseNode);
+                        await this.appCellWidgetInstance.start();
+                        await this.appCellWidgetInstance.run();
+
+                        // ensure that the app cell is in the correct state
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            currentState
+                        );
+                        // send a job status update; this will trigger an FSM mode change,
+                        // which will enable the jobStatus tab
+                        await TestUtil.waitForElementChange(
+                            this.kbaseNode.querySelector('[data-button="jobStatus"]'),
+                            () => {
+                                // send a status update
+                                send_STATUS({
+                                    bus: this.bus,
+                                    jobId,
+                                    jobState,
+                                });
+                            }
+                        );
+
+                        // after processing
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            jobState.meta.appCellFsm
+                        );
+                        expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
+                            jobState
+                        );
+
+                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
+                            return call[0] !== 'clock-tick';
+                        });
+                        // the cell will emit at least one request for status updates when
+                        // the cell starts up
+                        expect(busEmissions).toContain([
+                            jcm.MESSAGE_TYPE.START_UPDATE,
+                            { [jcm.PARAM.JOB_ID]: jobId },
+                        ]);
+                        // if the job state is terminal, expect there to be a request to stop updates
+                        if (Jobs.isTerminalStatus(jobState.status)) {
+                            expect(busEmissions).toContain([
+                                jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                { [jcm.PARAM.JOB_ID]: jobId },
+                            ]);
+                        }
+                    });
+                });
             });
         });
     });

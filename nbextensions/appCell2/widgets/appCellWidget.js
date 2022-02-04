@@ -988,15 +988,15 @@ define(
                     doStopRunning();
                 });
 
-                fsm.bus.on('on-success', () => {
+                fsm.bus.on('on-completed', () => {
                     doOnSuccess();
                 });
 
-                fsm.bus.on('resume-success', () => {
+                fsm.bus.on('resume-completed', () => {
                     doResumeSuccess();
                 });
 
-                fsm.bus.on('exit-success', () => {
+                fsm.bus.on('exit-completed', () => {
                     doExitSuccess();
                 });
 

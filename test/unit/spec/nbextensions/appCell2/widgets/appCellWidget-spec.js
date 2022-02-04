@@ -31,61 +31,6 @@ define([
 
     const fsmState = AppStates.STATE;
 
-    /**
-     * send a jcm.MESSAGE_TYPE.RUN_STATUS message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {object} runStatusArgs - object with keys for a valid run_status message
-     *      {object} bus
-     */
-    function send_RUN_STATUS(ctx) {
-        const { runStatusArgs } = ctx;
-        const coreMessage = { event_at: 1234567890, ...runStatusArgs };
-        sendBusMessage(
-            ctx,
-            coreMessage,
-            [jcm.CHANNEL.CELL],
-            runStatusArgs.cell_id,
-            jcm.MESSAGE_TYPE.RUN_STATUS
-        );
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.STATUS message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {string} jobId - the job to be updated
-     *      {object} jobState - the jobState object to be sent
-     */
-    function send_STATUS(ctx) {
-        const { jobId, jobState } = ctx;
-        sendBusMessage(
-            ctx,
-            {
-                [jcm.PARAM.JOB_ID]: jobId,
-                jobState,
-            },
-            [jcm.CHANNEL.JOB],
-            jobId,
-            jcm.MESSAGE_TYPE.STATUS
-        );
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.<type> message over the bus
-     *
-     * @param {object} ctx - `this` context, with key 'bus'
-     * @param {object} message        - the message
-     * @param {string} channelType    - jcm.CHANNEL.<type>
-     * @param {string} channelId      - ID for the channel
-     * @param {string} type           - jcm.MESSAGE_TYPE.<type>
-     */
-    function sendBusMessage(ctx, message, channelType, channelId, type) {
-        const bus = ctx.bus;
-
-        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
-    }
-
     const appSpec = {
         id: 'NarrativeTest/app_succeed',
         gitCommitHash: '8d1f8480aee9852e9354cf723f0808fae53b2fcc',
@@ -223,6 +168,7 @@ define([
             bus: ctx.bus,
             cell: mockCell,
             devMode: true,
+            saveMaxFrequency: 1,
         });
 
         Jupyter.notebook = {
@@ -293,6 +239,7 @@ define([
                     bus: this.bus,
                     cell: this.cell,
                     devMode: true,
+                    saveMaxFrequency: 1,
                 });
             });
 
@@ -328,6 +275,7 @@ define([
                         bus: Runtime.make().bus(),
                         cell: this.cell,
                         devMode: true,
+                        saveMaxFrequency: 1,
                     });
                     expect(this.appCellWidgetInstance.__fsm()).toBeUndefined();
                     return this.appCellWidgetInstance.init().then((initReturn) => {
@@ -505,7 +453,7 @@ define([
                             resolve();
                         });
                         spyOn(this.bus, 'emit');
-                        send_RUN_STATUS({
+                        TestUtil.send_RUN_STATUS({
                             bus: this.bus,
                             runStatusArgs,
                         });
@@ -556,7 +504,7 @@ define([
                         spyOn(Narrative, 'saveNotebook').and.callFake(() => {
                             resolve();
                         });
-                        send_RUN_STATUS({ bus: this.bus, runStatusArgs });
+                        TestUtil.send_RUN_STATUS({ bus: this.bus, runStatusArgs });
                     }).then(() => {
                         // FSM state to { mode: 'error', stage: 'launching' }
                         expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
@@ -581,7 +529,7 @@ define([
                 // TODO: ATM the app cell doesn't respond to invalid messages
                 xit('responds to crazy messages', function () {
                     const runStatusArgs = { event: 'THE APOCALYPSE', cell_id: this.cell_id };
-                    send_RUN_STATUS({
+                    TestUtil.send_RUN_STATUS({
                         bus: this.bus,
                         runStatusArgs,
                     });
@@ -608,7 +556,18 @@ define([
                             launchState: { event: 'launched_job', job_id: jobId },
                         };
 
-                        spyOn(this.bus, 'emit');
+                        spyOn(this.bus, 'emit').and.callFake((...args) => {
+                            const [msgType] = args;
+                            if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
+                                // send a status update
+                                TestUtil.send_STATUS({
+                                    bus: this.bus,
+                                    jobId,
+                                    jobState,
+                                });
+                            }
+                        });
+
                         await this.appCellWidgetInstance.init();
                         await this.appCellWidgetInstance.attach(this.kbaseNode);
                         await this.appCellWidgetInstance.start();
@@ -621,15 +580,7 @@ define([
                         // send a job status update; this will trigger an FSM mode change,
                         // which will enable the jobStatus tab
                         await TestUtil.waitForElementChange(
-                            this.kbaseNode.querySelector('[data-button="jobStatus"]'),
-                            () => {
-                                // send a status update
-                                send_STATUS({
-                                    bus: this.bus,
-                                    jobId,
-                                    jobState,
-                                });
-                            }
+                            this.kbaseNode.querySelector('[data-button="jobStatus"]')
                         );
 
                         // after processing

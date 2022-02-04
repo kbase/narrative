@@ -276,18 +276,18 @@ define([
             }
 
             channelList
-                .filter((channel) => {
-                    return channel && channel.length > 0 ? 1 : 0;
+                .filter((channelId) => {
+                    return channelId && channelId.length > 0 ? 1 : 0;
                 })
-                .forEach((channel) => {
-                    if (!this.listeners[channel]) {
-                        this.listeners[channel] = {};
+                .forEach((channelId) => {
+                    if (!this.listeners[channelId]) {
+                        this.listeners[channelId] = {};
                     }
-                    if (!this.listeners[channel][msgType]) {
-                        const channelObject = { [channelType]: channel };
+                    if (!this.listeners[channelId][msgType]) {
+                        const channelObject = { [channelType]: channelId };
 
                         // listen for job-related bus messages
-                        this.listeners[channel][msgType] = this.bus.listen({
+                        this.listeners[channelId][msgType] = this.bus.listen({
                             channel: channelObject,
                             key: {
                                 type: msgType,
@@ -298,7 +298,7 @@ define([
                                 }
                                 this.runHandler(msgType, message, {
                                     channelType,
-                                    channelId: channel,
+                                    channelId,
                                 });
                             },
                         });
@@ -314,13 +314,13 @@ define([
         /**
          * Remove the listener for ${msgType} messages for a channel
          *
-         * @param {string} channel
+         * @param {string} channelId
          * @param {string} msgType - the msgType of the listener
          */
-        removeListener(channel, msgType) {
+        removeListener(channelId, msgType) {
             try {
-                this.bus.removeListener(this.listeners[channel][msgType]);
-                delete this.listeners[channel][msgType];
+                this.bus.removeListener(this.listeners[channelId][msgType]);
+                delete this.listeners[channelId][msgType];
             } catch (err) {
                 // do nothing
             }
@@ -328,14 +328,14 @@ define([
 
         /**
          * Remove all listeners associated with a certain channel ID
-         * @param {string} channel
+         * @param {string} channelId
          */
-        removeChannelListeners(channel) {
-            if (this.listeners[channel] && Object.keys(this.listeners[channel]).length) {
-                Object.keys(this.listeners[channel]).forEach((msgType) => {
-                    this.removeListener(channel, msgType);
+        removeChannelListeners(channelId) {
+            if (this.listeners[channelId] && Object.keys(this.listeners[channelId]).length) {
+                Object.keys(this.listeners[channelId]).forEach((msgType) => {
+                    this.removeListener(channelId, msgType);
                 });
-                delete this.listeners[channel];
+                delete this.listeners[channelId];
             }
         }
 

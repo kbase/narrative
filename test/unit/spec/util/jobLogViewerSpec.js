@@ -30,50 +30,12 @@ define([
 
     function createLogViewer(context, showHistory = false, logPollInterval = null) {
         context.node = document.createElement('div');
-        context.runtimeBus = Runtime.make().bus();
+        context.bus = Runtime.make().bus();
         const args = { showHistory, devMode: true };
         if (logPollInterval) {
             args.logPollInterval = logPollInterval;
         }
         context.jobLogViewerInstance = new JobLogViewer(args);
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.<type> message over the bus
-     *
-     * @param {object} bus
-     * @param {object} message        - the message
-     * @param {string} channelType    - jcm.CHANNEL.<type>
-     * @param {string} channelId      - ID for the channel
-     * @param {string} type           - jcm.MESSAGE_TYPE.<type>
-     */
-    function sendBusMessage(bus, message, channelType, channelId, type) {
-        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
-    }
-
-    function send_STATUS(bus, jobState) {
-        const message = { [jcm.PARAM.JOB_ID]: jobState.job_id, jobState };
-        return sendBusMessage(
-            bus,
-            message,
-            jcm.CHANNEL.JOB,
-            jobState.job_id,
-            jcm.MESSAGE_TYPE.STATUS
-        );
-    }
-
-    function send_LOGS(bus, message) {
-        if (message.lines) {
-            message.first = 0;
-            message.max_lines = message.lines.length;
-        }
-        sendBusMessage(
-            bus,
-            message,
-            jcm.CHANNEL.JOB,
-            message[jcm.PARAM.JOB_ID],
-            jcm.MESSAGE_TYPE.LOGS
-        );
     }
 
     const logLines = [
@@ -248,7 +210,7 @@ define([
             await this.jobLogViewerInstance.start(arg);
 
             return new Promise((resolve) => {
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
                     resolve();
                 });
@@ -355,7 +317,10 @@ define([
                 },
                 executeFirst: () => {
                     if (jobState) {
-                        send_STATUS(context.runtimeBus, jobState);
+                        TestUtil.send_STATUS({
+                            bus: context.bus,
+                            jobState,
+                        });
                     }
                 },
                 config: { childList: true },
@@ -377,7 +342,7 @@ define([
                     it(`should create a string for status ${jobState.status}, history mode ${
                         mode ? 'on' : 'off'
                     }`, async function () {
-                        this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                        this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                             testJobStatus(this, mode);
                             expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobState.job_id });
                         });
@@ -398,7 +363,7 @@ define([
             it('should create a string for an unknown job', async function () {
                 const jobState = JobsData.unknownJob;
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                     testJobStatus(this);
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobState.job_id });
                 });
@@ -439,7 +404,10 @@ define([
                         const response = Jobs.isValidJobStateObject.and.originalFn(params);
                         if (firstCall) {
                             firstCall = false;
-                            send_STATUS(this.runtimeBus, jobsByStatus['running'][0]);
+                            TestUtil.send_STATUS({
+                                bus: this.bus,
+                                jobState: jobsByStatus['running'][0],
+                            });
                         } else {
                             // this is the DOM state after receiving the first (invalid) job update,
                             // but before receiving the second (valid) update.
@@ -448,10 +416,13 @@ define([
                         return response;
                     });
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
                         testJobStatus(this);
-                        send_STATUS(this.runtimeBus, state);
+                        TestUtil.send_STATUS({
+                            bus: this.bus,
+                            jobState: state,
+                        });
                     });
 
                     await this.jobLogViewerInstance.start({
@@ -485,16 +456,19 @@ define([
                 beforeEach(async function () {
                     jlv = this.jobLogViewerInstance;
                     container = this.node;
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                        send_STATUS(this.runtimeBus, jobState);
+                        TestUtil.send_STATUS({ bus: this.bus, jobState });
                     });
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, latest: true });
-                        send_LOGS(this.runtimeBus, {
-                            lines: lotsOfLogLines,
-                            [jcm.PARAM.JOB_ID]: jobId,
+                        TestUtil.send_LOGS({
+                            bus: this.bus,
+                            message: {
+                                lines: lotsOfLogLines,
+                                [jcm.PARAM.JOB_ID]: jobId,
+                            },
                         });
                     });
 
@@ -585,10 +559,10 @@ define([
                 const jobState = jobsByStatus['does_not_exist'][0];
                 const jobId = jobState.job_id;
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobState.job_id });
                     // send the job message
-                    send_STATUS(this.runtimeBus, jobState);
+                    TestUtil.send_STATUS({ bus: this.bus, jobState });
                 });
 
                 await this.jobLogViewerInstance.start({
@@ -609,10 +583,10 @@ define([
                     const jobState = jobsByStatus[queueState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobState.job_id });
                         // send the job message
-                        send_STATUS(this.runtimeBus, jobState);
+                        TestUtil.send_STATUS({ bus: this.bus, jobState });
                     });
 
                     await this.jobLogViewerInstance.start({
@@ -639,14 +613,14 @@ define([
                 const logs = [[], logLines.slice(0, 2), logLines.slice(0, 2), logLines]; //
                 let acc = 0;
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                    send_STATUS(this.runtimeBus, jobState);
+                    TestUtil.send_STATUS({ bus: this.bus, jobState });
                 });
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.START_UPDATE, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.START_UPDATE, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                    send_STATUS(this.runtimeBus, jobState);
+                    TestUtil.send_STATUS({ bus: this.bus, jobState });
                 });
 
                 await this.jobLogViewerInstance.start({
@@ -655,7 +629,7 @@ define([
                 });
 
                 return new Promise((resolve) => {
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, latest: true });
                         const logUpdate = logs[acc];
                         acc += 1;
@@ -676,7 +650,10 @@ define([
                             childList: true,
                             subtree: true,
                         });
-                        send_LOGS(this.runtimeBus, { lines: logUpdate, [jcm.PARAM.JOB_ID]: jobId });
+                        TestUtil.send_LOGS({
+                            bus: this.bus,
+                            message: { lines: logUpdate, [jcm.PARAM.JOB_ID]: jobId },
+                        });
                     });
                 });
             });
@@ -686,22 +663,25 @@ define([
                 const jobState = jobsByStatus['running'][0];
                 const jobId = jobState.job_id;
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                    send_STATUS(this.runtimeBus, jobState);
+                    TestUtil.send_STATUS({ bus: this.bus, jobState });
                 });
 
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.START_UPDATE, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.START_UPDATE, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                    send_STATUS(this.runtimeBus, jobState);
+                    TestUtil.send_STATUS({ bus: this.bus, jobState });
                 });
 
                 // this is called when the state is 'running'
-                this.runtimeBus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
+                this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
                     expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, latest: true });
-                    send_LOGS(this.runtimeBus, {
-                        [jcm.PARAM.JOB_ID]: jobId,
-                        error: 'summat went wrong',
+                    TestUtil.send_LOGS({
+                        bus: this.bus,
+                        message: {
+                            [jcm.PARAM.JOB_ID]: jobId,
+                            error: 'summat went wrong',
+                        },
                     });
                 });
 
@@ -733,14 +713,17 @@ define([
                     const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                        send_STATUS(this.runtimeBus, jobState);
+                        TestUtil.send_STATUS({ bus: this.bus, jobState });
                     });
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, first_line: 0 });
-                        send_LOGS(this.runtimeBus, { lines: logLines, [jcm.PARAM.JOB_ID]: jobId });
+                        TestUtil.send_LOGS({
+                            bus: this.bus,
+                            message: { lines: logLines, [jcm.PARAM.JOB_ID]: jobId },
+                        });
                     });
 
                     await this.jobLogViewerInstance.start({
@@ -761,14 +744,17 @@ define([
                     const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.STATUS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId });
-                        send_STATUS(this.runtimeBus, jobState);
+                        TestUtil.send_STATUS({ bus: this.bus, jobState });
                     });
 
-                    this.runtimeBus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
+                    this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
                         expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, first_line: 0 });
-                        send_LOGS(this.runtimeBus, { error: 'DANGER!', [jcm.PARAM.JOB_ID]: jobId });
+                        TestUtil.send_LOGS({
+                            bus: this.bus,
+                            message: { error: 'DANGER!', [jcm.PARAM.JOB_ID]: jobId },
+                        });
                     });
                     spyOn(console, 'error');
                     await this.jobLogViewerInstance.start({

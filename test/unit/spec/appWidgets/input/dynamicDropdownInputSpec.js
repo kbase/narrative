@@ -36,7 +36,7 @@ define([
                 userId: 'test_user',
             };
             bus = runtime.bus().makeChannelBus({
-                description: 'float testing',
+                description: 'dynamic dropdown testing',
             });
             testConfig.channelName = bus.channelName;
         });

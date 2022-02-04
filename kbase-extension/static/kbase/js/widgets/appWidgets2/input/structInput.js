@@ -19,6 +19,43 @@ define([
         p = t('p'),
         resolver = Resolver.make();
 
+    /**
+     * Creates the Struct Input widget, which displays one or more sub-input widgets in a given
+     * order. This factor expects the following config object:
+     * {
+     *   bus: a message bus from its parent
+     *   paramsChannelName: the unique name of the containing parameters widget channel
+     *   initialValue: an object with the initial input value, should have a key for each of its parameters,
+     *   parameterSpec: the processed parameter spec from sdk.js. This should be an object with the following keys:
+     *     id: string,
+     *     multipleItems: boolean,
+     *     ui: {
+     *       label: string,
+     *       description: string,
+     *       hint: string,
+     *       class: string,
+     *       control: string,
+     *       layout: array of the subparameter ids. They will be laid out in that order,
+     *       advanced: boolean, if true will be hidden in the advanced params
+     *     },
+     *     data: {
+     *       type: string (likely 'struct'),
+     *       constraints {
+     *         required: boolean,
+     *         disableable: boolean
+     *       },
+     *       defaultValue: object, key-value pair for subparams
+     *       nullValue: either object or null,
+     *       zeroValue: object, key-value pair for subparams
+     *     },
+     *     parameters: {
+     *       layout: order layout array as above,
+     *       specs: object, keys = parameter ids, values = subparameter specs to be passed to individual FieldWidgets
+     *     }
+     * }
+     * @param {Object} config
+     * @returns {StructInput} the created widget
+     */
     function factory(config) {
         let container,
             hostNode,
@@ -70,9 +107,6 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                // var validationOptions = {
-                //     required: spec.data.constraints.required
-                // };
                 return Validation.validate(rawValue, spec);
             });
         }
@@ -404,15 +438,11 @@ define([
         }
 
         function stop() {
-            return Promise.try(() => {
-                if (structFields) {
-                    return Promise.all(
-                        Object.keys(structFields).map((id) => {
-                            return structFields[id].instance.stop();
-                        })
-                    );
-                }
-            }).then(() => {
+            return Promise.all(
+                Object.keys(structFields).map((id) => {
+                    return structFields[id].instance.stop();
+                })
+            ).then(() => {
                 if (hostNode && container) {
                     hostNode.removeChild(container);
                 }
@@ -420,8 +450,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

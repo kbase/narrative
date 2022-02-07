@@ -81,6 +81,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
                     + "-----------------------------------------------------\n"
                     + e_trace
                 )
+
     return wrapper
 
 
@@ -1089,7 +1090,7 @@ class AppManager(object):
         return auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
 
     def register_new_job(self, job: Job) -> None:
-        JobManager().register_new_job(job)
+        JobManager().register_new_job(job, refresh=False)
         self._send_comm_message("new_job", {"job_id": job.job_id})
         with exc_to_msg("appmanager"):
             JobComm().lookup_job_state(job.job_id)

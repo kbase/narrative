@@ -376,108 +376,6 @@ define([
         );
     }
 
-    /**
-     * send a jcm.MESSAGE_TYPE.STATUS message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {string} jobId - the job to be updated
-     *      {object} input - the jobState object to be sent
-     */
-    function send_STATUS(ctx) {
-        const { jobId } = ctx;
-        sendBusMessage(
-            ctx,
-            {
-                [jcm.PARAM.JOB_ID]: jobId,
-                jobState: ctx.input,
-            },
-            [jcm.CHANNEL.JOB],
-            jobId,
-            jcm.MESSAGE_TYPE.STATUS
-        );
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.INFO message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {string} jobId
-     *      {object} jobInfo
-     */
-    function send_INFO(ctx) {
-        const { jobId, jobInfo } = ctx;
-        sendBusMessage(ctx, jobInfo, [jcm.CHANNEL.JOB], jobId, jcm.MESSAGE_TYPE.INFO);
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.RETRY message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {object} retryParent    - the parent of the retried job
-     *      {object} retry          - the new job
-     *      {object} bus            - the bus to send the message on
-     */
-    function send_RETRY(ctx) {
-        const { retryParent, retry } = ctx;
-        // send the retry response and the update for the batch parent
-        sendBusMessage(
-            ctx,
-            {
-                [jcm.PARAM.JOB_ID]: retryParent.job_id,
-                job: {
-                    [jcm.PARAM.JOB_ID]: retryParent.job_id,
-                    jobState: retryParent,
-                },
-                retry_id: retry.job_id,
-                retry: {
-                    [jcm.PARAM.JOB_ID]: retry.job_id,
-                    jobState: retry,
-                },
-            },
-            [jcm.CHANNEL.JOB],
-            retryParent.job_id,
-            jcm.MESSAGE_TYPE.RETRY
-        );
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.ERROR message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {object} jobId          - the job in question
-     *      {object} error          - error object from the backend
-     *      {object} bus            - the bus to send the message on
-     */
-    function send_ERROR(ctx) {
-        const { jobId, error } = ctx;
-        sendBusMessage(
-            ctx,
-            {
-                [jcm.PARAM.JOB_ID]: jobId,
-                error,
-                request: error.source,
-            },
-            [jcm.CHANNEL.JOB],
-            jobId,
-            jcm.MESSAGE_TYPE.ERROR
-        );
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.<type> message over the bus
-     *
-     * @param {object} ctx - `this` context, with key 'bus' or 'jobManager.bus'
-     *      {object} message        - the message
-     *      {string} channelType    - jcm.CHANNEL.<type>
-     *      {string} channelId      - ID for the channel
-     *      {string} type           - jcm.MESSAGE_TYPE.<type>
-     */
-    function sendBusMessage(ctx, message, channelType, channelId, type) {
-        const bus = ctx.bus || ctx.jobManager.bus;
-
-        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
-    }
-
     describe('The JobStatusTable module', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
@@ -1068,7 +966,11 @@ define([
                             this.input.meta.retryTarget = this.job.job_id;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                send_STATUS(this);
+                                TestUtil.send_STATUS({
+                                    bus: this.jobManager.bus,
+                                    jobId: this.jobId,
+                                    jobState: this.input,
+                                });
                             });
 
                             _checkRowStructure(this.row, this.job, this.input);
@@ -1115,7 +1017,18 @@ define([
                             this.input.meta.retryTarget = this.job.job_id;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                send_STATUS(this);
+                                // TODO: replace with a genuine retry instead --
+                                // the jobState is for a job with a different ID!
+                                TestUtil.sendBusMessage({
+                                    bus: this.jobManager.bus,
+                                    message: {
+                                        [jcm.PARAM.JOB_ID]: this.jobId,
+                                        jobState: this.input,
+                                    },
+                                    channelType: [jcm.CHANNEL.JOB],
+                                    channelId: this.jobId,
+                                    type: jcm.MESSAGE_TYPE.STATUS,
+                                });
                             });
 
                             _checkRowStructure(this.row, this.job, this.input);
@@ -1123,36 +1036,6 @@ define([
                             expect(
                                 this.jobManager.model.getItem(`exec.jobs.byId.${this.input.job_id}`)
                             ).toEqual(this.input);
-                        });
-                    });
-                });
-
-                describe('invalid', () => {
-                    beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, TEST_JOB);
-                    });
-                    JobsData.example.JobState.invalid.forEach((invalidJob) => {
-                        it(`should not update with invalid job ${JSON.stringify(
-                            invalidJob
-                        )}`, async function () {
-                            _checkRowStructure(this.row, this.job);
-                            this.input = invalidJob;
-                            spyOn(this.jobManager, 'updateModel').and.callThrough();
-                            spyOn(this.jobManager, '_isValidMessage').and.callFake((...params) => {
-                                expect(
-                                    this.jobManager._isValidMessage.and.originalFn.call(
-                                        this.jobManager,
-                                        ...params
-                                    )
-                                ).toBeFalse();
-                                this.row.classList.add('BOOP!');
-                            });
-                            await TestUtil.waitForElementChange(this.row, () => {
-                                send_STATUS(this);
-                            });
-                            expect(this.jobManager._isValidMessage).toHaveBeenCalled();
-                            expect(this.jobManager.updateModel).not.toHaveBeenCalled();
-                            _checkRowStructure(this.row, this.job);
                         });
                     });
                 });
@@ -1171,7 +1054,13 @@ define([
                             _checkRowStructure(this.row, this.job);
                             this.input = state;
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
-                            send_STATUS(this);
+                            TestUtil.send_STATUS({
+                                bus: this.jobManager.bus,
+                                jobState: {
+                                    ...this.input,
+                                    job_id: this.jobId,
+                                },
+                            });
                             _checkRowStructure(this.row, this.job);
                             expect(this.jobManager.updateModel).not.toHaveBeenCalled();
                         });
@@ -1227,7 +1116,7 @@ define([
                             spyOn(this.jobManager, 'updateModel').and.callThrough();
                             // fake error response
                             await TestUtil.waitForElementChange(this.row, () => {
-                                send_ERROR({
+                                TestUtil.send_ERROR({
                                     bus: this.jobManager.bus,
                                     jobId: this.job.job_id,
                                     error: errorTest.message,
@@ -1401,23 +1290,21 @@ define([
                                         container
                                             .querySelector(`[data-target="${input.retry_parent}"]`)
                                             .click();
-                                        send_RETRY({
+                                        TestUtil.send_RETRY({
                                             bus: ctx.jobManager.bus,
                                             retryParent,
                                             retry: input,
                                         });
                                     } else {
-                                        send_STATUS({
+                                        TestUtil.send_STATUS({
                                             bus: ctx.jobManager.bus,
-                                            input,
-                                            jobId: input.job_id,
+                                            jobState: input,
                                         });
                                     }
                                     // send the update for the batch parent
-                                    send_STATUS({
+                                    TestUtil.send_STATUS({
                                         bus: ctx.jobManager.bus,
-                                        input: updatedBatchJob,
-                                        jobId: updatedBatchJob.job_id,
+                                        jobState: updatedBatchJob,
                                     });
                                 }
                             );
@@ -1499,7 +1386,10 @@ define([
                             spyOn(this.jobManager, 'removeListener').and.callThrough();
                             spyOn(this.jobManager, 'runHandler').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
-                                send_INFO({ ...this, jobInfo: test.input });
+                                TestUtil.send_INFO({
+                                    bus: this.jobManager.bus,
+                                    jobInfo: test.input,
+                                });
                             });
                             expect(this.jobManager.removeListener).toHaveBeenCalledTimes(1);
                             expect(this.jobManager.removeListener.calls.allArgs()).toEqual([
@@ -1520,7 +1410,7 @@ define([
                         const invalidId = 'a random and incorrect job ID';
                         spyOn(this.jobManager, 'removeListener').and.callThrough();
                         spyOn(this.jobManager, 'runHandler').and.callThrough();
-                        send_INFO({
+                        TestUtil.send_INFO({
                             bus: this.jobManager.bus,
                             jobId: invalidId,
                             jobInfo: {
@@ -1531,39 +1421,6 @@ define([
                         expect(this.jobManager.runHandler).not.toHaveBeenCalled();
                         expect(this.jobManager.removeListener).not.toHaveBeenCalled();
                         _checkRowStructure(this.row, this.job);
-                    });
-                });
-
-                describe('invalid', () => {
-                    beforeEach(async function () {
-                        await createJobStatusTableWithContext(this, TEST_JOB);
-                    });
-                    JobsData.example.Info.invalid.forEach((invalidInfo) => {
-                        it('will be ignored', async function () {
-                            _checkRowStructure(this.row, this.job);
-                            spyOn(this.jobManager, 'removeListener').and.callThrough();
-                            spyOn(this.jobManager, '_isValidMessage').and.callFake((...params) => {
-                                expect(
-                                    this.jobManager._isValidMessage.and.originalFn.call(
-                                        this.jobManager,
-                                        ...params
-                                    )
-                                ).toBeFalse();
-                                this.row.classList.add('BOOP!');
-                            });
-                            await TestUtil.waitForElementChange(this.row, () => {
-                                send_INFO({
-                                    ...this,
-                                    jobInfo: {
-                                        job_id: this.job.job_id,
-                                        job_params: invalidInfo,
-                                    },
-                                });
-                            });
-                            expect(this.jobManager._isValidMessage).toHaveBeenCalled();
-                            expect(this.jobManager.removeListener).not.toHaveBeenCalled();
-                            _checkRowStructure(this.row, this.job);
-                        });
                     });
                 });
 
@@ -1619,7 +1476,10 @@ define([
                             async function () {
                                 prepareForUpdate(this, test);
                                 await TestUtil.waitForElementChange(this.indicatorDiv, () => {
-                                    send_INFO({ ...this, jobInfo: test.input });
+                                    TestUtil.send_INFO({
+                                        bus: this.jobManager.bus,
+                                        jobInfo: test.input,
+                                    });
                                 });
                                 const expectedCallArgs = [
                                     jcm.MESSAGE_TYPE.INFO,
@@ -1642,10 +1502,14 @@ define([
                                 await TestUtil.waitForElementChange(
                                     this.container.querySelector('#' + indicatorId),
                                     () => {
-                                        send_INFO({
-                                            ...this,
-                                            jobInfo: test.input,
-                                            jobId: this.job.retry_parent,
+                                        // TODO: add a genuine retry to the JobManager --
+                                        // the jobInfo is for a job with a different ID
+                                        TestUtil.sendBusMessage({
+                                            bus: this.jobManager.bus,
+                                            message: test.input,
+                                            channelType: jcm.CHANNEL.JOB,
+                                            channelId: this.job.retry_parent,
+                                            type: jcm.MESSAGE_TYPE.INFO,
                                         });
                                     }
                                 );

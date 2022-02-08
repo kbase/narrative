@@ -13,19 +13,6 @@ define([
     const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchInitMixin, JobManager } =
         JobManagerModule;
 
-    /**
-     * send a jcm.MESSAGE_TYPE.<type> message over the bus
-     *
-     * @param {object} bus
-     * @param {object} message        - the message
-     * @param {string} channelType    - jcm.CHANNEL.<type>
-     * @param {string} channelId      - ID for the channel
-     * @param {string} type           - jcm.MESSAGE_TYPE.<type>
-     */
-    function sendBusMessage(bus, message, messageAddress) {
-        bus.send(message, messageAddress);
-    }
-
     function createJobManagerInstance(context, jmClass = JobManager) {
         return new jmClass({
             model: context.model,
@@ -834,11 +821,13 @@ define([
                 const event = jcm.MESSAGE_TYPE.INFO,
                     jobId = 'testJobId',
                     channelType = jcm.CHANNEL.JOB,
+                    channelId = jobId,
                     messageAddress = {
-                        channel: { [channelType]: jobId },
-                        key: { type: jcm.MESSAGE_TYPE.INFO },
+                        type: event,
+                        channelType,
+                        channelId,
                     },
-                    channelData = { channelType, channelId: jobId };
+                    channelData = { channelType, channelId };
 
                 it('handles successful job info requests', function () {
                     this.jobId = jobId;
@@ -875,7 +864,10 @@ define([
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, jobInfo, messageAddress);
+                        TestUtil.send_INFO({
+                            bus: this.bus,
+                            jobInfo,
+                        });
                     }).then(() => {
                         expect(
                             this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
@@ -903,7 +895,7 @@ define([
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, message, messageAddress);
+                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
                     }).then(() => {
                         expect(
                             this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
@@ -918,11 +910,13 @@ define([
                     jobState = JobsData.jobsByStatus.terminated[0],
                     jobId = jobState.job_id,
                     channelType = jcm.CHANNEL.JOB,
+                    channelId = jobId,
                     messageAddress = {
-                        channel: { [channelType]: jobId },
-                        key: { type: jcm.MESSAGE_TYPE.RETRY },
+                        type: event,
+                        channelType,
+                        channelId,
                     },
-                    channelData = { channelType, channelId: jobId };
+                    channelData = { channelType, channelId };
 
                 it('handles successful job retries', function () {
                     // retry a terminated job
@@ -979,7 +973,7 @@ define([
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, message, messageAddress);
+                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
                     }).then(() => {
                         expect(
                             this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
@@ -1027,7 +1021,7 @@ define([
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, message, messageAddress);
+                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
                     }).then(() => {
                         expect(this.bus.emit).not.toHaveBeenCalled();
                         expect(this.jobManagerInstance.updateModel).not.toHaveBeenCalled();
@@ -1037,15 +1031,18 @@ define([
 
             describe('handleJobStatus', () => {
                 const event = jcm.MESSAGE_TYPE.STATUS;
-
                 it('can update the model if a job has been updated', function () {
                     // job to test
                     const jobState = TestUtil.JSONcopy(JobsData.allJobsWithBatchParent)[0],
                         jobId = jobState.job_id,
+                        channelType = jcm.CHANNEL.JOB,
+                        channelId = jobId,
                         messageAddress = {
-                            channel: { [jcm.CHANNEL.JOB]: jobId },
-                            key: { type: jcm.MESSAGE_TYPE.STATUS },
-                        };
+                            type: event,
+                            channelType,
+                            channelId,
+                        },
+                        channelData = { channelType, channelId };
 
                     this.jobId = jobId;
                     setUpHandlerTest(this, event);
@@ -1077,15 +1074,16 @@ define([
                                     // eslint-disable-next-line no-unused-vars
                                     const [_, msg, channel] = args;
                                     expect(msg).toEqual(messageOne);
-                                    expect(channel).toEqual({
-                                        channelType: jcm.CHANNEL.JOB,
-                                        channelId: jobId,
-                                    });
+                                    expect(channel).toEqual(channelData);
                                     resolve();
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, messageOne, messageAddress);
+                        TestUtil.sendBusMessage({
+                            bus: this.bus,
+                            message: messageOne,
+                            ...messageAddress,
+                        });
                     }).then(() => {
                         expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                             jobState
@@ -1102,7 +1100,11 @@ define([
                                 },
                             });
                             // the second message will trigger `updateModel`
-                            sendBusMessage(this.bus, messageTwo, messageAddress);
+                            TestUtil.sendBusMessage({
+                                bus: this.bus,
+                                message: messageTwo,
+                                ...messageAddress,
+                            });
                         }).then(() => {
                             expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                                 updateOne
@@ -1124,7 +1126,11 @@ define([
                                     },
                                 });
                                 // third message will also trigger an update
-                                sendBusMessage(this.bus, messageThree, messageAddress);
+                                TestUtil.sendBusMessage({
+                                    bus: this.bus,
+                                    message: messageThree,
+                                    ...messageAddress,
+                                });
                             }).then(() => {
                                 expect(
                                     this.jobManagerInstance.model.getItem(`exec.jobState`)
@@ -1144,6 +1150,13 @@ define([
                 JobsData.allJobsWithBatchParent.forEach((jobState) => {
                     it(`performs the appropriate update for ${jobState.job_id}`, function () {
                         const jobId = jobState.job_id;
+                        const channelType = jcm.CHANNEL.JOB,
+                            channelId = jobId,
+                            messageAddress = {
+                                type: event,
+                                channelType,
+                                channelId,
+                            };
                         this.jobId = jobId;
                         setUpHandlerTest(this, event);
                         Jobs.populateModelFromJobArray(
@@ -1176,10 +1189,7 @@ define([
                                     },
                                 }
                             );
-                            sendBusMessage(this.bus, message, {
-                                channel: { [jcm.CHANNEL.JOB]: jobId },
-                                key: { type: jcm.MESSAGE_TYPE.STATUS },
-                            });
+                            TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
                         }).then(() => {
                             expect(
                                 this.jobManagerInstance.model.getItem(`exec.jobs.byId.${jobId}`)
@@ -1219,6 +1229,14 @@ define([
                         batchParentUpdate = TestUtil.JSONcopy(JobsData.batchParentJob),
                         jobId = batchParent.job_id;
 
+                    const channelType = jcm.CHANNEL.JOB,
+                        channelId = jobId,
+                        messageAddress = {
+                            type: event,
+                            channelType,
+                            channelId,
+                        };
+
                     // remove the child jobs from the original batch parent
                     batchParent.child_jobs = [];
                     // change the update time for the updated batch parent
@@ -1253,10 +1271,7 @@ define([
                                 },
                             }
                         );
-                        sendBusMessage(this.bus, message, {
-                            channel: { [jcm.CHANNEL.JOB]: jobId },
-                            key: { type: jcm.MESSAGE_TYPE.STATUS },
-                        });
+                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
                     }).then(() => {
                         expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
                             batchParentUpdate

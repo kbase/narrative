@@ -674,21 +674,21 @@ define([], () => {
                 enter: {
                     messages: [
                         {
-                            emit: 'on-success',
+                            emit: 'on-completed',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'resume-success',
+                            emit: 'resume-completed',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-success',
+                            emit: 'exit-completed',
                         },
                     ],
                 },

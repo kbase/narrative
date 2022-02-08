@@ -21,6 +21,7 @@ module.exports = function (config) {
                 failFast: false,
                 timeoutInterval: 20000,
                 failSpecWithNoExpectations: true,
+                verboseDeprecations: true,
             },
             requireJsShowNoTimestampsError: '^(?!.*(^/narrative|test/))',
             clearContext: false,

@@ -1,9 +1,10 @@
 define([
     'common/format',
     'common/jobCommMessages',
+    '/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm',
     'testUtil',
     'json!/src/biokbase/narrative/tests/data/response_data.json',
-], (format, jcm, TestUtil, ResponseData) => {
+], (format, jcm, AppStates, TestUtil, ResponseData) => {
     'use strict';
     const t = {
         created: 1610065000000,
@@ -11,6 +12,8 @@ define([
         running: 1610065500000,
         finished: 1610065800000,
     };
+
+    const fsmStates = AppStates.STATE;
 
     const TEST_JOB_ID = 'someJob',
         SOME_VALUE = 'some unimportant value',
@@ -76,7 +79,7 @@ define([
                     label: 'created',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
@@ -98,7 +101,7 @@ define([
                     label: 'estimating',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
@@ -121,7 +124,7 @@ define([
                     label: 'queued',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
@@ -145,7 +148,7 @@ define([
                     label: 'cancellation',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'canceled' },
+                appCellFsm: fsmStates.TERMINATED,
             },
         },
         {
@@ -178,7 +181,7 @@ define([
                 },
                 terminal: true,
                 errorString: 'Queue error: Error code: 666',
-                appCellFsm: { mode: 'error', stage: 'queued' },
+                appCellFsm: fsmStates.RUNTIME_ERROR,
             },
         },
         {
@@ -202,7 +205,7 @@ define([
                     label: 'running',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'running' },
+                appCellFsm: fsmStates.PROCESSING_RUNNING,
             },
         },
         {
@@ -231,7 +234,7 @@ define([
                     label: 'cancellation',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'canceled' },
+                appCellFsm: fsmStates.TERMINATED,
             },
         },
         {
@@ -265,7 +268,7 @@ define([
                 },
                 terminal: true,
                 errorString: 'Server error: Error code: -32000',
-                appCellFsm: { mode: 'error', stage: 'running' },
+                appCellFsm: fsmStates.RUNTIME_ERROR,
             },
         },
         {
@@ -290,7 +293,7 @@ define([
                     label: 'success',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'success' },
+                appCellFsm: fsmStates.COMPLETED,
             },
             job_output: {
                 id: 'JOB_COMPLETED',
@@ -324,6 +327,7 @@ define([
                 label: 'does not exist',
             },
             terminal: true,
+            appCellFsm: fsmStates.RUNTIME_ERROR,
         },
     };
 
@@ -876,13 +880,5 @@ define([
         jobsById,
         jobStrings,
         example,
-        validJobStates,
-        invalidJobStates,
-        validInfo,
-        invalidInfo,
-        validRetry,
-        invalidRetry,
-        validLogs,
-        invalidLogs,
     };
 });

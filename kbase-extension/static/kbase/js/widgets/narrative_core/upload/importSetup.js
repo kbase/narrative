@@ -188,20 +188,28 @@ define([
         const appSpecs = await APIUtil.getAppSpecs(Object.keys(appIdToType));
         // translate results into an object keyed on app id
         const appIdToSpec = appSpecs.reduce((appIdToSpec, appSpec) => {
-            appIdToSpec[appSpec.info.id] = appSpec;
+            const appParamIds = new Set(appSpec.parameters.map((param) => param.id));
+            appIdToSpec[appSpec.info.id] = {
+                appSpec,
+                appParamIds,
+            };
             return appIdToSpec;
         }, {});
 
-        /* go through all parameters and update values accordingly:
+        /* Go over all rows, ensure that there are values present from all expected columns
+         * If not, error fast on each file?
+         */
+        _scanForMissingParameters(data, uploaders.app_info, appIdToSpec);
+
+        /* Go through all parameters and update values accordingly:
          *
          *   field_type = "dropdown" = display name -> value
          *   field_type = "checkbox" = 0 or 1 -> unchecked_value / checked_value respectively
          *   all others just pass through
-         */
-
-        /* First, build a structure of out a very specific set of parameters, only those that we
+         *
+         * First, build a structure of out a very specific set of parameters, only those that we
          * want to modify as above.
-         * thus, typeToSpecParams will look like:
+         * thus, typeToAlteredParams will look like:
          * {
          *   dataType: {
          *     assembly_type: {  // a dropdown, just keep the display / values
@@ -219,9 +227,9 @@ define([
          *   }
          * }
          */
-        const typeToSpecParams = Object.entries(appIdToType).reduce(
-            (typeToSpecParams, [appId, dataType]) => {
-                const spec = appIdToSpec[appId];
+        const typeToAlteredParams = Object.entries(appIdToType).reduce(
+            (typeToAlteredParams, [appId, dataType]) => {
+                const spec = appIdToSpec[appId].appSpec;
                 const specParams = spec.parameters.reduce((processedParams, param) => {
                     if (param.field_type === 'dropdown') {
                         processedParams[param.id] = param.dropdown_options.options.reduce(
@@ -239,8 +247,8 @@ define([
                     }
                     return processedParams;
                 }, {});
-                typeToSpecParams[dataType] = specParams;
-                return typeToSpecParams;
+                typeToAlteredParams[dataType] = specParams;
+                return typeToAlteredParams;
             },
             {}
         );
@@ -251,7 +259,7 @@ define([
          * If any of those are in the given parameter set, do the translation.
          */
         Object.values(appIdToType).forEach((dataType) => {
-            const specParams = typeToSpecParams[dataType];
+            const specParams = typeToAlteredParams[dataType];
             data.types[dataType] = data.types[dataType].map((parameterSet) => {
                 Object.keys(parameterSet).forEach((paramId) => {
                     const value = parameterSet[paramId];
@@ -263,6 +271,48 @@ define([
             });
         });
         return data;
+    }
+
+    /**
+     *
+     * @param {Object} data - has keys `types` and `files`, both of which are keyed on datatype.
+     * @see processSpreadsheetFileData for details
+     * @param {Object} appInfo - keyed on data type, mainly has the `app_id` key that we're interested in
+     * @param {Object} appIdToSpec - maps from appId to both the appSpec (key) object and appParamIds (key) set
+     */
+    function _scanForMissingParameters(data, appInfo, appIdToSpec) {
+        const columnErrors = [];
+        Object.keys(data.types).forEach((dataType) => {
+            const dataRow = data.types[dataType][0];
+            const appId = appInfo[dataType].app_id;
+            const paramIds = appIdToSpec[appId].appParamIds;
+            // make sure all ids in the row are present in the set of param ids
+            Object.keys(dataRow).forEach((paramId) => {
+                if (!paramIds.has(paramId)) {
+                    columnErrors.push({
+                        type: Errors.BULK_SPEC_ERRORS.UNKNOWN_COLUMN,
+                        column: paramId,
+                        dataType,
+                        file: data.files[dataType].file,
+                        tab: data.files[dataType].tab,
+                    });
+                }
+            });
+            for (const paramId of paramIds) {
+                if (!(paramId in dataRow)) {
+                    columnErrors.push({
+                        type: Errors.BULK_SPEC_ERRORS.MISSING_COLUMN,
+                        column: paramId,
+                        dataType,
+                        file: data.files[dataType].file,
+                        tab: data.files[dataType].tab,
+                    });
+                }
+            }
+        });
+        if (columnErrors.length) {
+            throw new Errors.ImportSetupError('data parameter error', columnErrors);
+        }
     }
 
     /**

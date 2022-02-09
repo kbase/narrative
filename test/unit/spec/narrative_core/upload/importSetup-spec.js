@@ -14,7 +14,7 @@ define([
     const stagingServiceUrl = Config.url('staging_api_url');
     const RELEASE_TAG = 'release';
 
-    describe('ImportSetup module tests', () => {
+    fdescribe('ImportSetup module tests', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 sidePanel: {
@@ -286,138 +286,268 @@ define([
                 });
             });
 
-            /**
-             * stagingResponse is optional. If present, this will start with mocking a call to the
-             * bulk_specification endpoint of the staging area, expecting a 200 response with the
-             * given data.
-             * @param {string} fileName
-             * @param {Object} stagingResponse expected response from a happy staging area call
-             */
-            async function testWithExpectedImportErrors(fileNames, stagingResponse) {
-                if (stagingResponse) {
-                    stubBulkSpecificationRequest(200, 'ok', stagingResponse);
+            describe('import cell staging area error tests', () => {
+                /**
+                 * stagingResponse is optional. If present, this will start with mocking a call to the
+                 * bulk_specification endpoint of the staging area, expecting a 200 response with the
+                 * given data.
+                 * @param {string} fileName
+                 * @param {Object} stagingResponse expected response from a happy staging area call
+                 */
+                async function testWithExpectedImportErrors(fileNames, stagingResponse) {
+                    if (stagingResponse) {
+                        stubBulkSpecificationRequest(200, 'ok', stagingResponse);
+                    }
+
+                    const importInputs = fileNames.map((fileName) => ({
+                        name: fileName,
+                        type: 'import_specification',
+                    }));
+                    await expectAsync(
+                        ImportSetup.setupImportCells(importInputs)
+                    ).toBeRejectedWithError(Errors.ImportSetupError);
                 }
 
-                const importInputs = fileNames.map((fileName) => ({
-                    name: fileName,
-                    type: 'import_specification',
-                }));
-                await expectAsync(ImportSetup.setupImportCells(importInputs)).toBeRejectedWithError(
-                    Errors.ImportSetupError
-                );
-            }
-
-            it('should error properly when unable to find bulk specification info', async () => {
-                // see https://github.com/kbase/staging_service/tree/develop#error-response-12
-                // for error details
-                const filename = 'xsv_input.csv';
-                stubBulkSpecificationRequest(404, 'not found', {
-                    errors: [
-                        {
-                            type: 'cannot_find_file',
-                            file: filename,
-                        },
-                    ],
-                });
-                await testWithExpectedImportErrors([filename]);
-            });
-
-            const wrongDataTypes = [
-                {
-                    dataType: 'not_a_real_datatype',
-                    label: 'bad',
-                },
-                {
-                    dataType: 'media',
-                    label: 'non-bulk',
-                },
-            ];
-            wrongDataTypes.forEach((testCase) => {
-                it(`should error when retrieving data with a ${testCase.label} data type`, async () => {
-                    const fileName = `${testCase.dataType}_data.csv`;
-                    const stagingResponse = {
-                        types: {
-                            [testCase.dataType]: [{ some: 'input' }],
-                        },
-                        files: {
-                            [testCase.dataType]: {
-                                file: fileName,
-                                tab: null,
+                it('should error properly when unable to find bulk specification info', async () => {
+                    // see https://github.com/kbase/staging_service/tree/develop#error-response-12
+                    // for error details
+                    const filename = 'xsv_input.csv';
+                    stubBulkSpecificationRequest(404, 'not found', {
+                        errors: [
+                            {
+                                type: 'cannot_find_file',
+                                file: filename,
                             },
-                        },
-                    };
-                    await testWithExpectedImportErrors([fileName], stagingResponse);
-                });
-            });
-
-            it('should error when receiving the same type of dataType from splitting service calls', async () => {
-                // really, the only way this gets triggered is when two conditions happen:
-                // 1. there are enough files, or files with long enough path names, to require multiple GET calls
-                // 2. two or more of those files have data for the same data type
-                // so let's play with some crazy long, generated file names. The allowed URL length
-                // is 2048 characters, so a couple files of length ~1500 should do it, right?
-                // Mocking calls to the service will need to be done manually here, too.
-                const file1 = `${'a'.repeat(1500)}.csv`,
-                    file2 = `${'b'.repeat(1500)}.csv`,
-                    dataType = 'assembly',
-                    response1 = {
-                        types: {
-                            [dataType]: { some: 'data' },
-                        },
-                        files: {
-                            [dataType]: { file: file1, tab: null },
-                        },
-                    },
-                    response2 = {
-                        types: {
-                            [dataType]: { some: 'more_data' },
-                        },
-                        files: {
-                            [dataType]: { file: file2, tab: null },
-                        },
-                    };
-
-                jasmine.Ajax.stubRequest(
-                    `${stagingServiceUrl}/bulk_specification/?files=${file1}`
-                ).andReturn({
-                    status: 200,
-                    statusText: 'ok',
-                    contentType: 'text/plain',
-                    responseHeaders: '',
-                    responseText: JSON.stringify(response1),
-                });
-                jasmine.Ajax.stubRequest(
-                    `${stagingServiceUrl}/bulk_specification/?files=${file2}`
-                ).andReturn({
-                    status: 200,
-                    statusText: 'ok',
-                    contentType: 'text/plain',
-                    responseHeaders: '',
-                    responseText: JSON.stringify(response2),
+                        ],
+                    });
+                    await testWithExpectedImportErrors([filename]);
                 });
 
-                const importInputs = [
+                const wrongDataTypes = [
                     {
-                        name: file1,
-                        type: 'import_specification',
+                        dataType: 'not_a_real_datatype',
+                        label: 'bad',
                     },
                     {
-                        name: file2,
-                        type: 'import_specification',
+                        dataType: 'media',
+                        label: 'non-bulk',
                     },
                 ];
+                wrongDataTypes.forEach((testCase) => {
+                    it(`should error when retrieving data with a ${testCase.label} data type`, async () => {
+                        const fileName = `${testCase.dataType}_data.csv`;
+                        const stagingResponse = {
+                            types: {
+                                [testCase.dataType]: [{ some: 'input' }],
+                            },
+                            files: {
+                                [testCase.dataType]: {
+                                    file: fileName,
+                                    tab: null,
+                                },
+                            },
+                        };
+                        await testWithExpectedImportErrors([fileName], stagingResponse);
+                    });
+                });
 
-                let error;
-                try {
-                    await ImportSetup.setupImportCells(importInputs);
-                } catch (e) {
-                    error = e;
+                it('should error when receiving the same type of dataType from splitting service calls', async () => {
+                    // really, the only way this gets triggered is when two conditions happen:
+                    // 1. there are enough files, or files with long enough path names, to require multiple GET calls
+                    // 2. two or more of those files have data for the same data type
+                    // so let's play with some crazy long, generated file names. The allowed URL length
+                    // is 2048 characters, so a couple files of length ~1500 should do it, right?
+                    // Mocking calls to the service will need to be done manually here, too.
+                    const file1 = `${'a'.repeat(1500)}.csv`,
+                        file2 = `${'b'.repeat(1500)}.csv`,
+                        dataType = 'assembly',
+                        response1 = {
+                            types: {
+                                [dataType]: { some: 'data' },
+                            },
+                            files: {
+                                [dataType]: { file: file1, tab: null },
+                            },
+                        },
+                        response2 = {
+                            types: {
+                                [dataType]: { some: 'more_data' },
+                            },
+                            files: {
+                                [dataType]: { file: file2, tab: null },
+                            },
+                        };
+
+                    jasmine.Ajax.stubRequest(
+                        `${stagingServiceUrl}/bulk_specification/?files=${file1}`
+                    ).andReturn({
+                        status: 200,
+                        statusText: 'ok',
+                        contentType: 'text/plain',
+                        responseHeaders: '',
+                        responseText: JSON.stringify(response1),
+                    });
+                    jasmine.Ajax.stubRequest(
+                        `${stagingServiceUrl}/bulk_specification/?files=${file2}`
+                    ).andReturn({
+                        status: 200,
+                        statusText: 'ok',
+                        contentType: 'text/plain',
+                        responseHeaders: '',
+                        responseText: JSON.stringify(response2),
+                    });
+
+                    const importInputs = [
+                        {
+                            name: file1,
+                            type: 'import_specification',
+                        },
+                        {
+                            name: file2,
+                            type: 'import_specification',
+                        },
+                    ];
+
+                    let error;
+                    try {
+                        await ImportSetup.setupImportCells(importInputs);
+                    } catch (e) {
+                        error = e;
+                    }
+                    // make sure we get the right list, and that the fileErrors
+                    // look like : { file1: [error], file2: [error] }
+                    expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
+                    [file1, file2].forEach((fileName) => {
+                        expect(error.fileErrors[fileName]).toEqual(jasmine.any(Array));
+                    });
+                });
+            });
+            describe('xsv column / app parameter mismatch error tests', () => {
+                const dataType = 'assembly';
+                const paramIds = [
+                    'staging_file_subdir_path',
+                    'assembly_name',
+                    'type',
+                    'min_contig_length',
+                ];
+
+                /**
+                 * Generates a batch of assembly data that gets returned from a mocked staging
+                 * service bulk specification call. Can optionally set extra data columns,
+                 * or missing data columns.
+                 * This follows the parameters in the Assembly uploader app spec, which has
+                 * 4 parameter ids: staging_file_subdir_path, assembly_name, type, min_contig_length.
+                 * Note that this data is completely meaningless and shouldn't be used for testing
+                 * intended inputs - this is generator for making sure that extra/missing column
+                 * errors are trapped correctly.
+                 * @param {Integer} extraCols should be 0 or greater
+                 * @param {Integer} missingCols should be between 0 - 4
+                 * @param {Integer} numRows should be at least 1
+                 * @param {String} file
+                 * @param {String|null} tab
+                 */
+                function generateAssemblyData(extraCols, missingCols, numRows, file, tab) {
+                    const data = [];
+                    let dataParamIds = TestUtil.JSONcopy(paramIds);
+                    if (missingCols > 0) {
+                        dataParamIds = dataParamIds.slice(0, dataParamIds.length - missingCols);
+                    }
+                    if (extraCols > 0) {
+                        for (let extra = 0; extra < extraCols; extra++) {
+                            dataParamIds.push(`extraCol_${extra + 1}`);
+                        }
+                    }
+                    for (let i = 0; i < numRows; i++) {
+                        data.push(
+                            dataParamIds.reduce((row, paramId) => {
+                                row[paramId] = `value_${i}`;
+                                return row;
+                            }, {})
+                        );
+                    }
+                    return {
+                        types: {
+                            [dataType]: data,
+                        },
+                        files: {
+                            [dataType]: { file, tab },
+                        },
+                    };
                 }
-                // make sure we get the right list, and that the fileErrors
-                // look like : { file1: [error], file2: [error] }
-                expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
-                [file1, file2].forEach((fileName) => {
-                    expect(error.fileErrors[fileName]).toEqual(jasmine.any(Array));
+
+                const testCases = [
+                    {
+                        label: 'missing column',
+                        extraCols: 0,
+                        missingCols: 1,
+                    },
+                    {
+                        label: 'missing multiple columns',
+                        extraCols: 0,
+                        missingCols: 3,
+                    },
+                    {
+                        label: 'extra column',
+                        extraCols: 1,
+                        missingCols: 0,
+                    },
+                    {
+                        label: 'multiple extra columns',
+                        extraCols: 3,
+                        missingCols: 0,
+                    },
+                    {
+                        label: 'missing one column, one extra column',
+                        extraCols: 1,
+                        missingCols: 1,
+                    },
+                    {
+                        label: 'all columns replaced',
+                        extraCols: 4,
+                        missingCols: 4,
+                    },
+                ];
+                testCases.forEach((testCase) => {
+                    it(`should show an error if data is returned with ${testCase.label}`, async () => {
+                        const fileName = 'dataFile.csv';
+                        const data = generateAssemblyData(
+                            testCase.extraCols,
+                            testCase.missingCols,
+                            5,
+                            fileName,
+                            null
+                        );
+                        expect(testCase.extraCols).toEqual(testCase.extraCols);
+                        stubBulkSpecificationRequest(200, 'ok', data);
+
+                        Mocks.mockJsonRpc1Call({
+                            url: Config.url('narrative_method_store'),
+                            body: /get_method_spec/,
+                            response: [ImportAssemblySpec],
+                        });
+
+                        Mocks.mockJsonRpc1Call({
+                            url: Config.url('narrative_method_store'),
+                            body: /get_method_full_info/,
+                            response: [{}],
+                        });
+
+                        let error;
+                        try {
+                            await ImportSetup.setupImportCells([
+                                { name: fileName, type: 'import_specification' },
+                            ]);
+                        } catch (e) {
+                            error = e;
+                        }
+
+                        // make sure we get the right list, and that the fileErrors
+                        // look like : { file1: [error], file2: [error] }
+                        expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
+                        const fileError = error.fileErrors[fileName];
+                        expect(fileError).toEqual(jasmine.any(Array));
+                        expect(fileError.length).toEqual(testCase.extraCols + testCase.missingCols);
+                    });
                 });
             });
         });

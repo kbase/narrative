@@ -11,6 +11,8 @@ define(['common/ui', 'common/html', 'util/string'], (UI, html, StringUtil) => {
         SERVER: 'server_error',
         UNKNOWN_TYPE: 'unknown_data_type',
         NOT_BULK_TYPE: 'non_bulk_import_data_type',
+        UNKNOWN_COLUMN: 'unknown_column',
+        MISSING_COLUMN: 'missing_column',
     };
 
     const DEFAULT_MESSAGES = {
@@ -21,6 +23,10 @@ define(['common/ui', 'common/html', 'util/string'], (UI, html, StringUtil) => {
     const TEMPLATE_MESSAGES = {
         UNKNOWN_TYPE: (dataType) => `Unknown importer type "${dataType}"`,
         NOT_BULK_TYPE: (dataType) => `Importer type "${dataType}" is not usable for bulk import`,
+        UNKNOWN_COLUMN: (column, dataType) =>
+            `Column with id "${column}" is not known for importer type "${dataType}"`,
+        MISSING_COLUMN: (column, dataType) =>
+            `Required column "${column}" for importer type "${dataType}" appears to be missing`,
     };
 
     /**
@@ -125,6 +131,20 @@ define(['common/ui', 'common/html', 'util/string'], (UI, html, StringUtil) => {
                 switch (error.type) {
                     case BULK_SPEC_ERRORS.CANNOT_PARSE:
                     case BULK_SPEC_ERRORS.INCORRECT_COLUMN_COUNT:
+                        addFileError(error);
+                        break;
+                    case BULK_SPEC_ERRORS.UNKNOWN_COLUMN:
+                        error.message = TEMPLATE_MESSAGES.UNKNOWN_COLUMN(
+                            error.column,
+                            error.dataType
+                        );
+                        addFileError(error);
+                        break;
+                    case BULK_SPEC_ERRORS.MISSING_COLUMN:
+                        error.message = TEMPLATE_MESSAGES.MISSING_COLUMN(
+                            error.column,
+                            error.dataType
+                        );
                         addFileError(error);
                         break;
                     case BULK_SPEC_ERRORS.NOT_FOUND:

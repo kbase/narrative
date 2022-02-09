@@ -442,21 +442,21 @@ class JobComm:
 
         This sends a packet that looks like:
         {
-            raw_request: the original JobRequest object, function params, or function name
+            request: the original JobRequest data object, function params, or function name
             source: the function request that spawned the error
             other fields about the error, dependent on the content.
         }
         """
         error_content = dict()
         if isinstance(req, JobRequest):
-            error_content["raw_request"] = req.raw_request
+            error_content["request"] = req.rq_data
             error_content["source"] = req.request_type
         elif isinstance(req, dict):
             data = req.get("content", {}).get("data", {})
-            error_content["raw_request"] = req
+            error_content["request"] = data
             error_content["source"] = data.get("request_type")
         elif isinstance(req, str) or req is None:
-            error_content["raw_request"] = req
+            error_content["request"] = req
             error_content["source"] = req
 
         if content is not None:

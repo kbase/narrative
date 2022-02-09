@@ -14,7 +14,7 @@ define([
     const stagingServiceUrl = Config.url('staging_api_url');
     const RELEASE_TAG = 'release';
 
-    fdescribe('ImportSetup module tests', () => {
+    describe('ImportSetup module tests', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 sidePanel: {
@@ -445,16 +445,29 @@ define([
                  * @param {Integer} numRows should be at least 1
                  * @param {String} file
                  * @param {String|null} tab
+                 * @returns {Object} keys:
+                 *    data - the data to be returned from the staging service
+                 *    errorMsgs - the list of file errors expected to be seen (not necessarily in the same order)
                  */
                 function generateAssemblyData(extraCols, missingCols, numRows, file, tab) {
-                    const data = [];
+                    const data = [],
+                        errorMsgs = [];
                     let dataParamIds = TestUtil.JSONcopy(paramIds);
                     if (missingCols > 0) {
+                        dataParamIds.slice(dataParamIds.length - missingCols).forEach((paramId) => {
+                            errorMsgs.push(
+                                `Required column "${paramId}" for importer type "${dataType}" appears to be missing`
+                            );
+                        });
                         dataParamIds = dataParamIds.slice(0, dataParamIds.length - missingCols);
                     }
                     if (extraCols > 0) {
                         for (let extra = 0; extra < extraCols; extra++) {
-                            dataParamIds.push(`extraCol_${extra + 1}`);
+                            const extraCol = `extraCol_${extra + 1}`;
+                            dataParamIds.push(extraCol);
+                            errorMsgs.push(
+                                `Column with id "${extraCol}" is not known for importer type "${dataType}"`
+                            );
                         }
                     }
                     for (let i = 0; i < numRows; i++) {
@@ -466,12 +479,15 @@ define([
                         );
                     }
                     return {
-                        types: {
-                            [dataType]: data,
+                        data: {
+                            types: {
+                                [dataType]: data,
+                            },
+                            files: {
+                                [dataType]: { file, tab },
+                            },
                         },
-                        files: {
-                            [dataType]: { file, tab },
-                        },
+                        errorMsgs,
                     };
                 }
 
@@ -518,7 +534,7 @@ define([
                             null
                         );
                         expect(testCase.extraCols).toEqual(testCase.extraCols);
-                        stubBulkSpecificationRequest(200, 'ok', data);
+                        stubBulkSpecificationRequest(200, 'ok', data.data);
 
                         Mocks.mockJsonRpc1Call({
                             url: Config.url('narrative_method_store'),
@@ -544,9 +560,8 @@ define([
                         // make sure we get the right list, and that the fileErrors
                         // look like : { file1: [error], file2: [error] }
                         expect(error).toEqual(jasmine.any(Errors.ImportSetupError));
-                        const fileError = error.fileErrors[fileName];
-                        expect(fileError).toEqual(jasmine.any(Array));
-                        expect(fileError.length).toEqual(testCase.extraCols + testCase.missingCols);
+                        const fileErrors = error.fileErrors[fileName];
+                        expect(fileErrors).toEqual(jasmine.arrayWithExactContents(data.errorMsgs));
                     });
                 });
             });

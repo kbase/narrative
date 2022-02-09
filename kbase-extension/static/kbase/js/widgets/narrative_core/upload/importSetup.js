@@ -228,7 +228,7 @@ define([
          * }
          */
         const typeToAlteredParams = Object.entries(appIdToType).reduce(
-            (typeToAlteredParams, [appId, dataType]) => {
+            (_typeToAlteredParams, [appId, dataType]) => {
                 const spec = appIdToSpec[appId].appSpec;
                 const specParams = spec.parameters.reduce((processedParams, param) => {
                     if (param.field_type === 'dropdown') {
@@ -247,8 +247,8 @@ define([
                     }
                     return processedParams;
                 }, {});
-                typeToAlteredParams[dataType] = specParams;
-                return typeToAlteredParams;
+                _typeToAlteredParams[dataType] = specParams;
+                return _typeToAlteredParams;
             },
             {}
         );

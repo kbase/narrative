@@ -162,20 +162,20 @@ class JobCommTestCase(unittest.TestCase):
             err: the error object produced
 
         error message produced will contain:
-            raw_request: the input that generated the error
+            request: the input that generated the error
             source: the request that was called
             extra_params
             name: the type of exception
             message: the error message
         """
         if isinstance(req, JobRequest):
-            raw_request = req.raw_request
+            request = req.rq_data
             source = req.request_type
         elif isinstance(req, dict):
-            raw_request = req
+            request = req["content"]["data"]
             source = req["content"]["data"]["request_type"]
         elif isinstance(req, str):
-            raw_request = req
+            request = req
             source = req
 
         msg = self.jc._comm.last_message
@@ -183,7 +183,7 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": raw_request,
+                    "request": request,
                     "source": source,
                     **extra_params,
                     "name": type(err).__name__,
@@ -290,7 +290,7 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     "source": "bar",
                     "extra": "field",
-                    "raw_request": req.raw_request,
+                    "request": req.rq_data,
                 },
             },
             msg,
@@ -306,7 +306,7 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     "source": "bar",
                     "extra": "field",
-                    "raw_request": req_dict,
+                    "request": req_dict["content"]["data"],
                 },
             },
             msg,
@@ -321,7 +321,7 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     "source": None,
                     "extra": "field",
-                    "raw_request": None,
+                    "request": None,
                 },
             },
             msg,
@@ -337,7 +337,7 @@ class JobCommTestCase(unittest.TestCase):
                 "content": {
                     "source": source,
                     "extra": "field",
-                    "raw_request": source,
+                    "request": source,
                 },
             },
             msg,
@@ -919,7 +919,7 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req_dict,
+                    "request": req_dict["content"]["data"],
                     "source": RETRY,
                     "name": "JSONRPCError",
                     "error": "Unable to retry job(s)",
@@ -1406,7 +1406,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": req_type,
                     "name": "RuntimeError",
                     "message": message,
-                    "raw_request": req.raw_request,
+                    "request": req.rq_data,
                 },
             },
             msg,
@@ -1453,7 +1453,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req.raw_request,
+                    "request": req.rq_data,
                     "source": req_type,
                     # Below are from transform_job_exception
                     "name": "Exception",
@@ -1486,7 +1486,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req.raw_request,
+                    "request": req.rq_data,
                     "source": req_type,
                     "name": "JobRequestException",
                     "message": f"{message}: a0a0a0",
@@ -1516,7 +1516,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req.raw_request,
+                    "request": req.rq_data,
                     "source": req_type,
                     "name": "ValueError",
                     "message": message,
@@ -1569,7 +1569,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req_dict,
+                    "request": req_dict["content"]["data"],
                     "source": req_type,
                     "name": "ValueError",
                     "message": message,
@@ -1600,7 +1600,7 @@ class exc_to_msgTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "raw_request": req_dict,
+                    "request": req_dict["content"]["data"],
                     "source": req_type,
                     "name": "ValueError",
                     "message": message,
@@ -1627,7 +1627,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
-                    "raw_request": None,
+                    "request": None,
                 },
             },
             msg,
@@ -1651,7 +1651,7 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "source": source,
                     "name": "ValueError",
                     "message": message,
-                    "raw_request": source,
+                    "request": source,
                 },
             },
             msg,

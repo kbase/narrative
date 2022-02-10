@@ -2,11 +2,21 @@ define([
     'base/js/namespace',
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
+    'widgets/appWidgets2/validators/constants',
     'common/props',
     'common/spec',
     'testUtil',
     '/test/data/testBulkImportObj',
-], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestUtil, TestBulkImportObject) => {
+], (
+    Jupyter,
+    FieldCellWidget,
+    ParamResolver,
+    Constants,
+    Props,
+    Spec,
+    TestUtil,
+    TestBulkImportObject
+) => {
     'use strict';
 
     describe('The Field Table Cell Widget module', () => {
@@ -277,26 +287,26 @@ define([
             {
                 validMsg: {
                     isValid: false,
-                    diagnosis: 'invalid',
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
                     errorMessage: 'data is invalid',
                 },
-                label: 'invalid',
+                label: Constants.DIAGNOSIS.INVALID,
             },
             {
                 validMsg: {
                     isValid: false,
-                    diagnosis: 'required-missing',
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                     errorMessage: 'value is required',
                 },
-                label: 'required-missing',
+                label: Constants.DIAGNOSIS.REQUIRED_MISSING,
             },
             {
                 validMsg: {
                     isValid: true,
-                    diagnosis: 'suspect',
+                    diagnosis: Constants.DIAGNOSIS.SUSPECT,
                     shortMessage: 'value is sus',
                 },
-                label: 'suspect',
+                label: Constants.DIAGNOSIS.SUSPECT,
             },
         ].forEach((testCase) => {
             it(`should show a response to validation message: ${testCase.label}`, async function () {
@@ -359,7 +369,7 @@ define([
             await TestUtil.waitForElementChange(msgPanel, () => {
                 this.fieldCellWidgetInstance.bus.emit('validation', {
                     isValid: false,
-                    diagnosis: 'invalid',
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
                 });
             });
             expect(msgPanel.classList).not.toContain('hidden');

@@ -4,7 +4,8 @@ define([
     'kb_service/utils',
     'util/util',
     'util/string',
-], (Promise, Workspace, serviceUtils, Util, StringUtil) => {
+    'widgets/appWidgets2/validators/constants',
+], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
     'use strict';
 
     function Validators() {
@@ -27,10 +28,10 @@ define([
             // the only meaningful value for an empty value is 'undefined'.
             if (value === undefined) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else {
                 if (
@@ -38,10 +39,10 @@ define([
                         return setValue === value;
                     })
                 ) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'Value not in the set';
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -68,7 +69,7 @@ define([
             let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string in data reference format';
             } else {
                 parsedValue = value.trim();
@@ -78,16 +79,16 @@ define([
 
                 if (!parsedValue) {
                     if (options.required) {
-                        diagnosis = 'required-missing';
+                        diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
-                        diagnosis = 'optional-empty';
+                        diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*$/.test(value)) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
             return {
@@ -112,7 +113,7 @@ define([
             let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string in workspace object reference format';
             } else {
                 parsedValue = value.trim();
@@ -121,16 +122,16 @@ define([
                 }
                 if (!parsedValue) {
                     if (options.required) {
-                        diagnosis = 'required-missing';
+                        diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
-                        diagnosis = 'optional-empty';
+                        diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (!/^\d+\/\d+\/\d+$/.test(parsedValue)) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
             return {
@@ -178,7 +179,7 @@ define([
                 messageId,
                 shortMessage,
                 errorMessage,
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
 
             return Promise.try(() => {
                 const validateName = validateWorkspaceObjectNameString(value, options);
@@ -206,11 +207,11 @@ define([
                                 messageId = 'obj-overwrite-diff-type';
                                 errorMessage =
                                     'an object already exists with this name and is not of the same type';
-                                diagnosis = 'invalid';
+                                diagnosis = Constants.DIAGNOSIS.INVALID;
                             } else {
                                 messageId = 'obj-overwrite-warning';
                                 shortMessage = 'an object already exists with this name';
-                                diagnosis = 'suspect';
+                                diagnosis = Constants.DIAGNOSIS.SUSPECT;
                             }
                         }
                     });
@@ -249,20 +250,20 @@ define([
                 errorObject,
                 messageId,
                 errorMessage,
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
             const min = options.min_int,
                 max = options.max_int;
 
             if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
-                    messageId = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 messageId = 'incoming-value-not-string';
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
@@ -279,9 +280,9 @@ define([
                     errorMessage = error.message;
                 }
                 if (errorMessage) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -319,13 +320,13 @@ define([
 
             if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 normalizedValue = value.trim();
@@ -333,9 +334,9 @@ define([
                 errorMessage = validateFloat(parsedValue, min, max);
                 if (errorMessage) {
                     parsedValue = undefined;
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
             return {
@@ -353,37 +354,37 @@ define([
                 messageId,
                 shortMessage,
                 errorMessage,
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
 
             if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string in workspace object name format';
             } else {
                 parsedValue = value.trim();
                 if (!parsedValue) {
                     if (options.required) {
-                        messageId = 'required-missing';
-                        diagnosis = 'required-missing';
+                        messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
-                        diagnosis = 'optional-empty';
+                        diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (/\s/.test(parsedValue)) {
                     messageId = 'obj-name-no-spaces';
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not contain a space';
                 } else if (/^[+-]*\d+$/.test(parsedValue)) {
                     messageId = 'obj-name-not-integer';
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not be in the form of an integer';
                 } else if (!/^[A-Za-z0-9|._-]+$/.test(parsedValue)) {
                     messageId = 'obj-name-invalid-characters';
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
                         'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
                 } else if (parsedValue.length > 255) {
                     messageId = 'obj-name-too-long';
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not exceed 255 characters in length';
                 }
             }
@@ -420,7 +421,7 @@ define([
         function validateText(value, options) {
             let parsedValue,
                 errorMessage,
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
             const minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(options.regexp_constraint) : false;
@@ -434,29 +435,29 @@ define([
 
             if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'the minimum length for this parameter is ' + minLength;
                 } else if (parsedValue.length > maxLength) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'the maximum length for this parameter is ' + maxLength;
                 } else if (regexp && !regexp.test(parsedValue)) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
                         'The text value did not match the regular expression constraint ' +
                         options.regexp_constraint;
                 } else {
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -480,13 +481,13 @@ define([
             // values are raw, no parsing.
             if (value === null) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (!(value instanceof Array)) {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be an array';
             } else {
                 parsedSet = value.filter((setValue) => {
@@ -494,24 +495,24 @@ define([
                 });
                 if (parsedSet.length === 0) {
                     if (options.required) {
-                        diagnosis = 'required-missing';
+                        diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
-                        diagnosis = 'optional-empty';
+                        diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (options.values) {
                     const matchedSet = parsedSet.filter((setValue) => {
                         return options.values.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
-                        diagnosis = 'invalid';
+                        diagnosis = Constants.DIAGNOSIS.INVALID;
                         errorMessage = 'Value not in the set';
                     } else {
-                        diagnosis = 'valid';
+                        diagnosis = Constants.DIAGNOSIS.VALID;
                     }
                 } else {
                     // no more validation, just having a set is ok.
-                    diagnosis = 'valid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -554,23 +555,23 @@ define([
         function validateBoolean(value, options) {
             let parsedValue,
                 errorMessage,
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
 
             if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 try {
                     parsedValue = stringToBoolean(value);
                 } catch (ex) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = ex.message;
                 }
             }
@@ -588,7 +589,7 @@ define([
             return {
                 isValid: true,
                 errorMessage: null,
-                diagnosis: 'valid',
+                diagnosis: Constants.DIAGNOSIS.VALID,
                 value: value,
                 parsedValue: value,
             };

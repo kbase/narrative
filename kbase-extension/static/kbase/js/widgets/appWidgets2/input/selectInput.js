@@ -6,9 +6,10 @@ define([
     'common/runtime',
     '../validators/text',
     '../inputUtils',
+    '../validators/constants',
     'select2',
     'bootstrap',
-], ($, Promise, html, UI, Runtime, Validation, inputUtils) => {
+], ($, Promise, html, UI, Runtime, Validation, Constants, inputUtils) => {
     'use strict';
 
     // Constants
@@ -109,7 +110,7 @@ define([
                 .catch((err) => {
                     channel.emit('validation', {
                         isValid: false,
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                         errorMessage: err.message,
                     });
                 });

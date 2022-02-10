@@ -7,24 +7,30 @@ define([
     'common/props',
     'common/runtime',
     '../inputUtils',
-
+    '../validators/constants',
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils) => {
+], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils, Constants) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        input = t('input');
+        input = t('input'),
+        model = Props.make({
+            data: {
+                value: null,
+            },
+            onUpdate: function () {
+                //syncModelToControl();
+                //autoValidate();
+            },
+        });
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
-            channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            ui,
-            model;
+            channel = busConnection.channel(config.channelName);
+        let parent, container, ui;
 
         // CONTROL
 
@@ -121,7 +127,7 @@ define([
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
@@ -141,7 +147,7 @@ define([
                         .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
                                 errorMessage: err.message,
                             });
                         });
@@ -220,16 +226,6 @@ define([
         }
 
         // INIT
-
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            },
-        });
 
         setModelValue(config.initialValue);
 

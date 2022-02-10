@@ -20,7 +20,7 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
         }
         return {
             isValid: 'true',
-            diagnosis: 'valid',
+            diagnosis: Constants.DIAGNOSIS.VALID,
         };
     }
 

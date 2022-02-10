@@ -3,9 +3,10 @@ define([
     'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/select2ObjectInput',
+    'widgets/appWidgets2/validators/constants',
     'base/js/namespace',
     'narrativeMocks',
-], ($, TestUtil, Runtime, Select2ObjectInput, Jupyter, Mocks) => {
+], ($, TestUtil, Runtime, Select2ObjectInput, Constants, Jupyter, Mocks) => {
     'use strict';
 
     const AUTH_TOKEN = 'fakeAuthToken';
@@ -209,7 +210,7 @@ define([
                 bus.emit('update', { value: 'foo' });
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeUndefined();
-                    expect(msg.diagnosis).toBe('optional-empty');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.OPTIONAL_EMPTY);
                     done();
                 });
             });
@@ -220,7 +221,7 @@ define([
                 bus.emit('reset-to-defaults');
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeUndefined();
-                    expect(msg.diagnosis).toBe('optional-empty');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.OPTIONAL_EMPTY);
                     done();
                 });
             });
@@ -258,7 +259,7 @@ define([
                 await TestUtil.wait(1000);
                 expect(validationMessage).toEqual({
                     errorMessage: undefined,
-                    diagnosis: 'optional-empty',
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                 });
             });
         });

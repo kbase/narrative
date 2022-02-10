@@ -2,6 +2,7 @@ define([
     'bluebird',
     'kb_common/html',
     '../validators/resolver',
+    '../validators/constants',
     'common/events',
     'common/ui',
     'util/util',
@@ -9,7 +10,7 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Util, Resolver, FieldWidget) => {
+], (Promise, html, Validation, Constants, Events, UI, Util, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -268,7 +269,7 @@ define([
                     }
                 });
                 fieldWidget.bus.on('validation', (message) => {
-                    if (message.diagnosis === 'optional-empty') {
+                    if (message.diagnosis === Constants.DIAGNOSIS.OPTIONAL_EMPTY) {
                         bus.emit('changed', {
                             newValue: Util.copy(viewModel.data),
                         });

@@ -12,6 +12,7 @@ define([
     'common/data',
     'util/timeFormat',
     'kb_sdk_clients/genericClient',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
@@ -28,7 +29,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient
+    GenericClient,
+    Constants
 ) => {
     'use strict';
 
@@ -39,17 +41,15 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            parent,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             model = {
                 value: undefined,
             },
             eventListeners = [];
+        let parent, container, ui;
 
         function makeInputControl() {
             let selectOptions;
@@ -72,13 +72,6 @@ define([
         }
 
         function setControlValue(value) {
-            let stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = value;
-            }
-
             const control = ui.getElement('input-container.input');
 
             $(control).val(value).trigger('change.select2');
@@ -112,7 +105,7 @@ define([
                 return {
                     isValid: true,
                     validated: true,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     errorMessage: null,
                     value: value,
                     parsedValue: value,
@@ -160,9 +153,6 @@ define([
             );
         }
 
-        let totalItems;
-        let currentPage;
-        let currentStartItem;
         const pageSize = 10;
 
         function doTaxonomySearch(data) {
@@ -175,15 +165,9 @@ define([
                 startItem = 0;
             }
 
-            // globals
-            currentPage = page;
-            currentStartItem = startItem;
-            const start = new Date().getTime();
-
             const taxonClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
-                // version: 'dev',
                 token: Runtime.make().authToken(),
             });
             return taxonClient
@@ -197,20 +181,15 @@ define([
                     },
                 ])
                 .then((result) => {
-                    // var elapsed = new Date().getTime() - start;
-                    // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
-                    totalItems = result[0].num_of_hits;
                     return result[0];
                 });
         }
 
         function getTaxonomyItem(taxonObject) {
-            // console.log('get taxonomy', taxonObject);
             const ref = taxonObject,
                 taxonClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
-                    // version: 'dev',
                     token: Runtime.make().authToken(),
                 });
             return taxonClient.callFunc('get_scientific_name', [ref]).then((result) => {
@@ -256,11 +235,11 @@ define([
                             callback(taxon);
                         });
                     },
-                    formatMoreResults: function (page) {
+                    formatMoreResults: function () {
                         return 'more???';
                     },
                     language: {
-                        loadingMore: function (arg) {
+                        loadingMore: function () {
                             return html.loading('Loading more scientific names');
                         },
                     },
@@ -291,7 +270,7 @@ define([
                                 .then((results) => {
                                     success(results);
                                 })
-                                .catch((err) => {
+                                .catch(() => {
                                     status = 'error';
                                     failure();
                                 });
@@ -358,11 +337,6 @@ define([
                     channel.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    // bus.channel().on('workspace-changed', function() {
-                    //     doWorkspaceChanged();
-                    // });
-                    // bus.emit('sync');
-
                     setControlValue(getModelValue());
                     autoValidate();
                 });
@@ -384,8 +358,8 @@ define([
         // INIT
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -7,6 +7,8 @@ define([], () => {
         INVALID: 'invalid',
         VALID: 'valid',
         SUSPECT: 'suspect',
+        DISABLED: 'disabled',
+        ERROR: 'error',
     };
 
     return {

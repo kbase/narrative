@@ -1,4 +1,4 @@
-define(['bluebird', './resolver'], (Promise, resolver) => {
+define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants) => {
     'use strict';
 
     function applyConstraints(value, constraints) {
@@ -6,14 +6,14 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
             if (constraints.required) {
                 return {
                     isValid: false,
-                    diagnosis: 'required-missing',
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                     messageId: 'required-missing',
                     errorMessage: 'value is required',
                 };
             } else {
                 return {
                     isValid: true,
-                    diagnosis: 'optional-empty',
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                     messageId: 'optional-empty',
                 };
             }
@@ -33,7 +33,7 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
             if (values === null || values.length === 0) {
                 if (spec.data.constraints.required) {
                     validationResult.isValid = false;
-                    validationResult.diagnosis = 'required-missing';
+                    validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     validationResult.messageId = 'required-missing';
                 }
                 return validationResult;
@@ -54,11 +54,9 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
                         Object.keys(subValidationResults).forEach((id) => {
                             const result = subValidationResults[id];
                             if (result.isValid === false) {
-                                //if (result.diagnosis === 'required-missing') {
                                 validationResult.isValid = false;
-                                validationResult.diagnosis = 'required-missing';
+                                validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                                 validationResult.messageId = 'required-missing';
-                                //}
                             }
                         });
                     }
@@ -73,7 +71,7 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
     }
 
     return {
-        applyConstraints: applyConstraints,
-        validate: validate,
+        applyConstraints,
+        validate,
     };
 });

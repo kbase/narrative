@@ -1,4 +1,4 @@
-define(['bluebird', 'util/util'], (Promise, Util) => {
+define(['bluebird', 'util/util', './constants'], (Promise, Util, Constants) => {
     'use strict';
 
     function importString(value) {
@@ -57,30 +57,30 @@ define(['bluebird', 'util/util'], (Promise, Util) => {
     function applyConstraints(value, constraints) {
         let messageId,
             errorMessage,
-            diagnosis = 'valid';
+            diagnosis = Constants.DIAGNOSIS.VALID;
 
         if (value === null) {
             if (constraints.required) {
-                diagnosis = 'required-missing';
+                diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                 messageId = 'required-missing';
                 errorMessage = 'value is required';
             } else {
-                diagnosis = 'optional-empty';
+                diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
             }
         } else {
             const error = validateInt(value, constraints.min, constraints.max);
             if (error) {
                 errorMessage = error.message;
                 messageId = error.id;
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
             }
         }
 
         return {
             isValid: errorMessage ? false : true,
-            messageId: messageId,
-            errorMessage: errorMessage,
-            diagnosis: diagnosis,
+            messageId,
+            errorMessage,
+            diagnosis,
         };
     }
 
@@ -91,8 +91,8 @@ define(['bluebird', 'util/util'], (Promise, Util) => {
     }
 
     return {
-        importString: importString,
-        applyConstraints: applyConstraints,
-        validate: validate,
+        importString,
+        applyConstraints,
+        validate,
     };
 });

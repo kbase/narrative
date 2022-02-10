@@ -9,8 +9,9 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
+    '../validators/constants',
     'bootstrap',
-], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, UI) => {
+], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, UI, Constants) => {
     'use strict';
 
     // Constants
@@ -20,19 +21,17 @@ define([
         option = t('option');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             constraints = config.parameterSpec.data.constraints,
             workspaceId = runtime.getEnv('workspaceId'),
             objectRefType = config.referenceType || 'name',
-            parent,
-            container,
             bus = config.bus,
-            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
                 value: undefined,
             };
+        let parent, container, ui;
 
         model.blacklistValues = config.blacklist || [];
 
@@ -55,8 +54,8 @@ define([
                         }
                     })
                     .map((objectInfo) => {
-                        let selected = false,
-                            ref = getObjectRef(objectInfo);
+                        let selected = false;
+                        const ref = getObjectRef(objectInfo);
                         if (ref === model.value) {
                             selected = true;
                         }
@@ -76,14 +75,16 @@ define([
                 {
                     id: events.addEvent({
                         type: 'change',
-                        handler: function (e) {
+                        handler: function () {
                             validate().then((result) => {
                                 if (result.isValid) {
                                     model.value = result.value;
                                     bus.emit('changed', {
                                         newValue: result.value,
                                     });
-                                } else if (result.diagnosis === 'required-missing') {
+                                } else if (
+                                    result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING
+                                ) {
                                     model.value = result.value;
                                     bus.emit('changed', {
                                         newValue: result.value,
@@ -130,7 +131,7 @@ define([
                 }
                 return false;
             })
-                .then((changed) => {
+                .then(() => {
                     return render();
                 })
                 .then(() => {
@@ -142,7 +143,7 @@ define([
             return Promise.try(() => {
                 model.value = undefined;
             })
-                .then((changed) => {
+                .then(() => {
                     render();
                 })
                 .then(() => {
@@ -202,22 +203,6 @@ define([
                     },
                 ]);
             });
-        }
-
-        function getObjectsByTypex(type) {
-            const workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken(),
-            });
-            return workspace
-                .list_objects({
-                    type: type,
-                    ids: [workspaceId],
-                })
-                .then((data) => {
-                    return data.map((objectInfo) => {
-                        return serviceUtils.objectInfoToObject(objectInfo);
-                    });
-                });
         }
 
         function fetchData() {
@@ -313,20 +298,6 @@ define([
                 // compare to availableData.
                 if (!_.isEqual(data, model.availableValues)) {
                     model.availableValues = data;
-                    const matching = model.availableValues.filter((value) => {
-                        if (value.name === getObjectRef(value)) {
-                            return true;
-                        }
-                        return false;
-                    });
-
-                    // disable for now -- race between this widget and the data panel
-                    // the data panel is slower, so this widget thinks there are
-                    // no availale objects, so it empties the model...
-                    //if (matching.length === 0) {
-                    //    model.value = null;
-                    // }
-
                     render().then(() => {
                         autoValidate();
                     });
@@ -354,16 +325,13 @@ define([
                             render();
                         })
                         .then(() => {
-                            bus.on('reset-to-defaults', (message) => {
+                            bus.on('reset-to-defaults', () => {
                                 resetModelValue();
                             });
                             bus.on('update', (message) => {
                                 setModelValue(message.value);
                             });
-                            //bus.on('workspace-changed', function (message) {
-                            //    doWorkspaceChanged();
-                            //});
-                            runtime.bus().on('workspace-changed', (message) => {
+                            runtime.bus().on('workspace-changed', () => {
                                 doWorkspaceChanged();
                             });
                             bus.emit('sync');
@@ -373,7 +341,7 @@ define([
         }
 
         return {
-            start: start,
+            start,
         };
     }
 

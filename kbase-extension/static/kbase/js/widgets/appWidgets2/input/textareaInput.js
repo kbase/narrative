@@ -6,8 +6,9 @@ define([
     'common/ui',
     'common/props',
     '../inputUtils',
+    '../validators/constants',
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
+], (Promise, html, Validation, Events, UI, Props, inputUtils, Constants) => {
     'use strict';
 
     // Constants
@@ -16,18 +17,18 @@ define([
         textarea = t('textarea');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            parent,
-            container,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            model = {
-                value: undefined,
-            },
-            ui,
             options = {
                 enabled: true,
                 rowCount: spec.ui.nRows || 5,
             };
+        let parent,
+            container,
+            model = {
+                value: undefined,
+            },
+            ui;
 
         // CONTROL
 
@@ -128,7 +129,7 @@ define([
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
@@ -148,7 +149,7 @@ define([
                         .catch((err) => {
                             bus.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
                                 errorMessage: err.message,
                             });
                         });

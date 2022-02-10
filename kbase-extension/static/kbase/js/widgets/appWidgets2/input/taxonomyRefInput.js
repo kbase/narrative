@@ -12,6 +12,7 @@ define([
     'common/data',
     'util/timeFormat',
     'kb_sdk_clients/genericClient',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
@@ -28,7 +29,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient
+    GenericClient,
+    Constants
 ) => {
     'use strict';
 
@@ -98,7 +100,7 @@ define([
                 return {
                     isValid: true,
                     validated: true,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     errorMessage: null,
                     value: value,
                     parsedValue: value,
@@ -113,7 +115,7 @@ define([
                     channel.emit('changed', {
                         newValue: result.parsedValue,
                     });
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
                         newValue: spec.data.nullValue,

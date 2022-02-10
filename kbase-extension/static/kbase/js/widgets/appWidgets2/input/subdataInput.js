@@ -9,8 +9,21 @@ define([
     'common/props',
     'base/js/namespace',
     '../subdataMethods/manager',
+    '../validators/constants',
     'bootstrap',
-], ($, Promise, html, Validation, Events, Runtime, UI, Props, Jupyter, SubdataMethods) => {
+], (
+    $,
+    Promise,
+    html,
+    Validation,
+    Events,
+    Runtime,
+    UI,
+    Props,
+    Jupyter,
+    SubdataMethods,
+    Constants
+) => {
     'use strict';
 
     /*
@@ -127,7 +140,7 @@ define([
 
         function didChange() {
             validate().then((result) => {
-                if (result.isValid || result.diagnosis === 'required-missing') {
+                if (result.isValid || result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.setItem('value', result.value);
                     updateInputControl('value');
                     channel.emit('changed', {

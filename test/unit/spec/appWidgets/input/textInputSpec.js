@@ -25,16 +25,16 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
         };
     }
 
-    function startWidgetAndSetTextField(widget, container, inputText) {
-        widget.start({ node: container }).then(() => {
-            const inputElem = container.querySelector('input[data-element="input"]');
-            inputElem.value = inputText;
-            inputElem.dispatchEvent(new Event('change'));
-        });
+    async function startWidgetAndSetTextField(widget, node, inputText) {
+        await widget.start({ node });
+        const inputElem = node.querySelector('input[data-element="input"]');
+        inputElem.value = inputText;
+        inputElem.dispatchEvent(new Event('change'));
+        await TestUtil.wait(1000); // should fire expected messages by then
     }
 
     describe('The Text Input widget', () => {
-        let bus, widget, container, runtime;
+        let bus, container, runtime;
         beforeEach(() => {
             runtime = Runtime.make();
             container = document.createElement('div');
@@ -42,7 +42,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
                 description: 'text input testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
-            widget = TextInput.make(testConfig);
         });
 
         afterEach(() => {
@@ -57,106 +56,115 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
         });
 
         it('should be instantiable', () => {
+            const widget = TextInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toEqual(jasmine.any(Function));
             });
         });
 
-        it('Should start and stop a widget', (done) => {
-            widget
-                .start({ node: container })
-                .then(() => {
-                    // verify it's there.
-                    const inputElem = container.querySelector('input[data-element="input"]');
-                    expect(inputElem).toBeDefined();
-                    return widget.stop();
-                })
-                .then(() => {
-                    // verify it's gone.
-                    expect(container.childElementCount).toBe(0);
-                    done();
-                });
+        it('Should start and stop a widget', async () => {
+            const widget = TextInput.make(testConfig);
+            await widget.start({ node: container });
+            // verify it's there.
+            const inputElem = container.querySelector('input[data-element="input"]');
+            expect(inputElem).toBeDefined();
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('Should update value via bus', (done) => {
+        it('Should update value via bus', async () => {
             // start with one value, change it, then reset.
             // check along the way.
+            const widget = TextInput.make(testConfig);
+            let validationMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                validationMsg = message;
             });
-            widget.start({ node: container }).then(() => {
-                bus.emit('update', { value: 'some text' });
-            });
+            await widget.start({ node: container });
+            bus.emit('update', { value: 'some text' });
+            await TestUtil.wait(1000);
+            expect(validationMsg.isValid).toBeTruthy();
         });
 
-        it('Should reset to default via bus', (done) => {
+        it('Should reset to default via bus', async () => {
+            const widget = TextInput.make(testConfig);
+            let validationMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                validationMsg = message;
             });
-            widget.start({ node: container }).then(() => {
-                bus.emit('reset-to-defaults');
-            });
+            await widget.start({ node: container });
+            bus.emit('reset-to-defaults');
+            await TestUtil.wait(1000);
+            expect(validationMsg.isValid).toBeTruthy(); // fires after reset
         });
 
-        it('Should respond to input change events with "changed"', (done) => {
+        it('Should respond to input change events with "changed"', async () => {
             const inputText = 'here is some text';
+            const widget = TextInput.make(testConfig);
+            let changedMsg;
             bus.on('changed', (message) => {
-                expect(message.newValue).toEqual(inputText);
-                done();
+                changedMsg = message;
             });
-            startWidgetAndSetTextField(widget, container, inputText);
+            await startWidgetAndSetTextField(widget, container, inputText);
+            expect(changedMsg.newValue).toEqual(inputText);
         });
 
-        it('Should respond to input change events with "validation"', (done) => {
+        it('Should respond to input change events with "validation"', async () => {
             const inputText = 'here is some text';
+            const widget = TextInput.make(testConfig);
+            let validationMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
+                validationMsg = message;
             });
-            startWidgetAndSetTextField(widget, container, inputText);
+            await startWidgetAndSetTextField(widget, container, inputText);
+            expect(validationMsg.isValid).toBeTruthy();
+            expect(validationMsg.errorMessage).toBeUndefined();
         });
 
-        xit('Should respond to keyup change events with "validation"', (done) => {
+        it('Should respond to keyup change events with "validation"', async () => {
             const inputText = 'here is some text';
+            const widget = TextInput.make(testConfig);
+            let validationMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
+                validationMsg = message;
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('keyup'));
-            });
+            await widget.start({ node: container });
+            const inputElem = container.querySelector('input[data-element="input"]');
+            inputElem.value = inputText;
+            inputElem.dispatchEvent(new Event('keyup'));
+            await TestUtil.wait(1000);
+            expect(validationMsg.isValid).toBeTruthy();
+            expect(validationMsg.errorMessage).toBeUndefined();
         });
 
-        it('Should show message when configured', (done) => {
+        it('Should show message when configured', async () => {
             testConfig.showOwnMessages = true;
-            widget = TextInput.make(testConfig);
+            const widget = TextInput.make(testConfig);
             const inputText = 'some text';
+            let validationMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                // ...detect something?
-                done();
+                validationMsg = message;
             });
-            startWidgetAndSetTextField(widget, container, inputText);
+            await startWidgetAndSetTextField(widget, container, inputText);
+            expect(validationMsg.isValid).toBeTruthy();
         });
 
-        it('Should return a diagnosis of required-missing if so', (done) => {
-            testConfig = buildTestConfig(true, '', bus);
-            widget = TextInput.make(testConfig);
-            const inputText = null;
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeFalsy();
-                expect(message.diagnosis).toBe('required-missing');
-                // ...detect something?
-                done();
+        it('Should return a diagnosis of required-missing if so', async () => {
+            const _bus = runtime.bus().makeChannelBus({
+                description: 'text input testing',
             });
-            startWidgetAndSetTextField(widget, container, inputText);
+
+            testConfig = buildTestConfig(true, '', _bus);
+            const widget = TextInput.make(testConfig);
+            const _container = document.createElement('div');
+            let validationMessage;
+            _bus.on('validation', (message) => {
+                validationMessage = message;
+            });
+            await startWidgetAndSetTextField(widget, _container, null);
+            expect(validationMessage.isValid).toBeFalsy();
+            expect(validationMessage.diagnosis).toBe('required-missing');
         });
     });
 });

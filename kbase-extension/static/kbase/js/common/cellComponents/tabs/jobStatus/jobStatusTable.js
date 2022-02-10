@@ -203,7 +203,7 @@ define([
             this.showHistory = true; // whether or not the embedded widgets should show job history
 
             const { jobManager, toggleTab } = config;
-            if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
+            if (!jobManager || !jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
                 throw new Error('Cannot start JobStatusTable without a jobs object in the config');
             }
             this.jobManager = jobManager;
@@ -227,6 +227,14 @@ define([
             if (!requiredArgs.every((arg) => arg in args && args[arg])) {
                 throw new Error('start argument must have these keys: ' + requiredArgs.join(', '));
             }
+
+            // ensure this is a batch job
+            const batchJob = this.jobManager.model.getItem('exec.jobState');
+            if (!batchJob) {
+                throw new Error('batch job not defined');
+            }
+            this.batchJob = batchJob;
+            this.batchId = this.jobManager.model.getItem('exec.jobState.batch_id');
 
             const indexedJobs = this.jobManager.model.getItem('exec.jobs.byId');
             if (!indexedJobs || !Object.keys(indexedJobs).length) {
@@ -730,21 +738,23 @@ define([
          * @param {object} message
          */
         handleJobError(message) {
-            const jobId = message.job_id,
+            const jobIdList = message[jcm.PARAM.JOB_ID_LIST],
                 { error } = message;
             if (!error) {
                 return;
             }
-            const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
-            const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
+            jobIdList.forEach((jobId) => {
+                const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+                const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
 
-            this.errors[rowIx] = error;
+                this.errors[rowIx] = error;
 
-            // update the table
-            this.dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
-            $('.' + `${cssBaseClass}__icon--action_warning`).popover({
-                placement: 'auto',
-                trigger: 'hover focus',
+                // update the table
+                this.dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
+                $('.' + `${cssBaseClass}__icon--action_warning`).popover({
+                    placement: 'auto',
+                    trigger: 'hover focus',
+                });
             });
         }
     }

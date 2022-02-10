@@ -690,11 +690,11 @@ define([
                 JobsData.batchJob.jobArray,
                 jobsByRetryParent
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(JobsData.batchJob.originalJobs).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(JobsData.batchJob.originalJobs))
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(jobsByRetryParent).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(jobsByRetryParent))
             );
         });
     });

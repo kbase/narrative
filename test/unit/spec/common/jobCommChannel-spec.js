@@ -536,18 +536,20 @@ define([
                         cell_id: 'bar',
                         run_id: 54321,
                     },
-                    expected: [
-                        {
-                            event: 'launched_job',
-                            event_at: 12345,
-                            job_id: TEST_JOB_ID,
-                            cell_id: 'bar',
-                            run_id: 54321,
-                        },
-                        {
-                            channel: { [CELL_CHANNEL]: 'bar' },
-                            key: { type: jcm.MESSAGE_TYPE.RUN_STATUS },
-                        },
+                    expectedMultiple: [
+                        [
+                            {
+                                event: 'launched_job',
+                                event_at: 12345,
+                                job_id: TEST_JOB_ID,
+                                cell_id: 'bar',
+                                run_id: 54321,
+                            },
+                            {
+                                channel: { [CELL_CHANNEL]: 'bar' },
+                                key: { type: jcm.MESSAGE_TYPE.RUN_STATUS },
+                            },
+                        ],
                     ],
                 },
                 {
@@ -621,132 +623,6 @@ define([
                         convertToJobStateBusMessage
                     ),
                 },
-                {
-                    type: jcm.MESSAGE_TYPE.ERROR,
-                    message: {
-                        job_id: TEST_JOB_ID,
-                        message: 'cancel error',
-                        source: 'cancel_job',
-                        code: 'RED',
-                    },
-                    expected: [
-                        {
-                            [JOB_ID]: TEST_JOB_ID,
-                            error: {
-                                job_id: TEST_JOB_ID,
-                                message: 'cancel error',
-                                source: 'cancel_job',
-                                code: 'RED',
-                            },
-                            request: 'cancel_job',
-                        },
-                        {
-                            channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                            key: { type: jcm.MESSAGE_TYPE.ERROR },
-                        },
-                    ],
-                },
-                {
-                    // unrecognised error type
-                    type: jcm.MESSAGE_TYPE.ERROR,
-                    message: {
-                        source: 'some-unknown-error',
-                        job_id: TEST_JOB_ID,
-                        message: 'some random error',
-                        code: 404,
-                    },
-                    expected: [
-                        {
-                            [JOB_ID]: TEST_JOB_ID,
-                            error: {
-                                source: 'some-unknown-error',
-                                job_id: TEST_JOB_ID,
-                                message: 'some random error',
-                                code: 404,
-                            },
-                            request: 'some-unknown-error',
-                        },
-                        {
-                            channel: { [JOB_CHANNEL]: TEST_JOB_ID },
-                            key: { type: jcm.MESSAGE_TYPE.ERROR },
-                        },
-                    ],
-                },
-                {
-                    type: jcm.MESSAGE_TYPE.ERROR,
-                    message: {
-                        [JOB_ID_LIST]: [
-                            'job_1_RetryWithErrors',
-                            'job_2_RetryWithErrors',
-                            'job_3_RetryWithErrors',
-                        ],
-                        message: 'multiple job error message',
-                        source: 'retry_job',
-                        code: 'RED',
-                    },
-                    expectedMultiple: [
-                        [
-                            {
-                                [JOB_ID]: 'job_1_RetryWithErrors',
-                                error: {
-                                    [JOB_ID_LIST]: [
-                                        'job_1_RetryWithErrors',
-                                        'job_2_RetryWithErrors',
-                                        'job_3_RetryWithErrors',
-                                    ],
-                                    message: 'multiple job error message',
-                                    source: 'retry_job',
-                                    code: 'RED',
-                                },
-                                request: 'retry_job',
-                            },
-                            {
-                                channel: { [JOB_CHANNEL]: 'job_1_RetryWithErrors' },
-                                key: { type: jcm.MESSAGE_TYPE.ERROR },
-                            },
-                        ],
-                        [
-                            {
-                                [JOB_ID]: 'job_2_RetryWithErrors',
-                                error: {
-                                    [JOB_ID_LIST]: [
-                                        'job_1_RetryWithErrors',
-                                        'job_2_RetryWithErrors',
-                                        'job_3_RetryWithErrors',
-                                    ],
-                                    message: 'multiple job error message',
-                                    source: 'retry_job',
-                                    code: 'RED',
-                                },
-                                request: 'retry_job',
-                            },
-                            {
-                                channel: { [JOB_CHANNEL]: 'job_2_RetryWithErrors' },
-                                key: { type: jcm.MESSAGE_TYPE.ERROR },
-                            },
-                        ],
-                        [
-                            {
-                                [JOB_ID]: 'job_3_RetryWithErrors',
-                                error: {
-                                    [JOB_ID_LIST]: [
-                                        'job_1_RetryWithErrors',
-                                        'job_2_RetryWithErrors',
-                                        'job_3_RetryWithErrors',
-                                    ],
-                                    message: 'multiple job error message',
-                                    source: 'retry_job',
-                                    code: 'RED',
-                                },
-                                request: 'retry_job',
-                            },
-                            {
-                                channel: { [JOB_CHANNEL]: 'job_3_RetryWithErrors' },
-                                key: { type: jcm.MESSAGE_TYPE.ERROR },
-                            },
-                        ],
-                    ],
-                },
             ];
 
             busTests.forEach((test) => {
@@ -756,13 +632,9 @@ define([
                     spyOn(testBus, 'send');
                     return comm.initCommChannel().then(() => {
                         comm.handleCommMessages(msg);
-                        if (test.expectedMultiple) {
-                            expect(testBus.send.calls.allArgs()).toEqual(
-                                jasmine.arrayWithExactContents(test.expectedMultiple)
-                            );
-                        } else if (test.expected) {
-                            expect(testBus.send.calls.allArgs()).toEqual([test.expected]);
-                        }
+                        expect(testBus.send.calls.allArgs()).toEqual(
+                            jasmine.arrayWithExactContents(test.expectedMultiple)
+                        );
                     });
                 });
             });
@@ -839,6 +711,142 @@ define([
                         expect(testBus.send.calls.allArgs()).toEqual(
                             jasmine.arrayWithExactContents(expectedMessages)
                         );
+                    });
+                });
+            });
+
+            describe('error message distribution', () => {
+                const BATCH_PARENT = 'BATCH_PARENT';
+                const errors = {
+                    simple: {
+                        name: 'ValueError',
+                        message: 'Some text',
+                    },
+                    complex: {
+                        name: 'ServerException',
+                        message: 'Some exception',
+                        error: 'Unable to perform this request',
+                        code: -1,
+                    },
+                    jobRequestException: {
+                        name: 'JobRequestException',
+                        message: 'Some text',
+                    },
+                };
+
+                const jobMapping = {
+                    JOB_A: { [jcm.PARAM.BATCH_ID]: BATCH_PARENT },
+                    JOB_B: { [jcm.PARAM.BATCH_ID]: BATCH_PARENT, [jcm.PARAM.JOB_ID]: 'JOB_B' },
+                    JOB_C: { [jcm.PARAM.BATCH_ID]: BATCH_PARENT },
+                    JOB_D: { [jcm.PARAM.JOB_ID]: 'JOB_D' },
+                    BATCH_PARENT: { [jcm.PARAM.BATCH_ID]: BATCH_PARENT },
+                };
+
+                const requests = {
+                    jobIdList: {
+                        request: {
+                            request_type: jcm.MESSAGE_TYPE.STATUS,
+                            [jcm.PARAM.JOB_ID_LIST]: ['A_JOB', 'B_JOB', 'C_JOB'],
+                        },
+                        channelsNoMap: [
+                            { [jcm.CHANNEL.JOB]: 'A_JOB' },
+                            { [jcm.CHANNEL.JOB]: 'B_JOB' },
+                            { [jcm.CHANNEL.JOB]: 'C_JOB' },
+                        ],
+                        channelsWithMap: [
+                            { [jcm.CHANNEL.JOB]: 'B_JOB' },
+                            { [jcm.CHANNEL.BATCH]: BATCH_PARENT },
+                        ],
+                        allIds: ['A_JOB', 'B_JOB', 'C_JOB'],
+                    },
+
+                    jobId: {
+                        request: {
+                            request_type: jcm.MESSAGE_TYPE.INFO,
+                            [jcm.PARAM.JOB_ID]: 'D_JOB',
+                        },
+                        channelsNoMap: [{ [jcm.CHANNEL.JOB]: 'D_JOB' }],
+                        channelsWithMap: [{ [jcm.CHANNEL.BATCH]: BATCH_PARENT }],
+                        allIds: ['D_JOB'],
+                    },
+
+                    batchId: {
+                        request: {
+                            request_type: jcm.MESSAGE_TYPE.RETRY,
+                            [jcm.PARAM.BATCH_ID]: BATCH_PARENT,
+                        },
+                        channelsNoMap: [{ [jcm.CHANNEL.JOB]: BATCH_PARENT }],
+                        channelsWithMap: [{ [jcm.CHANNEL.BATCH]: BATCH_PARENT }],
+                        allIds: [BATCH_PARENT],
+                    },
+                };
+
+                function generateErrorMessage(type, req) {
+                    const reqData = requests[req];
+                    const errorMessage = {
+                        ...errors[type],
+                        request: reqData.request,
+                        source: reqData.request.request_type,
+                        [jcm.PARAM.JOB_ID_LIST]: reqData.allIds,
+                    };
+                    return {
+                        type: `${type} error, ${req} params`,
+                        message: errorMessage,
+                        expected: reqData.channelsNoMap.map((channel) => {
+                            return [
+                                errorMessage,
+                                {
+                                    key: { type: jcm.MESSAGE_TYPE.ERROR },
+                                    channel,
+                                },
+                            ];
+                        }),
+                        expectedWithMap: reqData.channelsNoMap.map((channel) => {
+                            return [
+                                errorMessage,
+                                {
+                                    key: { type: jcm.MESSAGE_TYPE.ERROR },
+                                    channel,
+                                },
+                            ];
+                        }),
+                    };
+                }
+
+                const busTests = [];
+                ['simple', 'complex'].forEach((type) => {
+                    Object.keys(requests).forEach((req) => {
+                        busTests.push(generateErrorMessage(type, req));
+                    });
+                });
+                // these messages do not get passed on to the frontend as they're not very useful
+                Object.keys(requests).forEach((req) => {
+                    const test = generateErrorMessage('jobRequestException', req);
+                    test.expected = [];
+                    test.expectedWithMap = [];
+                    busTests.push(test);
+                });
+
+                // no mapping in place
+                busTests.forEach((test) => {
+                    it(`should send a ${test.type} message to the bus`, () => {
+                        const msg = makeCommMsg(jcm.MESSAGE_TYPE.ERROR, test.message),
+                            comm = new JobCommChannel();
+                        return comm.initCommChannel().then(() => {
+                            spyOn(testBus, 'send');
+                            comm.handleCommMessages(msg);
+                            expect(testBus.send.calls.allArgs()).toEqual(
+                                jasmine.arrayWithExactContents(test.expected)
+                            );
+                            // create the mapping and handle the message again
+                            comm._jobMapping = jobMapping;
+                            comm.handleCommMessages(msg);
+                            expect(testBus.send.calls.allArgs()).toEqual(
+                                jasmine.arrayWithExactContents(
+                                    test.expected.concat(test.expectedWithMap)
+                                )
+                            );
+                        });
                     });
                 });
             });

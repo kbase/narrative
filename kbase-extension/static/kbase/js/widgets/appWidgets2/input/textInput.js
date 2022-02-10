@@ -103,7 +103,9 @@ define([
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        if (e.target) {
+                            e.target.dispatchEvent(new Event('change'));
+                        }
                     }, editPauseInterval);
                 },
             };
@@ -230,8 +232,8 @@ define([
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

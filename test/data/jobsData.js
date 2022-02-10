@@ -685,23 +685,30 @@ define([
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 10);
 
-        const originalJobs = [
+        const originalJobIds = [
                 JOB.CREATED,
                 JOB.QUEUED,
                 JOB.TERMINATED_WHILST_QUEUED,
                 JOB.TERMINATED_WHILST_RUNNING,
                 JOB.DIED_WHILST_QUEUED,
-            ].reduce((acc, jobId) => {
+            ],
+            currentJobIds = [JOB.CREATED, JOB.QUEUED, JOB.RUNNING, JOB.COMPLETED, JOB.ESTIMATING];
+
+        // the original jobs prior to any updates
+        const originalJobsNoRetryData = {
+            [BATCH_ID]: TestUtil.JSONcopy(batchParentJob),
+        };
+        // update the child jobs
+        originalJobsNoRetryData[BATCH_ID].child_jobs = originalJobIds;
+
+        // original jobs
+        const originalJobs = originalJobIds.reduce((acc, jobId) => {
+                originalJobsNoRetryData[jobId] = TestUtil.JSONcopy(jobsById[jobId]);
                 acc[jobId] = jobIdIndex[jobId];
                 return acc;
             }, {}),
-            currentJobs = [
-                JOB.CREATED,
-                JOB.QUEUED,
-                JOB.RUNNING,
-                JOB.COMPLETED,
-                JOB.ESTIMATING,
-            ].reduce((acc, jobId) => {
+            // current jobs, minus batch parent
+            currentJobs = currentJobIds.reduce((acc, jobId) => {
                 acc[jobId] = jobIdIndex[jobId];
                 return acc;
             }, {});
@@ -740,6 +747,7 @@ define([
                         [jcm.PARAM.JOB_ID]: retryParent,
                         jobState: jobIdIndex[retryParent],
                     },
+                    retry_id: retry,
                     retry: {
                         [jcm.PARAM.JOB_ID]: retry,
                         jobState: jobIdIndex[retry],
@@ -755,7 +763,7 @@ define([
 
         function generateUpdateSeries() {
             // this maintains an array containing all the child IDs
-            const childJobIds = Object.keys(originalJobs);
+            const childJobIds = [...originalJobIds];
 
             // create a series of job messages that mimic running a batch job and
             // retrying some of the jobs in the batch
@@ -817,6 +825,24 @@ define([
             return jobUpdateSeries;
         }
 
+        const retryMessages = generateRetryMessage(
+            [
+                {
+                    retry: JOB.RUNNING,
+                    retryParent: JOB.TERMINATED_WHILST_QUEUED,
+                },
+                {
+                    retry: JOB.COMPLETED,
+                    retryParent: JOB.TERMINATED_WHILST_RUNNING,
+                },
+                {
+                    retry: JOB.ESTIMATING,
+                    retryParent: JOB.DIED_WHILST_QUEUED,
+                },
+            ],
+            []
+        );
+
         return {
             jobArray: Object.values(jobIdIndex),
             jobsById: jobIdIndex,
@@ -825,9 +851,13 @@ define([
                 JOB.TERMINATED_WHILST_RUNNING,
                 JOB.DIED_WHILST_QUEUED,
             ],
+            originalJobIds,
+            currentJobIds,
             originalJobs,
             currentJobs,
+            originalJobsNoRetryData,
             jobUpdateSeries: generateUpdateSeries(),
+            retryMessages: retryMessages.msg,
             batchId: BATCH_ID,
             expectedButtonState: [
                 ['.dropdown [data-action="cancel"]', false],
@@ -869,7 +899,33 @@ define([
     example.LOGS = example.Logs;
     example.RUN_STATUS = example.RunStatus;
 
+    function makeJobProgression() {
+        return [
+            {
+                ...jobsById[JOB.CREATED],
+                job_id: TEST_JOB_ID,
+            },
+            {
+                ...jobsById[JOB.ESTIMATING],
+                job_id: TEST_JOB_ID,
+            },
+            {
+                ...jobsById[JOB.QUEUED],
+                job_id: TEST_JOB_ID,
+            },
+            {
+                ...jobsById[JOB.RUNNING],
+                job_id: TEST_JOB_ID,
+            },
+            {
+                ...jobsById[JOB.COMPLETED],
+                job_id: TEST_JOB_ID,
+            },
+        ];
+    }
+
     return {
+        TEST_JOB_ID,
         validJobs,
         unknownJob,
         batchParentJob,
@@ -879,6 +935,7 @@ define([
         jobsByStatus,
         jobsById,
         jobStrings,
+        jobProgression: makeJobProgression(),
         example,
     };
 });

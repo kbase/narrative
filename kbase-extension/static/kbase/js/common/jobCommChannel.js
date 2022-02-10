@@ -252,6 +252,7 @@ define([
             // replace msgData with the validated messages
             msgData = validated.valid;
 
+            const batchJobs = {};
             this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case RESPONSES.NEW:
@@ -289,27 +290,65 @@ define([
                 //
                 // errors
                 case RESPONSES.ERROR:
-                    console.error('Error from job comm:', msg);
                     if (!msgData) {
+                        console.error('Error from job comm:', msg);
                         break;
                     }
+                    if (msgData.name && msgData.name === 'JobRequestException') {
+                        // invalid request formatting. Warn and return
+                        console.error('Badly-formatted request', msgData);
+                        break;
+                    }
+                    // if there is a raw request object, find the params of the original request
+                    // eslint-disable-next-line no-case-declarations
+                    const { request } = msgData;
+                    if (!request) {
+                        // we can't really do much without knowing where to direct the error to
+                        console.error('General error', msgData);
+                        break;
+                    }
+
                     // treat messages relating to single jobs as if they were for a job list
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData[PARAM.JOB_ID]
-                        ? [msgData[PARAM.JOB_ID]]
-                        : msgData[PARAM.JOB_ID_LIST];
+                    const jobIdList = request[PARAM.JOB_ID]
+                        ? [request[PARAM.JOB_ID]]
+                        : request[PARAM.BATCH_ID]
+                        ? [request[PARAM.BATCH_ID]]
+                        : request[PARAM.JOB_ID_LIST]
+                        ? request[PARAM.JOB_ID_LIST]
+                        : [];
+
+                    // eslint-disable-next-line no-case-declarations
+                    const errorMsg = Object.assign({}, msgData, {
+                        [jcm.PARAM.JOB_ID_LIST]: jobIdList,
+                    });
 
                     jobIdList.forEach((jobId) => {
-                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
-                            [PARAM.JOB_ID]: jobId,
-                            error: msgData,
-                            request: msgData.source,
-                        });
+                        // if there is no mapping for the job ID, address it using the job
+                        if (!this._jobMapping[jobId] || this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, errorMsg);
+                        }
+                        if (
+                            this._jobMapping[jobId] &&
+                            this._jobMapping[jobId][jcm.PARAM.BATCH_ID]
+                        ) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            batchJobs[batchId] = true;
+                        }
                     });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(CHANNEL.BATCH, batchId, msgType, errorMsg);
+                        });
+                    }
+
                     break;
 
                 // job information for one or more jobs
+                // logs for one or more jobs
                 case RESPONSES.INFO:
+                case RESPONSES.LOGS:
                     Object.keys(msgData).forEach((jobId) => {
                         // get the job mapping if it doesn't exist
                         if (!this._jobMapping[jobId]) {
@@ -321,14 +360,31 @@ define([
                                 this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
                             }
                         }
-                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
-                    });
-                    break;
 
-                case RESPONSES.LOGS:
-                    Object.keys(msgData).forEach((jobId) => {
-                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
+                                [jobId]: msgData[jobId],
+                            });
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
+                        }
                     });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                msgType,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
                     break;
 
                 case RESPONSES.RETRY:
@@ -344,8 +400,31 @@ define([
                                 this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
                             }
                         }
-                        this.sendBusMessage(CHANNEL.JOB, jobId, msgType, msgData[jobId]);
+
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
+                                [jobId]: msgData[jobId],
+                            });
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
+                        }
                     });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                msgType,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
                     break;
 
                 case RESPONSES.STATUS:
@@ -354,14 +433,31 @@ define([
                         if (!this._jobMapping[jobId]) {
                             this._extractMapping(msgData[jobId]);
                         }
-                        this.sendBusMessage(
-                            CHANNEL.JOB,
-                            jobId,
-                            // send out STATUS messages from a STATUS_ALL message
-                            RESPONSES.STATUS,
-                            msgData[jobId]
-                        );
+
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, RESPONSES.STATUS, {
+                                [jobId]: msgData[jobId],
+                            });
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
+                        }
                     });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                RESPONSES.STATUS,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
                     break;
 
                 default:

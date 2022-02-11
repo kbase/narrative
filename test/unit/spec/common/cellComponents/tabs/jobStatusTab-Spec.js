@@ -16,7 +16,7 @@ define([
     'use strict';
 
     const { JobManager } = JobManagerModule;
-    const { JobStatusTable } = JobStatusTableModule;
+    const { BatchJobStatusTable } = JobStatusTableModule;
     const model = Props.make({
         data: TestBulkImportObject,
     });
@@ -41,8 +41,8 @@ define([
         beforeEach(function () {
             container = document.createElement('div');
             // spy on starting/stopping the job status table, which is part of the job status tab
-            spyOn(JobStatusTable.prototype, 'start');
-            spyOn(JobStatusTable.prototype, 'stop');
+            spyOn(BatchJobStatusTable.prototype, 'start');
+            spyOn(BatchJobStatusTable.prototype, 'stop');
 
             this.jobStatusTabInstance = JobStatusTab.make({
                 model,
@@ -79,8 +79,8 @@ define([
             expect(firstChild).toHaveClass('kb-job-status-tab__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
 
-            expect(JobStatusTable.prototype.start).toHaveBeenCalledTimes(1);
-            const callArgs = JobStatusTable.prototype.start.calls.allArgs();
+            expect(BatchJobStatusTable.prototype.start).toHaveBeenCalledTimes(1);
+            const callArgs = BatchJobStatusTable.prototype.start.calls.allArgs();
             expect(callArgs[0].length).toEqual(1);
             const node = callArgs[0][0].node;
             // should be the same as firstChild above
@@ -91,10 +91,10 @@ define([
             expect(container.classList.length).toBe(0);
 
             await this.jobStatusTabInstance.start({ node: container });
-            expect(JobStatusTable.prototype.start).toHaveBeenCalled();
+            expect(BatchJobStatusTable.prototype.start).toHaveBeenCalled();
 
             await this.jobStatusTabInstance.stop();
-            expect(JobStatusTable.prototype.stop).toHaveBeenCalled();
+            expect(BatchJobStatusTable.prototype.stop).toHaveBeenCalled();
             expect(container.innerHTML).toBe('');
         });
     });

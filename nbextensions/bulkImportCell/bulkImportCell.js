@@ -513,7 +513,7 @@ define([
         function setupMessageBus() {
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(cell, 'attributes', 'id'),
+                    [jcm.CHANNEL.CELL]: Utils.getMeta(cell, 'attributes', 'id'),
                 },
                 description: 'parent bus for BulkImportCell',
             });

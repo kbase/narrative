@@ -5,9 +5,10 @@ define([
     'common/events',
     'common/ui',
     'common/props',
+    '../validators/constants',
 
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Props) => {
+], (Promise, html, Validation, Events, UI, Props, Constants) => {
     'use strict';
 
     // Constants
@@ -17,13 +18,16 @@ define([
         label = t('label');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            container,
             bus = config.bus,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: () => render(),
+            });
+        let parent, container, ui;
 
         options.enabled = true;
 
@@ -77,7 +81,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled',
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 }
 
@@ -197,13 +201,6 @@ define([
             // TODO: detach all events.
             return Promise.resolve();
         }
-
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: () => render(),
-        });
 
         return {
             start: start,

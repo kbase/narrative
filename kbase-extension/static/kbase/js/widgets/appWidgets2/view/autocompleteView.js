@@ -11,6 +11,7 @@ define([
     'narrativeConfig',
     'Taxonomy-client-api',
     'kbase-generic-client-api',
+    '../validators/constants',
 
     'typeahead',
     'bootstrap',
@@ -26,7 +27,8 @@ define([
     Bloodhound,
     Config,
     TaxonomyClientAPI,
-    GenericClient
+    GenericClient,
+    Constants
 ) => {
     'use strict';
 
@@ -36,14 +38,12 @@ define([
         input = t('input');
 
     function factory(config) {
-        let bus = config.bus,
+        const bus = config.bus,
             spec = config.parameterSpec,
-            parent,
-            container,
-            ui,
             model = {
                 value: undefined,
             };
+        let parent, container, ui;
 
         function getInputValue() {
             return ui.getElement('autocomplete-container.input').value;
@@ -90,7 +90,7 @@ define([
             validate(newValue).then((result) => {
                 if (result.isValid) {
                     setModelValue(result.parsedValue);
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     setModelValue(result.parsedValue);
                     bus.emit('changed', {
                         newValue: result.parsedValue,
@@ -150,7 +150,7 @@ define([
                         // `states` is an array of state names defined in "The Basics"
                         remote: {
                             url: 'http://kbase.us/some/fake/url', //bloodhound remote requires a URL
-                            filter: function (query, settings) {
+                            filter: function (query) {
                                 return query.hits;
                             },
                             prepare: function (settings) {

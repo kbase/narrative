@@ -202,6 +202,19 @@ define([
                     },
                 });
 
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: (message) => {
+                        return channel.request(message, {
+                            key: {
+                                type: 'get-parameters',
+                            },
+                        });
+                    },
+                });
+
                 const postButton = div(
                     {
                         class: 'input-group-addon kb-app-row-close-btn-addon',

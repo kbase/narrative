@@ -5,8 +5,9 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
+    '../validators/constants',
     'bootstrap',
-], (Promise, html, Validation, Events, Runtime, UI) => {
+], (Promise, html, Validation, Events, Runtime, UI, Constants) => {
     'use strict';
 
     // Constants
@@ -89,7 +90,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled',
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 });
             }
@@ -99,7 +100,7 @@ define([
                     if (!isUnique) {
                         return {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage:
                                 'Every output object from a single app run must have a unique name.',
                         };
@@ -171,11 +172,14 @@ define([
                 handler: function () {
                     validate()
                         .then((result) => {
-                            if (result.isValid || result.diagnosis === 'required-missing') {
+                            if (
+                                result.isValid ||
+                                result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING
+                            ) {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue,
                                 });
-                            } else if (result.diagnosis === 'invalid') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue,
                                     isError: true,
@@ -186,7 +190,7 @@ define([
                         .catch((err) => {
                             bus.emit('validation', {
                                 errorMessage: err.message,
-                                diagnosis: 'error',
+                                diagnosis: Constants.DIAGNOSIS.ERROR,
                             });
                         });
                 },
@@ -243,7 +247,7 @@ define([
                 .catch((err) => {
                     bus.emit('validation', {
                         errorMessage: err.message,
-                        diagnosis: 'error',
+                        diagnosis: Constants.DIAGNOSIS.ERROR,
                     });
                 });
         }

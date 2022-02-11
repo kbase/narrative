@@ -1,15 +1,15 @@
 define([
     'jquery',
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/ui',
     'common/runtime',
     '../validators/text',
     '../inputUtils',
-
+    '../validators/constants',
     'select2',
     'bootstrap',
-], ($, Promise, html, UI, Runtime, Validation, inputUtils) => {
+], ($, Promise, html, UI, Runtime, Validation, Constants, inputUtils) => {
     'use strict';
 
     // Constants
@@ -22,16 +22,22 @@ define([
      *
      * @param {object} config has fields:
      *  - parameterSpec - object - the spec object with parameter info as built by the Spec object
-     *  - availableValues - optional Array of objects - if given, this supercedes the list of values given in the parameterSpec.
-     *      as in the parameterSpec.data.constraints.options, each should be an object with structure:
+     *  - availableValues - optional Array of objects - if given, this supercedes the list of
+     *    values given in the parameterSpec.
+     *      as in the parameterSpec.data.constraints.options, each should be an object with the
+     *      structure:
      *      {
      *        display: string - the string to display as an option
      *        value: string - the value to set when selected
      *      }
      *  - initialValue - string - the value that should be selected when started
-     *  - disabledValues - array - the values that should be disabled at start (if initialValue is here, it's ignored)
+     *  - disabledValues - array - the values that should be disabled at start (if initialValue is
+     *    here, it's ignored)
      *  - channelName - string - the bus channel to use
-     *  - showOwnMessages - boolean - if true, this widget shows its own messages (better description to come)
+     *  - showOwnMessages - boolean - if true, this widget shows its own messages
+     *    (better description to come)
+     *  - invalidError - optional string - if present, this will be used for an error if an invalid
+     *    value is somehow selected (typically bad initialization)
      * @returns
      */
     function factory(config) {
@@ -104,7 +110,7 @@ define([
                 .catch((err) => {
                     channel.emit('validation', {
                         isValid: false,
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                         errorMessage: err.message,
                     });
                 });

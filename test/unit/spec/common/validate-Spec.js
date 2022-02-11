@@ -189,7 +189,7 @@ define([
             });
         });
 
-        it('String - Validate a simple string without constraints', () => {
+        it('validateTextString - Validate a simple string without constraints', () => {
             expect(Validation.validateTextString('test', {}).isValid).toEqual(true);
         });
 

@@ -216,9 +216,13 @@ define([
                         type: 'get-parameters',
                     },
                     handle: (message) => {
-                        if (message.parameterNames) {
+                        let parameterNames = message.parameterNames;
+                        if (!parameterNames) {
+                            parameterNames = appSpec.parameters.map((param) => param.id);
+                        }
+                        if (parameterNames) {
                             return Promise.all(
-                                message.parameterNames.map((paramName) => {
+                                parameterNames.map((paramName) => {
                                     return paramsBus
                                         .request(
                                             {
@@ -230,8 +234,10 @@ define([
                                                 },
                                             }
                                         )
-                                        .then((_value) => {
-                                            return { paramName: _value.value };
+                                        .then((result) => {
+                                            const returnVal = {};
+                                            returnVal[paramName] = result.value;
+                                            return returnVal;
                                         });
                                 })
                             ).then((results) => {

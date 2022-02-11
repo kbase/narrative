@@ -10,41 +10,49 @@ define([
     'kb_service/client/userAndJobState',
     'kb_service/client/shock',
     '../validators/text',
+    '../validators/constants',
+    '../inputUtils',
 
     'bootstrap',
-], (Promise, $, Jupyter, html, Events, UI, Runtime, Props, UJS, Shock, Validation) => {
+], (
+    Promise,
+    $,
+    Jupyter,
+    html,
+    Events,
+    UI,
+    Runtime,
+    Props,
+    UJS,
+    Shock,
+    Validation,
+    Constants,
+    InputUtils
+) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
         input = t('input'),
-        span = t('span'),
-        textarea = t('textarea'),
-        button = t('button'),
         table = t('table'),
         tr = t('tr'),
         td = t('td'),
-        serviceNameInUJS = 'ShockUploader',
-        maxFileStatesInUJS = 100,
-        maxFileStateTime = 7 * 24 * 3600000; // in milliseconds;
+        serviceNameInUJS = 'ShockUploader';
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            hostNode,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            ui,
-            model,
-            state,
-            local = {
-                fileName: null,
-                percentText: null,
-                fakeButton: null,
-            };
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
 
+        let hostNode, container, ui, state;
         // MODEL
 
         function setModelValue(value) {
@@ -96,27 +104,6 @@ define([
             });
         }
 
-        // function handleInputChange(e) {
-        //     validate()
-        //         .then(function (result) {
-        //             if (result.isValid) {
-        //                 bus.emit('changed', {
-        //                     newValue: result.value
-        //                 });
-        //             } else if (result.diagnosis === 'required-missing') {
-        //                 bus.emit('changed', {
-        //                     newValue: result.value
-        //                 });
-        //             }
-        //             console.log('RESULT value', result);
-        //             setModelValue(result.value);
-        //             bus.emit('validation', {
-        //                 errorMessage: result.errorMessage,
-        //                 diagnosis: result.diagnosis
-        //             });
-        //         });
-        // }
-
         function doChange() {
             importControlValue()
                 .then((value) => {
@@ -131,12 +118,12 @@ define([
                         if (config.showOwnMessages) {
                             ui.setContent('input-container.message', '');
                         }
-                    } else if (result.diagnosis === 'required-missing') {
+                    } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                         // nothing??
                     } else {
                         if (config.showOwnMessages) {
                             // show error message -- new!
-                            const message = inputUtils.buildMessageAlert({
+                            const message = InputUtils.buildMessageAlert({
                                 title: 'ERROR',
                                 type: 'danger',
                                 id: result.messageId,
@@ -151,7 +138,7 @@ define([
                 .catch((err) => {
                     channel.emit('validation', {
                         isValid: false,
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                         errorMessage: err.message,
                     });
                 });
@@ -164,15 +151,6 @@ define([
             };
         }
 
-        /*
-         * This simulates a user clicking on the file input.
-         * This mechanism is purely vanity --
-         */
-        function handleButtonChange(e) {
-            ui.getElement('file-input').dispatchEvent(new Event('click'));
-            // alert('button clicked!');
-        }
-
         function updateProgressBar(partial, total) {
             let percent = String(Math.floor((partial * 1000) / total) / 10);
             if (percent.indexOf('.') < 0) {
@@ -183,13 +161,12 @@ define([
 
         function uploadToShock(file, existingShockNodeId) {
             return new Promise((resolve, reject) => {
-                let shockClient = new Shock({
+                const shockClient = new Shock({
                         url: runtime.config('services.shock.url'),
                         token: runtime.authToken(),
                     }),
-                    uploadStartTime = new Date().getTime(),
-                    fileState,
-                    shockNodeId;
+                    uploadStartTime = new Date().getTime();
+                let fileState, shockNodeId;
 
                 // Called upon completion of uploading one chunk of the file.
                 // Used both for progress and to detect the end of the upload
@@ -207,7 +184,7 @@ define([
                     if (info.uploaded_size >= info.file_size) {
                         shockClient
                             .change_node_file_name(info.node_id, file.name)
-                            .then((info2) => {
+                            .then(() => {
                                 // RESOLUTION
                                 resolve({
                                     shockNodeId: shockNodeId,
@@ -279,18 +256,16 @@ define([
         }
 
         function handleFileInputChange(e) {
-            let files = e.target.files,
-                file;
+            const files = e.target.files;
 
             if (files.length === 0) {
                 return;
             }
 
-            file = files[0];
+            const file = files[0];
 
             uploadFile(file)
-                .then((info) => {
-                    // setModelValue(info.shockNodeId);
+                .then(() => {
                     syncModelToControl();
                     ui.getElement('input-container.input').dispatchEvent(new Event('change'));
                     return doChange();
@@ -300,131 +275,62 @@ define([
                 });
         }
 
-        function makeInputControl(currentValue, events) {
-            // function render() {
-            const cellStyle = {
-                    border: 'none',
-                    verticalAlign: 'middle',
-                },
-                // percentTextWidth = '50px',
-                layout = div([
-                    input({
-                        type: 'text',
-                        style: { display: 'none' },
-                        dataElement: 'input',
-                        id: events.addEvent(handleChanged),
-                    }),
-                    table(
-                        {
-                            style: { border: '0px', margin: '0px', width: '100%' },
-                            cellpadding: '0',
-                            cellspacing: '0',
-                        },
-                        [
-                            tr({ style: { border: 'none', verticalAlign: 'middle' } }, [
-                                td({ style: { width: '80%' } }, [
-                                    input({
-                                        class: 'form-control',
-                                        type: 'file',
-                                        style: { width: '100%' },
-                                        dataElement: 'file-input',
-                                        id: events.addEvent({
-                                            type: 'change',
-                                            handler: handleFileInputChange,
-                                        }),
+        function makeInputControl(events) {
+            const layout = div([
+                input({
+                    type: 'text',
+                    style: { display: 'none' },
+                    dataElement: 'input',
+                    id: events.addEvent(handleChanged),
+                }),
+                table(
+                    {
+                        style: { border: '0px', margin: '0px', width: '100%' },
+                        cellpadding: '0',
+                        cellspacing: '0',
+                    },
+                    [
+                        tr({ style: { border: 'none', verticalAlign: 'middle' } }, [
+                            td({ style: { width: '80%' } }, [
+                                input({
+                                    class: 'form-control',
+                                    type: 'file',
+                                    style: { width: '100%' },
+                                    dataElement: 'file-input',
+                                    id: events.addEvent({
+                                        type: 'change',
+                                        handler: handleFileInputChange,
                                     }),
-                                ]),
-
-                                //                            td({style: cellStyle}, [
-                                //                                button({
-                                //                                    dataElement: 'fake-button',
-                                //                                    type: 'button',
-                                //                                    class: 'btn kb-primary-btn',
-                                //                                    id: events.addEvent({
-                                //                                        type: 'click',
-                                //                                        handler: handleButtonChange
-                                //                                    })
-                                //                                }, 'Select File')
-                                //                            ]),
-                                //                            td({style: {width: '70%', padding: '0px', margin: '2px'}}, [
-                                //                                textarea({
-                                //                                    dataElement: 'input',
-                                //                                    type: 'text',
-                                //                                    readonly: true,
-                                //                                    style: {width: '100%'},
-                                //                                    rows: 3,
-                                //                                    id: events.addEvent({
-                                //                                        type: 'change',
-                                //                                        handler: handleInputChange
-                                //                                    })
-                                //                                })
-                                //                            ]),
-                                td(
-                                    {
-                                        style: {
-                                            border: 'none',
-                                            verticalAlign: 'middle',
-                                            width: '20%',
-                                        },
-                                    },
-                                    [
-                                        input({
-                                            dataElement: 'progress',
-                                            type: 'text',
-                                            readonly: true,
-                                            style: {
-                                                width: '100%',
-                                                padding: '0px',
-                                                textAlign: 'center',
-                                            },
-                                        }),
-                                    ]
-                                ),
+                                }),
                             ]),
-                        ]
-                    ),
-                ]);
+
+                            td(
+                                {
+                                    style: {
+                                        border: 'none',
+                                        verticalAlign: 'middle',
+                                        width: '20%',
+                                    },
+                                },
+                                [
+                                    input({
+                                        dataElement: 'progress',
+                                        type: 'text',
+                                        readonly: true,
+                                        style: {
+                                            width: '100%',
+                                            padding: '0px',
+                                            textAlign: 'center',
+                                        },
+                                    }),
+                                ]
+                            ),
+                        ]),
+                    ]
+                ),
+            ]);
 
             return layout;
-        }
-
-        function makeInputControlx(currentValue, events, bus) {
-            // CONTROL
-
-            return input({
-                id: events.addEvents({
-                    events: [
-                        {
-                            type: 'change',
-                            handler: function (e) {
-                                if (editPauseTimer) {
-                                    window.clearTimeout(editPauseTimer);
-                                    editPauseTimer = null;
-                                }
-                                validate().then((result) => {
-                                    if (result.isValid) {
-                                        bus.emit('changed', {
-                                            newValue: result.value,
-                                        });
-                                    } else if (result.diagnosis === 'required-missing') {
-                                        bus.emit('changed', {
-                                            newValue: result.value,
-                                        });
-                                    }
-                                    setModelValue(result.value);
-                                    bus.emit('validation', {
-                                        errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis,
-                                    });
-                                });
-                            },
-                        },
-                    ],
-                }),
-                class: 'form-control',
-                dataElement: 'input',
-                value: currentValue,
-            });
         }
 
         function render() {
@@ -437,10 +343,6 @@ define([
             }).then(() => {
                 return autoValidate();
             });
-        }
-
-        function updateInputControl() {
-            ui.getElement('input').value = model.value;
         }
 
         function layout(events) {
@@ -476,13 +378,12 @@ define([
                 autoValidate();
                 syncModelToControl();
 
-                channel.on('reset-to-defaults', (message) => {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
                 channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
-                // channel.emit('sync');
             });
         }
 
@@ -495,19 +396,9 @@ define([
             });
         }
 
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            },
-        });
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

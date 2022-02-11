@@ -65,11 +65,15 @@ define([
         beforeEach(() => {
             testBus = Runtime.make().bus();
             Jupyter.notebook = makeMockNotebook();
+            Jupyter.narrative = {
+                saveNarrative: () => {},
+            };
         });
 
         afterEach(() => {
             TestUtil.clearRuntime();
             Jupyter.notebook = null;
+            Jupyter.narrative = null;
             testBus = null;
         });
 
@@ -117,9 +121,7 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ["12345","abcde","who cares?"]',
-                // DATAUP-575: temporary disabling of cell_list
-                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ]);
         });
 
@@ -130,9 +132,7 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = []',
-                // DATAUP-575: temporary disabling of cell_list
-                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ]);
         });
 
@@ -463,10 +463,10 @@ define([
 
         it('Should respond to new_job by saving the Narrative', () => {
             const comm = new JobCommChannel();
-            spyOn(Jupyter.notebook, 'save_checkpoint');
+            spyOn(Jupyter.narrative, 'saveNarrative');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(makeCommMsg('new_job', {}));
-                expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+                expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
             });
         });
 

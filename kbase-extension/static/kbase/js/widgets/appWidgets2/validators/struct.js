@@ -1,4 +1,4 @@
-define(['bluebird', './resolver'], (Promise, resolver) => {
+define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants) => {
     'use strict';
 
     function applyConstraints(value, constraints) {
@@ -6,21 +6,21 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
             if (constraints.required) {
                 return {
                     isValid: false,
-                    diagnosis: 'required-missing',
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                     messageId: 'required-missing',
                     errorMessage: 'value is required',
                 };
             } else {
                 return {
                     isValid: true,
-                    diagnosis: 'optional-empty',
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                     messageId: 'optional-empty',
                 };
             }
         }
         return {
-            isValid: 'true',
-            diagnosis: 'valid',
+            isValid: true,
+            diagnosis: Constants.DIAGNOSIS.VALID,
         };
     }
 
@@ -36,7 +36,7 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
             if (value === null) {
                 if (spec.data.constraints.required) {
                     validationResult.isValid = false;
-                    validationResult.diagnosis = 'required-missing';
+                    validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     validationResult.messageId = 'required-missing';
                 }
                 return validationResult;
@@ -69,18 +69,18 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
                         const result = subValidationResults[subParamIds[i]];
                         if (!result.isValid) {
                             validationResult.isValid = false;
-                            if (result.diagnosis === 'required-missing') {
-                                validationResult.diagnosis = 'required-missing';
+                            if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
+                                validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                                 validationResult.messageId = 'required-missing';
                             } else {
-                                validationResult.diagnosis = 'invalid';
+                                validationResult.diagnosis = Constants.DIAGNOSIS.INVALID;
                                 validationResult.messageId = 'subfield-invalid';
                                 validationResult.message = 'A sub-field is invalid';
                             }
                             resolved = true;
                             break;
                         } else {
-                            if (result.diagosis !== 'optional-empty') {
+                            if (result.diagosis !== Constants.DIAGNOSIS.OPTIONAL_EMPTY) {
                                 subFieldsEmpty = false;
                             }
                         }
@@ -94,13 +94,13 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
 
                         if (!resolved && subFieldsEmpty) {
                             validationResult.isValid = false;
-                            validationResult.diagnosis = 'required-missing';
+                            validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                             validationResult.messageId = 'required-missing';
                         }
                     } else {
                         if (!resolved && subFieldsEmpty) {
                             validationResult.isValid = false;
-                            validationResult.diagnosis = 'optional-empty';
+                            validationResult.diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                             validationResult.messageId = 'optional-empty';
                         }
                     }
@@ -115,7 +115,7 @@ define(['bluebird', './resolver'], (Promise, resolver) => {
     }
 
     return {
-        applyConstraints: applyConstraints,
-        validate: validate,
+        applyConstraints,
+        validate,
     };
 });

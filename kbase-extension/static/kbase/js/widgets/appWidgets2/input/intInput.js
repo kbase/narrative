@@ -7,9 +7,10 @@ define([
     'common/runtime',
     '../inputUtils',
     '../validators/int',
+    '../validators/constants',
 
     'bootstrap',
-], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) => {
+], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -117,7 +118,7 @@ define([
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
@@ -140,7 +141,7 @@ define([
                         .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
                                 errorMessage: err.message,
                             });
                         });

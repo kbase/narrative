@@ -1,7 +1,8 @@
-define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
+define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace', './constants'], (
     Promise,
     serviceUtils,
-    Workspace
+    Workspace,
+    Constants
 ) => {
     'use strict';
 
@@ -30,33 +31,33 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
         let messageId,
             shortMessage,
             errorMessage,
-            diagnosis = 'valid';
+            diagnosis = Constants.DIAGNOSIS.VALID;
 
         return Promise.try(() => {
             if (!value) {
                 if (constraints.required) {
                     messageId = 'required-missing';
-                    diagnosis = 'required-missing';
+                    diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
-                    diagnosis = 'optional-empty';
+                    diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (/\s/.test(value)) {
                 messageId = 'obj-name-no-spaces';
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'an object name may not contain a space';
             } else if (/^[+-]*\d+$/.test(value)) {
                 messageId = 'obj-name-not-integer';
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'an object name may not be in the form of an integer';
             } else if (!/^[A-Za-z0-9|._-]+$/.test(value)) {
                 messageId = 'obj-name-invalid-characters';
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage =
                     'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
             } else if (value.length > 255) {
                 messageId = 'obj-name-too-long';
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'an object name may not exceed 255 characters in length';
             } else if (constraints.shouldNotExist || options.shouldNotExist) {
                 return getObjectInfo(
@@ -77,11 +78,11 @@ define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], (
                             messageId = 'obj-overwrite-diff-type';
                             errorMessage =
                                 'an object already exists with this name and is not of the same type';
-                            diagnosis = 'invalid';
+                            diagnosis = Constants.DIAGNOSIS.INVALID;
                         } else {
                             messageId = 'obj-overwrite-warning';
                             shortMessage = 'an object already exists with this name';
-                            diagnosis = 'suspect';
+                            diagnosis = Constants.DIAGNOSIS.SUSPECT;
                         }
                     }
                 });

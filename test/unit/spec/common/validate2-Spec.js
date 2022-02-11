@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'common/validation',
+    'widgets/appWidgets2/validation',
     'widgets/appWidgets2/validators/int',
     'widgets/appWidgets2/validators/resolver',
     'widgets/appWidgets2/validators/constants',

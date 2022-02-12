@@ -477,10 +477,10 @@ define([
              */
             it(`Should respond to ${jcm.MESSAGE_TYPE.NEW} by saving the Narrative`, () => {
                 const comm = new JobCommChannel();
-                spyOn(Jupyter.notebook, 'save_checkpoint');
+                spyOn(Jupyter.narrative, 'saveNarrative');
                 return comm.initCommChannel().then(() => {
                     comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.NEW, {}));
-                    expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+                    expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
                 });
             });
 

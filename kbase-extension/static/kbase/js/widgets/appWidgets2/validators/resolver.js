@@ -10,7 +10,7 @@ define(['require', 'bluebird'], (require, Promise) => {
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
         subdata: 'subdata',
-        customSubdata: 'customSubdata',
+        customSubdata: 'subdata',
         custom: 'custom',
         dynamicDropdown: 'dynamicDropdown',
     };

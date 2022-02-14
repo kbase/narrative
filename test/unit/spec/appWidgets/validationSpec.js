@@ -236,7 +236,13 @@ define([
         it('validateTextString - Validate a regexp with matching string', () => {
             const value = 'foobar';
             const options = {
-                regexp: /^foo/,
+                regexp: [
+                    {
+                        regex: '^foo',
+                        error_text: 'error',
+                        match: 1,
+                    },
+                ],
             };
             const result = Validation.validateTextString(value, options);
             expect(result).toEqual({
@@ -250,16 +256,19 @@ define([
         it('validateTextString - Validate a regexp with non-matching string', () => {
             const value = 'barfoo';
             const options = {
-                regexp: /^\d+$/,
+                regexp: [
+                    {
+                        regex: '^\\d+$',
+                        match: 1,
+                    },
+                ],
             };
             expect(Validation.validateTextString(value, options)).toEqual({
                 isValid: false,
                 diagnosis: Constants.DIAGNOSIS.INVALID,
                 value: value,
                 parsedValue: value,
-                errorMessage:
-                    'The text value did not match the regular expression constraint ' +
-                    options.regexp,
+                errorMessage: `Failed regular expression /${options.regexp[0].regex}/`,
             });
         });
 

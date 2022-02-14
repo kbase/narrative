@@ -420,13 +420,12 @@ define([
          *      gets validated as a workspace object name (meaning that string lengths and regexp
          *      are ignored)
          */
-        function validateText(value, constraints) {
+        function validateText(value, constraints, options = {}) {
             let parsedValue,
                 errorMessage,
                 diagnosis = Constants.DIAGNOSIS.VALID;
             const minLength = constraints.min_length,
-                maxLength = constraints.max_length,
-                regexp = constraints.regexp ? new RegExp(constraints.regexp) : false;
+                maxLength = constraints.max_length;
 
             if (constraints.type) {
                 switch (constraints.type) {
@@ -445,6 +444,9 @@ define([
             } else if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
+            } else if (options.invalidValues && options.invalidValues.has(value)) {
+                diagnosis = Constants.DIAGNOSIS.INVALID;
+                errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
@@ -453,11 +455,31 @@ define([
                 } else if (parsedValue.length > maxLength) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'the maximum length for this parameter is ' + maxLength;
-                } else if (regexp && !regexp.test(parsedValue)) {
-                    diagnosis = Constants.DIAGNOSIS.INVALID;
-                    errorMessage =
-                        'The text value did not match the regular expression constraint ' +
-                        constraints.regexp;
+                } else if (constraints.regexp) {
+                    const regexps = constraints.regexp.map((item) => {
+                        return {
+                            regexp: new RegExp(item.regex),
+                            message: item.error_text,
+                            invert: item.match ? false : true,
+                        };
+                    });
+                    const regexpErrorMessages = [];
+                    regexps.forEach((item) => {
+                        let matches = item.regexp.test(parsedValue);
+                        if (item.invert) {
+                            matches = !matches;
+                        }
+                        if (!matches) {
+                            regexpErrorMessages.push(
+                                item.message ||
+                                    `Failed regular expression ${item.regexp.toString()}`
+                            );
+                        }
+                    });
+                    if (regexpErrorMessages.length) {
+                        diagnosis = Constants.DIAGNOSIS.INVALID;
+                        errorMessage = regexpErrorMessages.join('; ');
+                    }
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
                 }

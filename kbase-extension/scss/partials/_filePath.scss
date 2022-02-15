@@ -5,6 +5,8 @@
     list-style-position: outside;
     list-style-type: none;
     padding: 0;
+    max-height: 60rem;
+    overflow-y: auto;
   }
 
   // .kb-file-path__list_item

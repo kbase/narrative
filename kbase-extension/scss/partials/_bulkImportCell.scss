@@ -147,7 +147,14 @@ $panel-separator-color: use_color('mid-blue');
   }
 }
 
-.kb-result-tab,
+.kb-result-tab {
+  &__container {
+    @include default-container-padding;
+    overflow-y: auto;
+    max-height: 70rem;
+  }
+}
+
 .kb-job-status-tab {
   &__container {
     @include default-container-padding;

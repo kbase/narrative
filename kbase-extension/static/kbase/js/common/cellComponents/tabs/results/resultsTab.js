@@ -118,7 +118,11 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             const createdObjects = {};
             let objectKeys = [];
             return workspaceClient
-                .get_objects2({ objects: reportLookupParam, ignoreErrors: 1 })
+                .get_objects2({
+                    objects: reportLookupParam,
+                    ignoreErrors: 1,
+                    skip_external_system_updates: 1,
+                })
                 .then((reportData) => {
                     reportData.data.forEach((report, idx) => {
                         if (report !== null && 'objects_created' in report.data) {

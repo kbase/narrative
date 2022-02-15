@@ -5,10 +5,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
-- DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
-
-### Version 5.0.2
 - SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
+- DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
+- DATAUP-715 - Adds scrollbars to the configure and results tab of the bulk import cell.
 
 ### Version 5.0.1
 - SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.

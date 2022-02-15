@@ -91,7 +91,6 @@ define([
     'common/semaphore',
     'common/spec',
     'common/ui',
-    'common/validation',
     'util/util',
     'util/icon',
 ], () => {

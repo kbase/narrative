@@ -9,6 +9,18 @@ define([
     'use strict';
 
     function Validators() {
+        /**
+         * This validates a single value against a set of acceptable values. For example, if
+         * value = 'a', and and options.values = ['a', 'b', 'c'], this will return
+         * {isValid: true}, since all the elements of value are present in options.values.
+         *
+         * This doesn't do any parsing, but will set an errorMessage in the return if a required
+         * value is undefined.
+         * @param {Array} value - the value to validate
+         * @param {Object} options
+         *  - required = boolean (default false)
+         *  - values = Array, the set of acceptable values
+         */
         function validateSet(value, options) {
             let errorMessage, diagnosis;
             // values are raw, no parsing.
@@ -43,12 +55,66 @@ define([
             };
         }
 
+        /**
+         * Validates whether the value is a valid object data palette reference path,
+         * consisting of only numerical values in the reference (e.g.: 1/2/3;4/5/6;7/8/9)
+         * Note that this doesn't check to see if the path is real, just if it's syntactically
+         * valid.
+         * @param {string} value
+         * @param {Object} options
+         * - required - boolean
+         * @returns {Object}
+         */
+        function validateWorkspaceDataPaletteRef(value, options) {
+            let parsedValue, errorMessage, diagnosis;
+
+            if (typeof value !== 'string') {
+                diagnosis = Constants.DIAGNOSIS.INVALID;
+                errorMessage = 'value must be a string in data reference format';
+            } else {
+                parsedValue = value.trim();
+                if (parsedValue.length === 0) {
+                    parsedValue = null;
+                }
+
+                if (!parsedValue) {
+                    if (options.required) {
+                        diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
+                    }
+                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*$/.test(value)) {
+                    diagnosis = Constants.DIAGNOSIS.INVALID;
+                    errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
+                } else {
+                    diagnosis = Constants.DIAGNOSIS.VALID;
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue,
+            };
+        }
+
+        /**
+         * Validates whether the given string is a workspace object reference. In this case,
+         * specifically, an UPA. That means it must have the format ##/##/## to be valid.
+         *
+         * It can also be valid if options.required == true and value is not present.
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         */
         function validateWorkspaceObjectRef(value, options) {
             let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
-                errorMessage = 'value must be a string in workspace object name format';
+                errorMessage = 'value must be a string in workspace object reference format';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length === 0) {
@@ -61,9 +127,9 @@ define([
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
-                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
+                } else if (!/^\d+\/\d+\/\d+$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                    errorMessage = 'Invalid object reference format (#/#/#)';
+                    errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
                 }
@@ -90,10 +156,23 @@ define([
                 .then((data) => {
                     if (data[0]) {
                         return serviceUtils.objectInfoToObject(data[0]);
+                    } else {
+                        return null;
                     }
                 });
         }
 
+        /**
+         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
+         * object.
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         * - shouldNotExist - boolean
+         * - workspaceId - int
+         * - workspaceServiceUrl - string(url),
+         * - types - Array
+         */
         function validateWorkspaceObjectName(value, options) {
             let parsedValue,
                 messageId,
@@ -102,107 +181,38 @@ define([
                 diagnosis = Constants.DIAGNOSIS.VALID;
 
             return Promise.try(() => {
-                if (typeof value !== 'string') {
-                    diagnosis = Constants.DIAGNOSIS.INVALID;
-                    errorMessage = 'value must be a string in workspace object name format';
-                } else {
-                    parsedValue = value.trim();
-                    if (parsedValue.length === 0) {
-                        parsedValue = null;
-                    }
-
-                    if (!parsedValue) {
-                        if (options.required) {
-                            messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                            diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                            errorMessage = 'value is required';
-                        } else {
-                            diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
-                            parsedValue = null;
-                        }
-                    } else if (/\s/.test(parsedValue)) {
-                        messageId = 'obj-name-no-spaces';
-                        diagnosis = Constants.DIAGNOSIS.INVALID;
-                        errorMessage = 'an object name may not contain a space';
-                    } else if (/^[+-]*\d+$/.test(parsedValue)) {
-                        messageId = 'obj-name-not-integer';
-                        diagnosis = Constants.DIAGNOSIS.INVALID;
-                        errorMessage = 'an object name may not be in the form of an integer';
-                    } else if (!/^[A-Za-z0-9|._-]+$/.test(parsedValue)) {
-                        messageId = 'obj-name-invalid-characters';
-                        diagnosis = Constants.DIAGNOSIS.INVALID;
-                        errorMessage =
-                            'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
-                    } else if (parsedValue.length > 255) {
-                        messageId = 'obj-name-too-long';
-                        diagnosis = Constants.DIAGNOSIS.INVALID;
-                        errorMessage = 'an object name may not exceed 255 characters in length';
-                    } else if (options.shouldNotExist) {
-                        return getObjectInfo(
-                            options.workspaceId,
-                            parsedValue,
-                            options.authToken,
-                            options.workspaceServiceUrl
-                        ).then((objectInfo) => {
-                            if (objectInfo) {
-                                const type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                    matchingType = options.types.some((typeId) => {
-                                        if (typeId === type) {
-                                            return true;
-                                        }
-                                        return false;
-                                    });
-                                if (!matchingType) {
-                                    messageId = 'obj-overwrite-diff-type';
-                                    errorMessage =
-                                        'an object already exists with this name and is not of the same type';
-                                    diagnosis = Constants.DIAGNOSIS.INVALID;
-                                } else {
-                                    messageId = 'obj-overwrite-warning';
-                                    shortMessage = 'an object already exists with this name';
-                                    diagnosis = Constants.DIAGNOSIS.SUSPECT;
-                                }
-                            }
-                        });
-                    }
+                ({ errorMessage, shortMessage, messageId, diagnosis, parsedValue } =
+                    validateWorkspaceObjectNameString(value, options));
+                if (errorMessage) {
+                    return;
                 }
-            }).then(() => {
-                return {
-                    isValid: errorMessage ? false : true,
-                    messageId,
-                    errorMessage,
-                    shortMessage,
-                    diagnosis,
-                    value,
-                    parsedValue,
-                };
-            });
-        }
-
-        function validateWorkspaceObjectRefSet(value, options) {
-            // TODO: validate each item.
-            let parsedValue,
-                messageId,
-                shortMessage,
-                errorMessage,
-                diagnosis = Constants.DIAGNOSIS.VALID;
-            return Promise.try(() => {
-                if (!(value instanceof Array)) {
-                    diagnosis = Constants.DIAGNOSIS.INVALID;
-                    errorMessage = 'value must be an array';
-                } else {
-                    parsedValue = value;
-                    if (parsedValue.length === 0) {
-                        if (options.required) {
-                            messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                            diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                            errorMessage = 'value is required';
-                        } else {
-                            diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
+                if (options.shouldNotExist) {
+                    return getObjectInfo(
+                        options.workspaceId,
+                        parsedValue,
+                        options.authToken,
+                        options.workspaceServiceUrl
+                    ).then((objectInfo) => {
+                        if (objectInfo) {
+                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                matchingType = options.types.some((typeId) => {
+                                    if (typeId === type) {
+                                        return true;
+                                    }
+                                    return false;
+                                });
+                            if (!matchingType) {
+                                messageId = 'obj-overwrite-diff-type';
+                                errorMessage =
+                                    'an object already exists with this name and is not of the same type';
+                                diagnosis = Constants.DIAGNOSIS.INVALID;
+                            } else {
+                                messageId = 'obj-overwrite-warning';
+                                shortMessage = 'an object already exists with this name';
+                                diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                            }
                         }
-                    } else {
-                        // TODO: validate each object name and report errors...
-                    }
+                    });
                 }
             }).then(() => {
                 return {
@@ -391,6 +401,25 @@ define([
             };
         }
 
+        /**
+         * Validates a text string against a set of optional constraints. Will fail if:
+         * - required and missing,
+         * - has a min_length, and is shorter
+         * - has a max_length, and is longer
+         * - has a regexp and doesn't match it
+         * - is a type option of "WorkspaceObjectName", and isn't a valid workspace object name
+         * (ignoring all other constraints)
+         *
+         * @param {string} value
+         * @param {object} options
+         * - required - boolean
+         * - min_length - int
+         * - max_length - int
+         * - regexp - regex (bare string of form /regex/)
+         * - type - string, only available now is "WorkspaceObjectName" - if that's present, this
+         *      gets validated as a workspace object name (meaning that string lengths and regexp
+         *      are ignored)
+         */
         function validateText(value, constraints) {
             let parsedValue,
                 errorMessage,
@@ -407,7 +436,6 @@ define([
             }
 
             if (StringUtil.isEmptyString(value)) {
-                parsedValue = '';
                 if (constraints.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
@@ -418,8 +446,7 @@ define([
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
-                // parsedValue = value.trim();
-                parsedValue = value;
+                parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'the minimum length for this parameter is ' + minLength;
@@ -445,6 +472,12 @@ define([
             };
         }
 
+        /**
+         * Validates that all values in the given "set" (an Array) are present in options.values.
+         * If any are missing, this will not validate.
+         * @param {Array} value
+         * @param {*} options
+         */
         function validateTextSet(set, options) {
             let errorMessage, diagnosis, parsedSet;
             // values are raw, no parsing.
@@ -456,6 +489,9 @@ define([
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
+            } else if (!(set instanceof Array)) {
+                diagnosis = Constants.DIAGNOSIS.INVALID;
+                errorMessage = 'value must be an array';
             } else {
                 parsedSet = set.filter((setValue) => {
                     return !StringUtil.isEmptyString(setValue);
@@ -509,11 +545,16 @@ define([
             }
         }
 
-        // As with all validators, the key is that this validates form input,
-        // in its raw form. For booleans is a string taking the form of a boolean
-        // symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
-        // may be represented as a two or three state dropdown or set of radio buttons,
-        // etc.
+        /**
+         * As with all validators, the key is that this validates form input,
+         * in its raw form. For booleans is a string taking the form of a boolean
+         * symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
+         * may be represented as a two or three state dropdown or set of radio buttons,
+         * etc.
+         * @param {string|boolean} value
+         * @param {*} options
+         * - required - boolean
+         */
         function validateBoolean(value, options) {
             let parsedValue,
                 errorMessage,
@@ -558,9 +599,9 @@ define([
         }
 
         return {
+            validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName,
             validateWorkspaceObjectRef,
-            validateWorkspaceObjectRefSet,
             validateInteger,
             validateIntString,
             validateIntegerField: validateIntString,

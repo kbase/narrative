@@ -1,9 +1,9 @@
-define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constants', 'testUtil'], (
-    Promise,
-    Validation,
-    Constants,
-    TestUtil
-) => {
+define([
+    'bluebird',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
+    'testUtil',
+], (Promise, Validation, Constants, TestUtil) => {
     'use strict';
 
     describe('Validator functions', () => {
@@ -178,11 +178,6 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
 
         // STRING
 
-        function wrap(val) {
-            return Promise.try(() => {
-                return val;
-            });
-        }
         it('validateTrue - should be an instant truthy no-op-ish response', () => {
             const value = 'foo';
             expect(Validation.validateTrue(value)).toEqual({
@@ -204,66 +199,44 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
             });
             expect(result.isValid).toEqual(true);
         });
-        it('validateTextString - Validate a simple string, required, empty string', (done) => {
-            wrap(
-                Validation.validateTextString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
+        it('validateTextString - Validate a simple string, required, empty string', () => {
+            const result = Validation.validateTextString('', { required: true });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, required, null', (done) => {
-            wrap(
-                Validation.validateTextString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, required, null', () => {
+            const result = Validation.validateTextString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, min and max length, within range', (done) => {
-            wrap(
-                Validation.validateTextString('hello', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, within range', () => {
+            const result = Validation.validateTextString('hello', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateTextString - Validate a simple string, min and max length, below', (done) => {
-            wrap(
-                Validation.validateTextString('hi', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, below', () => {
+            const result = Validation.validateTextString('hi', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, min and max length, above range', (done) => {
-            wrap(
-                Validation.validateTextString('hello earthling', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, above range', () => {
+            const result = Validation.validateTextString('hello earthling', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
         it('validateTextString - Validate a regexp with matching string', () => {
             const value = 'foobar';
             const options = {
-                regexp_constraint: /^foo/,
+                regexp: /^foo/,
             };
             const result = Validation.validateTextString(value, options);
             expect(result).toEqual({
@@ -277,7 +250,7 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
         it('validateTextString - Validate a regexp with non-matching string', () => {
             const value = 'barfoo';
             const options = {
-                regexp_constraint: /^\d+$/,
+                regexp: /^\d+$/,
             };
             expect(Validation.validateTextString(value, options)).toEqual({
                 isValid: false,
@@ -286,165 +259,109 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
                 parsedValue: value,
                 errorMessage:
                     'The text value did not match the regular expression constraint ' +
-                    options.regexp_constraint,
+                    options.regexp,
             });
         });
 
         // INTEGER
-        it('validateIntString - Validate an integer without constraints', (done) => {
-            wrap(Validation.validateIntString('42', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateIntString - Validate an integer without constraints', () => {
+            const result = Validation.validateIntString('42', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('42', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('42', {
+                required: true,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('', {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('7', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('7', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('3', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('3', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('42', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('42', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, wront type (int)', (done) => {
-            wrap(
-                Validation.validateIntString(42, {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer string, wrong type (int)', () => {
+            const result = Validation.validateIntString(42, {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
 
         // FLOAT
-        it('validateFloatString - Validate a float without constraints', (done) => {
-            wrap(Validation.validateFloatString('42.12', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateFloatString - Validate a float without constraints', () => {
+            const result = Validation.validateFloatString('42.12', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate a bad without constraints', (done) => {
-            wrap(Validation.validateFloatString('x', {})).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
+        it('validateFloatString - Validate a bad without constraints', () => {
+            const result = Validation.validateFloatString('x', {});
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an empty without constraints', (done) => {
-            wrap(Validation.validateFloatString('', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateFloatString - Validate an empty without constraints', () => {
+            const result = Validation.validateFloatString('', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate a float string, required', (done) => {
-            wrap(
-                Validation.validateFloatString('42.12', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateFloatString - Validate a float string, required', () => {
+            const result = Validation.validateFloatString('42.12', {
+                required: true,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate an empty string, required', (done) => {
-            wrap(
-                Validation.validateFloatString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an empty string, required', () => {
+            const result = Validation.validateFloatString('', {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an empty string, required', (done) => {
-            wrap(
-                Validation.validateFloatString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an empty string, required', () => {
+            const result = Validation.validateFloatString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
         // bad types
-        it('validateFloatString - Validate an undefined, required', (done) => {
-            wrap(
-                Validation.validateFloatString(undefined, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an undefined, required', () => {
+            const result = Validation.validateFloatString(undefined, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an array, required', (done) => {
-            wrap(
-                Validation.validateFloatString([], {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an array, required', () => {
+            const result = Validation.validateFloatString([], {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
 
         function runTests(method, tests) {
@@ -665,7 +582,7 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
                         title: 'value over max',
                         value: '123.45',
                         options: {
-                            max_float: 100,
+                            max: 100,
                         },
                         result: {
                             isValid: false,
@@ -679,7 +596,7 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
                         title: 'value under min',
                         value: '5',
                         options: {
-                            min_float: 10,
+                            min: 10,
                         },
                         result: {
                             isValid: false,
@@ -693,8 +610,8 @@ define(['bluebird', 'common/validation', 'widgets/appWidgets2/validators/constan
                         title: 'within range',
                         value: '5.5',
                         options: {
-                            min_float: 0,
-                            max_float: 10,
+                            min: 0,
+                            max: 10,
                         },
                         result: {
                             isValid: true,

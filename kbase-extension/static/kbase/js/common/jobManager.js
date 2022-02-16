@@ -748,60 +748,9 @@ define([
                     validStatuses: Jobs.validStatusesForAction.retry,
                 });
             }
-
-            /**
-             * Cancel a batch job by submitting a cancel request for the batch job container
-             *
-             * This action is triggered by hitting the 'Cancel' button at the top right of the
-             * bulk cell
-             */
-            cancelBatchJob() {
-                const batchId = this.model.getItem('exec.jobState.job_id');
-                if (batchId) {
-                    this.doJobAction('cancel', [batchId]);
-                }
-            }
-
-            /**
-             * Reset the job manager, removing all listeners and stored job data
-             */
-            resetJobs() {
-                const allJobs = this.model.getItem('exec.jobs.byId'),
-                    batchJob = this.model.getItem('exec.jobState');
-                if (!allJobs || !Object.keys(allJobs).length) {
-                    this.model.deleteItem('exec');
-                    this.resetCell();
-                    return;
-                }
-
-                if (batchJob && !allJobs[batchJob.job_id]) {
-                    allJobs[batchJob.job_id] = batchJob;
-                }
-
-                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
-                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
-                });
-
-                // ensure that job updates are turned off and listeners removed
-                Object.keys(allJobs).forEach((jobId) => {
-                    this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
-                });
-
-                this.model.deleteItem('exec');
-                this.resetCell();
-            }
-
-            resetCell() {
-                if (this.cellId) {
-                    this.bus.emit('reset-cell', {
-                        cellId: this.cellId,
-                        ts: Date.now(),
-                    });
-                }
-            }
         };
 
-    const BatchInitMixin = (Base) =>
+    const BatchMixin = (Base) =>
         class extends Base {
             /**
              * set up the job manager to handle a batch job
@@ -892,15 +841,68 @@ define([
             getFsmStateFromJobs() {
                 return Jobs.getFsmStateFromJobs(this.model.getItem('exec.jobs'));
             }
+
+            /**
+             * Cancel a batch job by submitting a cancel request for the batch job container
+             *
+             * This action is triggered by hitting the 'Cancel' button at the top right of the
+             * bulk cell
+             */
+            cancelBatchJob() {
+                const batchId = this.model.getItem('exec.jobState.job_id');
+                if (batchId) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] });
+                    // add the appropriate listener
+                    this.addListener(jcm.MESSAGE_TYPE.STATUS, jcm.CHANNEL.JOB, [batchId]);
+                }
+            }
+
+            /**
+             * Reset the job manager, removing all listeners and stored job data
+             */
+            resetJobs() {
+                const allJobs = this.model.getItem('exec.jobs.byId'),
+                    batchJob = this.model.getItem('exec.jobState');
+                if (!allJobs || !Object.keys(allJobs).length) {
+                    this.model.deleteItem('exec');
+                    this.resetCell();
+                    return;
+                }
+
+                if (batchJob && !allJobs[batchJob.job_id]) {
+                    allJobs[batchJob.job_id] = batchJob;
+                }
+
+                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
+                });
+
+                // ensure that job updates are turned off and listeners removed
+                Object.keys(allJobs).forEach((jobId) => {
+                    this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
+                });
+
+                this.model.deleteItem('exec');
+                this.resetCell();
+            }
+
+            resetCell() {
+                if (this.cellId) {
+                    this.bus.emit('reset-cell', {
+                        cellId: this.cellId,
+                        ts: Date.now(),
+                    });
+                }
+            }
         };
 
-    class JobManager extends BatchInitMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
+    class JobManager extends BatchMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
 
     return {
         JobManagerCore,
         DefaultHandlerMixin,
         JobActionsMixin,
-        BatchInitMixin,
+        BatchMixin,
         JobManager,
     };
 });

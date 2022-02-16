@@ -2020,7 +2020,7 @@ define(
                         if (jobState && !Jobs.isValidJobStateObject(jobState)) {
                             startListeningForJobMessages(jobState.job_id);
                             requestJobStatus(jobState.job_id);
-                        } else if (model.getItem('exec.launchState.job_id')) {
+                        } else if (!jobState && model.getItem('exec.launchState.job_id')) {
                             startListeningForJobMessages(jobState.job_id);
                         } else {
                             renderUI();

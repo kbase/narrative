@@ -369,7 +369,6 @@ define([], () => {
                 },
             },
             next: [
-                STATE.EDITING_COMPLETE,
                 STATE.PROCESSING_LAUNCHED,
                 STATE.PROCESSING_QUEUED,
                 STATE.PROCESSING_RUNNING,
@@ -378,6 +377,7 @@ define([], () => {
                 STATE.TERMINATED,
                 STATE.LAUNCH_ERROR,
                 STATE.RUNTIME_ERROR,
+                STATE.EDITING_COMPLETE,
                 STATE.INTERNAL_ERROR,
             ],
         },
@@ -637,7 +637,7 @@ define([], () => {
                     ],
                 },
             },
-            next: [STATE.TERMINATED, STATE.EDITING_COMPLETE],
+            next: [STATE.TERMINATED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // completed
         {
@@ -693,7 +693,7 @@ define([], () => {
                     ],
                 },
             },
-            next: [STATE.COMPLETED, STATE.EDITING_INCOMPLETE, STATE.INTERNAL_ERROR],
+            next: [STATE.COMPLETED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // launch error
         {
@@ -749,13 +749,7 @@ define([], () => {
                     name: 'resetApp',
                 },
             },
-            next: [
-                STATE.INTERNAL_ERROR,
-                // We will let a user attempt to reset the app.
-                STATE.NEW,
-                STATE.EDITING_INCOMPLETE,
-                STATE.EDITING_COMPLETE,
-            ],
+            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE, STATE.EDITING_COMPLETE],
         },
     ];
 

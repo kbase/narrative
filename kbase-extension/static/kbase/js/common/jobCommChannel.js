@@ -46,6 +46,11 @@ define([
     const COMM_NAME = 'KBaseJobs',
         { CHANNEL, PARAM, REQUESTS, RESPONSES } = jcm;
 
+    const debugFn = (...args) => {
+        // eslint-disable-next-line no-console
+        console.log(...args);
+    };
+
     class JobCommChannel {
         /**
          * Grabs the runtime, inits the set of job states, and registers callbacks against the
@@ -56,10 +61,7 @@ define([
             this.handleBusMessages();
             this.devMode = config.devMode || devMode.mode;
             this.debug = this.devMode
-                ? (...args) => {
-                      // eslint-disable-next-line no-console
-                      console.log(...args);
-                  }
+                ? debugFn
                 : () => {
                       /* no op */
                   };
@@ -253,7 +255,6 @@ define([
             msgData = validated.valid;
 
             const batchJobs = {};
-            this.debug(`received ${msgType} from backend`);
             switch (msgType) {
                 case RESPONSES.NEW:
                     Jupyter.narrative.saveNarrative();

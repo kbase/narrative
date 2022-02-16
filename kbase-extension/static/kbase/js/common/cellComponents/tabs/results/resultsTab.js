@@ -98,7 +98,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             const reportLookupParam = reports.map((ref) => {
                 return {
                     ref: ref,
-                    included: ['objects_created'],
+                    // included: ['objects_created'],
                 };
             });
             /* when we do the lookup, data will get returned as:

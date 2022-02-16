@@ -1,8 +1,8 @@
-define(['require', 'bluebird'], (require, Promise) => {
+define(['bluebird', '../validation'], (Promise, Validator) => {
     'use strict';
 
     const typeToValidatorModule = {
-        string: 'text',
+        string: Validator.validateText,
         int: 'int',
         float: 'float',
         sequence: 'sequence',
@@ -20,12 +20,21 @@ define(['require', 'bluebird'], (require, Promise) => {
             const fieldType = fieldSpec.data.type;
             if (!(fieldType in typeToValidatorModule)) {
                 reject(new Error(`No validator for type: ${fieldType}`));
+            } else if (typeof typeToValidatorModule[fieldType] === 'function') {
+                resolve(
+                    typeToValidatorModule[fieldType](
+                        fieldValue,
+                        fieldSpec.data.constraints || {},
+                        options || {}
+                    )
+                );
+            } else {
+                require(['./' + typeToValidatorModule[fieldType]], (validator) => {
+                    resolve(validator.validate(fieldValue, fieldSpec, options));
+                }, (err) => {
+                    reject(err);
+                });
             }
-            require(['./' + typeToValidatorModule[fieldType]], (validator) => {
-                resolve(validator.validate(fieldValue, fieldSpec, options));
-            }, (err) => {
-                reject(err);
-            });
         });
     }
 

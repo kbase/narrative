@@ -10,14 +10,8 @@ define([
     const validOutgoingMessageTypes = Object.values(jcm.RESPONSES);
 
     const jobCommand = {
-        cancel: {
-            command: jcm.MESSAGE_TYPE.CANCEL,
-            listener: jcm.MESSAGE_TYPE.STATUS,
-        },
-        retry: {
-            command: jcm.MESSAGE_TYPE.RETRY,
-            listener: jcm.MESSAGE_TYPE.RETRY,
-        },
+        cancel: jcm.MESSAGE_TYPE.CANCEL,
+        retry: jcm.MESSAGE_TYPE.RETRY,
     };
 
     class JobManagerCore {
@@ -631,9 +625,7 @@ define([
              * @param {array} jobIdList
              */
             doJobAction(action, jobIdList) {
-                this.bus.emit(jobCommand[action].command, { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
-                // add the appropriate listener
-                this.addListener(jobCommand[action].listener, jcm.CHANNEL.JOB, jobIdList);
+                this.bus.emit(jobCommand[action], { [jcm.PARAM.JOB_ID_LIST]: jobIdList });
             }
 
             /**
@@ -770,16 +762,15 @@ define([
                 ) {
                     throw new Error('Batch job must have a batch ID and at least one child job ID');
                 }
-                const allJobIds = [batch_id].concat(child_job_ids),
-                    // create the child jobs
-                    allJobs = child_job_ids.map((job_id) => {
-                        return {
-                            job_id,
-                            batch_id,
-                            status: 'created',
-                            created: 0,
-                        };
-                    });
+                // create the child jobs
+                const allJobs = child_job_ids.map((job_id) => {
+                    return {
+                        job_id,
+                        batch_id,
+                        status: 'created',
+                        created: 0,
+                    };
+                });
 
                 // add the parent job
                 allJobs.push({
@@ -792,22 +783,18 @@ define([
                 });
 
                 Jobs.populateModelFromJobArray(this.model, Object.values(allJobs));
-
-                this._initJobs({ allJobIds, batchId: batch_id });
-
-                // request job info
-                this.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, allJobIds);
-                this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batch_id });
+                this._initJobs({ batchId: batch_id });
             }
 
             _initJobs(args) {
-                const { allJobIds, batchId } = args;
-
-                ['STATUS', 'ERROR'].forEach((msgType) => {
-                    this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, allJobIds);
+                const { batchId } = args;
+                ['ERROR', 'INFO', 'LOGS', 'RETRY', 'STATUS'].forEach((msgType) => {
+                    this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.BATCH, batchId);
                 });
+
                 // request job updates
                 this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId });
+                this.requestBatchInfo();
             }
 
             restoreFromSaved() {
@@ -817,18 +804,8 @@ define([
                     return;
                 }
 
-                // make sure that all the child jobs of batchJob are in allJobs
-                if (batchJob.child_jobs && batchJob.child_jobs.length) {
-                    batchJob.child_jobs.forEach((job_id) => {
-                        if (!allJobs[job_id]) {
-                            allJobs[job_id] = { job_id };
-                        }
-                    });
-                }
-
                 this._initJobs({
                     batchId: batchJob.job_id,
-                    allJobIds: Object.keys(allJobs),
                 });
 
                 return this.getFsmStateFromJobs();
@@ -921,8 +898,6 @@ define([
                 const batchId = this.model.getItem('exec.jobState.job_id');
                 if (batchId) {
                     this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] });
-                    // add the appropriate listener
-                    this.addListener(jcm.MESSAGE_TYPE.STATUS, jcm.CHANNEL.JOB, [batchId]);
                 }
             }
 
@@ -930,32 +905,13 @@ define([
              * Reset the job manager, removing all listeners and stored job data
              */
             resetJobs() {
-                const allJobs = this.model.getItem('exec.jobs.byId'),
-                    batchJob = this.model.getItem('exec.jobState');
-                if (!allJobs || !Object.keys(allJobs).length) {
-                    this.model.deleteItem('exec');
-                    this.resetCell();
-                    return;
-                }
-
-                if (batchJob && !allJobs[batchJob.job_id]) {
-                    allJobs[batchJob.job_id] = batchJob;
-                }
-
+                const batchId = this.model.getItem('exec.jobState.job_id');
                 this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
-                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
+                    [jcm.PARAM.BATCH_ID]: batchId,
                 });
-
-                // ensure that job updates are turned off and listeners removed
-                Object.keys(allJobs).forEach((jobId) => {
-                    this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
-                });
-
+                this.removeAllListeners();
                 this.model.deleteItem('exec');
-                this.resetCell();
-            }
-
-            resetCell() {
+                // emit the reset-cell call
                 if (this.cellId) {
                     this.bus.emit('reset-cell', {
                         cellId: this.cellId,

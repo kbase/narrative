@@ -680,8 +680,10 @@ define([
         });
 
         it('current jobs, no retries', () => {
-            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobs);
-            expect(jobsByOriginalId).toEqual(JobsData.jobsById);
+            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobsWithBatchParent);
+            const expectedJobsById = TestUtil.JSONcopy(JobsData.jobsById);
+            delete expectedJobsById[JobsData.batchParentJob.job_id];
+            expect(jobsByOriginalId).toEqual(expectedJobsById);
         });
 
         it('can retrieve current jobs, with retries', () => {

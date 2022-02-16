@@ -563,7 +563,7 @@ define([
         return acc;
     }, {});
 
-    const jobsById = allJobs.reduce((acc, curr) => {
+    const jobsById = allJobsWithBatchParent.reduce((acc, curr) => {
         acc[curr.job_id] = curr;
         return acc;
     }, {});

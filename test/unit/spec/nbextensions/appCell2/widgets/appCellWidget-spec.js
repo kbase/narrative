@@ -545,69 +545,71 @@ define([
                 // ensure that the app cell goes from { mode: 'processing', stage: 'launched', }
                 // to the appropriate state on receiving a job status message
                 Object.keys(JobsData.jobsById).forEach((jobId) => {
-                    it(`processes a ${jobId} update`, async function () {
-                        const jobState = JobsData.jobsById[jobId];
-                        const currentState = fsmState.PROCESSING_LAUNCHED;
-                        cellStartUp(this);
-                        // start up cell as if it just received the job launched message
-                        this.cell.metadata.kbase.appCell.fsm = { currentState };
-                        this.cell.metadata.kbase.appCell.exec = {
-                            jobState: { job_id: jobId },
-                            launchState: { event: 'launched_job', job_id: jobId },
-                        };
+                    if (!JobsData.jobsById[jobId].batch_job) {
+                        it(`processes a ${jobId} update`, async function () {
+                            const jobState = JobsData.jobsById[jobId];
+                            const currentState = fsmState.PROCESSING_LAUNCHED;
+                            cellStartUp(this);
+                            // start up cell as if it just received the job launched message
+                            this.cell.metadata.kbase.appCell.fsm = { currentState };
+                            this.cell.metadata.kbase.appCell.exec = {
+                                jobState: { job_id: jobId },
+                                launchState: { event: 'launched_job', job_id: jobId },
+                            };
 
-                        spyOn(this.bus, 'emit').and.callFake((...args) => {
-                            const [msgType] = args;
-                            if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
-                                // send a status update
-                                TestUtil.send_STATUS({
-                                    bus: this.bus,
-                                    jobId,
-                                    jobState,
-                                });
-                            }
-                        });
+                            spyOn(this.bus, 'emit').and.callFake((...args) => {
+                                const [msgType] = args;
+                                if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
+                                    // send a status update
+                                    TestUtil.send_STATUS({
+                                        bus: this.bus,
+                                        jobId,
+                                        jobState,
+                                    });
+                                }
+                            });
 
-                        await this.appCellWidgetInstance.init();
-                        await this.appCellWidgetInstance.attach(this.kbaseNode);
-                        await this.appCellWidgetInstance.start();
-                        await this.appCellWidgetInstance.run();
+                            await this.appCellWidgetInstance.init();
+                            await this.appCellWidgetInstance.attach(this.kbaseNode);
+                            await this.appCellWidgetInstance.start();
+                            await this.appCellWidgetInstance.run();
 
-                        // ensure that the app cell is in the correct state
-                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
-                            currentState
-                        );
-                        // send a job status update; this will trigger an FSM mode change,
-                        // which will enable the jobStatus tab
-                        await TestUtil.waitForElementChange(
-                            this.kbaseNode.querySelector('[data-button="jobStatus"]')
-                        );
+                            // ensure that the app cell is in the correct state
+                            expect(
+                                this.appCellWidgetInstance.__fsm().getCurrentState().state
+                            ).toEqual(currentState);
+                            // send a job status update; this will trigger an FSM mode change,
+                            // which will enable the jobStatus tab
+                            await TestUtil.waitForElementChange(
+                                this.kbaseNode.querySelector('[data-button="jobStatus"]')
+                            );
 
-                        // after processing
-                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
-                            jobState.meta.appCellFsm
-                        );
-                        expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
-                            jobState
-                        );
+                            // after processing
+                            expect(
+                                this.appCellWidgetInstance.__fsm().getCurrentState().state
+                            ).toEqual(jobState.meta.appCellFsm);
+                            expect(
+                                this.appCellWidgetInstance.model.getItem('exec.jobState')
+                            ).toEqual(jobState);
 
-                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
-                            return call[0] !== 'clock-tick';
-                        });
-                        // the cell will emit at least one request for status updates when
-                        // the cell starts up
-                        expect(busEmissions).toContain([
-                            jcm.MESSAGE_TYPE.START_UPDATE,
-                            { [jcm.PARAM.JOB_ID]: jobId },
-                        ]);
-                        // if the job state is terminal, expect there to be a request to stop updates
-                        if (Jobs.isTerminalStatus(jobState.status)) {
+                            const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
+                                return call[0] !== 'clock-tick';
+                            });
+                            // the cell will emit at least one request for status updates when
+                            // the cell starts up
                             expect(busEmissions).toContain([
-                                jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                jcm.MESSAGE_TYPE.START_UPDATE,
                                 { [jcm.PARAM.JOB_ID]: jobId },
                             ]);
-                        }
-                    });
+                            // if the job state is terminal, expect there to be a request to stop updates
+                            if (Jobs.isTerminalStatus(jobState.status)) {
+                                expect(busEmissions).toContain([
+                                    jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                    { [jcm.PARAM.JOB_ID]: jobId },
+                                ]);
+                            }
+                        });
+                    }
                 });
             });
         });

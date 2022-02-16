@@ -584,7 +584,8 @@ define([
                 // this table already has the info populated, so the job info
                 // listener is not required
                 jobIdList.forEach((jobId) => {
-                    expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                    const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: jobId });
+                    expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
                         jasmine.arrayWithExactContents([
                             jcm.MESSAGE_TYPE.STATUS,
                             jcm.MESSAGE_TYPE.ERROR,
@@ -624,8 +625,9 @@ define([
                 ]);
                 // job info listeners only required for some jobs
                 jobIdList.forEach((jobId) => {
+                    const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: jobId });
                     if (missingJobIds.includes(jobId)) {
-                        expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                        expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
                             jasmine.arrayWithExactContents([
                                 jcm.MESSAGE_TYPE.STATUS,
                                 jcm.MESSAGE_TYPE.ERROR,
@@ -633,7 +635,7 @@ define([
                             ])
                         );
                     } else {
-                        expect(Object.keys(this.jobManager.listeners[jobId])).toEqual(
+                        expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
                             jasmine.arrayWithExactContents([
                                 jcm.MESSAGE_TYPE.STATUS,
                                 jcm.MESSAGE_TYPE.ERROR,
@@ -1020,20 +1022,26 @@ define([
                             // we expect the job-status listener to be removed
                             if (this.input.status === 'does_not_exist') {
                                 expect(Object.keys(this.jobManager.listeners)).toEqual([
-                                    BATCH_PARENT_ID,
+                                    JSON.stringify({ [jcm.CHANNEL.JOB]: BATCH_PARENT_ID }),
                                 ]);
                             } else if (
                                 Jobs.isTerminalStatus(this.input.status) &&
                                 !this.input.meta.canRetry
                             ) {
+                                const channelString = JSON.stringify({
+                                    [jcm.CHANNEL.JOB]: this.job.job_id,
+                                });
                                 expect(
-                                    this.jobManager.listeners[this.job.job_id][
+                                    this.jobManager.listeners[channelString][
                                         jcm.MESSAGE_TYPE.STATUS
                                     ]
                                 ).toBeUndefined();
                             } else {
+                                const channelString = JSON.stringify({
+                                    [jcm.CHANNEL.JOB]: this.job.job_id,
+                                });
                                 expect(
-                                    this.jobManager.listeners[this.job.job_id][
+                                    this.jobManager.listeners[channelString][
                                         jcm.MESSAGE_TYPE.STATUS
                                     ]
                                 ).toBeDefined();

@@ -471,7 +471,10 @@ define([
             this.jobsByRetryParent[rowIx].jobs[currentJobIx] = jobState;
             // do we have job info for it?
             if (!this.jobManager.model.getItem(`exec.jobs.info.${rowIx}`)) {
-                this.jobManager.requestJobInfo([rowIx]);
+                // TODO: move this to the Job Manager
+                this.jobManager.bus.emit(jcm.MESSAGE_TYPE.INFO, {
+                    [jcm.PARAM.JOB_ID_LIST]: [rowIx],
+                });
             }
 
             // is this a job that has been retried?

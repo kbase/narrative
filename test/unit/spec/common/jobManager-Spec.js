@@ -2080,6 +2080,98 @@ define([
             });
         });
 
+        describe('requestBatchUpdate', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+
+            it('requests the status of active jobs', function () {
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [
+                        jcm.MESSAGE_TYPE.STATUS,
+                        { [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(ACTIVE_JOB_IDS) },
+                    ],
+                ]);
+            });
+
+            it('does not make a request if there are no active jobs', function () {
+                const terminalJobs = JobsData.allJobs.filter((job) => {
+                    return !ACTIVE_JOB_IDS.includes(job.job_id);
+                });
+                terminalJobs.push(JobsData.batchParentJob);
+                Jobs.populateModelFromJobArray(this.jobManagerInstance.model, terminalJobs);
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([]);
+            });
+
+            it('does not make a request if the batch job is terminal', function () {
+                // update the batch job to terminated
+                this.jobManagerInstance.model.setItem('exec.jobState', {
+                    ...this.jobManagerInstance.model.getItem('exec.jobState'),
+                    status: 'terminated',
+                });
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([]);
+            });
+        });
+
+        describe('requestBatchInfo', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+
+            it('requests info for the batch if none is present', function () {
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchInfo();
+
+                this.jobManagerInstance.model.setItem('exec.jobs.info', {});
+                this.jobManagerInstance.requestBatchInfo();
+
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
+                ]);
+            });
+
+            it('requests info for jobs that lack it', function () {
+                const jobData = this.jobManagerInstance.model.getItem('exec.jobs'),
+                    jobIdList = Object.keys(jobData.byId),
+                    missingJobIds = [];
+                let bool = true;
+
+                // populate some job info but not others
+                jobData.info = jobIdList.reduce((acc, curr) => {
+                    bool = !bool;
+                    if (bool) {
+                        acc[curr] = { job_params: [{}] };
+                    } else {
+                        missingJobIds.push(curr);
+                    }
+                    return acc;
+                }, {});
+                this.jobManagerInstance.model.setItem('exec.jobs', jobData);
+
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchInfo();
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [
+                        jcm.MESSAGE_TYPE.INFO,
+                        { [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(missingJobIds) },
+                    ],
+                ]);
+            });
+        });
+
         const resetJobsCallArgs = [
             jcm.MESSAGE_TYPE.STOP_UPDATE,
             { [jcm.PARAM.BATCH_ID]: BATCH_ID },

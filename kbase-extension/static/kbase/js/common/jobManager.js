@@ -843,6 +843,75 @@ define([
             }
 
             /**
+             * send a message requesting status updates for all
+             * non-terminal jobs in the batch
+             */
+            requestBatchStatus() {
+                const jobsById = this.model.getItem('exec.jobs.byId'),
+                    batchJob = this.model.getItem('exec.jobState');
+
+                // no stored jobs
+                if (!jobsById || !batchJob || !Object.keys(jobsById).length) {
+                    return;
+                }
+                // terminal batch job ==> no updates to child jobs
+                if (Jobs.isTerminalStatus(batchJob.status)) {
+                    return;
+                }
+
+                const batchId = batchJob.job_id;
+                // ensure jobsById contains the batch job
+                if (!jobsById[batchId]) {
+                    jobsById[batchId] = batchJob;
+                }
+
+                const jobsToUpdate = Object.values(jobsById)
+                    .filter((job) => {
+                        return !Jobs.isTerminalStatus(job.status);
+                    })
+                    .map((job) => {
+                        return job.job_id;
+                    });
+
+                if (jobsToUpdate.length) {
+                    // if the only job to update is the batch job, skip the request
+                    if (jobsToUpdate.length === 1 && jobsToUpdate[0] === batchId) {
+                        return;
+                    }
+                    const args = {
+                        [jcm.PARAM.JOB_ID_LIST]: jobsToUpdate,
+                    };
+                    if (this.lastUpdate) {
+                        args.timestamp = this.lastUpdate;
+                    }
+                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, args);
+                }
+            }
+
+            /**
+             * request job information for any jobs lacking it
+             */
+            requestBatchInfo() {
+                const batchId = this.model.getItem('exec.jobState.job_id'),
+                    jobInfo = this.model.getItem('exec.jobs.info');
+                if (!jobInfo || !Object.keys(jobInfo).length) {
+                    return this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId });
+                }
+
+                const jobInfoIds = new Set(Object.keys(jobInfo));
+                const missingJobIds = Object.keys(this.model.getItem('exec.jobs.byId')).filter(
+                    (jobId) => {
+                        return !jobInfoIds.has(jobId);
+                    }
+                );
+                if (missingJobIds.length) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.INFO, {
+                        [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
+                    });
+                }
+            }
+
+            /**
              * Cancel a batch job by submitting a cancel request for the batch job container
              *
              * This action is triggered by hitting the 'Cancel' button at the top right of the

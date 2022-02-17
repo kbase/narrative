@@ -660,18 +660,11 @@ define([
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    [
-                                        jcm.MESSAGE_TYPE.START_UPDATE,
-                                        { [jcm.PARAM.BATCH_ID]: batchId },
-                                    ],
+                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
                                     [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
                                     [
                                         jcm.MESSAGE_TYPE.CANCEL,
                                         { [jcm.PARAM.JOB_ID_LIST]: [batchId] },
-                                    ],
-                                    [
-                                        jcm.MESSAGE_TYPE.STOP_UPDATE,
-                                        { [jcm.PARAM.BATCH_ID]: batchId },
                                     ],
                                     [
                                         'reset-cell',
@@ -775,10 +768,9 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    [jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
                     [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
                     [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] }],
-                    [jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

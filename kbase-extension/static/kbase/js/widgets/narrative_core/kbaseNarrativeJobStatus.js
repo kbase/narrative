@@ -184,8 +184,7 @@ define([
             return this;
         },
 
-        handleJobInfo: function (message) {
-            const info = message[this.jobId];
+        handleJobInfo: function (info) {
             if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.app_name) {
                 const { metadata } = this.cell;
                 if (metadata.kbase && metadata.kbase.attributes) {

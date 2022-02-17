@@ -47,7 +47,6 @@ define([
     'widgets/appWidgets2/validators/sequence',
     'widgets/appWidgets2/validators/struct',
     'widgets/appWidgets2/validators/subdata',
-    'widgets/appWidgets2/validators/text',
     'widgets/appWidgets2/validators/workspaceObjectName',
     'widgets/appWidgets2/validators/workspaceObjectRef',
     'widgets/appWidgets2/view/autocompleteView',

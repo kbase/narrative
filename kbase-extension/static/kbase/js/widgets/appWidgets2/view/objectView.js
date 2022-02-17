@@ -148,7 +148,7 @@ define([
                         return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
                     case 'name':
                     default:
-                        return Validation.validateText(rawValue, validationOptions);
+                        return Validation.validateTextString(rawValue, validationOptions);
                 }
             }).then((validationResult) => {
                 return {

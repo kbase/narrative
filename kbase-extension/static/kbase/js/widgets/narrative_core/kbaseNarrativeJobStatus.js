@@ -149,7 +149,9 @@ define([
                             type: jcm.MESSAGE_TYPE.INFO,
                         },
                         handle: function (message) {
-                            this.handleJobInfo(message);
+                            if (message[this.jobId]) {
+                                this.handleJobInfo(message[this.jobId]);
+                            }
                         }.bind(this),
                     });
 
@@ -162,7 +164,9 @@ define([
                             type: jcm.MESSAGE_TYPE.STATUS,
                         },
                         handle: function (message) {
-                            this.handleJobStatus(message);
+                            if (message[this.jobId]) {
+                                this.handleJobStatus(message[this.jobId]);
+                            }
                         }.bind(this),
                     });
 

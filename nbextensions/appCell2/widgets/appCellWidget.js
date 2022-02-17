@@ -92,7 +92,7 @@ define(
                 widgets = {},
                 cellBus = runtime.bus().makeChannelBus({
                     name: {
-                        cell: cellUtils.getMeta(cell, 'attributes', 'id'),
+                        [jcm.CHANNEL.CELL]: cellUtils.getMeta(cell, 'attributes', 'id'),
                     },
                     description: 'A cell channel',
                 }),
@@ -1399,6 +1399,9 @@ define(
             }
 
             function startListeningForJobMessages(jobId) {
+                if (!jobId) {
+                    return;
+                }
                 jobListeners.push(
                     // listen for job-related bus messages
                     runtime.bus().listen({
@@ -1411,7 +1414,6 @@ define(
                         handle: doJobStatus,
                     })
                 );
-
                 runtime.bus().emit(jcm.MESSAGE_TYPE.START_UPDATE, {
                     [jcm.PARAM.JOB_ID]: jobId,
                 });
@@ -1419,8 +1421,9 @@ define(
 
             function doJobStatus(message) {
                 const existingState = model.getItem('exec.jobState'),
-                    newJobState = message.jobState,
-                    { outputWidgetInfo } = message,
+                    existingJobId = existingState.job_id,
+                    newJobState = message[existingJobId].jobState,
+                    { outputWidgetInfo } = message[existingJobId],
                     forceRender =
                         !Jobs.isValidJobStateObject(existingState) &&
                         Jobs.isValidJobStateObject(newJobState);
@@ -2015,9 +2018,10 @@ define(
                          */
                         const jobState = model.getItem('exec.jobState');
                         if (jobState && !Jobs.isValidJobStateObject(jobState)) {
-                            // use the 'created' key to see if it's an updated jobState
                             startListeningForJobMessages(jobState.job_id);
                             requestJobStatus(jobState.job_id);
+                        } else if (model.getItem('exec.launchState.job_id')) {
+                            startListeningForJobMessages(jobState.job_id);
                         } else {
                             renderUI();
                         }

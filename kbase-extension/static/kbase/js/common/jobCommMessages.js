@@ -8,7 +8,7 @@ define(['json!kbase/config/job_config.json'], (JobConfig) => {
         // channel types
         CHANNEL = {
             CELL: 'cell',
-            JOB: 'jobId',
+            JOB: JobConfig.params.JOB_ID,
             BATCH: JobConfig.params.BATCH_ID,
         };
 

@@ -21,7 +21,8 @@ define([
         });
     }
 
-    const cellId = 'MY_FAVE_CELL_ID';
+    const cellId = 'MY_FAVE_CELL_ID',
+        BATCH_ID = JobsData.batchParentJob.job_id;
 
     /**
      * test whether a handler is defined
@@ -66,7 +67,7 @@ define([
             return job;
         });
         // a second set of jobs that have not been retried
-        const allOriginalJobs = TestUtil.JSONcopy(JobsData.allJobs).map((job) => {
+        const allOriginalJobIds = TestUtil.JSONcopy(JobsData.allJobs).map((job) => {
             job.job_id += '-v2';
             return job;
         });
@@ -74,7 +75,7 @@ define([
         const allJobs = [batchParent]
             .concat(allDupeJobs)
             .concat(retryParentJobs)
-            .concat(allOriginalJobs);
+            .concat(allOriginalJobIds);
 
         Jobs.populateModelFromJobArray(model, allJobs);
         return { model, allJobs };
@@ -769,13 +770,64 @@ define([
         });
 
         /* defaultHandlerMixin */
-        function setUpHandlerTest(context, event) {
+        function setUpHandlerTest(context, event, channelType, channelIdList) {
             context.jobManagerInstance.addEventHandler(event, { handler_1: scream });
             expect(Object.keys(context.jobManagerInstance.handlers[event]).sort()).toEqual([
                 `__default_${event}`,
                 'handler_1',
             ]);
-            context.jobManagerInstance.addListener(event, jcm.CHANNEL.JOB, [context.jobId]);
+            context.jobManagerInstance.addListener(event, channelType, channelIdList);
+        }
+
+        function getMessages(msgType) {
+            const error = 'some error string';
+            // all the data
+            let dataSource = {},
+                // the batch ID for the data source
+                batchId;
+            if (msgType === jcm.MESSAGE_TYPE.INFO) {
+                // filter out the non-batch jobs
+                Object.values(JobsData.example.INFO.valid).forEach((jobInfo) => {
+                    if ('batch_id' in jobInfo && jobInfo.batch_id) {
+                        dataSource[jobInfo.job_id] = jobInfo;
+                    }
+                });
+                batchId = Object.values(dataSource)[0].batch_id;
+            } else if (msgType === jcm.MESSAGE_TYPE.RETRY) {
+                dataSource = JobsData.batchJob.retryMessages;
+                batchId = JobsData.batchJob.batchId;
+            }
+
+            // use a job in the batch, not the batch parent
+            const jobIdList = Object.keys(dataSource),
+                jobId = jobIdList[0] === batchId ? jobIdList[1] : jobIdList[0];
+
+            return {
+                'by job ID': {
+                    jobIdList: [jobId],
+                    message: { [jobId]: dataSource[jobId] },
+                    channelType: jcm.CHANNEL.JOB,
+                    channelId: jobId,
+                    error: { [jobId]: { [jcm.PARAM.JOB_ID]: jobId, error } },
+                },
+                'by batch ID': {
+                    jobIdList: [jobId],
+                    message: { [jobId]: dataSource[jobId] },
+                    channelType: jcm.CHANNEL.BATCH,
+                    channelId: batchId,
+                    error: { [jobId]: { [jcm.PARAM.JOB_ID]: jobId, error } },
+                },
+                'all batch': {
+                    jobIdList: Object.keys(dataSource),
+                    message: dataSource,
+                    channelType: jcm.CHANNEL.BATCH,
+                    channelId: batchId,
+                    error: jobIdList.reduce((acc, curr) => {
+                        acc[curr] = { [jcm.PARAM.JOB_ID]: curr, error };
+                        return acc;
+                    }, {}),
+                },
+            };
         }
 
         function checkForHandlers(jobManagerInstance) {
@@ -819,150 +871,121 @@ define([
 
             describe('handleJobInfo', () => {
                 const event = jcm.MESSAGE_TYPE.INFO,
-                    jobId = 'testJobId',
-                    channelType = jcm.CHANNEL.JOB,
-                    channelId = jobId,
-                    messageAddress = {
-                        type: event,
-                        channelType,
-                        channelId,
-                    },
-                    channelData = { channelType, channelId };
+                    inputs = getMessages(event);
 
-                it('handles successful job info requests', function () {
-                    this.jobId = jobId;
-                    const jobParams = {
-                            this: 'that',
-                            the: 'other',
-                        },
-                        jobInfo = {
-                            app_id: 'some/app',
-                            app_name: 'Some app',
-                            batch_id: null,
-                            job_id: this.jobId,
-                            job_params: [jobParams],
-                        };
-                    setUpHandlerTest(this, event);
-                    expect(
-                        this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
-                    ).not.toBeDefined();
+                Object.keys(inputs).forEach((inputName) => {
+                    const { channelType, channelId, message, jobIdList, error } = inputs[inputName],
+                        channelData = { channelType, channelId };
 
-                    return new Promise((resolve) => {
-                        // add a handler that acts after the default handler so we know
-                        // the default action has already been done
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.INFO,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
+                    it(`handles successful job info requests, ${inputName}`, function () {
+                        setUpHandlerTest(this, event, channelType, [channelId]);
+                        jobIdList.forEach((jobId) => {
+                            expect(
+                                this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
+                            ).not.toBeDefined();
+                        });
+
+                        return new Promise((resolve) => {
+                            // add a handler that acts after the default handler so we know
+                            // the default action has already been done
+                            this.jobManagerInstance.addListener(event, channelType, channelId, {
                                 zzz_resolve_promise: (...args) => {
                                     // eslint-disable-next-line no-unused-vars
                                     const [_, msg, channel] = args;
-                                    expect(msg).toEqual(jobInfo);
+                                    expect(msg).toEqual(message);
                                     expect(channel).toEqual(channelData);
                                     resolve();
                                 },
+                            });
+                            TestUtil.sendBusMessage({
+                                bus: this.bus,
+                                message,
+                                channelType,
+                                channelId,
+                                type: event,
+                            });
+                        }).then(() => {
+                            jobIdList.forEach((jobId) => {
+                                expect(
+                                    this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
+                                ).toEqual(message[jobId]);
+                                if (channelType === jcm.CHANNEL.JOB) {
+                                    expect(
+                                        this.jobManagerInstance.listeners[jobId][event]
+                                    ).not.toBeDefined();
+                                }
+                            });
+                            if (channelType === jcm.CHANNEL.BATCH) {
+                                expect(
+                                    this.jobManagerInstance.listeners[channelId][event]
+                                ).toBeDefined();
                             }
-                        );
-                        TestUtil.send_INFO({
-                            bus: this.bus,
-                            jobInfo,
                         });
-                    }).then(() => {
-                        expect(
-                            this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
-                        ).toEqual(jobInfo);
-                        expect(this.jobManagerInstance.listeners[jobId][event]).not.toBeDefined();
                     });
-                });
 
-                it('handles errors in job info requests', function () {
-                    this.jobId = jobId;
-                    setUpHandlerTest(this, event);
-                    expect(
-                        this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
-                    ).not.toBeDefined();
-                    const error = 'Some made-up error';
-                    const message = { job_id: jobId, error };
-                    return new Promise((resolve) => {
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.INFO,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
+                    it(`handles errors in job info requests, ${inputName}`, function () {
+                        setUpHandlerTest(this, event, channelType, [channelId]);
+                        jobIdList.forEach((jobId) => {
+                            expect(
+                                this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
+                            ).not.toBeDefined();
+                        });
+                        return new Promise((resolve) => {
+                            this.jobManagerInstance.addListener(event, channelType, channelId, {
                                 zzz_resolve_promise: () => {
                                     resolve();
                                 },
-                            }
-                        );
-                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
-                    }).then(() => {
-                        expect(
-                            this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
-                        ).not.toBeDefined();
-                        expect(this.jobManagerInstance.listeners[jobId][event]).toBeDefined();
+                            });
+                            TestUtil.sendBusMessage({
+                                bus: this.bus,
+                                message: error,
+                                channelType,
+                                channelId,
+                                type: event,
+                            });
+                        }).then(() => {
+                            jobIdList.forEach((jobId) => {
+                                expect(
+                                    this.jobManagerInstance.model.getItem(
+                                        `exec.jobs.params.${jobId}`
+                                    )
+                                ).not.toBeDefined();
+                                if (channelType === jcm.CHANNEL.JOB) {
+                                    expect(
+                                        this.jobManagerInstance.listeners[jobId][event]
+                                    ).toBeDefined();
+                                }
+                            });
+                        });
                     });
                 });
             });
 
             describe('handleJobRetry', () => {
                 const event = jcm.MESSAGE_TYPE.RETRY,
-                    jobState = JobsData.jobsByStatus.terminated[0],
-                    jobId = jobState.job_id,
-                    channelType = jcm.CHANNEL.JOB,
-                    channelId = jobId,
-                    messageAddress = {
-                        type: event,
-                        channelType,
-                        channelId,
-                    },
-                    channelData = { channelType, channelId };
+                    inputs = getMessages(event);
 
-                it('handles successful job retries', function () {
-                    // retry a terminated job
-                    this.jobId = jobId;
-                    setUpHandlerTest(this, event);
-                    Jobs.populateModelFromJobArray(
-                        this.jobManagerInstance.model,
-                        JobsData.allJobsWithBatchParent
-                    );
+                Object.keys(inputs).forEach((inputName) => {
+                    const { channelType, channelId, message, error } = inputs[inputName],
+                        channelData = { channelType, channelId };
 
-                    // create a retry for the job
-                    const updatedJobState = Object.assign({}, jobState, {
-                            updated: jobState.updated + 10,
-                        }),
-                        newJobId = `${jobId}-retry`,
-                        retryJobState = {
-                            job_id: newJobId,
-                            status: 'queued',
-                            updated: jobState.updated + 10,
-                            created: jobState.updated + 5,
-                            retry_parent: this.jobId,
-                        };
+                    it(`handles successful job retries, ${inputName}`, function () {
+                        setUpHandlerTest(this, event, channelType, [channelId]);
+                        Jobs.populateModelFromJobArray(
+                            this.jobManagerInstance.model,
+                            Object.values(JobsData.batchJob.originalJobsNoRetryData)
+                        );
+                        const preRetryJobIdList = Object.keys(
+                            JobsData.batchJob.originalJobsNoRetryData
+                        );
+                        expect(
+                            Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                        ).toEqual(jasmine.arrayWithExactContents(preRetryJobIdList));
 
-                    expect(
-                        this.jobManagerInstance.model.getItem(`exec.jobs.params.${newJobId}`)
-                    ).not.toBeDefined();
-                    expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
-                    ).toBeDefined();
-                    expect(this.jobManagerInstance.listeners[newJobId]).not.toBeDefined();
-
-                    spyOn(this.bus, 'emit');
-                    spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
-                    return new Promise((resolve) => {
-                        const message = {
-                            [jcm.PARAM.JOB_ID]: this.jobId,
-                            job: { job_id: this.jobId, jobState: updatedJobState },
-                            retry_id: retryJobState.job_id,
-                            retry: { job_id: retryJobState.job_id, jobState: retryJobState },
-                        };
-
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.RETRY,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
+                        spyOn(this.bus, 'emit');
+                        spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
+                        return new Promise((resolve) => {
+                            this.jobManagerInstance.addListener(event, channelType, channelId, {
                                 zzz_resolve_promise: (...args) => {
                                     // ensure the args are as expected
                                     // eslint-disable-next-line no-unused-vars
@@ -971,338 +994,506 @@ define([
                                     expect(channel).toEqual(channelData);
                                     resolve();
                                 },
-                            }
-                        );
-                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
-                    }).then(() => {
-                        expect(
-                            this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
-                        ).toBeDefined();
-                        expect(
-                            this.jobManagerInstance.listeners[newJobId][jcm.MESSAGE_TYPE.STATUS]
-                        ).toBeDefined();
-                        const storedJobs = this.jobManagerInstance.model.getItem('exec.jobs.byId');
-                        expect(storedJobs[jobId]).toEqual(updatedJobState);
-                        expect(storedJobs[newJobId]).toEqual(retryJobState);
-                        expect(this.bus.emit).toHaveBeenCalled();
-                        expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
-                            [jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.JOB_ID]: newJobId }],
-                        ]);
+                            });
+                            // ensure the retry listener is in place
+                            expect(
+                                this.jobManagerInstance.listeners[channelId][event]
+                            ).toBeDefined();
+                            TestUtil.sendBusMessage({
+                                bus: this.bus,
+                                message,
+                                channelType,
+                                channelId,
+                                type: event,
+                            });
+                        }).then(() => {
+                            expect(this.bus.emit).toHaveBeenCalled();
+                            // TODO: improve this test
+                            expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(
+                                Object.values(message).length
+                            );
+                            const storedJobs =
+                                this.jobManagerInstance.model.getItem('exec.jobs.byId');
+                            const updateRequests = [];
+                            Object.values(message).forEach((retryBlob) => {
+                                expect(storedJobs[retryBlob.job_id]).toEqual(
+                                    retryBlob.job.jobState
+                                );
+                                expect(storedJobs[retryBlob.retry_id]).toEqual(
+                                    retryBlob.retry.jobState
+                                );
+                                if (channelType === jcm.CHANNEL.JOB) {
+                                    expect(
+                                        this.jobManagerInstance.listeners[retryBlob.retry_id][
+                                            jcm.MESSAGE_TYPE.STATUS
+                                        ]
+                                    ).toBeDefined();
+                                }
+                                // expect start_update requests for the retried job
+                                updateRequests.push([
+                                    jcm.MESSAGE_TYPE.START_UPDATE,
+                                    { [jcm.PARAM.JOB_ID]: retryBlob.retry_id },
+                                ]);
+                            });
+                            expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual(
+                                jasmine.arrayWithExactContents(updateRequests)
+                            );
+                        });
                     });
-                });
 
-                it('handles unsuccessful retries', function () {
-                    this.jobId = jobId;
-                    setUpHandlerTest(this, event);
-                    Jobs.populateModelFromJobArray(
-                        this.jobManagerInstance.model,
-                        JobsData.allJobsWithBatchParent
-                    );
-                    expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.RETRY]
-                    ).toBeDefined();
+                    it(`handles unsuccessful retries, ${inputName}`, function () {
+                        setUpHandlerTest(this, event, channelType, [channelId]);
+                        Jobs.populateModelFromJobArray(
+                            this.jobManagerInstance.model,
+                            Object.values(JobsData.batchJob.originalJobsNoRetryData)
+                        );
+                        const preRetryJobIdList = Object.keys(
+                            JobsData.batchJob.originalJobsNoRetryData
+                        );
+                        expect(
+                            Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                        ).toEqual(jasmine.arrayWithExactContents(preRetryJobIdList));
 
-                    spyOn(this.bus, 'emit');
-                    spyOn(this.jobManagerInstance, 'updateModel');
-
-                    return new Promise((resolve) => {
-                        const message = {
-                            [jcm.PARAM.JOB_ID]: this.jobId,
-                            job: { jobState: jobState },
-                            error: 'could not execute action',
-                        };
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.RETRY,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
+                        spyOn(this.bus, 'emit');
+                        spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
+                        return new Promise((resolve) => {
+                            this.jobManagerInstance.addListener(event, channelType, channelId, {
                                 zzz_resolve_promise: () => {
                                     resolve();
                                 },
-                            }
-                        );
-                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
-                    }).then(() => {
-                        expect(this.bus.emit).not.toHaveBeenCalled();
-                        expect(this.jobManagerInstance.updateModel).not.toHaveBeenCalled();
+                            });
+                            // ensure the retry listener is in place
+                            expect(
+                                this.jobManagerInstance.listeners[channelId][event]
+                            ).toBeDefined();
+                            TestUtil.sendBusMessage({
+                                bus: this.bus,
+                                message: error,
+                                channelType,
+                                channelId,
+                                type: event,
+                            });
+                        }).then(() => {
+                            expect(this.bus.emit).not.toHaveBeenCalled();
+                            expect(this.jobManagerInstance.updateModel).not.toHaveBeenCalled();
+                        });
                     });
                 });
             });
 
             describe('handleJobStatus', () => {
                 const event = jcm.MESSAGE_TYPE.STATUS;
-                it('can update the model if a job has been updated', function () {
-                    // job to test
+
+                // TODO: add error updates!!
+                describe('single job, multiple updates', () => {
                     const jobState = TestUtil.JSONcopy(JobsData.allJobsWithBatchParent)[0],
-                        jobId = jobState.job_id,
-                        channelType = jcm.CHANNEL.JOB,
-                        channelId = jobId,
-                        messageAddress = {
-                            type: event,
-                            channelType,
-                            channelId,
+                        jobId = jobState.job_id;
+
+                    const inputs = {
+                        'by job ID': {
+                            channelType: jcm.CHANNEL.JOB,
+                            channelId: jobId,
                         },
-                        channelData = { channelType, channelId };
+                        'by batch ID': {
+                            channelType: jcm.CHANNEL.BATCH,
+                            channelId: JobsData.batchJob.batchId,
+                        },
+                    };
 
-                    this.jobId = jobId;
-                    setUpHandlerTest(this, event);
-                    Jobs.populateModelFromJobArray(
-                        this.jobManagerInstance.model,
-                        JobsData.allJobsWithBatchParent
-                    );
-                    // create an update for the job
-                    const updateOne = Object.assign({}, jobState, {
-                            updated: jobState.updated + 10,
-                        }),
-                        updateTwo = Object.assign({}, jobState, {
-                            retry_ids: [1, 2, 3],
-                        }),
-                        messageOne = { [jcm.PARAM.JOB_ID]: jobId, jobState },
-                        messageTwo = { [jcm.PARAM.JOB_ID]: jobId, jobState: updateOne },
-                        messageThree = { [jcm.PARAM.JOB_ID]: jobId, jobState: updateTwo };
-
-                    spyOn(console, 'error');
-                    spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
-                    // the first message will not trigger `updateModel` as it is identical to the existing jobState
-                    return new Promise((resolve) => {
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.STATUS,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
-                                zzz_resolve_promise: (...args) => {
-                                    // eslint-disable-next-line no-unused-vars
-                                    const [_, msg, channel] = args;
-                                    expect(msg).toEqual(messageOne);
-                                    expect(channel).toEqual(channelData);
-                                    resolve();
+                    Object.keys(inputs).forEach((inputName) => {
+                        it(`can update the model if a job has been updated, ${inputName}`, function () {
+                            const { channelType, channelId } = inputs[inputName],
+                                messageAddress = {
+                                    type: event,
+                                    channelType,
+                                    channelId,
                                 },
-                            }
-                        );
-                        TestUtil.sendBusMessage({
-                            bus: this.bus,
-                            message: messageOne,
-                            ...messageAddress,
-                        });
-                    }).then(() => {
-                        expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
-                            jobState
-                        );
-                        expect(console.error).toHaveBeenCalledTimes(1);
-                        expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(0);
+                                channelData = { channelType, channelId };
 
-                        return new Promise((resolve) => {
-                            // Read it and weep
-                            this.jobManagerInstance.removeHandlerFunction('zzz_resolve_promise');
-                            this.jobManagerInstance.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
-                                zzz_resolve_promise: () => {
-                                    resolve();
-                                },
-                            });
-                            // the second message will trigger `updateModel`
-                            TestUtil.sendBusMessage({
-                                bus: this.bus,
-                                message: messageTwo,
-                                ...messageAddress,
-                            });
-                        }).then(() => {
-                            expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
-                                updateOne
+                            this.jobId = jobId;
+                            setUpHandlerTest(this, event, channelType, [channelId]);
+                            Jobs.populateModelFromJobArray(
+                                this.jobManagerInstance.model,
+                                JobsData.allJobsWithBatchParent
                             );
-                            expect(console.error).toHaveBeenCalledTimes(2);
-                            expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
-                            let updateModelCallArgs =
-                                this.jobManagerInstance.updateModel.calls.allArgs();
-                            // updateModel takes [jobState] as an argument
-                            expect(updateModelCallArgs).toEqual([[[updateOne]]]);
+                            // create an update for the job
+                            const updateOne = Object.assign({}, jobState, {
+                                    updated: jobState.updated + 10,
+                                }),
+                                updateTwo = Object.assign({}, jobState, {
+                                    retry_ids: [1, 2, 3],
+                                }),
+                                messageOne = { [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState } },
+                                messageTwo = {
+                                    [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState: updateOne },
+                                },
+                                messageThree = {
+                                    [jobId]: { [jcm.PARAM.JOB_ID]: jobId, jobState: updateTwo },
+                                };
 
+                            spyOn(console, 'error');
+                            spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
+                            // the first message will not trigger `updateModel` as it is identical to the existing jobState
                             return new Promise((resolve) => {
-                                this.jobManagerInstance.removeHandlerFunction(
-                                    'zzz_resolve_promise'
+                                this.jobManagerInstance.addListener(
+                                    jcm.MESSAGE_TYPE.STATUS,
+                                    channelType,
+                                    channelId,
+                                    {
+                                        zzz_resolve_promise: (...args) => {
+                                            // eslint-disable-next-line no-unused-vars
+                                            const [_, msg, channel] = args;
+                                            expect(msg).toEqual(messageOne);
+                                            expect(channel).toEqual(channelData);
+                                            resolve();
+                                        },
+                                    }
                                 );
-                                this.jobManagerInstance.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
-                                    zzz_resolve_promise: () => {
-                                        resolve();
-                                    },
-                                });
-                                // third message will also trigger an update
                                 TestUtil.sendBusMessage({
                                     bus: this.bus,
-                                    message: messageThree,
+                                    message: messageOne,
                                     ...messageAddress,
                                 });
                             }).then(() => {
                                 expect(
                                     this.jobManagerInstance.model.getItem(`exec.jobState`)
-                                ).toEqual(updateTwo);
-                                expect(console.error).toHaveBeenCalledTimes(3);
+                                ).toEqual(jobState);
+                                expect(console.error).toHaveBeenCalledTimes(1);
                                 expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(
-                                    2
+                                    0
                                 );
-                                updateModelCallArgs =
-                                    this.jobManagerInstance.updateModel.calls.allArgs();
-                                expect(updateModelCallArgs).toEqual([[[updateOne]], [[updateTwo]]]);
+
+                                return new Promise((resolve) => {
+                                    // Read it and weep
+                                    this.jobManagerInstance.removeHandlerFunction(
+                                        'zzz_resolve_promise'
+                                    );
+                                    this.jobManagerInstance.addEventHandler(
+                                        jcm.MESSAGE_TYPE.STATUS,
+                                        {
+                                            zzz_resolve_promise: () => {
+                                                resolve();
+                                            },
+                                        }
+                                    );
+                                    // the second message will trigger `updateModel`
+                                    TestUtil.sendBusMessage({
+                                        bus: this.bus,
+                                        message: messageTwo,
+                                        ...messageAddress,
+                                    });
+                                }).then(() => {
+                                    expect(
+                                        this.jobManagerInstance.model.getItem(`exec.jobState`)
+                                    ).toEqual(updateOne);
+                                    expect(console.error).toHaveBeenCalledTimes(2);
+                                    expect(
+                                        this.jobManagerInstance.updateModel
+                                    ).toHaveBeenCalledTimes(1);
+                                    let updateModelCallArgs =
+                                        this.jobManagerInstance.updateModel.calls.allArgs();
+                                    // updateModel takes [jobState] as an argument
+                                    expect(updateModelCallArgs).toEqual([[[updateOne]]]);
+
+                                    return new Promise((resolve) => {
+                                        this.jobManagerInstance.removeHandlerFunction(
+                                            'zzz_resolve_promise'
+                                        );
+                                        this.jobManagerInstance.addEventHandler(
+                                            jcm.MESSAGE_TYPE.STATUS,
+                                            {
+                                                zzz_resolve_promise: () => {
+                                                    resolve();
+                                                },
+                                            }
+                                        );
+                                        // third message will also trigger an update
+                                        TestUtil.sendBusMessage({
+                                            bus: this.bus,
+                                            message: messageThree,
+                                            ...messageAddress,
+                                        });
+                                    }).then(() => {
+                                        expect(
+                                            this.jobManagerInstance.model.getItem(`exec.jobState`)
+                                        ).toEqual(updateTwo);
+                                        expect(console.error).toHaveBeenCalledTimes(3);
+                                        expect(
+                                            this.jobManagerInstance.updateModel
+                                        ).toHaveBeenCalledTimes(2);
+                                        updateModelCallArgs =
+                                            this.jobManagerInstance.updateModel.calls.allArgs();
+                                        expect(updateModelCallArgs).toEqual([
+                                            [[updateOne]],
+                                            [[updateTwo]],
+                                        ]);
+                                    });
+                                });
                             });
                         });
                     });
                 });
 
-                JobsData.allJobsWithBatchParent.forEach((jobState) => {
-                    it(`performs the appropriate update for ${jobState.job_id}`, function () {
-                        const jobId = jobState.job_id;
-                        const channelType = jcm.CHANNEL.JOB,
-                            channelId = jobId,
-                            messageAddress = {
-                                type: event,
-                                channelType,
-                                channelId,
-                            };
-                        this.jobId = jobId;
-                        setUpHandlerTest(this, event);
-                        Jobs.populateModelFromJobArray(
-                            this.jobManagerInstance.model,
-                            JobsData.allJobsWithBatchParent
-                        );
-                        const updatedJobState = Object.assign({}, jobState, {
-                            updated: jobState.updated + 10,
-                        });
-                        expect(
-                            this.jobManagerInstance.model.getItem(`exec.jobs.byId.${jobId}`)
-                        ).toEqual(jobState);
+                describe('multiple job updates', () => {
+                    const updatedJobStates = {};
 
-                        spyOn(console, 'error');
-                        spyOn(this.bus, 'emit');
-                        spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
+                    const terminal = [],
+                        listening = [];
 
-                        return new Promise((resolve) => {
-                            const message = {
-                                jobState: updatedJobState,
-                                [jcm.PARAM.JOB_ID]: jobId,
-                            };
-                            this.jobManagerInstance.addListener(
-                                jcm.MESSAGE_TYPE.STATUS,
-                                jcm.CHANNEL.JOB,
-                                jobId,
-                                {
-                                    zzz_job_action: () => {
-                                        resolve();
-                                    },
-                                }
+                    JobsData.allJobsWithBatchParent.forEach((job) => {
+                        // these jobs should have status listeners after the update
+                        if (!job.meta.terminal || job.meta.canRetry) {
+                            listening.push(job.job_id);
+                        } else {
+                            // these jobs are terminal and cannot be retried
+                            terminal.push(job.job_id);
+                        }
+                        // set up the expected job statuses post-update
+                        updatedJobStates[job.job_id] = {
+                            ...TestUtil.JSONcopy(job),
+                            updated: job.updated + 10,
+                        };
+                    });
+                    const channelIdList = [];
+                    const batchMessage = {};
+
+                    const messageList = Object.values(updatedJobStates).map((job) => {
+                        channelIdList.push(job.job_id);
+                        batchMessage[job.job_id] = {
+                            [jcm.PARAM.JOB_ID]: job.job_id,
+                            jobState: job,
+                        };
+                        return {
+                            [job.job_id]: {
+                                [jcm.PARAM.JOB_ID]: job.job_id,
+                                jobState: job,
+                            },
+                        };
+                    });
+                    const inputs = {
+                        'by job ID': {
+                            channelType: jcm.CHANNEL.JOB,
+                            channelIdList,
+                            messageList,
+                        },
+                        'by batch ID': {
+                            channelType: jcm.CHANNEL.BATCH,
+                            channelIdList: [JobsData.batchJob.batchId],
+                            messageList: [batchMessage],
+                        },
+                    };
+
+                    Object.keys(inputs).forEach((inputName) => {
+                        const { channelType, channelIdList, messageList } = inputs[inputName];
+                        it(`updates multiple jobs, ${inputName}`, function () {
+                            setUpHandlerTest(this, event, channelType, channelIdList);
+                            Jobs.populateModelFromJobArray(
+                                this.jobManagerInstance.model,
+                                JobsData.allJobsWithBatchParent
                             );
-                            TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
-                        }).then(() => {
-                            expect(
-                                this.jobManagerInstance.model.getItem(`exec.jobs.byId.${jobId}`)
-                            ).toEqual(updatedJobState);
+                            spyOn(console, 'error');
+                            spyOn(this.bus, 'emit');
+                            spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
 
-                            expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
-                            expect(console.error).toHaveBeenCalledTimes(1);
-                            // for non-terminal jobs or those that can be retried
-                            // the listener should still be in place
-                            if (!jobState.meta.terminal || jobState.meta.canRetry) {
+                            return new Promise((resolve) => {
+                                if (channelType === jcm.CHANNEL.JOB) {
+                                    // resolve the promise when the last update comes through
+                                    this.jobManagerInstance.addListener(
+                                        jcm.MESSAGE_TYPE.STATUS,
+                                        channelType,
+                                        channelIdList[channelIdList.length - 1],
+                                        {
+                                            zzz_job_action: () => {
+                                                resolve();
+                                            },
+                                        }
+                                    );
+                                } else {
+                                    // otherwise, there will only be one update
+                                    this.jobManagerInstance.addListener(
+                                        jcm.MESSAGE_TYPE.STATUS,
+                                        channelType,
+                                        channelIdList[0],
+                                        {
+                                            zzz_job_action: () => {
+                                                resolve();
+                                            },
+                                        }
+                                    );
+                                }
+                                messageList.forEach((message) => {
+                                    const channelId =
+                                        channelType === jcm.CHANNEL.BATCH
+                                            ? channelIdList[0]
+                                            : Object.keys(message)[0];
+                                    TestUtil.sendBusMessage({
+                                        bus: this.bus,
+                                        message,
+                                        channelType,
+                                        channelId,
+                                        type: event,
+                                    });
+                                });
+                            }).then(() => {
+                                // check all jobs
                                 expect(
-                                    this.jobManagerInstance.listeners[jobId][
-                                        jcm.MESSAGE_TYPE.STATUS
-                                    ]
-                                ).toBeDefined();
-                                expect(this.bus.emit).not.toHaveBeenCalled();
-                            } else {
-                                expect(
-                                    this.jobManagerInstance.listeners[jobId][
-                                        jcm.MESSAGE_TYPE.STATUS
-                                    ]
-                                ).not.toBeDefined();
-                                // jcm.MESSAGE_TYPE.STOP_UPDATE should have been called
+                                    this.jobManagerInstance.model.getItem(`exec.jobs.byId`)
+                                ).toEqual(updatedJobStates);
+
+                                const nUpdates = messageList.length;
+                                expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(
+                                    nUpdates
+                                );
+                                expect(console.error).toHaveBeenCalledTimes(nUpdates);
                                 expect(this.bus.emit).toHaveBeenCalled();
                                 const callArgs = this.bus.emit.calls.allArgs();
-                                expect(callArgs).toEqual([
-                                    [jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId }],
-                                ]);
-                            }
+
+                                if (channelType === jcm.CHANNEL.BATCH) {
+                                    expect(callArgs).toEqual(
+                                        jasmine.arrayWithExactContents(
+                                            terminal.map((jobId) => {
+                                                return [
+                                                    jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                                    { [jcm.PARAM.JOB_ID]: jobId },
+                                                ];
+                                            })
+                                        )
+                                    );
+                                } else {
+                                    // for non-terminal jobs or those that can be retried
+                                    // the listener should still be in place
+                                    const hasStatusListeners = Object.keys(
+                                        this.jobManagerInstance.listeners
+                                    ).filter((jobId) => {
+                                        return (
+                                            this.jobManagerInstance.listeners[jobId] &&
+                                            this.jobManagerInstance.listeners[jobId][event]
+                                        );
+                                    });
+                                    expect(hasStatusListeners).toEqual(
+                                        jasmine.arrayWithExactContents(listening)
+                                    );
+                                    // jcm.MESSAGE_TYPE.STOP_UPDATE should have been called for the jobs in terminal
+                                    expect(callArgs).toEqual(
+                                        jasmine.arrayWithExactContents(
+                                            terminal.map((jobId) => {
+                                                return [
+                                                    jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                                    { [jcm.PARAM.JOB_ID]: jobId },
+                                                ];
+                                            })
+                                        )
+                                    );
+                                }
+                            });
                         });
                     });
                 });
 
-                it('adds missing child IDs as required', function () {
+                describe('missing child jobs', () => {
                     // this will be the updated job
                     const batchParent = TestUtil.JSONcopy(JobsData.batchParentJob),
                         batchParentUpdate = TestUtil.JSONcopy(JobsData.batchParentJob),
                         jobId = batchParent.job_id;
+                    const inputs = {
+                        'by job ID': {
+                            channelType: jcm.CHANNEL.JOB,
+                        },
+                        'by batch ID': {
+                            channelType: jcm.CHANNEL.BATCH,
+                        },
+                    };
+                    Object.keys(inputs).forEach((inputName) => {
+                        it(`adds missing child IDs, ${inputName}`, function () {
+                            const channelType = inputs[inputName].channelType,
+                                channelId = jobId,
+                                messageAddress = {
+                                    type: event,
+                                    channelType,
+                                    channelId,
+                                };
 
-                    const channelType = jcm.CHANNEL.JOB,
-                        channelId = jobId,
-                        messageAddress = {
-                            type: event,
-                            channelType,
-                            channelId,
-                        };
+                            // remove the child jobs from the original batch parent
+                            batchParent.child_jobs = [];
+                            // change the update time for the updated batch parent
+                            batchParentUpdate.updated += 10;
+                            setUpHandlerTest(this, event, channelType, [channelId]);
+                            Jobs.populateModelFromJobArray(this.jobManagerInstance.model, [
+                                batchParent,
+                            ]);
+                            this.jobManagerInstance.addListener(event, channelType, [channelId]);
 
-                    // remove the child jobs from the original batch parent
-                    batchParent.child_jobs = [];
-                    // change the update time for the updated batch parent
-                    batchParentUpdate.updated += 10;
-                    setUpHandlerTest(this, event);
-                    Jobs.populateModelFromJobArray(this.jobManagerInstance.model, [batchParent]);
-                    this.jobManagerInstance.addListener(jcm.MESSAGE_TYPE.STATUS, jcm.CHANNEL.JOB, [
-                        jobId,
-                    ]);
-
-                    expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
-                        batchParent
-                    );
-                    expect(
-                        this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
-                    ).toBeDefined();
-
-                    spyOn(console, 'error');
-                    spyOn(this.bus, 'emit');
-                    spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
-
-                    // trigger the update
-                    return new Promise((resolve) => {
-                        const message = { jobState: batchParentUpdate, [jcm.PARAM.JOB_ID]: jobId };
-                        this.jobManagerInstance.addListener(
-                            jcm.MESSAGE_TYPE.STATUS,
-                            jcm.CHANNEL.JOB,
-                            jobId,
-                            {
-                                zzz_job_action: () => {
-                                    resolve();
-                                },
-                            }
-                        );
-                        TestUtil.sendBusMessage({ bus: this.bus, message, ...messageAddress });
-                    }).then(() => {
-                        expect(this.jobManagerInstance.model.getItem(`exec.jobState`)).toEqual(
-                            batchParentUpdate
-                        );
-                        expect(
-                            this.jobManagerInstance.listeners[jobId][jcm.MESSAGE_TYPE.STATUS]
-                        ).toBeDefined();
-                        expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(1);
-                        expect(console.error).toHaveBeenCalledTimes(1);
-
-                        // all child jobs should have job status and job info listeners
-                        batchParentUpdate.child_jobs.forEach((_jobId) => {
+                            expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
+                                batchParent
+                            );
                             expect(
-                                this.jobManagerInstance.listeners[_jobId][jcm.MESSAGE_TYPE.STATUS]
+                                this.jobManagerInstance.listeners[channelId][event]
                             ).toBeDefined();
-                            expect(
-                                this.jobManagerInstance.listeners[_jobId][jcm.MESSAGE_TYPE.INFO]
-                            ).toBeDefined();
+
+                            spyOn(console, 'error');
+                            spyOn(this.bus, 'emit');
+                            spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
+
+                            // trigger the update
+                            return new Promise((resolve) => {
+                                const message = {
+                                    [jobId]: {
+                                        jobState: batchParentUpdate,
+                                        [jcm.PARAM.JOB_ID]: jobId,
+                                    },
+                                };
+                                this.jobManagerInstance.addListener(event, channelType, channelId, {
+                                    zzz_job_action: () => {
+                                        resolve();
+                                    },
+                                });
+                                TestUtil.sendBusMessage({
+                                    bus: this.bus,
+                                    message,
+                                    ...messageAddress,
+                                });
+                            }).then(() => {
+                                expect(
+                                    this.jobManagerInstance.model.getItem(`exec.jobState`)
+                                ).toEqual(batchParentUpdate);
+                                expect(
+                                    this.jobManagerInstance.listeners[channelId][event]
+                                ).toBeDefined();
+                                expect(this.jobManagerInstance.updateModel).toHaveBeenCalledTimes(
+                                    1
+                                );
+                                expect(console.error).toHaveBeenCalledTimes(1);
+
+                                if (channelType === jcm.CHANNEL.BATCH) {
+                                    expect(Object.keys(this.jobManagerInstance.listeners)).toEqual([
+                                        channelId,
+                                    ]);
+                                } else {
+                                    // all child jobs should have job status and job info listeners
+                                    batchParentUpdate.child_jobs.forEach((_jobId) => {
+                                        ['STATUS', 'ERROR', 'INFO'].forEach((msgType) => {
+                                            expect(
+                                                this.jobManagerInstance.listeners[_jobId][
+                                                    jcm.MESSAGE_TYPE[msgType]
+                                                ]
+                                            ).toBeDefined();
+                                        });
+                                    });
+                                }
+                                const callArgs = this.bus.emit.calls.allArgs();
+                                expect(this.bus.emit).toHaveBeenCalledTimes(1);
+                                expect(callArgs).toEqual([
+                                    [
+                                        jcm.MESSAGE_TYPE.START_UPDATE,
+                                        {
+                                            [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(
+                                                batchParentUpdate.child_jobs
+                                            ),
+                                        },
+                                    ],
+                                ]);
+                            });
                         });
-                        const callArgs = this.bus.emit.calls.allArgs();
-                        expect(this.bus.emit).toHaveBeenCalledTimes(1);
-                        expect(callArgs).toEqual([
-                            [
-                                jcm.MESSAGE_TYPE.START_UPDATE,
-                                {
-                                    [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(
-                                        batchParentUpdate.child_jobs
-                                    ),
-                                },
-                            ],
-                        ]);
                     });
                 });
             });
@@ -1588,7 +1779,7 @@ define([
 
             const resetJobsCallArgs = [
                 jcm.MESSAGE_TYPE.STOP_UPDATE,
-                { [jcm.PARAM.BATCH_ID]: JobsData.batchParentJob.job_id },
+                { [jcm.PARAM.BATCH_ID]: BATCH_ID },
             ];
 
             describe('cancelBatchJob', () => {
@@ -1608,10 +1799,7 @@ define([
                     const actionRequest = actionStatusMatrix.cancel.jobRequest;
                     expect(callArgs).toEqual(
                         jasmine.arrayWithExactContents([
-                            [
-                                actionRequest,
-                                { [jcm.PARAM.JOB_ID_LIST]: [JobsData.batchParentJob.job_id] },
-                            ],
+                            [actionRequest, { [jcm.PARAM.JOB_ID_LIST]: [BATCH_ID] }],
                         ])
                     );
                     // the job model should be unchanged
@@ -1619,9 +1807,9 @@ define([
                         Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(jasmine.arrayWithExactContents(batchIds));
                     // there should be a status listener for the batch parent
-                    expect(
-                        this.jobManagerInstance.listeners[JobsData.batchParentJob.job_id]
-                    ).toEqual({ [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen() });
+                    expect(this.jobManagerInstance.listeners[BATCH_ID]).toEqual({
+                        [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen(),
+                    });
                 });
             });
 

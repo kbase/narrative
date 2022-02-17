@@ -187,9 +187,9 @@ define([
      * a function used to view the results of finished jobs.
      *
      * @param {object} config
-     * @returns jobStatusTable instance
+     * @returns BatchJobStatusTable instance
      */
-    class JobStatusTable {
+    class BatchJobStatusTable {
         constructor(config = {}) {
             this._init(config);
         }
@@ -204,7 +204,9 @@ define([
 
             const { jobManager, toggleTab } = config;
             if (!jobManager || !jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
-                throw new Error('Cannot start JobStatusTable without a jobs object in the config');
+                throw new Error(
+                    'Cannot start BatchJobStatusTable without a jobs object in the config'
+                );
             }
             this.jobManager = jobManager;
             this.toggleTab = toggleTab;
@@ -220,7 +222,7 @@ define([
          * @param {object} args  -- with key
          *      node:     DOM node to attach to
          *
-         * @returns {Promise} started JobStatusTable widget
+         * @returns {Promise} started BatchJobStatusTable widget
          */
         start(args) {
             const requiredArgs = ['node'];
@@ -449,16 +451,13 @@ define([
         addTableRow(jobState) {
             // check whether this job is part of the same batch as the other jobs;
             // if so, it should be added to the table
-            const expectedBatchId = this.jobManager.model.getItem('exec.jobState.batch_id');
             if (
-                // no batch job
-                !expectedBatchId ||
                 // incoming job has no batch ID
                 !jobState.batch_id ||
                 // incoming job is in a different batch
-                jobState.batch_id !== expectedBatchId ||
+                jobState.batch_id !== this.batchId ||
                 // this is the batch job
-                jobState.job_id === expectedBatchId
+                jobState.job_id === this.batchId
             ) {
                 return;
             }
@@ -643,7 +642,6 @@ define([
          * @param {array} jobs
          */
         setUpJobListeners(jobs) {
-            const batchId = this.jobManager.model.getItem('exec.jobState.job_id');
             const paramsRequired = [];
             const jobIdList = [];
             jobs.forEach((jobState) => {
@@ -651,7 +649,7 @@ define([
                     jobIdList.push(jobState.job_id);
                     if (
                         !this.jobManager.model.getItem(`exec.jobs.info.${jobState.job_id}`) &&
-                        jobState.job_id !== batchId
+                        jobState.job_id !== this.batchId
                     ) {
                         paramsRequired.push(jobState.job_id);
                     }
@@ -662,7 +660,7 @@ define([
                 this.jobManager.addListener(
                     jcm.MESSAGE_TYPE[event],
                     jcm.CHANNEL.JOB,
-                    [batchId].concat(jobIdList)
+                    [this.batchId].concat(jobIdList)
                 );
             });
 
@@ -670,11 +668,13 @@ define([
                 this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, paramsRequired);
                 const jobInfoRequestParams =
                     paramsRequired.length === jobIdList.length
-                        ? { [jcm.PARAM.BATCH_ID]: batchId }
+                        ? { [jcm.PARAM.BATCH_ID]: this.batchId }
                         : { [jcm.PARAM.JOB_ID_LIST]: paramsRequired };
                 this.jobManager.bus.emit(jcm.MESSAGE_TYPE.INFO, jobInfoRequestParams);
             }
-            this.jobManager.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId });
+            this.jobManager.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                [jcm.PARAM.BATCH_ID]: this.batchId,
+            });
         }
 
         // HANDLERS
@@ -685,6 +685,11 @@ define([
          */
         updateJobStatusInTable(jobState) {
             const rowIx = jobState.retry_parent || jobState.job_id;
+
+            // no visible updates for the batch ID
+            if (jobState.job_id === this.batchId) {
+                return;
+            }
 
             if (!this.jobsByRetryParent[rowIx]) {
                 return this.addTableRow(jobState);
@@ -716,6 +721,12 @@ define([
          * @param {object} message
          */
         handleJobInfo(message) {
+            Object.values(message).forEach((infoMessage) => {
+                this._handleJobInfo(infoMessage);
+            });
+        }
+
+        _handleJobInfo(message) {
             const jobId = message.job_id;
             const jobState = this.jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
             const appData = this.jobManager.model.getItem('app');
@@ -760,7 +771,7 @@ define([
     }
 
     return {
-        JobStatusTable,
+        BatchJobStatusTable,
         generateJobDisplayData,
         cssBaseClass,
     };

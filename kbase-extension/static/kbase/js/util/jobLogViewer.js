@@ -1266,7 +1266,11 @@ define([
                     this.listenersByType[jcm.MESSAGE_TYPE[type]] = this.bus.listen({
                         channel: { [jcm.CHANNEL.JOB]: this.jobId },
                         key: { type: jcm.MESSAGE_TYPE[type] },
-                        handle,
+                        handle: (message) => {
+                            if (this.jobId in message) {
+                                handle(message[this.jobId]);
+                            }
+                        },
                     });
                 }, this);
             }

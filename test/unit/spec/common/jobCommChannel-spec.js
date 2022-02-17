@@ -19,7 +19,23 @@ define([
 
     const { JOB_ID, JOB_ID_LIST, BATCH_ID } = jcm.PARAM,
         JOB_CHANNEL = jcm.CHANNEL.JOB,
-        CELL_CHANNEL = jcm.CHANNEL.CELL;
+        CELL_CHANNEL = jcm.CHANNEL.CELL,
+        BATCH_CHANNEL = jcm.CHANNEL.BATCH;
+
+    const responseDataJobMapping = {};
+    const batchJobs = {};
+
+    // generate the expected mapping of job IDs to batch IDs
+    Object.values(ResponseData[jcm.MESSAGE_TYPE.INFO]).forEach((job) => {
+        if ('batch_id' in job && job.batch_id) {
+            responseDataJobMapping[job.job_id] = { [jcm.PARAM.BATCH_ID]: job.batch_id };
+            if (job.batch_id === job.job_id) {
+                batchJobs[job.batch_id] = 1;
+            }
+        } else {
+            responseDataJobMapping[job.job_id] = { [jcm.PARAM.JOB_ID]: job.job_id };
+        }
+    });
 
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
         return Mocks.buildMockNotebook({
@@ -40,29 +56,6 @@ define([
             },
         };
     }
-
-    const convertToJobState = (acc, curr) => {
-        acc[curr.job_id] = {
-            [JOB_ID]: curr.job_id,
-            jobState: curr,
-            outputWidgetInfo: {},
-        };
-        return acc;
-    };
-
-    const convertToJobStateBusMessage = (job) => {
-        return [
-            {
-                [JOB_ID]: job.job_id,
-                jobState: job,
-                outputWidgetInfo: {},
-            },
-            {
-                channel: { [JOB_CHANNEL]: job.job_id },
-                key: { type: jcm.MESSAGE_TYPE.STATUS },
-            },
-        ];
-    };
 
     describe('The JobCommChannel', () => {
         let testBus;
@@ -484,10 +477,10 @@ define([
              */
             it(`Should respond to ${jcm.MESSAGE_TYPE.NEW} by saving the Narrative`, () => {
                 const comm = new JobCommChannel();
-                spyOn(Jupyter.notebook, 'save_checkpoint');
+                spyOn(Jupyter.narrative, 'saveNarrative');
                 return comm.initCommChannel().then(() => {
                     comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.NEW, {}));
-                    expect(Jupyter.notebook.save_checkpoint).toHaveBeenCalled();
+                    expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
                 });
             });
 
@@ -526,6 +519,34 @@ define([
                 });
             });
 
+            function generateMultiJobResponse(messageType) {
+                const output = {};
+                Object.keys(ResponseData[messageType]).forEach((jobId) => {
+                    const outputId = responseDataJobMapping[jobId][jcm.PARAM.BATCH_ID]
+                        ? responseDataJobMapping[jobId][jcm.PARAM.BATCH_ID]
+                        : responseDataJobMapping[jobId][jcm.PARAM.JOB_ID];
+
+                    if (!(outputId in output)) {
+                        output[outputId] = {};
+                    }
+                    output[outputId][jobId] = ResponseData[messageType][jobId];
+                });
+
+                const channelOutput = [];
+                Object.keys(output).forEach((jobId) => {
+                    const address = {
+                        channel: { [JOB_CHANNEL]: jobId },
+                        key: { type: messageType },
+                    };
+
+                    if (jobId in batchJobs) {
+                        address.channel = { [BATCH_CHANNEL]: jobId };
+                    }
+                    channelOutput.push([output[jobId], address]);
+                });
+                return channelOutput;
+            }
+
             const busTests = [
                 {
                     type: jcm.MESSAGE_TYPE.RUN_STATUS,
@@ -556,72 +577,31 @@ define([
                     // info multiple jobs
                     type: jcm.MESSAGE_TYPE.INFO,
                     message: ResponseData[jcm.MESSAGE_TYPE.INFO],
-                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.INFO]).map(
-                        (info) => {
-                            return [
-                                info,
-                                {
-                                    channel: { [JOB_CHANNEL]: info.job_id },
-                                    key: { type: jcm.MESSAGE_TYPE.INFO },
-                                },
-                            ];
-                        }
-                    ),
+                    expectedMultiple: generateMultiJobResponse(jcm.MESSAGE_TYPE.INFO),
                 },
                 {
                     // status for multiple jobs
                     type: jcm.MESSAGE_TYPE.STATUS,
                     message: ResponseData[jcm.MESSAGE_TYPE.STATUS],
-                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.STATUS]).map(
-                        (status) => {
-                            return [
-                                status,
-                                {
-                                    channel: { [JOB_CHANNEL]: status.job_id },
-                                    key: { type: jcm.MESSAGE_TYPE.STATUS },
-                                },
-                            ];
-                        }
-                    ),
+                    expectedMultiple: generateMultiJobResponse(jcm.MESSAGE_TYPE.STATUS),
+                },
+                {
+                    // status all message
+                    type: jcm.MESSAGE_TYPE.STATUS_ALL,
+                    message: ResponseData[jcm.MESSAGE_TYPE.STATUS],
+                    expectedMultiple: generateMultiJobResponse(jcm.MESSAGE_TYPE.STATUS),
                 },
                 {
                     // logs for multiple jobs
                     type: jcm.MESSAGE_TYPE.LOGS,
                     message: ResponseData[jcm.MESSAGE_TYPE.LOGS],
-                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.LOGS]).map(
-                        (logs) => {
-                            return [
-                                logs,
-                                {
-                                    channel: { [JOB_CHANNEL]: logs.job_id },
-                                    key: { type: jcm.MESSAGE_TYPE.LOGS },
-                                },
-                            ];
-                        }
-                    ),
+                    expectedMultiple: generateMultiJobResponse(jcm.MESSAGE_TYPE.LOGS),
                 },
                 {
                     // retry multiple jobs
                     type: jcm.MESSAGE_TYPE.RETRY,
                     message: ResponseData[jcm.MESSAGE_TYPE.RETRY],
-                    expectedMultiple: Object.values(ResponseData[jcm.MESSAGE_TYPE.RETRY]).map(
-                        (retry) => {
-                            return [
-                                retry,
-                                {
-                                    channel: { [JOB_CHANNEL]: retry.job_id },
-                                    key: { type: jcm.MESSAGE_TYPE.RETRY },
-                                },
-                            ];
-                        }
-                    ),
-                },
-                {
-                    type: jcm.MESSAGE_TYPE.STATUS_ALL,
-                    message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
-                    expectedMultiple: JobsData.allJobsWithBatchParent.map(
-                        convertToJobStateBusMessage
-                    ),
+                    expectedMultiple: generateMultiJobResponse(jcm.MESSAGE_TYPE.RETRY),
                 },
             ];
 
@@ -629,8 +609,8 @@ define([
                 it(`should send a ${test.type} message to the bus`, () => {
                     const msg = makeCommMsg(test.type, test.message),
                         comm = new JobCommChannel();
-                    spyOn(testBus, 'send');
                     return comm.initCommChannel().then(() => {
+                        spyOn(testBus, 'send');
                         comm.handleCommMessages(msg);
                         expect(testBus.send.calls.allArgs()).toEqual(
                             jasmine.arrayWithExactContents(test.expectedMultiple)
@@ -642,15 +622,17 @@ define([
             ['STATUS', 'INFO', 'RETRY', 'LOGS'].forEach((type) => {
                 const msgType = jcm.MESSAGE_TYPE[type];
                 const validAndInvalidData = {},
-                    expected = {};
+                    expectedInvalid = {};
                 let i = 0;
-                ['valid', 'invalid'].forEach((validity) => {
-                    expected[validity] = {};
-                    JobsData.example[type][validity].forEach((elem) => {
-                        validAndInvalidData[`job_${i}`] = elem;
-                        expected[validity][`job_${i}`] = elem;
-                        i++;
-                    });
+                // collate all valid and invalid data. Add fake job_ids for the invalid data as it
+                // won't necessarily have a job ID
+                JobsData.example[type].invalid.forEach((elem) => {
+                    validAndInvalidData[`job_${i}`] = elem;
+                    expectedInvalid[`job_${i}`] = elem;
+                    i++;
+                });
+                JobsData.example[type].valid.forEach((elem) => {
+                    validAndInvalidData[elem.job_id] = elem;
                 });
 
                 // message containing data for one job
@@ -673,14 +655,14 @@ define([
 
                 // message where all data is invalid
                 it(`should not send a ${msgType} message, many jobs, invalid`, () => {
-                    const msg = makeCommMsg(msgType, expected.invalid),
+                    const msg = makeCommMsg(msgType, expectedInvalid),
                         comm = new JobCommChannel();
                     return comm.initCommChannel().then(() => {
                         spyOn(comm, 'reportCommMessageError');
                         spyOn(console, 'error');
                         comm.handleCommMessages(msg);
                         expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
-                            [{ msgType, msgData: expected.invalid }],
+                            [{ msgType, msgData: expectedInvalid }],
                         ]);
                     });
                 });
@@ -695,19 +677,9 @@ define([
                         spyOn(testBus, 'send');
                         comm.handleCommMessages(msg);
                         expect(comm.reportCommMessageError.calls.allArgs()).toEqual([
-                            [{ msgType, msgData: expected.invalid }],
+                            [{ msgType, msgData: expectedInvalid }],
                         ]);
-
-                        const expectedMessages = Object.keys(expected.valid).map((key) => {
-                            return [
-                                expected.valid[key],
-                                {
-                                    channel: { [JOB_CHANNEL]: key },
-                                    key: { type: msgType },
-                                },
-                            ];
-                        });
-
+                        const expectedMessages = generateMultiJobResponse(msgType);
                         expect(testBus.send.calls.allArgs()).toEqual(
                             jasmine.arrayWithExactContents(expectedMessages)
                         );
@@ -853,49 +825,18 @@ define([
         });
 
         describe('job mapping', () => {
-            const statusData = ResponseData[jcm.MESSAGE_TYPE.STATUS];
-            // generate the expected mapping
-            const responseDataMapping = {};
-            Object.values(statusData).forEach((job) => {
-                const jobId = job[jcm.PARAM.JOB_ID];
-                if (job.jobState && job.jobState.batch_id) {
-                    responseDataMapping[jobId] = { [jcm.PARAM.BATCH_ID]: job.jobState.batch_id };
-                } else {
-                    responseDataMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
-                }
-            });
+            ['STATUS', 'INFO', 'RETRY', 'LOGS'].forEach((type) => {
+                it(`should create a job mapping from ${type} data`, () => {
+                    const comm = new JobCommChannel(),
+                        msg = makeCommMsg(
+                            jcm.MESSAGE_TYPE[type],
+                            ResponseData[jcm.MESSAGE_TYPE[type]]
+                        );
 
-            it('should create a job mapping from job updates', () => {
-                const comm = new JobCommChannel(),
-                    msg = makeCommMsg(jcm.MESSAGE_TYPE.STATUS, statusData);
-
-                return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(comm._jobMapping).toEqual(responseDataMapping);
-                });
-            });
-
-            it('should create a job mapping from job info data', () => {
-                const infoData = ResponseData[jcm.MESSAGE_TYPE.INFO];
-                const comm = new JobCommChannel(),
-                    msg = makeCommMsg(jcm.MESSAGE_TYPE.INFO, infoData);
-
-                return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(comm._jobMapping).toEqual(responseDataMapping);
-                });
-            });
-
-            // since the retry data includes the job status,
-            // we can reconstitute the job mapping from it
-            it('should create a job mapping from job retry data', () => {
-                const retryData = ResponseData[jcm.MESSAGE_TYPE.RETRY];
-                const comm = new JobCommChannel(),
-                    msg = makeCommMsg(jcm.MESSAGE_TYPE.RETRY, retryData);
-
-                return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(comm._jobMapping).toEqual(responseDataMapping);
+                    return comm.initCommChannel().then(() => {
+                        comm.handleCommMessages(msg);
+                        expect(comm._jobMapping).toEqual(responseDataJobMapping);
+                    });
                 });
             });
 

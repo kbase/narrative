@@ -62,16 +62,24 @@ define([
 
         _isValidMessage(msgType, message) {
             switch (msgType) {
-                case jcm.MESSAGE_TYPE.STATUS:
-                    return Jobs.isValidBackendJobStateObject(message);
-                case jcm.MESSAGE_TYPE.INFO:
-                    return Jobs.isValidJobInfoObject(message);
-                case jcm.MESSAGE_TYPE.LOGS:
-                    return Jobs.isValidJobLogsObject(message);
-                case jcm.MESSAGE_TYPE.RETRY:
-                    return Jobs.isValidJobRetryObject(message);
                 case jcm.MESSAGE_TYPE.RUN_STATUS:
                     return Jobs.isValidRunStatusObject(message);
+                case jcm.MESSAGE_TYPE.STATUS:
+                    return Object.values(message).every((val) => {
+                        return Jobs.isValidBackendJobStateObject(val);
+                    });
+                case jcm.MESSAGE_TYPE.INFO:
+                    return Object.values(message).every((val) => {
+                        return Jobs.isValidJobInfoObject(val);
+                    });
+                case jcm.MESSAGE_TYPE.LOGS:
+                    return Object.values(message).every((val) => {
+                        return Jobs.isValidJobLogsObject(val);
+                    });
+                case jcm.MESSAGE_TYPE.RETRY:
+                    return Object.values(message).every((val) => {
+                        return Jobs.isValidJobRetryObject(val);
+                    });
                 case msgType.indexOf('job') !== -1:
                     return !!message.jobId;
                 default:
@@ -294,6 +302,7 @@ define([
                             },
                             handle: (message) => {
                                 if (!this._isValidMessage(msgType, message)) {
+                                    console.warn('invalid message', msgType, message);
                                     return;
                                 }
                                 this.runHandler(msgType, message, {
@@ -362,66 +371,6 @@ define([
             this.runHandler('modelUpdate', jobArray);
             return this.model;
         }
-
-        /* UTIL FUNCTIONS */
-
-        _checkStates(statusList, validStates) {
-            if (validStates && validStates.length) {
-                const allInTheList = statusList.every((status) => {
-                    return validStates.includes(status);
-                });
-                if (!allInTheList) {
-                    console.error(
-                        `Invalid status supplied! Valid statuses: ${validStates.join(
-                            '; '
-                        )}; supplied: ${statusList.join('; ')}.`
-                    );
-                    return null;
-                }
-            }
-            return statusList;
-        }
-
-        /**
-         * Get jobs with a certain status, excluding the batch parent job
-         *
-         * @param {array} statusList - array of statuses to find
-         * @param {array} validStates - array of valid statuses for this action (optional)
-         * @returns {array} job IDs
-         */
-        getCurrentJobIDsByStatus(rawStatusList, validStates) {
-            return this.getCurrentJobsByStatus(rawStatusList, validStates).map((job) => {
-                return job.job_id;
-            });
-        }
-
-        /**
-         * Get jobs with a certain status, excluding the batch parent job
-         *
-         * @param {array} statusList - array of statuses to find
-         * @param {array} validStates - array of valid statuses for this action (optional)
-         * @returns {array} job objects
-         */
-        getCurrentJobsByStatus(rawStatusList, validStates) {
-            const statusList = this._checkStates(rawStatusList, validStates);
-            const jobsById = this.model.getItem('exec.jobs.byId');
-            if (!statusList || !jobsById || !Object.keys(jobsById).length) {
-                return [];
-            }
-            const batchId = this.model.getItem('exec.jobState.job_id');
-
-            // this should only use current jobs
-            const currentJobs = Jobs.getCurrentJobs(Object.values(jobsById));
-
-            // return only jobs with the appropriate status and that are not the batch parent
-            return Object.keys(currentJobs)
-                .filter((job_id) => {
-                    return statusList.includes(currentJobs[job_id].status) && job_id !== batchId;
-                })
-                .map((job_id) => {
-                    return currentJobs[job_id];
-                });
-        }
     }
 
     /**
@@ -457,32 +406,45 @@ define([
              *
              * @param {object} message
              */
-            handleJobInfo(self, message) {
-                if (message.error) {
-                    return;
-                }
-                const jobId = message.job_id;
-                self.model.setItem(`exec.jobs.info.${jobId}`, message);
-                self.removeListener(jobId, jcm.MESSAGE_TYPE.INFO);
+            handleJobInfo(self, message, addressArgs) {
+                Object.values(message).forEach((jobInfoMessage) => {
+                    if (!jobInfoMessage.error) {
+                        const jobId = jobInfoMessage.job_id;
+                        self.model.setItem(`exec.jobs.info.${jobId}`, jobInfoMessage);
+                        if (addressArgs.channelType === jcm.CHANNEL.JOB) {
+                            self.removeListener(jobId, jcm.MESSAGE_TYPE.INFO);
+                        }
+                    }
+                });
             }
 
-            handleJobRetry(self, message) {
-                const { job, retry, error } = message;
-                if (error) {
-                    return;
-                }
-
-                // request job updates for the new job
-                ['STATUS', 'ERROR'].forEach((msgType) => {
-                    self.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, [
-                        retry.jobState.job_id,
-                    ]);
+            /**
+             * update the model with job retry information
+             *
+             * @param {object} message
+             */
+            handleJobRetry(self, message, addressArgs) {
+                Object.values(message).forEach((jobRetryMessage) => {
+                    if (!jobRetryMessage.error) {
+                        self._handleJobRetry(jobRetryMessage, addressArgs);
+                    }
                 });
-                self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
-                    [jcm.PARAM.JOB_ID]: retry.jobState.job_id,
+            }
+
+            _handleJobRetry(message, addressArgs) {
+                const { job, retry_id, retry } = message;
+                if (addressArgs.channelType === jcm.CHANNEL.JOB) {
+                    ['STATUS', 'ERROR'].forEach((msgType) => {
+                        this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, [retry_id]);
+                    });
+                }
+                // TODO: make these more efficient for batch calls
+                // request job updates for the new job
+                this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                    [jcm.PARAM.JOB_ID]: retry_id,
                 });
                 // update the model with the job data
-                self.updateModel(
+                this.updateModel(
                     [job, retry].map((j) => {
                         return j.jobState;
                     })
@@ -492,53 +454,71 @@ define([
             /**
              * @param {Object} message
              */
-            handleJobStatus(self, message) {
+            handleJobStatus(self, message, addressArgs) {
+                const updated = [];
+                Object.values(message).forEach((jobStatusMessage) => {
+                    if (!jobStatusMessage.error) {
+                        updated.push(self._handleJobStatus(jobStatusMessage, addressArgs));
+                    }
+                });
+                // update the state as appropriate
+                const toUpdate = updated.filter((job) => {
+                    return !!job;
+                });
+                if (toUpdate.length) {
+                    self.updateModel(toUpdate);
+                }
+            }
+
+            _handleJobStatus(message, addressArgs) {
                 const { jobState } = message,
                     { status } = jobState,
                     jobId = jobState.job_id;
 
                 // check if the job object has changed since we last saved it
-                const savedState = self.model.getItem(`exec.jobs.byId.${jobId}`);
+                const savedState = this.model.getItem(`exec.jobs.byId.${jobId}`);
                 if (savedState && _.isEqual(savedState, jobState)) {
+                    // return nothing if the state does not need to be updated
                     return;
                 }
 
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates
                 if (Jobs.isTerminalStatus(status) && !Jobs.canRetry(jobState)) {
-                    self.removeListener(jobId, jcm.MESSAGE_TYPE.STATUS);
-                    if (status === 'does_not_exist') {
-                        self.removeChannelListeners(jobId);
+                    if (addressArgs.channelType === jcm.CHANNEL.JOB) {
+                        this.removeListener(jobId, jcm.MESSAGE_TYPE.STATUS);
+                        if (status === 'does_not_exist') {
+                            this.removeChannelListeners(jobId);
+                        }
                     }
-                    self.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId });
-                    self.updateModel([jobState]);
-                    return;
+                    this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId });
+                    return jobState;
                 }
 
                 if (jobState.batch_job) {
                     const missingJobIds = [];
                     // do we have all the children?
                     jobState.child_jobs.forEach((job_id) => {
-                        if (!self.model.getItem(`exec.jobs.byId.${job_id}`)) {
+                        if (!this.model.getItem(`exec.jobs.byId.${job_id}`)) {
                             missingJobIds.push(job_id);
                         }
                     });
                     if (missingJobIds.length) {
-                        ['STATUS', 'ERROR', 'INFO'].forEach((msgType) => {
-                            self.addListener(
-                                jcm.MESSAGE_TYPE[msgType],
-                                jcm.CHANNEL.JOB,
-                                missingJobIds
-                            );
-                        });
-                        self.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                        if (addressArgs.channelType === jcm.CHANNEL.JOB) {
+                            ['STATUS', 'ERROR', 'INFO'].forEach((msgType) => {
+                                this.addListener(
+                                    jcm.MESSAGE_TYPE[msgType],
+                                    jcm.CHANNEL.JOB,
+                                    missingJobIds
+                                );
+                            });
+                        }
+                        this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
                             [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
                         });
                     }
                 }
-
-                // otherwise, update the state
-                self.updateModel([jobState]);
+                return jobState;
             }
         };
 
@@ -567,6 +547,68 @@ define([
 
     const JobActionsMixin = (Base) =>
         class extends Base {
+            /* UTIL FUNCTIONS */
+
+            _checkStates(statusList, validStates) {
+                if (validStates && validStates.length) {
+                    const allInTheList = statusList.every((status) => {
+                        return validStates.includes(status);
+                    });
+                    if (!allInTheList) {
+                        console.error(
+                            `Invalid status supplied! Valid statuses: ${validStates.join(
+                                '; '
+                            )}; supplied: ${statusList.join('; ')}.`
+                        );
+                        return null;
+                    }
+                }
+                return statusList;
+            }
+
+            /**
+             * Get jobs with a certain status, excluding the batch parent job
+             *
+             * @param {array} statusList - array of statuses to find
+             * @param {array} validStates - array of valid statuses for this action (optional)
+             * @returns {array} job IDs
+             */
+            getCurrentJobIDsByStatus(rawStatusList, validStates) {
+                return this.getCurrentJobsByStatus(rawStatusList, validStates).map((job) => {
+                    return job.job_id;
+                });
+            }
+
+            /**
+             * Get jobs with a certain status, excluding the batch parent job
+             *
+             * @param {array} statusList - array of statuses to find
+             * @param {array} validStates - array of valid statuses for this action (optional)
+             * @returns {array} job objects
+             */
+            getCurrentJobsByStatus(rawStatusList, validStates) {
+                const statusList = this._checkStates(rawStatusList, validStates);
+                const jobsById = this.model.getItem('exec.jobs.byId');
+                if (!statusList || !jobsById || !Object.keys(jobsById).length) {
+                    return [];
+                }
+                const batchId = this.model.getItem('exec.jobState.job_id');
+
+                // this should only use current jobs
+                const currentJobs = Jobs.getCurrentJobs(Object.values(jobsById));
+
+                // return only jobs with the appropriate status and that are not the batch parent
+                return Object.keys(currentJobs)
+                    .filter((job_id) => {
+                        return (
+                            statusList.includes(currentJobs[job_id].status) && job_id !== batchId
+                        );
+                    })
+                    .map((job_id) => {
+                        return currentJobs[job_id];
+                    });
+            }
+
             /* JOB ACTIONS */
 
             /**

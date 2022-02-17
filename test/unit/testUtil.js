@@ -195,13 +195,13 @@ define('testUtil', [
      *      {object} jobInfo
      */
     function send_INFO(ctx) {
-        const { bus, jobInfo } = ctx;
+        const { bus, jobInfo, channelType, channelId } = ctx;
         const jobId = jobInfo.job_id;
         sendBusMessage({
             bus,
-            message: { ...jobInfo, [jcm.PARAM.JOB_ID]: jobId },
-            channelType: jcm.CHANNEL.JOB,
-            channelId: jobId,
+            message: { [jobId]: { ...jobInfo, [jcm.PARAM.JOB_ID]: jobId } },
+            channelType: channelType ? channelType : jcm.CHANNEL.JOB,
+            channelId: channelId ? channelId : jobId,
             type: jcm.MESSAGE_TYPE.INFO,
         });
     }
@@ -221,7 +221,7 @@ define('testUtil', [
         }
         sendBusMessage({
             bus,
-            message,
+            message: { [message[jcm.PARAM.JOB_ID]]: message },
             channelType: jcm.CHANNEL.JOB,
             channelId: message[jcm.PARAM.JOB_ID],
             type: jcm.MESSAGE_TYPE.LOGS,
@@ -237,48 +237,27 @@ define('testUtil', [
      *      {object} bus            - the bus to send the message on
      */
     function send_RETRY(ctx) {
-        const { bus, retryParent, retry } = ctx;
+        const { bus, retryParent, retry, channelType, channelId } = ctx;
         // send the retry response and the update for the batch parent
         sendBusMessage({
             bus,
             message: {
-                [jcm.PARAM.JOB_ID]: retryParent.job_id,
-                job: {
+                [retryParent.job_id]: {
                     [jcm.PARAM.JOB_ID]: retryParent.job_id,
-                    jobState: retryParent,
-                },
-                retry_id: retry.job_id,
-                retry: {
-                    [jcm.PARAM.JOB_ID]: retry.job_id,
-                    jobState: retry,
+                    job: {
+                        [jcm.PARAM.JOB_ID]: retryParent.job_id,
+                        jobState: retryParent,
+                    },
+                    retry_id: retry.job_id,
+                    retry: {
+                        [jcm.PARAM.JOB_ID]: retry.job_id,
+                        jobState: retry,
+                    },
                 },
             },
-            channelType: jcm.CHANNEL.JOB,
-            channelId: retryParent.job_id,
+            channelType: channelType ? channelType : jcm.CHANNEL.JOB,
+            channelId: channelId ? channelId : retryParent.job_id,
             type: jcm.MESSAGE_TYPE.RETRY,
-        });
-    }
-
-    /**
-     * send a jcm.MESSAGE_TYPE.ERROR message over the bus
-     *
-     * @param {object} ctx - `this` context, containing keys
-     *      {object} jobId          - the job in question
-     *      {object} error          - error object from the backend
-     *      {object} bus            - the bus to send the message on
-     */
-    function send_ERROR(ctx) {
-        const { bus, jobId, error } = ctx;
-        sendBusMessage({
-            bus,
-            message: {
-                [jcm.PARAM.JOB_ID]: jobId,
-                error,
-                request: error.source,
-            },
-            channelType: jcm.CHANNEL.JOB,
-            channelId: jobId,
-            type: jcm.MESSAGE_TYPE.ERROR,
         });
     }
 
@@ -311,14 +290,28 @@ define('testUtil', [
      *      {object} jobState - the jobState object to be sent
      */
     function send_STATUS(ctx) {
-        const { bus, jobState } = ctx;
+        const { bus, channelType, channelId, jobState } = ctx;
+        let { message } = ctx;
+        if (!message) {
+            message = {
+                [jcm.PARAM.JOB_ID]: jobState.job_id,
+                jobState,
+            };
+        }
+        if (channelType && channelId) {
+            return sendBusMessage({
+                bus,
+                message: { [channelId]: message },
+                channelType,
+                channelId,
+                type: jcm.MESSAGE_TYPE.STATUS,
+            });
+        }
+
         const jobId = jobState.job_id;
         sendBusMessage({
             bus,
-            message: {
-                [jcm.PARAM.JOB_ID]: jobId,
-                jobState,
-            },
+            message: { [jobId]: message },
             channelType: jcm.CHANNEL.JOB,
             channelId: jobId,
             type: jcm.MESSAGE_TYPE.STATUS,
@@ -330,7 +323,7 @@ define('testUtil', [
      *
      * @param {object} args with key value pairs:
      * @param {object} bus
-     * @param {object} message
+     * @param {object} message        - message, to be passed as-is
      * @param {string} channelType    - jcm.CHANNEL.<type>
      * @param {string} channelId      - ID for the channel
      * @param {string} type           - jcm.MESSAGE_TYPE.<type>
@@ -346,8 +339,6 @@ define('testUtil', [
         const { bus, message, channelType, channelId, type } = args;
 
         bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
-
-        // bus.send({ [channelId]: message }, { channel: { [channelType]: channelId }, key: { type } });
     }
 
     return {
@@ -361,7 +352,6 @@ define('testUtil', [
         waitForElement,
         waitForElementState,
         waitForElementChange,
-        send_ERROR,
         send_INFO,
         send_LOGS,
         send_RETRY,

@@ -4,7 +4,7 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
     const t = html.tag,
         div = t('div'),
         dataElementName = 'kb-job-list-wrapper',
-        { JobStatusTable } = JobStatusTableModule;
+        { BatchJobStatusTable } = JobStatusTableModule;
 
     function factory(config) {
         let container, jobStatusTableWidget;
@@ -28,7 +28,7 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
                 container = arg.node;
                 container.innerHTML = renderLayout();
 
-                jobStatusTableWidget = new JobStatusTable(config);
+                jobStatusTableWidget = new BatchJobStatusTable(config);
                 return Promise.try(() => {
                     jobStatusTableWidget.start({
                         node: container.querySelector(`[data-element="${dataElementName}"]`),

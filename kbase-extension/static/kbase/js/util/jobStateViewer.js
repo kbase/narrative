@@ -342,7 +342,11 @@ define([
          * @param {object} message
          */
         function handleJobStatusUpdate(message) {
-            jobState = message.jobState;
+            if (!(jobId in message)) {
+                return;
+            }
+
+            jobState = message[jobId].jobState;
             switch (jobState.status) {
                 case 'queued':
                 case 'created':
@@ -358,7 +362,7 @@ define([
                     break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.status, message);
+                    console.error('Unknown job status', jobState.status, message[jobId]);
                     throw new Error('Unknown job status ' + jobState.status);
             }
         }

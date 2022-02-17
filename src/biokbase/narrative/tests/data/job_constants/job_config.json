@@ -11,7 +11,6 @@
         "ERROR": "job_error",
         "INFO": "job_info",
         "LOGS": "job_logs",
-        "NEW": "new_job",
         "RETRY": "retry_job",
         "RUN_STATUS": "run_status",
         "START_UPDATE": "start_job_update",

@@ -430,6 +430,7 @@ define([
                     const runButton = cell.element[0].querySelector(selectors.run);
                     const cancelButton = cell.element[0].querySelector(selectors.cancel);
                     spyOn(console, 'error');
+                    spyOn(Jupyter.narrative, 'saveNarrative');
                     await TestUtil.waitForElementState(cancelButton, () => {
                         return (
                             !runButton.classList.contains('disabled') &&
@@ -477,6 +478,11 @@ define([
                         testCase.updatedState
                     );
                     checkTabState(cell, testCase);
+                    if (testCase.msgEvent === 'launched_job_batch') {
+                        expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+                    } else {
+                        expect(Jupyter.narrative.saveNarrative).not.toHaveBeenCalled();
+                    }
                 });
             });
 

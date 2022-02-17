@@ -535,6 +535,7 @@ define([
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    Jupyter.narrative.saveNarrative();
                     if (cancelBatch) {
                         cancelBatchJob();
                         break;

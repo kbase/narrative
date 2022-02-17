@@ -475,15 +475,6 @@ define([
              * Mocking out comm messages coming back over the channel is gruesome. Just
              * calling the handleCommMessage function directly.
              */
-            it(`Should respond to ${jcm.MESSAGE_TYPE.NEW} by saving the Narrative`, () => {
-                const comm = new JobCommChannel();
-                spyOn(Jupyter.narrative, 'saveNarrative');
-                return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(makeCommMsg(jcm.MESSAGE_TYPE.NEW, {}));
-                    expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
-                });
-            });
-
             ['job-status', 'start', 'error', 'NEW', jcm.MESSAGE_TYPE.CANCEL].forEach((type) => {
                 it(`should reject invalid message type ${type}`, () => {
                     const comm = new JobCommChannel();

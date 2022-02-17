@@ -256,10 +256,6 @@ define([
 
             const batchJobs = {};
             switch (msgType) {
-                case RESPONSES.NEW:
-                    Jupyter.narrative.saveNarrative();
-                    break;
-
                 // CELL messages
                 case RESPONSES.RUN_STATUS:
                     if (msgData.event === 'launched_job_batch') {

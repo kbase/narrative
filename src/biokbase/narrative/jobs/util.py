@@ -29,7 +29,6 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
             "STATUS_ALL",
             "STOP_UPDATE",
             "ERROR",
-            "NEW",
             "RUN_STATUS",
         ],
         "params": ["BATCH_ID", "CELL_ID_LIST", "JOB_ID", "JOB_ID_LIST"],

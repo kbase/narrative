@@ -312,8 +312,7 @@ class AppManager(object):
                 "job_id": job_id,
             },
         )
-        self.register_new_job(new_job)
-        self._send_comm_message(MESSAGE_TYPE["NEW"], {"job_id": job_id})
+        JobManager().register_new_job(new_job, refresh=False)
         if cell_id is None:
             return new_job
 
@@ -402,8 +401,7 @@ class AppManager(object):
                 "job_id": job_id,
             },
         )
-        self.register_new_job(new_job)
-        self._send_comm_message(MESSAGE_TYPE["NEW"], {"job_id": job_id})
+        JobManager().register_new_job(new_job, refresh=False)
         if cell_id is not None:
             return
         else:
@@ -552,11 +550,8 @@ class AppManager(object):
 
         # TODO make a tighter design in the job manager for submitting a family of jobs
         for new_job in child_jobs:
-            self.register_new_job(new_job)
-        self.register_new_job(parent_job)
-        self._send_comm_message(
-            MESSAGE_TYPE["NEW"], {"job_id_list": [batch_id] + child_ids}
-        )
+            JobManager().register_new_job(new_job, refresh=False)
+        JobManager().register_new_job(parent_job, refresh=False)
 
         if cell_id is None:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
@@ -984,9 +979,3 @@ class AppManager(object):
         token_name = f"KBApp_{name}"
         token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
         return auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
-
-    def register_new_job(self, job: Job) -> None:
-        JobManager().register_new_job(job, refresh=False)
-        with exc_to_msg("appmanager"):
-            JobComm().lookup_job_state(job.job_id)
-            JobComm().start_job_status_loop()

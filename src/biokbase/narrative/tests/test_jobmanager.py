@@ -302,20 +302,20 @@ class JobManagerTest(unittest.TestCase):
                 n_not_started += 1
 
         for job_id in ALL_JOBS:
-            self.assertIn(f"<td>{job_id}</td>", html)
+            self.assertIn(f'<td class="job_id">{job_id}</td>', html)
 
         for param in counts:
             for value in counts[param]:
-                self.assertIn("<td>" + str(value) + "</td>", html)
-                value_count = html.count("<td>" + str(value) + "</td>")
+                self.assertIn(f'<td class="{param}">{str(value)}</td>', html)
+                value_count = html.count(f'<td class="{param}">{str(value)}</td>')
 
                 self.assertEqual(counts[param][value], value_count)
 
         if n_incomplete:
-            incomplete_count = html.count("<td>Incomplete</td>")
+            incomplete_count = html.count('<td class="finish_time">Incomplete</td>')
             self.assertEqual(incomplete_count, n_incomplete)
         if n_not_started:
-            not_started_count = html.count("<td>Not started</td>")
+            not_started_count = html.count('<td class="run_time">Not started</td>')
             self.assertEqual(not_started_count, n_not_started)
 
     def test_list_jobs_twice(self):

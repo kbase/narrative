@@ -10,7 +10,7 @@ define([
 ], (JobManagerModule, Jobs, jcm, Props, Runtime, UI, TestUtil, JobsData) => {
     'use strict';
 
-    const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchInitMixin, JobManager } =
+    const { JobManagerCore, DefaultHandlerMixin, JobActionsMixin, BatchMixin, JobManager } =
         JobManagerModule;
 
     function createJobManagerInstance(context, jmClass = JobManager) {
@@ -1868,79 +1868,6 @@ define([
                     expect(this.bus.emit).not.toHaveBeenCalled();
                 });
             });
-
-            const resetJobsCallArgs = [
-                jcm.MESSAGE_TYPE.STOP_UPDATE,
-                { [jcm.PARAM.BATCH_ID]: BATCH_ID },
-            ];
-
-            describe('cancelBatchJob', () => {
-                it('cancels the current batch parent job', function () {
-                    spyOn(this.bus, 'emit');
-                    const batchIds = JobsData.allJobsWithBatchParent.map((jobState) => {
-                        return jobState.job_id;
-                    });
-                    expect(
-                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
-                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
-                    expect(this.jobManagerInstance.listeners).toBeDefined();
-                    this.jobManagerInstance.cancelBatchJob();
-                    // check the args to bus.emit were correct
-                    expect(this.bus.emit).toHaveBeenCalled();
-                    const callArgs = this.bus.emit.calls.allArgs();
-                    const actionRequest = actionStatusMatrix.cancel.jobRequest;
-                    expect(callArgs).toEqual(
-                        jasmine.arrayWithExactContents([
-                            [actionRequest, { [jcm.PARAM.JOB_ID_LIST]: [BATCH_ID] }],
-                        ])
-                    );
-                    // the job model should be unchanged
-                    expect(
-                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
-                    ).toEqual(jasmine.arrayWithExactContents(batchIds));
-                    // there should be a status listener for the batch parent
-                    const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: BATCH_ID });
-                    expect(this.jobManagerInstance.listeners[channelString]).toEqual({
-                        [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen(),
-                    });
-                });
-            });
-
-            describe('resetJobs', () => {
-                function runResetTest(ctx, thisCellId = null) {
-                    spyOn(ctx.bus, 'emit');
-                    spyOn(Date, 'now').and.returnValue(1234567890);
-                    expect(
-                        Object.keys(ctx.jobManagerInstance.model.getItem('exec.jobs.byId'))
-                    ).toEqual(
-                        jasmine.arrayWithExactContents(
-                            JobsData.allJobsWithBatchParent.map((jobState) => {
-                                return jobState.job_id;
-                            })
-                        )
-                    );
-                    expect(ctx.jobManagerInstance.listeners).toBeDefined();
-                    ctx.jobManagerInstance.resetJobs();
-                    expect(ctx.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
-                    expect(ctx.jobManagerInstance.listeners).toEqual({});
-                    // check the args to bus.emit were correct
-                    expect(ctx.bus.emit).toHaveBeenCalled();
-                    let expected = [resetJobsCallArgs];
-                    if (thisCellId) {
-                        expected = [resetJobsCallArgs, ['reset-cell', { cellId, ts: 1234567890 }]];
-                    }
-                    const callArgs = ctx.bus.emit.calls.allArgs();
-                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));
-                }
-                it('can reset the stored jobs and listeners', function () {
-                    runResetTest(this);
-                });
-
-                it('can reset stored jobs, listeners, and cells', function () {
-                    this.jobManagerInstance.cellId = cellId;
-                    runResetTest(this, cellId);
-                });
-            });
         });
 
         /**
@@ -1984,7 +1911,7 @@ define([
                 this.bus = Runtime.make().bus();
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
-                    BatchInitMixin(JobManagerCore)
+                    BatchMixin(JobManagerCore)
                 );
             });
             const childIds = ['this', 'that', 'the other'],
@@ -2087,7 +2014,7 @@ define([
             it('does nothing if there are no jobs saved', function () {
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
-                    BatchInitMixin(JobManagerCore)
+                    BatchMixin(JobManagerCore)
                 );
                 spyOn(this.jobManagerInstance.bus, 'emit');
                 expect(this.jobManagerInstance.listeners).toEqual({});
@@ -2103,7 +2030,7 @@ define([
                 Jobs.populateModelFromJobArray(this.model, JobsData.allJobsWithBatchParent);
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
-                    BatchInitMixin(JobManagerCore)
+                    BatchMixin(JobManagerCore)
                 );
                 expect(this.jobManagerInstance.listeners).toEqual({});
                 spyOn(this.jobManagerInstance.bus, 'emit');
@@ -2120,7 +2047,7 @@ define([
                 Jobs.populateModelFromJobArray(this.model, [JobsData.batchParentJob]);
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
-                    BatchInitMixin(JobManagerCore)
+                    BatchMixin(JobManagerCore)
                 );
                 expect(this.jobManagerInstance.listeners).toEqual({});
                 spyOn(this.jobManagerInstance.bus, 'emit');
@@ -2138,7 +2065,7 @@ define([
             beforeEach(function () {
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
-                    BatchInitMixin(JobManagerCore)
+                    BatchMixin(JobManagerCore)
                 );
             });
             it('uses the Jobs function', function () {
@@ -2150,6 +2077,182 @@ define([
                 expect(this.jobManagerInstance.model.getItem).toHaveBeenCalled();
                 expect(Jobs.getFsmStateFromJobs).toHaveBeenCalled();
                 expect(Jobs.getFsmStateFromJobs.calls.allArgs()).toEqual([[[]]]);
+            });
+        });
+
+        describe('requestBatchUpdate', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+
+            it('requests the status of active jobs', function () {
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [
+                        jcm.MESSAGE_TYPE.STATUS,
+                        { [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(ACTIVE_JOB_IDS) },
+                    ],
+                ]);
+            });
+
+            it('does not make a request if there are no active jobs', function () {
+                const terminalJobs = JobsData.allJobs.filter((job) => {
+                    return !ACTIVE_JOB_IDS.includes(job.job_id);
+                });
+                terminalJobs.push(JobsData.batchParentJob);
+                Jobs.populateModelFromJobArray(this.jobManagerInstance.model, terminalJobs);
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([]);
+            });
+
+            it('does not make a request if the batch job is terminal', function () {
+                // update the batch job to terminated
+                this.jobManagerInstance.model.setItem('exec.jobState', {
+                    ...this.jobManagerInstance.model.getItem('exec.jobState'),
+                    status: 'terminated',
+                });
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchStatus();
+                expect(this.bus.emit.calls.allArgs()).toEqual([]);
+            });
+        });
+
+        describe('requestBatchInfo', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+
+            it('requests info for the batch if none is present', function () {
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchInfo();
+
+                this.jobManagerInstance.model.setItem('exec.jobs.info', {});
+                this.jobManagerInstance.requestBatchInfo();
+
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
+                ]);
+            });
+
+            it('requests info for jobs that lack it', function () {
+                const jobData = this.jobManagerInstance.model.getItem('exec.jobs'),
+                    jobIdList = Object.keys(jobData.byId),
+                    missingJobIds = [];
+                let bool = true;
+
+                // populate some job info but not others
+                jobData.info = jobIdList.reduce((acc, curr) => {
+                    bool = !bool;
+                    if (bool) {
+                        acc[curr] = { job_params: [{}] };
+                    } else {
+                        missingJobIds.push(curr);
+                    }
+                    return acc;
+                }, {});
+                this.jobManagerInstance.model.setItem('exec.jobs', jobData);
+
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.requestBatchInfo();
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [
+                        jcm.MESSAGE_TYPE.INFO,
+                        { [jcm.PARAM.JOB_ID_LIST]: jasmine.arrayWithExactContents(missingJobIds) },
+                    ],
+                ]);
+            });
+        });
+
+        const resetJobsCallArgs = [
+            jcm.MESSAGE_TYPE.STOP_UPDATE,
+            { [jcm.PARAM.BATCH_ID]: BATCH_ID },
+        ];
+
+        describe('cancelBatchJob', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+            it('cancels the current batch parent job', function () {
+                spyOn(this.bus, 'emit');
+                const allBatchJobIds = JobsData.allJobsWithBatchParent.map((jobState) => {
+                    return jobState.job_id;
+                });
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                ).toEqual(jasmine.arrayWithExactContents(allBatchJobIds));
+                expect(this.jobManagerInstance.listeners).toBeDefined();
+                this.jobManagerInstance.cancelBatchJob();
+                // check the args to bus.emit were correct
+                expect(this.bus.emit).toHaveBeenCalled();
+                const callArgs = this.bus.emit.calls.allArgs();
+                const actionRequest = actionStatusMatrix.cancel.jobRequest;
+                expect(callArgs).toEqual(
+                    jasmine.arrayWithExactContents([
+                        [actionRequest, { [jcm.PARAM.JOB_ID_LIST]: [BATCH_ID] }],
+                    ])
+                );
+                // the job model should be unchanged
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                ).toEqual(jasmine.arrayWithExactContents(allBatchJobIds));
+                // there should be a status listener for the batch parent
+                const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: BATCH_ID });
+                expect(this.jobManagerInstance.listeners[channelString]).toEqual({
+                    [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen(),
+                });
+            });
+        });
+
+        describe('resetJobs', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchMixin(JobManagerCore)
+                );
+            });
+
+            function runResetTest(ctx, thisCellId = null) {
+                spyOn(ctx.bus, 'emit');
+                spyOn(Date, 'now').and.returnValue(1234567890);
+                expect(Object.keys(ctx.jobManagerInstance.model.getItem('exec.jobs.byId'))).toEqual(
+                    jasmine.arrayWithExactContents(
+                        JobsData.allJobsWithBatchParent.map((jobState) => {
+                            return jobState.job_id;
+                        })
+                    )
+                );
+                expect(ctx.jobManagerInstance.listeners).toBeDefined();
+                ctx.jobManagerInstance.resetJobs();
+                expect(ctx.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
+                expect(ctx.jobManagerInstance.listeners).toEqual({});
+                // check the args to bus.emit were correct
+                expect(ctx.bus.emit).toHaveBeenCalled();
+                let expected = [resetJobsCallArgs];
+                if (thisCellId) {
+                    expected = [resetJobsCallArgs, ['reset-cell', { cellId, ts: 1234567890 }]];
+                }
+                const callArgs = ctx.bus.emit.calls.allArgs();
+                expect(callArgs).toEqual(jasmine.arrayWithExactContents(expected));
+            }
+            it('can reset the stored jobs and listeners', function () {
+                runResetTest(this);
+            });
+
+            it('can reset stored jobs, listeners, and cells', function () {
+                this.jobManagerInstance.cellId = cellId;
+                runResetTest(this, cellId);
             });
         });
     });

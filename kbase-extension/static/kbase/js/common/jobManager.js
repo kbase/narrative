@@ -748,60 +748,9 @@ define([
                     validStatuses: Jobs.validStatusesForAction.retry,
                 });
             }
-
-            /**
-             * Cancel a batch job by submitting a cancel request for the batch job container
-             *
-             * This action is triggered by hitting the 'Cancel' button at the top right of the
-             * bulk cell
-             */
-            cancelBatchJob() {
-                const batchId = this.model.getItem('exec.jobState.job_id');
-                if (batchId) {
-                    this.doJobAction('cancel', [batchId]);
-                }
-            }
-
-            /**
-             * Reset the job manager, removing all listeners and stored job data
-             */
-            resetJobs() {
-                const allJobs = this.model.getItem('exec.jobs.byId'),
-                    batchJob = this.model.getItem('exec.jobState');
-                if (!allJobs || !Object.keys(allJobs).length) {
-                    this.model.deleteItem('exec');
-                    this.resetCell();
-                    return;
-                }
-
-                if (batchJob && !allJobs[batchJob.job_id]) {
-                    allJobs[batchJob.job_id] = batchJob;
-                }
-
-                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
-                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
-                });
-
-                // ensure that job updates are turned off and listeners removed
-                Object.keys(allJobs).forEach((jobId) => {
-                    this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
-                });
-
-                this.model.deleteItem('exec');
-                this.resetCell();
-            }
-
-            resetCell() {
-                if (this.cellId) {
-                    this.bus.emit('reset-cell', {
-                        cellId: this.cellId,
-                        ts: Date.now(),
-                    });
-                }
-            }
         };
 
-    const BatchInitMixin = (Base) =>
+    const BatchMixin = (Base) =>
         class extends Base {
             /**
              * set up the job manager to handle a batch job
@@ -892,15 +841,137 @@ define([
             getFsmStateFromJobs() {
                 return Jobs.getFsmStateFromJobs(this.model.getItem('exec.jobs'));
             }
+
+            /**
+             * send a message requesting status updates for all
+             * non-terminal jobs in the batch
+             */
+            requestBatchStatus() {
+                const jobsById = this.model.getItem('exec.jobs.byId'),
+                    batchJob = this.model.getItem('exec.jobState');
+
+                // no stored jobs
+                if (!jobsById || !batchJob || !Object.keys(jobsById).length) {
+                    return;
+                }
+                // terminal batch job ==> no updates to child jobs
+                if (Jobs.isTerminalStatus(batchJob.status)) {
+                    return;
+                }
+
+                const batchId = batchJob.job_id;
+                // ensure jobsById contains the batch job
+                if (!jobsById[batchId]) {
+                    jobsById[batchId] = batchJob;
+                }
+
+                const jobsToUpdate = Object.values(jobsById)
+                    .filter((job) => {
+                        return !Jobs.isTerminalStatus(job.status);
+                    })
+                    .map((job) => {
+                        return job.job_id;
+                    });
+
+                if (jobsToUpdate.length) {
+                    // if the only job to update is the batch job, skip the request
+                    if (jobsToUpdate.length === 1 && jobsToUpdate[0] === batchId) {
+                        return;
+                    }
+                    const args = {
+                        [jcm.PARAM.JOB_ID_LIST]: jobsToUpdate,
+                    };
+                    if (this.lastUpdate) {
+                        args.timestamp = this.lastUpdate;
+                    }
+                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, args);
+                }
+            }
+
+            /**
+             * request job information for any jobs lacking it
+             */
+            requestBatchInfo() {
+                const batchId = this.model.getItem('exec.jobState.job_id'),
+                    jobInfo = this.model.getItem('exec.jobs.info');
+                if (!jobInfo || !Object.keys(jobInfo).length) {
+                    return this.bus.emit(jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId });
+                }
+
+                const jobInfoIds = new Set(Object.keys(jobInfo));
+                const missingJobIds = Object.keys(this.model.getItem('exec.jobs.byId')).filter(
+                    (jobId) => {
+                        return !jobInfoIds.has(jobId);
+                    }
+                );
+                if (missingJobIds.length) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.INFO, {
+                        [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
+                    });
+                }
+            }
+
+            /**
+             * Cancel a batch job by submitting a cancel request for the batch job container
+             *
+             * This action is triggered by hitting the 'Cancel' button at the top right of the
+             * bulk cell
+             */
+            cancelBatchJob() {
+                const batchId = this.model.getItem('exec.jobState.job_id');
+                if (batchId) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] });
+                    // add the appropriate listener
+                    this.addListener(jcm.MESSAGE_TYPE.STATUS, jcm.CHANNEL.JOB, [batchId]);
+                }
+            }
+
+            /**
+             * Reset the job manager, removing all listeners and stored job data
+             */
+            resetJobs() {
+                const allJobs = this.model.getItem('exec.jobs.byId'),
+                    batchJob = this.model.getItem('exec.jobState');
+                if (!allJobs || !Object.keys(allJobs).length) {
+                    this.model.deleteItem('exec');
+                    this.resetCell();
+                    return;
+                }
+
+                if (batchJob && !allJobs[batchJob.job_id]) {
+                    allJobs[batchJob.job_id] = batchJob;
+                }
+
+                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                    [jcm.PARAM.BATCH_ID]: batchJob.job_id,
+                });
+
+                // ensure that job updates are turned off and listeners removed
+                Object.keys(allJobs).forEach((jobId) => {
+                    this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
+                });
+
+                this.model.deleteItem('exec');
+                this.resetCell();
+            }
+
+            resetCell() {
+                if (this.cellId) {
+                    this.bus.emit('reset-cell', {
+                        cellId: this.cellId,
+                        ts: Date.now(),
+                    });
+                }
+            }
         };
 
-    class JobManager extends BatchInitMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
+    class JobManager extends BatchMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
 
     return {
         JobManagerCore,
         DefaultHandlerMixin,
         JobActionsMixin,
-        BatchInitMixin,
+        BatchMixin,
         JobManager,
     };
 });

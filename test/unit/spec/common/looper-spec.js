@@ -33,6 +33,19 @@ define(['common/looper'], (Looper) => {
             expect(console.error).not.toHaveBeenCalled();
             jasmine.clock().tick(10001);
             expect(console.error.calls.allArgs()).toEqual([['ZOMG!']]);
+            expect(looperInstance.requestLoop).toBeNull();
+        });
+
+        it('will not override an existing request', () => {
+            const looperInstance = new Looper({ pollInterval: 10000 });
+            spyOn(console, 'error');
+            looperInstance.scheduleRequest(console.error, 'ZOMG!');
+            expect(console.error).not.toHaveBeenCalled();
+            jasmine.clock().tick(5000);
+            looperInstance.scheduleRequest(console.error, 'WTF! FML!');
+            jasmine.clock().tick(10001);
+            expect(console.error.calls.allArgs()).toEqual([['ZOMG!']]);
+            expect(looperInstance.requestLoop).toBeNull();
         });
 
         it('can have the function cleared', () => {

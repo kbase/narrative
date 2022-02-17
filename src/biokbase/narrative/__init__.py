@@ -2,7 +2,7 @@ __all__ = ["magics", "common", "handlers", "contents", "services", "widgetmanage
 
 from semantic_version import Version
 
-__version__ = Version("5.0.1")
+__version__ = Version("5.0.2")
 
 
 def version():

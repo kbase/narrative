@@ -85,7 +85,7 @@ class JobManager(object):
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
 
         if refresh is None:
-            refresh = int(not job.was_terminal())
+            refresh = not job.was_terminal()
         self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
         # add the new job to the _jobs_by_cell_id mapping if there is a cell_id present

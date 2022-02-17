@@ -259,7 +259,7 @@ Messages expected by the narrative backend:
 * `JOB_ID` - string OR
 * `JOB_ID_LIST` - array of strings
 
-`RETRY` - retry a job or list of jobs, responds with `RETRY` and `NEW`
+`RETRY` - retry a job or list of jobs, responds with `RETRY`
 * `JOB_ID` - string OR
 * `JOB_ID_LIST` - array of strings
 
@@ -459,12 +459,6 @@ In case of error, the response has the keys:
 
 Retry data is split out into individual jobs and sent to `job_id`
 
-
-### `NEW`
-Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent
-
-**content**
-  * `job_id` - string OR `job_id_list` - array of strings
 
 ### `RUN_STATUS`
 Sent during the job startup process. There are a few of these containing various startup status, including errors (if they happen).

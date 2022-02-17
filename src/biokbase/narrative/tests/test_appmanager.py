@@ -1164,13 +1164,7 @@ class AppManagerTestCase(unittest.TestCase):
                     "run_id": run_id,
                     "job_id": self.test_job_id,
                 },
-            },
-            {
-                "msg_type": MESSAGE_TYPE["NEW"],
-                "content": {
-                    "job_id": self.test_job_id,
-                },
-            },
+            }
         ]
 
     def _bulk_messages(self, cell_id=None, run_id=None, num_jobs=1):
@@ -1191,13 +1185,7 @@ class AppManagerTestCase(unittest.TestCase):
                     "batch_id": self.test_job_id,
                     "child_job_ids": child_ids,
                 },
-            },
-            {
-                "msg_type": MESSAGE_TYPE["NEW"],
-                "content": {
-                    "job_id_list": [self.test_job_id] + child_ids,
-                },
-            },
+            }
         ]
 
     def _verify_comm_success(

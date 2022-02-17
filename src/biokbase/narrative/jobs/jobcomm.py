@@ -368,18 +368,7 @@ class JobComm:
     def _retry_jobs(self, req: JobRequest) -> dict:
         job_id_list = self._get_job_ids(req)
         retry_results = self._jm.retry_jobs(job_id_list)
-        retry_ids = [
-            result["retry"]["jobState"]["job_id"]
-            for result in retry_results.values()
-            if "retry" in result
-        ]
-        if len(retry_ids):
-            self.send_comm_message(
-                MESSAGE_TYPE["NEW"],
-                {PARAM["JOB_ID_LIST"]: retry_ids},
-            )
         self.send_comm_message(MESSAGE_TYPE["RETRY"], retry_results)
-
         return retry_results
 
     def _get_job_logs(self, req: JobRequest) -> dict:

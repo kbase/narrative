@@ -97,7 +97,6 @@ CELL_JOB_STATUS = MESSAGE_TYPE["CELL_JOB_STATUS"]
 ERROR = MESSAGE_TYPE["ERROR"]
 INFO = MESSAGE_TYPE["INFO"]
 LOGS = MESSAGE_TYPE["LOGS"]
-NEW = MESSAGE_TYPE["NEW"]
 RETRY = MESSAGE_TYPE["RETRY"]
 START_UPDATE = MESSAGE_TYPE["START_UPDATE"]
 STATUS = MESSAGE_TYPE["STATUS"]
@@ -418,7 +417,9 @@ class JobCommTestCase(unittest.TestCase):
                 ]
                 exp_msg = {
                     "msg_type": "job_status_all",
-                    "content": {id: ALL_RESPONSE_DATA[STATUS][id] for id in exp_job_ids}
+                    "content": {
+                        id: ALL_RESPONSE_DATA[STATUS][id] for id in exp_job_ids
+                    },
                 }
                 self.assertEqual(exp_msg, msg)
 
@@ -862,15 +863,6 @@ class JobCommTestCase(unittest.TestCase):
             },
             retry_msg,
         )
-        retry_ids = [RETRIED_JOBS[id] for id in job_id_list if id in RETRIED_JOBS]
-        new_msg = self.jc._comm.pop_message()
-        if len(retry_ids):
-            self.assertEqual(
-                {"msg_type": NEW, "content": {JOB_ID_LIST: retry_ids}},
-                new_msg,
-            )
-        else:
-            self.assertEqual(new_msg, None)
 
     def test_retry_jobs__job_id__ok(self):
         job_id_list = [BATCH_TERMINATED_RETRIED]

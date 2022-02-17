@@ -1465,7 +1465,7 @@ define([
                 tooLongCase,
                 goodStringCases,
             ];
-            runTests('validateText', testCases);
+            runTests('validateTextString', testCases);
             runTests('validateWorkspaceObjectName', testCases); // covers all but the case where we have to see if the object exists
         })();
 

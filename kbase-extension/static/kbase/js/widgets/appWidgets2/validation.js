@@ -411,7 +411,7 @@ define([
          * (ignoring all other constraints)
          *
          * @param {string} value
-         * @param {object} options
+         * @param {object} constraints
          * - required - boolean
          * - min_length - int
          * - max_length - int
@@ -419,8 +419,11 @@ define([
          * - type - string, only available now is "WorkspaceObjectName" - if that's present, this
          *      gets validated as a workspace object name (meaning that string lengths and regexp
          *      are ignored)
+         * @param {object} options (optional). if present, optional values are
+         * - invalidValues {Set<string>} set of values that are always invalid
+         * - invalidError {string} string to respond with if an invalid value is present
          */
-        function validateText(value, constraints, options = {}) {
+        function validateTextString(value, constraints, options = {}) {
             let parsedValue,
                 errorMessage,
                 diagnosis = Constants.DIAGNOSIS.VALID;
@@ -620,6 +623,13 @@ define([
             };
         }
 
+        function importTextString(value) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+            return value;
+        }
+
         return {
             validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName,
@@ -629,13 +639,13 @@ define([
             validateIntegerField: validateIntString,
             validateFloat,
             validateFloatString,
-            validateText,
-            validateTextString: validateText,
+            validateTextString,
             validateSet,
             validateTextSet,
             validateStringSet: validateTextSet,
             validateBoolean,
             validateTrue,
+            importTextString,
         };
     }
 

@@ -1,8 +1,11 @@
-define(['bluebird', '../validation'], (Promise, Validator) => {
+define(['require', 'bluebird', '../validation'], (require, Promise, Validator) => {
     'use strict';
 
+    const typeToValidator = {
+        string: Validator.validateTextString,
+    };
+
     const typeToValidatorModule = {
-        string: Validator.validateText,
         int: 'int',
         float: 'float',
         sequence: 'sequence',
@@ -18,11 +21,11 @@ define(['bluebird', '../validation'], (Promise, Validator) => {
     function validate(fieldValue, fieldSpec, options) {
         return new Promise((resolve, reject) => {
             const fieldType = fieldSpec.data.type;
-            if (!(fieldType in typeToValidatorModule)) {
+            if (!(fieldType in typeToValidatorModule) && !(fieldType in typeToValidator)) {
                 reject(new Error(`No validator for type: ${fieldType}`));
-            } else if (typeof typeToValidatorModule[fieldType] === 'function') {
+            } else if (fieldType in typeToValidator) {
                 resolve(
-                    typeToValidatorModule[fieldType](
+                    typeToValidator[fieldType](
                         fieldValue,
                         fieldSpec.data.constraints || {},
                         options || {}
@@ -32,6 +35,8 @@ define(['bluebird', '../validation'], (Promise, Validator) => {
                 require(['./' + typeToValidatorModule[fieldType]], (validator) => {
                     resolve(validator.validate(fieldValue, fieldSpec, options));
                 }, (err) => {
+                    console.error('error while loading');
+                    console.error(JSON.stringify(err));
                     reject(err);
                 });
             }

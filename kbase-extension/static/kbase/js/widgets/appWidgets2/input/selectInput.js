@@ -4,7 +4,7 @@ define([
     'common/html',
     'common/ui',
     'common/runtime',
-    '../validators/text',
+    '../validation',
     '../inputUtils',
     '../validators/constants',
     'select2',
@@ -65,13 +65,15 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Validation.importString(getControlValue());
+            return Validation.importTextString(getControlValue());
         }
 
         function validate(value) {
-            return Validation.validate(value, spec, {
-                invalidValues: model.invalidValues,
-                invalidError,
+            return Promise.try(() => {
+                return Validation.validateTextString(value, spec.data.constraints, {
+                    invalidValues: model.invalidValues,
+                    invalidError,
+                });
             });
         }
 

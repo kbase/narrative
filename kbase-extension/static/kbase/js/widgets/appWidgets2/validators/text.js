@@ -1,4 +1,4 @@
-define(['bluebird', 'util/string'], (Promise, StringUtil) => {
+define(['bluebird', 'util/string', './constants'], (Promise, StringUtil, Constants) => {
     'use strict';
 
     function importString(value) {
@@ -11,7 +11,7 @@ define(['bluebird', 'util/string'], (Promise, StringUtil) => {
     function applyConstraints(value, constraints, options) {
         let parsedValue,
             errorMessage,
-            diagnosis = 'valid',
+            diagnosis = Constants.DIAGNOSIS.VALID,
             regexps;
 
         const minLength = constraints.min_length,
@@ -31,24 +31,24 @@ define(['bluebird', 'util/string'], (Promise, StringUtil) => {
         if (StringUtil.isEmptyString(value)) {
             parsedValue = '';
             if (constraints.required) {
-                diagnosis = 'required-missing';
+                diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                 errorMessage = 'value is required';
             } else {
-                diagnosis = 'optional-empty';
+                diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
             }
         } else if (typeof value !== 'string') {
-            diagnosis = 'invalid';
+            diagnosis = Constants.DIAGNOSIS.INVALID;
             errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
         } else if (options.invalidValues && options.invalidValues.has(value)) {
-            diagnosis = 'invalid';
+            diagnosis = Constants.DIAGNOSIS.INVALID;
             errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
         } else {
             parsedValue = value;
             if (parsedValue.length < minLength) {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'the minimum length for this parameter is ' + minLength;
             } else if (parsedValue.length > maxLength) {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'the maximum length for this parameter is ' + maxLength;
             } else if (regexps) {
                 const regexpErrorMessages = [];
@@ -64,23 +64,34 @@ define(['bluebird', 'util/string'], (Promise, StringUtil) => {
                     }
                 });
                 if (regexpErrorMessages.length > 0) {
-                    diagnosis = 'invalid';
+                    diagnosis = Constants.DIAGNOSIS.VALID;
                     errorMessage = regexpErrorMessages.join('; ');
                 }
             } else {
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
             }
         }
 
         return {
             isValid: errorMessage ? false : true,
-            errorMessage: errorMessage,
-            diagnosis: diagnosis,
-            value: value,
-            parsedValue: parsedValue,
+            errorMessage,
+            diagnosis,
+            value,
+            parsedValue,
         };
     }
 
+    /**
+     *
+     * @param {String} value the value to validate, expected to be a string
+     * @param {Object} spec the parameter spec from the app spec
+     * @param {Object} options can have the following keys, all optional:
+     *   - invalidValues - {Set<string>} - any values in this set are automatically treated as
+     *     invalid
+     *   - invalidError - {String} - optional special error used if any of the invalidValues
+     *     Set are encountered
+     * @returns
+     */
     function validate(value, spec, options) {
         return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints, options || {});

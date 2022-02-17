@@ -5,11 +5,12 @@ define([
     'kb_common/utils',
     'StagingServiceClient',
     'kb_service/utils',
-    'common/validation',
+    '../validation',
     'common/events',
     'common/runtime',
     'common/ui',
     'common/data',
+    '../validators/constants',
     'util/timeFormat',
     'util/string',
     'kbase-generic-client-api',
@@ -28,6 +29,7 @@ define([
     Runtime,
     UI,
     Data,
+    Constants,
     TimeFormat,
     StringUtil,
     GenericClient,
@@ -175,7 +177,7 @@ define([
                 if (typeof selectedItem === 'number') {
                     selectedItem = String(selectedItem);
                 }
-                return Validation.validateText(selectedItem, validationConstraints);
+                return Validation.validateTextString(selectedItem, validationConstraints);
             });
         }
 
@@ -305,7 +307,7 @@ define([
                     channel.emit('changed', {
                         newValue: newValue,
                     });
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
                         newValue: spec.data.nullValue,

@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    '../validators/text',
+    '../validation',
     'util/util',
     'common/ui',
     'common/props',
@@ -43,7 +43,7 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 

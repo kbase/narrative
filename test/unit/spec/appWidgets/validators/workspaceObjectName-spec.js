@@ -1,7 +1,8 @@
-define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'], (
-    Validator,
-    Mocks
-) => {
+define([
+    'widgets/appWidgets2/validators/workspaceObjectName',
+    'widgets/appWidgets2/validators/constants',
+    'narrativeMocks',
+], (Validator, Constants, Mocks) => {
     'use strict';
 
     function buildResult(expected) {
@@ -53,7 +54,7 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
                 const expectedResult = {
                     isValid: false,
                     messageId: 'required-missing',
-                    diagnosis: 'required-missing',
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                     errorMessage: 'value is required',
                     shortMessage: undefined,
                 };
@@ -68,7 +69,7 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
             expect(result).toEqual(
                 buildResult({
                     isValid: true,
-                    diagnosis: 'optional-empty',
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                 })
             );
         });
@@ -112,7 +113,7 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
                         isValid: false,
                         errorMessage: testCase.errorMessage,
                         messageId: testCase.messageId,
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                     })
                 );
             });
@@ -143,14 +144,14 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
                 {
                     label: 'valid',
                     wsResponse: null,
-                    result: { isValid: true, diagnosis: 'valid' },
+                    result: { isValid: true, diagnosis: Constants.DIAGNOSIS.VALID },
                 },
                 {
                     label: 'warning',
                     wsResponse: [1, inputValue, inputType],
                     result: {
                         isValid: true,
-                        diagnosis: 'suspect',
+                        diagnosis: Constants.DIAGNOSIS.SUSPECT,
                         shortMessage: 'an object already exists with this name',
                         messageId: 'obj-overwrite-warning',
                     },
@@ -160,7 +161,7 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
                     wsResponse: [1, inputValue, 'SomeModule.OtherType'],
                     result: {
                         isValid: false,
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                         errorMessage:
                             'an object already exists with this name and is not of the same type',
                         messageId: 'obj-overwrite-diff-type',
@@ -204,7 +205,9 @@ define(['widgets/appWidgets2/validators/workspaceObjectName', 'narrativeMocks'],
                     shouldNotExist: true,
                 };
                 const result = await Validator.validate(inputValue, spec, options);
-                expect(result).toEqual(buildResult({ isValid: true, diagnosis: 'valid' }));
+                expect(result).toEqual(
+                    buildResult({ isValid: true, diagnosis: Constants.DIAGNOSIS.VALID })
+                );
                 expect(jasmine.Ajax.requests.count()).toBe(1);
             });
         });

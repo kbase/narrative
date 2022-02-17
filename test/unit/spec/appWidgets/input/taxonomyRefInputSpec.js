@@ -3,9 +3,10 @@ define([
     'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/taxonomyRefInput',
+    'widgets/appWidgets2/validators/constants',
     'base/js/namespace',
     'narrativeMocks',
-], ($, TestUtil, Runtime, TaxonomyRefInput, Jupyter, Mocks) => {
+], ($, TestUtil, Runtime, TaxonomyRefInput, Constants, Jupyter, Mocks) => {
     'use strict';
     const AUTH_TOKEN = 'fakeAuthToken';
 
@@ -148,7 +149,7 @@ define([
             xit('Should set model value by bus', (done) => {
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeNull();
-                    expect(msg.diagnosis).toBe('valid');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.VALID);
                     done();
                 });
 
@@ -163,7 +164,7 @@ define([
             xit('Should reset model value by bus', (done) => {
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeNull();
-                    expect(msg.diagnosis).toBe('valid');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.VALID);
                     done();
                 });
 
@@ -202,7 +203,10 @@ define([
                 // set the model value, which triggers a validation message
                 $select.val('stuff').trigger('change');
                 await TestUtil.wait(1000);
-                expect(validationMessage).toEqual({ errorMessage: null, diagnosis: 'valid' });
+                expect(validationMessage).toEqual({
+                    errorMessage: null,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                });
             });
         });
     });

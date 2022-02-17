@@ -1,10 +1,12 @@
-define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui', 'bootstrap'], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    Ui
-) => {
+define([
+    'bluebird',
+    'common/html',
+    '../validation',
+    'common/events',
+    'common/ui',
+    '../validators/constants',
+    'bootstrap',
+], (Promise, html, Validation, Events, Ui, Constants) => {
     'use strict';
 
     // Constants
@@ -14,16 +16,14 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
         option = t('option');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            ui,
-            container,
             bus = config.bus,
             model = {
                 availableValues: null,
                 value: null,
             };
+        let parent, ui, container;
 
         // Validate configuration.
         // Nothing to do...
@@ -70,7 +70,7 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled',
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 }
 
@@ -84,21 +84,21 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
         }
 
         function makeInputControl(events) {
-            let selected,
-                selectOptions = model.availableValues.map((item) => {
-                    selected = false;
-                    if (item.value === model.value) {
-                        selected = true;
-                    }
+            let selected;
+            const selectOptions = model.availableValues.map((item) => {
+                selected = false;
+                if (item.value === model.value) {
+                    selected = true;
+                }
 
-                    return option(
-                        {
-                            value: item.value,
-                            selected: selected,
-                        },
-                        item.display
-                    );
-                });
+                return option(
+                    {
+                        value: item.value,
+                        selected: selected,
+                    },
+                    item.display
+                );
+            });
 
             // CONTROL
             return select(
@@ -126,7 +126,7 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
             );
         }
 
-        function render(input) {
+        function render() {
             Promise.try(() => {
                 const events = Events.make(),
                     inputControl = makeInputControl(events);
@@ -167,7 +167,7 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
                     return true;
                 }
                 return false;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -175,7 +175,7 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
         function unsetModelValue() {
             return Promise.try(() => {
                 model.value = undefined;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -214,17 +214,8 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
             });
         }
 
-        //        function run(input) {
-        //            return Promise.try(function () {
-        //                return render(input);
-        //            })
-        //            .then(function () {
-        //                return autoValidate();
-        //            });
-        //        }
-
         return {
-            start: start,
+            start,
         };
     }
 

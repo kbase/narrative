@@ -58,7 +58,7 @@ define([
         //shorten name if applicable
         const $name = $('<span>').addClass('kb-data-list-name');
         if (maxNameLength && name && name.length > maxNameLength) {
-            $name.append(name.substring(0, maxNameLength - 3) + '...');
+            $name.text(name.substring(0, maxNameLength - 3) + '...');
             $name.tooltip({
                 title: name,
                 placement: 'bottom',
@@ -68,7 +68,7 @@ define([
                 },
             });
         } else {
-            $name.append(name);
+            $name.text(name);
         }
 
         const $logo = $('<div>');
@@ -80,7 +80,7 @@ define([
 
         //no default
         const $byUser = $('<span>').addClass('kb-data-list-edit-by').append(editBy),
-            $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative),
+            $narrative = $('<div>').addClass('kb-data-list-narrative').text(entry.narrative),
             $title = $('<div>').append($name),
             $subcontent = $('<div>').addClass('narrative-data-list-subcontent');
 
@@ -177,7 +177,7 @@ define([
             }
 
             DataProvider.getDataByName().then((data) => {
-                if (data.hasOwnProperty(objectInfo[1])) {
+                if (objectInfo[1] in data) {
                     showCopyWarningDialog();
                 } else {
                     doObjectCopy();

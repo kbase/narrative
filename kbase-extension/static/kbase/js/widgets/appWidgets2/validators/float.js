@@ -1,4 +1,4 @@
-define(['bluebird'], (Promise) => {
+define(['bluebird', './constants'], (Promise, Constants) => {
     'use strict';
 
     function toFloat(value) {
@@ -50,23 +50,23 @@ define(['bluebird'], (Promise) => {
 
         if (value === null) {
             if (constraints.required) {
-                diagnosis = 'required-missing';
+                diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                 errorMessage = 'value is required';
             } else {
-                diagnosis = 'optional-empty';
+                diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
             }
         } else {
             errorMessage = validateFloat(value, constraints.min, constraints.max);
             if (errorMessage) {
-                diagnosis = 'invalid';
+                diagnosis = Constants.DIAGNOSIS.INVALID;
             } else {
-                diagnosis = 'valid';
+                diagnosis = Constants.DIAGNOSIS.VALID;
             }
         }
         return {
             isValid: errorMessage ? false : true,
-            errorMessage: errorMessage,
-            diagnosis: diagnosis,
+            errorMessage,
+            diagnosis,
         };
     }
 
@@ -77,8 +77,8 @@ define(['bluebird'], (Promise) => {
     }
 
     return {
-        importString: importString,
-        applyConstraints: applyConstraints,
-        validate: validate,
+        importString,
+        applyConstraints,
+        validate,
     };
 });

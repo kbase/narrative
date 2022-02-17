@@ -190,7 +190,7 @@ define([
                     this.renderPanel();
                 })
                 .catch((err) => {
-                    console.error(error);
+                    console.error(err);
                 });
         },
 
@@ -235,8 +235,7 @@ define([
         },
 
         renderPanel: function () {
-            let self = this,
-                k,
+            const self = this,
                 divider = '<hr class="kb-data-list-row-hr">';
 
             if (self.$narPanel && self.narData) {
@@ -249,7 +248,7 @@ define([
                         )
                     );
                     self.narData.mine.sort(self.sortNarrativesFunc);
-                    for (k = 0; k < self.narData.mine.length; k++) {
+                    for (let k = 0; k < self.narData.mine.length; k++) {
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(
                                 self.narData.mine[k]
@@ -267,7 +266,7 @@ define([
                             $('<div>').addClass('kb-nar-manager-titles').append('Shared With Me')
                         )
                     );
-                    for (k = 0; k < self.narData.shared.length; k++) {
+                    for (let k = 0; k < self.narData.shared.length; k++) {
                         if (!self.narData.shared[k].$div) {
                             self.narData.shared[k].$div = self.renderNarrativeDiv(
                                 self.narData.shared[k]
@@ -366,7 +365,7 @@ define([
                                     }
                                     const $tbl = $('<table>').css({ width: '100%' });
                                     for (let k = 0; k < history.length; k++) {
-                                        var $revertBtn = $('<button>')
+                                        const $revertBtn = $('<button>')
                                             .append('v' + history[k][4])
                                             .addClass('kb-data-list-btn');
                                         if (k === 0) {
@@ -648,10 +647,10 @@ define([
                }
              */
 
-            let self = this,
-                isError = false;
+            const self = this;
 
-            let isCurrent = false;
+            let isCurrent = false,
+                isError = false;
             if (this.ws_name === data.ws[1]) {
                 isCurrent = true;
             }
@@ -667,7 +666,7 @@ define([
             const $ctrContent = $('<div>').css({ 'min-height': '60px' });
             $ctrCol.append($ctrContent);
 
-            var $interactionPanel = $('<div>')
+            const $interactionPanel = $('<div>')
                 .addClass('panel panel-default')
                 .append(
                     $('<div>')
@@ -727,7 +726,7 @@ define([
                         .tooltip({ title: 'This narrative has been corrupted.' })
                 );
             }
-            $nameLink.append(nameText).append($version).append($priv);
+            $nameLink.text(nameText).append($version).append($priv);
             $dataCol.append(
                 $('<div>')
                     .addClass('kb-data-list-name')
@@ -774,13 +773,9 @@ define([
 
                 let shareCount = -1; // our user is always going to be included, but will bump the count, since it's not "shared"
                 const perms = this.wsPerms[data.ws[0]];
-                for (const usr in perms) {
-                    if (perms.hasOwnProperty(usr)) {
-                        if (usr === '*') {
-                            continue;
-                        }
-                        shareCount++;
-                    }
+                shareCount += Object.keys(perms).length;
+                if (perms['*']) {
+                    shareCount--;
                 }
 
                 // should really put this in the addDatacontrols; so refactor at some point!
@@ -878,7 +873,7 @@ define([
 
             /* Clicking this should disable it, then show the passed $alertContainer
              */
-            var $initCopyBtn = $('<button>')
+            const $initCopyBtn = $('<button>')
                 .addClass('kb-primary-btn')
                 .click(() => {
                     setButtonWorking(true);
@@ -890,7 +885,7 @@ define([
              * Gets pre-populated with the current narrative name + "- copy"
              * When empty, prompts to enter a name with a tooltip, and disables the copy btn.
              */
-            var $newNameInput = $('<input type="text">')
+            const $newNameInput = $('<input type="text">')
                 .addClass('form-control')
                 .tooltip({
                     title: 'Please enter a name.',
@@ -920,7 +915,7 @@ define([
             /*
              * Does the actual copy and displays the error if that happens.
              */
-            var $doCopyBtn = $('<button>')
+            const $doCopyBtn = $('<button>')
                 .addClass('kb-primary-btn')
                 .append('Copy')
                 .click(() => {
@@ -950,7 +945,7 @@ define([
                         });
                 });
 
-            var $cancelBtn = $('<button>')
+            const $cancelBtn = $('<button>')
                 .addClass('kb-default-btn')
                 .append('Cancel')
                 .click(() => {
@@ -1029,7 +1024,7 @@ define([
                 workingStr = 'Building...',
                 doneStr = 'Link below',
                 errorStr = 'Error!';
-            var $btn = $('<button>')
+            const $btn = $('<button>')
                 .addClass('kb-primary-btn')
                 .append(activeStr)
                 .on('click', () => {
@@ -1088,8 +1083,7 @@ define([
                 };
             if (nar_info[10].methods) {
                 const content = JSON.parse(nar_info[10].methods);
-                Object.keys(content.app).forEach((a) => counts.apps++);
-                Object.keys(content.method).forEach((m) => counts.apps++);
+                counts.apps += content.app.length + content.method.length;
                 counts.viewers += content.output;
                 counts.code += content.ipython.code;
                 counts.md += content.ipython.markdown;

@@ -1,10 +1,11 @@
 define([
     'bluebird',
-    'common/validation',
+    'widgets/appWidgets2/validation',
     'widgets/appWidgets2/validators/int',
     'widgets/appWidgets2/validators/resolver',
+    'widgets/appWidgets2/validators/constants',
     'testUtil',
-], (Promise, Validation, IntValidation, ValidationResolver, TestUtil) => {
+], (Promise, Validation, IntValidation, ValidationResolver, Constants, TestUtil) => {
     'use strict';
 
     describe('Validator2 core functions', () => {
@@ -343,7 +344,7 @@ define([
                         },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                         },
                     },
@@ -362,7 +363,7 @@ define([
                         },
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                         },
                     },
@@ -381,7 +382,7 @@ define([
                         },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be numeric',
                         },
                     },

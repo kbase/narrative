@@ -1,4 +1,9 @@
-define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, TestUtil) => {
+define([
+    'bluebird',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
+    'testUtil',
+], (Promise, Validation, Constants, TestUtil) => {
     'use strict';
 
     describe('Validator functions', () => {
@@ -92,7 +97,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     messageId: undefined,
                     errorMessage: undefined,
                     shortMessage: undefined,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     value: wsObjName,
                     parsedValue: wsObjName,
                 });
@@ -111,7 +116,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     isValid: true,
                     messageId: 'obj-overwrite-warning',
                     shortMessage: 'an object already exists with this name',
-                    diagnosis: 'suspect',
+                    diagnosis: Constants.DIAGNOSIS.SUSPECT,
                     errorMessage: undefined,
                     value: wsObjName,
                     parsedValue: wsObjName,
@@ -132,7 +137,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     messageId: 'obj-overwrite-diff-type',
                     errorMessage:
                         'an object already exists with this name and is not of the same type',
-                    diagnosis: 'invalid',
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
                     shortMessage: undefined,
                     value: wsObjName,
                     parsedValue: wsObjName,
@@ -152,7 +157,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     isValid: true,
                     messageId: undefined,
                     errorMessage: undefined,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     shortMessage: undefined,
                     value: 'somename',
                     parsedValue: 'somename',
@@ -173,17 +178,12 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
 
         // STRING
 
-        function wrap(val) {
-            return Promise.try(() => {
-                return val;
-            });
-        }
         it('validateTrue - should be an instant truthy no-op-ish response', () => {
             const value = 'foo';
             expect(Validation.validateTrue(value)).toEqual({
                 isValid: true,
                 errorMessage: null,
-                diagnosis: 'valid',
+                diagnosis: Constants.DIAGNOSIS.VALID,
                 value: value,
                 parsedValue: value,
             });
@@ -199,71 +199,55 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
             });
             expect(result.isValid).toEqual(true);
         });
-        it('validateTextString - Validate a simple string, required, empty string', (done) => {
-            wrap(
-                Validation.validateTextString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
+        it('validateTextString - Validate a simple string, required, empty string', () => {
+            const result = Validation.validateTextString('', { required: true });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, required, null', (done) => {
-            wrap(
-                Validation.validateTextString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, required, null', () => {
+            const result = Validation.validateTextString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, min and max length, within range', (done) => {
-            wrap(
-                Validation.validateTextString('hello', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, within range', () => {
+            const result = Validation.validateTextString('hello', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateTextString - Validate a simple string, min and max length, below', (done) => {
-            wrap(
-                Validation.validateTextString('hi', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, below', () => {
+            const result = Validation.validateTextString('hi', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateTextString - Validate a simple string, min and max length, above range', (done) => {
-            wrap(
-                Validation.validateTextString('hello earthling', {
-                    required: true,
-                    min_length: 5,
-                    max_length: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateTextString - Validate a simple string, min and max length, above range', () => {
+            const result = Validation.validateTextString('hello earthling', {
+                required: true,
+                min_length: 5,
+                max_length: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
         it('validateTextString - Validate a regexp with matching string', () => {
             const value = 'foobar';
             const options = {
-                regexp_constraint: /^foo/,
+                regexp: [
+                    {
+                        regex: '^foo',
+                        error_text: 'error',
+                        match: 1,
+                    },
+                ],
             };
             const result = Validation.validateTextString(value, options);
             expect(result).toEqual({
                 isValid: true,
-                diagnosis: 'valid',
+                diagnosis: Constants.DIAGNOSIS.VALID,
                 value: value,
                 parsedValue: value,
                 errorMessage: undefined,
@@ -272,174 +256,121 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
         it('validateTextString - Validate a regexp with non-matching string', () => {
             const value = 'barfoo';
             const options = {
-                regexp_constraint: /^\d+$/,
+                regexp: [
+                    {
+                        regex: '^\\d+$',
+                        match: 1,
+                    },
+                ],
             };
             expect(Validation.validateTextString(value, options)).toEqual({
                 isValid: false,
-                diagnosis: 'invalid',
+                diagnosis: Constants.DIAGNOSIS.INVALID,
                 value: value,
                 parsedValue: value,
-                errorMessage:
-                    'The text value did not match the regular expression constraint ' +
-                    options.regexp_constraint,
+                errorMessage: `Failed regular expression /${options.regexp[0].regex}/`,
             });
         });
 
         // INTEGER
-        it('validateIntString - Validate an integer without constraints', (done) => {
-            wrap(Validation.validateIntString('42', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateIntString - Validate an integer without constraints', () => {
+            const result = Validation.validateIntString('42', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('42', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('42', {
+                required: true,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('', {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('7', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('7', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('3', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('3', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, required', (done) => {
-            wrap(
-                Validation.validateIntString('42', {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer, required', () => {
+            const result = Validation.validateIntString('42', {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateIntString - Validate an integer, wront type (int)', (done) => {
-            wrap(
-                Validation.validateIntString(42, {
-                    required: true,
-                    min_int: 5,
-                    max_int: 10,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateIntString - Validate an integer string, wrong type (int)', () => {
+            const result = Validation.validateIntString(42, {
+                required: true,
+                min: 5,
+                max: 10,
             });
+            expect(result.isValid).toEqual(false);
         });
 
         // FLOAT
-        it('validateFloatString - Validate a float without constraints', (done) => {
-            wrap(Validation.validateFloatString('42.12', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateFloatString - Validate a float without constraints', () => {
+            const result = Validation.validateFloatString('42.12', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate a bad without constraints', (done) => {
-            wrap(Validation.validateFloatString('x', {})).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
+        it('validateFloatString - Validate a bad without constraints', () => {
+            const result = Validation.validateFloatString('x', {});
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an empty without constraints', (done) => {
-            wrap(Validation.validateFloatString('', {})).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
+        it('validateFloatString - Validate an empty without constraints', () => {
+            const result = Validation.validateFloatString('', {});
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate a float string, required', (done) => {
-            wrap(
-                Validation.validateFloatString('42.12', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
+        it('validateFloatString - Validate a float string, required', () => {
+            const result = Validation.validateFloatString('42.12', {
+                required: true,
             });
+            expect(result.isValid).toEqual(true);
         });
-        it('validateFloatString - Validate an empty string, required', (done) => {
-            wrap(
-                Validation.validateFloatString('', {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an empty string, required', () => {
+            const result = Validation.validateFloatString('', {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an empty string, required', (done) => {
-            wrap(
-                Validation.validateFloatString(null, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an empty string, required', () => {
+            const result = Validation.validateFloatString(null, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
         // bad types
-        it('validateFloatString - Validate an undefined, required', (done) => {
-            wrap(
-                Validation.validateFloatString(undefined, {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an undefined, required', () => {
+            const result = Validation.validateFloatString(undefined, {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
-        it('validateFloatString - Validate an array, required', (done) => {
-            wrap(
-                Validation.validateFloatString([], {
-                    required: true,
-                })
-            ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
+        it('validateFloatString - Validate an array, required', () => {
+            const result = Validation.validateFloatString([], {
+                required: true,
             });
+            expect(result.isValid).toEqual(false);
         });
 
         function runTests(method, tests) {
@@ -485,7 +416,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '',
                             parsedValue: undefined,
@@ -497,7 +428,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '   ',
                             parsedValue: undefined,
@@ -509,7 +440,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: null,
                             parsedValue: undefined,
@@ -521,7 +452,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '',
                             parsedValue: undefined,
@@ -533,7 +464,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '   ',
                             parsedValue: undefined,
@@ -545,7 +476,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: null,
                             parsedValue: undefined,
@@ -559,7 +490,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '42',
                             parsedValue: 42,
@@ -571,7 +502,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '42.12',
                             parsedValue: 42.12,
@@ -583,7 +514,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '42e2',
                             parsedValue: 42e2,
@@ -597,7 +528,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be numeric',
                             value: 'abc',
                             parsedValue: undefined,
@@ -611,7 +542,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "undefined")',
                             value: undefined,
                             pasedValue: undefined,
@@ -623,7 +554,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: [],
                             parsedValue: undefined,
@@ -635,7 +566,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: {},
                             parsedValue: undefined,
@@ -647,7 +578,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: new Date(0),
                             parsedValue: undefined,
@@ -660,11 +591,11 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         title: 'value over max',
                         value: '123.45',
                         options: {
-                            max_float: 100,
+                            max: 100,
                         },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'the maximum value for this parameter is 100',
                             value: '123.45',
                             parsedValue: undefined,
@@ -674,11 +605,11 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         title: 'value under min',
                         value: '5',
                         options: {
-                            min_float: 10,
+                            min: 10,
                         },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'the minimum value for this parameter is 10',
                             value: '5',
                             parsedValue: undefined,
@@ -688,12 +619,12 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         title: 'within range',
                         value: '5.5',
                         options: {
-                            min_float: 0,
-                            max_float: 10,
+                            min: 0,
+                            max: 10,
                         },
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '5.5',
                             parsedValue: 5.5,
@@ -705,7 +636,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a finite float',
                             value: 'Infinity',
                             parsedValue: undefined,
@@ -732,7 +663,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '',
                             parsedValue: undefined,
@@ -744,7 +675,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '   ',
                             parsedValue: undefined,
@@ -756,7 +687,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: null,
                             parsedValue: undefined,
@@ -768,7 +699,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '',
                             parsedValue: undefined,
@@ -780,7 +711,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '   ',
                             parsedValue: undefined,
@@ -792,7 +723,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: null,
                             parsedValue: undefined,
@@ -806,7 +737,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '42',
                             parsedValue: 42,
@@ -820,7 +751,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'Invalid integer format',
                             value: 'abc',
                             parsedValue: undefined,
@@ -832,7 +763,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'Invalid integer format',
                             value: '42.12',
                             parsedValue: undefined,
@@ -846,7 +777,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "undefined")',
                             value: undefined,
                             pasedValue: undefined,
@@ -858,7 +789,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: [],
                             parsedValue: undefined,
@@ -870,7 +801,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: {},
                             parsedValue: undefined,
@@ -882,7 +813,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: new Date(0),
                             parsedValue: undefined,
@@ -904,7 +835,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '',
                             parsedValue: undefined,
@@ -916,7 +847,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: '   ',
                             parsedValue: undefined,
@@ -928,7 +859,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: false },
                         result: {
                             isValid: true,
-                            diagnosis: 'optional-empty',
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             errorMessage: undefined,
                             value: null,
                             parsedValue: undefined,
@@ -940,7 +871,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '',
                             parsedValue: undefined,
@@ -952,7 +883,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: '   ',
                             parsedValue: undefined,
@@ -964,7 +895,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { required: true },
                         result: {
                             isValid: false,
-                            diagnosis: 'required-missing',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             errorMessage: 'value is required',
                             value: null,
                             parsedValue: undefined,
@@ -978,7 +909,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: '42',
                             parsedValue: '42',
@@ -990,7 +921,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: 'abc',
                             parsedValue: 'abc',
@@ -1002,7 +933,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             errorMessage: undefined,
                             value: 'uniîcodé',
                             parsedValue: 'uniîcodé',
@@ -1017,7 +948,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "undefined")',
                             value: undefined,
                             pasedValue: undefined,
@@ -1029,7 +960,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: [],
                             parsedValue: undefined,
@@ -1041,7 +972,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: {},
                             parsedValue: undefined,
@@ -1053,7 +984,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be a string (it is of type "object")',
                             value: new Date(0),
                             parsedValue: undefined,
@@ -1077,7 +1008,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     options: {},
                     result: {
                         isValid: true,
-                        diagnosis: 'optional-empty',
+                        diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                     },
                 },
                 {
@@ -1086,7 +1017,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     options: { required: false },
                     result: {
                         isValid: true,
-                        diagnosis: 'optional-empty',
+                        diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                         parsedValue: undefined,
                         errorMessage: undefined,
                         value: undefined,
@@ -1098,7 +1029,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                     options: { required: true },
                     result: {
                         isValid: false,
-                        diagnosis: 'required-missing',
+                        diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                         parsedValue: undefined,
                         errorMessage: 'value is required',
                         value: undefined,
@@ -1133,7 +1064,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         errorMessage: 'Value not in the set',
                         parsedValue: 'a',
                         value: 'a',
-                        diagnosis: 'invalid',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
                     },
                 },
             ];
@@ -1159,7 +1090,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         result: {
                             isValid: false,
                             errorMessage: 'value must be a string in data reference format',
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                         },
                     };
                 }),
@@ -1173,7 +1104,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             result: {
                                 isValid: false,
                                 errorMessage: 'value is required',
-                                diagnosis: 'required-missing',
+                                diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             },
                         };
                     })
@@ -1185,7 +1116,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                                 options: { required: false },
                                 result: {
                                     isValid: true,
-                                    diagnosis: 'optional-empty',
+                                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                                 },
                             };
                         })
@@ -1198,7 +1129,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage:
                                 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)',
                         },
@@ -1220,7 +1151,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                         },
                     };
                 });
@@ -1241,7 +1172,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             isValid: false,
                             errorMessage:
                                 'value must be a string in workspace object reference format',
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                         },
                     };
                 }),
@@ -1255,7 +1186,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             result: {
                                 isValid: false,
                                 errorMessage: 'value is required',
-                                diagnosis: 'required-missing',
+                                diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             },
                         };
                     })
@@ -1267,7 +1198,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                                 options: { required: false },
                                 result: {
                                     isValid: true,
-                                    diagnosis: 'optional-empty',
+                                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                                 },
                             };
                         })
@@ -1286,7 +1217,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'Invalid object reference format, should be #/#/#',
                         },
                     };
@@ -1303,7 +1234,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                         },
                     };
                 });
@@ -1323,7 +1254,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             isValid: false,
                             errorMessage:
                                 'value must be a string (it is of type "' + typeof value + '")',
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                         },
                     };
                 }),
@@ -1337,7 +1268,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             result: {
                                 isValid: false,
                                 errorMessage: 'value is required',
-                                diagnosis: 'required-missing',
+                                diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             },
                         };
                     })
@@ -1349,7 +1280,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                                 options: { required: false },
                                 result: {
                                     isValid: true,
-                                    diagnosis: 'optional-empty',
+                                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                                 },
                             };
                         })
@@ -1368,7 +1299,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                         },
                     };
                 }),
@@ -1395,7 +1326,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                         },
                     };
                 });
@@ -1415,7 +1346,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         result: {
                             isValid: false,
                             errorMessage: 'value must be a string in workspace object name format',
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                         },
                     };
                 }),
@@ -1429,7 +1360,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             result: {
                                 isValid: false,
                                 errorMessage: 'value is required',
-                                diagnosis: 'required-missing',
+                                diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                             },
                         };
                     })
@@ -1441,7 +1372,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                                 options: { required: false, type: 'WorkspaceObjectName' },
                                 result: {
                                     isValid: true,
-                                    diagnosis: 'optional-empty',
+                                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                                 },
                             };
                         })
@@ -1454,7 +1385,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { type: 'WorkspaceObjectName' },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             messageId: 'obj-name-no-spaces',
                             errorMessage: 'an object name may not contain a space',
                         },
@@ -1468,7 +1399,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { type: 'WorkspaceObjectName' },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             messageId: 'obj-name-not-integer',
                             errorMessage: 'an object name may not be in the form of an integer',
                         },
@@ -1482,7 +1413,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { type: 'WorkspaceObjectName' },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             messageId: 'obj-name-invalid-characters',
                             errorMessage:
                                 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"',
@@ -1496,7 +1427,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { type: 'WorkspaceObjectName' },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             messageId: 'obj-name-too-long',
                             errorMessage: 'an object name may not exceed 255 characters in length',
                         },
@@ -1519,7 +1450,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { type: 'WorkspaceObjectName' },
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                             parsedValue: value.trim(),
                         },
                     };
@@ -1534,7 +1465,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                 tooLongCase,
                 goodStringCases,
             ];
-            runTests('validateText', testCases);
+            runTests('validateTextString', testCases);
             runTests('validateWorkspaceObjectName', testCases); // covers all but the case where we have to see if the object exists
         })();
 
@@ -1548,7 +1479,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                             options: { required: false },
                             result: {
                                 isValid: true,
-                                diagnosis: 'optional-empty',
+                                diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
                             },
                         };
                     })
@@ -1560,7 +1491,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                                 options: { required: true },
                                 result: {
                                     isValid: false,
-                                    diagnosis: 'required-missing',
+                                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
                                     errorMessage: 'value is required',
                                 },
                             };
@@ -1574,7 +1505,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { values: ['a', 'b', 'c', 1, 2, 3] },
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                         },
                     };
                 }),
@@ -1585,7 +1516,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: { values: ['b', 'd', 1, 4] },
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'Value not in the set',
                         },
                     };
@@ -1597,7 +1528,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: true,
-                            diagnosis: 'valid',
+                            diagnosis: Constants.DIAGNOSIS.VALID,
                         },
                     },
                 ],
@@ -1609,7 +1540,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
                         options: {},
                         result: {
                             isValid: false,
-                            diagnosis: 'invalid',
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be an array',
                         },
                     };

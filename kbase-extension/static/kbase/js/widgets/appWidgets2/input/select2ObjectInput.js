@@ -7,13 +7,27 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/validation',
+    '../validation',
     'util/timeFormat',
     'widgets/appWidgets2/common',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
-], (Promise, $, _, html, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
+], (
+    Promise,
+    $,
+    _,
+    html,
+    Data,
+    Events,
+    Runtime,
+    UI,
+    Validation,
+    TimeFormat,
+    WidgetCommon,
+    Constants
+) => {
     'use strict';
 
     // Constants
@@ -235,7 +249,7 @@ define([
                     channel.emit('changed', {
                         newValue: result.parsedValue,
                     });
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
                         newValue: spec.data.nullValue,
@@ -380,17 +394,6 @@ define([
                 });
             });
         }
-
-        // function getObjectRef(objectInfo) {
-        //     switch (objectRefType) {
-        //         case 'name':
-        //             return objectInfo.name;
-        //         case 'ref':
-        //             return objectInfo.ref;
-        //         default:
-        //             throw new Error('Unsupported object reference type ' + objectRefType);
-        //     }
-        // }
 
         /*
          * Handle the workspace being updated and reflecting that correctly

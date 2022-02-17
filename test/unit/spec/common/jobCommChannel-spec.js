@@ -116,9 +116,7 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ["12345","abcde","who cares?"]',
-                // DATAUP-575: temporary disabling of cell_list
-                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ]);
         });
 
@@ -129,9 +127,7 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = []',
-                // DATAUP-575: temporary disabling of cell_list
-                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ]);
         });
 

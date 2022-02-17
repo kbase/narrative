@@ -2,34 +2,15 @@ define([
     'bluebird',
     'jquery',
     'common/html',
-    'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'common/validation',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
-    'util/timeFormat',
     'kb_sdk_clients/genericClient',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Data,
-    TimeFormat,
-    GenericClient
-) => {
+], (Promise, $, html, Events, Runtime, UI, GenericClient, Constants) => {
     'use strict';
 
     // Constants
@@ -98,7 +79,7 @@ define([
                 return {
                     isValid: true,
                     validated: true,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     errorMessage: null,
                     value: value,
                     parsedValue: value,
@@ -113,7 +94,7 @@ define([
                     channel.emit('changed', {
                         newValue: result.parsedValue,
                     });
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
                         newValue: spec.data.nullValue,

@@ -658,6 +658,7 @@ define([
                                         jcm.MESSAGE_TYPE.START_UPDATE,
                                         { [jcm.PARAM.BATCH_ID]: batchId },
                                     ],
+                                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
                                     [
                                         jcm.MESSAGE_TYPE.CANCEL,
                                         { [jcm.PARAM.JOB_ID_LIST]: [batchId] },

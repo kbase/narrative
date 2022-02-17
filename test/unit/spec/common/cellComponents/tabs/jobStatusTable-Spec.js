@@ -29,6 +29,11 @@ define([
     const allJobsWithBatchParent = JobsData.allJobsWithBatchParent;
     const allJobsNoBatchParent = JobsData.allJobs;
     const batchId = JobsData.batchParentJob.job_id;
+
+    // all messages will be addressed using the batch ID
+    const channelType = jcm.CHANNEL.BATCH,
+        channelId = batchId;
+
     const typesToFiles = {
         assembly: {
             appId: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
@@ -214,7 +219,7 @@ define([
 
     function createInstance(config = {}) {
         // add in typesToFiles and fileTypeMapping
-        return new BatchJobStatusTable(
+        const table = new BatchJobStatusTable(
             Object.assign(
                 {},
                 {
@@ -228,6 +233,11 @@ define([
                 config
             )
         );
+        // ensure that the job manager has all relevant listeners
+        ['ERROR', 'INFO', 'RETRY', 'STATUS', 'LOGS'].forEach((type) => {
+            table.jobManager.addListener(jcm.MESSAGE_TYPE[type], channelType, channelId);
+        });
+        return table;
     }
 
     function createStartedInstance(container, config = {}) {
@@ -259,6 +269,21 @@ define([
             model: makeModel(jobArray),
             bus: Runtime.make().bus(),
         });
+
+        // ensure that the job manager is up and running
+        ['ERROR', 'INFO', 'RETRY', 'STATUS', 'LOGS'].forEach((type) => {
+            context.jobManager.addListener(jcm.MESSAGE_TYPE[type], channelType, channelId);
+        });
+
+        // ensure tests are set up correctly
+        if (!context.jobManager.model.getItem('exec.jobState')) {
+            const nJobs = jobArray.length;
+            if (context.job.batch_id) {
+                throw new Error(`${nJobs} jobs, no batch job, batch_id specified`);
+            }
+            throw new Error(`no batch job or batch_id`);
+        }
+
         context.jobStatusTableInstance = await createStartedInstance(context.container, {
             jobManager: context.jobManager,
             toggleTab: context.toggleTab || null,
@@ -581,17 +606,6 @@ define([
                     // job status request for the full batch
                     [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
                 ]);
-                // this table already has the info populated, so the job info
-                // listener is not required
-                jobIdList.forEach((jobId) => {
-                    const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: jobId });
-                    expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
-                        jasmine.arrayWithExactContents([
-                            jcm.MESSAGE_TYPE.STATUS,
-                            jcm.MESSAGE_TYPE.ERROR,
-                        ])
-                    );
-                });
             });
             it('requests info for jobs that do not have info defined', async function () {
                 instantiateJobStatusTable(this);
@@ -605,7 +619,7 @@ define([
                     bool = !bool;
                     if (bool) {
                         acc[curr] = { job_params: [{}] };
-                    } else if (curr !== batchId) {
+                    } else {
                         missingJobIds.push(curr);
                     }
                     return acc;
@@ -617,32 +631,13 @@ define([
                 await this.jobStatusTableInstance.start({
                     node: container,
                 });
-                expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
-                    // job info request for missing IDs
-                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.JOB_ID_LIST]: this.missingJobIds }],
-                    // job status request for the full batch
-                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
-                ]);
-                // job info listeners only required for some jobs
-                jobIdList.forEach((jobId) => {
-                    const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: jobId });
-                    if (missingJobIds.includes(jobId)) {
-                        expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
-                            jasmine.arrayWithExactContents([
-                                jcm.MESSAGE_TYPE.STATUS,
-                                jcm.MESSAGE_TYPE.ERROR,
-                                jcm.MESSAGE_TYPE.INFO,
-                            ])
-                        );
-                    } else {
-                        expect(Object.keys(this.jobManager.listeners[channelString])).toEqual(
-                            jasmine.arrayWithExactContents([
-                                jcm.MESSAGE_TYPE.STATUS,
-                                jcm.MESSAGE_TYPE.ERROR,
-                            ])
-                        );
-                    }
-                });
+                expect(this.jobManager.bus.emit.calls.allArgs()).toEqual(
+                    jasmine.arrayWithExactContents([
+                        [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.JOB_ID_LIST]: this.missingJobIds }],
+                        // job status request for the full batch
+                        [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    ])
+                );
             });
         });
 
@@ -776,11 +771,6 @@ define([
                             model: makeModel(BATCH_WITH_RETRY),
                             bus: Runtime.make().bus(),
                         });
-                        this.jobManager.addListener(
-                            jcm.MESSAGE_TYPE.INFO,
-                            jcm.CHANNEL.JOB,
-                            BATCH_WITH_RETRY
-                        );
                     });
 
                     async function runParamUpdateTest(ctx, test, jobInfo) {
@@ -1006,8 +996,8 @@ define([
                                 TestUtil.sendBusMessage({
                                     bus: this.jobManager.bus,
                                     message,
-                                    channelType: jcm.CHANNEL.JOB,
-                                    channelId: this.jobId,
+                                    channelType,
+                                    channelId,
                                     type: jcm.MESSAGE_TYPE.STATUS,
                                 });
                             });
@@ -1017,35 +1007,6 @@ define([
                             expect(
                                 this.jobManager.model.getItem(`exec.jobs.byId.${this.job.job_id}`)
                             ).toEqual(this.input);
-                            // if it is a terminal job state, the listener should have been removed
-                            // if the job cannot be retried and it is in a terminal state,
-                            // we expect the job-status listener to be removed
-                            if (this.input.status === 'does_not_exist') {
-                                expect(Object.keys(this.jobManager.listeners)).toEqual([
-                                    JSON.stringify({ [jcm.CHANNEL.JOB]: BATCH_PARENT_ID }),
-                                ]);
-                            } else if (
-                                Jobs.isTerminalStatus(this.input.status) &&
-                                !this.input.meta.canRetry
-                            ) {
-                                const channelString = JSON.stringify({
-                                    [jcm.CHANNEL.JOB]: this.job.job_id,
-                                });
-                                expect(
-                                    this.jobManager.listeners[channelString][
-                                        jcm.MESSAGE_TYPE.STATUS
-                                    ]
-                                ).toBeUndefined();
-                            } else {
-                                const channelString = JSON.stringify({
-                                    [jcm.CHANNEL.JOB]: this.job.job_id,
-                                });
-                                expect(
-                                    this.jobManager.listeners[channelString][
-                                        jcm.MESSAGE_TYPE.STATUS
-                                    ]
-                                ).toBeDefined();
-                            }
                         });
                     });
                 });
@@ -1078,8 +1039,8 @@ define([
                                 TestUtil.sendBusMessage({
                                     bus: this.jobManager.bus,
                                     message,
-                                    channelType: jcm.CHANNEL.JOB,
-                                    channelId: this.jobId,
+                                    channelType,
+                                    channelId,
                                     type: jcm.MESSAGE_TYPE.STATUS,
                                 });
                             });
@@ -1158,8 +1119,8 @@ define([
                                 TestUtil.sendBusMessage({
                                     bus: this.jobManager.bus,
                                     message: errorTest.message,
-                                    channelType: jcm.CHANNEL.JOB,
-                                    channelId: this.job.job_id,
+                                    channelType,
+                                    channelId,
                                     type: jcm.MESSAGE_TYPE.ERROR,
                                 });
                             });
@@ -1190,12 +1151,6 @@ define([
                         this.jobStatusTableInstance = await createStartedInstance(container, {
                             jobManager: this.jobManager,
                         });
-
-                        this.jobManager.addListener(
-                            jcm.MESSAGE_TYPE.RETRY,
-                            jcm.CHANNEL.JOB,
-                            originalJobsIdsWithBatchJob
-                        );
                     });
 
                     it('sets up a table correctly', function () {
@@ -1321,14 +1276,12 @@ define([
                                 container.querySelector('#' + indicator.id),
                                 () => {
                                     if (update.retry) {
-                                        // simulate a click to get the retry listener added
-                                        container
-                                            .querySelector(`[data-target="${input.retry_parent}"]`)
-                                            .click();
                                         TestUtil.send_RETRY({
                                             bus: ctx.jobManager.bus,
                                             retryParent,
                                             retry: input,
+                                            channelType,
+                                            channelId,
                                         });
                                     } else {
                                         TestUtil.sendBusMessage({
@@ -1339,8 +1292,8 @@ define([
                                                     jobState: input,
                                                 },
                                             },
-                                            channelType: jcm.CHANNEL.JOB,
-                                            channelId: input.job_id,
+                                            channelType,
+                                            channelId,
                                             type: jcm.MESSAGE_TYPE.STATUS,
                                         });
                                     }
@@ -1353,8 +1306,8 @@ define([
                                                 jobState: updatedBatchJob,
                                             },
                                         },
-                                        channelType: jcm.CHANNEL.JOB,
-                                        channelId: batchId,
+                                        channelType,
+                                        channelId,
                                         type: jcm.MESSAGE_TYPE.STATUS,
                                     });
                                 }
@@ -1439,14 +1392,13 @@ define([
                             const message = {
                                 [test.input.job_id]: test.input,
                             };
-                            spyOn(this.jobManager, 'removeListener').and.callThrough();
                             spyOn(this.jobManager, 'runHandler').and.callThrough();
                             await TestUtil.waitForElementChange(this.row, () => {
                                 TestUtil.sendBusMessage({
                                     bus: this.jobManager.bus,
                                     message,
-                                    channelType: jcm.CHANNEL.JOB,
-                                    channelId: this.jobId,
+                                    channelType,
+                                    channelId,
                                     type: jcm.MESSAGE_TYPE.INFO,
                                 });
                             });
@@ -1469,17 +1421,15 @@ define([
                                 job_id: invalidId,
                             },
                         };
-                        spyOn(this.jobManager, 'removeListener').and.callThrough();
                         spyOn(this.jobManager, 'runHandler').and.callThrough();
                         TestUtil.sendBusMessage({
                             bus: this.jobManager.bus,
                             message,
-                            channelType: jcm.CHANNEL.JOB,
-                            channelId: invalidId,
+                            channelType,
+                            channelId,
                             type: jcm.MESSAGE_TYPE.INFO,
                         });
                         expect(this.jobManager.runHandler).not.toHaveBeenCalled();
-                        expect(this.jobManager.removeListener).not.toHaveBeenCalled();
                         _checkRowStructure(this.row, this.job);
                     });
                 });
@@ -1495,14 +1445,11 @@ define([
                         ctx.input = Object.assign({}, TestUtil.JSONcopy(ctx.job), test.input);
                         ctx.input.meta.type = test.type;
                         ctx.input.meta.object = test.object;
-
-                        spyOn(ctx.jobManager, 'removeListener').and.callThrough();
                         spyOn(ctx.jobManager, 'runHandler').and.callThrough();
                     }
 
                     function postUpdateChecks(ctx, expectedCallArgs) {
                         expect(ctx.container.querySelectorAll('#' + indicatorId).length).toEqual(1);
-                        expect(ctx.jobManager.removeListener).toHaveBeenCalledTimes(1);
                         expect(ctx.jobManager.runHandler).toHaveBeenCalled();
                         const allCalls = ctx.jobManager.runHandler.calls.allArgs();
                         expect(allCalls).toEqual([expectedCallArgs]);
@@ -1513,11 +1460,6 @@ define([
                         // BATCH_WITH_RETRY is [RETRIED_JOB, RETRY_PARENT, BATCH_PARENT]
                         await createJobStatusTableWithContext(this, BATCH_WITH_RETRY);
                         this.job = TestUtil.JSONcopy(RETRIED_JOB);
-                        this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, [
-                            RETRIED_JOB_ID,
-                            RETRY_PARENT_ID,
-                            BATCH_PARENT_ID,
-                        ]);
                         this.indicatorDiv = document.createElement('div');
                         this.indicatorDiv.id = indicatorId;
                         this.container.append(this.indicatorDiv);
@@ -1543,8 +1485,8 @@ define([
                                     TestUtil.sendBusMessage({
                                         bus: this.jobManager.bus,
                                         message,
-                                        channelType: jcm.CHANNEL.JOB,
-                                        channelId: RETRIED_JOB_ID,
+                                        channelType,
+                                        channelId,
                                         type: jcm.MESSAGE_TYPE.INFO,
                                     });
                                 });
@@ -1552,8 +1494,8 @@ define([
                                     jcm.MESSAGE_TYPE.INFO,
                                     message,
                                     {
-                                        channelType: jcm.CHANNEL.JOB,
-                                        channelId: RETRIED_JOB_ID,
+                                        channelType,
+                                        channelId,
                                     },
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);
@@ -1578,8 +1520,8 @@ define([
                                         TestUtil.sendBusMessage({
                                             bus: this.jobManager.bus,
                                             message,
-                                            channelType: jcm.CHANNEL.JOB,
-                                            channelId: RETRY_PARENT_ID,
+                                            channelType,
+                                            channelId,
                                             type: jcm.MESSAGE_TYPE.INFO,
                                         });
                                     }
@@ -1589,8 +1531,8 @@ define([
                                     jcm.MESSAGE_TYPE.INFO,
                                     message,
                                     {
-                                        channelType: jcm.CHANNEL.JOB,
-                                        channelId: RETRY_PARENT_ID,
+                                        channelType,
+                                        channelId,
                                     },
                                 ];
                                 postUpdateChecks(this, expectedCallArgs);

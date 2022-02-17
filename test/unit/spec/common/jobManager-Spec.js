@@ -30,6 +30,10 @@ define([
         }
     });
 
+    const ALL_LISTENERS = ['ERROR', 'INFO', 'LOGS', 'RETRY', 'STATUS'].map((l) => {
+        return jcm.MESSAGE_TYPE[l];
+    });
+
     const actionStatusMatrix = {
         cancel: {
             valid: Jobs.validStatusesForAction.cancel,
@@ -1874,18 +1878,15 @@ define([
          * @param {object} ctx  this context
          * @param {object} args with keys
          *          batchId         batch job ID
-         *          allJobIds       IDs of batch job and all children
          *          listenerArray   listeners expected to be active; array of strings, e.g.
          *                          [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.INFO]
          */
         function check_initJobs(ctx, args) {
-            const { batchId, allJobIds, listenerArray } = args;
-            const channelStrings = allJobIds.map((id) => {
-                return ctx.jobManagerInstance._encodeChannel(jcm.CHANNEL.JOB, id);
-            });
+            const { batchId, listenerArray } = args;
+            const channelString = ctx.jobManagerInstance._encodeChannel(jcm.CHANNEL.BATCH, batchId);
 
             expect(Object.keys(ctx.jobManagerInstance.listeners)).toEqual(
-                jasmine.arrayWithExactContents(channelStrings)
+                jasmine.arrayWithExactContents([channelString])
             );
 
             Object.keys(ctx.jobManagerInstance.listeners).forEach((channel) => {
@@ -1957,12 +1958,7 @@ define([
                 // check that the appropriate messages have been sent out
                 check_initJobs(this, {
                     batchId,
-                    allJobIds: childIds.concat([batchId]),
-                    listenerArray: [
-                        jcm.MESSAGE_TYPE.STATUS,
-                        jcm.MESSAGE_TYPE.INFO,
-                        jcm.MESSAGE_TYPE.ERROR,
-                    ],
+                    listenerArray: ALL_LISTENERS,
                 });
             });
 
@@ -1994,12 +1990,7 @@ define([
                 // check that the appropriate messages have been sent out
                 check_initJobs(this, {
                     batchId,
-                    allJobIds: childIds.concat([batchId]),
-                    listenerArray: [
-                        jcm.MESSAGE_TYPE.STATUS,
-                        jcm.MESSAGE_TYPE.INFO,
-                        jcm.MESSAGE_TYPE.ERROR,
-                    ],
+                    listenerArray: ALL_LISTENERS,
                 });
             });
         });
@@ -2037,9 +2028,8 @@ define([
                 this.jobManagerInstance.restoreFromSaved();
 
                 check_initJobs(this, {
-                    batchId: JobsData.batchParentJob.job_id,
-                    allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.ERROR],
+                    batchId: BATCH_ID,
+                    listenerArray: ALL_LISTENERS,
                 });
             });
 
@@ -2054,9 +2044,8 @@ define([
                 this.jobManagerInstance.restoreFromSaved();
 
                 check_initJobs(this, {
-                    batchId: JobsData.batchParentJob.job_id,
-                    allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
-                    listenerArray: [jcm.MESSAGE_TYPE.STATUS, jcm.MESSAGE_TYPE.ERROR],
+                    batchId: BATCH_ID,
+                    listenerArray: ALL_LISTENERS,
                 });
             });
         });
@@ -2207,11 +2196,7 @@ define([
                 expect(
                     Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
                 ).toEqual(jasmine.arrayWithExactContents(allBatchJobIds));
-                // there should be a status listener for the batch parent
-                const channelString = JSON.stringify({ [jcm.CHANNEL.JOB]: BATCH_ID });
-                expect(this.jobManagerInstance.listeners[channelString]).toEqual({
-                    [jcm.MESSAGE_TYPE.STATUS]: this.bus.listen(),
-                });
+                expect(this.jobManagerInstance.listeners).toEqual({});
             });
         });
 

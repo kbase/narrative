@@ -267,7 +267,10 @@ define([
             }).then(() => {
                 this.renderTable(jobs);
                 this.setUpEventHandlers();
-                this.setUpJobListeners(jobs);
+                this.jobManager.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.BATCH_ID]: this.batchId,
+                });
+                this.jobManager.requestBatchInfo();
             });
         }
 
@@ -636,47 +639,6 @@ define([
                 jobStatusTable_info: (_, jobInfo) => {
                     this.handleJobInfo.bind(self)(jobInfo);
                 },
-            });
-        }
-
-        /**
-         * Set up job event listeners and handlers
-         *
-         * @param {array} jobs
-         */
-        setUpJobListeners(jobs) {
-            const paramsRequired = [];
-            const jobIdList = [];
-            jobs.forEach((jobState) => {
-                if (!jobState.batch_job) {
-                    jobIdList.push(jobState.job_id);
-                    if (
-                        !this.jobManager.model.getItem(`exec.jobs.info.${jobState.job_id}`) &&
-                        jobState.job_id !== this.batchId
-                    ) {
-                        paramsRequired.push(jobState.job_id);
-                    }
-                }
-            });
-
-            ['STATUS', 'ERROR'].forEach((event) => {
-                this.jobManager.addListener(
-                    jcm.MESSAGE_TYPE[event],
-                    jcm.CHANNEL.JOB,
-                    [this.batchId].concat(jobIdList)
-                );
-            });
-
-            if (paramsRequired.length) {
-                this.jobManager.addListener(jcm.MESSAGE_TYPE.INFO, jcm.CHANNEL.JOB, paramsRequired);
-                const jobInfoRequestParams =
-                    paramsRequired.length === jobIdList.length
-                        ? { [jcm.PARAM.BATCH_ID]: this.batchId }
-                        : { [jcm.PARAM.JOB_ID_LIST]: paramsRequired };
-                this.jobManager.bus.emit(jcm.MESSAGE_TYPE.INFO, jobInfoRequestParams);
-            }
-            this.jobManager.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
-                [jcm.PARAM.BATCH_ID]: this.batchId,
             });
         }
 

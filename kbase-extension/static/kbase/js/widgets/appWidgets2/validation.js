@@ -449,10 +449,10 @@ define([
             } else if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
-            } else if (options.invalidValues && options.invalidValues.has(value)) {
-                diagnosis = Constants.DIAGNOSIS.INVALID;
-                errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
-            } else if (options.validValues && !options.validValues.has(value)) {
+            } else if (
+                (options.invalidValues && options.invalidValues.has(value)) ||
+                (options.validValues && !options.validValues.has(value))
+            ) {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
             } else {

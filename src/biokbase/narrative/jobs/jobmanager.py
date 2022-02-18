@@ -601,7 +601,7 @@ class JobManager(object):
                     state["created"] / 1000.0
                 ).strftime("%Y-%m-%d %H:%M:%S")
                 state["run_time"] = "Not started"
-                state["owner"] = job.user
+                state["user"] = job.user
                 state["app_id"] = job.app_id
                 state["batch_id"] = job.batch_id
                 exec_start = state.get("running", None)
@@ -638,14 +638,14 @@ class JobManager(object):
                 </tr>
                 {% for j in jobs %}
                 <tr>
-                    <td>{{ j.job_id|e }}</td>
-                    <td>{{ j.app_id|e }}</td>
-                    <td>{{ j.created|e }}</td>
-                    <td>{{ j.batch_id|e }}</td>
-                    <td>{{ j.user|e }}</td>
-                    <td>{{ j.status|e }}</td>
-                    <td>{{ j.run_time|e }}</td>
-                    <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
+                    <td class="job_id">{{ j.job_id|e }}</td>
+                    <td class="app_id">{{ j.app_id|e }}</td>
+                    <td class="created">{{ j.created|e }}</td>
+                    <td class="batch_id">{{ j.batch_id|e }}</td>
+                    <td class="user">{{ j.user|e }}</td>
+                    <td class="status">{{ j.status|e }}</td>
+                    <td class="run_time">{{ j.run_time|e }}</td>
+                    <td class="finish_time">{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>

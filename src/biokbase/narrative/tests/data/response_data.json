@@ -378,7 +378,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "child_jobs": [],
                 "created": 1625755944000,
                 "finished": 1625756074922,
@@ -397,12 +396,9 @@
                 "queued": 1625755944353,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625755954453,
                 "status": "completed",
                 "updated": 1625756075071,
-                "user": "alien_test_user",
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -413,8 +409,7 @@
                         "wsName": "wjriehl:1475006266615"
                     },
                     "tag": "release"
-                },
-                "wsid": 10538
+                }
             },
             "job_id": "BATCH_COMPLETED",
             "outputWidgetInfo": {
@@ -433,7 +428,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "child_jobs": [],
                 "created": 1625755944000,
                 "error": {
@@ -452,13 +446,9 @@
                 "retry_ids": [
                     "BATCH_RETRY_ERROR"
                 ],
-                "retry_saved_toggle": false,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625755952628,
                 "status": "error",
-                "updated": 1625755962079,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625755962079
             },
             "job_id": "BATCH_ERROR_RETRIED",
             "outputWidgetInfo": null
@@ -467,7 +457,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": true,
-                "cell_id": null,
                 "child_jobs": [
                     "BATCH_COMPLETED",
                     "BATCH_TERMINATED",
@@ -482,12 +471,8 @@
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": null,
                 "status": "created",
-                "updated": 1625755944607,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625755944607
             },
             "job_id": "BATCH_PARENT",
             "outputWidgetInfo": null
@@ -496,7 +481,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "child_jobs": [],
                 "created": 1625755993000,
                 "finished": 1625756123416,
@@ -516,12 +500,9 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "retry_parent": "BATCH_TERMINATED_RETRIED",
-                "retry_saved_toggle": true,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625756004391,
                 "status": "completed",
                 "updated": 1625756123553,
-                "user": "alien_test_user",
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -532,8 +513,7 @@
                         "wsName": "wjriehl:1475006266615"
                     },
                     "tag": "release"
-                },
-                "wsid": 10538
+                }
             },
             "job_id": "BATCH_RETRY_COMPLETED",
             "outputWidgetInfo": {
@@ -552,7 +532,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "child_jobs": [],
                 "created": 1625757655000,
                 "error": {
@@ -570,13 +549,9 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "retry_parent": "BATCH_ERROR_RETRIED",
-                "retry_saved_toggle": true,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625757662469,
                 "status": "error",
-                "updated": 1625757676740,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625757676740
             },
             "job_id": "BATCH_RETRY_ERROR",
             "outputWidgetInfo": null
@@ -585,7 +560,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_2",
                 "child_jobs": [],
                 "created": 1625757279000,
                 "job_id": "BATCH_RETRY_RUNNING",
@@ -594,13 +568,9 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "retry_parent": "BATCH_TERMINATED_RETRIED",
-                "retry_saved_toggle": true,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625757285899,
                 "status": "running",
-                "updated": 1625757405384,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625757405384
             },
             "job_id": "BATCH_RETRY_RUNNING",
             "outputWidgetInfo": null
@@ -609,7 +579,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "child_jobs": [],
                 "created": 1625755944000,
                 "finished": 1625755985250,
@@ -618,14 +587,10 @@
                 "queued": 1625755944442,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625755952599,
                 "status": "terminated",
                 "terminated_code": 0,
-                "updated": 1625755985250,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625755985250
             },
             "job_id": "BATCH_TERMINATED",
             "outputWidgetInfo": null
@@ -634,7 +599,6 @@
             "jobState": {
                 "batch_id": "BATCH_PARENT",
                 "batch_job": false,
-                "cell_id": "NARRATIVE_BATCH_CELL_1",
                 "child_jobs": [],
                 "created": 1625755944000,
                 "finished": 1625755977130,
@@ -646,14 +610,10 @@
                     "BATCH_RETRY_COMPLETED",
                     "BATCH_RETRY_RUNNING"
                 ],
-                "retry_saved_toggle": false,
-                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                 "running": 1625755952563,
                 "status": "terminated",
                 "terminated_code": 0,
-                "updated": 1625755977130,
-                "user": "alien_test_user",
-                "wsid": 10538
+                "updated": 1625755977130
             },
             "job_id": "BATCH_TERMINATED_RETRIED",
             "outputWidgetInfo": null
@@ -662,7 +622,6 @@
             "jobState": {
                 "batch_id": null,
                 "batch_job": false,
-                "cell_id": "NARRATIVE_CELL_1",
                 "child_jobs": [],
                 "created": 1642431805000,
                 "finished": 1642431852079,
@@ -680,12 +639,9 @@
                 "queued": 1642431805791,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "cd76b1cd-f6d7-438d-ac9c-121fa637cbdc",
                 "running": 1642431816870,
                 "status": "completed",
                 "updated": 1642431852275,
-                "user": "test_user",
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -694,8 +650,7 @@
                         "report_window_line_height": "16"
                     },
                     "tag": "dev"
-                },
-                "wsid": 54321
+                }
             },
             "job_id": "JOB_COMPLETED",
             "outputWidgetInfo": {
@@ -712,19 +667,14 @@
             "jobState": {
                 "batch_id": null,
                 "batch_job": false,
-                "cell_id": "NARRATIVE_CELL_1",
                 "child_jobs": [],
                 "created": 1642522053000,
                 "job_id": "JOB_CREATED",
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "45620f44-6045-482c-af54-d7c123854fe3",
                 "status": "created",
-                "updated": 1642522062069,
-                "user": "fake_test_user",
-                "wsid": 55555
+                "updated": 1642522062069
             },
             "job_id": "JOB_CREATED",
             "outputWidgetInfo": null
@@ -733,7 +683,6 @@
             "jobState": {
                 "batch_id": null,
                 "batch_job": false,
-                "cell_id": "NARRATIVE_CELL_2",
                 "child_jobs": [],
                 "created": 1642431841000,
                 "error": {
@@ -750,13 +699,9 @@
                 "queued": 1642431841259,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "c2ed67e1-4457-4aa0-8f10-88d5f530cbc7",
                 "running": 1642431847689,
                 "status": "error",
-                "updated": 1642431856323,
-                "user": "ialarmedalien",
-                "wsid": 65854
+                "updated": 1642431856323
             },
             "job_id": "JOB_ERROR",
             "outputWidgetInfo": null
@@ -765,7 +710,6 @@
             "jobState": {
                 "batch_id": null,
                 "batch_job": false,
-                "cell_id": "NARRATIVE_CELL_2",
                 "child_jobs": [],
                 "created": 1642521765000,
                 "job_id": "JOB_RUNNING",
@@ -773,13 +717,9 @@
                 "queued": 1642521765842,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "b27bdcf3-98f8-4c62-8b5d-5b181cf46058",
                 "running": 1642521775867,
                 "status": "running",
-                "updated": 1642521775870,
-                "user": "test_user",
-                "wsid": 54321
+                "updated": 1642521775870
             },
             "job_id": "JOB_RUNNING",
             "outputWidgetInfo": null
@@ -788,7 +728,6 @@
             "jobState": {
                 "batch_id": null,
                 "batch_job": false,
-                "cell_id": "NARRATIVE_CELL_2",
                 "child_jobs": [],
                 "created": 1642521724000,
                 "finished": 1642521729372,
@@ -797,13 +736,9 @@
                 "queued": 1642521724208,
                 "retry_count": 0,
                 "retry_ids": [],
-                "retry_saved_toggle": false,
-                "run_id": "5f31a481-3ef6-45ff-b627-a5a0e90c212b",
                 "status": "terminated",
                 "terminated_code": 0,
-                "updated": 1642521729372,
-                "user": "test_user",
-                "wsid": 54321
+                "updated": 1642521729372
             },
             "job_id": "JOB_TERMINATED",
             "outputWidgetInfo": null
@@ -828,7 +763,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_1",
                     "child_jobs": [],
                     "created": 1625755944000,
                     "finished": 1625756074922,
@@ -847,12 +781,9 @@
                     "queued": 1625755944353,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625755954453,
                     "status": "completed",
                     "updated": 1625756075071,
-                    "user": "alien_test_user",
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -863,8 +794,7 @@
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    },
-                    "wsid": 10538
+                    }
                 },
                 "job_id": "BATCH_COMPLETED",
                 "outputWidgetInfo": {
@@ -886,7 +816,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_1",
                     "child_jobs": [],
                     "created": 1625755944000,
                     "error": {
@@ -905,13 +834,9 @@
                     "retry_ids": [
                         "BATCH_RETRY_ERROR"
                     ],
-                    "retry_saved_toggle": false,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625755952628,
                     "status": "error",
-                    "updated": 1625755962079,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625755962079
                 },
                 "job_id": "BATCH_ERROR_RETRIED",
                 "outputWidgetInfo": null
@@ -921,7 +846,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_2",
                     "child_jobs": [],
                     "created": 1625757655000,
                     "error": {
@@ -939,13 +863,9 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
-                    "retry_saved_toggle": true,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625757662469,
                     "status": "error",
-                    "updated": 1625757676740,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625757676740
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -958,7 +878,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": true,
-                    "cell_id": null,
                     "child_jobs": [
                         "BATCH_COMPLETED",
                         "BATCH_TERMINATED",
@@ -973,12 +892,8 @@
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": null,
                     "status": "created",
-                    "updated": 1625755944607,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625755944607
                 },
                 "job_id": "BATCH_PARENT",
                 "outputWidgetInfo": null
@@ -991,7 +906,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_2",
                     "child_jobs": [],
                     "created": 1625755993000,
                     "finished": 1625756123416,
@@ -1011,12 +925,9 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
-                    "retry_saved_toggle": true,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625756004391,
                     "status": "completed",
                     "updated": 1625756123553,
-                    "user": "alien_test_user",
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -1027,8 +938,7 @@
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    },
-                    "wsid": 10538
+                    }
                 },
                 "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
@@ -1051,7 +961,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_2",
                     "child_jobs": [],
                     "created": 1625757655000,
                     "error": {
@@ -1069,13 +978,9 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
-                    "retry_saved_toggle": true,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625757662469,
                     "status": "error",
-                    "updated": 1625757676740,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625757676740
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -1088,7 +993,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_2",
                     "child_jobs": [],
                     "created": 1625757279000,
                     "job_id": "BATCH_RETRY_RUNNING",
@@ -1097,13 +1001,9 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
-                    "retry_saved_toggle": true,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625757285899,
                     "status": "running",
-                    "updated": 1625757405384,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625757405384
                 },
                 "job_id": "BATCH_RETRY_RUNNING",
                 "outputWidgetInfo": null
@@ -1116,7 +1016,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_1",
                     "child_jobs": [],
                     "created": 1625755944000,
                     "finished": 1625755985250,
@@ -1125,14 +1024,10 @@
                     "queued": 1625755944442,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625755952599,
                     "status": "terminated",
                     "terminated_code": 0,
-                    "updated": 1625755985250,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625755985250
                 },
                 "job_id": "BATCH_TERMINATED",
                 "outputWidgetInfo": null
@@ -1144,7 +1039,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_1",
                     "child_jobs": [],
                     "created": 1625755944000,
                     "finished": 1625755977130,
@@ -1156,14 +1050,10 @@
                         "BATCH_RETRY_COMPLETED",
                         "BATCH_RETRY_RUNNING"
                     ],
-                    "retry_saved_toggle": false,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625755952563,
                     "status": "terminated",
                     "terminated_code": 0,
-                    "updated": 1625755977130,
-                    "user": "alien_test_user",
-                    "wsid": 10538
+                    "updated": 1625755977130
                 },
                 "job_id": "BATCH_TERMINATED_RETRIED",
                 "outputWidgetInfo": null
@@ -1173,7 +1063,6 @@
                 "jobState": {
                     "batch_id": "BATCH_PARENT",
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_BATCH_CELL_2",
                     "child_jobs": [],
                     "created": 1625755993000,
                     "finished": 1625756123416,
@@ -1193,12 +1082,9 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
-                    "retry_saved_toggle": true,
-                    "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
                     "running": 1625756004391,
                     "status": "completed",
                     "updated": 1625756123553,
-                    "user": "alien_test_user",
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -1209,8 +1095,7 @@
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    },
-                    "wsid": 10538
+                    }
                 },
                 "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
@@ -1233,7 +1118,6 @@
                 "jobState": {
                     "batch_id": null,
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_CELL_1",
                     "child_jobs": [],
                     "created": 1642431805000,
                     "finished": 1642431852079,
@@ -1251,12 +1135,9 @@
                     "queued": 1642431805791,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "cd76b1cd-f6d7-438d-ac9c-121fa637cbdc",
                     "running": 1642431816870,
                     "status": "completed",
                     "updated": 1642431852275,
-                    "user": "test_user",
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -1265,8 +1146,7 @@
                             "report_window_line_height": "16"
                         },
                         "tag": "dev"
-                    },
-                    "wsid": 54321
+                    }
                 },
                 "job_id": "JOB_COMPLETED",
                 "outputWidgetInfo": {
@@ -1287,19 +1167,14 @@
                 "jobState": {
                     "batch_id": null,
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_CELL_1",
                     "child_jobs": [],
                     "created": 1642522053000,
                     "job_id": "JOB_CREATED",
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "45620f44-6045-482c-af54-d7c123854fe3",
                     "status": "created",
-                    "updated": 1642522062069,
-                    "user": "fake_test_user",
-                    "wsid": 55555
+                    "updated": 1642522062069
                 },
                 "job_id": "JOB_CREATED",
                 "outputWidgetInfo": null
@@ -1312,7 +1187,6 @@
                 "jobState": {
                     "batch_id": null,
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_CELL_2",
                     "child_jobs": [],
                     "created": 1642431841000,
                     "error": {
@@ -1329,13 +1203,9 @@
                     "queued": 1642431841259,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "c2ed67e1-4457-4aa0-8f10-88d5f530cbc7",
                     "running": 1642431847689,
                     "status": "error",
-                    "updated": 1642431856323,
-                    "user": "ialarmedalien",
-                    "wsid": 65854
+                    "updated": 1642431856323
                 },
                 "job_id": "JOB_ERROR",
                 "outputWidgetInfo": null
@@ -1348,7 +1218,6 @@
                 "jobState": {
                     "batch_id": null,
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_CELL_2",
                     "child_jobs": [],
                     "created": 1642521765000,
                     "job_id": "JOB_RUNNING",
@@ -1356,13 +1225,9 @@
                     "queued": 1642521765842,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "b27bdcf3-98f8-4c62-8b5d-5b181cf46058",
                     "running": 1642521775867,
                     "status": "running",
-                    "updated": 1642521775870,
-                    "user": "test_user",
-                    "wsid": 54321
+                    "updated": 1642521775870
                 },
                 "job_id": "JOB_RUNNING",
                 "outputWidgetInfo": null
@@ -1375,7 +1240,6 @@
                 "jobState": {
                     "batch_id": null,
                     "batch_job": false,
-                    "cell_id": "NARRATIVE_CELL_2",
                     "child_jobs": [],
                     "created": 1642521724000,
                     "finished": 1642521729372,
@@ -1384,13 +1248,9 @@
                     "queued": 1642521724208,
                     "retry_count": 0,
                     "retry_ids": [],
-                    "retry_saved_toggle": false,
-                    "run_id": "5f31a481-3ef6-45ff-b627-a5a0e90c212b",
                     "status": "terminated",
                     "terminated_code": 0,
-                    "updated": 1642521729372,
-                    "user": "test_user",
-                    "wsid": 54321
+                    "updated": 1642521729372
                 },
                 "job_id": "JOB_TERMINATED",
                 "outputWidgetInfo": null

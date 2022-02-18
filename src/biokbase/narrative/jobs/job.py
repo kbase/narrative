@@ -18,18 +18,19 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 COMPLETED_STATUS = "completed"
 TERMINAL_STATUSES = [COMPLETED_STATUS, "terminated", "error"]
 
-EXCLUDED_JOB_STATE_FIELDS = [
+JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
     "authstrat",
     "condor_job_ads",
-    "job_input",
+    "retry_saved_toggle",
     "scheduler_type",
     "scheduler_id",
 ]
-JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
-    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
-]
 
-EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "child_jobs"]
+EXCLUDED_JOB_STATE_FIELDS = JOB_INIT_EXCLUDED_JOB_STATE_FIELDS + ["job_input"]
+
+OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS = EXCLUDED_JOB_STATE_FIELDS + ["user", "wsid"]
+
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "child_jobs"]
 
 
 # The app_id and app_version should both align with what's available in
@@ -398,7 +399,7 @@ class Job(object):
                 -1,
             )
 
-        self._trim_ee2_state(state, EXCLUDED_JOB_STATE_FIELDS)
+        self._trim_ee2_state(state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
         if "job_output" not in state:
             state["job_output"] = {}
         for arg in EXTRA_JOB_STATE_FIELDS:

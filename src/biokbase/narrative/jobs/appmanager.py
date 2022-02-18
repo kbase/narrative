@@ -4,7 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
-from .jobcomm import JobComm, exc_to_msg, MESSAGE_TYPE
+from .jobcomm import JobComm, MESSAGE_TYPE
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager

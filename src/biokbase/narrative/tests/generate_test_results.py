@@ -6,7 +6,7 @@ from biokbase.narrative.app_util import app_version_tags
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.jobs.job import (
     JOB_ATTR_DEFAULTS,
-    EXCLUDED_JOB_STATE_FIELDS,
+    OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS,
     COMPLETED_STATUS,
 )
 from biokbase.narrative.tests.job_test_constants import (
@@ -70,8 +70,6 @@ def generate_mappings(all_jobs):
 
 def _generate_job_output(job_id):
     state = get_test_job(job_id)
-    job_input = state.get("job_input", {})
-    narr_cell_info = job_input.get("narrative_cell_info", {})
     widget_info = state.get("widget_info", None)
 
     state.update(
@@ -79,13 +77,11 @@ def _generate_job_output(job_id):
             "batch_id": state.get(
                 "batch_id", job_id if state.get("batch_job", False) else None
             ),
-            "cell_id": narr_cell_info.get("cell_id", None),
-            "run_id": narr_cell_info.get("run_id", None),
             "job_output": state.get("job_output", {}),
             "child_jobs": state.get("child_jobs", []),
         }
     )
-    for f in EXCLUDED_JOB_STATE_FIELDS:
+    for f in OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS:
         if f in state:
             del state[f]
 

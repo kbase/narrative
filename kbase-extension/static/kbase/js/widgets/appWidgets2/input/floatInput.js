@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
@@ -158,6 +158,18 @@ define([
                 initialControlValue = String(currentValue);
             }
 
+            function boundaryDiv(value, isMin) {
+                value = String(value);
+                const text = isMin ? `${value} &#8804; ` : ` &#8804; ${value}`;
+                return div(
+                    {
+                        class: 'input-group-addon kb-input-group-addon',
+                        fontFamily: 'monospace',
+                    },
+                    text
+                );
+            }
+
             return div(
                 {
                     style: { width: '100%' },
@@ -170,15 +182,7 @@ define([
                             style: { width: '100%' },
                         },
                         [
-                            typeof min === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      String(min) + ' &#8804; '
-                                  )
-                                : '',
+                            typeof min === 'number' ? boundaryDiv(min, true) : '',
                             input({
                                 id: events.addEvents({
                                     events: [handleChanged(), handleTouched()],
@@ -191,15 +195,7 @@ define([
                                 },
                                 value: initialControlValue,
                             }),
-                            typeof max === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      ' &#8804; ' + String(max)
-                                  )
-                                : '',
+                            typeof max === 'number' ? boundaryDiv(max, false) : '',
                         ]
                     ),
                     div({

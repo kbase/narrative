@@ -42,7 +42,6 @@ define([
     'widgets/appWidgets2/subdataMethods/samplePropertyHistogram',
     'widgets/appWidgets2/validators/customSubdata',
     'widgets/appWidgets2/validators/float',
-    'widgets/appWidgets2/validators/int',
     'widgets/appWidgets2/validators/resolver',
     'widgets/appWidgets2/validators/sequence',
     'widgets/appWidgets2/validators/struct',

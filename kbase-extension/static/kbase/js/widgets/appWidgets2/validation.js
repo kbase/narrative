@@ -242,7 +242,7 @@ define([
             }
         }
 
-        function validateIntString(value, constraints) {
+        function validateIntString(value, constraints, options = {}) {
             let plainValue,
                 parsedValue,
                 errorObject,
@@ -260,12 +260,16 @@ define([
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
-            } else if (typeof value !== 'string') {
+            } else if (typeof value !== 'string' && typeof value !== 'number') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
-                messageId = 'incoming-value-not-string';
-                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
+                messageId = 'incoming-value-not-string-or-number';
+                errorMessage =
+                    'value must be a string or number (it is of type "' + typeof value + '")';
             } else {
-                plainValue = value.trim();
+                plainValue = value;
+                if (typeof plainValue === 'string') {
+                    plainValue = plainValue.trim();
+                }
                 try {
                     parsedValue = Util.toInteger(plainValue);
                     errorObject = validateInteger(parsedValue, min, max);
@@ -275,7 +279,7 @@ define([
                     }
                 } catch (error) {
                     messageId = 'internal-error';
-                    errorMessage = error.message;
+                    errorMessage = options.nonIntError ? options.nonIntError : error.message;
                 }
                 if (errorMessage) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
@@ -635,6 +639,29 @@ define([
             return value;
         }
 
+        function importIntString(value, nonIntError) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+
+            if (typeof value !== 'string') {
+                throw new Error('value must be a string (it is of type "' + typeof value + '")');
+            }
+
+            const plainValue = value.trim();
+            if (plainValue === '') {
+                return null;
+            }
+            try {
+                return Util.toInteger(plainValue);
+            } catch (err) {
+                if (nonIntError) {
+                    throw new Error(nonIntError);
+                }
+                throw err;
+            }
+        }
+
         return {
             validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName,
@@ -651,6 +678,7 @@ define([
             validateBoolean,
             validateTrue,
             importTextString,
+            importIntString,
         };
     }
 

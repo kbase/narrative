@@ -654,7 +654,7 @@ define([
             runTests('validateFloatString', tests);
         })();
 
-        // INTS
+        // INTEGERS
         (function () {
             const emptyValues = [
                     {
@@ -778,7 +778,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "undefined")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "undefined")',
                             value: undefined,
                             pasedValue: undefined,
                         },
@@ -790,7 +791,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: [],
                             parsedValue: undefined,
                         },
@@ -802,7 +804,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: {},
                             parsedValue: undefined,
                         },
@@ -814,7 +817,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: new Date(0),
                             parsedValue: undefined,
                         },

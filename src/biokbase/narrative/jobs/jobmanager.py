@@ -42,7 +42,7 @@ DOES_NOT_EXIST = "does_not_exist"
 class JobManager(object):
     """
     The KBase Job Manager class. This handles all jobs and makes their status available.
-    On status lookups, it feeds the results to the KBaseJobs channel that the front end
+    It sends the results to the KBaseJobs channel that the front end
     listens to.
     """
 
@@ -264,40 +264,12 @@ class JobManager(object):
 
         return output_states
 
-    def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
-        """
-        Finds jobs with a cell_id in cell_id_list
-        Mappings of job ID to cell ID are added when new jobs are registered
-        Returns a list of job IDs and a mapping of cell IDs to the list of
-        job IDs associated with the cell.
-        """
-        if not cell_id_list:
-            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
+    def get_job_states(self, job_ids: List[str]) -> dict:
+        job_ids, error_ids = self._check_job_list(job_ids)
+        output_states = self._construct_job_output_state_set(job_ids)
+        return self.add_errors_to_results(output_states, error_ids)
 
-        cell_to_job_mapping = {
-            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
-            for id in cell_id_list
-        }
-        # union of all the job_ids in the cell_to_job_mapping
-        job_id_list = set().union(*cell_to_job_mapping.values())
-        return (job_id_list, cell_to_job_mapping)
-
-    def lookup_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
-        """
-        Fetch job states for jobs with a cell_id in cell_id_list
-        Returns a dictionary of job states keyed by job ID and a mapping of
-        cell IDs to the list of job IDs associated with the cell.
-        """
-        (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
-            cell_id_list
-        )
-        job_states = {}
-        if len(jobs_to_lookup) > 0:
-            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
-
-        return {"jobs": job_states, "mapping": cell_to_job_mapping}
-
-    def lookup_all_job_states(self, ignore_refresh_flag=False) -> dict:
+    def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
         Fetches states for all running jobs.
         If ignore_refresh_flag is True, then returns states for all jobs this
@@ -317,10 +289,38 @@ class JobManager(object):
             return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
 
-    def get_job_states(self, job_ids: List[str]) -> dict:
-        job_ids, error_ids = self._check_job_list(job_ids)
-        output_states = self._construct_job_output_state_set(job_ids)
-        return self.add_errors_to_results(output_states, error_ids)
+    def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
+        """
+        Finds jobs with a cell_id in cell_id_list
+        Mappings of job ID to cell ID are added when new jobs are registered
+        Returns a list of job IDs and a mapping of cell IDs to the list of
+        job IDs associated with the cell.
+        """
+        if not cell_id_list:
+            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
+
+        cell_to_job_mapping = {
+            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
+            for id in cell_id_list
+        }
+        # union of all the job_ids in the cell_to_job_mapping
+        job_id_list = set().union(*cell_to_job_mapping.values())
+        return (job_id_list, cell_to_job_mapping)
+
+    def get_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
+        """
+        Fetch job states for jobs with a cell_id in cell_id_list
+        Returns a dictionary of job states keyed by job ID and a mapping of
+        cell IDs to the list of job IDs associated with the cell.
+        """
+        (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
+            cell_id_list
+        )
+        job_states = {}
+        if len(jobs_to_lookup) > 0:
+            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
+
+        return {"jobs": job_states, "mapping": cell_to_job_mapping}
 
     def get_job_info(self, job_ids: List[str]) -> dict:
         """
@@ -588,7 +588,7 @@ class JobManager(object):
         List all job ids, their info, and status in a quick HTML format.
         """
         try:
-            all_states = self.lookup_all_job_states(ignore_refresh_flag=True)
+            all_states = self.get_all_job_states(ignore_refresh_flag=True)
             state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
 
             if not len(state_list):

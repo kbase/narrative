@@ -43,11 +43,11 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_ERROR_RETRIED,
     JOB_NOT_FOUND,
     BAD_JOB_ID,
-    JOBS_TERMINALITY,
     ALL_JOBS,
     BAD_JOBS,
     TERMINAL_JOBS,
     ACTIVE_JOBS,
+    REFRESH_STATE,
     BATCH_CHILDREN,
     TEST_JOBS,
     get_test_job,
@@ -150,7 +150,7 @@ class JobManagerTest(unittest.TestCase):
                     refresh = d["refresh"]
 
                     self.assertEqual(
-                        job_id in exp_job_ids and not JOBS_TERMINALITY[job_id],
+                        job_id in exp_job_ids and REFRESH_STATE[job_id],
                         refresh,
                     )
 
@@ -516,10 +516,14 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_all_job_states(self):
         states = self.jm.get_all_job_states()
-        self.assertEqual(set(ACTIVE_JOBS), set(states.keys()))
+        refreshing_jobs = [job_id for job_id, state in REFRESH_STATE.items() if state]
+        self.assertEqual(set(refreshing_jobs), set(states.keys()))
         self.assertEqual(
             states,
-            {id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][id] for id in ACTIVE_JOBS},
+            {
+                id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][id]
+                for id in refreshing_jobs
+            },
         )
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -715,8 +719,8 @@ class JobManagerTest(unittest.TestCase):
             self.assertCountEqual(batch_job.child_jobs, new_child_ids)
 
     def test_modify_job_refresh(self):
-        for job_id, terminality in JOBS_TERMINALITY.items():
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], not terminality)
+        for job_id, refreshing in REFRESH_STATE.items():
+            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], refreshing)
             self.jm.modify_job_refresh([job_id], False)  # stop
             self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
             self.jm.modify_job_refresh([job_id], False)  # stop harder

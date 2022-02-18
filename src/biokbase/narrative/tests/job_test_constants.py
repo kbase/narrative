@@ -94,12 +94,17 @@ JOBS_TERMINALITY = {
 
 TERMINAL_JOBS = []
 ACTIVE_JOBS = []
+REFRESH_STATE = {}
 for key, value in JOBS_TERMINALITY.items():
     if value:
         TERMINAL_JOBS.append(key)
     else:
         ACTIVE_JOBS.append(key)
-
+    # job refresh state
+    if key in BATCH_PARENT_CHILDREN:
+        REFRESH_STATE[key] = False
+    else:
+        REFRESH_STATE[key] = not value
 
 READS_OBJ_1 = "rhodobacterium.art.q20.int.PE.reads"
 READS_OBJ_2 = "rhodobacterium.art.q10.PE.reads"

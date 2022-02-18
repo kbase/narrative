@@ -163,7 +163,8 @@ class JobManager(object):
 
             # Set to refresh when job is not in terminal state
             # and when job is present in cells (if given)
-            refresh = not job.was_terminal()
+            # and when it is not part of a batch
+            refresh = not job.was_terminal() and not job.batch_id
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 

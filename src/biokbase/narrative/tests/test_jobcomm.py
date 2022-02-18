@@ -458,7 +458,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jm._jobs_by_cell_id = {}
         self.jm = JobManager()
         self.assertEqual(self.jm._running_jobs, {})
-        # this will trigger a call to _lookup_all_job_states
+        # this will trigger a call to _get_all_job_states
         # a message containing all jobs (i.e. {}) will be sent out
         # when it returns 0 jobs, the JobComm will run stop_job_status_loop
         self.jc.start_job_status_loop()
@@ -516,7 +516,7 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertIn(job_id, error_states)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_all_job_states__ok(self):
+    def test_get_all_job_states__ok(self):
         self.check_job_output_states(
             request_type=STATUS_ALL, response_type=STATUS_ALL, ok_states=ALL_JOBS
         )
@@ -524,48 +524,48 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------------
     # Lookup single job state
     # -----------------------
-    def test_lookup_job_state__1_ok(self):
-        output_states = self.jc.lookup_job_state(JOB_COMPLETED)
+    def test_get_job_state__1_ok(self):
+        output_states = self.jc.get_job_state(JOB_COMPLETED)
         self.check_job_output_states(
             output_states=output_states, ok_states=[JOB_COMPLETED]
         )
 
-    def test_lookup_job_state__no_job(self):
+    def test_get_job_state__no_job(self):
         with self.assertRaisesRegex(
             JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[None]}")
         ):
-            self.jc.lookup_job_state(None)
+            self.jc.get_job_state(None)
 
     # -----------------------
     # Lookup select job states
     # -----------------------
 
-    def test_lookup_job_states__job_id__ok(self):
+    def test_get_job_states__job_id__ok(self):
         self.check_job_output_states(
             params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED]
         )
 
-    def test_lookup_job_states__job_id__dne(self):
+    def test_get_job_states__job_id__dne(self):
         self.check_job_output_states(
             params={JOB_ID: JOB_NOT_FOUND}, error_states=[JOB_NOT_FOUND]
         )
 
-    def test_lookup_job_states__job_id__invalid(self):
+    def test_get_job_states__job_id__invalid(self):
         self.check_job_id__no_job_test(STATUS)
 
-    def test_lookup_job_states__job_id_list__1_ok(self):
+    def test_get_job_states__job_id_list__1_ok(self):
         job_id_list = [JOB_COMPLETED]
         self.check_job_output_states(
             params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
         )
 
-    def test_lookup_job_states__job_id_list__2_ok(self):
+    def test_get_job_states__job_id_list__2_ok(self):
         job_id_list = [JOB_COMPLETED, BATCH_PARENT]
         self.check_job_output_states(
             params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
         )
 
-    def test_lookup_job_states__job_id_list__ok_bad(self):
+    def test_get_job_states__job_id_list__ok_bad(self):
         job_id_list = [BAD_JOB_ID, JOB_COMPLETED]
         self.check_job_output_states(
             params={JOB_ID_LIST: job_id_list},
@@ -573,27 +573,27 @@ class JobCommTestCase(unittest.TestCase):
             error_states=[BAD_JOB_ID],
         )
 
-    def test_lookup_job_states__job_id_list__no_jobs(self):
+    def test_get_job_states__job_id_list__no_jobs(self):
         self.check_job_id_list__no_jobs(STATUS)
 
-    def test_lookup_job_states__batch_id__ok(self):
+    def test_get_job_states__batch_id__ok(self):
         self.check_job_output_states(
             request_type=STATUS,
             params={BATCH_ID: BATCH_PARENT},
             ok_states=BATCH_PARENT_CHILDREN,
         )
 
-    def test_lookup_job_states__batch_id__dne(self):
+    def test_get_job_states__batch_id__dne(self):
         self.check_batch_id__dne_test(STATUS)
 
-    def test_lookup_job_states__batch_id__no_job(self):
+    def test_get_job_states__batch_id__no_job(self):
         self.check_batch_id__no_job_test(STATUS)
 
-    def test_lookup_job_states__batch_id__not_batch(self):
+    def test_get_job_states__batch_id__not_batch(self):
         self.check_batch_id__not_batch_test(STATUS)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_job_states__job_id_list__ee2_error(self):
+    def test_get_job_states__job_id_list__ee2_error(self):
         exc = Exception("Test exception")
         exc_message = str(exc)
 
@@ -621,10 +621,10 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     # -----------------------
-    # lookup cell job states
+    # get cell job states
     # -----------------------
 
-    def test_lookup_job_states_by_cell_id__job_req_none(self):
+    def test_get_job_states_by_cell_id__job_req_none(self):
         cell_id_list = None
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
@@ -632,7 +632,7 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message(req_dict)
         self.check_error_message(req_dict, err)
 
-    def test_lookup_job_states_by_cell_id__empty_cell_id_list(self):
+    def test_get_job_states_by_cell_id__empty_cell_id_list(self):
         cell_id_list = []
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
@@ -641,7 +641,7 @@ class JobCommTestCase(unittest.TestCase):
         self.check_error_message(req_dict, err)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_job_states_by_cell_id__invalid_cell_id_list(self):
+    def test_get_job_states_by_cell_id__invalid_cell_id_list(self):
         cell_id_list = ["a", "b", "c"]
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         self.jc._handle_comm_message(req_dict)
@@ -655,7 +655,7 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_job_states_by_cell_id__invalid_cell_id_list_req(self):
+    def test_get_job_states_by_cell_id__invalid_cell_id_list_req(self):
         cell_id_list = ["a", "b", "c"]
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         result = self.jc._handle_comm_message(req_dict)
@@ -670,7 +670,7 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_lookup_job_states_by_cell_id__all_results(self):
+    def test_get_job_states_by_cell_id__all_results(self):
         cell_id_list = TEST_CELL_ID_LIST
         expected_ids = ALL_JOBS
         expected_states = {id: ALL_RESPONSE_DATA[STATUS][id] for id in expected_ids}

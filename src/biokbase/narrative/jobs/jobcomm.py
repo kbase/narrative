@@ -171,13 +171,13 @@ class JobComm:
         if self._msg_map is None:
             self._msg_map = {
                 MESSAGE_TYPE["CANCEL"]: self._cancel_jobs,
-                MESSAGE_TYPE["CELL_JOB_STATUS"]: self._lookup_job_states_by_cell_id,
+                MESSAGE_TYPE["CELL_JOB_STATUS"]: self._get_job_states_by_cell_id,
                 MESSAGE_TYPE["INFO"]: self._get_job_info,
                 MESSAGE_TYPE["LOGS"]: self._get_job_logs,
                 MESSAGE_TYPE["RETRY"]: self._retry_jobs,
                 MESSAGE_TYPE["START_UPDATE"]: self._modify_job_updates,
-                MESSAGE_TYPE["STATUS"]: self._lookup_job_states,
-                MESSAGE_TYPE["STATUS_ALL"]: self._lookup_all_job_states,
+                MESSAGE_TYPE["STATUS"]: self._get_job_states,
+                MESSAGE_TYPE["STATUS_ALL"]: self._get_all_job_states,
                 MESSAGE_TYPE["STOP_UPDATE"]: self._modify_job_updates,
             }
 
@@ -236,7 +236,7 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on
         a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
-        all_job_states = self._lookup_all_job_states()
+        all_job_states = self._get_all_job_states()
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
@@ -245,20 +245,20 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(
+    def _get_all_job_states(
         self, req: JobRequest = None, ignore_refresh_flag: bool = False
     ) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.lookup_all_job_states(
+        all_job_states = self._jm.get_all_job_states(
             ignore_refresh_flag=ignore_refresh_flag
         )
         self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
         return all_job_states
 
-    def _lookup_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
+    def _get_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
         """
         Fetches status of all jobs associated with the given cell ID(s)
         :param req: a JobRequest with the cell_id_list of interest
@@ -277,7 +277,7 @@ class JobComm:
             }
         }
         """
-        cell_job_states = self._jm.lookup_job_states_by_cell_id(
+        cell_job_states = self._jm.get_job_states_by_cell_id(
             cell_id_list=req.cell_id_list
         )
         self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
@@ -300,7 +300,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["INFO"], job_info)
         return job_info
 
-    def __job_states(self, job_id_list) -> dict:
+    def __get_job_states(self, job_id_list) -> dict:
         """
         Look up job states.
 
@@ -310,16 +310,16 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
-    def lookup_job_state(self, job_id: str) -> dict:
+    def get_job_state(self, job_id: str) -> dict:
         """
-        This differs from the _lookup_job_state (underscored version) in that
+        This differs from the _get_job_state (underscored version) in that
         it just takes a job_id string, not a JobRequest.
         """
-        return self.__job_states([job_id])
+        return self.__get_job_states([job_id])
 
-    def _lookup_job_states(self, req: JobRequest) -> dict:
+    def _get_job_states(self, req: JobRequest) -> dict:
         job_id_list = self._get_job_ids(req)
-        return self.__job_states(job_id_list)
+        return self.__get_job_states(job_id_list)
 
     def _modify_job_updates(self, req: JobRequest) -> dict:
         """

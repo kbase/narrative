@@ -42,7 +42,7 @@ DOES_NOT_EXIST = "does_not_exist"
 class JobManager(object):
     """
     The KBase Job Manager class. This handles all jobs and makes their status available.
-    On status lookups, it feeds the results to the KBaseJobs channel that the front end
+    It sends the results to the KBaseJobs channel that the front end
     listens to.
     """
 
@@ -71,6 +71,32 @@ class JobManager(object):
         states = {job_id: states[job_id] for job_id in ordering}
 
         return states
+
+    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+        """
+        Deduplicates the input job list, maintaining insertion order
+        Any jobs not present in self._running_jobs are added to an error list
+
+        :param input_ids: a list of putative job IDs
+        :return results: tuple with items "job_ids", containing valid IDs;
+        and "error_ids", for jobs that the narrative backend does not know about
+        """
+        if not isinstance(input_ids, list):
+            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
+
+        job_ids = []
+        error_ids = []
+        for input_id in input_ids:
+            if input_id and input_id not in job_ids + error_ids:
+                if input_id in self._running_jobs:
+                    job_ids.append(input_id)
+                else:
+                    error_ids.append(input_id)
+
+        if not len(job_ids) + len(error_ids):
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
+
+        return job_ids, error_ids
 
     def register_new_job(self, job: Job, refresh: bool = None) -> None:
         """
@@ -143,15 +169,6 @@ class JobManager(object):
 
             self.register_new_job(job, refresh)
 
-    def get_job(self, job_id):
-        """
-        Returns a Job with the given job_id.
-        Raises a JobRequestException if not found.
-        """
-        if job_id not in self._running_jobs:
-            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
-        return self._running_jobs[job_id]["job"]
-
     def _create_jobs(self, job_ids) -> dict:
         """
         TODO: error handling
@@ -175,31 +192,14 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+    def get_job(self, job_id):
         """
-        Deduplicates the input job list, maintaining insertion order
-        Any jobs not present in self._running_jobs are added to an error list
-
-        :param input_ids: a list of putative job IDs
-        :return results: tuple with items "job_ids", containing valid IDs;
-        and "error_ids", for jobs that the narrative backend does not know about
+        Returns a Job with the given job_id.
+        Raises a JobRequestException if not found.
         """
-        if not isinstance(input_ids, list):
-            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
-
-        job_ids = []
-        error_ids = []
-        for input_id in input_ids:
-            if input_id and input_id not in job_ids + error_ids:
-                if input_id in self._running_jobs:
-                    job_ids.append(input_id)
-                else:
-                    error_ids.append(input_id)
-
-        if not len(job_ids) + len(error_ids):
-            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
-
-        return job_ids, error_ids
+        if job_id not in self._running_jobs:
+            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
+        return self._running_jobs[job_id]["job"]
 
     def _construct_job_output_state_set(
         self, job_ids: List[str], states: dict = None
@@ -264,6 +264,64 @@ class JobManager(object):
 
         return output_states
 
+    def get_job_states(self, job_ids: List[str]) -> dict:
+        job_ids, error_ids = self._check_job_list(job_ids)
+        output_states = self._construct_job_output_state_set(job_ids)
+        return self.add_errors_to_results(output_states, error_ids)
+
+    def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
+        """
+        Fetches states for all running jobs.
+        If ignore_refresh_flag is True, then returns states for all jobs this
+        JobManager knows about (i.e. all jobs associated with the workspace).
+
+        This returns them all as a dictionary, keyed on the job id.
+        :param ignore_refresh_flag: boolean - if True, ignore the usual refresh state of the job.
+            Even if the job is stopped, or completed, fetch and return its state from the service.
+        """
+        jobs_to_lookup = list()
+
+        # grab the list of running job ids, so we don't run into update-while-iterating problems.
+        for job_id in self._running_jobs.keys():
+            if self._running_jobs[job_id]["refresh"] or ignore_refresh_flag:
+                jobs_to_lookup.append(job_id)
+        if len(jobs_to_lookup) > 0:
+            return self._construct_job_output_state_set(jobs_to_lookup)
+        return dict()
+
+    def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
+        """
+        Finds jobs with a cell_id in cell_id_list
+        Mappings of job ID to cell ID are added when new jobs are registered
+        Returns a list of job IDs and a mapping of cell IDs to the list of
+        job IDs associated with the cell.
+        """
+        if not cell_id_list:
+            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
+
+        cell_to_job_mapping = {
+            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
+            for id in cell_id_list
+        }
+        # union of all the job_ids in the cell_to_job_mapping
+        job_id_list = set().union(*cell_to_job_mapping.values())
+        return (job_id_list, cell_to_job_mapping)
+
+    def get_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
+        """
+        Fetch job states for jobs with a cell_id in cell_id_list
+        Returns a dictionary of job states keyed by job ID and a mapping of
+        cell IDs to the list of job IDs associated with the cell.
+        """
+        (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
+            cell_id_list
+        )
+        job_states = {}
+        if len(jobs_to_lookup) > 0:
+            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
+
+        return {"jobs": job_states, "mapping": cell_to_job_mapping}
+
     def get_job_info(self, job_ids: List[str]) -> dict:
         """
         Sends the info over the comm channel as these packets:
@@ -289,59 +347,6 @@ class JobManager(object):
                 "job_params": job.params,
             }
         return self.add_errors_to_results(infos, error_ids)
-
-    def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
-        """
-        Finds jobs with a cell_id in cell_id_list
-        Mappings of job ID to cell ID are added when new jobs are registered
-        Returns a list of job IDs and a mapping of cell IDs to the list of
-        job IDs associated with the cell.
-        """
-        if not cell_id_list:
-            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
-
-        cell_to_job_mapping = {
-            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
-            for id in cell_id_list
-        }
-        # union of all the job_ids in the cell_to_job_mapping
-        job_id_list = set().union(*cell_to_job_mapping.values())
-        return (job_id_list, cell_to_job_mapping)
-
-    def lookup_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
-        """
-        Fetch job states for jobs with a cell_id in cell_id_list
-        Returns a dictionary of job states keyed by job ID and a mapping of
-        cell IDs to the list of job IDs associated with the cell.
-        """
-        (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
-            cell_id_list
-        )
-        job_states = {}
-        if len(jobs_to_lookup) > 0:
-            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
-
-        return {"jobs": job_states, "mapping": cell_to_job_mapping}
-
-    def lookup_all_job_states(self, ignore_refresh_flag=False) -> dict:
-        """
-        Fetches states for all running jobs.
-        If ignore_refresh_flag is True, then returns states for all jobs this
-        JobManager knows about (i.e. all jobs associated with the workspace).
-
-        This returns them all as a dictionary, keyed on the job id.
-        :param ignore_refresh_flag: boolean - if True, ignore the usual refresh state of the job.
-            Even if the job is stopped, or completed, fetch and return its state from the service.
-        """
-        jobs_to_lookup = list()
-
-        # grab the list of running job ids, so we don't run into update-while-iterating problems.
-        for job_id in self._running_jobs.keys():
-            if self._running_jobs[job_id]["refresh"] or ignore_refresh_flag:
-                jobs_to_lookup.append(job_id)
-        if len(jobs_to_lookup) > 0:
-            return self._construct_job_output_state_set(jobs_to_lookup)
-        return dict()
 
     def get_job_logs(
         self,
@@ -536,11 +541,6 @@ class JobManager(object):
             }
         return results
 
-    def get_job_states(self, job_ids: List[str]) -> dict:
-        job_ids, error_ids = self._check_job_list(job_ids)
-        output_states = self._construct_job_output_state_set(job_ids)
-        return self.add_errors_to_results(output_states, error_ids)
-
     def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:
         """
         Modifies how many things want to get the job updated.
@@ -588,7 +588,7 @@ class JobManager(object):
         List all job ids, their info, and status in a quick HTML format.
         """
         try:
-            all_states = self.lookup_all_job_states(ignore_refresh_flag=True)
+            all_states = self.get_all_job_states(ignore_refresh_flag=True)
             state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
 
             if not len(state_list):

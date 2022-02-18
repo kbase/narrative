@@ -263,7 +263,7 @@ define([
             data.types[dataType] = data.types[dataType].map((parameterSet) => {
                 Object.keys(parameterSet).forEach((paramId) => {
                     const value = parameterSet[paramId];
-                    if (specParams[paramId]) {
+                    if (specParams[paramId] && value in specParams[paramId]) {
                         parameterSet[paramId] = specParams[paramId][value];
                     }
                 });

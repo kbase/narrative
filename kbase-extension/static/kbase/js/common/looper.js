@@ -1,4 +1,4 @@
-define([], () => {
+define(['util/developerMode'], (Developer) => {
     'use strict';
 
     const debugFn = (...args) => {
@@ -10,7 +10,7 @@ define([], () => {
         constructor(config = {}) {
             this.requestLoop = null;
             this.pollInterval = config.pollInterval || 2500;
-            this.devMode = config.devMode || false;
+            this.devMode = config.devMode || Developer.mode;
             this.debug = this.devMode
                 ? debugFn
                 : () => {

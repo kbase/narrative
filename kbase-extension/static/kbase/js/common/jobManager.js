@@ -3,8 +3,9 @@ define([
     'common/dialogMessages',
     'common/jobCommMessages',
     'common/jobs',
+    'common/looper',
     'util/util',
-], (_, DialogMessages, jcm, Jobs, Utils) => {
+], (_, DialogMessages, jcm, Jobs, Looper, Utils) => {
     'use strict';
 
     const validOutgoingMessageTypes = Object.values(jcm.RESPONSES);
@@ -521,7 +522,6 @@ define([
                             this.removeChannelListeners(jcm.CHANNEL.JOB, jobId);
                         }
                     }
-                    this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, { [jcm.PARAM.JOB_ID]: jobId });
                     return jobState;
                 }
 
@@ -543,7 +543,7 @@ define([
                                 );
                             });
                         }
-                        this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                        this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
                             [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
                         });
                     }
@@ -788,12 +788,28 @@ define([
 
             _initJobs(args) {
                 const { batchId } = args;
+                if (!batchId) {
+                    throw new Error('Cannot init jobs without a batch ID');
+                }
+
+                const self = this;
                 ['ERROR', 'INFO', 'LOGS', 'RETRY', 'STATUS'].forEach((msgType) => {
                     this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.BATCH, batchId);
                 });
 
-                // request job updates
-                this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, { [jcm.PARAM.BATCH_ID]: batchId });
+                if (!this.looper) {
+                    this.looper = new Looper();
+                }
+
+                // set up repeated requests for batch status
+                // on receiving a job status message, this handler will set
+                // up a delayed request to request a status update for the batch.
+                this.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
+                    batchStatus: () => {
+                        self.looper.scheduleRequest(self.requestBatchStatus.bind(self));
+                    },
+                });
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId });
                 this.requestBatchInfo();
             }
 
@@ -898,6 +914,9 @@ define([
                 const batchId = this.model.getItem('exec.jobState.job_id');
                 if (batchId) {
                     this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] });
+                    if (this.looper) {
+                        this.looper.clearRequest();
+                    }
                 }
             }
 
@@ -905,10 +924,10 @@ define([
              * Reset the job manager, removing all listeners and stored job data
              */
             resetJobs() {
-                const batchId = this.model.getItem('exec.jobState.job_id');
-                this.bus.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
-                    [jcm.PARAM.BATCH_ID]: batchId,
-                });
+                // remove all listeners and cancel any pending job requests
+                if (this.looper) {
+                    this.looper.clearRequest();
+                }
                 this.removeAllListeners();
                 this.model.deleteItem('exec');
                 // emit the reset-cell call

@@ -72,6 +72,32 @@ class JobManager(object):
 
         return states
 
+    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+        """
+        Deduplicates the input job list, maintaining insertion order
+        Any jobs not present in self._running_jobs are added to an error list
+
+        :param input_ids: a list of putative job IDs
+        :return results: tuple with items "job_ids", containing valid IDs;
+        and "error_ids", for jobs that the narrative backend does not know about
+        """
+        if not isinstance(input_ids, list):
+            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
+
+        job_ids = []
+        error_ids = []
+        for input_id in input_ids:
+            if input_id and input_id not in job_ids + error_ids:
+                if input_id in self._running_jobs:
+                    job_ids.append(input_id)
+                else:
+                    error_ids.append(input_id)
+
+        if not len(job_ids) + len(error_ids):
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
+
+        return job_ids, error_ids
+
     def register_new_job(self, job: Job, refresh: bool = None) -> None:
         """
         Registers a new Job with the manager and stores the job locally.
@@ -143,15 +169,6 @@ class JobManager(object):
 
             self.register_new_job(job, refresh)
 
-    def get_job(self, job_id):
-        """
-        Returns a Job with the given job_id.
-        Raises a JobRequestException if not found.
-        """
-        if job_id not in self._running_jobs:
-            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
-        return self._running_jobs[job_id]["job"]
-
     def _create_jobs(self, job_ids) -> dict:
         """
         TODO: error handling
@@ -175,31 +192,14 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+    def get_job(self, job_id):
         """
-        Deduplicates the input job list, maintaining insertion order
-        Any jobs not present in self._running_jobs are added to an error list
-
-        :param input_ids: a list of putative job IDs
-        :return results: tuple with items "job_ids", containing valid IDs;
-        and "error_ids", for jobs that the narrative backend does not know about
+        Returns a Job with the given job_id.
+        Raises a JobRequestException if not found.
         """
-        if not isinstance(input_ids, list):
-            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
-
-        job_ids = []
-        error_ids = []
-        for input_id in input_ids:
-            if input_id and input_id not in job_ids + error_ids:
-                if input_id in self._running_jobs:
-                    job_ids.append(input_id)
-                else:
-                    error_ids.append(input_id)
-
-        if not len(job_ids) + len(error_ids):
-            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
-
-        return job_ids, error_ids
+        if job_id not in self._running_jobs:
+            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
+        return self._running_jobs[job_id]["job"]
 
     def _construct_job_output_state_set(
         self, job_ids: List[str], states: dict = None
@@ -264,32 +264,6 @@ class JobManager(object):
 
         return output_states
 
-    def get_job_info(self, job_ids: List[str]) -> dict:
-        """
-        Sends the info over the comm channel as these packets:
-        {
-            app_id: module/name,
-            app_name: random string,
-            job_id: string,
-            job_params: dictionary,
-            batch_id: string,
-        }
-        Will set packet to the generic job not found message if job_id doesn't exist.
-        """
-        job_ids, error_ids = self._check_job_list(job_ids)
-
-        infos = dict()
-        for job_id in job_ids:
-            job = self.get_job(job_id)
-            infos[job_id] = {
-                "app_id": job.app_id,
-                "app_name": job.app_name,
-                "batch_id": job.batch_id,
-                "job_id": job_id,
-                "job_params": job.params,
-            }
-        return self.add_errors_to_results(infos, error_ids)
-
     def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
         """
         Finds jobs with a cell_id in cell_id_list
@@ -342,6 +316,37 @@ class JobManager(object):
         if len(jobs_to_lookup) > 0:
             return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
+
+    def get_job_states(self, job_ids: List[str]) -> dict:
+        job_ids, error_ids = self._check_job_list(job_ids)
+        output_states = self._construct_job_output_state_set(job_ids)
+        return self.add_errors_to_results(output_states, error_ids)
+
+    def get_job_info(self, job_ids: List[str]) -> dict:
+        """
+        Sends the info over the comm channel as these packets:
+        {
+            app_id: module/name,
+            app_name: random string,
+            job_id: string,
+            job_params: dictionary,
+            batch_id: string,
+        }
+        Will set packet to the generic job not found message if job_id doesn't exist.
+        """
+        job_ids, error_ids = self._check_job_list(job_ids)
+
+        infos = dict()
+        for job_id in job_ids:
+            job = self.get_job(job_id)
+            infos[job_id] = {
+                "app_id": job.app_id,
+                "app_name": job.app_name,
+                "batch_id": job.batch_id,
+                "job_id": job_id,
+                "job_params": job.params,
+            }
+        return self.add_errors_to_results(infos, error_ids)
 
     def get_job_logs(
         self,
@@ -535,11 +540,6 @@ class JobManager(object):
                 "error": f"Cannot find job with ID {error_id}",
             }
         return results
-
-    def get_job_states(self, job_ids: List[str]) -> dict:
-        job_ids, error_ids = self._check_job_list(job_ids)
-        output_states = self._construct_job_output_state_set(job_ids)
-        return self.add_errors_to_results(output_states, error_ids)
 
     def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:
         """

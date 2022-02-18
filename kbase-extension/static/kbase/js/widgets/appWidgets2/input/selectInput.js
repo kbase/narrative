@@ -9,7 +9,7 @@ define([
     '../validators/constants',
     'select2',
     'bootstrap',
-], ($, Promise, html, UI, Runtime, Validation, Constants, inputUtils) => {
+], ($, Promise, html, UI, Runtime, Validation, inputUtils, Constants) => {
     'use strict';
 
     // Constants
@@ -70,10 +70,20 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validateTextString(value, spec.data.constraints, {
-                    invalidValues: model.invalidValues,
-                    invalidError,
-                });
+                const defaultInvalidMessage = `Invalid ${spec.ui.label}: ${value}. Please select a value from the dropdown.`;
+                const validation = Validation.validateTextString(
+                    value || '',
+                    spec.data.constraints,
+                    {
+                        invalidValues: model.invalidValues,
+                        invalidError: invalidError || defaultInvalidMessage,
+                        validValues: model.availableValuesSet,
+                    }
+                );
+                if (validation.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
+                    validation.errorMessage = 'Please select a value from the dropdown.';
+                }
+                return validation;
             });
         }
 

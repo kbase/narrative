@@ -422,6 +422,8 @@ define([
          * @param {object} options (optional). if present, optional values are
          * - invalidValues {Set<string>} set of values that are always invalid
          * - invalidError {string} string to respond with if an invalid value is present
+         * - validValues {Set<string>} set of allowed values - if present, and the value doesn't
+         *   match one of these, it will resolve to invalid.
          */
         function validateTextString(value, constraints, options = {}) {
             let parsedValue,
@@ -447,7 +449,10 @@ define([
             } else if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
-            } else if (options.invalidValues && options.invalidValues.has(value)) {
+            } else if (
+                (options.invalidValues && options.invalidValues.has(value)) ||
+                (options.validValues && !options.validValues.has(value))
+            ) {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
                 errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
             } else {

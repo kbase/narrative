@@ -74,7 +74,6 @@ define([
 
         function importControlValue() {
             return Promise.try(() => {
-                // return getControlValue();
                 return Validation.importIntString(
                     getControlValue(),
                     'Invalid parameter format, please enter an integer.'
@@ -188,7 +187,7 @@ define([
                             class: 'form-control',
                             dataElement: 'input',
                             dataType: 'int',
-                            value: String(currentValue),
+                            value: currentValue,
                             style: {
                                 textAlign: 'right',
                             },

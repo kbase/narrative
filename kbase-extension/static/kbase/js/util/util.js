@@ -44,7 +44,8 @@ define(['bluebird'], (Promise) => {
      * - if value is anything else (like an Array or Object)
      */
     function toInteger(value) {
-        switch (typeof value) {
+        const valueType = typeof value;
+        switch (valueType) {
             case 'number':
                 if (value !== Math.floor(value)) {
                     throw new Error('Integer is a non-integer number');
@@ -54,15 +55,37 @@ define(['bluebird'], (Promise) => {
                 if (value.match(/^[-+]?[\d]+$/)) {
                     return parseInt(value, 10);
                 }
-                throw new Error('Invalid integer format');
+                throw new Error('Invalid integer format: ' + value);
             default:
-                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
+                throw new Error('Type ' + valueType + ' cannot be converted to integer');
         }
+    }
+
+    /**
+     * Converts a string to a float.
+     * If it's not a string (or already a number), this throws an Error.
+     * Integers also count here and will be returned unchanged.
+     * @param {string|number} value
+     * @returns
+     */
+    function toFloat(value) {
+        const valueType = typeof value;
+        if (valueType === 'number') {
+            return value;
+        } else if (valueType === 'string') {
+            const number = Number(value);
+            if (isNaN(number)) {
+                throw new Error('Invalid float format: ' + value);
+            }
+            return number;
+        }
+        throw new Error('Type ' + valueType + ' cannot be converted to float');
     }
 
     return Object.freeze({
         copy: copyValue,
         pRequire,
         toInteger,
+        toFloat,
     });
 });

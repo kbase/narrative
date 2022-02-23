@@ -6,7 +6,7 @@ define([
     'common/props',
     'common/runtime',
     '../inputUtils',
-    '../validators/float',
+    '../validation',
     '../validators/constants',
     'bootstrap',
 ], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
@@ -59,13 +59,18 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateFloatString(value, spec.data.constraints, {
+                    nonFloatError: 'Invalid parameter format, please enter a number.',
+                });
             });
         }
 
         function importControlValue() {
             return Promise.try(() => {
-                return Validation.importString(getControlValue());
+                return Validation.importFloatString(
+                    getControlValue(),
+                    'Invalid parameter format, please enter a number.'
+                );
             });
         }
 
@@ -89,11 +94,12 @@ define([
             return {
                 type: 'keyup',
                 handler: function (e) {
+                    const target = e.target;
                     channel.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 },
             };
@@ -149,14 +155,8 @@ define([
         }
 
         function makeInputControl(currentValue, events) {
-            // CONTROL
             const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            let initialControlValue;
-
-            if (typeof currentValue === 'number') {
-                initialControlValue = String(currentValue);
-            }
 
             return div(
                 {
@@ -183,7 +183,7 @@ define([
                                 style: {
                                     textAlign: 'right',
                                 },
-                                value: initialControlValue,
+                                value: currentValue,
                             }),
                             typeof max === 'number'
                                 ? InputUtils.numericalBoundaryDiv(max, false)
@@ -208,17 +208,14 @@ define([
             });
         }
 
-        function layout(events) {
+        function layout() {
             const content = div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content: content,
-                events: events,
-            };
+            return content;
         }
 
         function autoValidate() {
@@ -235,11 +232,7 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                const events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
+                container.innerHTML = layout();
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -267,8 +260,8 @@ define([
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

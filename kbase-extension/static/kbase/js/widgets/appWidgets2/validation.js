@@ -22,13 +22,14 @@ define([
          *  - values = Array, the set of acceptable values
          */
         function validateSet(value, options) {
-            let errorMessage, diagnosis;
+            let errorMessage, messageId, diagnosis;
             // values are raw, no parsing.
 
             // the only meaningful value for an empty value is 'undefined'.
             if (value === undefined) {
                 if (options.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
@@ -40,6 +41,7 @@ define([
                     })
                 ) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.VALUE_NOT_FOUND;
                     errorMessage = 'Value not in the set';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
@@ -48,6 +50,7 @@ define([
 
             return {
                 isValid: errorMessage ? false : true,
+                messageId,
                 errorMessage,
                 diagnosis,
                 value,
@@ -66,10 +69,11 @@ define([
          * @returns {Object}
          */
         function validateWorkspaceDataPaletteRef(value, options) {
-            let parsedValue, errorMessage, diagnosis;
+            let parsedValue, errorMessage, messageId, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_STRING;
                 errorMessage = 'value must be a string in data reference format';
             } else {
                 parsedValue = value.trim();
@@ -80,12 +84,14 @@ define([
                 if (!parsedValue) {
                     if (options.required) {
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.INVALID;
                     errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
@@ -93,10 +99,11 @@ define([
             }
             return {
                 isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue,
+                errorMessage,
+                messageId,
+                diagnosis,
+                value,
+                parsedValue,
             };
         }
 
@@ -110,10 +117,11 @@ define([
          * - required - boolean
          */
         function validateWorkspaceObjectRef(value, options) {
-            let parsedValue, errorMessage, diagnosis;
+            let parsedValue, errorMessage, messageId, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_STRING;
                 errorMessage = 'value must be a string in workspace object reference format';
             } else {
                 parsedValue = value.trim();
@@ -123,12 +131,14 @@ define([
                 if (!parsedValue) {
                     if (options.required) {
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (!/^\d+\/\d+\/\d+$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
@@ -136,6 +146,7 @@ define([
             }
             return {
                 isValid: errorMessage ? false : true,
+                messageId,
                 errorMessage,
                 diagnosis,
                 value,
@@ -202,12 +213,12 @@ define([
                                     return false;
                                 });
                             if (!matchingType) {
-                                messageId = 'obj-overwrite-diff-type';
+                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
                                 errorMessage =
                                     'an object already exists with this name and is not of the same type';
                                 diagnosis = Constants.DIAGNOSIS.INVALID;
                             } else {
-                                messageId = 'obj-overwrite-warning';
+                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
                                 shortMessage = 'an object already exists with this name';
                                 diagnosis = Constants.DIAGNOSIS.SUSPECT;
                             }
@@ -227,17 +238,32 @@ define([
             });
         }
 
+        /**
+         * Validates an integer. If the integer is invalid, this returns a small message structure with keys:
+         * id {string} - a simple id for the message
+         * message {string} - a printable error message
+         * @param {integer} value
+         * @param {integer} min (optional) if present, will return an error message if value is below this
+         * @param {integer} max (optional) if present, will return an error message if value is above this
+         * @returns
+         */
         function validateInteger(value, min, max) {
+            if (!isFinite(value)) {
+                return {
+                    messageId: Constants.MESSAGE_IDS.INFINITE,
+                    errorMessage: 'value must be finite',
+                };
+            }
             if (max && max < value) {
                 return {
-                    id: 'int-above-maximum',
-                    message: 'the maximum value for this parameter is ' + max,
+                    messageId: Constants.MESSAGE_IDS.VALUE_OVER_MAX,
+                    errorMessage: 'the maximum value for this parameter is ' + max,
                 };
             }
             if (min && min > value) {
                 return {
-                    id: 'int-below-minimum',
-                    message: 'the minimum value for this parameter is ' + min,
+                    messageId: Constants.MESSAGE_IDS.VALUE_UNDER_MIN,
+                    errorMessage: 'the minimum value for this parameter is ' + min,
                 };
             }
         }
@@ -245,7 +271,6 @@ define([
         function validateIntString(value, constraints, options = {}) {
             let plainValue,
                 parsedValue,
-                errorObject,
                 messageId,
                 errorMessage,
                 diagnosis = Constants.DIAGNOSIS.VALID;
@@ -255,14 +280,14 @@ define([
             if (StringUtil.isEmptyString(value)) {
                 if (constraints.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                    messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string' && typeof value !== 'number') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
-                messageId = 'incoming-value-not-string-or-number';
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_PARSEABLE;
                 errorMessage =
                     'value must be a string or number (it is of type "' + typeof value + '")';
             } else {
@@ -272,13 +297,12 @@ define([
                 }
                 try {
                     parsedValue = Util.toInteger(plainValue);
-                    errorObject = validateInteger(parsedValue, min, max);
+                    const errorObject = validateInteger(parsedValue, min, max);
                     if (errorObject) {
-                        messageId = errorObject.id;
-                        errorMessage = errorObject.message;
+                        ({ messageId, errorMessage } = errorObject);
                     }
                 } catch (error) {
-                    messageId = 'internal-error';
+                    messageId = Constants.MESSAGE_IDS.ERROR;
                     errorMessage = options.nonIntError ? options.nonIntError : error.message;
                 }
                 if (errorMessage) {
@@ -302,41 +326,63 @@ define([
 
         function validateFloat(value, min, max) {
             if (isNaN(value)) {
-                return 'value must be numeric';
+                return {
+                    messageId: Constants.MESSAGE_IDS.NAN,
+                    errorMessage: 'value must be numeric',
+                };
             }
             if (!isFinite(value)) {
-                return 'value must be a finite float';
+                return {
+                    messageId: Constants.MESSAGE_IDS.INFINITE,
+                    errorMessage: 'value must be finite',
+                };
             }
-            if (max && max < value) {
-                return 'the maximum value for this parameter is ' + max;
+            if (max && value > max) {
+                return {
+                    messageId: Constants.MESSAGE_IDS.VALUE_OVER_MAX,
+                    errorMessage: `the maximum value for this parameter is ${max}`,
+                };
             }
-            if (min && min > value) {
-                return 'the minimum value for this parameter is ' + min;
+            if (min && value < min) {
+                return {
+                    messageId: Constants.MESSAGE_IDS.VALUE_UNDER_MIN,
+                    errorMessage: `the minimum value for this parameter is ${min}`,
+                };
             }
         }
 
-        function validateFloatString(value, constraints) {
-            let normalizedValue, parsedValue, errorMessage, diagnosis;
+        function validateFloatString(value, constraints, options = {}) {
+            let plainValue, parsedValue, errorMessage, messageId, diagnosis;
             const min = constraints.min,
                 max = constraints.max;
 
             if (StringUtil.isEmptyString(value)) {
                 if (constraints.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
-            } else if (typeof value !== 'string') {
+            } else if (typeof value !== 'string' && typeof value !== 'number') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
-                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_PARSEABLE;
+                errorMessage =
+                    'value must be a string or number (it is of type "' + typeof value + '")';
             } else {
                 try {
-                    normalizedValue = value.trim();
-                    parsedValue = parseFloat(normalizedValue);
-                    errorMessage = validateFloat(parsedValue, min, max);
+                    plainValue = value;
+                    if (typeof plainValue === 'string') {
+                        plainValue = plainValue.trim();
+                    }
+                    parsedValue = Util.toFloat(plainValue);
+                    const errorObject = validateFloat(parsedValue, min, max);
+                    if (errorObject) {
+                        ({ messageId, errorMessage } = errorObject);
+                    }
                 } catch (error) {
-                    errorMessage = error.message;
+                    messageId = Constants.MESSAGE_IDS.ERROR;
+                    errorMessage = options.nonFloatError ? options.nonFloatError : error.message;
                 }
                 if (errorMessage) {
                     parsedValue = undefined;
@@ -348,9 +394,10 @@ define([
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage,
+                messageId,
                 diagnosis,
                 value,
-                normalizedValue,
+                plainValue,
                 parsedValue,
             };
         }
@@ -369,27 +416,27 @@ define([
                 parsedValue = value.trim();
                 if (!parsedValue) {
                     if (options.required) {
-                        messageId = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
                 } else if (/\s/.test(parsedValue)) {
-                    messageId = 'obj-name-no-spaces';
+                    messageId = Constants.MESSAGE_IDS.OBJ_NO_SPACES;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not contain a space';
                 } else if (/^[+-]*\d+$/.test(parsedValue)) {
-                    messageId = 'obj-name-not-integer';
+                    messageId = Constants.MESSAGE_IDS.OBJ_NO_INT;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not be in the form of an integer';
                 } else if (!/^[A-Za-z0-9|.|_-]+$/.test(parsedValue)) {
-                    messageId = 'obj-name-invalid-characters';
+                    messageId = Constants.MESSAGE_IDS.OBJ_INVALID;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
                         'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
                 } else if (parsedValue.length > 255) {
-                    messageId = 'obj-name-too-long';
+                    messageId = Constants.MESSAGE_IDS.OBJ_LONG;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not exceed 255 characters in length';
                 }
@@ -432,6 +479,7 @@ define([
         function validateTextString(value, constraints, options = {}) {
             let parsedValue,
                 errorMessage,
+                messageId,
                 diagnosis = Constants.DIAGNOSIS.VALID;
             const minLength = constraints.min_length,
                 maxLength = constraints.max_length;
@@ -446,26 +494,31 @@ define([
             if (StringUtil.isEmptyString(value)) {
                 if (constraints.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_STRING;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else if (
                 (options.invalidValues && options.invalidValues.has(value)) ||
                 (options.validValues && !options.validValues.has(value))
             ) {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.INVALID;
                 errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.VALUE_UNDER_MIN;
                     errorMessage = 'the minimum length for this parameter is ' + minLength;
                 } else if (parsedValue.length > maxLength) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.VALUE_OVER_MAX;
                     errorMessage = 'the maximum length for this parameter is ' + maxLength;
                 } else if (constraints.regexp) {
                     const regexps = constraints.regexp.map((item) => {
@@ -490,6 +543,7 @@ define([
                     });
                     if (regexpErrorMessages.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
+                        messageId = Constants.MESSAGE_IDS.INVALID;
                         errorMessage = regexpErrorMessages.join('; ');
                     }
                 } else {
@@ -500,6 +554,7 @@ define([
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage,
+                messageId,
                 diagnosis,
                 value,
                 parsedValue,
@@ -513,18 +568,20 @@ define([
          * @param {*} options
          */
         function validateTextSet(set, options) {
-            let errorMessage, diagnosis, parsedSet;
+            let errorMessage, messageId, diagnosis, parsedSet;
             // values are raw, no parsing.
 
             if (set === null) {
                 if (options.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (!(set instanceof Array)) {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_ARRAY;
                 errorMessage = 'value must be an array';
             } else {
                 parsedSet = set.filter((setValue) => {
@@ -533,6 +590,7 @@ define([
                 if (parsedSet.length === 0) {
                     if (options.required) {
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                        messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
@@ -543,6 +601,7 @@ define([
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
+                        diagnosis = Constants.MESSAGE_IDS.VALUE_NOT_FOUND;
                         errorMessage = 'Value not in the set';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.VALID;
@@ -556,6 +615,7 @@ define([
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage,
+                messageId,
                 diagnosis,
                 value: set,
                 parsedValue: parsedSet,
@@ -592,23 +652,27 @@ define([
         function validateBoolean(value, options) {
             let parsedValue,
                 errorMessage,
+                messageId,
                 diagnosis = Constants.DIAGNOSIS.VALID;
 
             if (StringUtil.isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
+                    messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = Constants.DIAGNOSIS.INVALID;
+                messageId = Constants.MESSAGE_IDS.VALUE_NOT_PARSEABLE;
                 errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 try {
                     parsedValue = stringToBoolean(value);
                 } catch (ex) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.VALUE_NOT_PARSEABLE;
                     errorMessage = ex.message;
                 }
             }
@@ -616,6 +680,7 @@ define([
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage,
+                messageId,
                 diagnosis,
                 value,
                 parsedValue,
@@ -632,6 +697,11 @@ define([
             };
         }
 
+        /**
+         * Basically casts undefined -> null, otherwise returns the given string.
+         * @param {String} value the value to verify
+         * @returns
+         */
         function importTextString(value) {
             if (value === undefined || value === null) {
                 return null;
@@ -639,6 +709,16 @@ define([
             return value;
         }
 
+        /**
+         * This imports an integer string under the following restrictions.
+         * 1. Returns null if the value is undefined, null, or a whitespace-only string.
+         * 2. Throws an error if the value is not a string
+         * 3. Attempts to cast the string to an integer. If it fails, throws an Error.
+         * 4. If nonIntError is given and an error occurs, then nonIntError is thrown.
+         * @param {String} value expected to be an integer string, will be cast into an int if so.
+         * @param {String} nonIntError
+         * @returns
+         */
         function importIntString(value, nonIntError) {
             if (value === undefined || value === null) {
                 return null;
@@ -662,13 +742,34 @@ define([
             }
         }
 
+        function importFloatString(value, nonFloatError) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+
+            if (typeof value !== 'string') {
+                throw new Error('value must be a string (it is of type "' + typeof value + '")');
+            }
+            const normalizedValue = value.trim();
+            if (value === '') {
+                return null;
+            }
+            try {
+                return Util.toFloat(normalizedValue);
+            } catch (err) {
+                if (nonFloatError) {
+                    throw new Error(nonFloatError);
+                }
+                throw err;
+            }
+        }
+
         return {
             validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName,
             validateWorkspaceObjectRef,
             validateInteger,
             validateIntString,
-            validateIntegerField: validateIntString,
             validateFloat,
             validateFloatString,
             validateTextString,
@@ -679,6 +780,7 @@ define([
             validateTrue,
             importTextString,
             importIntString,
+            importFloatString,
         };
     }
 

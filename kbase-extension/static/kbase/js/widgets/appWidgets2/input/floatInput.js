@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
@@ -9,7 +9,7 @@ define([
     '../validators/float',
     '../validators/constants',
     'bootstrap',
-], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation, Constants) => {
+], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -122,7 +122,7 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
+                                    const message = InputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -171,13 +171,7 @@ define([
                         },
                         [
                             typeof min === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      String(min) + ' &#8804; '
-                                  )
+                                ? InputUtils.numericalBoundaryDiv(min, true)
                                 : '',
                             input({
                                 id: events.addEvents({
@@ -192,13 +186,7 @@ define([
                                 value: initialControlValue,
                             }),
                             typeof max === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      ' &#8804; ' + String(max)
-                                  )
+                                ? InputUtils.numericalBoundaryDiv(max, false)
                                 : '',
                         ]
                     ),

@@ -7,7 +7,7 @@ define([
     '../inputUtils',
 
     'bootstrap',
-], (Promise, html, Events, UI, Props) => {
+], (Promise, html, Events, UI, Props, InputUtils) => {
     'use strict';
 
     // Constants
@@ -51,21 +51,9 @@ define([
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
 
-            function boundaryDiv(value, isMin) {
-                value = String(value);
-                const text = isMin ? `${value} &#8804; ` : ` &#8804; ${value}`;
-                return div(
-                    {
-                        class: 'input-group-addon kb-input-group-addon',
-                        fontFamily: 'monospace',
-                    },
-                    text
-                );
-            }
-
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    typeof min === 'number' ? boundaryDiv(min, true) : '',
+                    typeof min === 'number' ? InputUtils.numericalBoundaryDiv(min, true) : '',
                     input({
                         class: 'form-control',
                         dataElement: 'input',
@@ -76,7 +64,7 @@ define([
                             textAlign: 'right',
                         },
                     }),
-                    typeof max === 'number' ? boundaryDiv(max, false) : '',
+                    typeof max === 'number' ? InputUtils.numericalBoundaryDiv(max, false) : '',
                 ]),
                 div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);

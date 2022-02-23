@@ -9,7 +9,7 @@ define([
     '../validators/float',
     '../validators/constants',
     'bootstrap',
-], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation, Constants) => {
+], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -122,7 +122,7 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
+                                    const message = InputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -158,18 +158,6 @@ define([
                 initialControlValue = String(currentValue);
             }
 
-            function boundaryDiv(value, isMin) {
-                value = String(value);
-                const text = isMin ? `${value} &#8804; ` : ` &#8804; ${value}`;
-                return div(
-                    {
-                        class: 'input-group-addon kb-input-group-addon',
-                        fontFamily: 'monospace',
-                    },
-                    text
-                );
-            }
-
             return div(
                 {
                     style: { width: '100%' },
@@ -182,7 +170,9 @@ define([
                             style: { width: '100%' },
                         },
                         [
-                            typeof min === 'number' ? boundaryDiv(min, true) : '',
+                            typeof min === 'number'
+                                ? InputUtils.numericalBoundaryDiv(min, true)
+                                : '',
                             input({
                                 id: events.addEvents({
                                     events: [handleChanged(), handleTouched()],
@@ -195,7 +185,9 @@ define([
                                 },
                                 value: initialControlValue,
                             }),
-                            typeof max === 'number' ? boundaryDiv(max, false) : '',
+                            typeof max === 'number'
+                                ? InputUtils.numericalBoundaryDiv(max, false)
+                                : '',
                         ]
                     ),
                     div({

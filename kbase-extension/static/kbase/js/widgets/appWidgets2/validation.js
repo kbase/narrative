@@ -239,15 +239,22 @@ define([
         }
 
         /**
-         * Validates an integer. If the integer is invalid, this returns a small message structure with keys:
+         * Validates a number. If the value is invalid or infinite, this returns a small message
+         * structure with keys:
          * id {string} - a simple id for the message
          * message {string} - a printable error message
-         * @param {integer} value
-         * @param {integer} min (optional) if present, will return an error message if value is below this
-         * @param {integer} max (optional) if present, will return an error message if value is above this
+         * @param {Number} value
+         * @param {Number} min (optional) if present, will return an error message if value is below this
+         * @param {Number} max (optional) if present, will return an error message if value is above this
          * @returns
          */
-        function validateInteger(value, min, max) {
+        function validateNumber(value, min, max) {
+            if (isNaN(value)) {
+                return {
+                    messageId: Constants.MESSAGE_IDS.NAN,
+                    errorMessage: 'value must be numeric',
+                };
+            }
             if (!isFinite(value)) {
                 return {
                     messageId: Constants.MESSAGE_IDS.INFINITE,
@@ -268,6 +275,30 @@ define([
             }
         }
 
+        /**
+         * Validates an integer string against a set of optional constraints. Will fail if:
+         * - required and missing,
+         * - has a min, and is lower
+         * - has a max, and is higher
+         * - resolves to infinity
+         *
+         * @param {string} value
+         * @param {object} constraints
+         * - required - boolean
+         * - min - int
+         * - max - int
+         * @param {object} options (optional). if present, the only option right now is
+         * nonIntError. If that is given, and the value to validate is non-parseable,
+         * this error will be substituted.
+         * @returns {Object} with keys:
+         *  isValid: boolean,
+         *  errorMessage: string or undefined,
+         *  messageId: string or undefined (one of Constants.MESSAGE_IDS),
+         *  diagnosis: string or undefined (one of Constants.DIAGNOSIS),
+         *  value: the original value,
+         *  plainValue: if value was a string, this is the trimmed version
+         *  parsedValue: the parsed integer
+         */
         function validateIntString(value, constraints, options = {}) {
             let plainValue,
                 parsedValue,
@@ -297,7 +328,7 @@ define([
                 }
                 try {
                     parsedValue = Util.toInteger(plainValue);
-                    const errorObject = validateInteger(parsedValue, min, max);
+                    const errorObject = validateNumber(parsedValue, min, max);
                     if (errorObject) {
                         ({ messageId, errorMessage } = errorObject);
                     }
@@ -316,7 +347,6 @@ define([
                 isValid: errorMessage ? false : true,
                 messageId,
                 errorMessage,
-                message: errorMessage,
                 diagnosis,
                 value,
                 plainValue,
@@ -324,33 +354,30 @@ define([
             };
         }
 
-        function validateFloat(value, min, max) {
-            if (isNaN(value)) {
-                return {
-                    messageId: Constants.MESSAGE_IDS.NAN,
-                    errorMessage: 'value must be numeric',
-                };
-            }
-            if (!isFinite(value)) {
-                return {
-                    messageId: Constants.MESSAGE_IDS.INFINITE,
-                    errorMessage: 'value must be finite',
-                };
-            }
-            if (max && value > max) {
-                return {
-                    messageId: Constants.MESSAGE_IDS.VALUE_OVER_MAX,
-                    errorMessage: `the maximum value for this parameter is ${max}`,
-                };
-            }
-            if (min && value < min) {
-                return {
-                    messageId: Constants.MESSAGE_IDS.VALUE_UNDER_MIN,
-                    errorMessage: `the minimum value for this parameter is ${min}`,
-                };
-            }
-        }
-
+        /**
+         * Validates a number string against a set of optional constraints. Will fail if:
+         * - required and missing,
+         * - has a min, and is lower
+         * - has a max, and is higher
+         * - resolves to infinity
+         *
+         * @param {string} value
+         * @param {object} constraints
+         * - required - boolean
+         * - min - int
+         * - max - int
+         * @param {object} options (optional). if present, the only option right now is
+         * nonFloatError. If that is given, and the value to validate is non-parseable,
+         * this error will be substituted.
+         * @returns {Object} with keys:
+         *  isValid: boolean,
+         *  errorMessage: string or undefined,
+         *  messageId: string or undefined (one of Constants.MESSAGE_IDS),
+         *  diagnosis: string or undefined (one of Constants.DIAGNOSIS),
+         *  value: the original value,
+         *  plainValue: if value was a string, this is the trimmed version
+         *  parsedValue: the parsed number
+         */
         function validateFloatString(value, constraints, options = {}) {
             let plainValue, parsedValue, errorMessage, messageId, diagnosis;
             const min = constraints.min,
@@ -376,7 +403,7 @@ define([
                         plainValue = plainValue.trim();
                     }
                     parsedValue = Util.toFloat(plainValue);
-                    const errorObject = validateFloat(parsedValue, min, max);
+                    const errorObject = validateNumber(parsedValue, min, max);
                     if (errorObject) {
                         ({ messageId, errorMessage } = errorObject);
                     }
@@ -700,7 +727,7 @@ define([
         /**
          * Basically casts undefined -> null, otherwise returns the given string.
          * @param {String} value the value to verify
-         * @returns
+         * @returns the imported string or null
          */
         function importTextString(value) {
             if (value === undefined || value === null) {
@@ -742,6 +769,17 @@ define([
             }
         }
 
+        /**
+         * Imports a string into a Number format. This is distinct from importIntString, as it accepts
+         * any non-infinite number. It operates under these restrictions:
+         * 1. Returns null if the value is undefined, null, or a whitespace-only string.
+         * 2. Throws an error if the value is not a string.
+         * 3. Attempts to cast the string to an Number. If it fails, throws an Error, with an option
+         *    for a custom error of nonFloatError is given.
+         * @param {string} value the string to import into a Number
+         * @param {string} nonFloatError (optional) if the parse fails, this custom error gets returned
+         * @returns
+         */
         function importFloatString(value, nonFloatError) {
             if (value === undefined || value === null) {
                 return null;
@@ -750,12 +788,12 @@ define([
             if (typeof value !== 'string') {
                 throw new Error('value must be a string (it is of type "' + typeof value + '")');
             }
-            const normalizedValue = value.trim();
-            if (value === '') {
+            const plainValue = value.trim();
+            if (plainValue === '') {
                 return null;
             }
             try {
-                return Util.toFloat(normalizedValue);
+                return Util.toFloat(plainValue);
             } catch (err) {
                 if (nonFloatError) {
                     throw new Error(nonFloatError);
@@ -768,9 +806,8 @@ define([
             validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName,
             validateWorkspaceObjectRef,
-            validateInteger,
+            validateNumber,
             validateIntString,
-            validateFloat,
             validateFloatString,
             validateTextString,
             validateSet,

@@ -1571,4 +1571,82 @@ define([
             runTests('validateStringSet', testCases);
         })();
     });
+
+    describe('String import functions', () => {
+        it('importTextString - plain strings are unchanged', () => {
+            ['a', 'bb', 'ccc', '  ', ''].forEach((str) => {
+                expect(Validation.importTextString(str)).toEqual(str);
+            });
+        });
+
+        it('importTextString - undefined and null are nullified', () => {
+            [undefined, null].forEach((val) => {
+                expect(Validation.importTextString(val)).toBeNull();
+            });
+        });
+
+        const empties = [undefined, null, '', '  '];
+        empties.forEach((val) => {
+            it(`importIntString - ${val} - should be null`, () => {
+                expect(Validation.importIntString(val)).toBeNull();
+            });
+            it(`importFloatString - ${val} - should be null`, () => {
+                expect(Validation.importFloatString(val)).toBeNull();
+            });
+        });
+
+        const nonStrings = [[], {}, 123, new Set()];
+        nonStrings.forEach((val) => {
+            it(`importIntString - ${val} - should throw an error`, () => {
+                expect(() => Validation.importIntString(val)).toThrowError(
+                    `value must be a string (it is of type "${typeof val}")`
+                );
+            });
+            it(`importFloatString - ${val} - should throw an error`, () => {
+                expect(() => Validation.importFloatString(val)).toThrowError(
+                    `value must be a string (it is of type "${typeof val}")`
+                );
+            });
+        });
+
+        ['a', '1 2 3', '1.1', '-1.2'].forEach((val) => {
+            [true, false].forEach((withErr) => {
+                it(`importIntString - ${val} - should fail with${
+                    !withErr ? 'out' : ''
+                } a custom error`, () => {
+                    const errStr = 'so totally not an int!';
+                    if (withErr) {
+                        expect(() => Validation.importIntString(val, errStr)).toThrowError(errStr);
+                    } else {
+                        try {
+                            Validation.importIntString(val);
+                        } catch (err) {
+                            expect(err).not.toEqual(errStr);
+                        }
+                    }
+                });
+            });
+        });
+
+        ['a', '1 2 3', 'not a number at all!'].forEach((val) => {
+            [true, false].forEach((withErr) => {
+                it(`importFloatString - ${val} - should fail with${
+                    !withErr ? 'out' : ''
+                } a custom error`, () => {
+                    const errStr = 'so totally not a number!';
+                    if (withErr) {
+                        expect(() => Validation.importFloatString(val, errStr)).toThrowError(
+                            errStr
+                        );
+                    } else {
+                        try {
+                            Validation.importFloatString(val);
+                        } catch (err) {
+                            expect(err).not.toEqual(errStr);
+                        }
+                    }
+                });
+            });
+        });
+    });
 });

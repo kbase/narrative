@@ -13,14 +13,9 @@ define([
     // allow spies to be overwritten
     jasmine.getEnv().allowRespy(true);
 
-    const TEST_JOB_ID = 'someJob',
+    const { TEST_JOB_ID } = JobsData,
         TEST_JOB_LIST = [TEST_JOB_ID, 'anotherJob', 'aThirdJob'],
         ERROR_STR = 'Some error string';
-
-    const { JOB_ID, JOB_ID_LIST, BATCH_ID } = jcm.PARAM,
-        JOB_CHANNEL = jcm.CHANNEL.JOB,
-        CELL_CHANNEL = jcm.CHANNEL.CELL,
-        BATCH_CHANNEL = jcm.CHANNEL.BATCH;
 
     const responseDataJobMapping = {};
     const batchJobs = {};
@@ -156,9 +151,9 @@ define([
             });
 
             const messagesToSend = [
-                [jcm.MESSAGE_TYPE.STATUS, { [JOB_ID]: 0 }],
-                [jcm.MESSAGE_TYPE.STATUS, { [JOB_ID]: 1 }],
-                [jcm.MESSAGE_TYPE.STATUS, { [JOB_ID]: 2 }],
+                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: 0 }],
+                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: 1 }],
+                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: 2 }],
             ];
             const messagesInQueue = messagesToSend.map((arg) => {
                 return {
@@ -171,7 +166,7 @@ define([
                     {
                         target_name: 'KBaseJobs',
                         request_type: jcm.MESSAGE_TYPE.STATUS,
-                        [JOB_ID]: num,
+                        [jcm.PARAM.JOB_ID]: num,
                     },
                 ];
             });
@@ -191,7 +186,7 @@ define([
                             'ERROR sending comm message: ' + comm.ERROR_COMM_CHANNEL_NOT_INIT
                         );
                         // resolve the promise on receiving the last message
-                        if (args[1][JOB_ID] === 2) {
+                        if (args[1][jcm.PARAM.JOB_ID] === 2) {
                             resolve();
                         }
                     });
@@ -223,7 +218,7 @@ define([
                             }
                             return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                         }
-                        const jobId = args[1][JOB_ID];
+                        const jobId = args[1][jcm.PARAM.JOB_ID];
                         // original function should throw an error
                         await expectAsync(
                             comm.sendCommMessage.and.originalFn.call(comm, ...args)
@@ -274,7 +269,7 @@ define([
                             }
                             return comm.sendCommMessage.and.originalFn.call(comm, ...args);
                         }
-                        const jobId = args[1][JOB_ID];
+                        const jobId = args[1][jcm.PARAM.JOB_ID];
                         if (jobId < 2) {
                             // original function should throw an error
                             await expectAsync(
@@ -331,68 +326,68 @@ define([
             const busMsgCases = [
                 {
                     channel: jcm.MESSAGE_TYPE.LOGS,
-                    message: { [JOB_ID]: TEST_JOB_ID },
+                    message: { [jcm.PARAM.JOB_ID]: TEST_JOB_ID },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.LOGS,
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.LOGS,
                     message: {
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                         latest: true,
                     },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.LOGS,
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                         latest: true,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.LOGS,
                     message: {
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                         first_line: 2000,
                         latest: true,
                     },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.LOGS,
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                         first_line: 2000,
                         latest: true,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.CANCEL,
-                    message: { [JOB_ID]: TEST_JOB_ID },
+                    message: { [jcm.PARAM.JOB_ID]: TEST_JOB_ID },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.CANCEL,
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.CANCEL,
-                    message: { [JOB_ID_LIST]: TEST_JOB_LIST },
+                    message: { [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.CANCEL,
-                        [JOB_ID_LIST]: TEST_JOB_LIST,
+                        [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.RETRY,
-                    message: { [JOB_ID]: TEST_JOB_ID },
+                    message: { [jcm.PARAM.JOB_ID]: TEST_JOB_ID },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.RETRY,
-                        [JOB_ID]: TEST_JOB_ID,
+                        [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                     },
                 },
                 {
                     channel: jcm.MESSAGE_TYPE.RETRY,
-                    message: { [JOB_ID_LIST]: TEST_JOB_LIST },
+                    message: { [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.RETRY,
-                        [JOB_ID_LIST]: TEST_JOB_LIST,
+                        [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST,
                     },
                 },
             ];
@@ -403,26 +398,26 @@ define([
                 busMsgCases.push(
                     {
                         channel: jcm.MESSAGE_TYPE[type],
-                        message: { [JOB_ID]: TEST_JOB_ID },
+                        message: { [jcm.PARAM.JOB_ID]: TEST_JOB_ID },
                         expected: {
                             request_type: jcm.MESSAGE_TYPE[type],
-                            [JOB_ID]: TEST_JOB_ID,
+                            [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
                         },
                     },
                     {
                         channel: jcm.MESSAGE_TYPE[type],
-                        message: { [JOB_ID_LIST]: TEST_JOB_LIST },
+                        message: { [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST },
                         expected: {
                             request_type: jcm.MESSAGE_TYPE[type],
-                            [JOB_ID_LIST]: TEST_JOB_LIST,
+                            [jcm.PARAM.JOB_ID_LIST]: TEST_JOB_LIST,
                         },
                     },
                     {
                         channel: jcm.MESSAGE_TYPE[type],
-                        message: { [BATCH_ID]: 'batch_job' },
+                        message: { [jcm.PARAM.BATCH_ID]: 'batch_job' },
                         expected: {
                             request_type: `${jcm.MESSAGE_TYPE[type]}`,
-                            [BATCH_ID]: 'batch_job',
+                            [jcm.PARAM.BATCH_ID]: 'batch_job',
                         },
                     }
                 );
@@ -464,7 +459,7 @@ define([
                 await comm.initCommChannel();
 
                 await expectAsync(
-                    comm.sendCommMessage('unknown', { [JOB_CHANNEL]: TEST_JOB_ID })
+                    comm.sendCommMessage('unknown', { [jcm.CHANNEL.JOB]: TEST_JOB_ID })
                 ).toBeRejectedWithError(
                     'ERROR sending comm message: Ignoring unknown message type "unknown"'
                 );
@@ -526,12 +521,12 @@ define([
                 const channelOutput = [];
                 Object.keys(output).forEach((jobId) => {
                     const address = {
-                        channel: { [JOB_CHANNEL]: jobId },
+                        channel: { [jcm.CHANNEL.JOB]: jobId },
                         key: { type: messageType },
                     };
 
                     if (jobId in batchJobs) {
-                        address.channel = { [BATCH_CHANNEL]: jobId };
+                        address.channel = { [jcm.CHANNEL.BATCH]: jobId };
                     }
                     channelOutput.push([output[jobId], address]);
                 });
@@ -558,7 +553,7 @@ define([
                                 run_id: 54321,
                             },
                             {
-                                channel: { [CELL_CHANNEL]: 'bar' },
+                                channel: { [jcm.CHANNEL.CELL]: 'bar' },
                                 key: { type: jcm.MESSAGE_TYPE.RUN_STATUS },
                             },
                         ],

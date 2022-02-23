@@ -18,7 +18,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
             });
             container = document.createElement('div');
             testConfig = {
-                bus: bus,
+                bus,
                 parameterSpec: {
                     data: {
                         defaultValue: '',

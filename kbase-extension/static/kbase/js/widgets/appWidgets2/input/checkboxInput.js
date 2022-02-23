@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
@@ -52,9 +52,8 @@ define([
             return 0;
         }
 
-        // FIXME: where is the 'input-control' element?
         function syncModelToControl() {
-            const control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-container.input');
             if (model.value === 1) {
                 control.checked = true;
             } else {
@@ -112,7 +111,7 @@ define([
                     }),
                     type: 'checkbox',
                     dataElement: 'input',
-                    checked: checked,
+                    checked,
                     value: 1,
                 }),
             ]);
@@ -146,8 +145,6 @@ define([
                 container.innerHTML = render(events);
                 events.attachEvents();
 
-                autoValidate();
-
                 // Listen for events from the containing environment.
 
                 channel.on('reset-to-defaults', () => {
@@ -159,7 +156,7 @@ define([
                     syncModelToControl();
                 });
 
-                return null;
+                return autoValidate();
             });
         }
 
@@ -175,8 +172,8 @@ define([
         // INIT
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

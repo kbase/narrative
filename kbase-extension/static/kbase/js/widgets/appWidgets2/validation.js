@@ -601,7 +601,7 @@ define([
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
-                        diagnosis = Constants.MESSAGE_IDS.VALUE_NOT_FOUND;
+                        messageId = Constants.MESSAGE_IDS.VALUE_NOT_FOUND;
                         errorMessage = 'Value not in the set';
                     } else {
                         diagnosis = Constants.DIAGNOSIS.VALID;

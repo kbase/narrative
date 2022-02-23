@@ -1,7 +1,7 @@
 define(['util/util'], (Utils) => {
     'use strict';
 
-    fdescribe('Basic Util functions', () => {
+    describe('Basic Util functions', () => {
         it('should have expected functions', () => {
             ['copy', 'pRequire', 'toInteger', 'toFloat'].forEach((fn) => {
                 expect(Utils[fn]).toEqual(jasmine.any(Function));

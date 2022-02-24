@@ -419,7 +419,7 @@ define([
                 };
             });
         });
-        return { byId: outputJobs };
+        return outputJobs;
     }
 
     describe('createCombinedJobState', () => {
@@ -440,7 +440,7 @@ define([
         const tests = [
             {
                 desc: 'all jobs',
-                jobs: { byId: JobsData.jobsById },
+                jobs: JobsData.jobsById,
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
                 statusBarSummary: summary.running,
@@ -455,7 +455,7 @@ define([
             },
             {
                 desc: 'jobs with retries',
-                jobs: { byId: JobsData.batchJob.jobsById },
+                jobs: JobsData.batchJob.jobsById,
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success (3 jobs retried)`,
                 fsmState: 'inProgressResultsAvailable',
                 statusBarSummary: summary.running,
@@ -464,10 +464,8 @@ define([
             {
                 desc: 'jobs with retries, original jobs only',
                 jobs: {
-                    byId: {
-                        ...JobsData.batchJob.originalJobs,
-                        retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
-                    },
+                    ...JobsData.batchJob.originalJobs,
+                    retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
                 },
                 expected: `${batch} in progress: 2 queued, 1 failed, 2 cancelled`,
                 fsmState: 'inProgress',
@@ -622,22 +620,6 @@ define([
             {
                 desc: 'null',
                 jobs: null,
-                expected: '',
-                fsmState: null,
-                statusBarSummary: '',
-                statuses: {},
-            },
-            {
-                desc: 'byId is empty',
-                jobs: { byId: {} },
-                expected: '',
-                fsmState: null,
-                statusBarSummary: '',
-                statuses: {},
-            },
-            {
-                desc: 'byId is null',
-                jobs: { byId: null },
                 expected: '',
                 fsmState: null,
                 statusBarSummary: '',

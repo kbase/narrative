@@ -308,8 +308,9 @@ define([
             });
 
             it('Should fail to start without a node', async () => {
+                createJobManager(this);
                 const simpleLogViewerInstance = new SimpleLogViewer({
-                    jobManager: { bus: Runtime.make().bus(), model: {} },
+                    jobManager: this.jobManager,
                 });
                 await expectAsync(
                     simpleLogViewerInstance.start({ jobId: TEST_JOB_ID })
@@ -317,8 +318,9 @@ define([
             });
 
             it('Should fail to start without a jobId', async function () {
+                createJobManager(this);
                 const simpleLogViewerInstance = new SimpleLogViewer({
-                    jobManager: { bus: Runtime.make().bus(), model: {} },
+                    jobManager: this.jobManager,
                 });
                 await expectAsync(
                     simpleLogViewerInstance.start({ node: this.node })

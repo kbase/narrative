@@ -700,9 +700,7 @@ define([
                     this.addEventHandlers();
 
                     // check whether a jobState is available
-                    const jobState = this.jobManager.model.getItem(
-                        `exec.jobs.byId.${this.jobId}`
-                    ) || { job_id: this.jobId };
+                    const jobState = this.jobManager.getJob(this.jobId) || { job_id: this.jobId };
 
                     // initial render
                     if (jobState && jobState.status) {

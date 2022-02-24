@@ -23,7 +23,7 @@ define([
 ) => {
     'use strict';
 
-    const { cssBaseClass, ManagedJobStateViewer } = JobStateViewerModule;
+    const { cssBaseClass, JobStateViewer } = JobStateViewerModule;
 
     const { JobManager } = JobManagerModule;
 
@@ -62,7 +62,7 @@ define([
         createJobManager(context);
 
         const args = { showHistory, jobManager: context.jobManager, devMode: true };
-        context.jobStateViewerInstance = new ManagedJobStateViewer(args);
+        context.jobStateViewerInstance = new JobStateViewer(args);
     }
 
     /**
@@ -115,9 +115,9 @@ define([
         });
     }
 
-    describe('The managed job state viewer module', () => {
+    describe('The job state viewer module', () => {
         it('Should load the module code successfully', () => {
-            expect(ManagedJobStateViewer).toEqual(jasmine.any(Function));
+            expect(JobStateViewer).toEqual(jasmine.any(Function));
         });
 
         it('Should have a css base class', () => {
@@ -126,7 +126,7 @@ define([
         });
     });
 
-    describe('The managed job state viewer instance', () => {
+    describe('The job state viewer instance', () => {
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
@@ -148,13 +148,14 @@ define([
 
             it('should fail to init without a job manager', () => {
                 expect(() => {
-                    new ManagedJobStateViewer();
+                    new JobStateViewer();
                 }).toThrowError(Error, 'Requires a valid JobManager for initialisation');
             });
 
             it('Should fail to start without a node', async () => {
-                const jobStateViewerInstance = new ManagedJobStateViewer({
-                    jobManager: { bus: Runtime.make().bus(), model: {} },
+                createJobManager(this);
+                const jobStateViewerInstance = new JobStateViewer({
+                    jobManager: this.jobManager,
                 });
                 await expectAsync(
                     jobStateViewerInstance.start({ jobId: 'fakeJob' })
@@ -162,8 +163,8 @@ define([
             });
 
             it('Should fail to start without a jobId', async function () {
-                const jobStateViewerInstance = new ManagedJobStateViewer({
-                    jobManager: { bus: Runtime.make().bus(), model: {} },
+                const jobStateViewerInstance = new JobStateViewer({
+                    jobManager: this.jobManager,
                 });
                 await expectAsync(
                     jobStateViewerInstance.start({ node: this.node })

@@ -98,7 +98,7 @@ define([
                 this.addEventHandlers();
 
                 // check whether a jobState is available
-                this.lastJobState = this.jobManager.model.getItem(`exec.jobs.byId.${this.jobId}`);
+                this.lastJobState = this.jobManager.getJob(this.jobId);
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
                 this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
@@ -313,10 +313,10 @@ define([
             }
         };
 
-    class ManagedJobStateViewer extends EventListenerMixin(JobStateViewerCore) {}
+    class JobStateViewer extends EventListenerMixin(JobStateViewerCore) {}
 
     return {
-        ManagedJobStateViewer,
+        JobStateViewer,
         cssBaseClass,
     };
 });

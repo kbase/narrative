@@ -387,10 +387,37 @@ define([
                 this.pollInterval = config.pollInterval || DEFAULT_STATUS_REQUEST_INTERVAL;
             }
 
-            init() {
+            /**
+             * Initialise the job manager with the provided job ID
+             *
+             * @param {string} jobId
+             */
+            initJob(jobId) {
+                // create a proto job to initialise the model
+                const protoJob = {
+                    job_id: jobId,
+                    status: 'created',
+                    created: 0,
+                };
+                this.model.setItem('exec.jobState', protoJob);
+                return this._initJob(protoJob);
+            }
+
+            /**
+             * Initialise the job manager with a stored job
+             */
+            restoreFromSaved() {
                 const job = this.model.getItem('exec.jobState');
+                this._initJob(job);
+            }
+
+            _initJob(job) {
                 if (!job) {
                     throw new Error('Cannot init without a job');
+                }
+
+                if (!this.model.getItem(`exec.jobs.byId.${job.job_id}`)) {
+                    this.model.setItem(`exec.jobs.byId.${job.job_id}`, job);
                 }
 
                 const self = this;
@@ -422,6 +449,7 @@ define([
              */
             updateModel(jobState) {
                 this.model.setItem('exec.jobState', jobState);
+                this.model.setItem(`exec.jobs.byId.${jobState.job_id}`, jobState);
                 this.runHandler('modelUpdate', [jobState]);
                 return this.model;
             }
@@ -460,6 +488,20 @@ define([
                     // update the model
                     self.updateModel(jobState);
                 }
+            }
+
+            /**
+             * @param {string} jobId (optional)
+             *                  If a job ID is not provided, returns the job registered in `exec.jobState`
+             *
+             * @returns {object} job, if it exists, or undefined
+             */
+            getJob(jobId = null) {
+                const job = this.model.getItem('exec.jobState');
+                if (!jobId || jobId === job.job_id) {
+                    return job;
+                }
+                return undefined;
             }
         };
 
@@ -1008,6 +1050,31 @@ define([
                         [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
                     });
                 }
+            }
+
+            /**
+             * Retrieve the batch job
+             *
+             * @returns {object} batch job, or undefined if there is none
+             */
+            getBatchJob() {
+                return this.model.getItem('exec.jobState');
+            }
+
+            /**
+             *
+             * @returns {object} containing jobs indexed by ID, or undefined if there is none
+             */
+            getIndexedJobs() {
+                return this.model.getItem('exec.jobs.byId');
+            }
+
+            /**
+             * @param {string} jobId
+             * @returns {object} job, if it exists, or undefined
+             */
+            getJob(jobId) {
+                return this.model.getItem(`exec.jobs.byId.${jobId}`);
             }
 
             /**

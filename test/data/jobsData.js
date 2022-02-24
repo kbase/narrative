@@ -903,29 +903,30 @@ define([
         return [
             {
                 ...jobsById[JOB.CREATED],
-                job_id: TEST_JOB_ID,
+                job_id: JOB.CREATED,
             },
             {
                 ...jobsById[JOB.ESTIMATING],
-                job_id: TEST_JOB_ID,
+                job_id: JOB.CREATED,
             },
             {
                 ...jobsById[JOB.QUEUED],
-                job_id: TEST_JOB_ID,
+                job_id: JOB.CREATED,
             },
             {
                 ...jobsById[JOB.RUNNING],
-                job_id: TEST_JOB_ID,
+                job_id: JOB.CREATED,
             },
             {
                 ...jobsById[JOB.COMPLETED],
-                job_id: TEST_JOB_ID,
+                job_id: JOB.CREATED,
             },
         ];
     }
 
     return {
         TEST_JOB_ID,
+        JOB_NAMES: JOB,
         validJobs,
         unknownJob,
         batchParentJob,

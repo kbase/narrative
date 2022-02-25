@@ -35,11 +35,7 @@ define([
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
             } else {
-                if (
-                    !options.values.some((setValue) => {
-                        return setValue === value;
-                    })
-                ) {
+                if (!options.values.some((setValue) => setValue === value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     messageId = Constants.MESSAGE_IDS.VALUE_NOT_FOUND;
                     errorMessage = 'Value not in the set';

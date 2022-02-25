@@ -6,14 +6,29 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
         dataElementName = 'kb-job-list-wrapper',
         { BatchJobStatusTable } = JobStatusTableModule;
 
-    function factory(config) {
+    function JobStatusTab(config = {}) {
+        const launchMode = config.launchMode || false;
+
         let container, jobStatusTableWidget;
+
+        function mode() {
+            return launchMode ? 'launchMode' : 'runMode';
+        }
 
         function renderLayout() {
             return div({
                 class: 'kb-job-status-tab__container',
                 dataElement: dataElementName,
             });
+        }
+
+        function renderLaunchingLayout() {
+            return div(
+                {
+                    class: 'kb-job-status-tab__container',
+                },
+                'Batch job submitted; waiting for response from job runner.'
+            );
         }
 
         /**
@@ -24,10 +39,14 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
          */
 
         function start(arg) {
+            container = arg.node;
+            if (launchMode) {
+                return Promise.try(() => {
+                    container.innerHTML = renderLaunchingLayout();
+                });
+            }
             return Promise.try(() => {
-                container = arg.node;
                 container.innerHTML = renderLayout();
-
                 jobStatusTableWidget = new BatchJobStatusTable(config);
                 return Promise.try(() => {
                     jobStatusTableWidget.start({
@@ -50,18 +69,29 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
         return {
             start,
             stop,
+            mode,
         };
     }
 
     return {
+        launchMode: {
+            make: (options) => {
+                return JobStatusTab(Object.assign({}, options, { launchMode: true }));
+            },
+        },
+
+        runMode: {
+            make: (options) => {
+                return JobStatusTab(options);
+            },
+        },
+
         /**
          * This should be (or resemble) the config object from the bulkImportCell
          * with keys 'model' and 'jobManager'
          *
          * @param {object} config
          */
-        make: function (config) {
-            return factory(config);
-        },
+        make: JobStatusTab,
     };
 });

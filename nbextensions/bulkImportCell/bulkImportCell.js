@@ -152,9 +152,13 @@ define([
                         label: 'Info',
                         widget: MultiAppInfoWidget,
                     },
+                    launching: {
+                        label: 'Job Status',
+                        widget: JobStatusTabWidget.launchMode,
+                    },
                     jobStatus: {
                         label: 'Job Status',
-                        widget: JobStatusTabWidget,
+                        widget: JobStatusTabWidget.runMode,
                     },
                     results: {
                         label: 'Result',
@@ -535,13 +539,13 @@ define([
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    updateState('inProgress');
+                    switchToTab('jobStatus');
                     Jupyter.narrative.saveNarrative();
                     if (cancelBatch) {
                         cancelBatchJob();
                         break;
                     }
-                    updateState('inProgress');
-                    switchToTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -894,7 +898,7 @@ define([
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');
-            switchToTab('viewConfigure');
+            switchToTab('launching');
         }
 
         /**
@@ -1004,18 +1008,23 @@ define([
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
                 let newTab;
-                model.setItem('state.state', newUiState);
-                const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
-                stateDiff.selectedFileType = state.selectedFileType;
-                // update selections
-                if (stateDiff.tab.tabs[state.tab.selected].enabled) {
-                    stateDiff.tab.selected = state.tab.selected;
-                } else {
-                    newTab = stateDiff.defaultTab;
-                }
-                state = stateDiff;
-                if (newTab) {
-                    switchToTab(newTab);
+                const oldState = model.getItem('state.state');
+                if (oldState !== newUiState) {
+                    model.setItem('state.state', newUiState);
+                    const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
+                    stateDiff.selectedFileType = state.selectedFileType;
+                    // update selections
+                    if (state.tab.selected) {
+                        if (stateDiff.tab.tabs[state.tab.selected].enabled) {
+                            stateDiff.tab.selected = state.tab.selected;
+                        } else {
+                            newTab = stateDiff.defaultTab;
+                        }
+                    }
+                    state = stateDiff;
+                    if (newTab) {
+                        switchToTab(newTab);
+                    }
                 }
             }
             cellTabs.setState(state.tab);

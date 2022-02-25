@@ -184,12 +184,12 @@ define([
             );
         }
 
-        function render(events, startWithError) {
+        function render(events) {
             return div(
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeInputControl(events, startWithError))]
+                [div({ dataElement: 'input-container' }, makeInputControl(events))]
             );
         }
 

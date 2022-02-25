@@ -251,6 +251,7 @@ define([
                 value: value,
                 parsedValue: value,
                 errorMessage: undefined,
+                messageId: undefined,
             });
         });
         it('validateTextString - Validate a regexp with non-matching string', () => {
@@ -269,6 +270,7 @@ define([
                 value: value,
                 parsedValue: value,
                 errorMessage: `Failed regular expression /${options.regexp[0].regex}/`,
+                messageId: Constants.MESSAGE_IDS.INVALID,
             });
         });
 
@@ -378,8 +380,8 @@ define([
                 testSet.forEach((test) => {
                     if (test.options.required === undefined) {
                         [true, false].forEach((required) => {
-                            it(method + ' - ' + test.title + ' - required: ' + required, (done) => {
-                                Promise.try(() => {
+                            it(method + ' - ' + test.title + ' - required: ' + required, () => {
+                                return Promise.try(() => {
                                     const options = test.options;
                                     options.required = required;
                                     return Validation[method](test.value, options);
@@ -387,19 +389,17 @@ define([
                                     Object.keys(test.result).forEach((key) => {
                                         expect(result[key]).toEqual(test.result[key]);
                                     });
-                                    done();
                                 });
                             });
                         });
                     } else {
-                        it(method + ' - ' + test.title, (done) => {
-                            Promise.try(() => {
+                        it(method + ' - ' + test.title, () => {
+                            return Promise.try(() => {
                                 return Validation[method](test.value, test.options);
                             }).then((result) => {
                                 Object.keys(test.result).forEach((key) => {
                                     expect(result[key]).toEqual(test.result[key]);
                                 });
-                                done();
                             });
                         });
                     }
@@ -529,7 +529,7 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be numeric',
+                            errorMessage: 'Invalid float format: abc',
                             value: 'abc',
                             parsedValue: undefined,
                         },
@@ -543,9 +543,10 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "undefined")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "undefined")',
                             value: undefined,
-                            pasedValue: undefined,
+                            parsedValue: undefined,
                         },
                     },
                     {
@@ -555,7 +556,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: [],
                             parsedValue: undefined,
                         },
@@ -567,7 +569,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: {},
                             parsedValue: undefined,
                         },
@@ -579,7 +582,8 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
+                            errorMessage:
+                                'value must be a string or number (it is of type "object")',
                             value: new Date(0),
                             parsedValue: undefined,
                         },
@@ -637,7 +641,7 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a finite float',
+                            errorMessage: 'value must be finite',
                             value: 'Infinity',
                             parsedValue: undefined,
                         },
@@ -752,19 +756,19 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid integer format',
+                            errorMessage: 'Invalid integer format: abc',
                             value: 'abc',
                             parsedValue: undefined,
                         },
                     },
                     {
-                        title: 'decmial format',
+                        title: 'decimal format',
                         value: '42.12',
                         options: {},
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid integer format',
+                            errorMessage: 'Invalid integer format: 42.12',
                             value: '42.12',
                             parsedValue: undefined,
                         },
@@ -1484,6 +1488,7 @@ define([
                             result: {
                                 isValid: true,
                                 diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                                messageId: undefined,
                             },
                         };
                     })
@@ -1496,6 +1501,7 @@ define([
                                 result: {
                                     isValid: false,
                                     diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                                    messageId: Constants.MESSAGE_IDS.REQUIRED_MISSING,
                                     errorMessage: 'value is required',
                                 },
                             };
@@ -1510,6 +1516,7 @@ define([
                         result: {
                             isValid: true,
                             diagnosis: Constants.DIAGNOSIS.VALID,
+                            messageId: undefined,
                         },
                     };
                 }),
@@ -1522,6 +1529,7 @@ define([
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'Value not in the set',
+                            messageId: Constants.MESSAGE_IDS.VALUE_NOT_FOUND,
                         },
                     };
                 }),
@@ -1533,6 +1541,7 @@ define([
                         result: {
                             isValid: true,
                             diagnosis: Constants.DIAGNOSIS.VALID,
+                            messageId: undefined,
                         },
                     },
                 ],
@@ -1546,6 +1555,7 @@ define([
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
                             errorMessage: 'value must be an array',
+                            messageId: Constants.MESSAGE_IDS.VALUE_NOT_ARRAY,
                         },
                     };
                 });
@@ -1560,5 +1570,83 @@ define([
             runTests('validateTextSet', testCases);
             runTests('validateStringSet', testCases);
         })();
+    });
+
+    describe('String import functions', () => {
+        it('importTextString - plain strings are unchanged', () => {
+            ['a', 'bb', 'ccc', '  ', ''].forEach((str) => {
+                expect(Validation.importTextString(str)).toEqual(str);
+            });
+        });
+
+        it('importTextString - undefined and null are nullified', () => {
+            [undefined, null].forEach((val) => {
+                expect(Validation.importTextString(val)).toBeNull();
+            });
+        });
+
+        const empties = [undefined, null, '', '  '];
+        empties.forEach((val) => {
+            it(`importIntString - ${val} - should be null`, () => {
+                expect(Validation.importIntString(val)).toBeNull();
+            });
+            it(`importFloatString - ${val} - should be null`, () => {
+                expect(Validation.importFloatString(val)).toBeNull();
+            });
+        });
+
+        const nonStrings = [[], {}, 123, new Set()];
+        nonStrings.forEach((val) => {
+            it(`importIntString - ${val} - should throw an error`, () => {
+                expect(() => Validation.importIntString(val)).toThrowError(
+                    `value must be a string (it is of type "${typeof val}")`
+                );
+            });
+            it(`importFloatString - ${val} - should throw an error`, () => {
+                expect(() => Validation.importFloatString(val)).toThrowError(
+                    `value must be a string (it is of type "${typeof val}")`
+                );
+            });
+        });
+
+        ['a', '1 2 3', '1.1', '-1.2'].forEach((val) => {
+            [true, false].forEach((withErr) => {
+                it(`importIntString - ${val} - should fail with${
+                    !withErr ? 'out' : ''
+                } a custom error`, () => {
+                    const errStr = 'so totally not an int!';
+                    if (withErr) {
+                        expect(() => Validation.importIntString(val, errStr)).toThrowError(errStr);
+                    } else {
+                        try {
+                            Validation.importIntString(val);
+                        } catch (err) {
+                            expect(err).not.toEqual(errStr);
+                        }
+                    }
+                });
+            });
+        });
+
+        ['a', '1 2 3', 'not a number at all!'].forEach((val) => {
+            [true, false].forEach((withErr) => {
+                it(`importFloatString - ${val} - should fail with${
+                    !withErr ? 'out' : ''
+                } a custom error`, () => {
+                    const errStr = 'so totally not a number!';
+                    if (withErr) {
+                        expect(() => Validation.importFloatString(val, errStr)).toThrowError(
+                            errStr
+                        );
+                    } else {
+                        try {
+                            Validation.importFloatString(val);
+                        } catch (err) {
+                            expect(err).not.toEqual(errStr);
+                        }
+                    }
+                });
+            });
+        });
     });
 });

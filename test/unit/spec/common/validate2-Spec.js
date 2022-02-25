@@ -244,7 +244,7 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid integer format',
+                            errorMessage: 'Invalid integer format: abc',
                         },
                     },
                 ],

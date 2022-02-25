@@ -4,10 +4,10 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
     const typeToValidator = {
         string: Validator.validateTextString,
         int: Validator.validateIntString,
+        float: Validator.validateFloatString,
     };
 
     const typeToValidatorModule = {
-        float: 'float',
         sequence: 'sequence',
         struct: 'struct',
         workspaceObjectName: 'workspaceObjectName',

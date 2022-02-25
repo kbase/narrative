@@ -725,15 +725,15 @@ define([
          */
         handleJobRetry(message) {
             Object.values(message).forEach((retryMessage) => {
-                // close all widgets tracking the previous job ID and restart them with the new widgets
+                // close all widgets tracking the previous job ID
                 const { job_id } = retryMessage;
-                const $currentRow = $(`#job_${job_id}`);
-                if ($currentRow && $currentRow[0].classList.contains('vertical_collapse--open')) {
-                    this.showHideChildRow($currentRow);
-                }
+                const $currentRow = $(`#job_${job_id}.vertical_collapse--open`);
                 if (this.widgetsById[`${job_id}_LOG`]) {
                     this.widgetsById[`${job_id}_LOG`].stop();
                     this.widgetsById[`${job_id}_STATE`].stop();
+                }
+                if ($currentRow[0]) {
+                    this.showHideChildRow($currentRow);
                 }
             });
         }
@@ -762,7 +762,6 @@ define([
                 // update the table
                 this.dataTable.DataTable().row(`#job_${rowId}`).invalidate().draw();
             });
-            this.dataTable.DataTable().invalidate().draw();
         }
 
         /**

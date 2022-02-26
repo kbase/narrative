@@ -178,7 +178,7 @@ class AppManager(object):
         return self.spec_manager.available_apps(tag)
 
     @_app_error_wrapper
-    def run_app_batch(
+    def run_legacy_batch_app(
         self,
         app_id,
         params,
@@ -408,7 +408,7 @@ class AppManager(object):
             return new_job
 
     @_app_error_wrapper
-    def run_app_bulk(
+    def run_app_batch(
         self,
         app_info: list,
         cell_id: str = None,
@@ -501,7 +501,7 @@ class AppManager(object):
             "username": system_variable("user_id"),
             "wsid": ws_id,
         }
-        kblogging.log_event(self._log, "run_app_bulk", log_info)
+        kblogging.log_event(self._log, "run_app_batch", log_info)
 
         # if we're doing a dry run, stop here and return the setup
         if dry_run:

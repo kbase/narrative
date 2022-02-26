@@ -389,7 +389,7 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# End tests for run_app #############
 
-    ############# Test run_app_batch #############
+    ############# Test run_legacy_batch_app #############
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -397,10 +397,10 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__dry_run_good_inputs(self, auth, c):
+    def test_run_legacy_batch_app__dry_run_good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         params = [self.test_app_params, self.test_app_params]
-        job_runner_inputs = self.am.run_app_batch(
+        job_runner_inputs = self.am.run_legacy_batch_app(
             self.test_app_id,
             params,
             cell_id="abcdefghi",
@@ -452,10 +452,10 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__good_inputs(self, auth, c):
+    def test_run_legacy_batch_app__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         params = [self.test_app_params, self.test_app_params]
-        new_job = self.am.run_app_batch(
+        new_job = self.am.run_legacy_batch_app(
             self.test_app_id,
             params,
             version=self.test_app_version,
@@ -473,11 +473,11 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__gui_cell(self, auth, c):
+    def test_run_legacy_batch_app__gui_cell(self, auth, c):
         cell_id = "12345"
         c.return_value.send_comm_message = MagicMock()
         self.assertIsNone(
-            self.am.run_app_batch(
+            self.am.run_legacy_batch_app(
                 self.test_app_id,
                 [self.test_app_params, self.test_app_params],
                 tag=self.test_tag,
@@ -489,47 +489,49 @@ class AppManagerTestCase(unittest.TestCase):
         )
 
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_batch__bad_id(self, c):
+    def test_run_legacy_batch_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(self.bad_app_id, None)
+            return self.am.run_legacy_batch_app(self.bad_app_id, None)
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_batch__bad_tag(self, c):
+    def test_run_legacy_batch_app__bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(self.good_app_id, None, tag=self.bad_tag)
+            return self.am.run_legacy_batch_app(
+                self.good_app_id, None, tag=self.bad_tag
+            )
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_batch__bad_version_match(self, c):
+    def test_run_legacy_batch_app__bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(
+            return self.am.run_legacy_batch_app(
                 self.good_app_id, None, tag="dev", version="0.0.1"
             )
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             SEMANTIC_VER_ERROR,
         )
 
@@ -541,26 +543,26 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__missing_inputs(self, auth, c):
+    def test_run_legacy_batch_app__missing_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         self.assertIsNotNone(
-            self.am.run_app_batch(self.good_app_id, None, tag=self.good_tag)
+            self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.good_tag)
         )
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_batch__print_error(self, c):
+    def test_run_legacy_batch_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
 
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_batch(
+            lambda: self.am.run_legacy_batch_app(
                 self.bad_app_id, [self.test_app_params], tag=self.test_tag
             ),
-            "run_app_batch",
+            "run_legacy_batch_app",
             UNKNOWN_APP_ID,
         )
 
@@ -571,18 +573,18 @@ class AppManagerTestCase(unittest.TestCase):
         cell_id = "some_batch_cell"
         self.run_app_expect_error(
             comm_mock2,
-            lambda: self.am.run_app_batch(
+            lambda: self.am.run_legacy_batch_app(
                 self.bad_app_id,
                 [self.test_app_params],
                 tag=self.test_tag,
                 cell_id=cell_id,
             ),
-            "run_app_batch",
+            "run_legacy_batch_app",
             None,
             cell_id=cell_id,
         )
 
-    ############# End tests for run_app_batch #############
+    ############# End tests for run_legacy_batch_app #############
 
     ############# Test run_local_app #############
     @mock.patch(CLIENTS_AM, get_mock_client)
@@ -687,7 +689,7 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# End tests for run_local_app #############
 
-    ############# Test run_app_bulk #############
+    ############# Test run_app_batch #############
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -695,13 +697,13 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__dry_run(self, auth, c):
+    def test_run_app_batch__dry_run(self, auth, c):
         mock_comm = MagicMock()
         c.return_value.send_comm_message = mock_comm
 
         test_input = self.bulk_run_good_inputs
 
-        dry_run_results = self.am.run_app_bulk(test_input, dry_run=True)
+        dry_run_results = self.am.run_app_batch(test_input, dry_run=True)
         batch_run_params = dry_run_results["batch_run_params"]
         batch_params = dry_run_results["batch_params"]
 
@@ -747,7 +749,7 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__good_inputs(self, auth, c):
+    def test_run_app_batch__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         test_input = self.bulk_run_good_inputs
 
@@ -762,7 +764,7 @@ class AppManagerTestCase(unittest.TestCase):
                     param_set[key] = None
             param_set["workspace_name"] = self.public_ws
 
-        new_jobs = self.am.run_app_bulk(test_input)
+        new_jobs = self.am.run_app_batch(test_input)
         self.assertIsInstance(new_jobs, dict)
         self.assertIn("parent_job", new_jobs)
         self.assertIn("child_jobs", new_jobs)
@@ -787,7 +789,7 @@ class AppManagerTestCase(unittest.TestCase):
         GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__from_gui_cell(self, auth, c):
+    def test_run_app_batch__from_gui_cell(self, auth, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
         cell_id = "a_cell_id"
@@ -796,7 +798,7 @@ class AppManagerTestCase(unittest.TestCase):
         # should return None, fire a couple of messages
         for run_id in run_ids:
             self.assertIsNone(
-                self.am.run_app_bulk(
+                self.am.run_app_batch(
                     self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
                 )
             )
@@ -812,7 +814,7 @@ class AppManagerTestCase(unittest.TestCase):
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_bulk__bad_inputs(self, c):
+    def test_run_app_batch__bad_inputs(self, c):
         no_info_error = (
             "app_info must be a list with at least one set of app information"
         )
@@ -863,19 +865,19 @@ class AppManagerTestCase(unittest.TestCase):
         for test_case in cases:
 
             def run_func():
-                return self.am.run_app_bulk(test_case["arg"])
+                return self.am.run_app_batch(test_case["arg"])
 
             comm_mock.reset_mock()
             self.run_app_expect_error(
                 comm_mock,
                 run_func,
-                "run_app_bulk",
+                "run_app_batch",
                 test_case["expected_error"],
             )
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
-    def test_run_app_bulk__print_error(self, c):
+    def test_run_app_batch__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
 
@@ -885,8 +887,8 @@ class AppManagerTestCase(unittest.TestCase):
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(test_case),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(test_case),
+            "run_app_batch",
             "an app_id must be of the format module_name/app_name",
         )
 
@@ -897,8 +899,8 @@ class AppManagerTestCase(unittest.TestCase):
         cell_id = "some_cell_or_another"
         self.run_app_expect_error(
             comm_mock2,
-            lambda: self.am.run_app_bulk(test_case, cell_id=cell_id),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(test_case, cell_id=cell_id),
+            "run_app_batch",
             None,
             cell_id=cell_id,
         )
@@ -911,12 +913,12 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = comm_mock
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(self.bulk_run_good_inputs),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(self.bulk_run_good_inputs),
+            "run_app_batch",
             'Unable to retrieve system variable: "workspace_id"',
         )
 
-    ############# End tests for run_app_bulk #############
+    ############# End tests for run_app_batch #############
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description(self):

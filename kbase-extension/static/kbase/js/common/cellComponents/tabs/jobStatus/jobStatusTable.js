@@ -7,8 +7,6 @@ define([
     'common/jobStateViewer',
     'common/simpleLogViewer',
     './jobActionDropdown',
-    'util/jobLogViewer',
-    'util/appCellUtil',
     'util/string',
     'jquery-dataTables',
 ], (
@@ -20,8 +18,6 @@ define([
     JobStateViewerModule,
     SimpleLogViewerModule,
     JobActionDropdown,
-    JobLogViewerModule,
-    Util,
     String
 ) => {
     'use strict';
@@ -302,7 +298,9 @@ define([
             this.jobManager.removeEventHandler('modelUpdate', 'dropdown');
             this.jobManager.removeEventHandler(jcm.MESSAGE_TYPE.INFO, 'jobStatusTable_info');
             this.jobManager.removeEventHandler(jcm.MESSAGE_TYPE.ERROR, 'jobStatusTable_error');
-            this.container.innerHTML = '';
+            if (this.container) {
+                this.container.innerHTML = '';
+            }
             if (this.dropdownWidget) {
                 return this.dropdownWidget.stop();
             }

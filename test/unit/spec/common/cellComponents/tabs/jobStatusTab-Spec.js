@@ -32,7 +32,11 @@ define([
 
         it('has expected functions', () => {
             expect(JobStatusTab.make).toBeDefined();
-            expect(JobStatusTab.make).toEqual(jasmine.any(Function));
+            [JobStatusTab.make, JobStatusTab.launchMode.make, JobStatusTab.runMode.make].forEach(
+                (fn) => {
+                    expect(fn).toEqual(jasmine.any(Function));
+                }
+            );
         });
     });
 
@@ -70,7 +74,35 @@ define([
             }, this);
         });
 
-        it('should start the job status tab widget', async function () {
+        it('can be started in launch mode or run mode', function () {
+            // default: run mode
+            expect(this.jobStatusTabInstance.mode()).toEqual('runMode');
+
+            const runModeTab = JobStatusTab.runMode.make();
+            expect(runModeTab.mode()).toEqual('runMode');
+
+            const launchModeTab = JobStatusTab.launchMode.make();
+            expect(launchModeTab.mode()).toEqual('launchMode');
+
+            const specifiedLaunchModeTab = JobStatusTab.make({ launchMode: true });
+            expect(specifiedLaunchModeTab.mode()).toEqual('launchMode');
+        });
+
+        it('should display a message in launch mode', async () => {
+            const launchModeTab = JobStatusTab.launchMode.make();
+            expect(launchModeTab.mode()).toEqual('launchMode');
+            await launchModeTab.start({ node: container });
+
+            expect(container.childNodes.length).toBe(1);
+            const [firstChild] = container.childNodes;
+            expect(firstChild).toHaveClass('kb-job-status-tab__container');
+            expect(firstChild.getAttribute('data-element')).toBeNull();
+            expect(firstChild.textContent).toEqual(
+                'Batch job submitted; waiting for response from job runner.'
+            );
+        });
+
+        it('should start the job status tab widget in run mode', async function () {
             expect(container.classList.length).toBe(0);
             await this.jobStatusTabInstance.start({ node: container });
             expect(container.childNodes.length).toBe(1);

@@ -444,9 +444,9 @@ define([
                         return !cancelButton.classList.contains('hidden');
                     });
                     checkTabState(cell, {
-                        selectedTab: 'viewConfigure',
-                        enabledTabs: ['viewConfigure', 'info'],
-                        visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                        selectedTab: 'launching',
+                        enabledTabs: ['viewConfigure', 'info', 'launching'],
+                        visibleTabs: ['viewConfigure', 'info', 'launching', 'results'],
                     });
 
                     // wait for the cell to receive the run status message and transition

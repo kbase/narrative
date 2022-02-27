@@ -55,6 +55,7 @@ define([
                 JOB_NOT_FOUND: 'Job not found',
                 JOB_STATUS_UNKNOWN: Jobs.jobStatusUnknown,
                 BATCH_JOB: 'Job logs are not available for batch jobs',
+                NO_ENTRIES: 'No log entries to show.',
             };
 
             // UI buttons states
@@ -330,7 +331,7 @@ define([
             renderLog() {
                 const lines = this.model.getItem('lines');
                 if (!lines || lines.length === 0) {
-                    this.ui.setContent(LOG_PANEL, 'No log entries to show.');
+                    this.ui.setContent(LOG_PANEL, p(this.messages.NO_ENTRIES));
                     this.renderButtons();
                     return;
                 }
@@ -498,7 +499,7 @@ define([
                 this.lastJobState = jobState;
 
                 if (status === 'does_not_exist') {
-                    this.ui.setContent(LOG_PANEL, p([this.messages.JOB_NOT_FOUND]));
+                    this.ui.setContent(LOG_PANEL, p(this.messages.JOB_NOT_FOUND));
                     this._renderButtonState('default');
                     this.stopLogAutoFetch();
                     this.state.awaitingLog = false;
@@ -517,7 +518,7 @@ define([
                 if (newMode !== previousMode) {
                     switch (newMode) {
                         case 'queued':
-                            this.ui.setContent(LOG_PANEL, p([this.messages.JOB_QUEUED]));
+                            this.ui.setContent(LOG_PANEL, p(this.messages.JOB_QUEUED));
                             this._renderButtonState('default');
                             break;
                         case 'running':
@@ -707,7 +708,7 @@ define([
                         this.handleJobStatus({ jobState });
                     } else {
                         // some kind of 'await job info' message
-                        this.ui.setContent(LOG_PANEL, p([this.messages.JOB_STATUS_UNKNOWN]));
+                        this.ui.setContent(LOG_PANEL, p(this.messages.JOB_STATUS_UNKNOWN));
                         this._renderButtonState('default');
                     }
 

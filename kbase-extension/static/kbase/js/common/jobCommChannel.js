@@ -195,7 +195,7 @@ define([
          * If a batch ID does not exist, a job ID mapping is made instead:
          *
          * _jobMapping: {
-         *      [job_id]: { [jcm.PARAM.JOB_ID: job_id }
+         *      [job_id]: { [jcm.PARAM.JOB_ID]: job_id }
          * }
          *
          * @param {object} jobStateObj
@@ -248,6 +248,7 @@ define([
             // if there is no valid data, abort
             if (!('valid' in validated)) {
                 this.debug('no valid data in backend message');
+                console.error(msgType, msgData);
                 return;
             }
 

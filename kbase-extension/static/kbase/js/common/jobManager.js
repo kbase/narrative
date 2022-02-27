@@ -15,6 +15,9 @@ define([
         retry: jcm.MESSAGE_TYPE.RETRY,
     };
 
+    // how soon after receiving job status updates from the backend to send the next status request
+    const DEFAULT_STATUS_REQUEST_INTERVAL = 2500;
+
     class JobManagerCore {
         /**
          * Initialise the job manager
@@ -374,34 +377,136 @@ define([
                 this.removeChannelListeners(channelType, channelId);
             });
         }
-
-        /**
-         * Update the model with the supplied jobState objects
-         * @param {array} jobArray list of jobState objects to update the model with
-         */
-        updateModel(jobArray) {
-            const jobIndex = this.model.getItem('exec.jobs');
-            const batchId = this.model.getItem('exec.jobState.job_id');
-            let batchJob;
-            jobArray.forEach((jobState) => {
-                // update the job object
-                jobIndex.byId[jobState.job_id] = jobState;
-                if (jobState.job_id === batchId) {
-                    batchJob = jobState;
-                }
-            });
-            this.model.setItem('exec.jobs', jobIndex);
-            // check whether the batch parent needs updating
-            if (batchJob) {
-                this.model.setItem('exec.jobState', batchJob);
-            }
-            this.runHandler('modelUpdate', jobArray);
-            return this.model;
-        }
     }
 
+    const SingleJobMixin = (Base) =>
+        class extends Base {
+            constructor(config) {
+                // run the constructor for the base class
+                super(config);
+                this.pollInterval = config.pollInterval || DEFAULT_STATUS_REQUEST_INTERVAL;
+            }
+
+            /**
+             * Initialise the job manager with the provided job ID
+             *
+             * @param {string} jobId
+             */
+            initJob(jobId) {
+                // create a proto job to initialise the model
+                const protoJob = {
+                    job_id: jobId,
+                    status: 'created',
+                    created: 0,
+                };
+                this.model.setItem('exec.jobState', protoJob);
+                return this._initJob(protoJob);
+            }
+
+            /**
+             * Initialise the job manager with a stored job
+             */
+            restoreFromSaved() {
+                const job = this.model.getItem('exec.jobState');
+                this._initJob(job);
+            }
+
+            _initJob(job) {
+                if (!job) {
+                    throw new Error('Cannot init without a job');
+                }
+
+                if (!this.model.getItem(`exec.jobs.byId.${job.job_id}`)) {
+                    this.model.setItem(`exec.jobs.byId.${job.job_id}`, job);
+                }
+
+                const self = this;
+                ['ERROR', 'INFO', 'LOGS', 'STATUS'].forEach((msgType) => {
+                    this.addListener(jcm.MESSAGE_TYPE[msgType], jcm.CHANNEL.JOB, job.job_id);
+                });
+
+                if (!this.looper) {
+                    this.looper = new Looper({ pollInterval: this.pollInterval });
+                }
+
+                this.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
+                    // default job status handler
+                    [`__default_${jcm.MESSAGE_TYPE.STATUS}`]: self.handleJobStatus.bind(self),
+
+                    // set up a delayed request for job status, executed after this.pollInterval ms
+                    jobStatusLooper: () => {
+                        self.looper.scheduleRequest(self.requestJobStatus.bind(self));
+                    },
+                });
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: job.job_id });
+            }
+
+            /**
+             * Update the stored jobState object and run the 'modelUpdate' handler
+             *
+             * @param {object} jobState
+             * @returns this.model
+             */
+            updateModel(jobState) {
+                this.model.setItem('exec.jobState', jobState);
+                this.model.setItem(`exec.jobs.byId.${jobState.job_id}`, jobState);
+                this.runHandler('modelUpdate', [jobState]);
+                return this.model;
+            }
+
+            /**
+             * Request the status of the stored job
+             */
+            requestJobStatus() {
+                const job = this.model.getItem('exec.jobState');
+
+                if (Jobs.isTerminalStatus(job.status)) {
+                    // no more updates. Remove the looping request handler
+                    this.looper.clearRequest();
+                    this.removeEventHandler(jcm.MESSAGE_TYPE.STATUS, 'jobStatusLooper');
+                    return;
+                }
+
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: job.job_id,
+                });
+            }
+
+            /**
+             * Default handler for a job status message, which updates the stored job if applicable
+             *
+             * @param {Object} message
+             */
+            handleJobStatus(self, message) {
+                const job = this.model.getItem('exec.jobState');
+                if (message[job.job_id]) {
+                    const jobState = message[job.job_id].jobState;
+                    if (_.isEqual(jobState, job)) {
+                        // no update required
+                        return;
+                    }
+                    // update the model
+                    self.updateModel(jobState);
+                }
+            }
+
+            /**
+             * @param {string} jobId (optional)
+             *                  If a job ID is not provided, returns the job registered in `exec.jobState`
+             *
+             * @returns {object} job, if it exists, or undefined
+             */
+            getJob(jobId = null) {
+                const job = this.model.getItem('exec.jobState');
+                if (!jobId || jobId === job.job_id) {
+                    return job;
+                }
+                return undefined;
+            }
+        };
+
     /**
-     * A set of generic message handlers
+     * A set of generic message handlers for batch jobs
      *
      * @param {class} Base
      * @returns
@@ -426,6 +531,30 @@ define([
                     toAdd[`__default_${jcm.MESSAGE_TYPE[event]}`] = defaultHandlers[event];
                     this.addEventHandler(jcm.MESSAGE_TYPE[event], toAdd);
                 }, this);
+            }
+
+            /**
+             * Update the model with the supplied jobState objects
+             * @param {array} jobArray list of jobState objects to update the model with
+             */
+            updateModel(jobArray) {
+                const jobIndex = this.model.getItem('exec.jobs');
+                const batchId = this.model.getItem('exec.jobState.job_id');
+                let batchJob;
+                jobArray.forEach((jobState) => {
+                    // update the job object
+                    jobIndex.byId[jobState.job_id] = jobState;
+                    if (jobState.job_id === batchId) {
+                        batchJob = jobState;
+                    }
+                });
+                this.model.setItem('exec.jobs', jobIndex);
+                // check whether the batch parent needs updating
+                if (batchJob) {
+                    this.model.setItem('exec.jobState', batchJob);
+                }
+                this.runHandler('modelUpdate', jobArray);
+                return this.model;
             }
 
             /**
@@ -744,6 +873,11 @@ define([
 
     const BatchMixin = (Base) =>
         class extends Base {
+            constructor(config) {
+                // run the constructor for the base class
+                super(config);
+                this.pollInterval = config.pollInterval || DEFAULT_STATUS_REQUEST_INTERVAL;
+            }
             /**
              * set up the job manager to handle a batch job
              *
@@ -798,7 +932,7 @@ define([
                 });
 
                 if (!this.looper) {
-                    this.looper = new Looper();
+                    this.looper = new Looper({ pollInterval: this.pollInterval });
                 }
 
                 // set up repeated requests for batch status
@@ -836,20 +970,22 @@ define([
             }
 
             /**
-             * send a message requesting status updates for all
-             * non-terminal jobs in the batch
+             * Examine the jobs in the model and create an array of job IDs to be updated
+             *
+             * @returns {array} jobsToUpdate
              */
-            requestBatchStatus() {
+
+            _getJobsToUpdate() {
                 const jobsById = this.model.getItem('exec.jobs.byId'),
                     batchJob = this.model.getItem('exec.jobState');
 
                 // no stored jobs
                 if (!jobsById || !batchJob || !Object.keys(jobsById).length) {
-                    return;
+                    return [];
                 }
                 // terminal batch job ==> no updates to child jobs
                 if (Jobs.isTerminalStatus(batchJob.status)) {
-                    return;
+                    return [];
                 }
 
                 const batchId = batchJob.job_id;
@@ -866,19 +1002,31 @@ define([
                         return job.job_id;
                     });
 
-                if (jobsToUpdate.length) {
-                    // if the only job to update is the batch job, skip the request
-                    if (jobsToUpdate.length === 1 && jobsToUpdate[0] === batchId) {
-                        return;
-                    }
-                    const args = {
-                        [jcm.PARAM.JOB_ID_LIST]: jobsToUpdate,
-                    };
-                    if (this.lastUpdate) {
-                        args.timestamp = this.lastUpdate;
-                    }
-                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, args);
+                // if the only job to update is the batch job, skip the request
+                if (jobsToUpdate.length === 1 && jobsToUpdate[0] === batchId) {
+                    return [];
                 }
+                return jobsToUpdate;
+            }
+
+            /**
+             * send a message requesting status updates for all
+             * non-terminal jobs in the batch
+             */
+            requestBatchStatus() {
+                const jobsToUpdate = this._getJobsToUpdate();
+
+                if (!jobsToUpdate.length) {
+                    return;
+                }
+
+                const args = {
+                    [jcm.PARAM.JOB_ID_LIST]: jobsToUpdate,
+                };
+                if (this.lastUpdate) {
+                    args.timestamp = this.lastUpdate;
+                }
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, args);
             }
 
             /**
@@ -902,6 +1050,31 @@ define([
                         [jcm.PARAM.JOB_ID_LIST]: missingJobIds,
                     });
                 }
+            }
+
+            /**
+             * Retrieve the batch job
+             *
+             * @returns {object} batch job, or undefined if there is none
+             */
+            getBatchJob() {
+                return this.model.getItem('exec.jobState');
+            }
+
+            /**
+             *
+             * @returns {object} containing jobs indexed by ID, or undefined if there is none
+             */
+            getIndexedJobs() {
+                return this.model.getItem('exec.jobs.byId');
+            }
+
+            /**
+             * @param {string} jobId
+             * @returns {object} job, if it exists, or undefined
+             */
+            getJob(jobId) {
+                return this.model.getItem(`exec.jobs.byId.${jobId}`);
             }
 
             /**
@@ -942,11 +1115,15 @@ define([
 
     class JobManager extends BatchMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
 
+    class SingleJobManager extends SingleJobMixin(JobManagerCore) {}
+
     return {
         JobManagerCore,
         DefaultHandlerMixin,
         JobActionsMixin,
         BatchMixin,
+        SingleJobMixin,
+        SingleJobManager,
         JobManager,
     };
 });

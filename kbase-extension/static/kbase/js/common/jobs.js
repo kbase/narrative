@@ -913,13 +913,13 @@ define([
     /**
      * group job IDs by job status
      *
-     * @param {object} jobIx
+     * @param {object} jobsIndex jobs indexed by ID
      * @returns {object} jobsByStatus with keys job status and values Set object containing job IDs
      */
-    function _groupJobsByStatus(jobIx) {
+    function _groupJobsByStatus(jobsIndex) {
         // index by status
         const jobsByStatus = {};
-        Object.values(jobIx).forEach((job) => {
+        Object.values(jobsIndex).forEach((job) => {
             const { job_id, status } = job;
             if (!jobsByStatus[status]) {
                 jobsByStatus[status] = new Set();
@@ -938,16 +938,11 @@ define([
      * @returns {object} with keys job status and values number of jobs in that state
      */
     function getCurrentJobCounts(jobsIndex, options = {}) {
-        if (
-            !jobsIndex ||
-            !Object.keys(jobsIndex).length ||
-            !jobsIndex.byId ||
-            !Object.keys(jobsIndex.byId).length
-        ) {
+        if (!jobsIndex || !Object.keys(jobsIndex).length) {
             return {};
         }
         const jobsByRetryParent = {};
-        const currentJobs = getCurrentJobs(Object.values(jobsIndex.byId), jobsByRetryParent);
+        const currentJobs = getCurrentJobs(Object.values(jobsIndex), jobsByRetryParent);
 
         // get job count for each status
         const statuses = _jobCountByStatus(_groupJobsByStatus(currentJobs));
@@ -970,17 +965,12 @@ define([
 
     /**
      * Given an object containing jobs indexed by ID, summarise the status of the jobs
-     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs` in a batch cell
+     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs.byId` in a batch cell
      * @returns {string} summary string
      */
 
     function createCombinedJobState(jobsIndex) {
-        if (
-            !jobsIndex ||
-            !Object.keys(jobsIndex).length ||
-            !jobsIndex.byId ||
-            !Object.keys(jobsIndex.byId).length
-        ) {
+        if (!jobsIndex || !Object.keys(jobsIndex).length) {
             return '';
         }
 
@@ -1034,17 +1024,12 @@ define([
 
     /**
      * Given an object containing jobs indexed by ID, create a summary for a collapsed cell
-     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs` in a batch cell
+     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs.byId` in a batch cell
      * @returns {string} summary string
      */
 
     function createCombinedJobStateSummary(jobsIndex) {
-        if (
-            !jobsIndex ||
-            !Object.keys(jobsIndex).length ||
-            !jobsIndex.byId ||
-            !Object.keys(jobsIndex.byId).length
-        ) {
+        if (!jobsIndex || !Object.keys(jobsIndex).length) {
             return '';
         }
         // get job count for each status and retries
@@ -1071,16 +1056,11 @@ define([
     /**
      * Get the FSM state for a bulk cell from the jobs
      *
-     * @param {object} jobsIndex jobs index
+     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs.byId` in a batch cell
      * @returns {string} FSM state
      */
     function getFsmStateFromJobs(jobsIndex) {
-        if (
-            !jobsIndex ||
-            !Object.keys(jobsIndex).length ||
-            !jobsIndex.byId ||
-            !Object.keys(jobsIndex.byId).length
-        ) {
+        if (!jobsIndex || !Object.keys(jobsIndex).length) {
             return null;
         }
 

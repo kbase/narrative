@@ -235,7 +235,10 @@ define([
                         );
                     collapsedCellJobStatus = Jobs.createJobStatusFromFsm(fsmMode, fsmStage);
                 } else if (utils.getCellMeta(_cell, 'kbase.bulkImportCell.exec.jobs')) {
-                    const currentJobs = utils.getCellMeta(_cell, 'kbase.bulkImportCell.exec.jobs');
+                    const currentJobs = utils.getCellMeta(
+                        _cell,
+                        'kbase.bulkImportCell.exec.jobs.byId'
+                    );
                     collapsedCellJobStatus = Jobs.createCombinedJobStateSummary(currentJobs);
                 }
             }

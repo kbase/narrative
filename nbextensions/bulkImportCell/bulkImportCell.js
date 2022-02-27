@@ -676,7 +676,7 @@ define([
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
                                 Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs')
+                                    jobManagerContext.model.getItem('exec.jobs.byId')
                                 )
                             );
                         },
@@ -699,7 +699,7 @@ define([
 
                             if (cellCollapsed && jobStatusEl) {
                                 jobStatusEl.innerHTML = Jobs.createCombinedJobStateSummary(
-                                    jobManagerContext.model.getItem('exec.jobs')
+                                    jobManagerContext.model.getItem('exec.jobs.byId')
                                 );
                             }
                         },

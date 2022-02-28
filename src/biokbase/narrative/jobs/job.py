@@ -18,18 +18,19 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 COMPLETED_STATUS = "completed"
 TERMINAL_STATUSES = [COMPLETED_STATUS, "terminated", "error"]
 
-EXCLUDED_JOB_STATE_FIELDS = [
+JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
     "authstrat",
     "condor_job_ads",
-    "job_input",
+    "retry_saved_toggle",
     "scheduler_type",
     "scheduler_id",
 ]
-JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
-    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
-]
 
-EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "child_jobs"]
+EXCLUDED_JOB_STATE_FIELDS = JOB_INIT_EXCLUDED_JOB_STATE_FIELDS + ["job_input"]
+
+OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS = EXCLUDED_JOB_STATE_FIELDS + ["user", "wsid"]
+
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "child_jobs"]
 
 
 # The app_id and app_version should both align with what's available in
@@ -124,6 +125,49 @@ class Job(object):
         else:
             return jobs
 
+    @staticmethod
+    def _trim_ee2_state(state: dict, exclude: list) -> None:
+        if exclude:
+            for field in exclude:
+                if field in state:
+                    del state[field]
+
+    @staticmethod
+    def query_ee2_state(
+        job_id: str,
+        init: bool = True,
+    ) -> dict:
+        return clients.get("execution_engine2").check_job(
+            {
+                "job_id": job_id,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
+                ),
+            }
+        )
+
+    @staticmethod
+    def query_ee2_states(
+        job_ids: List[str],
+        init: bool = True,
+    ) -> dict:
+        if not job_ids:
+            return {}
+
+        return clients.get("execution_engine2").check_jobs(
+            {
+                "job_ids": job_ids,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
+                ),
+                "return_list": 0,
+            }
+        )
+
     def __getattr__(self, name):
         """
         Map expected job attributes to paths in stored ee2 state
@@ -179,6 +223,7 @@ class Job(object):
             run_id=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
+            # TODO: add the status attribute!
             tag=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("tag", JOB_ATTR_DEFAULTS["tag"]),
@@ -252,38 +297,13 @@ class Job(object):
         else:
             return self.cell_id in cell_ids
 
-    def batch_cell_ids(self):
-        if self.batch_job:
-            child_cell_ids = [child_job.cell_id for child_job in self.children]
-            return list(set(child_cell_ids))
-        return None
-
-    @property
-    def final_state(self):
-        if self.was_terminal() is True:
-            return self.state()
-        return None
-
-    def info(self):
-        spec = self.app_spec()
-        print(f"App name (id): {spec['info']['name']} ({self.app_id})")
-        print(f"Version: {spec['info']['ver']}")
-
-        try:
-            state = self.state()
-            print(f"Status: {state['status']}")
-            print("Inputs:\n------")
-            pprint(self.params)
-        except BaseException:
-            print("Unable to retrieve current running state!")
-
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def parameters(self):
         """
         Returns the parameters used to start the job. Job tries to use its params field, but
-        if that's None, then it makes a call to njs.
+        if that's None, then it makes a call to EE2.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
         object fetched from ee2.get_job_params
@@ -318,13 +338,6 @@ class Job(object):
             else:
                 self._acc_state.update(state)
 
-    @staticmethod
-    def _trim_ee2_state(state: dict, exclude: list) -> None:
-        if exclude:
-            for field in exclude:
-                if field in state:
-                    del state[field]
-
     def state(self, force_refresh=False):
         """
         Queries the job service to see the state of the current job.
@@ -341,42 +354,6 @@ class Job(object):
         state = copy.deepcopy(self._acc_state)
         self._trim_ee2_state(state, exclude)
         return state
-
-    @staticmethod
-    def query_ee2_state(
-        job_id: str,
-        init: bool = True,
-    ) -> dict:
-        return clients.get("execution_engine2").check_job(
-            {
-                "job_id": job_id,
-                "exclude_fields": (
-                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
-                    if init
-                    else EXCLUDED_JOB_STATE_FIELDS
-                ),
-            }
-        )
-
-    @staticmethod
-    def query_ee2_states(
-        job_ids: List[str],
-        init: bool = True,
-    ) -> dict:
-        if not job_ids:
-            return {}
-
-        return clients.get("execution_engine2").check_jobs(
-            {
-                "job_ids": job_ids,
-                "exclude_fields": (
-                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
-                    if init
-                    else EXCLUDED_JOB_STATE_FIELDS
-                ),
-                "return_list": 0,
-            }
-        )
 
     def output_state(self, state=None) -> dict:
         """
@@ -422,7 +399,7 @@ class Job(object):
                 -1,
             )
 
-        self._trim_ee2_state(state, EXCLUDED_JOB_STATE_FIELDS)
+        self._trim_ee2_state(state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
         if "job_output" not in state:
             state["job_output"] = {}
         for arg in EXTRA_JOB_STATE_FIELDS:
@@ -450,6 +427,7 @@ class Job(object):
                 state.update({"updated": int(time.time())})
 
         return {
+            "job_id": self.job_id,
             "jobState": state,
             "outputWidgetInfo": widget_info,
         }
@@ -538,15 +516,73 @@ class Job(object):
         if log_update["lines"]:
             self._job_logs = self._job_logs + log_update["lines"]
 
-    def is_finished(self):
+    def _verify_children(self, children: List["Job"]) -> None:
+        if not self.batch_job:
+            raise ValueError("Not a batch container job")
+        if children is None:
+            raise ValueError(
+                "Must supply children when setting children of batch job parent"
+            )
+
+        inst_child_ids = [job.job_id for job in children]
+        if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
+            raise ValueError("Child job id mismatch")
+
+    def update_children(self, children: List["Job"]) -> None:
+        self._verify_children(children)
+        self.children = children
+
+    def _create_error_state(
+        self,
+        error: str,
+        error_msg: str,
+        code: int,
+    ) -> dict:
         """
-        Returns True if the job is finished (in any state, including errors or canceled),
-        False if its running/queued.
+        Creates an error state to return if
+        1. the state is missing or unretrievable
+        2. Job is none
+        This creates the whole state dictionary to return, as described in
+        _construct_cache_job_state.
+        :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
+        :param error_msg: a shortened error string, meant to be human-readable
+        :param code: int, an error code
         """
-        return self.state().get("status") in TERMINAL_STATUSES
+        return {
+            "status": "error",
+            "error": {
+                "code": code,
+                "name": "Job Error",
+                "message": error_msg,
+                "error": error,
+            },
+            "errormsg": error_msg,
+            "error_code": code,
+            "job_id": self.job_id,
+            "cell_id": self.cell_id,
+            "run_id": self.run_id,
+            "created": 0,
+            "updated": 0,
+        }
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
+
+    def info(self):
+        """
+        Printed job info
+        """
+        spec = self.app_spec()
+        print(f"App name (id): {spec['info']['name']} ({self.app_id})")
+        print(f"Version: {spec['info']['ver']}")
+
+        try:
+            state = self.state()
+            print(f"Status: {state['status']}")
+            print("Inputs:\n------")
+            pprint(self.params)
+        except BaseException:
+            print("Unable to retrieve current running state!")
 
     def _repr_javascript_(self):
         """
@@ -589,52 +625,3 @@ class Job(object):
         """
 
         return {attr: getattr(self, attr) for attr in [*JOB_ATTRS, "_acc_state"]}
-
-    def _create_error_state(
-        self,
-        error: str,
-        error_msg: str,
-        code: int,
-    ) -> dict:
-        """
-        Creates an error state to return if
-        1. the state is missing or unretrievable
-        2. Job is none
-        This creates the whole state dictionary to return, as described in
-        _construct_cache_job_state.
-        :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
-        :param error_msg: a shortened error string, meant to be human-readable
-        :param code: int, an error code
-        """
-        return {
-            "status": "error",
-            "error": {
-                "code": code,
-                "name": "Job Error",
-                "message": error_msg,
-                "error": error,
-            },
-            "errormsg": error_msg,
-            "error_code": code,
-            "job_id": self.job_id,
-            "cell_id": self.cell_id,
-            "run_id": self.run_id,
-            "created": 0,
-            "updated": 0,
-        }
-
-    def _verify_children(self, children: List["Job"]) -> None:
-        if not self.batch_job:
-            raise ValueError("Not a batch container job")
-        if children is None:
-            raise ValueError(
-                "Must supply children when setting children of batch job parent"
-            )
-
-        inst_child_ids = [job.job_id for job in children]
-        if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
-            raise ValueError("Child job id mismatch")
-
-    def update_children(self, children: List["Job"]) -> None:
-        self._verify_children(children)
-        self.children = children

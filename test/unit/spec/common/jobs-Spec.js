@@ -1,9 +1,12 @@
-define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
-    Jobs,
-    JobsData,
-    Props,
-    TestUtil
-) => {
+define([
+    'common/jobs',
+    '/test/data/jobsData',
+    'common/props',
+    'common/jobCommMessages',
+    'util/util',
+    'testUtil',
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (Jobs, JobsData, Props, jcm, Utils, TestUtil, ResponseData) => {
     'use strict';
 
     function arrayToHTML(array) {
@@ -12,8 +15,10 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
 
     const jobsModuleExports = [
         'canCancel',
+        'canDo',
         'canRetry',
         'createCombinedJobState',
+        'createCombinedJobStateSummary',
         'createJobStatusFromFsm',
         'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
@@ -21,8 +26,13 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         'getCurrentJobs',
         'getFsmStateFromJobs',
         'isTerminalStatus',
+        'isValidBackendJobStateObject',
+        'isValidJobStatus',
         'isValidJobStateObject',
         'isValidJobInfoObject',
+        'isValidJobLogsObject',
+        'isValidJobRetryObject',
+        'isValidRunStatusObject',
         'jobAction',
         'jobArrayToIndexedObject',
         'jobLabel',
@@ -30,11 +40,24 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         'jobStatusUnknown',
         'jobStrings',
         'niceState',
+        'populateModelFromJobArray',
         'updateJobModel',
+        'validateMessage',
         'validJobStatuses',
         'validStatusesForAction',
     ];
 
+    const invalidTypes = [
+        null,
+        undefined,
+        1,
+        'foo',
+        [],
+        ['a', 'list'],
+        () => {
+            /* no op */
+        },
+    ];
     describe('Test Jobs module', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
@@ -54,17 +77,15 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         afterEach(() => {
             TestUtil.clearRuntime();
         });
+        const terminalStatuses = ['completed', 'does_not_exist', 'error', 'terminated'];
 
-        it('should return true if the job status is terminal', () => {
-            ['completed', 'terminated', 'error', 'does_not_exist'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeTrue();
+        Jobs.validJobStatuses.forEach((status) => {
+            const isTerminal = terminalStatuses.includes(status);
+            it(`should return ${isTerminal} for status ${status}`, () => {
+                expect(Jobs.isTerminalStatus(status)).toEqual(isTerminal);
             });
         });
-        it('should return false for jobs that are in progress', () => {
-            ['created', 'estimating', 'queued', 'running'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeFalse();
-            });
-        });
+
         it('should return false for invalid job statuses', () => {
             badStates.forEach((status) => {
                 expect(Jobs.isTerminalStatus(status)).toBeFalse();
@@ -72,50 +93,101 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
     });
 
-    describe('The isValidJobStateObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
+    describe('Job data validation', () => {
+        ['BackendJobState', 'JobState', 'Info', 'Retry', 'Logs', 'RunStatus'].forEach((type) => {
+            let fn;
+            switch (type) {
+                case 'BackendJobState':
+                case 'JobState':
+                case 'RunStatus':
+                    fn = `isValid${type}Object`;
+                    break;
+                default:
+                    fn = `isValidJob${type}Object`;
+            }
 
-        it('Should know how to tell good job states', () => {
-            JobsData.allJobsWithBatchParent
-                .concat([
-                    {
-                        job_id: 'zero_created',
-                        created: 0,
-                        status: 'created',
-                    },
-                    {
-                        job_id: 'does_not_exist',
-                        status: 'does_not_exist',
-                    },
-                ])
-                .forEach((elem) => {
-                    expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
+            describe(`The ${fn} function`, () => {
+                JobsData.example[type].valid.forEach((elem) => {
+                    it(`passes ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeTrue();
+                    });
                 });
-        });
 
-        it('Should know how to tell bad job states', () => {
-            JobsData.invalidJobs.forEach((elem) => {
-                expect(Jobs.isValidJobStateObject(elem)).toBeFalse();
-            });
-        });
-    });
-
-    describe('The isValidJobInfoObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
-
-        JobsData.validInfo.forEach((elem) => {
-            it(`passes ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeTrue();
+                JobsData.example[type].invalid.forEach((elem) => {
+                    it(`fails ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeFalse();
+                    });
+                });
             });
         });
 
-        JobsData.invalidInfo.forEach((elem) => {
-            it(`fails ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeFalse();
+        describe('the validateMessage function', () => {
+            Object.keys(ResponseData).forEach((respType) => {
+                it(`should validate a multi-job ${respType} message`, () => {
+                    expect(
+                        Jobs.validateMessage({
+                            message: ResponseData[respType],
+                            type: respType,
+                        })
+                    ).toEqual({
+                        valid: ResponseData[respType],
+                    });
+                });
+            });
+
+            ['job-status', 'greetings', 'error', 'NEW', jcm.MESSAGE_TYPE.CANCEL].forEach((type) => {
+                it(`should reject invalid message type ${type}`, () => {
+                    expect(Jobs.validateMessage({ message: null, type })).toEqual({
+                        invalid: null,
+                    });
+                });
+            });
+
+            invalidTypes.forEach((dataType) => {
+                it(`should reject message with an invalid data type ${Utils.objectToString(
+                    dataType
+                )}`, () => {
+                    expect(
+                        Jobs.validateMessage({ message: dataType, type: jcm.MESSAGE_TYPE.INFO })
+                    ).toEqual({ invalid: dataType });
+                });
+            });
+
+            const gotValidator = ['INFO', 'LOGS', 'RETRY', 'RUN_STATUS', 'STATUS', 'STATUS_ALL'];
+            Object.keys(jcm.RESPONSES).forEach((type) => {
+                if (!gotValidator.includes(type)) {
+                    it(`should validate ${type} messages (no validator)`, () => {
+                        expect(
+                            Jobs.validateMessage({
+                                message: {},
+                                type: jcm.RESPONSES[type],
+                            })
+                        ).toEqual({
+                            valid: {},
+                        });
+                    });
+                }
+            });
+
+            ['INFO', 'LOGS', 'RETRY', 'STATUS'].forEach((type) => {
+                // combine valid and invalid data type
+                it(`should separate out valid and invalid ${type} data`, () => {
+                    const dataBlob = {},
+                        expected = {};
+                    let i = 0;
+
+                    ['valid', 'invalid'].forEach((validity) => {
+                        expected[validity] = {};
+                        JobsData.example[type][validity].forEach((elem) => {
+                            dataBlob[`job_${i}`] = elem;
+                            expected[validity][`job_${i}`] = elem;
+                            i++;
+                        });
+                    });
+                    expect(
+                        Jobs.validateMessage({ message: dataBlob, type: jcm.MESSAGE_TYPE[type] })
+                    ).toEqual(expected);
+                });
             });
         });
     });
@@ -167,7 +239,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
 
         it('should return an appropriate string for dodgy jobStates', () => {
-            JobsData.invalidJobs.forEach((state) => {
+            JobsData.example.JobState.invalid.forEach((state) => {
                 args.forEach((arg) => {
                     const statusLines = Jobs.createJobStatusLines(state, arg);
                     container.innerHTML = arrayToHTML(statusLines);
@@ -347,7 +419,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 };
             });
         });
-        return { byId: outputJobs };
+        return outputJobs;
     }
 
     describe('createCombinedJobState', () => {
@@ -368,7 +440,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         const tests = [
             {
                 desc: 'all jobs',
-                jobs: { byId: JobsData.jobsById },
+                jobs: JobsData.jobsById,
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
                 statusBarSummary: summary.running,
@@ -383,24 +455,22 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             },
             {
                 desc: 'jobs with retries',
-                jobs: { byId: JobsData.batchJob.jobsById },
-                expected: `${batch} in progress: 2 queued, 1 running, 1 success (3 jobs retried)`,
+                jobs: JobsData.batchJob.jobsById,
+                expected: `${batch} in progress: 3 queued, 1 running, 1 success (3 jobs retried)`,
                 fsmState: 'inProgressResultsAvailable',
                 statusBarSummary: summary.running,
-                statuses: { queued: 2, running: 1, completed: 1, retried: 3 },
+                statuses: { queued: 3, running: 1, completed: 1, retried: 3 },
             },
             {
                 desc: 'jobs with retries, original jobs only',
                 jobs: {
-                    byId: {
-                        ...JobsData.batchJob.originalJobs,
-                        retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
-                    },
+                    ...JobsData.batchJob.originalJobs,
+                    retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
                 },
-                expected: `${batch} in progress: 1 queued, 1 failed, 2 cancelled`,
+                expected: `${batch} in progress: 2 queued, 1 failed, 2 cancelled`,
                 fsmState: 'inProgress',
                 statusBarSummary: summary.queued,
-                statuses: { queued: 1, error: 1, terminated: 2 },
+                statuses: { queued: 2, error: 1, terminated: 2 },
             },
             {
                 desc: 'all jobs queued',
@@ -555,22 +625,6 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 statusBarSummary: '',
                 statuses: {},
             },
-            {
-                desc: 'byId is empty',
-                jobs: { byId: {} },
-                expected: '',
-                fsmState: null,
-                statusBarSummary: '',
-                statuses: {},
-            },
-            {
-                desc: 'byId is null',
-                jobs: { byId: null },
-                expected: '',
-                fsmState: null,
-                statusBarSummary: '',
-                statuses: {},
-            },
         ];
 
         tests.forEach((test) => {
@@ -608,8 +662,10 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
 
         it('current jobs, no retries', () => {
-            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobs);
-            expect(jobsByOriginalId).toEqual(JobsData.jobsById);
+            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobsWithBatchParent);
+            const expectedJobsById = TestUtil.JSONcopy(JobsData.jobsById);
+            delete expectedJobsById[JobsData.batchParentJob.job_id];
+            expect(jobsByOriginalId).toEqual(expectedJobsById);
         });
 
         it('can retrieve current jobs, with retries', () => {
@@ -618,11 +674,11 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 JobsData.batchJob.jobArray,
                 jobsByRetryParent
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(JobsData.batchJob.originalJobs).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(JobsData.batchJob.originalJobs))
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(jobsByRetryParent).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(jobsByRetryParent))
             );
         });
     });

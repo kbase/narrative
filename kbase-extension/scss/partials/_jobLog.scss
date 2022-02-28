@@ -50,6 +50,9 @@ $counter-name: code-list-counter;
     &--expanded {
       max-height: $line-height-spacious*30;
     }
+    p {
+      margin: 1rem;
+    }
   }
   // .kb-log__log_line_container
   &__log_line_container {

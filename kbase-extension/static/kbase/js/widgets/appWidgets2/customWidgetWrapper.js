@@ -1,27 +1,18 @@
-define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
+define(['bluebird', 'jquery', 'base/js/namespace', 'common/runtime', 'common/jobCommMessages'], (
     Promise,
-    html,
+    $,
     Jupyter,
-    Runtime
+    Runtime,
+    jcm
 ) => {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        pre = t('pre');
-
     function factory(config) {
-        let parent,
-            container,
-            cellId = config.cellId,
-            cellBus,
+        const cellId = config.cellId,
             runtime = Runtime.make(),
             // our state
-            appId = config.app.id,
-            appVersion = config.app.version,
-            appTag = config.app.tag,
-            appSpec = config.app.spec,
-            wrappedWidget;
+            appSpec = config.app.spec;
+        let container, wrappedWidget;
 
         /*
          * This is a fake widget finder for now...
@@ -39,7 +30,7 @@ define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
             const widgetDef = findWidget(appSpec.widgets.input);
             require([widgetDef.modulePath], (Widget) => {
                 wrappedWidget = new Widget($(container), {
-                    appSpec: appSpec,
+                    appSpec,
                     workspaceName: Jupyter.narrative.getWorkspaceName(),
                 });
                 appSpec.parameters.forEach((parameter) => {
@@ -51,17 +42,13 @@ define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
                             },
                             {
                                 channel: {
-                                    cell: cellId,
+                                    [jcm.CHANNEL.CELL]: cellId,
                                 },
                                 key: {
                                     type: 'parameter-changed',
                                 },
                             }
                         );
-
-                        // changedParameters[parameter.id] = data.val;
-                        // console.log('CHANGED', data);
-                        // Update the param in the metadata ...
                     });
                 });
             });
@@ -81,16 +68,17 @@ define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
                     {},
                     {
                         channel: {
-                            cell: cellId,
+                            [jcm.CHANNEL.CELL]: cellId,
                         },
                         key: {
                             type: 'sync-params',
                         },
                     }
                 );
+                // listen for cell-related bus messages
                 runtime.bus().listen({
                     channel: {
-                        cell: cellId,
+                        [jcm.CHANNEL.CELL]: cellId,
                     },
                     key: {
                         type: 'parameter-value',
@@ -106,11 +94,13 @@ define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
             });
         }
 
-        function stop() {}
+        function stop() {
+            // no op
+        }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

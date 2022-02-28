@@ -8,7 +8,7 @@ define([
     'common/html',
     'common/jobManager',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -39,7 +39,7 @@ define([
     html,
     JobManagerModule,
     Jobs,
-    JobComms,
+    jcm,
     Props,
     Runtime,
     Spec,
@@ -62,9 +62,7 @@ define([
     DevMode
 ) => {
     'use strict';
-    const { JobManager } = JobManagerModule,
-        jcm = JobComms.JobCommMessages;
-
+    const { JobManager } = JobManagerModule;
     const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';
@@ -154,9 +152,13 @@ define([
                         label: 'Info',
                         widget: MultiAppInfoWidget,
                     },
+                    launching: {
+                        label: 'Job Status',
+                        widget: JobStatusTabWidget.launchMode,
+                    },
                     jobStatus: {
                         label: 'Job Status',
-                        widget: JobStatusTabWidget,
+                        widget: JobStatusTabWidget.runMode,
                     },
                     results: {
                         label: 'Result',
@@ -515,7 +517,7 @@ define([
         function setupMessageBus() {
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(cell, 'attributes', 'id'),
+                    [jcm.CHANNEL.CELL]: Utils.getMeta(cell, 'attributes', 'id'),
                 },
                 description: 'parent bus for BulkImportCell',
             });
@@ -537,12 +539,13 @@ define([
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    updateState('inProgress');
+                    switchToTab('jobStatus');
+                    Jupyter.narrative.saveNarrative();
                     if (cancelBatch) {
                         cancelBatchJob();
                         break;
                     }
-                    updateState('inProgress');
-                    switchToTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -677,7 +680,7 @@ define([
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
                                 Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs')
+                                    jobManagerContext.model.getItem('exec.jobs.byId')
                                 )
                             );
                         },
@@ -700,7 +703,7 @@ define([
 
                             if (cellCollapsed && jobStatusEl) {
                                 jobStatusEl.innerHTML = Jobs.createCombinedJobStateSummary(
-                                    jobManagerContext.model.getItem('exec.jobs')
+                                    jobManagerContext.model.getItem('exec.jobs.byId')
                                 );
                             }
                         },
@@ -891,11 +894,11 @@ define([
          * Then changes the global cell state to "launching".
          */
         function doRunCellAction() {
-            runStatusListener = cellBus.on(jcm.RESPONSES.RUN_STATUS, handleRunStatus);
+            runStatusListener = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, handleRunStatus);
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');
-            switchToTab('viewConfigure');
+            switchToTab('launching');
         }
 
         /**
@@ -1005,18 +1008,23 @@ define([
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
                 let newTab;
-                model.setItem('state.state', newUiState);
-                const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
-                stateDiff.selectedFileType = state.selectedFileType;
-                // update selections
-                if (stateDiff.tab.tabs[state.tab.selected].enabled) {
-                    stateDiff.tab.selected = state.tab.selected;
-                } else {
-                    newTab = stateDiff.defaultTab;
-                }
-                state = stateDiff;
-                if (newTab) {
-                    switchToTab(newTab);
+                const oldState = model.getItem('state.state');
+                if (oldState !== newUiState) {
+                    model.setItem('state.state', newUiState);
+                    const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
+                    stateDiff.selectedFileType = state.selectedFileType;
+                    // update selections
+                    if (state.tab.selected) {
+                        if (stateDiff.tab.tabs[state.tab.selected].enabled) {
+                            stateDiff.tab.selected = state.tab.selected;
+                        } else {
+                            newTab = stateDiff.defaultTab;
+                        }
+                    }
+                    state = stateDiff;
+                    if (newTab) {
+                        switchToTab(newTab);
+                    }
                 }
             }
             cellTabs.setState(state.tab);

@@ -4,7 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -19,7 +19,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
-    JobComms,
+    jcm,
     Runtime,
     Mocks,
     TestUtil,
@@ -30,7 +30,6 @@ define([
     SimpleAppSpec
 ) => {
     'use strict';
-    const jcm = JobComms.JobCommMessages;
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
@@ -363,7 +362,7 @@ define([
                         {},
                         {
                             channel: {
-                                cell: cell.metadata.kbase.attributes.id,
+                                [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                             },
                             key: {
                                 type: 'delete-cell',
@@ -431,6 +430,7 @@ define([
                     const runButton = cell.element[0].querySelector(selectors.run);
                     const cancelButton = cell.element[0].querySelector(selectors.cancel);
                     spyOn(console, 'error');
+                    spyOn(Jupyter.narrative, 'saveNarrative');
                     await TestUtil.waitForElementState(cancelButton, () => {
                         return (
                             !runButton.classList.contains('disabled') &&
@@ -444,9 +444,9 @@ define([
                         return !cancelButton.classList.contains('hidden');
                     });
                     checkTabState(cell, {
-                        selectedTab: 'viewConfigure',
-                        enabledTabs: ['viewConfigure', 'info'],
-                        visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                        selectedTab: 'launching',
+                        enabledTabs: ['viewConfigure', 'info', 'launching'],
+                        visibleTabs: ['viewConfigure', 'info', 'launching', 'results'],
                     });
 
                     // wait for the cell to receive the run status message and transition
@@ -465,10 +465,10 @@ define([
                             );
                             runtime.bus().send(message, {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: jcm.RESPONSES.RUN_STATUS,
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             });
                         }
@@ -478,6 +478,11 @@ define([
                         testCase.updatedState
                     );
                     checkTabState(cell, testCase);
+                    if (testCase.msgEvent === 'launched_job_batch') {
+                        expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+                    } else {
+                        expect(Jupyter.narrative.saveNarrative).not.toHaveBeenCalled();
+                    }
                 });
             });
 
@@ -655,9 +660,12 @@ define([
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    ['request-job-updates-start', { batchId }],
-                                    ['request-job-cancel', { jobIdList: [batchId] }],
-                                    ['request-job-updates-stop', { batchId }],
+                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [
+                                        jcm.MESSAGE_TYPE.CANCEL,
+                                        { [jcm.PARAM.JOB_ID_LIST]: [batchId] },
+                                    ],
                                     [
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
@@ -747,10 +755,10 @@ define([
                             },
                             {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: jcm.RESPONSES.RUN_STATUS,
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             }
                         );
@@ -760,11 +768,9 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    [jcm.REQUESTS.START_UPDATE, { batchId }],
-                    [jcm.REQUESTS.INFO, { batchId }],
-                    [jcm.REQUESTS.CANCEL, { jobIdList: [batchId] }],
-                    [jcm.REQUESTS.STOP_UPDATE, { batchId }],
-                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

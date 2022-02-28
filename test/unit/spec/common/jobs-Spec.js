@@ -723,22 +723,18 @@ define([
 
         it('creates a model with jobs indexed by ID', () => {
             const model = Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent);
-            const idIndex = model.byId;
-            expect(Object.keys(idIndex).sort()).toEqual(
-                JobsData.allJobsWithBatchParent
-                    .map((jobState) => {
-                        return jobState.job_id;
+            expect(Object.keys(model)).toEqual(
+                jasmine.arrayWithExactContents(
+                    JobsData.allJobsWithBatchParent.map((job) => {
+                        return job.job_id;
                     })
-                    .sort()
+                )
             );
         });
 
         it('creates an empty model with an empty jobs array', () => {
             const model = Jobs.jobArrayToIndexedObject([]);
-            expect(model).toEqual({
-                byId: {},
-            });
-            expect(model.byId).toEqual({});
+            expect(model).toEqual({});
         });
     });
 });

@@ -104,8 +104,6 @@ define([
                 this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
                     [jcm.PARAM.JOB_ID]: this.jobId,
                 });
-            }).catch((err) => {
-                throw err;
             });
         }
 

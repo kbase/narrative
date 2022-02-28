@@ -895,7 +895,9 @@ define([
                     this.model = Props.make({
                         data: {
                             exec: {
-                                jobs: Jobs.jobArrayToIndexedObject([this.starterJob]),
+                                jobs: {
+                                    byId: Jobs.jobArrayToIndexedObject([this.starterJob]),
+                                },
                             },
                         },
                     });

@@ -634,7 +634,7 @@ define([
             throw new Error('More than one batch parent found');
         }
 
-        model.setItem('exec.jobs', jobArrayToIndexedObject(jobArray));
+        model.setItem('exec.jobs.byId', jobArrayToIndexedObject(jobArray));
 
         model.setItem('exec.jobState', Array.from(batchJobs)[0]);
         return model;
@@ -644,19 +644,16 @@ define([
      * Given an array of jobState objects, create an object with jobs indexed by ID
      *
      * @param {array} jobArray array of jobState objects
-     * @returns {object} with indexed job data:
-     *      byId        key: job_id, value: jobState object
+     * @returns {object} comprising indexed job data, with key: job_id, value: jobState object
      */
 
     function jobArrayToIndexedObject(jobArray = []) {
-        const jobIx = {
-            byId: {},
-        };
+        const jobIndex = {};
 
         jobArray.forEach((job) => {
-            jobIx.byId[job.job_id] = job;
+            jobIndex[job.job_id] = job;
         });
-        return jobIx;
+        return jobIndex;
     }
 
     /**

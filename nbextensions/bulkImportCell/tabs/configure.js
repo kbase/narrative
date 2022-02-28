@@ -26,7 +26,11 @@ define([
      *     model: cell metadata, contains such fun items as the app parameters and state
      *     specs: app specs, keyed by their app id
      *     fileTypesDisplay: mapping of file type to display label
-     *     typesToFiles: map from object type to appId and list of input files,
+     *     typesToFiles: map from object type to appId, list of input files, and messages,
+     *       if applicable
+     *       appId: string
+     *       files: array of strings
+     *       messages: (optional) array of objects with keys: type and message (both strings)
      *     viewOnly: boolean - if true, then will start child widgets in view only mode
      * @returns
      */
@@ -83,6 +87,7 @@ define([
                         buildFileTypePanel(fileTypeNode, readyState),
                         startInputWidgets(),
                     ];
+                    showConfigMessage();
                     running = true;
                     return Promise.all(initPromises);
                 });
@@ -157,6 +162,54 @@ define([
             ]);
         }
 
+        /**
+         * Shows a message at the top of the configuration panel, based on current information.
+         * Currently only supports a warning that there are multiple parameter sets given from
+         * an xSV file, but only one is used.
+         */
+        function showConfigMessage() {
+            const messages = typesToFiles[selectedFileType].messages;
+            if (messages) {
+                const messageNode = ui.getElement('input-container.config-message');
+                messages.forEach((msg) => {
+                    const elem = renderConfigMessage(msg);
+                    messageNode.appendChild(ui.createNode(elem));
+                });
+            }
+        }
+
+        /**
+         * Makes the DOM element for a config message.
+         * @param {Object} msg - has keys type and message.
+         *   type - string, expected to be one of 'error' or 'warning', will default to 'warning'
+         *   message - string
+         */
+        function renderConfigMessage(msg) {
+            const div = html.tag('div'),
+                span = html.tag('span'),
+                iTag = html.tag('i'),
+                strong = html.tag('strong');
+            const icon = 'fa fa-exclamation-circle';
+            let msgType = msg.type;
+            if (msgType !== 'warning' && msgType !== 'error') {
+                msgType = 'warning';
+            }
+            return div(
+                {
+                    class: `${cssBaseClass}__message ${cssBaseClass}__message--${msg.type}`,
+                },
+                [
+                    span(
+                        {
+                            class: `${cssBaseClass}__message--${msg.type}-title`,
+                        },
+                        [iTag({ class: icon }), strong(` ${msg.type}:`)]
+                    ),
+                    span(msg.message),
+                ]
+            );
+        }
+
         function renderLayout() {
             const div = html.tag('div');
             return div(
@@ -174,6 +227,10 @@ define([
                             dataElement: 'input-container',
                         },
                         [
+                            div({
+                                class: `${cssBaseClass}__message_container`,
+                                dataElement: 'config-message',
+                            }),
                             div({
                                 class: `${cssBaseClass}__file_paths`,
                                 dataElement: 'file-paths',

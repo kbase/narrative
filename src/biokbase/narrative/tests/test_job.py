@@ -139,7 +139,7 @@ def get_widget_info(job_id):
 @mock.patch(CLIENTS, get_mock_client)
 def get_batch_family_jobs(return_list=False):
     """
-    As invoked in appmanager's run_app_bulk, i.e.,
+    As invoked in appmanager's run_app_batch, i.e.,
     with from_job_id(s)
     """
     child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
@@ -242,7 +242,7 @@ class JobTest(unittest.TestCase):
 
     def test_job_init__extra_state(self):
         """
-        test job initialisation as is done by run_app_batch
+        test job initialisation as is done by run_legacy_batch_app
         """
 
         app_id = "kb_BatchApp/run_batch"
@@ -266,7 +266,7 @@ class JobTest(unittest.TestCase):
 
     def test_job_init__batch_family(self):
         """
-        test job initialization, as is done by run_app_bulk
+        test job initialization, as is done by run_app_batch
         """
         batch_jobs = get_batch_family_jobs(return_list=False)
 

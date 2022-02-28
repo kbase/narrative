@@ -15,7 +15,7 @@ from string import Formatter, Template
 def get_input_scaffold(app, tag="release", use_defaults=False):
     """
     Builds a "scaffold" structure of what app inputs are used, in the structure that's
-    expected by 'run_app_batch' (also the structure expected by 'run_app'). This will
+    expected by 'run_legacy_batch_app' (also the structure expected by 'run_app'). This will
     effectively be a dictionary of keys to None (except for the case of group parameters,
     those will fill out the group with the proper keys, and wrap them in a list if necessary)
 

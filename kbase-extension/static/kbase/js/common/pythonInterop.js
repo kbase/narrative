@@ -115,7 +115,7 @@ define([], () => {
         return [
             paramSetName + ' = ' + pythonifiedParams,
             'from biokbase.narrative.jobs.appmanager import AppManager',
-            'AppManager().run_app_batch(' + buildNiceArgsList(positionalArgs) + ')',
+            'AppManager().run_legacy_batch_app(' + buildNiceArgsList(positionalArgs) + ')',
         ].join('\n');
     }
 
@@ -131,7 +131,7 @@ define([], () => {
                 run_id: runId,
             }),
             args = positionalArgs.concat(namedArgs),
-            appCall = params instanceof Array ? 'run_app_batch' : 'run_app',
+            appCall = params instanceof Array ? 'run_legacy_batch_app' : 'run_app',
             pythonCode = [
                 'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().' + appCall + '(' + buildNiceArgsList(args) + ')',
@@ -252,7 +252,7 @@ define([], () => {
     }
 
     /**
-     * Builds the call to run_app_bulk
+     * Builds the call to run_app_batch
      * @param {string} cellId the unique id of the cell, for run metadata
      * @param {string} runId the unique id of the run, for metadata
      * @param {array} appInfo the set of information to send to the function.
@@ -283,7 +283,7 @@ define([], () => {
         ];
         return [
             'from biokbase.narrative.jobs.appmanager import AppManager',
-            `AppManager().run_app_bulk(${buildNiceArgsList(args)})`,
+            `AppManager().run_app_batch(${buildNiceArgsList(args)})`,
         ].join('\n');
     }
 

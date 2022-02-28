@@ -40,7 +40,8 @@ define([
                 this.objRef = this.options.name;
             } else if ('upas' in this.options && 'name' in this.options.upas) {
                 // See https://github.com/kbase/NarrativeViewers/blob/master/ui/narrative/methods/view_pangenome/spec.json
-                // for the mapping of the upa to the "name" property.
+                // for the mapping of the upa to the "name" property; and widgetmanager.py for how
+                // this is done.
                 this.objRef = this.options.upas.name;
             } else {
                 this.objRef = this.options.ws + '/' + this.options.name;

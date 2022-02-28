@@ -13,6 +13,7 @@ This document describes how to release and deploy the Narrative Interface app on
   - [Stage a Final Release](#stage-a-final-release)
   - [Deploying Next, Appdev, & Prod](#deploying-next-appdev--prod)
   - [Deploying Narrative-Refactor](#deploying-narrative-refactor)
+  - [Deploying Narrative-Dev](#deploying-narrative-dev)
     - [Create Release Image](#create-release-image)
     - [Tag & Deploy Image (admins only)](#tag--deploy-image-admins-only)
   - [Image URLs](#image-urls)
@@ -65,19 +66,23 @@ To see your changes once the new image is created, simply open a narrative on CI
     -   Ensure that tests pass.
 
 4.  PR the develop branch to the master branch.
-    -   Deploy on the next environment.
+    -   Deploy on the narrative-dev environment.
     -   Ensure that things work as expected.
 
-5.  Create a new release in the narrative repo.
-    -   tag it with the new version, prefixed with v (e.g. v4.2.1).
-
+5.  Create a new release in the narrative repo on GitHub.
+    -   Create a new tag with the new version number, prefixed with v (e.g. v4.2.1).
+    -   Set the new tag against the `master` branch.
+    -   Put the recent notes in the description.
 ### Deploying Next, Appdev, & Prod
 
-The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod](https://narrative.kbase.us) environments are all deployed using a production image. 
+The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [production](https://narrative.kbase.us) environments are all deployed using a production image. 
 
 ### Deploying Narrative-Refactor
 
 The [narrative-refactor](https://narrative-refactor.kbase.us) image is automatically built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge. The images can be found here: https://github.com/orgs/kbase/packages
+
+### Deploying Narrative-Dev
+The [narrative-dev](https://narrative-dev.kbase.us) environment is meant for pre-release and iterative testing of new UI features and changes. As such, this isn't always tied to any particular branch, although it is most often set to deploy the production image. Contact a DevOps team member if there are any questions.
 
 
 #### Create Release Image

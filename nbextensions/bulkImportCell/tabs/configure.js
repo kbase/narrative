@@ -87,7 +87,6 @@ define([
                         buildFileTypePanel(fileTypeNode, readyState),
                         startInputWidgets(),
                     ];
-                    showConfigMessage();
                     running = true;
                     return Promise.all(initPromises);
                 });
@@ -152,12 +151,13 @@ define([
             const appSpec = specs[typesToFiles[selectedFileType].appId];
             const filePathNode = ui.getElement('input-container.file-paths');
             const paramNode = ui.getElement('input-container.params');
+            showConfigMessage();
             return Promise.all([
                 buildFilePathWidget(filePathNode, appSpec).then((instance) => {
-                    filePathWidget = instance.widget;
+                    filePathWidget = instance.instance;
                 }),
                 buildParamsWidget(paramNode, appSpec).then((instance) => {
-                    paramsWidget = instance.widget;
+                    paramsWidget = instance.instance;
                 }),
             ]);
         }
@@ -172,8 +172,11 @@ define([
             if (messages) {
                 const messageNode = ui.getElement('input-container.config-message');
                 messages.forEach((msg) => {
-                    const elem = renderConfigMessage(msg);
-                    messageNode.appendChild(ui.createNode(elem));
+                    if (msg.message) {
+                        // ignore if the actual message is missing.
+                        const elem = renderConfigMessage(msg);
+                        messageNode.appendChild(ui.createNode(elem));
+                    }
                 });
             }
         }
@@ -196,14 +199,14 @@ define([
             }
             return div(
                 {
-                    class: `${cssBaseClass}__message ${cssBaseClass}__message--${msg.type}`,
+                    class: `${cssBaseClass}__message ${cssBaseClass}__message--${msgType}`,
                 },
                 [
                     span(
                         {
-                            class: `${cssBaseClass}__message--${msg.type}-title`,
+                            class: `${cssBaseClass}__message--${msgType}-title`,
                         },
-                        [iTag({ class: icon }), strong(` ${msg.type}:`)]
+                        [iTag({ class: icon }), strong(` ${msgType}:`)]
                     ),
                     span(msg.message),
                 ]
@@ -594,6 +597,7 @@ define([
             if (paramsWidget) {
                 widgetStopPromises.push(paramsWidget.stop());
             }
+            ui.getElement('input-container.config-message').innerHTML = '';
             return Promise.all(widgetStopPromises);
         }
 

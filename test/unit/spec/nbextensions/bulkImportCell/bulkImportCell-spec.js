@@ -470,7 +470,7 @@ define([
                             });
                         }
                     );
-                    expect(console.error.calls.allArgs()).toEqual([['running execute!']]);
+                    expect(console.error.calls.allArgs()).toContain(['running execute!']);
                     expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                         testCase.updatedState
                     );

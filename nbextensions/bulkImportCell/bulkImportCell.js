@@ -892,6 +892,7 @@ define([
         function doRunCellAction() {
             runStatusListener = cellBus.on('run-status', handleRunStatus);
             busEventManager.add(runStatusListener);
+            clearCellMessages();
             cell.execute();
             updateState('launching');
             switchToTab('viewConfigure');
@@ -1137,6 +1138,13 @@ define([
             return buildTabs(ui.getElement('body.run-control-panel.toolbar')).then(() => {
                 layout.events.attachEvents(kbaseNode);
                 controlPanel.setActionState(initialActionState);
+            });
+        }
+
+        function clearCellMessages() {
+            const inputs = model.getItem('inputs');
+            Object.keys(inputs).forEach((dataType) => {
+                delete inputs[dataType].messages;
             });
         }
 

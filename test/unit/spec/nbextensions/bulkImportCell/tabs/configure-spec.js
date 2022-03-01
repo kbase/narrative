@@ -337,9 +337,6 @@ define([
 
                 // TEST FOR DATA TYPE 2
                 expect(this._model.getItem('state.selectedFileType')).toBe('dataType2');
-                // btn1 = container.querySelector(
-                //     '[data-element="filetype-panel"] [data-element="dataType1"]'
-                // );
                 expect(btn1.classList).not.toContain(
                     'kb-filetype-panel__filetype_button--selected'
                 );

@@ -377,8 +377,11 @@ define([
                 );
                 // if there's an appParameters array, then we need to process that into files
                 // if it's greater than 1 in length, just use the non-file params from the first one
-                // TODO: make a flag that there's more than 1 to show a warning
                 const appParameters = typesToFiles[fileType].appParameters || [];
+                // this becomes true if there is at least one row of appParameters with different
+                // non fileParamIds values. Here, we just skim through the otherParamIds for each row.
+                let hasUniqueParams = true;
+                const nonFileAppParams = appParameters.length ? appParameters[0] : {};
                 appParameters.forEach((appParamSet) => {
                     // store all the "input files" in the files array for that type
                     inputFileIds.forEach((paramId) => {
@@ -390,15 +393,31 @@ define([
                         return fpRow;
                     }, {});
                     initialParams[fileType].filePaths.push(filePathRow);
+                    // if we still have all unique params, gotta check the next row
+                    if (hasUniqueParams) {
+                        hasUniqueParams = !otherParamIds[fileType].some(
+                            (paramId) => nonFileAppParams[paramId] !== appParamSet[paramId]
+                        );
+                    }
                 });
 
+                if (!hasUniqueParams) {
+                    if (!typesToFiles[fileType].messages) {
+                        typesToFiles[fileType].messages = [];
+                    }
+                    typesToFiles[fileType].messages.push({
+                        type: 'warning',
+                        message:
+                            'Multiple parameters listed in the bulk import specification file. Import can proceed, but only the first line of parameters will be used.',
+                    });
+                }
+
                 const otherParams = specs[appId].makeDefaultedModel();
-                const appParams = appParameters.length ? appParameters[0] : {};
                 initialParams[fileType].params = otherParamIds[fileType].reduce(
                     (paramSet, paramId) => {
                         paramSet[paramId] = otherParams[paramId];
-                        if (paramId in appParams) {
-                            paramSet[paramId] = appParams[paramId];
+                        if (paramId in nonFileAppParams) {
+                            paramSet[paramId] = nonFileAppParams[paramId];
                         }
                         return paramSet;
                     },

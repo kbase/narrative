@@ -6,8 +6,11 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 - DATAUP-641 - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+- DATAUP-641 - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+- DATAUP-641 - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
 - PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
-
+- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+ 
 ### Version 5.0.2
 - SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
 - DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.

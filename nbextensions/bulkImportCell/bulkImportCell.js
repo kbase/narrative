@@ -604,18 +604,20 @@ define([
              *   params: [{ set of params for individual run }]
              * }]
              */
-            Object.keys(inputs).forEach((fileType) => {
-                const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
-                const appInfo = {
-                    app_id: appSpecInfo.id,
-                    tag: appSpecInfo.tag || 'release',
-                    version: appSpecInfo.git_commit_hash,
-                    params: params[fileType].filePaths.map((filePathParams) => {
-                        return Object.assign({}, filePathParams, params[fileType].params);
-                    }),
-                };
-                appInfos.push(appInfo);
-            });
+            Object.keys(inputs)
+                .sort()
+                .forEach((fileType) => {
+                    const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
+                    const appInfo = {
+                        app_id: appSpecInfo.id,
+                        tag: appSpecInfo.tag || 'release',
+                        version: appSpecInfo.git_commit_hash,
+                        params: params[fileType].filePaths.map((filePathParams) => {
+                            return Object.assign({}, filePathParams, params[fileType].params);
+                        }),
+                    };
+                    appInfos.push(appInfo);
+                });
 
             const code = PythonInterop.buildBulkAppRunner(cellId, runId, appInfos);
             cell.set_text(code);

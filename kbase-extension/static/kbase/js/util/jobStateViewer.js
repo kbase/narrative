@@ -10,15 +10,14 @@ define([
     'common/format',
     'common/html',
     'common/jobs',
-    'common/jobCommChannel',
-], (Promise, Runtime, UI, format, html, Jobs, JobComms) => {
+    'common/jobCommMessages',
+], (Promise, Runtime, UI, format, html, Jobs, jcm) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
         p = t('p'),
-        span = t('span'),
-        jcm = JobComms.JobCommMessages;
+        span = t('span');
 
     /**
      * Updates the view stats.
@@ -256,8 +255,7 @@ define([
             ui,
             jobState = null,
             listeningForJob = false,
-            jobId,
-            parentJobId;
+            jobId;
 
         const viewModel = {
             lastUpdated: {
@@ -325,8 +323,8 @@ define([
             if (listeningForJob) {
                 return;
             }
-            runtime.bus().emit(jcm.REQUESTS.START_UPDATE, {
-                jobId,
+            runtime.bus().emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: jobId,
             });
             listeningForJob = true;
         }
@@ -344,7 +342,11 @@ define([
          * @param {object} message
          */
         function handleJobStatusUpdate(message) {
-            jobState = message.jobState;
+            if (!(jobId in message)) {
+                return;
+            }
+
+            jobState = message[jobId].jobState;
             switch (jobState.status) {
                 case 'queued':
                 case 'created':
@@ -360,7 +362,7 @@ define([
                     break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.status, message);
+                    console.error('Unknown job status', jobState.status, message[jobId]);
                     throw new Error('Unknown job status ' + jobState.status);
             }
         }
@@ -372,12 +374,13 @@ define([
          */
         function listenForJobStatus() {
             listeners.push(
+                // listen for job-related bus messages
                 runtime.bus().listen({
                     channel: {
-                        jobId: jobId,
+                        [jcm.CHANNEL.JOB]: jobId,
                     },
                     key: {
-                        type: jcm.RESPONSES.STATUS,
+                        type: jcm.MESSAGE_TYPE.STATUS,
                     },
                     handle: handleJobStatusUpdate,
                 })
@@ -402,9 +405,7 @@ define([
                     ui = UI.make({ node: container });
 
                     container.innerHTML = renderRunStats();
-
                     jobId = arg.jobId;
-                    parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
                     listeners.push(
                         runtime.bus().on('clock-tick', () => {
@@ -415,9 +416,8 @@ define([
                     listenForJobStatus();
 
                     // request a new job status update from the kernel on start
-                    runtime.bus().emit(jcm.REQUESTS.STATUS, {
-                        jobId: jobId,
-                        parentJobId: parentJobId,
+                    runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: jobId,
                     });
                     listeningForJob = true;
 

@@ -19,6 +19,7 @@ define([
     'util/bootstrapDialog',
     'handlebars',
     'common/props',
+    'common/jobCommMessages',
     'text!kbase/templates/report_error_button.html',
     'bootstrap',
 ], (
@@ -32,9 +33,11 @@ define([
     BootstrapDialog,
     Handlebars,
     Props,
+    jcm,
     ReportErrorBtnTmpl
 ) => {
     'use strict';
+
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
         version: '1.0.0',
@@ -549,7 +552,7 @@ define([
                 {},
                 {
                     channel: {
-                        cell: cellId,
+                        [jcm.CHANNEL.CELL]: cellId,
                     },
                     key: {
                         type: 'delete-cell',

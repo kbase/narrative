@@ -60,9 +60,15 @@ define(['bluebird'], (Promise) => {
         }
     }
 
+    function objectToString(obj) {
+        const type = Object.prototype.toString.call(obj);
+        return type.substring(8, type.length - 1);
+    }
+
     return Object.freeze({
         copy: copyValue,
         pRequire,
         toInteger,
+        objectToString,
     });
 });

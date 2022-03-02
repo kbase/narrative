@@ -1,37 +1,53 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
-from biokbase.narrative.jobs.jobmanager import JobManager
-import biokbase.narrative.jobs.specmanager as specmanager
-import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job, JOB_ATTRS, JOB_ATTR_DEFAULTS
-from biokbase.narrative.tests.test_job import get_test_spec
-from IPython.display import HTML, Javascript
 import unittest
 import mock
 from mock import MagicMock
+from biokbase.narrative.jobs.specmanager import SpecManager
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+import biokbase.narrative.app_util as app_util
+from biokbase.narrative.jobs.job import Job
+from IPython.display import HTML, Javascript
 from .narrative_mock.mockclients import (
     get_mock_client,
     WSID_STANDARD,
 )
 import os
-from typing import List
 import sys
 import io
 import copy
 from .util import ConfigTests
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
+    READS_OBJ_1,
+    READS_OBJ_2,
+)
 
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
 TOKEN_ID = "ABCDE12345"
+UNKNOWN_APP_ID = "Unknown app id"
+READS_FILE_1 = "reads file 1"
+READS_FILE_2 = "reads file 2"
+NEW_READS_SET = "New Reads Set"
+
+JOB_COMM_MOCK = "biokbase.narrative.jobs.appmanager.JobComm"
+GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"
+CLIENTS_AM = "biokbase.narrative.jobs.appmanager.clients.get"
+CLIENTS_AM_SM = "biokbase.narrative.jobs.appmanager.specmanager.clients.get"
+CLIENTS_SM = "biokbase.narrative.jobs.specmanager.clients.get"
 
 
-def mock_agent_token(*args, **kwargs):
-    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+with mock.patch(CLIENTS, get_mock_client):
+    sm = SpecManager()
+    sm.reload()
+    TEST_SPECS = copy.deepcopy(sm.app_specs)
 
 
-def get_method(tag, app_id, live=False):
-    spec = get_test_spec(tag, app_id, live=live)
+def get_method(tag, app_id):
+    spec = copy.deepcopy(TEST_SPECS[tag][app_id])
     return (
         spec["behavior"]["kb_service_name"]
         + "."
@@ -39,6 +55,15 @@ def get_method(tag, app_id, live=False):
     )
 
 
+def mock_agent_token(*args, **kwargs):
+    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+
+
+def get_timestamp():
+    return "any old time"
+
+
+@mock.patch("biokbase.narrative.jobs.appmanager.timestamp", get_timestamp)
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -211,10 +236,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# Testing run_app #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__dry_run(self, auth, c):
@@ -234,10 +259,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(expected, output)
         self.assertEqual(mock_comm.call_count, 0)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__good_inputs(self, auth, c):
@@ -251,10 +276,10 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__from_gui_cell(self, auth, c):
@@ -272,7 +297,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -286,7 +311,7 @@ class AppManagerTestCase(unittest.TestCase):
             f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
 
@@ -300,7 +325,7 @@ class AppManagerTestCase(unittest.TestCase):
             f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
@@ -317,10 +342,10 @@ class AppManagerTestCase(unittest.TestCase):
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_app__missing_inputs(self, auth, c):
@@ -328,8 +353,8 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsNotNone(self.am.run_app(self.good_app_id, None, tag=self.good_tag))
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -341,7 +366,7 @@ class AppManagerTestCase(unittest.TestCase):
                 self.bad_app_id, self.test_app_params, tag=self.test_tag
             ),
             "run_app",
-            "Unknown app id",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -364,18 +389,18 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# End tests for run_app #############
 
-    ############# Test run_app_batch #############
+    ############# Test run_legacy_batch_app #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__dry_run_good_inputs(self, auth, c):
+    def test_run_legacy_batch_app__dry_run_good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         params = [self.test_app_params, self.test_app_params]
-        job_runner_inputs = self.am.run_app_batch(
+        job_runner_inputs = self.am.run_legacy_batch_app(
             self.test_app_id,
             params,
             cell_id="abcdefghi",
@@ -421,16 +446,16 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(job_runner_inputs, expected)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__good_inputs(self, auth, c):
+    def test_run_legacy_batch_app__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         params = [self.test_app_params, self.test_app_params]
-        new_job = self.am.run_app_batch(
+        new_job = self.am.run_legacy_batch_app(
             self.test_app_id,
             params,
             version=self.test_app_version,
@@ -442,17 +467,17 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__gui_cell(self, auth, c):
+    def test_run_legacy_batch_app__gui_cell(self, auth, c):
         cell_id = "12345"
         c.return_value.send_comm_message = MagicMock()
         self.assertIsNone(
-            self.am.run_app_batch(
+            self.am.run_legacy_batch_app(
                 self.test_app_id,
                 [self.test_app_params, self.test_app_params],
                 tag=self.test_tag,
@@ -463,80 +488,82 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_batch__bad_id(self, c):
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_legacy_batch_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(self.bad_app_id, None)
+            return self.am.run_legacy_batch_app(self.bad_app_id, None)
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_batch__bad_tag(self, c):
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_legacy_batch_app__bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(self.good_app_id, None, tag=self.bad_tag)
+            return self.am.run_legacy_batch_app(
+                self.good_app_id, None, tag=self.bad_tag
+            )
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_batch__bad_version_match(self, c):
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_legacy_batch_app__bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_app_batch(
+            return self.am.run_legacy_batch_app(
                 self.good_app_id, None, tag="dev", version="0.0.1"
             )
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
-            "run_app_batch",
+            "run_legacy_batch_app",
             SEMANTIC_VER_ERROR,
         )
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_batch__missing_inputs(self, auth, c):
+    def test_run_legacy_batch_app__missing_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         self.assertIsNotNone(
-            self.am.run_app_batch(self.good_app_id, None, tag=self.good_tag)
+            self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.good_tag)
         )
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_batch__print_error(self, c):
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_legacy_batch_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
 
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_batch(
+            lambda: self.am.run_legacy_batch_app(
                 self.bad_app_id, [self.test_app_params], tag=self.test_tag
             ),
-            "run_app_batch",
-            "Unknown app id",
+            "run_legacy_batch_app",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -546,24 +573,24 @@ class AppManagerTestCase(unittest.TestCase):
         cell_id = "some_batch_cell"
         self.run_app_expect_error(
             comm_mock2,
-            lambda: self.am.run_app_batch(
+            lambda: self.am.run_legacy_batch_app(
                 self.bad_app_id,
                 [self.test_app_params],
                 tag=self.test_tag,
                 cell_id=cell_id,
             ),
-            "run_app_batch",
+            "run_legacy_batch_app",
             None,
             cell_id=cell_id,
         )
 
-    ############# End tests for run_app_batch #############
+    ############# End tests for run_legacy_batch_app #############
 
     ############# Test run_local_app #############
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_local_app_ok(self, auth, c):
@@ -576,10 +603,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsInstance(result, Javascript)
         self.assertIn("KBaseNarrativeOutputCell", result.data)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
     def test_run_local_app_fail_cases(self, auth, c):
@@ -626,8 +653,8 @@ class AppManagerTestCase(unittest.TestCase):
                 test_case["expected_error"],
             )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_run_local_app__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
@@ -639,7 +666,7 @@ class AppManagerTestCase(unittest.TestCase):
                 self.bad_app_id, self.test_app_params, tag=self.test_tag
             ),
             "run_local_app",
-            "Unknown app id",
+            UNKNOWN_APP_ID,
         )
 
         comm_mock2 = MagicMock()
@@ -662,21 +689,21 @@ class AppManagerTestCase(unittest.TestCase):
 
     ############# End tests for run_local_app #############
 
-    ############# Test run_app_bulk #############
+    ############# Test run_app_batch #############
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__dry_run(self, auth, c):
+    def test_run_app_batch__dry_run(self, auth, c):
         mock_comm = MagicMock()
         c.return_value.send_comm_message = mock_comm
 
         test_input = self.bulk_run_good_inputs
 
-        dry_run_results = self.am.run_app_bulk(test_input, dry_run=True)
+        dry_run_results = self.am.run_app_batch(test_input, dry_run=True)
         batch_run_params = dry_run_results["batch_run_params"]
         batch_params = dry_run_results["batch_params"]
 
@@ -697,9 +724,7 @@ class AppManagerTestCase(unittest.TestCase):
 
         exp_batch_run_params = [
             {
-                "method": get_method(
-                    test_input[i]["tag"], test_input[i]["app_id"], live=True
-                ),
+                "method": get_method(test_input[i]["tag"], test_input[i]["app_id"]),
                 "service_ver": test_input[i]["version"],
                 "params": [mod(test_input[i]["params"][j])],
                 "app_id": test_input[i]["app_id"],
@@ -718,13 +743,13 @@ class AppManagerTestCase(unittest.TestCase):
 
         self.assertEqual(mock_comm.call_count, 0)
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__good_inputs(self, auth, c):
+    def test_run_app_batch__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         test_input = self.bulk_run_good_inputs
 
@@ -739,7 +764,7 @@ class AppManagerTestCase(unittest.TestCase):
                     param_set[key] = None
             param_set["workspace_name"] = self.public_ws
 
-        new_jobs = self.am.run_app_bulk(test_input)
+        new_jobs = self.am.run_app_batch(test_input)
         self.assertIsInstance(new_jobs, dict)
         self.assertIn("parent_job", new_jobs)
         self.assertIn("child_jobs", new_jobs)
@@ -758,13 +783,13 @@ class AppManagerTestCase(unittest.TestCase):
         for job in [parent_job] + child_jobs:
             self.assertEqual(False, self.jm._running_jobs[job.job_id]["refresh"])
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
-        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        GET_AGENT_TOKEN,
         side_effect=mock_agent_token,
     )
-    def test_run_app_bulk__from_gui_cell(self, auth, c):
+    def test_run_app_batch__from_gui_cell(self, auth, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
         cell_id = "a_cell_id"
@@ -773,10 +798,11 @@ class AppManagerTestCase(unittest.TestCase):
         # should return None, fire a couple of messages
         for run_id in run_ids:
             self.assertIsNone(
-                self.am.run_app_bulk(
+                self.am.run_app_batch(
                     self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
                 )
             )
+
             self._verify_comm_success(
                 c.return_value.send_comm_message,
                 True,
@@ -786,9 +812,9 @@ class AppManagerTestCase(unittest.TestCase):
             )
             comm_mock.reset_mock()
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_bulk__bad_inputs(self, c):
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_app_batch__bad_inputs(self, c):
         no_info_error = (
             "app_info must be a list with at least one set of app information"
         )
@@ -839,19 +865,19 @@ class AppManagerTestCase(unittest.TestCase):
         for test_case in cases:
 
             def run_func():
-                return self.am.run_app_bulk(test_case["arg"])
+                return self.am.run_app_batch(test_case["arg"])
 
             comm_mock.reset_mock()
             self.run_app_expect_error(
                 comm_mock,
                 run_func,
-                "run_app_bulk",
+                "run_app_batch",
                 test_case["expected_error"],
             )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
-    def test_run_app_bulk__print_error(self, c):
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
+    def test_run_app_batch__print_error(self, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
 
@@ -861,8 +887,8 @@ class AppManagerTestCase(unittest.TestCase):
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(test_case),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(test_case),
+            "run_app_batch",
             "an app_id must be of the format module_name/app_name",
         )
 
@@ -873,109 +899,98 @@ class AppManagerTestCase(unittest.TestCase):
         cell_id = "some_cell_or_another"
         self.run_app_expect_error(
             comm_mock2,
-            lambda: self.am.run_app_bulk(test_case, cell_id=cell_id),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(test_case, cell_id=cell_id),
+            "run_app_batch",
             None,
             cell_id=cell_id,
         )
 
-    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(CLIENTS_AM, get_mock_client)
+    @mock.patch(JOB_COMM_MOCK)
     def test_bulk_app_no_wsid(self, c):
         del os.environ["KB_WORKSPACE_ID"]
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(self.bulk_run_good_inputs),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(self.bulk_run_good_inputs),
+            "run_app_batch",
             'Unable to retrieve system variable: "workspace_id"',
         )
 
-    ############# End tests for run_app_bulk #############
+    ############# End tests for run_app_batch #############
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description(self):
         desc = self.am.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_tag(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.good_app_id, tag=self.bad_tag)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_name(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.bad_app_id)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
-    @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
     def test_validate_params(self):
         inputs = {
             "reads_tuple": [
                 {
-                    "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_label": READS_FILE_1,
+                    "input_reads_obj": READS_OBJ_1,
                     "input_reads_metadata": {"key1": "value1"},
                 },
                 {
-                    "input_reads_label": "reads file 2",
-                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_label": READS_FILE_2,
+                    "input_reads_obj": READS_OBJ_2,
                     "input_reads_metadata": {"key2": "value2"},
                 },
             ],
             "output_object": "MyReadsSet",
-            "description": "New Reads Set",
+            "description": NEW_READS_SET,
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
-        sm = specmanager.SpecManager()
-        spec = sm.get_spec(app_id, tag=tag)
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
         (params, ws_inputs) = app_util.validate_parameters(
-            app_id, tag, sm.app_params(spec), inputs
+            app_id, tag, spec_params, inputs
         )
         self.assertDictEqual(params, inputs)
         self.assertIn("12345/8/1", ws_inputs)
         self.assertIn("12345/7/1", ws_inputs)
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
-    @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_input_mapping(self):
         self.maxDiff = None
         inputs = {
             "reads_tuple": [
                 {
-                    "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_label": READS_FILE_1,
+                    "input_reads_obj": READS_OBJ_1,
                     "input_reads_metadata": {"key1": "value1"},
                 },
                 {
-                    "input_reads_label": "reads file 2",
-                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_label": READS_FILE_2,
+                    "input_reads_obj": READS_OBJ_2,
                     "input_reads_metadata": {"key2": "value2"},
                 },
             ],
             "output_object": "MyReadsSet",
-            "description": "New Reads Set",
+            "description": NEW_READS_SET,
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
         ws_name = self.public_ws
-        sm = specmanager.SpecManager()
-        spec = sm.get_spec(app_id, tag=tag)
-        spec_params = sm.app_params(spec)
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
         spec_params_map = dict(
             (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
         )
@@ -988,17 +1003,17 @@ class AppManagerTestCase(unittest.TestCase):
                 "data": {
                     "items": [
                         {
-                            "label": "reads file 1",
+                            "label": READS_FILE_1,
                             "metadata": {"key1": "value1"},
                             "ref": "12345/7/1",
                         },
                         {
-                            "label": "reads file 2",
+                            "label": READS_FILE_2,
                             "metadata": {"key2": "value2"},
                             "ref": "12345/8/1",
                         },
                     ],
-                    "description": "New Reads Set",
+                    "description": NEW_READS_SET,
                 },
                 "workspace": ws_name,
             }
@@ -1010,9 +1025,7 @@ class AppManagerTestCase(unittest.TestCase):
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         self.assertEqual(ret, ws_name + "/MyReadsSet;18836/5/1")
 
-    @mock.patch(
-        "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_generate_input(self):
         prefix = "pre"
         suffix = "suf"
@@ -1048,12 +1061,12 @@ class AppManagerTestCase(unittest.TestCase):
                 "expected": ws_name + "/" + "input_value",
             },
             {
-                "value": "rhodobacterium.art.q20.int.PE.reads",
+                "value": READS_OBJ_1,
                 "type": "resolved-ref",
                 "expected": "11635/9/1",
             },
             {
-                "value": ws_name + "/rhodobacterium.art.q20.int.PE.reads",
+                "value": ws_name + "/" + READS_OBJ_1,
                 "type": "resolved-ref",
                 "expected": "11635/9/1",
             },
@@ -1066,8 +1079,8 @@ class AppManagerTestCase(unittest.TestCase):
             },
             {
                 "value": [
-                    "rhodobacterium.art.q20.int.PE.reads",
-                    "rhodobacterium.art.q10.PE.reads",
+                    READS_OBJ_1,
+                    READS_OBJ_2,
                 ],
                 "type": "list<resolved-ref>",
                 "expected": ["11635/9/1", "11635/10/1"],
@@ -1076,7 +1089,7 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
             {"value": "bar", "type": None, "expected": "bar"},
             {
-                "value": "rhodobacterium.art.q20.int.PE.reads",
+                "value": READS_OBJ_1,
                 "type": "future-default",
                 "spec": {"is_output": 0, "allowed_types": ["Some.KnownType"]},
                 "expected": "11635/9/1",
@@ -1106,118 +1119,88 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             app_util.transform_param_value("foo", "bar", None)
 
-    def _verify_comm_mock(
-        self,
-        send_comm_mock: MagicMock,
-        num_calls: int,
-        expected_messages: List[str] = None,
-        expected_keys: List[List[str]] = None,
-        expected_values: List[List[dict]] = None,
-    ) -> None:
-        """
-        Validates the usage of the MagicMock used instead of sending a comm message to the
-        front end. This is expected to mock any calls to JobComm.mock_comm_channel. Each of
-        the "expected_*" kwargs are given as a list - each element represents which time the
-        call was made, in order.
-
-        This is done through a series of asserts. If they all pass and None is returned, then
-        the mock was used as expected.
-
-        num_calls - the number of times the call was expected (>= 0)
-        expected_messages - the send message types
-        expected_keys - the list of keys used in each message (may not all be given inspected
-          values, but all should be present)
-        expected_values - the set of values used in each message (there may be more keys, but
-          these are known key-value pairs)
-        """
-        self.assertEqual(send_comm_mock.call_count, num_calls)
-        for i in range(num_calls):
-            [message_name, message_dict] = send_comm_mock.call_args_list[i][0]
-            if expected_messages is not None:
-                self.assertEqual(message_name, expected_messages[i])
-            if expected_keys is not None:
-                for key in expected_keys[i]:
-                    self.assertIn(key, message_dict)
-            if expected_values is not None:
-                for key in expected_values[i]:
-                    self.assertEqual(message_dict.get(key), expected_values[i][key])
+    def _transform_comm_messages(self, comm_mock):
+        transformed_call_args_list = []
+        for call in comm_mock.call_args_list:
+            [msg_type, content] = call[0]
+            transformed_call_args_list.append(
+                {"msg_type": msg_type, "content": content}
+            )
+        return transformed_call_args_list
 
     def _verify_comm_error(self, comm_mock, cell_id=None, run_id=None) -> None:
         """
-        a wrapper around self._verify_comm_mock that just looks for the error message, and
-        ONLY the error message, to have been sent, so we can make these tests a little more
-        DRY.
-
-        This is really for app running cases that are expected to fail before trying to start
-        the app with EE2. Other cases should run _verify_comm_mock directly.
+        Generates standard error messages and tests it against stored comm messages.
         """
-        expected_keys = [
-            [
-                "event",
-                "event_at",
-                "error_message",
-                "error_code",
-                "error_source",
-                "error_stacktrace",
-                "error_type",
-            ]
-        ]
-        expected_values = [
-            {
-                "run_id": run_id,
-                "cell_id": cell_id,
+        transformed_call_args_list = self._transform_comm_messages(comm_mock)
+        expected_message = {
+            "msg_type": MESSAGE_TYPE["RUN_STATUS"],
+            "content": {
                 "event": "error",
+                "event_at": get_timestamp(),
                 "error_code": -1,
                 "error_source": "appmanager",
+                "error_type": "ValueError",
+            },
+        }
+        if run_id:
+            expected_message["content"]["run_id"] = run_id
+        if cell_id:
+            expected_message["content"]["cell_id"] = cell_id
+
+        for key in ["error_message", "error_stacktrace"]:
+            self.assertTrue(key in transformed_call_args_list[0]["content"])
+            del transformed_call_args_list[0]["content"][key]
+
+        self.assertEqual(transformed_call_args_list, [expected_message])
+
+    def _single_messages(self, cell_id=None, run_id=None):
+
+        return [
+            {
+                "msg_type": MESSAGE_TYPE["RUN_STATUS"],
+                "content": {
+                    "event": "launched_job",
+                    "event_at": get_timestamp(),
+                    "cell_id": cell_id,
+                    "run_id": run_id,
+                    "job_id": self.test_job_id,
+                },
             }
         ]
-        self._verify_comm_mock(
-            comm_mock,
-            1,
-            expected_messages=["run_status"],
-            expected_keys=expected_keys,
-            expected_values=expected_values,
-        )
+
+    def _bulk_messages(self, cell_id=None, run_id=None, num_jobs=1):
+
+        child_ids = []
+        n_child_jobs = num_jobs - 1
+        for i in range(n_child_jobs):
+            child_ids.append(self.test_job_id + f"_child_{i}")
+
+        return [
+            {
+                "msg_type": MESSAGE_TYPE["RUN_STATUS"],
+                "content": {
+                    "event": "launched_job_batch",
+                    "event_at": get_timestamp(),
+                    "cell_id": cell_id,
+                    "run_id": run_id,
+                    "batch_id": self.test_job_id,
+                    "child_job_ids": child_ids,
+                },
+            }
+        ]
 
     def _verify_comm_success(
-        self, comm_mock, is_batch, num_jobs=1, cell_id=None, run_id=None
+        self, comm_mock, is_bulk, num_jobs=1, cell_id=None, run_id=None
     ) -> None:
-        expected_messages = ["run_status"]
-        expected_keys = [
-            ["event", "event_at", "cell_id", "run_id"],
-        ]
-        event = "launched_job_batch" if is_batch else "launched_job"
-        expected_values = [
-            {
-                "event": event,
-                "cell_id": cell_id,
-                "run_id": run_id,
-            },
-        ]
-        if is_batch:
-            expected_keys[0].append("batch_id")
-            expected_keys[0].append("child_job_ids")
-            expected_values[0]["batch_id"] = self.test_job_id
+        transformed_call_args_list = self._transform_comm_messages(comm_mock)
+
+        if is_bulk:
+            expected = self._bulk_messages(cell_id, run_id, num_jobs)
         else:
-            expected_keys[0].append("job_id")
-            expected_values[0]["job_id"] = self.test_job_id
-        for i in range(num_jobs):
-            expected_messages.append("new_job")
-            expected_keys.append(["job_id"])
-            # job ids are new_job_id_child_0, new_job_id_child_1, ..., new_job_id
-            expected_values.append(
-                {
-                    "job_id": self.test_job_id
-                    + (f"_child_{i}" if i < num_jobs - 1 else "")
-                }
-            )
-        self._verify_comm_mock(
-            comm_mock,
-            1 + num_jobs,
-            expected_messages=expected_messages,
-            expected_keys=expected_keys,
-            expected_values=expected_values,
-        )
+            expected = self._single_messages(cell_id, run_id)
+
+        self.assertEqual(transformed_call_args_list, expected)
 
 
 if __name__ == "__main__":

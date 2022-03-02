@@ -2,7 +2,7 @@ import unittest
 import mock
 import copy
 import itertools
-from biokbase.workspace.baseclient import ServerError
+from biokbase.execution_engine2.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
     Job,
@@ -13,7 +13,7 @@ from biokbase.narrative.jobs.job import (
 )
 from biokbase.narrative.jobs.jobmanager import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
 from biokbase.narrative.jobs.specmanager import SpecManager
-from .util import ConfigTests
+
 from .narrative_mock.mockclients import (
     get_mock_client,
     get_failing_mock_client,
@@ -23,6 +23,25 @@ from .narrative_mock.mockclients import (
 from contextlib import contextmanager
 from io import StringIO
 import sys
+
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
+    MAX_LOG_LINES,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
+    JOBS_TERMINALITY,
+    ALL_JOBS,
+    TERMINAL_JOBS,
+    ACTIVE_JOBS,
+    BATCH_CHILDREN,
+    get_test_job,
+)
+
+from biokbase.narrative.tests.generate_test_results import JOBS_BY_CELL_ID
 
 
 @contextmanager
@@ -36,103 +55,14 @@ def capture_stdout():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-config = ConfigTests()
-sm = SpecManager()
-TEST_JOBS = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
-    sm.reload()
+with mock.patch(CLIENTS, get_mock_client):
+    sm = SpecManager()
     TEST_SPECS = copy.deepcopy(sm.app_specs)
-sm.reload()  # get live data
-LIVE_SPECS = copy.deepcopy(sm.app_specs)
 
 
-def get_test_spec(tag, app_id, live=False):
-    specs = LIVE_SPECS if live else TEST_SPECS
-    return copy.deepcopy(specs[tag][app_id])
+def get_test_spec(tag, app_id):
+    return copy.deepcopy(TEST_SPECS[tag][app_id])
 
-
-def get_test_job(job_id):
-    return copy.deepcopy(TEST_JOBS[job_id])
-
-
-# test_jobs contains jobs in the following states
-JOB_COMPLETED = "5d64935ab215ad4128de94d6"
-JOB_CREATED = "5d64935cb215ad4128de94d7"
-JOB_RUNNING = "5d64935cb215ad4128de94d8"
-JOB_TERMINATED = "5d64935cb215ad4128de94d9"
-JOB_ERROR = "5d64935cb215ad4128de94e0"
-BATCH_PARENT = "60e7112887b7e512a899c8f1"
-BATCH_COMPLETED = "60e7112887b7e512a899c8f2"
-BATCH_TERMINATED = "60e7112887b7e512a899c8f3"
-BATCH_TERMINATED_RETRIED = "60e7112887b7e512a899c8f4"
-BATCH_ERROR_RETRIED = "60e7112887b7e512a899c8f5"
-BATCH_RETRY_COMPLETED = "60e71159fce9347f2adeaac6"
-BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
-BATCH_RETRY_ERROR = "60e717d78ac80701062efe63"
-JOB_NOT_FOUND = "job_not_found"
-
-TEST_CELL_ID_LIST = [
-    "9329ac6c-604c-42a9-aca2-a15dba6278ce",
-    "9329ac6c-604c-42a9-aca2-a15dba6278cf",
-    # batch cell
-    "58356bf5-2e81-441a-b1ee-01b38eddefb0",
-    # batch cell two
-    "58356bf5-2e81-441a-b1ee-01b38eddefb1",
-    "invalid_cell_id",
-]
-# expected _jobs_by_cell_id mapping in JobManager
-JOBS_BY_CELL_ID = {
-    TEST_CELL_ID_LIST[0]: {JOB_COMPLETED, JOB_CREATED},
-    TEST_CELL_ID_LIST[1]: {JOB_RUNNING, JOB_TERMINATED, JOB_ERROR},
-    TEST_CELL_ID_LIST[2]: {
-        BATCH_PARENT,
-        BATCH_COMPLETED,
-        BATCH_TERMINATED,
-        BATCH_TERMINATED_RETRIED,
-        BATCH_ERROR_RETRIED,
-        BATCH_RETRY_COMPLETED,
-    },
-    TEST_CELL_ID_LIST[3]: {BATCH_PARENT, BATCH_RETRY_RUNNING, BATCH_RETRY_ERROR},
-}
-
-# mapping expected as output from lookup_jobs_by_cell_id
-TEST_CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
-TEST_CELL_IDs[TEST_CELL_ID_LIST[4]] = []
-
-BATCH_CHILDREN = [
-    BATCH_COMPLETED,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    BATCH_RETRY_COMPLETED,
-    BATCH_RETRY_RUNNING,
-    BATCH_RETRY_ERROR,
-]
-
-JOBS_TERMINALITY = {
-    JOB_COMPLETED: True,
-    JOB_CREATED: False,
-    JOB_RUNNING: False,
-    JOB_TERMINATED: True,
-    JOB_ERROR: True,
-    BATCH_PARENT: False,
-    BATCH_COMPLETED: True,
-    BATCH_TERMINATED: True,
-    BATCH_TERMINATED_RETRIED: True,
-    BATCH_ERROR_RETRIED: True,
-    BATCH_RETRY_COMPLETED: True,
-    BATCH_RETRY_RUNNING: False,
-    BATCH_RETRY_ERROR: True,
-}
-
-ALL_JOBS = list(JOBS_TERMINALITY.keys())
-TERMINAL_JOBS = []
-ACTIVE_JOBS = []
-for key, value in JOBS_TERMINALITY.items():
-    if value:
-        TERMINAL_JOBS.append(key)
-    else:
-        ACTIVE_JOBS.append(key)
 
 CLIENTS = "biokbase.narrative.jobs.job.clients.get"
 CHILD_ID_MISMATCH = "Child job id mismatch"
@@ -189,10 +119,9 @@ def get_widget_info(job_id):
     if state.get("status") != COMPLETED_STATUS:
         return None
     job_input = state.get("job_input", {})
-    narr_cell_info = job_input.get("narrative_cell_info", {})
-    params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
-    tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
     app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
+    params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
+    tag = job_input.get("narrative_cell_info", {}).get("tag", JOB_ATTR_DEFAULTS["tag"])
     spec = get_test_spec(tag, app_id)
     with mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client):
         output_widget, widget_params = map_outputs_from_state(
@@ -202,47 +131,15 @@ def get_widget_info(job_id):
         )
     return {
         "name": output_widget,
-        "tag": narr_cell_info.get("tag", "release"),
+        "tag": tag,
         "params": widget_params,
     }
-
-
-def get_test_job_state(job_id):
-    state = get_test_job(job_id)
-    job_input = state.get("job_input", {})
-    narr_cell_info = job_input.get("narrative_cell_info", {})
-
-    state.update(
-        {
-            "batch_id": state.get(
-                "batch_id", job_id if state.get("batch_job", False) else None
-            ),
-            "cell_id": narr_cell_info.get("cell_id", None),
-            "run_id": narr_cell_info.get("run_id", None),
-            "job_output": state.get("job_output", {}),
-            "child_jobs": state.get("child_jobs", []),
-        }
-    )
-    for f in EXCLUDED_JOB_STATE_FIELDS:
-        if f in state:
-            del state[f]
-
-    output_state = {
-        "jobState": state,
-        "outputWidgetInfo": get_widget_info(job_id),
-    }
-    return output_state
-
-
-def get_test_job_states(job_ids=TEST_JOBS.keys()):
-    # generate full job state objects
-    return {job_id: get_test_job_state(job_id) for job_id in job_ids}
 
 
 @mock.patch(CLIENTS, get_mock_client)
 def get_batch_family_jobs(return_list=False):
     """
-    As invoked in appmanager's run_app_bulk, i.e.,
+    As invoked in appmanager's run_app_batch, i.e.,
     with from_job_id(s)
     """
     child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
@@ -273,59 +170,12 @@ def get_all_jobs(return_list=False):
     return jobs
 
 
-def get_cell_2_jobs():
-    """
-    Returns a dict with keys being all the cell IDs
-    in the test data, and the values being a list of
-    jobs with that cell ID.
-
-    Batch jobs technically don't have cell IDs,
-    but they will take on the cell IDs of their children.
-    If their children are in different
-    cells, all children's cell IDs will map to the batch job
-    """
-    cell_and_jobs = []
-    for job_id, job in get_all_jobs().items():
-        if job.batch_job:
-            for child_job in job.children:
-                cell_and_jobs.append((child_job.cell_id, job_id))
-        else:
-            cell_and_jobs.append((job.cell_id, job_id))
-
-    cell_2_jobs = {}
-    for cell_id, job_id in cell_and_jobs:
-        if cell_id in cell_2_jobs and job_id not in cell_2_jobs[cell_id]:
-            cell_2_jobs[cell_id] += [job_id]
-        else:
-            cell_2_jobs[cell_id] = [job_id]
-    return cell_2_jobs
-
-
 class JobTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-
-        job_state = get_test_job(JOB_COMPLETED)
-        job_input = job_state["job_input"]
-        cls.job_id = job_state["job_id"]
-        cls.app_id = job_input["app_id"]
-        cls.app_version = job_input.get("service_ver", "0.0.1")
-        cls.batch_id = None
-        cls.batch_job = False
-        cls.child_jobs = []
-        cls.cell_id = job_input.get("narrative_cell_info", {}).get("cell_id")
-        cls.extra_data = None
-        cls.user = job_state["user"]
-        cls.params = job_input["params"]
-        cls.retry_ids = job_state.get("retry_ids", [])
-        cls.retry_parent = job_state.get("retry_parent")
-        cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
-        cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
-
-        # load mock specs
-        with mock.patch(CLIENTS, get_mock_client):
-            SpecManager().reload()
+        cls.NEW_RETRY_IDS = ["hello", "goodbye"]
+        cls.NEW_CHILD_JOBS = ["cerulean", "magenta"]
 
     def check_jobs_equal(self, jobl, jobr):
         self.assertEqual(jobl._acc_state, jobr._acc_state)
@@ -392,7 +242,7 @@ class JobTest(unittest.TestCase):
 
     def test_job_init__extra_state(self):
         """
-        test job initialisation as is done by run_app_batch
+        test job initialisation as is done by run_legacy_batch_app
         """
 
         app_id = "kb_BatchApp/run_batch"
@@ -416,7 +266,7 @@ class JobTest(unittest.TestCase):
 
     def test_job_init__batch_family(self):
         """
-        test job initialization, as is done by run_app_bulk
+        test job initialization, as is done by run_app_batch
         """
         batch_jobs = get_batch_family_jobs(return_list=False)
 
@@ -464,31 +314,27 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs_custom(job, expected)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_state__no_final_state__non_terminal(self):
+    def test_state__non_terminal(self):
         """
         test that a job outputs the correct state
         """
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
         state = job.state()
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
         self.assertEqual(state["status"], "created")
 
         expected_state = create_state_from_ee2(JOB_CREATED)
         self.assertEqual(state, expected_state)
 
-    def test_state__final_state_exists__terminal(self):
+    def test_state__terminal(self):
         """
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
         self.assertTrue(job.was_terminal())
-        self.assertIsNotNone(job.final_state)
         expected = create_state_from_ee2(JOB_COMPLETED)
-        self.assertEqual(job.final_state, expected)
 
         with assert_obj_method_called(MockClients, "check_job", call_status=False):
             state = job.state()
@@ -502,8 +348,7 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        self.assertIsNone(job.final_state)
-        with self.assertRaisesRegex(ServerError, "Check job failed"):
+        with self.assertRaisesRegex(ServerError, "check_job failed"):
             job.state()
 
     def test_state__returns_none(self):
@@ -557,7 +402,19 @@ class JobTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_job_info(self):
         job = create_job_from_ee2(JOB_COMPLETED)
-        info_str = "App name (id): Test Editor (NarrativeTest/test_editor)\nVersion: 0.0.1\nStatus: completed\nInputs:\n------\n"
+
+        job_data = get_test_job(JOB_COMPLETED)
+        app_id = job_data.get("job_input", {}).get("app_id")
+        tag = job_data.get("job_input", {}).get("narrative_cell_info", {}).get("tag")
+        status = job_data["status"]
+        job_spec = get_test_spec(tag, app_id)
+        app_name = job_spec.get("info", {}).get("name")
+        version = job_spec.get("info", {}).get("ver")
+        info_str = (
+            f"App name (id): {app_name} ({app_id})\n"
+            + f"Version: {version}\n"
+            + f"Status: {status}\nInputs:\n------\n"
+        )
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())
@@ -577,20 +434,6 @@ class JobTest(unittest.TestCase):
         self.assertIn("element.html", js_out)
         self.assertIn(job.job_id, js_out)
         self.assertIn("kbaseNarrativeJobStatus", js_out)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_job_finished(self):
-
-        is_finished = {
-            JOB_CREATED: False,
-            JOB_RUNNING: False,
-            JOB_COMPLETED: True,
-            JOB_TERMINATED: True,
-        }
-
-        for job_id in is_finished.keys():
-            job = create_job_from_ee2(job_id)
-            self.assertEqual(job.is_finished(), is_finished[job_id])
 
     @mock.patch("biokbase.narrative.widgetmanager.WidgetManager.show_output_widget")
     @mock.patch(CLIENTS, get_mock_client)
@@ -612,10 +455,10 @@ class JobTest(unittest.TestCase):
         # Things set up by the mock:
         # 1. There's 100 total log lines
         # 2. Each line has its line number embedded in it
-        total_lines = 100
+        total_lines = MAX_LOG_LINES
         job = create_job_from_ee2(JOB_COMPLETED)
         logs = job.log()
-        # we know there's 100 lines total, so roll with it that way.
+        # we know there's MAX_LOG_LINES lines total, so roll with it that way.
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), total_lines)
         for i in range(len(logs[1])):
@@ -624,14 +467,14 @@ class JobTest(unittest.TestCase):
             self.assertIn("line", line)
             self.assertIn(str(i), line["line"])
         # grab the last half
-        offset = 50
+        offset = int(MAX_LOG_LINES / 2)
         logs = job.log(first_line=offset)
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), offset)
         for i in range(total_lines - offset):
             self.assertIn(str(i + offset), logs[1][i]["line"])
         # grab a bite from the middle
-        num_fetch = 20
+        num_fetch = int(MAX_LOG_LINES / 5)
         logs = job.log(first_line=offset, num_lines=num_fetch)
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), num_fetch)
@@ -801,9 +644,6 @@ class JobTest(unittest.TestCase):
             )
             self.assertEqual(exp, got)
 
-    NEW_RETRY_IDS = ["hello", "goodbye"]
-    NEW_CHILD_JOBS = ["cerulean", "magenta"]
-
     def test_refresh_attrs__non_batch_active(self):
         """
         retry_ids should be refreshed
@@ -885,8 +725,7 @@ class JobTest(unittest.TestCase):
 
     def test_in_cells(self):
         all_jobs = get_all_jobs()
-        cell_2_jobs = get_cell_2_jobs()
-        cell_ids = list(cell_2_jobs.keys())
+        cell_ids = list(JOBS_BY_CELL_ID.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
@@ -894,7 +733,7 @@ class JobTest(unittest.TestCase):
                 # Get jobs expected to be associated with the cell IDs
                 exp_job_ids = [
                     job_id
-                    for cell_id, job_ids in cell_2_jobs.items()
+                    for cell_id, job_ids in JOBS_BY_CELL_ID.items()
                     for job_id in job_ids
                     if cell_id in combo
                 ]
@@ -932,18 +771,6 @@ class JobTest(unittest.TestCase):
             self.assertTrue(batch_job.in_cells(["B", "A", cell_id]))
 
         self.assertFalse(batch_job.in_cells(["goodbye", "hasta manana"]))
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_batch_cell_ids__not_batch(self):
-        job = Job.from_job_id(JOB_COMPLETED)
-        self.assertEqual(job.batch_cell_ids(), None)
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_batch_cell_ids__batch_job(self):
-        batch_fam = get_batch_family_jobs(return_list=True)
-
-        job = batch_fam[0]
-        self.assertEqual(set(job.batch_cell_ids()), {TEST_CELL_ID_LIST[2], TEST_CELL_ID_LIST[3]})
 
     def test_app_name(self):
         for job in get_all_jobs().values():

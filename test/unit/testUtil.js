@@ -1,8 +1,9 @@
-define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.json'], (
-    Promise,
-    StagingFileCache,
-    TestConfig
-) => {
+define('testUtil', [
+    'bluebird',
+    'util/stagingFileCache',
+    'common/jobCommMessages',
+    'json!/test/testConfig.json',
+], (Promise, StagingFileCache, jcm, TestConfig) => {
     'use strict';
 
     let token = null,
@@ -186,6 +187,160 @@ define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.
         StagingFileCache.clearCache();
     }
 
+    /**
+     * send a jcm.MESSAGE_TYPE.INFO message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} bus
+     *      {object} jobInfo
+     */
+    function send_INFO(ctx) {
+        const { bus, jobInfo, channelType, channelId } = ctx;
+        const jobId = jobInfo.job_id;
+        sendBusMessage({
+            bus,
+            message: { [jobId]: { ...jobInfo, [jcm.PARAM.JOB_ID]: jobId } },
+            channelType: channelType ? channelType : jcm.CHANNEL.JOB,
+            channelId: channelId ? channelId : jobId,
+            type: jcm.MESSAGE_TYPE.INFO,
+        });
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.LOGS message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} bus
+     *      {object} message - partial log message; missing keys will be filled in
+     */
+    function send_LOGS(ctx) {
+        const { bus, message } = ctx;
+        if (message.lines) {
+            message.first = 0;
+            message.max_lines = message.lines.length;
+        }
+        sendBusMessage({
+            bus,
+            message: { [message[jcm.PARAM.JOB_ID]]: message },
+            channelType: jcm.CHANNEL.JOB,
+            channelId: message[jcm.PARAM.JOB_ID],
+            type: jcm.MESSAGE_TYPE.LOGS,
+        });
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.RETRY message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} retryParent    - the parent of the retried job
+     *      {object} retry          - the new job
+     *      {object} bus            - the bus to send the message on
+     */
+    function send_RETRY(ctx) {
+        const { bus, retryParent, retry, channelType, channelId } = ctx;
+        // send the retry response and the update for the batch parent
+        sendBusMessage({
+            bus,
+            message: {
+                [retryParent.job_id]: {
+                    [jcm.PARAM.JOB_ID]: retryParent.job_id,
+                    job: {
+                        [jcm.PARAM.JOB_ID]: retryParent.job_id,
+                        jobState: retryParent,
+                    },
+                    retry_id: retry.job_id,
+                    retry: {
+                        [jcm.PARAM.JOB_ID]: retry.job_id,
+                        jobState: retry,
+                    },
+                },
+            },
+            channelType: channelType ? channelType : jcm.CHANNEL.JOB,
+            channelId: channelId ? channelId : retryParent.job_id,
+            type: jcm.MESSAGE_TYPE.RETRY,
+        });
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.RUN_STATUS message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} runStatusArgs - object with keys for a valid run_status message
+     *      {object} bus
+     */
+    function send_RUN_STATUS(ctx) {
+        const { bus, runStatusArgs } = ctx;
+        if (!runStatusArgs.cell_id) {
+            throw new Error('No cell_id supplied for RUN_STATUS message');
+        }
+        sendBusMessage({
+            bus,
+            message: { event_at: 1234567890, ...runStatusArgs },
+            channelType: [jcm.CHANNEL.CELL],
+            channelId: runStatusArgs.cell_id,
+            type: jcm.MESSAGE_TYPE.RUN_STATUS,
+        });
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.STATUS message over the bus
+     *
+     * @param {object} ctx - `this` context, containing keys
+     *      {object} bus      - message bus
+     *      {object} jobState - the jobState object to be sent
+     */
+    function send_STATUS(ctx) {
+        const { bus, channelType, channelId, jobState } = ctx;
+        let { message } = ctx;
+        if (!message) {
+            message = {
+                [jcm.PARAM.JOB_ID]: jobState.job_id,
+                jobState,
+            };
+        }
+        if (channelType && channelId) {
+            return sendBusMessage({
+                bus,
+                message: { [channelId]: message },
+                channelType,
+                channelId,
+                type: jcm.MESSAGE_TYPE.STATUS,
+            });
+        }
+
+        const jobId = jobState.job_id;
+        sendBusMessage({
+            bus,
+            message: { [jobId]: message },
+            channelType: jcm.CHANNEL.JOB,
+            channelId: jobId,
+            type: jcm.MESSAGE_TYPE.STATUS,
+        });
+    }
+
+    /**
+     * send a jcm.MESSAGE_TYPE.<type> message over the bus
+     *
+     * @param {object} args with key value pairs:
+     * @param {object} bus
+     * @param {object} message        - message, to be passed as-is
+     * @param {string} channelType    - jcm.CHANNEL.<type>
+     * @param {string} channelId      - ID for the channel
+     * @param {string} type           - jcm.MESSAGE_TYPE.<type>
+     */
+    function sendBusMessage(args) {
+        const keys = ['bus', 'message', 'channelType', 'channelId', 'type'].filter((key) => {
+            return !args[key];
+        });
+        if (keys.length) {
+            throw new Error('Missing required keys for sendBusMessage: ' + keys.join(', '));
+        }
+
+        const { bus, message, channelType, channelId, type } = args;
+
+        bus.send(message, { channel: { [channelType]: channelId }, key: { type } });
+    }
+
     return {
         make,
         getAuthToken,
@@ -197,6 +352,12 @@ define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.
         waitForElement,
         waitForElementState,
         waitForElementChange,
+        send_INFO,
+        send_LOGS,
+        send_RETRY,
+        send_RUN_STATUS,
+        send_STATUS,
+        sendBusMessage,
         clearRuntime,
     };
 });

@@ -19,12 +19,12 @@ define([
     'common/ui',
     'common/fsm',
     'common/jobs',
-    'common/jobCommChannel',
+    'common/jobCommMessages',
     'common/html',
     'common/runClock',
     'common/errorDisplay',
     'util/developerMode',
-], (Promise, Runtime, Props, UI, Fsm, Jobs, JobComms, html, RunClock, ErrorDisplay, devMode) => {
+], (Promise, Runtime, Props, UI, Fsm, Jobs, jcm, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -38,8 +38,7 @@ define([
         logContentExpandedClass = `${logContentStandardClass}--expanded`,
         LOG_CONTAINER = 'log-container',
         LOG_PANEL = 'log-panel',
-        LOG_LINES = 'log-lines',
-        jcm = JobComms.JobCommMessages;
+        LOG_LINES = 'log-lines';
 
     let logContentClass = logContentStandardClass;
 
@@ -409,8 +408,8 @@ define([
 
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
-                this.bus.emit(jcm.REQUESTS.STATUS, {
-                    jobId: this.jobId,
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: this.jobId,
                 });
                 this.state.listeningForJob = true;
             }).catch((err) => {
@@ -445,8 +444,8 @@ define([
          * request regular job status updates
          */
         startJobStatusUpdates() {
-            this.bus.emit(jcm.REQUESTS.START_UPDATE, {
-                jobId: this.jobId,
+            this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
             });
             this.state.listeningForJob = true;
         }
@@ -458,7 +457,7 @@ define([
             this.state.listeningForJob = false;
 
             if (this.state.awaitingLog) {
-                this.stopEventListeners([jcm.RESPONSES.STATUS]);
+                this.stopEventListeners([jcm.MESSAGE_TYPE.STATUS]);
             } else {
                 this.stopEventListeners();
             }
@@ -474,11 +473,9 @@ define([
         requestJobLog(firstLine) {
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit(jcm.REQUESTS.LOGS, {
-                jobId: this.jobId,
-                options: {
-                    first_line: firstLine,
-                },
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
+                first_line: firstLine,
             });
         }
 
@@ -490,11 +487,9 @@ define([
             this.state.scrollToEndOnNext = true;
             this.ui.showElement('spinner');
             this.state.awaitingLog = true;
-            this.bus.emit(jcm.REQUESTS.LOGS, {
-                jobId: this.jobId,
-                options: {
-                    latest: true,
-                },
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
+                latest: true,
             });
         }
 
@@ -1199,9 +1194,6 @@ define([
                 this.ui.hideElement('spinner');
                 /* message has structure:
                  * {
-                 *   jobId: string,
-                 *   latest: bool,
-                 *   logs: {
                  *      first: int (first line of the log batch), 0-indexed
                  *      job_id: string,
                  *      latest: bool,
@@ -1212,7 +1204,6 @@ define([
                  *          linepos: int, position in log. helpful!
                  *          ts: timestamp
                  *      }]
-                 *   }
                  * }
                  */
                 this.state.awaitingLog = false;
@@ -1220,8 +1211,8 @@ define([
                 if (message.error) {
                     return this.handleLogDeleted(message);
                 }
-                if (message.logs.lines.length !== 0) {
-                    const viewLines = message.logs.lines.map((line) => {
+                if (message.lines.length !== 0) {
+                    const viewLines = message.lines.map((line) => {
                         return {
                             text: line.line,
                             isError: line.is_error === 1 ? true : false,
@@ -1229,9 +1220,9 @@ define([
                         };
                     });
                     this.model.setItem('lines', viewLines);
-                    this.model.setItem('firstLine', message.logs.first + 1);
-                    this.model.setItem('lastLine', message.logs.first + viewLines.length);
-                    this.model.setItem('totalLines', message.logs.max_lines);
+                    this.model.setItem('firstLine', message.first + 1);
+                    this.model.setItem('lastLine', message.first + viewLines.length);
+                    this.model.setItem('totalLines', message.max_lines);
                     this.renderLog();
                 }
                 if (this.state.looping) {
@@ -1271,10 +1262,15 @@ define([
                 Object.keys(handlers).forEach((type) => {
                     // ensure that the correct `this` context is bound
                     const handle = handlers[type].bind(this);
-                    this.listenersByType[jcm.RESPONSES[type]] = this.bus.listen({
-                        channel: { jobId: this.jobId },
-                        key: { type: jcm.RESPONSES[type] },
-                        handle,
+                    // listen for job-related bus messages
+                    this.listenersByType[jcm.MESSAGE_TYPE[type]] = this.bus.listen({
+                        channel: { [jcm.CHANNEL.JOB]: this.jobId },
+                        key: { type: jcm.MESSAGE_TYPE[type] },
+                        handle: (message) => {
+                            if (this.jobId in message) {
+                                handle(message[this.jobId]);
+                            }
+                        },
                     });
                 }, this);
             }

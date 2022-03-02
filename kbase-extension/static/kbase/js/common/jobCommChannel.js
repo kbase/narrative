@@ -16,136 +16,39 @@
  *    request.
  * 2. This gets captured by one of the callbacks in handleBusMessages()
  * 3. These all invoke sendCommMessage(). This builds a message packet and sends it across the
- *    comm channel where it gets heard by a capturing function in biokbase.narrative.jobmanager.
- * ...that's it. These messages are asynchronous by design. They're meant to be requests that
- * get responses eventually.
+ *    comm channel where it gets heard by a capturing function in biokbase.narrative.jobs.jobcomm
+ *
+ * These messages are asynchronous by design. They're meant to be requests that get responses
+ * eventually.
  *
  * From the back end to the front, the flow is slightly different. On Comm channel creation time,
  * the handleCommMessages function is set up as the callback for anything that comes across the
  * channel to the front end. Each of these has a message type associated with it.
- * 1. The type is interepreted (a big ol' switch statement) and responded to.
- * 2. Most responses (job status updates, log messages) are parceled out to the App Cells that
- *    invoked them. Or, really, anything listening on the appropriate channel (either the cell,
- *    or the job id)
+ *
+ * 1. The type is interpreted (a big ol' switch statement) and responded to.
+ * 2. Responses (job status updates, log messages) are "addressed" using either a job or a cell
+ *    ID and a message type. Any frontend component with a listener of the appropriate type on
+ *    the appropriate channel can pick up and act upon the content of the messages.
  */
 define([
     'bluebird',
-    'jquery',
-    'handlebars',
-    'kbaseAccordion',
-    'util/bootstrapDialog',
     'util/developerMode',
+    'util/util',
     'base/js/namespace',
     'common/runtime',
+    'common/jobs',
+    'common/jobCommMessages',
     'services/kernels/comm',
     'common/semaphore',
-    'text!kbase/templates/job_panel/job_init_error.html',
-], (
-    Promise,
-    $,
-    Handlebars,
-    kbaseAccordion,
-    BootstrapDialog,
-    devMode,
-    Jupyter,
-    Runtime,
-    JupyterComm,
-    Semaphore,
-    JobInitErrorTemplate
-) => {
+], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, jcm, JupyterComm, Semaphore) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
-        CELL = 'cell',
-        JOB = 'jobId',
-        RESULT = 'result',
-        PING = 'ping',
-        JOB_ID = 'job_id',
-        JOB_ID_LIST = 'job_id_list',
-        // messages to be sent to backend for job request types
-        REQUESTS = {
-            PING: PING,
+        { CHANNEL, PARAM, REQUESTS, RESPONSES } = jcm;
 
-            // cancels the job
-            CANCEL: 'request-job-cancel',
-
-            // Requests status of all jobs in a cell or list of cells
-            CELL_JOB_STATUS: 'request-cell-job-status',
-
-            // Fetches info (not state) about a job, including the app id, name, and inputs.
-            INFO: 'request-job-info',
-
-            // Fetches job logs from kernel.
-            LOGS: 'request-job-log',
-
-            // retries the job
-            RETRY: 'request-job-retry',
-
-            // Request regular job status updates for a job or list of jobs
-            START_UPDATE: 'request-job-updates-start',
-
-            // Fetches job status from kernel.
-            STATUS: 'request-job-status',
-
-            // Tells kernel to stop including a job in the regular job status updates
-            STOP_UPDATE: 'request-job-updates-stop',
-        },
-        BACKEND_REQUESTS = {
-            PING: PING,
-            CANCEL: 'cancel_job',
-            INFO: 'job_info',
-            LOGS: 'job_logs',
-            RETRY: 'retry_job',
-            START_UPDATE: 'start_job_update',
-            STATUS: 'job_status',
-            STOP_UPDATE: 'stop_job_update',
-        },
-        BACKEND_RESPONSES = {
-            ERROR: 'job_comm_error',
-            INFO: BACKEND_REQUESTS.INFO,
-            LOGS: BACKEND_REQUESTS.LOGS,
-            RESULT: RESULT,
-            RETRY: 'job_retries',
-            RUN_STATUS: 'run_status',
-            STATUS: BACKEND_REQUESTS.STATUS,
-        },
-        RESPONSES = {
-            CELL_JOB_STATUS: 'cell-job-status',
-            ERROR: 'job-error',
-            INFO: 'job-info',
-            LOGS: 'job-logs',
-            RESULT: RESULT,
-            RETRY: 'job-retry-response',
-            RUN_STATUS: 'run-status',
-            STATUS: 'job-status',
-        },
-        // these job request types also have a 'batch' version
-        batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
-        BATCH_BACKEND_REQUESTS = {};
-    // the batch version of BACKEND_REQUESTS[type]
-    batchRequests.forEach((type) => {
-        BATCH_BACKEND_REQUESTS[BACKEND_REQUESTS[type]] = BACKEND_REQUESTS[type] + '_batch';
-    });
-
-    // Conversion of the message type of an incoming message
-    // to the type used for the message to be sent to the backend
-    const requestTranslation = {};
-
-    Object.keys(REQUESTS).forEach((type) => {
-        requestTranslation[REQUESTS[type]] = BACKEND_REQUESTS[type];
-    });
-
-    const JobCommMessages = {
-        validIncomingMessageTypes: function () {
-            return Object.values(REQUESTS);
-        },
-        validOutgoingMessageTypes: function () {
-            return Object.values(RESPONSES);
-        },
-        RESPONSES,
-        REQUESTS,
-        BACKEND_REQUESTS,
-        BACKEND_RESPONSES,
+    const debugFn = (...args) => {
+        // eslint-disable-next-line no-console
+        console.log(...args);
     };
 
     class JobCommChannel {
@@ -158,42 +61,44 @@ define([
             this.handleBusMessages();
             this.devMode = config.devMode || devMode.mode;
             this.debug = this.devMode
-                ? (...args) => {
-                      // eslint-disable-next-line no-console
-                      console.log(...args);
-                  }
+                ? debugFn
                 : () => {
                       /* no op */
                   };
 
-            this.messageQueue = [];
             this.ERROR_COMM_CHANNEL_NOT_INIT = 'Comm channel not initialized, not sending message.';
+
+            this.messageQueue = [];
+
+            // maintain a mapping of job IDs and dispatch information
+            this._jobMapping = {};
         }
 
         /**
          * Sends a message over the bus. The channel should have a single key of either
-         * cell or jobId.
-         * @param {string} channelName - either CELL or JOB
+         * cell or job ID.
+         * @param {string} channelType - either CELL or JOB
          * @param {string} channelId - id for the channel
          * @param {string} msgType - one of the msg types
          * @param {any} message
          */
-        sendBusMessage(channelName, channelId, msgType, message) {
-            const channel = {};
-            channel[channelName] = channelId;
+        sendBusMessage(channelType, channelId, msgType, message) {
+            const channel = {
+                [channelType]: channelId,
+            };
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel,
                 key: {
                     type: msgType,
                 },
             });
-            this.debug(`sending bus message: ${channelName} ${channelId} ${msgType}`);
+            this.debug(`sending bus message: ${channelType} ${channelId} ${msgType}`);
         }
 
         /**
-         * Registers callbacks for handling bus messages. This listens to the global runtime bus.
-         * Mostly, it relays bus messages into comm channel requests that are satisfied by the
-         * kernel.
+         * Registers callbacks for handling bus messages. This listens to the global runtime
+         * bus, and relays requests from frontend components to the narrative backend to be
+         * completed by the kernel.
          */
         handleBusMessages() {
             const bus = this.runtime.bus();
@@ -215,40 +120,19 @@ define([
          */
         _transformMessage(rawMessage) {
             const { msgType, msgData } = rawMessage;
-            let transformedMsg = {
-                target_name: COMM_NAME,
-                request_type: requestTranslation[msgType],
-            };
 
-            const translations = {
-                // backend uses `job_id` instead of `batch_id`
-                batchId: JOB_ID,
-                batch_id: JOB_ID,
-                jobId: JOB_ID,
-                jobIdList: JOB_ID_LIST,
-                pingId: 'ping_id',
-            };
-
-            for (const [key, value] of Object.entries(msgData)) {
-                if (key !== 'options') {
-                    const msgKey = translations[key] || key;
-                    transformedMsg[msgKey] = value;
-                }
-                // convert to the batch form of the request
-                if (
-                    (key === 'batchId' || key === 'batch_id') &&
-                    BATCH_BACKEND_REQUESTS[transformedMsg.request_type]
-                ) {
-                    transformedMsg.request_type =
-                        BATCH_BACKEND_REQUESTS[transformedMsg.request_type];
-                }
+            if (!Object.values(REQUESTS).includes(msgType)) {
+                throw new Error(`Ignoring unknown message type "${msgType}"`);
             }
 
-            if (msgData.options) {
-                transformedMsg = Object.assign({}, transformedMsg, msgData.options);
-            }
-
-            return transformedMsg;
+            return Object.assign(
+                {},
+                {
+                    target_name: COMM_NAME,
+                    request_type: msgType,
+                },
+                msgData
+            );
         }
 
         /**
@@ -259,11 +143,12 @@ define([
          * If no arguments are supplied to sendCommMessage, the stored messages (if any)
          * will be sent.
          *
-         * @param {string} msgType - message type; will be one of the
-         *                 values in the REQUESTS object (optional)
+         * @param {string}  msgType - message type; will be one of the
+         *                  values in the jcm.REQUESTS object (optional)
          *
-         * @param {object} msgData - additional parameters for the request,
-         *                 such as jobId or jobIdList, or an 'options' object (optional)
+         * @param {object}  msgData - additional parameters for the request,
+         *                  such as one of the values in the jcm.PARAM object or
+         *                  a request-specific param (optional)
          */
         sendCommMessage(msgType, msgData) {
             if (msgType && msgData) {
@@ -300,6 +185,41 @@ define([
         }
 
         /**
+         * Extract the job ID <-> batch ID relationship from a job state object,
+         * and store it in the _jobMapping table in the format
+         *
+         * _jobMapping: {
+         *      [job_id]: { [jcm.PARAM.BATCH_ID]: batch_id }
+         * }
+         *
+         * If a batch ID does not exist, a job ID mapping is made instead:
+         *
+         * _jobMapping: {
+         *      [job_id]: { [jcm.PARAM.JOB_ID]: job_id }
+         * }
+         *
+         * @param {object} jobStateObj
+         */
+        _extractMapping(jobStateObj) {
+            if (!jobStateObj.jobState) {
+                if (jobStateObj[jcm.PARAM.JOB_ID]) {
+                    this._jobMapping[jobStateObj[jcm.PARAM.JOB_ID]] = {
+                        [jcm.PARAM.JOB_ID]: jobStateObj[jcm.PARAM.JOB_ID],
+                    };
+                }
+                return;
+            }
+            const jobId = jobStateObj.jobState.job_id;
+            if (jobStateObj.jobState.batch_id) {
+                this._jobMapping[jobId] = {
+                    [jcm.PARAM.BATCH_ID]: jobStateObj.jobState.batch_id,
+                };
+            } else {
+                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+            }
+        }
+
+        /**
          * Callback attached to the comm channel. This gets called with the message when
          * a message is passed.
          * The message is expected to have the following structure (at a minimum):
@@ -311,32 +231,50 @@ define([
          *     }
          *   }
          * }
-         * Where msg_type is one of:
-         * start, new_job, job_status, job_status_all, job_comm_err, job_init_err, job_init_lookup_err,
-         * or any of the values of BACKEND_RESPONSES
+         * where msg_type is one of the values of jcm.RESPONSES
          *
          * @param {object} msg
          */
         handleCommMessages(msg) {
             const msgType = msg.content.data.msg_type;
-            const msgData = msg.content.data.content;
-            let msgTypeToSend = null;
-            this.debug(`received ${msgType} from backend`);
+            let msgData = msg.content.data.content;
+
+            // validate and discard any invalid messages
+            const validated = Jobs.validateMessage({ type: msgType, message: msgData });
+            // report any invalid data
+            if ('invalid' in validated) {
+                this.reportCommMessageError({ msgType, msgData: validated.invalid });
+            }
+            // if there is no valid data, abort
+            if (!('valid' in validated)) {
+                this.debug('no valid data in backend message');
+                console.error(msgType, msgData);
+                return;
+            }
+
+            // replace msgData with the validated messages
+            msgData = validated.valid;
+
+            const batchJobs = {};
             switch (msgType) {
-                case 'start':
-                    break;
-
-                case 'new_job':
-                    Jupyter.narrative.saveNarrative();
-                    break;
-
                 // CELL messages
-                case BACKEND_RESPONSES.RUN_STATUS:
-                    this.sendBusMessage(CELL, msgData.cell_id, RESPONSES.RUN_STATUS, msgData);
-                    break;
+                case RESPONSES.RUN_STATUS:
+                    if (msgData.event === 'launched_job_batch') {
+                        const batchId = msgData.batch_id;
+                        msgData.child_job_ids.forEach((jobId) => {
+                            this._jobMapping[jobId] = { [jcm.PARAM.BATCH_ID]: batchId };
+                        });
+                        this._jobMapping[batchId] = { [jcm.PARAM.BATCH_ID]: batchId };
+                    } else if (msgData.event === 'launched_job') {
+                        this._jobMapping[msgData.job_id] = { [jcm.PARAM.JOB_ID]: msgData.job_id };
+                    }
 
-                case BACKEND_RESPONSES.RESULT:
-                    this.sendBusMessage(CELL, msgData.address.cell_id, RESPONSES.RESULT, msgData);
+                    this.sendBusMessage(
+                        CHANNEL.CELL,
+                        msgData.cell_id,
+                        RESPONSES.RUN_STATUS,
+                        msgData
+                    );
                     break;
 
                 // JOB messages
@@ -349,91 +287,175 @@ define([
                 // filtering.
                 //
                 // errors
-                case BACKEND_RESPONSES.ERROR:
-                    console.error('Error from job comm:', msg);
+                case RESPONSES.ERROR:
                     if (!msgData) {
+                        console.error('Error from job comm:', msg);
                         break;
                     }
-                    // treat messages relating to single jobs as if they were for a job list
+                    if (msgData.name && msgData.name === 'JobRequestException') {
+                        // invalid request formatting. Warn and return
+                        console.error('Badly-formatted request', msgData);
+                        break;
+                    }
+                    // if there is a raw request object, find the params of the original request
                     // eslint-disable-next-line no-case-declarations
-                    const jobIdList = msgData.job_id ? [msgData.job_id] : msgData.job_id_list;
-                    if (msgData.source === BACKEND_REQUESTS.LOGS) {
-                        msgTypeToSend = RESPONSES.LOGS;
-                    } else {
-                        msgTypeToSend = RESPONSES.ERROR;
+                    const { request } = msgData;
+                    if (!request) {
+                        // we can't really do much without knowing where to direct the error to
+                        console.error('General error', msgData);
+                        break;
                     }
 
-                    jobIdList.forEach((_jobId) => {
-                        this.sendBusMessage(JOB, _jobId, msgTypeToSend, {
-                            jobId: _jobId,
-                            error: msgData,
-                            request: msgData.source,
-                        });
-                    });
-                    break;
+                    // treat messages relating to single jobs as if they were for a job list
+                    // eslint-disable-next-line no-case-declarations
+                    const jobIdList = request[PARAM.JOB_ID]
+                        ? [request[PARAM.JOB_ID]]
+                        : request[PARAM.BATCH_ID]
+                        ? [request[PARAM.BATCH_ID]]
+                        : request[PARAM.JOB_ID_LIST]
+                        ? request[PARAM.JOB_ID_LIST]
+                        : [];
 
-                case 'job_init_err':
-                case 'job_init_lookup_err':
-                    this.displayJobError(msgData);
-                    console.error('Error from job comm:', msg);
+                    // eslint-disable-next-line no-case-declarations
+                    const errorMsg = Object.assign({}, msgData, {
+                        [jcm.PARAM.JOB_ID_LIST]: jobIdList,
+                    });
+
+                    jobIdList.forEach((jobId) => {
+                        // if there is no mapping for the job ID, address it using the job
+                        if (!this._jobMapping[jobId] || this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, errorMsg);
+                        }
+                        if (
+                            this._jobMapping[jobId] &&
+                            this._jobMapping[jobId][jcm.PARAM.BATCH_ID]
+                        ) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            batchJobs[batchId] = true;
+                        }
+                    });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(CHANNEL.BATCH, batchId, msgType, errorMsg);
+                        });
+                    }
+
                     break;
 
                 // job information for one or more jobs
-                // Object with keys jobId and values { jobId: jobId, jobInfo: { ...job params... } }
-                case BACKEND_RESPONSES.INFO:
-                    Object.keys(msgData).forEach((_jobId) => {
-                        this.sendBusMessage(JOB, msgData[_jobId].job_id, RESPONSES.INFO, {
-                            jobId: msgData[_jobId].job_id,
-                            jobInfo: msgData[_jobId],
-                        });
-                    });
-                    break;
+                // logs for one or more jobs
+                case RESPONSES.INFO:
+                case RESPONSES.LOGS:
+                    Object.keys(msgData).forEach((jobId) => {
+                        // get the job mapping if it doesn't exist
+                        if (!this._jobMapping[jobId]) {
+                            if (msgData[jobId].batch_id) {
+                                this._jobMapping[jobId] = {
+                                    [jcm.PARAM.BATCH_ID]: msgData[jobId].batch_id,
+                                };
+                            } else {
+                                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+                            }
+                        }
 
-                case BACKEND_RESPONSES.LOGS:
-                    this.sendBusMessage(JOB, msgData.job_id, RESPONSES.LOGS, {
-                        jobId: msgData.job_id,
-                        logs: msgData,
-                        latest: msgData.latest,
-                    });
-                    break;
-
-                case BACKEND_RESPONSES.RETRY:
-                    msgData.forEach((jobRetried) => {
-                        this.sendBusMessage(
-                            JOB,
-                            jobRetried.job.jobState.job_id,
-                            RESPONSES.RETRY,
-                            jobRetried
-                        );
-                    });
-                    break;
-
-                /*
-                 * The job status for one or more jobs.
-                 * The job_status_all message covers all active jobs.
-                 *
-                 * data structure: object with key jobId and value
-                 * { jobState: job.jobState, outputWidgetInfo: job.outputWidgetInfo }
-                 */
-                case BACKEND_RESPONSES.STATUS:
-                case 'job_status_all':
-                    Object.keys(msgData).forEach((_jobId) => {
-                        msgData[_jobId].jobId = _jobId;
-                        // check whether or not this is an ee2 error
-                        if (msgData[_jobId].jobState.status === 'ee2_error') {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.ERROR, {
-                                jobId: _jobId,
-                                error: {
-                                    job_id: _jobId,
-                                    message: 'ee2 connection error',
-                                    code: msgData[_jobId].jobState.status,
-                                },
-                                request: 'job_status',
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
+                                [jobId]: msgData[jobId],
                             });
-                        } else {
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, msgData[_jobId]);
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
                         }
                     });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                msgType,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
+                    break;
+
+                case RESPONSES.RETRY:
+                    Object.keys(msgData).forEach((jobId) => {
+                        const jobData = msgData[jobId];
+                        if (jobData.retry) {
+                            this._extractMapping(jobData.retry);
+                        }
+                        if (!this._jobMapping[jobId]) {
+                            if (jobData.job) {
+                                this._extractMapping(jobData.job);
+                            } else {
+                                this._jobMapping[jobId] = { [jcm.PARAM.JOB_ID]: jobId };
+                            }
+                        }
+
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, msgType, {
+                                [jobId]: msgData[jobId],
+                            });
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
+                        }
+                    });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                msgType,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
+                    break;
+
+                case RESPONSES.STATUS:
+                case RESPONSES.STATUS_ALL:
+                    Object.keys(msgData).forEach((jobId) => {
+                        if (!this._jobMapping[jobId]) {
+                            this._extractMapping(msgData[jobId]);
+                        }
+
+                        if (this._jobMapping[jobId][jcm.PARAM.JOB_ID]) {
+                            this.sendBusMessage(CHANNEL.JOB, jobId, RESPONSES.STATUS, {
+                                [jobId]: msgData[jobId],
+                            });
+                        }
+                        if (this._jobMapping[jobId][jcm.PARAM.BATCH_ID]) {
+                            const batchId = this._jobMapping[jobId][jcm.PARAM.BATCH_ID];
+                            if (!(batchId in batchJobs)) {
+                                batchJobs[batchId] = {};
+                            }
+                            batchJobs[batchId][jobId] = msgData[jobId];
+                        }
+                    });
+
+                    if (Object.keys(batchJobs).length) {
+                        Object.keys(batchJobs).forEach((batchId) => {
+                            this.sendBusMessage(
+                                CHANNEL.BATCH,
+                                batchId,
+                                RESPONSES.STATUS,
+                                batchJobs[batchId]
+                            );
+                        });
+                    }
                     break;
 
                 default:
@@ -444,59 +466,13 @@ define([
             }
         }
 
-        displayJobError(msgData) {
-            // code, error, job_id (opt), message, name, source
-            const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
-            const modal = new BootstrapDialog({
-                title: 'Job Initialization Error',
-                body: $modalBody,
-                buttons: [
-                    $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
-                        .append('OK')
-                        .click(() => {
-                            modal.hide();
-                        }),
-                ],
-            });
-            new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
-                elements: [
-                    {
-                        title: 'Detailed Error Information',
-                        body: $(
-                            '<table class="table table-bordered"><tr><th>code:</th><td>' +
-                                msgData.code +
-                                '</td></tr>' +
-                                '<tr><th>error:</th><td>' +
-                                msgData.message +
-                                '</td></tr>' +
-                                (function () {
-                                    if (msgData.service) {
-                                        return (
-                                            '<tr><th>service:</th><td>' +
-                                            msgData.service +
-                                            '</td></tr>'
-                                        );
-                                    }
-                                    return '';
-                                })() +
-                                '<tr><th>type:</th><td>' +
-                                msgData.name +
-                                '</td></tr>' +
-                                '<tr><th>source:</th><td>' +
-                                msgData.source +
-                                '</td></tr></table>'
-                        ),
-                    },
-                ],
-            });
-
-            $modalBody.find('button#kb-job-err-report').click(() => {
-                // no action
-            });
-            modal.getElement().on('hidden.bs.modal', () => {
-                modal.destroy();
-            });
-            modal.show();
+        reportCommMessageError(message) {
+            const { msgType, msgData } = message;
+            console.error(
+                'Invalid message data error',
+                `message type ${msgType} with data`,
+                msgData
+            );
         }
 
         /**
@@ -601,5 +577,5 @@ define([
         }
     }
 
-    return { JobCommChannel, JobCommMessages };
+    return JobCommChannel;
 });

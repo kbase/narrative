@@ -15,15 +15,20 @@ class MockComm(object):
             return None
         return self.messages[-1]
 
+    def pop_message(self):
+        if len(self.messages) == 0:
+            return None
+        return self.messages.pop()
+
     def peek_message(self, i):
         return self.messages[i]
 
     def on_msg(self, *args, **kwargs):
         """Mock the msg router"""
 
-    def send(self, data=None, content=None):
+    def send(self, message=None):
         """Mock sending a msg"""
-        self.messages.append({"data": data, "content": content})
+        self.messages.append(message)
 
     def clear_message_cache(self):
         self.messages = []

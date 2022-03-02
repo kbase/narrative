@@ -272,7 +272,7 @@ define([
             }
 
             // set labels
-            const messageElem = ui.getElement('advanced-hidden-message');
+            const messageElem = container.querySelector('[data-element="advanced-hidden-message"]');
             messageElem.querySelector('span').textContent = `(${headerLabel})`;
             messageElem.querySelector('button').textContent = buttonLabel;
             showHideAdvancedErrorMessage();
@@ -347,11 +347,8 @@ define([
             const advancedErrorClass = `${cssBaseClass}__toggle--advanced-errors`;
             const messageSelector = `${messageParentSelector} .${advancedErrorClass}`;
             const messageNode = container.querySelector(messageSelector);
-            if (
-                !settings.showAdvanced &&
-                Object.values(advancedParamErrors).some((v) => v) &&
-                !messageNode
-            ) {
+            const hasErrors = Object.values(advancedParamErrors).some((v) => v);
+            if (!settings.showAdvanced && hasErrors && !messageNode) {
                 container.querySelector(messageParentSelector).appendChild(
                     ui.createNode(
                         span({ class: advancedErrorClass }, [
@@ -365,7 +362,7 @@ define([
                         ])
                     )
                 );
-            } else if (messageNode) {
+            } else if ((!hasErrors || settings.showAdvanced) && messageNode) {
                 container.querySelector(messageSelector).remove();
             }
         }

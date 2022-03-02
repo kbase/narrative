@@ -118,6 +118,7 @@ define([
                 });
 
                 fieldWidget.bus.on('validation', (message) => {
+                    // console.log(parameterSpec.id + ': ' + JSON.stringify(message));
                     // only propagate if invalid. value changes come through
                     // the 'changed' message
                     const paramId = parameterSpec.id;
@@ -351,21 +352,19 @@ define([
                 Object.values(advancedParamErrors).some((v) => v) &&
                 !messageNode
             ) {
-                container
-                    .querySelector(messageParentSelector)
-                    .appendChild(
-                        ui.createNode(
-                            span({ class: advancedErrorClass }, [
-                                iTag({
-                                    class: `${advancedErrorClass}--icon fa fa-exclamation-triangle`,
-                                }),
-                                strong(' Warning: '),
-                                span(
-                                    'Error in advanced parameter. Show advanced parameters for details.'
-                                ),
-                            ])
-                        )
-                    );
+                container.querySelector(messageParentSelector).appendChild(
+                    ui.createNode(
+                        span({ class: advancedErrorClass }, [
+                            iTag({
+                                class: `${advancedErrorClass}--icon fa fa-exclamation-triangle`,
+                            }),
+                            strong(' Warning: '),
+                            span(
+                                'Error in advanced parameter. Show advanced parameters for details.'
+                            ),
+                        ])
+                    )
+                );
             } else if (messageNode) {
                 container.querySelector(messageSelector).remove();
             }
@@ -464,6 +463,7 @@ define([
             }
             return controlPromise
                 .then((inputWidget) => {
+                    // console.log(`starting ${paramSpec.id} with ${initialParams[paramSpec.id]}`)
                     const widget = makeFieldWidget(
                         inputWidget,
                         appSpec,
@@ -525,7 +525,6 @@ define([
          */
         function start(arg) {
             doAttach(arg.node);
-
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             arg.parameters.layout.forEach((id) => {

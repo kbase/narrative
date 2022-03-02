@@ -140,6 +140,11 @@ define([
                     return item.ui.label;
                 });
 
+                // there should not be an error in the advanced param header
+                expect(
+                    this.node.querySelector('span.kb-app-params__toggle--advanced-errors')
+                ).not.toBeDefined();
+
                 paramContainers.forEach((paramNode) => {
                     //each param container should have ONE label
                     const labelArr = paramNode.querySelectorAll('label.kb-field-cell__cell_label');
@@ -188,6 +193,44 @@ define([
                 await this.paramsWidgetInstance.stop();
                 expect(this.node.innerHTML).toEqual('');
                 this.paramsWidgetInstance = null;
+            });
+        });
+
+        xdescribe('The running instance with advanced param errors', () => {
+            let advancedBus;
+            beforeEach(async function () {
+                const args = TestUtil.JSONcopy(this.defaultArgs);
+                advancedBus = Runtime.make().bus();
+                args.bus = advancedBus;
+                // breaks the input, makes it a bad value, this should show an error
+                args.initialParams.fastq_reads.params.insert_size_std_dev = 'not a float value';
+                // console.log(JSON.stringify(args.initialParams, null, 4));
+                this.paramsWidgetInstance = makeParamsWidget(args);
+                await this.paramsWidgetInstance.start({
+                    node: this.node,
+                    appSpec: this.spec,
+                    parameters: this.parameters,
+                });
+                await TestUtil.wait(1000);
+            });
+
+            afterEach(async function () {
+                if (this.paramsWidgetInstance) {
+                    await this.paramsWidgetInstance.stop();
+                }
+                advancedBus.stop();
+            });
+
+            it('should show an advanced parameter error after startup, when advanced params are collapsed', async function () {
+                await TestUtil.wait(500);
+                const errorNode = this.node.querySelector(
+                    '.kb-app-params__toggle--advanced-errors'
+                );
+                expect(errorNode).not.toBeNull();
+                expect(errorNode.childElementCount).toBe(3);
+                expect(errorNode.firstChild.classList).toContain('fa-exclamation-triangle');
+                expect(errorNode.textContent).toContain('Warning:');
+                expect(errorNode.textContent).toContain('Error in advanced parameter');
             });
         });
     });

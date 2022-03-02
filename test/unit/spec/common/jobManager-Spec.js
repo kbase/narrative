@@ -8,7 +8,19 @@ define([
     'common/ui',
     'testUtil',
     '/test/data/jobsData',
-], (JobManagerModule, Jobs, jcm, Looper, Props, Runtime, UI, TestUtil, JobsData) => {
+    '/test/data/testBulkImportObj',
+], (
+    JobManagerModule,
+    Jobs,
+    jcm,
+    Looper,
+    Props,
+    Runtime,
+    UI,
+    TestUtil,
+    JobsData,
+    TestBulkImportObject
+) => {
     'use strict';
 
     const {
@@ -35,6 +47,95 @@ define([
             ACTIVE_JOB_IDS.push(job.job_id);
         }
     });
+
+    const bulkImportMeta = TestUtil.JSONcopy(TestBulkImportObject);
+    // add some extra data locally
+    bulkImportMeta.inputs.assembly = {
+        appId: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+        files: ['test_assembly.fa', 'another_test_assm.fa'],
+    };
+
+    bulkImportMeta.params.assembly = {
+        filePaths: [
+            {
+                assembly_name: 'test_assembly',
+                staging_file_subdir_path: 'test_assembly.fa',
+            },
+            {
+                assembly_name: 'another_test_assembly',
+                staging_file_subdir_path: 'another_test_assm.fa',
+            },
+        ],
+        params: {
+            generate_ids_if_needed: 1,
+            generate_missing_genes: 1,
+            min_contig_length: 500,
+            read_orientation_outward: 0,
+            scientific_name: '',
+            single_genome: 1,
+            type: 'draft isolate',
+        },
+    };
+
+    bulkImportMeta.app.outputParamIds.assembly = ['assembly_name'];
+
+    bulkImportMeta.app.specs['kb_uploadmethods/import_fasta_as_assembly_from_staging'] = {
+        parameters: [
+            {
+                id: 'staging_file_subdir_path',
+                ui_name: 'FASTA file path',
+            },
+            {
+                id: 'type',
+                ui_name: 'Assembly Type',
+            },
+            {
+                id: 'min_contig_length',
+                ui_name: 'Minimum contig length',
+            },
+            {
+                id: 'assembly_name',
+                ui_name: 'Assembly object name',
+            },
+        ],
+        full_info: {
+            id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+        },
+    };
+
+    const expectedJobParams = [
+        {
+            app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+            userParams: {
+                staging_file_subdir_path: 'test_assembly.fa',
+                type: 'draft isolate',
+                min_contig_length: 500,
+                assembly_name: 'test_assembly',
+            },
+            outputParams: ['assembly_name'],
+        },
+        {
+            app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+            outputParams: ['assembly_name'],
+            userParams: {
+                staging_file_subdir_path: 'another_test_assm.fa',
+                type: 'draft isolate',
+                min_contig_length: 500,
+                assembly_name: 'another_test_assembly',
+            },
+        },
+        {
+            app_id: 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+            outputParams: ['name'],
+            userParams: {
+                import_type: 'SRA',
+                fastq_fwd_staging_file_name: 'some_sra_file.sra',
+                sequencing_tech: 'Illumina',
+                name: 'KBase_object_details_22020-10-14T232042188.json_reads',
+                single_genome: 1,
+            },
+        },
+    ];
 
     const actionStatusMatrix = {
         cancel: {
@@ -2130,8 +2231,9 @@ define([
         describe('batch mixin', () => {
             /**
              * @param {object} ctx  this context
+             * @param {boolean} restoredFromSaved whether or not this is from a 'restoreFromSaved' call
              */
-            function check_initJobs(ctx) {
+            function check_initJobs(ctx, restoredFromSaved = false) {
                 const batchJob = ctx.jobManagerInstance.getBatchJob();
                 expect(batchJob.job_id).toEqual(BATCH_ID);
 
@@ -2150,10 +2252,11 @@ define([
                     ctx.jobManagerInstance.handlers[jcm.MESSAGE_TYPE.STATUS].batchStatus
                 ).toEqual(jasmine.any(Function));
 
-                const busCallArgs = [
-                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
-                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }],
-                ];
+                const busCallArgs = [[jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: BATCH_ID }]];
+
+                if (restoredFromSaved) {
+                    busCallArgs.push([jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: BATCH_ID }]);
+                }
 
                 expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual(
                     jasmine.arrayWithExactContents(busCallArgs)
@@ -2198,7 +2301,7 @@ define([
                 });
             });
 
-            describe('batch job initialisation', () => {
+            describe('_initJobs batch job initialisation', () => {
                 beforeEach(function () {
                     createBatchMixinJobManager(this);
                 });
@@ -2304,13 +2407,32 @@ define([
                 });
             });
 
+            const childIds = ['this', 'that', 'the other'],
+                batchId = BATCH_ID;
+
+            function checkJobInfo(ctx) {
+                const savedInfo = ctx.model.getItem('exec.jobs.info');
+                expect(Object.keys(savedInfo)).toEqual(
+                    jasmine.arrayWithExactContents([batchId, ...childIds])
+                );
+                childIds.forEach((id, ix) => {
+                    expect(savedInfo[childIds[ix]]).toEqual(expectedJobParams[ix]);
+                });
+                expect(savedInfo[batchId]).toEqual({
+                    app_id: 'batch',
+                    app_name: 'batch',
+                    userParams: null,
+                    outputParams: [],
+                });
+            }
+
             describe('initBatchJob', () => {
                 beforeEach(function () {
+                    this.model = Props.make({
+                        data: TestUtil.JSONcopy(bulkImportMeta),
+                    });
                     createBatchMixinJobManager(this);
                 });
-
-                const childIds = ['this', 'that', 'the other'],
-                    batchId = BATCH_ID;
 
                 const invalidInput = [
                     {},
@@ -2332,8 +2454,11 @@ define([
                 });
 
                 it('adds job data when given the appropriate input', function () {
+                    const bulkImportMetaCopy = TestUtil.JSONcopy(bulkImportMeta);
+                    // remove all jobs data
+                    delete bulkImportMetaCopy.exec;
                     this.model = Props.make({
-                        data: {},
+                        data: bulkImportMetaCopy,
                     });
                     this.jobManagerInstance.model = this.model;
                     ['exec.jobs.byId', 'exec.jobState'].forEach((modelItem) => {
@@ -2353,6 +2478,7 @@ define([
                     );
                     // check that the appropriate messages have been sent out
                     check_initJobs(this);
+                    checkJobInfo(this);
                 });
 
                 it('replaces any existing job data with the new input', function () {
@@ -2365,8 +2491,8 @@ define([
                             })
                         )
                     );
-                    expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
-                        JobsData.batchParentJob
+                    expect(this.jobManagerInstance.model.getItem('exec.jobState').job_id).toEqual(
+                        JobsData.batchParentJob.job_id
                     );
 
                     spyOn(this.jobManagerInstance.bus, 'emit');
@@ -2383,6 +2509,7 @@ define([
                     );
 
                     check_initJobs(this);
+                    checkJobInfo(this);
                 });
             });
 
@@ -2420,7 +2547,7 @@ define([
                     spyOn(this.jobManagerInstance.bus, 'emit');
                     this.jobManagerInstance.restoreFromSaved();
 
-                    check_initJobs(this);
+                    check_initJobs(this, true);
                 });
 
                 it('sets up the appropriate listeners even if child jobs are missing', function () {
@@ -2433,7 +2560,21 @@ define([
                     spyOn(this.jobManagerInstance.bus, 'emit');
                     this.jobManagerInstance.restoreFromSaved();
 
-                    check_initJobs(this);
+                    check_initJobs(this, true);
+                });
+            });
+
+            describe('generateJobParams', () => {
+                beforeEach(function () {
+                    this.model = Props.make({
+                        data: TestUtil.JSONcopy(bulkImportMeta),
+                    });
+                    createBatchMixinJobManager(this);
+                });
+
+                it('generates a list of job params from the model', function () {
+                    const jobParams = this.jobManagerInstance.generateJobParams();
+                    expect(jobParams).toEqual(expectedJobParams);
                 });
             });
 

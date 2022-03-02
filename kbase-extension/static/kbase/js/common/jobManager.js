@@ -896,8 +896,12 @@ define([
                 ) {
                     throw new Error('Batch job must have a batch ID and at least one child job ID');
                 }
+
+                const jobParamsArray = this.generateJobParams();
+                const jobInfo = {};
                 // create the child jobs
-                const allJobs = child_job_ids.map((job_id) => {
+                const allJobs = child_job_ids.map((job_id, ix) => {
+                    jobInfo[job_id] = jobParamsArray[ix];
                     return {
                         job_id,
                         batch_id,
@@ -905,13 +909,20 @@ define([
                         created: 0,
                     };
                 });
+                jobInfo[batch_id] = {
+                    app_id: 'batch',
+                    app_name: 'batch',
+                    outputParams: [],
+                    userParams: null,
+                };
+                this.model.setItem('exec.jobs.info', jobInfo);
 
                 // add the parent job
                 allJobs.push({
                     job_id: batch_id,
                     batch_id,
                     batch_job: true,
-                    child_jobs: [],
+                    child_jobs: [child_job_ids],
                     status: 'created',
                     created: 0,
                 });
@@ -959,6 +970,38 @@ define([
                 });
 
                 return this.getFsmStateFromJobs();
+            }
+
+            generateJobParams() {
+                const appParams = [];
+                const inputs = this.model.getItem('inputs'),
+                    params = this.model.getItem('params'),
+                    appSpecs = this.model.getItem('app.specs'),
+                    outputParamIds = this.model.getItem('app.outputParamIds');
+
+                Object.keys(inputs)
+                    .sort()
+                    .forEach((fileType) => {
+                        const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
+                        params[fileType].filePaths.forEach((filePathParams) => {
+                            const filteredParams = {
+                                app_id: appSpecInfo.id,
+                            };
+                            filteredParams.userParams = {};
+                            appSpecs[appSpecInfo.id].parameters.forEach((param) => {
+                                const paramId = param.id;
+                                if (filePathParams[paramId]) {
+                                    filteredParams.userParams[paramId] = filePathParams[paramId];
+                                } else if (params[fileType].params[paramId]) {
+                                    filteredParams.userParams[paramId] =
+                                        params[fileType].params[paramId];
+                                }
+                            });
+                            filteredParams.outputParams = outputParamIds[fileType];
+                            appParams.push(filteredParams);
+                        });
+                    });
+                return appParams;
             }
 
             /**

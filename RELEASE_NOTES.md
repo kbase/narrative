@@ -10,6 +10,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 - DATAUP-641 - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
 - PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
 - DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
 
 Dependency Changes
 - Python dependency updates

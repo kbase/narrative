@@ -1146,6 +1146,7 @@ define([
             Object.keys(inputs).forEach((dataType) => {
                 delete inputs[dataType].messages;
             });
+            model.setItem('inputs', inputs);
         }
 
         /**

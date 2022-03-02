@@ -5,7 +5,7 @@ define([
     'kb_common/utils',
     'StagingServiceClient',
     'kb_service/utils',
-    'common/validation',
+    '../validation',
     'common/events',
     'common/runtime',
     'common/ui',
@@ -177,7 +177,7 @@ define([
                 if (typeof selectedItem === 'number') {
                     selectedItem = String(selectedItem);
                 }
-                return Validation.validateText(selectedItem, validationConstraints);
+                return Validation.validateTextString(selectedItem, validationConstraints);
             });
         }
 

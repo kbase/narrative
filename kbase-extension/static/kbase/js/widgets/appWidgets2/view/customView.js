@@ -1,14 +1,13 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validators/text',
+    '../validation',
     'common/events',
     'common/ui',
     'common/props',
-    '../inputUtils',
 
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
+], (Promise, html, Validation, Events, UI, Props) => {
     'use strict';
 
     const t = html.tag,
@@ -16,18 +15,18 @@ define([
         input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
+
+        let parent, container, ui;
 
         // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
 
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
@@ -54,17 +53,9 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-        // VALIDATION
-
-        function importControlValue() {
-            return Promise.try(() => {
-                return Validation.importString(getControlValue());
-            });
-        }
-
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
@@ -76,7 +67,7 @@ define([
 
         // DOM & RENDERING
 
-        function makeViewControl(events) {
+        function makeViewControl() {
             return input({
                 class: 'form-control',
                 readonly: true,
@@ -116,7 +107,6 @@ define([
                 const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
                 syncModelToControl();
                 autoValidate();
 
@@ -131,7 +121,6 @@ define([
                 bus.on('focus', () => {
                     doFocus();
                 });
-                // bus.emit('sync');
             });
         }
 
@@ -145,21 +134,11 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            },
-        });
-
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

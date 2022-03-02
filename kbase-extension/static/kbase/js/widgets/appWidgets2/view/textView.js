@@ -1,14 +1,10 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validators/text',
-    'common/events',
-    'common/ui',
-    'common/props',
-    '../inputUtils',
-
-    'bootstrap',
-], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
+define(['bluebird', 'common/html', 'common/events', 'common/ui', 'common/props', 'bootstrap'], (
+    Promise,
+    html,
+    Events,
+    UI,
+    Props
+) => {
     'use strict';
 
     const t = html.tag,
@@ -16,12 +12,15 @@ define([
         input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
+        let parent, container, ui;
 
         // CONTROL
 
@@ -52,7 +51,7 @@ define([
 
         // DOM & RENDERING
 
-        function makeViewControl(events) {
+        function makeViewControl() {
             return input({
                 class: 'form-control',
                 readonly: true,
@@ -92,7 +91,6 @@ define([
                 const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
                 syncModelToControl();
 
                 bus.on('reset-to-defaults', () => {
@@ -101,7 +99,6 @@ define([
                 bus.on('focus', () => {
                     doFocus();
                 });
-                // bus.emit('sync');
             });
         }
 
@@ -115,18 +112,11 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {},
-        });
-
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

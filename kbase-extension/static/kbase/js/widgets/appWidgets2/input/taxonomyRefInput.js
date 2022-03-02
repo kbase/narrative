@@ -2,36 +2,15 @@ define([
     'bluebird',
     'jquery',
     'common/html',
-    'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'common/validation',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
-    'util/timeFormat',
     'kb_sdk_clients/genericClient',
     '../validators/constants',
 
     'select2',
     'bootstrap',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Data,
-    TimeFormat,
-    GenericClient,
-    Constants
-) => {
+], (Promise, $, html, Events, Runtime, UI, GenericClient, Constants) => {
     'use strict';
 
     // Constants

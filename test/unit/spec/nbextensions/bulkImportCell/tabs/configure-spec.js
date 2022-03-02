@@ -276,15 +276,27 @@ define([
                     dataType1: {
                         appId,
                         files: ['file1', 'file2'],
+                        messages: [
+                            {
+                                type: 'warning',
+                                message: 'message for data type 1',
+                            },
+                        ],
                     },
                     dataType2: {
                         appId,
                         files: ['file3', 'file4'],
+                        messages: [
+                            {
+                                type: 'error',
+                                message: 'Error message for data type 2',
+                            },
+                        ],
                     },
                 };
             });
 
-            it('should toggle the active file type', function () {
+            it('should toggle the active file type', async function () {
                 const configure = ConfigureTab.make({
                     bus,
                     model: this._model,
@@ -293,46 +305,49 @@ define([
                     fileTypesDisplay,
                 });
 
-                return configure
-                    .start({
-                        node: container,
-                    })
-                    .then(() => {
-                        const ftPanel = container.querySelector('[data-element="filetype-panel"]');
-                        // expect that both buttons are there, and the first is selected
-                        const btn1 = ftPanel.querySelector('[data-element="dataType1"]');
-                        expect(
-                            btn1.classList.contains('kb-filetype-panel__filetype_button--selected')
-                        ).toBeTruthy();
-                        const btn2 = ftPanel.querySelector('[data-element="dataType2"]');
-                        expect(
-                            btn2.classList.contains('kb-filetype-panel__filetype_button--selected')
-                        ).toBeFalsy();
+                await configure.start({ node: container });
+                // TEST FOR DATA TYPE 1
+                const ftPanel = container.querySelector('[data-element="filetype-panel"]');
+                // expect that both buttons are there, and the first is selected
+                const btn1 = ftPanel.querySelector('[data-element="dataType1"]');
+                expect(btn1.classList).toContain('kb-filetype-panel__filetype_button--selected');
+                const btn2 = ftPanel.querySelector('[data-element="dataType2"]');
+                expect(btn2.classList).not.toContain(
+                    'kb-filetype-panel__filetype_button--selected'
+                );
+                expect(container.innerHTML).toContain('Parameters');
 
-                        return new Promise((resolve) => {
-                            bus.on('toggled-active-filetype', (message) => {
-                                expect(message.fileType).toBe('dataType2');
-                                expect(
-                                    btn2.classList.contains(
-                                        'kb-filetype-panel__filetype_button--selected'
-                                    )
-                                ).toBeTrue();
-                                resolve();
-                            });
+                // message tests (detailed tests are in the message tests spec below)
+                let msgContainer = container.querySelector('[data-element="config-message"]');
+                expect(msgContainer).toBeDefined();
+                expect(msgContainer.childElementCount).toBe(1);
+                let msg = msgContainer.firstChild;
+                expect(msg.classList).toContain('kb-bulk-import-configure__message--warning');
+                expect(msg.textContent).toContain(this._typesToFiles.dataType1.messages[0].message);
 
-                            btn2.click();
-                        });
-                    })
-                    .then(() => {
-                        expect(this._model.getItem('state.selectedFileType')).toBe('dataType2');
-                        const btn1 = container.querySelector(
-                            '[data-element="filetype-panel"] [data-element="dataType1"]'
-                        );
-                        expect(
-                            btn1.classList.contains('kb-filetype-panel__filetype_button--selected')
-                        ).toBeFalsy();
-                    })
-                    .then(() => configure.stop());
+                let toggledMsg;
+                bus.on('toggled-active-filetype', (message) => {
+                    toggledMsg = message;
+                });
+
+                btn2.click();
+                await TestUtil.wait(500);
+                expect(toggledMsg.fileType).toBe('dataType2');
+                expect(btn2.classList).toContain('kb-filetype-panel__filetype_button--selected');
+
+                // TEST FOR DATA TYPE 2
+                expect(this._model.getItem('state.selectedFileType')).toBe('dataType2');
+                expect(btn1.classList).not.toContain(
+                    'kb-filetype-panel__filetype_button--selected'
+                );
+                // message tests!
+                msgContainer = container.querySelector('[data-element="config-message"]');
+                expect(msgContainer).toBeDefined();
+                expect(msgContainer.childElementCount).toBe(1);
+                msg = msgContainer.firstChild;
+                expect(msg.classList).toContain('kb-bulk-import-configure__message--error');
+                expect(msg.textContent).toContain(this._typesToFiles.dataType2.messages[0].message);
+                await configure.stop();
             });
 
             it('should start with output name duplication errors', async function () {
@@ -373,6 +388,128 @@ define([
                 expect(dupMessage.classList).not.toContain('hidden');
                 expect(dupMessage.innerHTML).toContain('duplicate value found');
                 await configure.stop();
+            });
+        });
+
+        describe('message tests', () => {
+            const defWarning = {
+                type: 'warning',
+                message: 'a warning',
+            };
+            const defError = {
+                type: 'error',
+                message: 'an error',
+            };
+            [
+                {
+                    msgs: [defWarning],
+                    label: 'a warning message',
+                },
+                {
+                    msgs: [defWarning, defError, defWarning, defError],
+                    label: 'multiple error and warning messages',
+                },
+                {
+                    msgs: [defError],
+                    label: 'an error message',
+                },
+                {
+                    msgs: [
+                        {
+                            type: 'unknown',
+                            message: 'some message',
+                        },
+                    ],
+                    label: 'an unknown message, defaulting to warning',
+                },
+                {
+                    msgs: [
+                        {
+                            message: 'some untitled message',
+                        },
+                    ],
+                    label: 'a message with a missing type, defaulting to warning',
+                },
+            ].forEach((testCase) => {
+                it(`should show ${testCase.label}`, async () => {
+                    const fileType = initialState.selectedFileType;
+                    const messageTypesToFiles = TestUtil.JSONcopy(typesToFiles);
+                    messageTypesToFiles[fileType].messages = testCase.msgs;
+                    const model = Props.make({
+                        data: Object.assign({}, TestBulkImportObject, { state: initialState }),
+                        onUpdate: () => {
+                            /* intentionally left blank */
+                        },
+                    });
+                    const configure = ConfigureTab.make({
+                        bus,
+                        model,
+                        specs,
+                        typesToFiles: messageTypesToFiles,
+                        fileTypesDisplay,
+                    });
+
+                    await configure.start({ node: container });
+                    // just make sure it renders the "File Paths" and "Parameters" headers
+                    expect(container.innerHTML).toContain('Parameters');
+                    const msgContainer = container.querySelector('[data-element="config-message"]');
+                    expect(msgContainer).toBeDefined();
+                    expect(msgContainer.childElementCount).toBe(testCase.msgs.length);
+                    // each message should be as in the test case
+                    msgContainer.childNodes.forEach((msgNode, index) => {
+                        const testMsg = testCase.msgs[index];
+                        // we should have the text in there.
+                        expect(msgNode.textContent).toContain(testMsg.message);
+                        // we should have the right classes
+                        expect(msgNode.classList).toContain('kb-bulk-import-configure__message');
+                        // the class should default to warning
+                        let msgType = testMsg.type;
+                        if (msgType !== 'error' && msgType !== 'warning') {
+                            msgType = 'warning';
+                        }
+                        expect(msgNode.classList).toContain(
+                            `kb-bulk-import-configure__message--${msgType}`
+                        );
+                        const titleElem = msgNode.querySelector(
+                            `.kb-bulk-import-configure__message--${msgType}-title`
+                        );
+                        // the title should have an icon
+                        expect(titleElem.querySelector('i.fa.fa-exclamation-circle')).toBeDefined();
+                        expect(titleElem.textContent.toLowerCase()).toContain(msgType);
+                    });
+                    await configure.stop();
+                    expect(container.innerHTML).toEqual('');
+                });
+            });
+
+            it('should not show a message when text is missing', async () => {
+                const badMsg = [
+                    {
+                        type: 'error',
+                    },
+                ];
+                const messageTypesToFiles = TestUtil.JSONcopy(typesToFiles);
+                messageTypesToFiles[initialState.selectedFileType].messages = badMsg;
+                const model = Props.make({
+                    data: Object.assign({}, TestBulkImportObject, { state: initialState }),
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
+                });
+                const configure = ConfigureTab.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles: messageTypesToFiles,
+                    fileTypesDisplay,
+                });
+
+                await configure.start({ node: container });
+                const msgContainer = container.querySelector('[data-element="config-message"]');
+                expect(msgContainer).toBeDefined();
+                expect(msgContainer.childElementCount).toBe(0);
+                await configure.stop();
+                expect(container.innerHTML).toEqual('');
             });
         });
     });

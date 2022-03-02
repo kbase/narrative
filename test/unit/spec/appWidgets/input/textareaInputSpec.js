@@ -29,12 +29,12 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil']
         };
     }
 
-    function startWidgetAndSetTextarea(widget, container, inputText) {
-        widget.start({ node: container }).then(() => {
-            const inputElem = container.querySelector('textarea');
-            inputElem.value = inputText;
-            inputElem.dispatchEvent(new Event('change'));
-        });
+    async function startWidgetAndSetTextarea(widget, container, inputText) {
+        await widget.start({ node: container });
+        const inputElem = container.querySelector('textarea');
+        inputElem.value = inputText;
+        inputElem.dispatchEvent(new Event('change'));
+        await TestUtil.wait(1000);
     }
 
     describe('Textarea Input tests', () => {
@@ -67,107 +67,110 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil']
             });
         });
 
-        it('Should start and stop a widget', (done) => {
+        it('Should start and stop a widget', async () => {
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
-            widget
-                .start({ node: container })
-                .then(() => {
-                    // verify it's there.
-                    const textarea = container.querySelector('textarea');
-                    expect(textarea).toBeDefined();
-                    expect(textarea.getAttribute('rows')).toBe(String(numRows));
-                    return widget.stop();
-                })
-                .then(() => {
-                    // verify it's gone.
-                    expect(container.childElementCount).toBe(0);
-                    done();
-                });
+            await widget.start({ node: container });
+            // verify it's there.
+            const textarea = container.querySelector('textarea');
+            expect(textarea).toBeDefined();
+            expect(textarea.getAttribute('rows')).toBe(String(numRows));
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('Should update value via bus', (done) => {
+        it('Should update value via bus', async () => {
             // start with one value, change it, then reset.
             // check along the way.
+            let busMessage;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                busMessage = message;
             });
-            widget.start({ node: container }).then(() => {
-                bus.emit('update', { value: 'some text' });
-            });
+            await widget.start({ node: container });
+            bus.emit('update', { value: 'some text' });
+            await TestUtil.wait(1000);
+            expect(busMessage.isValid).toBeTruthy();
+            await widget.stop();
         });
 
-        it('Should reset to default via bus', (done) => {
+        it('Should reset to default via bus', async () => {
+            let busMessage;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                busMessage = message;
             });
-            widget.start({ node: container }).then(() => {
-                bus.emit('reset-to-defaults');
-            });
+            await widget.start({ node: container });
+            bus.emit('reset-to-defaults');
+            await TestUtil.wait(1000);
+            expect(busMessage.isValid).toBeTruthy();
+            await widget.stop();
         });
 
-        it('Should respond to input change events with "changed"', (done) => {
+        it('Should respond to input change events with "changed"', async () => {
             const inputText = 'here is some text';
+            let busMessage;
             bus.on('changed', (message) => {
-                expect(message.newValue).toEqual(inputText);
-                widget.stop().then(done);
+                busMessage = message;
             });
-            startWidgetAndSetTextarea(widget, container, inputText);
+            await startWidgetAndSetTextarea(widget, container, inputText);
+            expect(busMessage.newValue).toEqual(inputText);
+            await widget.stop();
         });
 
-        it('Should respond to input change events with "validation"', (done) => {
+        it('Should respond to input change events with "validation"', async () => {
             const inputText = 'here is some text';
+            let busMessage;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
+                busMessage = message;
             });
-            startWidgetAndSetTextarea(widget, container, inputText);
+            await startWidgetAndSetTextarea(widget, container, inputText);
+            expect(busMessage.isValid).toBeTruthy();
+            expect(busMessage.errorMessage).toBeUndefined();
+            await widget.stop();
         });
 
-        xit('Should respond to keyup change events with "changed"', () => {
+        it('Should respond to keyup change events with "validation"', async () => {
             const inputText = 'here is some text';
             // event does not have e.target defined, so running this test emits
             // Uncaught TypeError: Cannot read property 'dispatchEvent' of null thrown
-            bus.on('changed', (message) => {
-                // expect(message.newValue).toBe(inputText);
-                expect(message.isValid).toBeTruthy();
-                // ...detect something?
-                // done();
+            let busMessage;
+            bus.on('validation', (message) => {
+                busMessage = message;
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('textarea');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('keyup'));
-            });
+            await widget.start({ node: container });
+            const inputElem = container.querySelector('textarea');
+            inputElem.value = inputText;
+            inputElem.dispatchEvent(new Event('keyup'));
+            await TestUtil.wait(1000);
+            expect(busMessage.isValid).toBeTruthy();
+            expect(busMessage.errorMessage).toBeUndefined();
+            await widget.stop();
         });
 
-        it('Should show message when configured', (done) => {
+        it('Should show message when configured', async () => {
             testConfig.showOwnMessages = true;
             widget = TextareaInput.make(testConfig);
             const inputText = 'some text';
+            let busMessage;
             bus.on('changed', (message) => {
-                expect(message.newValue).toBe(inputText);
-                // ...detect something?
-                done();
+                busMessage = message;
             });
-            startWidgetAndSetTextarea(widget, container, inputText);
+            await startWidgetAndSetTextarea(widget, container, inputText);
+            expect(busMessage.newValue).toBe(inputText);
+            await widget.stop();
         });
 
-        it('Should return a diagnosis of required-missing if so', (done) => {
+        it('Should return a diagnosis of required-missing if so', async () => {
             testConfig = buildTestConfig(true, '', bus);
             widget = TextareaInput.make(testConfig);
-            const inputText = null;
+            let busMessage;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeFalsy();
-                expect(message.diagnosis).toBe('required-missing');
-                // ...detect something?
-                done();
+                busMessage = message;
             });
-            startWidgetAndSetTextarea(widget, container, inputText);
+            await startWidgetAndSetTextarea(widget, container, null);
+            expect(busMessage.isValid).toBeFalsy();
+            expect(busMessage.diagnosis).toBe('required-missing');
+            await widget.stop();
         });
     });
 });

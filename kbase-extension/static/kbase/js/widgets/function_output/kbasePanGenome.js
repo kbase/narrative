@@ -38,6 +38,11 @@ define([
             this._super(options);
             if (this.options.name.indexOf('/') > -1) {
                 this.objRef = this.options.name;
+            } else if ('upas' in this.options && 'name' in this.options.upas) {
+                // See https://github.com/kbase/NarrativeViewers/blob/master/ui/narrative/methods/view_pangenome/spec.json
+                // for the mapping of the upa to the "name" property; and widgetmanager.py for how
+                // this is done.
+                this.objRef = this.options.upas.name;
             } else {
                 this.objRef = this.options.ws + '/' + this.options.name;
             }
@@ -185,7 +190,7 @@ define([
                     const numGenomes = genomeList.length;
                     const numberTable = [];
                     const header = ['<th>Genome</th><th>Legend</th>'];
-                    for (var i = 0; i < numGenomes; i++) {
+                    for (let i = 0; i < numGenomes; i++) {
                         header.push('<th style="text-align:center"><b>G' + (i + 1) + '</b></th>');
                         const singleComp = [];
                         singleComp.push('<b>G' + (i + 1) + '</b> - ' + genomeList[i]);
@@ -205,7 +210,7 @@ define([
                         '<table class="table table-hover table-striped table-bordered">'
                     );
                     $prettyTable.append($('<tr>').append(header.join()));
-                    for (var i = 0; i < numberTable.length; i++) {
+                    for (let i = 0; i < numberTable.length; i++) {
                         $prettyTable.append(self.tableRow(numberTable[i]));
                     }
                     $homologDiv.empty().append($prettyTable);
@@ -407,7 +412,6 @@ define([
             self.dataPromise.then((results) => {
                 results = results[0];
                 getFamilyFunctionNames(fam.orthologs).then((names) => {
-                    console.log(names);
                     $div.empty();
                     new DynamicTable($div, {
                         headers: [

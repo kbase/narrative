@@ -1,37 +1,33 @@
 define([
     'bluebird',
-    'jquery',
-    'base/js/namespace',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     'common/props',
-    'kb_service/client/userAndJobState',
-    'kb_service/client/shock',
-    '../validators/text',
+    '../validation',
 
     'bootstrap',
-], (Promise, $, Jupyter, html, Events, UI, Runtime, Props, UJS, Shock, Validation) => {
+], (Promise, html, Events, UI, Runtime, Props, Validation) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
-        input = t('input'),
-        table = t('table'),
-        tr = t('tr'),
-        td = t('td');
+        input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            hostNode,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
+        let hostNode, container, ui;
 
         // MODEL
 
@@ -64,7 +60,7 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
@@ -128,13 +124,12 @@ define([
                 autoValidate();
                 syncModelToControl();
 
-                channel.on('reset-to-defaults', (message) => {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
                 channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
-                // channel.emit('sync');
             });
         }
 
@@ -147,19 +142,9 @@ define([
             });
         }
 
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            },
-        });
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

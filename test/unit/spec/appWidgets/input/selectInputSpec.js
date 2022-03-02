@@ -1,8 +1,9 @@
-define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], (
-    Runtime,
-    SelectInput,
-    TestUtil
-) => {
+define([
+    'common/runtime',
+    'widgets/appWidgets2/input/selectInput',
+    'testUtil',
+    'widgets/appWidgets2/validators/constants',
+], (Runtime, SelectInput, TestUtil, Constants) => {
     'use strict';
     let bus, testConfig, runtime, container;
     const required = false,
@@ -33,6 +34,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
                             },
                         ],
                     },
+                },
+                ui: {
+                    label: 'A select input',
                 },
             },
             channelName: _bus.channelName,
@@ -180,13 +184,33 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
                             }
                         }
                         if (!message.isValid) {
-                            expect(message.diagnosis).toBe('required-missing');
+                            expect(message.diagnosis).toBe(Constants.DIAGNOSIS.REQUIRED_MISSING);
                             resolve();
                         }
                     });
                     const inputElem = container.querySelector('select[data-element="input"]');
                     inputElem.selectedIndex = -1;
                     inputElem.dispatchEvent(new Event('change'));
+                });
+            });
+        });
+
+        it('Should show the user a specific error if the given option is not one of the allowed ones', () => {
+            const badOption = 'a very bad option';
+            bus = runtime.bus().makeChannelBus();
+            testConfig = buildTestConfig(true, '', bus);
+            testConfig.initialValue = badOption;
+            const widget = SelectInput.make(testConfig);
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeFalse();
+                        expect(message.diagnosis).toBe(Constants.DIAGNOSIS.INVALID);
+                        expect(message.errorMessage).toBe(
+                            `Invalid ${testConfig.parameterSpec.ui.label}: ${badOption}. Please select a value from the dropdown.`
+                        );
+                        resolve();
+                    });
                 });
             });
         });

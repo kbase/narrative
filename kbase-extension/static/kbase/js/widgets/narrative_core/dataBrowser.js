@@ -3,6 +3,7 @@
  */
 
 define([
+    'jquery',
     'bluebird',
     'narrativeConfig',
     'kbase-generic-client-api',
@@ -10,7 +11,7 @@ define([
     'util/timeFormat',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'api/dataProvider',
-], (Promise, Config, GenericClient, Runtime, TimeFormat, kbaseDataCard, DataProvider) => {
+], ($, Promise, Config, GenericClient, Runtime, TimeFormat, kbaseDataCard, DataProvider) => {
     'use strict';
 
     const OBJECT_COUNT_LIMIT = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
@@ -103,18 +104,14 @@ define([
 
         changeState(newState) {
             Object.assign(this.state, newState);
-            // this.state = {...this.state, ...newState};
-            let updateWsList = false,
-                updateTypeList = false;
-            if (this.state.typeFilter === null) {
-                updateTypeList = true;
-            }
-            if (newState.hasOwnProperty('wsIdFilter') || newState.hasOwnProperty('typeFilter')) {
+            const updateWsList = false,
+                updateTypeList = this.state.typeFilter === null;
+            if ('wsIdFilter' in newState || 'typeFilter' in newState) {
                 this.state.searchFilter = '';
                 this.setLoading(true);
                 this.updateView(updateWsList, updateTypeList);
             }
-            if (newState.hasOwnProperty('searchFilter')) {
+            if ('searchFilter' in newState) {
                 this.render();
             }
         }
@@ -168,7 +165,7 @@ define([
             Object.keys(typeCounts).forEach((t) => {
                 const unversioned = t.split('-')[0];
                 const typeName = unversioned.split('.')[1];
-                if (!types.hasOwnProperty(typeName)) {
+                if (!(typeName in types)) {
                     types[typeName] = {
                         count: typeCounts[t],
                         full: [unversioned],
@@ -286,7 +283,7 @@ define([
                         obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
                         obj.narrativeName = this.data.workspace_display[obj.ws_id].display;
 
-                        rows.append(this.rowTemplate(obj, loadedData.hasOwnProperty(obj.name)));
+                        rows.append(this.rowTemplate(obj, obj.name in loadedData));
                         count++;
                     }
                 }
@@ -324,7 +321,7 @@ define([
                 if (!this.data.limit_reached || this.data.limit_reached !== 1) {
                     name += ' (' + this.workspaces[wsId].count + ')';
                 }
-                const $option = $('<option data-id="' + wsId + '">' + name + '</option>');
+                const $option = $('<option data-id="' + wsId + '"/>').text(name);
                 if (this.state.wsIdFilter == wsId) {
                     $option.prop('selected', true);
                 }
@@ -350,15 +347,8 @@ define([
             Object.keys(this.types)
                 .sort()
                 .forEach((t) => {
-                    const $option = $(
-                        '<option data-type="' +
-                            t +
-                            '">' +
-                            t +
-                            ' (' +
-                            this.types[t].count +
-                            ')' +
-                            '</option>'
+                    const $option = $(`<option data-type="${t}" />`).text(
+                        `${t} (${this.types[t].count})`
                     );
                     if (this.state.typeFilter === t) {
                         $option.prop('selected', true);

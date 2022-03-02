@@ -7,7 +7,7 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/validation',
+    '../validation',
     'util/timeFormat',
     'widgets/appWidgets2/common',
     '../validators/constants',

@@ -9,7 +9,7 @@ define([
     'common/props',
     'kb_service/client/userAndJobState',
     'kb_service/client/shock',
-    '../validators/text',
+    '../validation',
     '../validators/constants',
     '../inputUtils',
 
@@ -88,13 +88,13 @@ define([
 
         function importControlValue() {
             return Promise.try(() => {
-                return Validation.importString(getControlValue());
+                return Validation.importTextString(getControlValue());
             });
         }
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 

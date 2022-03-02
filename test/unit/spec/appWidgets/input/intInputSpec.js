@@ -56,133 +56,135 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime', 'testUtil'], (
             });
         });
 
-        it('should start and stop properly without initial value', (done) => {
+        it('should start and stop properly without initial value', async () => {
             const widget = IntInput.make(testConfig);
-            widget
-                .start({ node: container })
-                .then(() => {
-                    expect(container.childElementCount).toBeGreaterThan(0);
-                    const input = container.querySelector('input[data-type="int"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBeNull();
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(container.childElementCount).toBe(0);
-                    done();
-                });
+            await widget.start({ node: container });
+            expect(container.childElementCount).toBeGreaterThan(0);
+            const input = container.querySelector('input[data-type="int"]');
+            expect(input).toBeDefined();
+            expect(input.getAttribute('value')).toBe(testConfig.parameterSpec.data.nullValue);
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('should start and stop properly with initial value', (done) => {
+        it('should start and stop properly with initial value', async () => {
             testConfig.initialValue = 10;
             const widget = IntInput.make(testConfig);
-            widget
-                .start({ node: container })
-                .then(() => {
-                    expect(container.childElementCount).toBeGreaterThan(0);
-                    const input = container.querySelector('input[data-type="int"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(container.childElementCount).toBe(0);
-                    done();
-                });
+            await widget.start({ node: container });
+            expect(container.childElementCount).toBeGreaterThan(0);
+            const input = container.querySelector('input[data-type="int"]');
+            expect(input).toBeDefined();
+            expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('should update model properly with change event', (done) => {
+        it('should update model properly with change event', async () => {
+            const widget = IntInput.make(testConfig);
+            let changeMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 1 });
-                done();
+                changeMsg = value;
             });
-            const widget = IntInput.make(testConfig);
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                input.setAttribute('value', 1);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="int"]');
+            input.setAttribute('value', 1);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(changeMsg).toEqual({ newValue: 1 });
+            await widget.stop();
         });
 
-        xit('should update model properly with keyup/touch event', (done) => {
+        it('should update model properly with keyup event', async () => {
             const widget = IntInput.make(testConfig);
+            let validMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeFalsy();
-                done();
+                validMsg = message;
             });
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                input.value = 'foo';
-                input.setAttribute('value', 'foo');
-                input.dispatchEvent(new KeyboardEvent('keyup', { key: 3 }));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="int"]');
+            input.value = 'foo';
+            input.setAttribute('value', 'foo');
+            input.dispatchEvent(new KeyboardEvent('keyup', { key: 3 }));
+            await TestUtil.wait(500);
+            expect(validMsg.isValid).toBeFalsy();
+            await widget.stop();
         });
 
-        it('should catch invalid string input', (done) => {
+        it('should catch invalid string input', async () => {
             const widget = IntInput.make(testConfig);
+            let validMsg;
             bus.on('validation', (msg) => {
-                expect(msg.isValid).toBeFalsy();
-                expect(msg.diagnosis).toBe('invalid');
-                done();
+                validMsg = msg;
             });
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                input.setAttribute('value', 'abracadabra');
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+
+            const input = container.querySelector('input[data-type="int"]');
+            input.setAttribute('value', 'abracadabra');
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(validMsg.isValid).toBeFalsy();
+            expect(validMsg.diagnosis).toBe('invalid');
+            await widget.stop();
         });
 
-        it('should catch invalid float input', (done) => {
+        it('should catch invalid float input', async () => {
             const widget = IntInput.make(testConfig);
+            let validMsg;
             bus.on('validation', (msg) => {
-                expect(msg.isValid).toBeFalsy();
-                expect(msg.diagnosis).toBe('invalid');
-                done();
+                validMsg = msg;
             });
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                input.setAttribute('value', 12345.6);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="int"]');
+            input.setAttribute('value', 12345.6);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(validMsg.isValid).toBeFalsy();
+            expect(validMsg.diagnosis).toBe('invalid');
+            await widget.stop();
         });
 
-        it('should show message when configured, valid input', (done) => {
+        it('should show message when configured, valid input', async () => {
             testConfig.showOwnMessages = true;
             const widget = IntInput.make(testConfig);
+            let changeMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 5 });
-                // message node will be empty
-                const errorMsg = container.querySelector('[data-element="message"]');
-                expect(errorMsg.innerHTML).toBe('');
-                done();
+                changeMsg = value;
             });
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                input.setAttribute('value', 5);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="int"]');
+            input.setAttribute('value', 5);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(changeMsg).toEqual({ newValue: 5 });
+            // message node will be empty
+            const errorMsg = container.querySelector('[data-element="message"]');
+            expect(errorMsg.innerHTML).toBe('');
+            await widget.stop();
         });
 
-        it('should show message when configured, invalid input', (done) => {
+        it('should show message when configured, invalid input', async () => {
             testConfig.showOwnMessages = true;
             const widget = IntInput.make(testConfig);
+            let changeMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 123456 });
-                // check for an error message in the node
-                const errorMsg = container.querySelector('[data-element="message"]');
-                expect(errorMsg.innerHTML).toContain('ERROR');
+                changeMsg = value;
             });
+            let validMsg;
             bus.on('validation', (msg) => {
-                expect(msg.isValid).toBeFalsy();
-                expect(msg.diagnosis).toBe('invalid');
-                done();
+                validMsg = msg;
             });
-            widget.start({ node: container }).then(() => {
-                const input = container.querySelector('input[data-type="int"]');
-                // this value is out of the allowed range
-                input.setAttribute('value', 123456);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="int"]');
+            // this value is out of the allowed range
+            input.setAttribute('value', 123456);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(1000);
+            expect(changeMsg).toEqual({ newValue: 123456 });
+            // check for an error message in the node
+            const errorMsg = container.querySelector('[data-element="message"]');
+            expect(errorMsg.innerHTML).toContain('ERROR');
+            expect(validMsg.isValid).toBeFalsy();
+            expect(validMsg.diagnosis).toBe('invalid');
         });
 
         // this sets the model values but does nothing to the UI

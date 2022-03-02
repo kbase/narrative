@@ -1,7 +1,7 @@
 define([
     'bluebird',
-    'kb_common/html',
-    '../validators/text',
+    'common/html',
+    '../validation',
     'common/events',
     'common/ui',
     'common/props',
@@ -71,13 +71,13 @@ define([
 
         function importControlValue() {
             return Promise.try(() => {
-                return Validation.importString(getControlValue());
+                return Validation.importTextString(getControlValue());
             });
         }
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
@@ -105,7 +105,9 @@ define([
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        if (e.target) {
+                            e.target.dispatchEvent(new Event('change'));
+                        }
                     }, editPauseInterval);
                 },
             };

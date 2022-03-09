@@ -5,11 +5,83 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
+- DATAUP-641 - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+- DATAUP-641 - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+- DATAUP-641 - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
+- PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
+- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+- SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
+
+- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+- SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
+
+Dependency Changes
+- Python dependency updates
+  - bokeh: 2.3.3 -> 2.4.2
+  - coverage: 5.5 -> 6.3.2
+  - decorator: 5.0.9 -> 5.1.1
+  - jinja2: 3.0.1 -> 3.0.3
+  - jsonschema: 3.2.0 -> 4.4.0
+  - markupsafe: 2.0.1 -> 2.1.0
+  - pillow: 8.3.2 -> 9.0.1
+  - plotly: 5.3.1 -> 5.6.0
+  - pygments: 2.10.0 -> 2.11.2
+  - pymongo: 3.12.0 -> 4.0.1
+  - pytest-cov: 2.12.1 -> 3.0.0
+  - pytest: 6.2.5 -> 7.0.1
+  - pyyaml: 5.4.1 -> 6.0
+  - requests: 2.26.0 -> 2.27.1
+  - rsa: 4.7.2 -> 4.8
+  - semantic_version: 2.8.5 -> 2.9.0
+  - setuptools: 57.4.0 -> 60.9.3
+  - sympy: 1.8 -> 1.9
+  - terminado: 0.11.1 -> 0.13.1
+
+### Version 5.0.2
+- SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
+- DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
+- DATAUP-715 - Adds scrollbars to the configure and results tab of the bulk import cell.
+- Fixed an error where Narrative names didn't always render properly in the Narratives panel.
+- Fixed an error where Narrative names didn't always render properly in the data slideout.
+
+### Version 5.0.1
+- SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.
+- Updated AppParamsWidget to return all current values from `get-parameters` if no specific value was specified, allowing to see all current parameter values without having to know their names.
+- DATAUP-570 - Only use the Narrative configuration to set available import types in the Import area dropdowns
+- DATAUP-577 - Sanitize suggested output object names for bulk import jobs so they follow the rules
+- PTV-1717 - fix landing page links for modeling widgets
+- PTV-1726 - address issue where the "Narrative updated in another session" would appear with no other session open
+
+### Version 5.0.0
+This new major version of the KBase Narrative Interface introduces a way to import data from your data staging area in large batches using a single Bulk Import cell. See more details about the new workflows here: [Bulk Import Guide](https://docs.kbase.us/data/upload-download-guide/bulk-import-guide)
+
+There are also a ton of other updates and changes to both the Narrative interface (in various small and not-so-small ways) and to how the Narrative software will be developed going forward.
+
+The following is a high level list of changes, with matching JIRA tickets where appropriate. As always, all Narrative work is done on Github and is available for view and discussion there.
 
 Code Changes
-
+- Built an entirely new Bulk Import cell type that runs a batch of Import jobs all at once.
+- Objects that can be imported in bulk are:
+  - SRA reads
+  - Interleaved FASTQ reads
+  - Non-interleaved FASTQ reads
+  - Read Assemblies
+  - GFF metagenomes
+  - Genbank genomes
+- Redesigned the Data Import Tab
+  - It now suggests object upload type based on file suffix.
+  - Files are now selected for import by clicking a checkbox (or selecting a type), then clicking “Import Selected”
+  - The Import Tab file browser has been improved and remembers selections more consistently
+  - The Import Tab styling has been made more internally consistent.
+- DATAUP-225 - Styles and color usage have been normalized in many places in the app cell and bulk import cell
+- DATAUP-329 - Standardized the use of select boxes in various inputs for the app cell and bulk import cell
+- Remove app info dialog option - superseded by the “Info” tab on all app cells
+- DATAUP-263 - Fix bug where app cells can get stuck in the “Sending…” phase
 - SAM-40 - Add Name/ID column to SampleSet viewer
-- Migrated from Bower -> NPM, mostly kept the same versions, though some were unavoidably changed
+- DATAUP-651 - Update Data Import tab help tour to include new features.
+
+Development Changes
+- UIP-3 - Made the migration away from Bower to using only NPM for Javascript package management. Mostly, the same versions were kept, though some were unavoidably changed
   - seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
   - plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
   - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
@@ -18,14 +90,16 @@ Code Changes
   - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
     - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
     - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
-- SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
+DATAUP-246 - migrate from CSS to using SASS throughout the Narrative, making use of [BEM notation](http://getbem.com/introduction/) for element styling
+DATAUP-62 - designed and implemented simple coding standards and git workflow for the Narrative repo
+DATAUP-71 - added automated linting and code quality tools to the Narrative repo
 
 
 ### Version 4.6.0
 Code changes
 - DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
 - PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
-- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly. 
+- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly.
 
 Dependency Changes
 - Python dependency updates
@@ -37,7 +111,7 @@ Dependency Changes
 - Javascript dependency updates
   - @wdio/browserstack-service 7.9.1 -> 7.11.1
   - @wdio/cli 7.9.1 -> 7.11.1
-  - @wdio/local-runner 7.9.1 -> 7.11.1 
+  - @wdio/local-runner 7.9.1 -> 7.11.1
   - @wdio/mocha-framework 7.9.1 -> 7.11.1
   - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
   - @wdio/spec-reporter 7.9.0 -> 7.10.1

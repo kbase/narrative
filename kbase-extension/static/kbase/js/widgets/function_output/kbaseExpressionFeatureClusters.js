@@ -457,7 +457,8 @@ define([
 
                             const methodMap = {
                                 view_expression_profile: kbaseExpressionSparkline,
-                                view_expression_pairwise_correlation: kbaseExpressionPairwiseCorrelation,
+                                view_expression_pairwise_correlation:
+                                    kbaseExpressionPairwiseCorrelation,
                                 view_expression_heatmap: kbaseExpressionHeatmap,
                             };
 

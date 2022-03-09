@@ -8,9 +8,6 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
     'use strict';
 
     const t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        span = t('span'),
         table = t('table'),
         tr = t('tr'),
         td = t('td'),
@@ -26,32 +23,32 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
             params,
             paramsListener = null,
             jobId,
-            runtime = Runtime.make(),
             isParentJob;
+        const runtime = Runtime.make();
 
-        function updateRowStatus(ui, params, container) {
+        function updateRowStatus(_ui, _params, _container) {
             if (isParentJob) {
-                if (params && params.batch_params && params.batch_params.length) {
-                    container.innerHTML =
+                if (_params && _params.batch_params && _params.batch_params.length) {
+                    _container.innerHTML =
                         'This batch job has ' +
-                        params.batch_params.length +
+                        _params.batch_params.length +
                         ' child jobs. Please click one of those on the left for details';
                 } else {
-                    container.innerHTML = 'Please click one of the child jobs for details.';
+                    _container.innerHTML = 'Please click one of the child jobs for details.';
                 }
             }
-            if (!params) {
+            if (!_params) {
                 return;
             } else {
-                Object.keys(params).forEach((key) => {
+                Object.keys(_params).forEach((key) => {
                     const selector = '[data-element-job-id="' + key + '"]';
-                    let row = container.querySelector(selector);
+                    let row = _container.querySelector(selector);
                     if (row === null) {
                         row = document.createElement('tr');
                         row.setAttribute('data-element-job-id', key);
-                        container.getElementsByTagName('tbody')[0].appendChild(row);
+                        _container.getElementsByTagName('tbody')[0].appendChild(row);
                     }
-                    row.innerHTML = td(key) + td(params[key]);
+                    row.innerHTML = td(key) + td(_params[key]);
                 });
             }
         }

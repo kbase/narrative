@@ -1,16 +1,15 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
     'common/runtime',
     '../inputUtils',
-    '../validators/float',
-
+    '../validation',
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) => {
+], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -60,13 +59,18 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateFloatString(value, spec.data.constraints, {
+                    nonFloatError: 'Invalid parameter format, please enter a number.',
+                });
             });
         }
 
         function importControlValue() {
             return Promise.try(() => {
-                return Validation.importString(getControlValue());
+                return Validation.importFloatString(
+                    getControlValue(),
+                    'Invalid parameter format, please enter a number.'
+                );
             });
         }
 
@@ -90,11 +94,12 @@ define([
             return {
                 type: 'keyup',
                 handler: function (e) {
+                    const target = e.target;
                     channel.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 },
             };
@@ -118,12 +123,12 @@ define([
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
+                                    const message = InputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -141,7 +146,7 @@ define([
                         .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
                                 errorMessage: err.message,
                             });
                         });
@@ -150,14 +155,8 @@ define([
         }
 
         function makeInputControl(currentValue, events) {
-            // CONTROL
             const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            let initialControlValue;
-
-            if (typeof currentValue === 'number') {
-                initialControlValue = String(currentValue);
-            }
 
             return div(
                 {
@@ -172,13 +171,7 @@ define([
                         },
                         [
                             typeof min === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      String(min) + ' &#8804; '
-                                  )
+                                ? InputUtils.numericalBoundaryDiv(min, true)
                                 : '',
                             input({
                                 id: events.addEvents({
@@ -190,16 +183,10 @@ define([
                                 style: {
                                     textAlign: 'right',
                                 },
-                                value: initialControlValue,
+                                value: currentValue,
                             }),
                             typeof max === 'number'
-                                ? div(
-                                      {
-                                          class: 'input-group-addon kb-input-group-addon',
-                                          fontFamily: 'monospace',
-                                      },
-                                      ' &#8804; ' + String(max)
-                                  )
+                                ? InputUtils.numericalBoundaryDiv(max, false)
                                 : '',
                         ]
                     ),
@@ -221,17 +208,14 @@ define([
             });
         }
 
-        function layout(events) {
+        function layout() {
             const content = div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content: content,
-                events: events,
-            };
+            return content;
         }
 
         function autoValidate() {
@@ -248,11 +232,7 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                const events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
+                container.innerHTML = layout();
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -280,8 +260,8 @@ define([
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

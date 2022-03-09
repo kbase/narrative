@@ -4,8 +4,10 @@ define([
     'base/js/namespace',
     'narrativeConfig',
     'narrativeMocks',
-], ($, AppPanel, Jupyter, Config, Mocks) => {
+    'testUtil',
+], ($, AppPanel, Jupyter, Config, Mocks, TestUtil) => {
     'use strict';
+
     let $panel, appPanel;
     const FAKE_USER = 'some_user',
         FAKE_TOKEN = 'some_fake_token',
@@ -115,6 +117,7 @@ define([
             Jupyter.notebook = null;
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('Should initialize properly', () => {
@@ -375,7 +378,7 @@ define([
             }, 1000);
         });
 
-        it('Should trigger the insert app function when triggerApp is called', (done) => {
+        it('Should trigger the insert app function when triggerApp is called', () => {
             const appId = 'a_module/an_app',
                 dummySpec = {
                     info: {
@@ -387,18 +390,21 @@ define([
                 url: Config.url('narrative_method_store'),
                 response: [dummySpec],
             });
-            // in actual usage, this event gets bound to either $(document) or some other
-            // widget that it percolates up to. Jasmine doesn't like that, so we bind it here
-            appPanel.on('appClicked.Narrative', (event, app, tag, params) => {
-                expect(app).toEqual(dummySpec);
-                expect(tag).toEqual(appTag);
-                expect(params).not.toBeDefined();
-                done();
+
+            return new Promise((resolve) => {
+                // in actual usage, this event gets bound to either $(document) or some other
+                // widget that it percolates up to. Jasmine doesn't like that, so we bind it here
+                appPanel.on('appClicked.Narrative', (event, app, tag, params) => {
+                    expect(app).toEqual(dummySpec);
+                    expect(tag).toEqual(appTag);
+                    expect(params).not.toBeDefined();
+                    resolve();
+                });
+                appPanel.triggerApp(appId, 'release');
             });
-            appPanel.triggerApp(appId, 'release');
         });
 
-        it('Should trigger the insert app function when an app card has its title clicked', (done) => {
+        it('Should trigger the insert app function when an app card has its title clicked', () => {
             const appId = 'a_module/an_app',
                 appName = APP_INFO.app_infos[appId].info.name,
                 dummySpec = {
@@ -412,15 +418,18 @@ define([
                 url: Config.url('narrative_method_store'),
                 response: [dummySpec],
             });
-            // in actual usage, this event gets bound to either $(document) or some other
-            // widget that it percolates up to. Jasmine doesn't like that, so we bind it here
-            appPanel.on('appClicked.Narrative', (event, app, tag, params) => {
-                expect(app).toEqual(dummySpec);
-                expect(tag).toEqual(appTag);
-                expect(params).not.toBeDefined();
-                done();
+
+            return new Promise((resolve) => {
+                // in actual usage, this event gets bound to either $(document) or some other
+                // widget that it percolates up to. Jasmine doesn't like that, so we bind it here
+                appPanel.on('appClicked.Narrative', (event, app, tag, params) => {
+                    expect(app).toEqual(dummySpec);
+                    expect(tag).toEqual(appTag);
+                    expect(params).not.toBeDefined();
+                    resolve();
+                });
+                $panel.find(`div.kb-data-list-name:contains("${appName}")`).click();
             });
-            $panel.find(`div.kb-data-list-name:contains("${appName}")`).click();
         });
 
         it('Should know how to show an error', () => {

@@ -1,11 +1,9 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
-    'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'common/validation',
+    'underscore',
+    'common/html',
+    '../validation',
     'common/events',
     'common/runtime',
     'common/ui',
@@ -14,22 +12,7 @@ define([
     'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
-    'css!font-awesome',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Data,
-    TimeFormat,
-    WidgetCommon
-) => {
+], (Promise, $, _, html, Validation, Events, Runtime, UI, Data, TimeFormat, WidgetCommon) => {
     'use strict';
 
     // Constants
@@ -42,22 +25,19 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             objectRefType = config.referenceType || 'name',
-            parent,
-            container,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
                 availableValuesMap: {},
                 value: undefined,
             },
-            eventListeners = [],
-            workspaceId = runtime.getEnv('workspaceId');
+            eventListeners = [];
+        let parent, container, ui;
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
@@ -81,7 +61,6 @@ define([
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some((value) => {
                                 if (objectInfoHasRef(objectInfo, value)) {
-                                    // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
                                     return true;
                                 }
@@ -90,10 +69,9 @@ define([
                         }
                     })
                     .map((objectInfo, idx) => {
-                        let selected = false,
-                            ref = idx; //getObjectRef(objectInfo);
+                        let selected = false;
+                        const ref = idx;
                         if (objectInfoHasRef(objectInfo, model.value)) {
-                            // if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option(
@@ -178,8 +156,8 @@ define([
 
         function validate() {
             return Promise.try(() => {
-                let objInfo = model.availableValues[getControlValue()],
-                    processedValue = '',
+                let processedValue = '';
+                const objInfo = model.availableValues[getControlValue()],
                     validationOptions = {
                         required: spec.data.constraints.required,
                         authToken: runtime.authToken(),
@@ -328,17 +306,6 @@ define([
             });
         }
 
-        // function getObjectRef(objectInfo) {
-        //     switch (objectRefType) {
-        //         case 'name':
-        //             return objectInfo.name;
-        //         case 'ref':
-        //             return objectInfo.ref;
-        //         default:
-        //             throw new Error('Unsupported object reference type ' + objectRefType);
-        //     }
-        // }
-
         /*
          * Handle the workspace being updated and reflecting that correctly
          * in the ui.
@@ -346,10 +313,9 @@ define([
          * rebuild the control. If there is a current value and it is no longer
          * available, issue a warning
          */
-
         function doWorkspaceUpdated(data) {
             // compare to availableData.
-            if (!utils.isEqual(data, model.availableValues)) {
+            if (!_.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
                 model.availableValuesMap = {};
                 // our map is a little strange.
@@ -428,8 +394,8 @@ define([
         // INIT
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

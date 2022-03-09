@@ -1,16 +1,16 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
     'common/runtime',
     '../inputUtils',
-    '../validators/int',
+    '../validation',
+    '../validators/constants',
 
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) => {
+], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -60,7 +60,9 @@ define([
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                return Validation.validateIntString(value, spec.data.constraints, {
+                    nonIntError: 'Invalid parameter format, please enter an integer.',
+                });
             });
         }
 
@@ -72,7 +74,10 @@ define([
 
         function importControlValue() {
             return Promise.try(() => {
-                return Validation.importString(getControlValue());
+                return Validation.importIntString(
+                    getControlValue(),
+                    'Invalid parameter format, please enter an integer.'
+                );
             });
         }
 
@@ -90,11 +95,12 @@ define([
             return {
                 type: 'keyup',
                 handler: function (e) {
+                    const target = e.target;
                     channel.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 },
             };
@@ -118,12 +124,12 @@ define([
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
+                                    const message = InputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -141,7 +147,7 @@ define([
                         .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
                                 errorMessage: err.message,
                             });
                         });
@@ -153,45 +159,35 @@ define([
             // CONTROL
             const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            let initialControlValue;
-            if (typeof currentValue === 'number') {
-                initialControlValue = String(currentValue);
-            }
-            return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
-                div({ class: 'input-group', style: { width: '100%' } }, [
-                    typeof min === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              String(min) + ' &#8804; '
-                          )
-                        : '',
-                    input({
-                        id: events.addEvents({
-                            events: [handleChanged(), handleTouched()],
+
+            return div(
+                {
+                    style: { width: '100%' },
+                    dataElement: 'input-wrapper',
+                },
+                [
+                    div({ class: 'input-group', style: { width: '100%' } }, [
+                        typeof min === 'number' ? InputUtils.numericalBoundaryDiv(min, true) : '',
+                        input({
+                            id: events.addEvents({
+                                events: [handleChanged(), handleTouched()],
+                            }),
+                            class: 'form-control',
+                            dataElement: 'input',
+                            dataType: 'int',
+                            value: currentValue,
+                            style: {
+                                textAlign: 'right',
+                            },
                         }),
-                        class: 'form-control',
-                        dataElement: 'input',
-                        dataType: 'int',
-                        value: initialControlValue,
-                        style: {
-                            textAlign: 'right',
-                        },
+                        typeof max === 'number' ? InputUtils.numericalBoundaryDiv(max, false) : '',
+                    ]),
+                    div({
+                        dataElement: 'message',
+                        style: { backgroundColor: 'red', color: 'white' },
                     }),
-                    typeof max === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              ' &#8804; ' + String(max)
-                          )
-                        : '',
-                ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
-            ]);
+                ]
+            );
         }
 
         function render() {
@@ -257,8 +253,8 @@ define([
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

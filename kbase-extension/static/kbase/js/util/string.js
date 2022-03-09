@@ -44,14 +44,17 @@ define([], () => {
         if (!str) {
             return str;
         }
+        const charMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;',
+        };
         return str.replace(/[&<>"']/g, (s) => {
-            const charMap = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            };
             return charMap[s];
         });
     }
@@ -100,11 +103,86 @@ define([], () => {
         return s;
     }
 
+    /**
+     * Set the first letter of a string to uppercase
+     *
+     * Returns the input unchanged if it is not a string
+     *
+     * @param {string} string
+     */
+    function capitalize(string) {
+        if (typeof string !== 'string') {
+            return string;
+        }
+        return string.charAt(0).toLocaleUpperCase() + string.slice(1);
+    }
+
+    /**
+     * Turn an array of strings into a comma-separated string
+     * @param {array} array
+     * @returns {string}
+     */
+    function arrayToEnglish(array) {
+        const cleanArray = array.filter((item) => !!item);
+        if (cleanArray.length < 3) {
+            return array.join(' and ');
+        }
+        const lastItem = cleanArray.pop();
+        return cleanArray
+            .map((item) => `${item},`)
+            .concat(`and ${lastItem}`)
+            .join(' ');
+    }
+
+    /**
+     * Returns true if the value is an empty string (or entirely whitespace), or null.
+     * Returns false otherwise.
+     * @param {*} value
+     */
+    function isEmptyString(value) {
+        if (value === null) {
+            return true;
+        }
+        if (typeof value === 'string' && value.trim() === '') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This brings sanity to the output object name string in a few steps:
+     * 1. the name is treated as a path, and reduced down to only the filename
+     *   e.g. /path/to/file.txt -> file.txt
+     * 2. any illegal characters are transformed into _
+     *   e.g. "bad_file name&?.txt" -> "bad_file_name__.txt"
+     * 3. if the name is entirely numerical (not allowed), "obj_" is prepended
+     * 4. if the name is over 255 characters, it gets truncated to that length
+     * @param {string} name the potential output object name to make valid
+     */
+    function sanitizeWorkspaceObjectName(name, isPath) {
+        const maxNameLength = 255; // undocumented, from the workspace code
+        // if we're in a subpath, need to strip it down to just the file name
+        if (isPath && name.indexOf('/') !== -1) {
+            name = name.substring(name.lastIndexOf('/') + 1);
+        }
+        if (name.match(/^\d+$/)) {
+            name = `obj_${name}`;
+        }
+        if (name.length > maxNameLength) {
+            name = name.substring(0, maxNameLength);
+        }
+        return name.replace(/[^A-Za-z0-9|._-]/g, '_');
+    }
+
     return {
-        uuid: uuid,
-        safeJSONStringify: safeJSONStringify,
-        readableBytes: readableBytes,
-        prettyPrintJSON: prettyPrintJSON,
-        escape: escape,
+        uuid,
+        safeJSONStringify,
+        readableBytes,
+        prettyPrintJSON,
+        escape,
+        capitalize,
+        arrayToEnglish,
+        isEmptyString,
+        sanitizeWorkspaceObjectName,
     };
 });

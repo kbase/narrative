@@ -1,10 +1,12 @@
-define(['jquery', 'kbaseNarrativeDownloadPanel', 'base/js/namespace', 'narrativeMocks'], (
-    $,
-    kbaseNarrativeDownloadPanel,
-    Jupyter,
-    Mocks
-) => {
+define([
+    'jquery',
+    'kbaseNarrativeDownloadPanel',
+    'base/js/namespace',
+    'narrativeMocks',
+    'testUtil',
+], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil) => {
     'use strict';
+
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
@@ -22,6 +24,7 @@ define(['jquery', 'kbaseNarrativeDownloadPanel', 'base/js/namespace', 'narrative
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should properly load with a valid upa', () => {

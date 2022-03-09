@@ -1,4 +1,4 @@
-define(['widgets/appWidgets2/input/subdataInput'], (SubdataInput) => {
+define(['widgets/appWidgets2/input/subdataInput', 'testUtil'], (SubdataInput, TestUtil) => {
     'use strict';
 
     describe('Test subobject data input widget', () => {
@@ -19,7 +19,7 @@ define(['widgets/appWidgets2/input/subdataInput'], (SubdataInput) => {
         };
 
         afterEach(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

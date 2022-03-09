@@ -1,12 +1,12 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, Dom) => {
+], (Promise, html, Validation, Events, Ui, Constants) => {
     'use strict';
 
     // Constants
@@ -16,16 +16,14 @@ define([
         option = t('option');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            dom,
-            container,
             bus = config.bus,
             model = {
                 availableValues: null,
                 value: null,
             };
+        let parent, ui, container;
 
         // Validate configuration.
         // Nothing to do...
@@ -44,7 +42,7 @@ define([
          */
 
         function getInputValue() {
-            const control = dom.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
 
             if (selected.length === 0) {
@@ -72,7 +70,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled',
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 }
 
@@ -86,21 +84,21 @@ define([
         }
 
         function makeInputControl(events) {
-            let selected,
-                selectOptions = model.availableValues.map((item) => {
-                    selected = false;
-                    if (item.value === model.value) {
-                        selected = true;
-                    }
+            let selected;
+            const selectOptions = model.availableValues.map((item) => {
+                selected = false;
+                if (item.value === model.value) {
+                    selected = true;
+                }
 
-                    return option(
-                        {
-                            value: item.value,
-                            selected: selected,
-                        },
-                        item.display
-                    );
-                });
+                return option(
+                    {
+                        value: item.value,
+                        selected: selected,
+                    },
+                    item.display
+                );
+            });
 
             // CONTROL
             return select(
@@ -128,12 +126,12 @@ define([
             );
         }
 
-        function render(input) {
+        function render() {
             Promise.try(() => {
                 const events = Events.make(),
                     inputControl = makeInputControl(events);
 
-                dom.setContent('input-container', inputControl);
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             }).then(() => {
                 autoValidate();
@@ -169,7 +167,7 @@ define([
                     return true;
                 }
                 return false;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -177,7 +175,7 @@ define([
         function unsetModelValue() {
             return Promise.try(() => {
                 model.value = undefined;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -197,7 +195,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = Ui.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);
@@ -216,17 +214,8 @@ define([
             });
         }
 
-        //        function run(input) {
-        //            return Promise.try(function () {
-        //                return render(input);
-        //            })
-        //            .then(function () {
-        //                return autoValidate();
-        //            });
-        //        }
-
         return {
-            start: start,
+            start,
         };
     }
 

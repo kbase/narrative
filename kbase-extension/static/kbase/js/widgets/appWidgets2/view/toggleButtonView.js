@@ -7,10 +7,10 @@ define([
     'common/events',
     'common/ui',
     'common/props',
+    '../validators/constants',
 
     'bootstrap',
-    'css!font-awesome',
-], (Promise, $, Jupyter, html, Validation, Events, UI, Props) => {
+], (Promise, $, Jupyter, html, Validation, Events, UI, Props, Constants) => {
     'use strict';
 
     // Constants
@@ -20,13 +20,18 @@ define([
         label = t('label');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            container,
             bus = config.bus,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {
+                    render();
+                },
+            });
+        let container, ui;
 
         options.enabled = true;
 
@@ -80,7 +85,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled',
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 }
 
@@ -115,7 +120,7 @@ define([
                         events: [
                             {
                                 type: 'change',
-                                handler: function (e) {
+                                handler: function () {
                                     validate().then((result) => {
                                         if (result.isValid) {
                                             bus.emit('changed', {
@@ -172,7 +177,6 @@ define([
         function start() {
             return Promise.try(() => {
                 bus.on('run', (message) => {
-                    parent = message.node;
                     container = message.node.appendChild(document.createElement('div'));
 
                     const events = Events.make({ node: container }),
@@ -183,7 +187,7 @@ define([
 
                     ui = UI.make({ node: container });
 
-                    bus.on('reset-to-defaults', (message) => {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
 
@@ -201,17 +205,9 @@ define([
             // TODO: detach all events.
         }
 
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function (props) {
-                render();
-            },
-        });
-
         return {
-            start: start,
+            start,
+            stop,
         };
     }
 

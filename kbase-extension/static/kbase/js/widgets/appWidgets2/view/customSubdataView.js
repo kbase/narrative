@@ -9,9 +9,21 @@ define([
     'common/props',
     'base/js/namespace',
     '../subdataMethods/manager',
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome',
-], ($, Promise, html, Validation, Events, Runtime, UI, Props, Jupyter, SubdataMethods) => {
+], (
+    $,
+    Promise,
+    html,
+    Validation,
+    Events,
+    Runtime,
+    UI,
+    Props,
+    Jupyter,
+    SubdataMethods,
+    Constants
+) => {
     'use strict';
 
     /*
@@ -39,23 +51,31 @@ define([
         button = t('button');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             appSpec = config.appSpec,
             runtime = Runtime.make(),
             workspaceId = runtime.getEnv('workspaceId'),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            model,
-            subdataMethods,
-            isAvailableValuesInitialized = false,
-            options = {
-                objectSelectionPageSize: 20,
-            },
-            ui;
+            subdataMethods = SubdataMethods.make(),
+            model = Props.make({
+                data: {
+                    referenceObjectName: null,
+                    availableValues: [],
+                    selectedItems: [],
+                    value: null,
+                    showFrom: 0,
+                    showTo: 5,
+                },
+                onUpdate: () => {
+                    renderStats();
+                    renderToolbar();
+                    renderAvailableItems();
+                    renderSelectedItems();
+                },
+            });
 
-        subdataMethods = SubdataMethods.make();
+        let parent, container, ui;
 
         function buildOptions() {
             const availableValues = model.getItem('availableValues'),
@@ -66,9 +86,9 @@ define([
             }
             return selectOptions.concat(
                 availableValues.map((availableValue) => {
-                    let selected = false,
-                        optionLabel = availableValue.id,
+                    const optionLabel = availableValue.id,
                         optionValue = availableValue.id;
+                    let selected = false;
                     // TODO: pull the value out of the object
                     if (value.indexOf(availableValue.id) >= 0) {
                         selected = true;
@@ -116,13 +136,7 @@ define([
 
         function didChange() {
             validate().then((result) => {
-                if (result.isValid) {
-                    model.setItem('value', result.value);
-                    updateInputControl('value');
-                    channel.emit('changed', {
-                        newValue: result.value,
-                    });
-                } else if (result.diagnosis === 'required-missing') {
+                if (result.isValid || result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.setItem('value', result.value);
                     updateInputControl('value');
                     channel.emit('changed', {
@@ -143,25 +157,6 @@ define([
             didChange();
         }
 
-        function doRemoveSelectedItem(indexOfitemToRemove) {
-            const selectedItems = model.getItem('selectedItems', []),
-                prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
-            selectedItems.splice(indexOfitemToRemove, 1);
-
-            const newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
-            if (newAllowSelection && !prevAllowSelection) {
-                // update text areas to have md-col-7 (from md-col-10)
-                $(ui.getElement('input-container'))
-                    .find('.row > .col-md-10')
-                    .switchClass('col-md-10', 'col-md-7');
-                $(ui.getElement('input-container')).find('.col-md-3.hidden').removeClass('hidden');
-
-                // update button areas to remove hidden class
-            }
-            model.setItem('selectedItems', selectedItems);
-            didChange();
-        }
-
         function doRemoveSelectedAvailableItem(idToRemove) {
             const selectedItems = model.getItem('selectedItems', []);
 
@@ -178,14 +173,14 @@ define([
         }
 
         function renderAvailableItems() {
-            let selected = model.getItem('selectedItems', []),
+            const selected = model.getItem('selectedItems', []),
                 allowSelection = spec.ui.multiSelection || selected.length === 0,
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
-                events = Events.make({ node: container }),
-                content;
+                events = Events.make({ node: container });
+            let content;
 
             if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
@@ -196,7 +191,7 @@ define([
                                 return item.id === id;
                             }),
                             disabled = isSelected;
-                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                        return div({ class: 'row', style: { border: '1px solid #CCC' } }, [
                             div(
                                 {
                                     class: 'col-md-2',
@@ -249,11 +244,7 @@ define([
                                                 },
                                                 [
                                                     span({
-                                                        class: 'fa fa-minus-circle',
-                                                        style: {
-                                                            color: 'red',
-                                                            fontSize: '200%',
-                                                        },
+                                                        class: 'fa fa-2x fa-minus-circle text-danger',
                                                     }),
                                                 ]
                                             );
@@ -275,11 +266,7 @@ define([
                                                 },
                                                 [
                                                     span({
-                                                        class: 'fa fa-plus-circle',
-                                                        style: {
-                                                            color: 'green',
-                                                            fontSize: '200%',
-                                                        },
+                                                        class: 'fa fa-2x fa-plus-circle text-success',
                                                     }),
                                                 ]
                                             );
@@ -293,8 +280,7 @@ define([
                                                 dataItemId: item.id,
                                             },
                                             span({
-                                                class: 'fa fa-ban',
-                                                style: { color: 'silver', fontSize: '200%' },
+                                                class: 'fa fa-2x a-ban text-silver',
                                             })
                                         );
                                     })(),
@@ -311,10 +297,10 @@ define([
         }
 
         function renderSelectedItems() {
-            let selectedItems = model.getItem('selectedItems', []),
+            const selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
-                events = Events.make({ node: container }),
-                content;
+                events = Events.make({ node: container });
+            let content;
 
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
@@ -332,7 +318,7 @@ define([
                             {
                                 class: 'row',
                                 style: {
-                                    border: '1px #CCC solid',
+                                    border: '1px solid #CCC',
                                     borderCollapse: 'collapse',
                                     boxSizing: 'border-box',
                                 },
@@ -358,8 +344,6 @@ define([
                                     {
                                         class: 'col-md-8',
                                         style: {
-                                            xdisplay: 'inline-block',
-                                            xwidth: '90%',
                                             padding: '2px',
                                         },
                                     },
@@ -383,8 +367,7 @@ define([
                                                 title: 'Remove from selected',
                                             },
                                             span({
-                                                class: 'fa fa-minus-circle',
-                                                style: { color: 'red', fontSize: '200%' },
+                                                class: 'fa fa-2x fa-minus-circle text-danger',
                                             })
                                         ),
                                     ]
@@ -400,58 +383,43 @@ define([
         }
 
         function renderSearchBox() {
-            let items = model.getItem('availableValues', []),
-                events = Events.make({ node: container }),
-                content;
-
-            //if (items.length === 0) {
-            //    content = '';
-            //} else {
-            content = input({
-                class: 'form-contol',
-                style: { xwidth: '100%' },
-                placeholder: 'search',
-                value: model.getItem('filter') || '',
-                id: events.addEvents({
-                    events: [
-                        {
-                            type: 'keyup',
-                            handler: function (e) {
-                                doSearchKeyUp(e);
+            const events = Events.make({ node: container }),
+                content = input({
+                    class: 'form-contol',
+                    placeholder: 'search',
+                    value: model.getItem('filter') || '',
+                    id: events.addEvents({
+                        events: [
+                            {
+                                type: 'keyup',
+                                handler: function (e) {
+                                    doSearchKeyUp(e);
+                                },
                             },
-                        },
-                        {
-                            type: 'focus',
-                            handler: function () {
-                                Jupyter.narrative.disableKeyboardManager();
+                            {
+                                type: 'focus',
+                                handler: function () {
+                                    Jupyter.narrative.disableKeyboardManager();
+                                },
                             },
-                        },
-                        {
-                            type: 'blur',
-                            handler: function () {
-                                console.log('SingleSubData Search BLUR');
-                                // Jupyter.narrative.enableKeyboardManager();
+                            {
+                                type: 'click',
+                                handler: function () {
+                                    Jupyter.narrative.disableKeyboardManager();
+                                },
                             },
-                        },
-                        {
-                            type: 'click',
-                            handler: function () {
-                                Jupyter.narrative.disableKeyboardManager();
-                            },
-                        },
-                    ],
-                }),
-            });
-            //}
+                        ],
+                    }),
+                });
 
             ui.setContent('search-box', content);
             events.attachEvents();
         }
 
         function renderStats() {
-            let availableItems = model.getItem('availableValues', []),
-                filteredItems = model.getItem('filteredAvailableItems', []),
-                content;
+            const availableItems = model.getItem('availableValues', []),
+                filteredItems = model.getItem('filteredAvailableItems', []);
+            let content;
 
             if (availableItems.length === 0) {
                 content = span({ style: { fontStyle: 'italic' } }, [' - no available items']);
@@ -466,9 +434,9 @@ define([
         }
 
         function renderToolbar() {
-            let items = model.getItem('filteredAvailableItems', []),
-                events = Events.make({ node: container }),
-                content;
+            const items = model.getItem('filteredAvailableItems', []),
+                events = Events.make({ node: container });
+            let content;
 
             if (items.length === 0) {
                 content = '';
@@ -478,7 +446,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -492,7 +459,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '50%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -506,7 +472,6 @@ define([
                         {
                             class: 'btn btn-default',
                             type: 'button',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -520,7 +485,6 @@ define([
                         {
                             type: 'button',
                             class: 'btn btn-default',
-                            style: { xwidth: '100%' },
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
@@ -538,11 +502,11 @@ define([
         }
 
         function setPageStart(newFrom) {
-            let from = model.getItem('showFrom'),
+            const from = model.getItem('showFrom'),
                 to = model.getItem('to'),
-                newTo,
                 total = model.getItem('filteredAvailableItems', []).length,
                 pageSize = 5;
+            let newTo;
 
             if (newFrom <= 0) {
                 newFrom = 0;
@@ -598,7 +562,7 @@ define([
             }
         }
 
-        function makeInputControl(events) {
+        function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
             const availableValues = model.getItem('availableValues');
@@ -611,7 +575,7 @@ define([
                             fontStyle: 'italic',
                             whiteSpace: 'normal',
                             padding: '3px',
-                            border: '1px silver solid',
+                            border: '1px solid silver',
                         },
                     },
                     'Items will be available after selecting a value for ' +
@@ -644,7 +608,7 @@ define([
                                     { class: 'col-md-12' },
                                     div({
                                         style: {
-                                            border: '1px silver solid',
+                                            border: '1px solid silver',
                                         },
                                         dataElement: 'available-items',
                                     })
@@ -658,7 +622,7 @@ define([
                     classes: ['kb-panel-light'],
                     body: div({
                         style: {
-                            border: '1px silver solid',
+                            border: '1px solid silver',
                         },
                         dataElement: 'selected-items',
                     }),
@@ -678,17 +642,18 @@ define([
          *
          */
         function updateInputControl(changedProperty) {
+            let count, options;
             switch (changedProperty) {
                 case 'value':
                     // just change the selections.
-                    var count = buildCount();
+                    count = buildCount();
                     ui.setContent('input-control.count', count);
 
                     break;
                 case 'availableValues':
                     // rebuild the options
                     // re-apply the selections from the value
-                    var options = buildOptions();
+                    options = buildOptions();
                     ui.setContent('input-control.input', options);
                     ui.setContent('input-control.count', count);
 
@@ -710,17 +675,6 @@ define([
          * values.
          */
         function getInputValue() {
-            //            var control = ui.getElement('input-container.input');
-            //            if (!control) {
-            //                return null;
-            //            }
-            //            var input = control.selectedOptions,
-            //                i, values = [];
-            //            for (i = 0; i < input.length; i += 1) {
-            //                values.push(input.item(i).value);
-            //            }
-            //            // cute ... allows selecting multiple values but does not expect a sequence...
-            //            return values;
             return model.getItem('selectedItems');
         }
 
@@ -760,23 +714,6 @@ define([
             });
         }
 
-        function fetchDatax() {
-            let referenceObjectName = model.getItem('referenceObjectName'),
-                referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
-
-            if (!referenceObjectRef) {
-                if (!referenceObjectName) {
-                    return [];
-                }
-                referenceObjectRef = workspaceId + '/' + referenceObjectName;
-            }
-
-            return subdataMethods.fetchData({
-                referenceObjectRef: referenceObjectRef,
-                spec: spec,
-            });
-        }
-
         function syncAvailableValues() {
             return Promise.try(() => {
                 return fetchData();
@@ -810,7 +747,6 @@ define([
                 // - a set of selected ids
                 // - a set of filtered ids
                 model.setItem('availableValues', data);
-                isAvailableValuesInitialized = true;
 
                 // TODO: generate all of this in the fetchData -- it will be a bit faster.
                 const map = {};
@@ -818,12 +754,7 @@ define([
                     map[datum.id] = datum;
                 });
 
-                //var availableIds = data.map(function (datum) {
-                //    return datum.id;
-                //});
-
                 model.setItem('availableValuesMap', map);
-
                 doFilterItems();
             });
         }
@@ -846,7 +777,7 @@ define([
             return Promise.try(() => {
                 // check to see if we have to render inputControl.
                 const events = Events.make({ node: container }),
-                    inputControl = makeInputControl(events),
+                    inputControl = makeInputControl(),
                     content = div(
                         {
                             class: 'input-group',
@@ -915,8 +846,8 @@ define([
             // primary value.
             // TODO: we need to get this via the message bus!!!
             if (
-                subdataInfo.params.dependencies.some((paramId) => {
-                    return model.getItem(['required-params', paramId], null) === null;
+                subdataInfo.params.dependencies.some((_paramId) => {
+                    return model.getItem(['required-params', _paramId], null) === null;
                 })
             ) {
                 resetModelValue();
@@ -935,7 +866,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', (message) => {
+            channel.on('reset-to-defaults', () => {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -948,9 +879,6 @@ define([
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-
-                // updateInputControl('availableValues');
-                // updateInputControl('value');
             });
 
             /*
@@ -966,29 +894,6 @@ define([
              * any parameter which has a dependency upon any other.
              *
              */
-
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.constant_ref
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
 
             if (subdataInfo.params.dependencies) {
                 subdataInfo.params.dependencies.forEach((paramId) => {
@@ -1031,51 +936,6 @@ define([
                 });
             }
 
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
-
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-value',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
-
             // This control has a dependency relationship in that its
             // selection of available values is dependent upon a sub-property
             // of an object referenced by another parameter.
@@ -1099,7 +959,7 @@ define([
                         },
                     }
                 )
-                .then((message) => {
+                .then(() => {
                     // console.log('Now i got it again', message);
                 });
         }
@@ -1160,25 +1020,6 @@ define([
                 busConnection.stop();
             });
         }
-
-        // MAIN
-
-        model = Props.make({
-            data: {
-                referenceObjectName: null,
-                availableValues: [],
-                selectedItems: [],
-                value: null,
-                showFrom: 0,
-                showTo: 5,
-            },
-            onUpdate: function (props) {
-                renderStats();
-                renderToolbar();
-                renderAvailableItems();
-                renderSelectedItems();
-            },
-        });
 
         return {
             start: start,

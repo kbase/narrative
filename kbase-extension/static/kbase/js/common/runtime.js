@@ -9,25 +9,41 @@ define([
     'use strict';
     const narrativeConfig = Props.make({ data: Config.getConfig() });
 
-    function factory(config) {
-        function createRuntime() {
-            const bus = Bus.make();
+    function factory(config = {}) {
+        const busArgs = config.bus || {};
+        let clock, theBus;
 
-            const clock = Clock.make({
-                bus: bus,
+        function createRuntime() {
+            theBus = Bus.make(busArgs);
+
+            clock = Clock.make({
+                bus: theBus,
                 resolution: 1000,
             });
             clock.start();
 
             $(document).on('dataUpdated.Narrative', () => {
-                bus.emit('workspace-changed');
+                theBus.emit('workspace-changed');
             });
 
             return {
                 created: new Date(),
-                bus: bus,
+                bus: theBus,
                 env: Props.make({}),
+                clock,
             };
+        }
+
+        function destroy() {
+            if (clock) {
+                clock.stop();
+            }
+            $(document).off('dataUpdated.Narrative');
+            if (theBus) {
+                theBus.destroy();
+            }
+            theBus = null;
+            window.kbaseRuntime = null;
         }
 
         /*
@@ -58,12 +74,11 @@ define([
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            let settings = Jupyter.notebook.metadata.kbase.userSettings,
-                setting;
+            const settings = Jupyter.notebook.metadata.kbase.userSettings;
             if (!settings) {
                 return defaultValue;
             }
-            setting = settings[settingKey];
+            const setting = settings[settingKey];
             if (setting === undefined) {
                 return defaultValue;
             }
@@ -92,14 +107,15 @@ define([
         }
 
         return {
-            authToken: authToken,
+            authToken,
             config: getConfig,
-            bus: bus,
-            getUserSetting: getUserSetting,
-            setEnv: setEnv,
-            getEnv: getEnv,
-            workspaceId: workspaceId,
-            userId: userId,
+            bus,
+            getUserSetting,
+            setEnv,
+            getEnv,
+            workspaceId,
+            userId,
+            destroy,
         };
     }
 

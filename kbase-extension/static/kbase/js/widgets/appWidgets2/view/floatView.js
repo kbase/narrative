@@ -1,14 +1,10 @@
-define([
-    'bluebird',
-    'base/js/namespace',
-    'kb_common/html',
-    'common/events',
-    'common/ui',
-    'common/props',
-
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, Jupyter, html, Events, UI, Props) => {
+define(['bluebird', 'common/html', 'common/ui', 'common/props', '../inputUtils', 'bootstrap'], (
+    Promise,
+    html,
+    UI,
+    Props,
+    InputUtils
+) => {
     'use strict';
 
     // Constants
@@ -17,12 +13,16 @@ define([
         input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: spec.data.nullValue,
+                },
+                onUpdate: function () {},
+            });
+
+        let parent, container, ui;
 
         // MODEL
 
@@ -50,23 +50,12 @@ define([
 
         function makeViewControl(currentValue) {
             // CONTROL
-            let initialControlValue,
+            const initialControlValue = String(currentValue),
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            if (typeof currentValue === 'number') {
-                initialControlValue = String(currentValue);
-            }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    typeof min === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              String(min) + ' &#8804; '
-                          )
-                        : '',
+                    typeof min === 'number' ? InputUtils.numericalBoundaryDiv(min, true) : '',
                     input({
                         class: 'form-control',
                         dataElement: 'input',
@@ -77,15 +66,7 @@ define([
                         value: initialControlValue,
                         readonly: true,
                     }),
-                    typeof max === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              ' &#8804; ' + String(max)
-                          )
-                        : '',
+                    typeof max === 'number' ? InputUtils.numericalBoundaryDiv(max, false) : '',
                 ]),
                 div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);
@@ -143,17 +124,11 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: {
-                value: spec.data.nullValue,
-            },
-            onUpdate: function () {},
-        });
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

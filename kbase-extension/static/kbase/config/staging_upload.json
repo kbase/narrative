@@ -1,12 +1,16 @@
 {
     "dropdown_order": [
         {
-            "id": "fastq_reads",
-            "name": "FASTQ Reads"
-        },
-        {
             "id": "sra_reads",
             "name": "SRA Reads"
+        },
+        {
+            "id": "fastq_reads_interleaved",
+            "name": "FASTQ Reads Interleaved"
+        },
+        {
+            "id": "fastq_reads_noninterleaved",
+            "name": "FASTQ Reads NonInterleaved"
         },
         {
             "id": "genbank_genome",
@@ -14,11 +18,11 @@
         },
         {
             "id": "gff_genome",
-            "name": "GFF Genome"
+            "name": "GFF/FASTA Genome"
         },
         {
             "id": "gff_metagenome",
-            "name": "GFF Metagenome"
+            "name": "GFF/FASTA Metagenome"
         },
         {
             "id": "expression_matrix",
@@ -39,14 +43,34 @@
         {
             "id": "phenotype_set",
             "name": "Phenotype Set"
-        },{
+        },
+        {
             "id": "sample_set",
             "name": "Sample Set"
+        },
+        {
+            "id": "import_specification",
+            "name": "Import Specification"
+        },
+        {
+            "id": "decompress",
+            "name": "Decompress/Unpack"
         }
+    ],
+    "bulk_import_types": [
+        "sra_reads",
+        "fastq_reads_interleaved",
+        "fastq_reads_noninterleaved",
+        "gff_metagenome",
+        "assembly",
+        "genbank_genome"
     ],
     "app_info": {
         "web_upload": {
             "app_id": "kb_uploadmethods/upload_web_file"
+        },
+        "import_specification": {
+
         },
         "test_fastq_reads": {
             "app_id": "NarrativeTest/example_reads_upload",
@@ -62,15 +86,6 @@
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
             "app_static_params": {"import_type": "FASTQ/FASTA"},
-            "app_output_param": "name",
-            "app_output_suffix": "_reads",
-            "multiselect": false
-        },
-        "sra_reads": {
-            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
-            "app_input_param": "sra_staging_file_name",
-            "app_input_param_type": "string",
-            "app_static_params": {"import_type": "SRA"},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
@@ -155,6 +170,42 @@
             "app_output_param": "set_name",
             "app_output_suffix": "_sample_set",
             "multiselect": false
+        },
+        "decompress": {
+            "app_id": "kb_uploadmethods/unpack_staging_file",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "",
+            "app_output_suffix": "",
+            "multiselect": false
+        },
+        "sra_reads": {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "app_input_param": "sra_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "SRA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "fastq_reads_interleaved": {
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+            "app_input_param": "fastq_fwd_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "FASTQ/FASTA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "fastq_reads_noninterleaved": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "app_input_param": "fastq_fwd_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "FASTQ/FASTA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": true
         }
     }
 }

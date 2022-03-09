@@ -51,9 +51,31 @@ Then, simply run (from the narrative root directory) `make test`.
 This calls a few subcommands, and those can be run independently for specific uses:
 
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
-- `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services. Note that this currently requires an authentication token. 
+- `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services. Note that this currently requires an authentication token.
 - `make test-frontend` will run both the frontend unit tests and integration tests as above.
 - `make test-backend` will run only the backend Python tests.
+
+#### Frontend Unit Tests
+
+You can run the frontend unit tests interactively by launching a headless instance of the narrative and then starting Karma, the unit test runner. There are aliases provided to make this easier.
+
+To start the headless narrative:
+```
+npm run headless
+```
+
+To run tests in Firefox:
+```
+npm run test_firefox
+```
+
+To run tests in Chrome:
+```
+npm run test_chrome
+```
+
+There is an additional Karma config file suitable for running tests locally, which turns off Karma's file caching so that you can run tests in Firefox or Chrome by repeatedly refreshing the browser.
+
 
 ### Add Credentials for Tests
 
@@ -78,7 +100,7 @@ This just needs the path to the token file, which should be kept in the `test` d
 #### ***Frontend Integration Tests***
 
 There are currently two options here.
-1. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests. 
+1. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests.
 2. Use the same token file as described above.
 
 These are checked in that order. That is, if there's a `KBASE_TEST_TOKEN` variable, that gets used. Otherwise, it checks for the token file referenced in `test/testConfig.json`. If both of those are absent, a fake test token is used, which might cause failures if your tests include authenticated services.
@@ -146,19 +168,13 @@ To debug using the Karma Debugger complete the following steps:
 - In one terminal tab enter:
 
 ```
-kbase-narrative --no-browser --NotebookApp.allow_origin="*" --ip=127.0.0.1 --port=32323
+npm run headless
 ```
 
 - Open a second tab and enter:
 
 ```
-export PATH=$PATH:./node_modules/.bin/
+npm run tdd
 ```
 
-- In the second tab enter:
-
-```
-karma start test/unit/karma.conf.js --browsers=Chrome --single-run=false
-```
-
-After running the third command, a chrome browser will open. Click on the debug button. This opens a second browser window where you can inspect the page and use chrome debugger tools.
+After running the second command, a Chrome browser will open. Click on the debug button. This opens a second browser window where you can inspect the page and use chrome debugger tools.

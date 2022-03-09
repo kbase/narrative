@@ -1,16 +1,29 @@
-process.env.CHROME_BIN = require('puppeteer').executablePath();
 module.exports = function (config) {
     'use strict';
+
+    const alwaysExclude = [
+        'kbase-extension/static/buildTools/*.js',
+        'kbase-extension/static/ext_components/**/test/**/*.js',
+        'kbase-extension/static/ext_modules/**/test/**/*.js',
+        'kbase-extension/static/kbase/js/patched-components/**/*',
+    ];
+    // the following tests should be run separately due to test runner issues
+    const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
+        'test/unit/spec/util/appCellUtil-spec.js',
+    ];
+
     config.set({
         basePath: '../../',
         frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
         client: {
             jasmine: {
                 failFast: false,
-                DEFAULT_TIMEOUT_INTERVAL: 20000,
+                timeoutInterval: 20000,
                 failSpecWithNoExpectations: true,
+                verboseDeprecations: true,
             },
-            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/))',
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative|test/))',
             clearContext: false,
         },
         plugins: [
@@ -31,7 +44,10 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
                 ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
-            'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/api/StagingServiceClient.js': ['coverage'],
+            'nbextensions/appCell2/**/*.js': ['coverage'],
+            'nbextensions/bulkImportCell/**/*.js': ['coverage'],
+            'nbextensions/codeCell/**/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage'],
         },
         // karma defaults:
@@ -39,28 +55,29 @@ module.exports = function (config) {
         files: [
             'node_modules/jasmine-ajax/lib/mock-ajax.js',
             // tests and test resources
-            'test/unit/testUtil.js',
-            'test/unit/mocks.js',
-            'test/unit/test-main.js',
-            { pattern: 'test/unit/spec/**/*.js', included: false },
-            { pattern: 'test/unit/spec/**/*.json', included: false },
+            { pattern: 'test/unit/testUtil.js', nocache: true },
+            { pattern: 'test/unit/mocks.js', nocache: true },
+            { pattern: 'test/unit/test-main.js', nocache: true },
+            { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
+            { pattern: 'test/unit/spec/**/*.json', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
-            { pattern: 'test/data/**/*', included: false },
+            { pattern: 'test/data/**/*', included: false, nocache: true },
             // JS files
-            'kbase-extension/static/narrative_paths.js',
+            { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
             { pattern: 'kbase-extension/static/**/*.js', included: false },
-            { pattern: 'test/unit/spec/**/*.json', included: false },
-            { pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false },
+            { pattern: 'nbextensions/**/*.js', included: false },
             // static resources
-            { pattern: 'kbase-extension/kbase_templates/*.html', included: false },
-            { pattern: 'kbase-extension/static/**/*.css', included: false },
+            { pattern: 'kbase-extension/kbase_templates/*.html', included: false, nocache: true },
+            { pattern: 'kbase-extension/static/**/*.css', nocache: true },
             { pattern: 'kbase-extension/static/**/*.gif', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/templates/**/*.html',
                 included: false,
             },
             { pattern: 'kbase-extension/static/**/*.woff2', included: false },
+            { pattern: 'kbase-extension/static/**/*.ttf', included: false },
+            { pattern: 'kbase-extension/static/**/*.woff', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/config/**/*.json',
                 included: false,
@@ -75,12 +92,9 @@ module.exports = function (config) {
                 included: false,
             },
         ],
-        exclude: [
-            'kbase-extension/static/buildTools/*.js',
-            'kbase-extension/static/ext_components/**/test/**/*.js',
-            'kbase-extension/static/ext_modules/**/test/**/*.js',
-            'kbase-extension/static/kbase/js/patched-components/**/*',
-        ],
+        isolatedTests,
+        alwaysExclude,
+        exclude: [...alwaysExclude, ...isolatedTests],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters: ['mocha', 'coverage', 'json-result'],
@@ -93,7 +107,7 @@ module.exports = function (config) {
                     subdir: 'html',
                 },
                 {
-                    type: 'lcov',
+                    type: 'lcovonly',
                     subdir: 'lcov',
                 },
             ],
@@ -121,7 +135,7 @@ module.exports = function (config) {
         singleRun: true,
         proxies: {
             '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
-            '/narrative/nbextensions': 'http://localhost:32323/narrative/nbextensions',
+            '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',

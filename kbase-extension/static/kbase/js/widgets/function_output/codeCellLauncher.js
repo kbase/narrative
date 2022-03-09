@@ -9,7 +9,7 @@ define([
     'kbwidget',
     'narrativeConfig',
     'base/js/namespace',
-    'common/utils',
+    'common/cellUtils',
     // For effect
     'bootstrap',
 ], (Uuid, $, KBWidget, Config, Jupyter, utils) => {

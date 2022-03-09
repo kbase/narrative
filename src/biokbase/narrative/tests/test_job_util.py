@@ -20,7 +20,7 @@ cancelled_state = {
         0,
         0,
     ],
-    "sub_jobs": [],
+    "child_jobs": [],
     "token_id": "5a8fcf6d-5e06-4a98-b56e-62bc2c095e69",
     "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
 }
@@ -34,7 +34,7 @@ queued_state = {
     "job_state": "queued",
     "run_id": "0d0203f2-58c5-4eb6-9ecb-8e44ba8a2308",
     "status": ["2019-05-07T22:42:41+0000", "queued", "started", None, None, 0, 0],
-    "sub_jobs": [],
+    "child_jobs": [],
     "token_id": "5a8fcf6d-5e06-4a98-b56e-62bc2c095e69",
     "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
 }

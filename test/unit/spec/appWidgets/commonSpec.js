@@ -1,54 +1,54 @@
-define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common'], (
+define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common', 'testUtil'], (
     Events,
     UI,
     html,
-    WidgetCommon
+    WidgetCommon,
+    TestUtil
 ) => {
     'use strict';
-    const div = html.tag('div');
-    const button = html.tag('button');
-    const container = document.createElement('div');
-    const events = Events.make({ node: container });
-    const ui = UI.make({ node: container });
+    const div = html.tag('div'),
+        button = html.tag('button');
+
     describe('Test WidgetCommon module', () => {
+        let container;
+        beforeEach(function () {
+            container = document.createElement('div');
+            this.events = Events.make({ node: container });
+            this.ui = UI.make({ node: container });
+        });
+        afterEach(() => {
+            container.remove();
+            TestUtil.clearRuntime();
+        });
+
         it('Should be loaded with the right functions', () => {
             expect(WidgetCommon).toBeDefined();
             expect(WidgetCommon.clipboardButton).toBeDefined();
             expect(WidgetCommon.containerContent).toBeDefined();
         });
 
-        it('Should be able to produce content with a clipboard icon', () => {
+        it('Should be able to produce content with a clipboard icon', function () {
             const input = document.createElement('div');
-            const content = WidgetCommon.containerContent(
+            container.innerHTML = WidgetCommon.containerContent(
                 div,
                 button,
-                events,
-                ui,
+                this.events,
+                this.ui,
                 container,
                 input
             );
-            container.innerHTML = content;
-            expect(
-                container
-                    .querySelectorAll('[data-element=icon]')[0]
-                    .classList.contains('fa-clipboard')
-            ).toBeTrue();
+            expect(container.querySelector('[data-element=icon]')).toHaveClass('fa-clipboard');
         });
 
-        it('Should be able to create the clipboard icon', () => {
-            const clipboardButton = WidgetCommon.clipboardButton(
+        it('Should be able to create the clipboard icon', function () {
+            container.innerHTML = WidgetCommon.clipboardButton(
                 div,
                 button,
-                events,
-                ui,
+                this.events,
+                this.ui,
                 container
             );
-            container.innerHTML = clipboardButton;
-            expect(
-                container
-                    .querySelectorAll('[data-element=icon]')[0]
-                    .classList.contains('fa-clipboard')
-            ).toBeTrue();
+            expect(container.querySelector('[data-element=icon]')).toHaveClass('fa-clipboard');
         });
     });
 });

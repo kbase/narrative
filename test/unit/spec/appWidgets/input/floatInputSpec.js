@@ -1,11 +1,15 @@
-define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, Runtime) => {
+define(['widgets/appWidgets2/input/floatInput', 'common/runtime', 'testUtil'], (
+    FloatInput,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test float data input widget', () => {
         let testConfig = {},
             runtime,
-            bus;
+            bus,
+            container;
 
         beforeEach(() => {
             runtime = Runtime.make();
@@ -29,11 +33,14 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
                 },
                 channelName: bus.channelName,
             };
+            container = document.createElement('div');
         });
 
         afterEach(() => {
+            container.remove();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {
@@ -48,128 +55,114 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
             });
         });
 
-        it('should start and stop properly without initial value', (done) => {
+        it('should start and stop properly without initial value', async () => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget
-                .start({ node: node })
-                .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="float"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBeNull();
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(node.childElementCount).toBe(0);
-                    done();
-                });
+            await widget.start({ node: container });
+            expect(container.childElementCount).toBeGreaterThan(0);
+            const input = container.querySelector('input[data-type="float"]');
+            expect(input).toBeDefined();
+            expect(input.getAttribute('value')).toBe(testConfig.parameterSpec.data.nullValue);
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('should start and stop properly with initial value', (done) => {
+        it('should start and stop properly with initial value', async () => {
             testConfig.initialValue = 10.0;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget
-                .start({ node: node })
-                .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="float"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(node.childElementCount).toBe(0);
-                    done();
-                });
+            await widget.start({ node: container });
+            expect(container.childElementCount).toBeGreaterThan(0);
+            const input = container.querySelector('input[data-type="float"]');
+            expect(input).toBeDefined();
+            expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
         });
 
-        it('should update model properly with change event', (done) => {
+        it('should update model properly with change event', async () => {
+            let changeMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 1.2 });
-                done();
+                changeMsg = value;
             });
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
-                input.setAttribute('value', 1.2);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="float"]');
+            input.setAttribute('value', 1.2);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(changeMsg).toEqual({ newValue: 1.2 });
         });
 
-        xit('should update model properly with keyup/touch event', (done) => {
+        it('should update model properly with keyup/touch event', async () => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
+            let validMsg;
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                validMsg = message;
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
-                input.setAttribute('value', 1.23);
-                input.dispatchEvent(new Event('keyup'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="float"]');
+            input.setAttribute('value', 1.23);
+            input.dispatchEvent(new Event('keyup'));
+            await TestUtil.wait(500);
+            expect(validMsg.isValid).toBeTruthy();
         });
 
-        it('should catch invalid string input', (done) => {
+        it('should catch invalid string input', async () => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
+            let validMsg;
             bus.on('validation', (msg) => {
-                expect(msg.isValid).toBeFalsy();
-                expect(msg.diagnosis).toBe('invalid');
-                done();
+                validMsg = msg;
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
-                input.setAttribute('value', 'abracadabra');
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="float"]');
+            input.setAttribute('value', 'abracadabra');
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(validMsg.isValid).toBeFalsy();
+            expect(validMsg.diagnosis).toBe('invalid');
         });
 
-        it('should show message when configured, valid input', (done) => {
+        it('should show message when configured, valid input', async () => {
             testConfig.showOwnMessages = true;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
+            let changeMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 123.456 });
-                // No error message
-                const errorMsg = node.querySelector('[data-element="message"]');
-                expect(errorMsg.innerHTML).toBe('');
-                done();
+                changeMsg = value;
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
-                input.setAttribute('value', 123.456);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="float"]');
+            input.setAttribute('value', 123.456);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(changeMsg).toEqual({ newValue: 123.456 });
+            // No error message
+            const errorMsg = container.querySelector('[data-element="message"]');
+            expect(errorMsg.innerHTML).toBe('');
         });
 
-        it('should show message when configured, invalid input', (done) => {
+        it('should show message when configured, invalid input', async () => {
             testConfig.showOwnMessages = true;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-
+            let changeMsg, validMsg;
             bus.on('changed', (value) => {
-                expect(value).toEqual({ newValue: 12345.6 });
-                // check for an error message in the node
-                const errorMsg = node.querySelector('[data-element="message"]');
-                expect(errorMsg.innerHTML).toContain('ERROR');
+                changeMsg = value;
             });
 
             bus.on('validation', (msg) => {
-                expect(msg.isValid).toBeFalsy();
-                expect(msg.diagnosis).toBe('invalid');
-                done();
+                validMsg = msg;
             });
 
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
-                // this value is out of the allowed range
-                input.setAttribute('value', 12345.6);
-                input.dispatchEvent(new Event('change'));
-            });
+            await widget.start({ node: container });
+            const input = container.querySelector('input[data-type="float"]');
+            // this value is out of the allowed range
+            input.setAttribute('value', 12345.6);
+            input.dispatchEvent(new Event('change'));
+            await TestUtil.wait(500);
+            expect(changeMsg).toEqual({ newValue: 12345.6 });
+            // check for an error message in the node
+            const errorMsg = container.querySelector('[data-element="message"]');
+            expect(errorMsg.innerHTML).toContain('ERROR');
+            expect(validMsg.isValid).toBeFalsy();
+            expect(validMsg.diagnosis).toBe('invalid');
         });
 
         // Currently, this updates the model but not the UI.
@@ -177,8 +170,7 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         // interface, this test is disabled.
         xit('should respond to update command', () => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: '12345.6' });
             });
         });

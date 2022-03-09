@@ -22,7 +22,7 @@
  * @static
  */
 require(['narrative_paths', 'require'], (paths, require) => {
-    require(['jquery', 'bluebird', 'narrativeConfig', 'narrativeLogin', 'css!font-awesome'], (
+    require(['jquery', 'bluebird', 'narrativeConfig', 'narrativeLogin'], (
         $,
         Promise,
         Config,

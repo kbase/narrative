@@ -15,7 +15,7 @@ define([
     'widgets/function_output/samples/SampleSet',
 
     // For effect.
-    'css!widgets/function_output/samples/KBaseSampleSet.css',
+    'css!widgets/function_output/samples/KBaseSampleSet',
 ], (
     KBWidget,
     $,

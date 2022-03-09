@@ -12,13 +12,15 @@
  */
 
 (function ($, undefined) {
+    'use strict';
+
     require([
         'kbwidget',
         'bootstrap',
         'jquery',
         'narrativeConfig',
         'util/string',
-        'util/display',
+        'util/icon',
         'util/bootstrapDialog',
         'kbaseAuthenticatedWidget',
         'kbaseAccordion',
@@ -29,13 +31,12 @@
         $,
         Config,
         StringUtil,
-        DisplayUtil,
+        Icon,
         BootstrapDialog,
         kbaseAuthenticatedWidget,
         kbaseAccordion,
         kbaseNarrativeOutputCell
     ) => {
-        'use strict';
         return KBWidget({
             name: 'kbaseNarrativeAppCell',
             parent: kbaseAuthenticatedWidget,
@@ -213,9 +214,8 @@
              * Renders this cell and its contained input widget.
              */
             render: function (stepSpecs) {
+                const self = this;
                 this.methodSpecs = {};
-
-                var self = this;
                 this.$runButton = $('<button>')
                     .attr('type', 'button')
                     .attr('value', 'Run')
@@ -260,7 +260,7 @@
                     .attr('value', 'Get State')
                     .addClass('btn btn-danger btn-sm')
                     .append('Get State')
-                    .click((event) => {
+                    .click(() => {
                         console.log(self.getState());
                     });
 
@@ -272,7 +272,7 @@
                     .append('Cancel')
                     .css({ 'margin-right': '5px' })
                     .click(
-                        $.proxy((event) => {
+                        $.proxy(() => {
                             self.stopAppRun();
                         }, this)
                     )
@@ -285,7 +285,7 @@
                     .append('Edit and Re-Run')
                     .css({ 'margin-right': '5px', 'margin-left': '10px' })
                     .click(
-                        $.proxy((event) => {
+                        $.proxy(() => {
                             self.resetAppRun(false);
                         }, this)
                     )
@@ -298,7 +298,6 @@
                 const stepHeaderText = 'Step ';
                 this.inputSteps = [];
                 this.inputStepLookup = {};
-                const inputStep = {};
                 for (let i = 0; i < stepSpecs.length; i++) {
                     const $stepPanel = this.renderStepDiv(
                         this.appSpec.steps[i].step_id,
@@ -330,30 +329,15 @@
                 const $appSubmittedStamp = $('<div>');
 
                 const headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"');
-                const $appHeaderDiv = $('<div>')
-                    // .addClass('kb-app-panel-header')
-                    .html(headerCleaned);
-
-                // var $menuSpan = $('<div class="pull-right">');
-
-                // Controls (minimize)
-                // var $controlsSpan = $('<div>').addClass("pull-left");
-                // var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                //             .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
-                // $controlsSpan.append($minimizeControl);
+                const $appHeaderDiv = $('<div>').html(headerCleaned);
 
                 const $cellPanel = $('<div>')
                     .addClass('panel kb-app-panel kb-cell-run')
-                    // .append($controlsSpan)
-                    // .append($menuSpan)
                     .append(
                         $('<div>')
                             .addClass('panel-heading')
                             .append($('<div>').append($appSubtitleDiv).append($appSubmittedStamp))
                     )
-                    //.addClass('app-panel-heading')
-                    // .append($('<div>')
-                    // .append($('<h1><b>' + appTitle + '</b></h1>')))
                     .append($('<div>').addClass('panel-body').append($appHeaderDiv))
                     .append($('<div>').addClass('panel-body').append(this.$methodPanel))
                     .append(
@@ -365,7 +349,7 @@
 
                 this.$elem.closest('.cell').trigger('set-title.cell', [appTitle]);
 
-                const $logo = $('<div>').append(DisplayUtil.getAppIcon({ isApp: true }));
+                const $logo = $('<div>').append(Icon.makeGenericIcon('cubes', '#00BCD4'));
                 this.$elem.closest('.cell').trigger('set-icon.cell', [$logo.html()]);
 
                 //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
@@ -380,9 +364,7 @@
 
                 // Add minimize/restore actions.
                 // These mess with the CSS on the cells!
-                const $mintarget = $cellPanel;
                 this.panel_minimized = false;
-                var self = this;
                 this.refresh();
             },
 
@@ -406,7 +388,6 @@
                 // First setup the Input widget header
                 const $inputWidgetDiv = $('<div>');
                 const methodId = stepSpec.info.id + '-step-details-' + StringUtil.uuid();
-                const buttonLabel = 'details';
                 const methodDesc = stepSpec.info.subtitle;
                 const $header = $('<div>').css({ 'margin-top': '4px' }).addClass('kb-func-desc');
                 const $staticMethodInfo = $('<div>')
@@ -553,7 +534,7 @@
                 if (this.appSpec && this.inputSteps) {
                     const steps = this.appSpec.steps;
                     for (let s = 0; s < steps.length; s++) {
-                        var input_mapping = steps[s].input_mapping;
+                        const input_mapping = steps[s].input_mapping;
                         for (let m = 0; m < input_mapping.length; m++) {
                             if (input_mapping[m].is_from_input) {
                                 // should be 1 for true, 0 for false
@@ -631,7 +612,7 @@
             prepareDataBeforeRun: function () {
                 if (this.inputSteps) {
                     for (let i = 0; i < this.inputSteps.length; i++)
-                        var v = this.inputSteps[i].widget.prepareDataBeforeRun();
+                        this.inputSteps[i].widget.prepareDataBeforeRun();
                 }
             },
 
@@ -826,9 +807,8 @@
                             this.inputSteps[i].outputWidget &&
                             this.inputSteps[i].outputWidget.getState
                         ) {
-                            this.state.step[id].outputState.widgetState = this.inputSteps[
-                                i
-                            ].outputWidget.getState();
+                            this.state.step[id].outputState.widgetState =
+                                this.inputSteps[i].outputWidget.getState();
                         }
                     }
                 }
@@ -853,12 +833,12 @@
                 //console.log(state);
                 // set the step states
                 if (this.inputSteps && state.step) {
-                    for (var i = 0; i < this.inputSteps.length; i++) {
-                        var id = this.inputSteps[i].id;
-                        if (state.step.hasOwnProperty(id)) {
+                    for (let i = 0; i < this.inputSteps.length; i++) {
+                        const stepId = this.inputSteps[i].id;
+                        if (state.step.hasOwnProperty(stepId)) {
                             // set the input states
-                            if (state.step[id].inputState) {
-                                this.inputSteps[i].widget.loadState(state.step[id].inputState);
+                            if (state.step[stepId].inputState) {
+                                this.inputSteps[i].widget.loadState(state.step[stepId].inputState);
                             }
                         }
                     }
@@ -887,7 +867,7 @@
                         } else if (state.runningState.appRunState === 'error') {
                             this.setErrorState(true);
                             this.minimizeAllSteps();
-                            for (var i = 0; i < this.inputSteps.length; i++) {
+                            for (let i = 0; i < this.inputSteps.length; i++) {
                                 if (
                                     this.inputSteps[i].$stepContainer.hasClass(
                                         'kb-app-step-running'
@@ -908,8 +888,8 @@
                             this.$runButton.hide();
                             // start minimized if done, todo: save minimization state of steps
                             this.minimizeAllSteps();
-                            for (var i = 0; i < this.inputSteps.length; i++) {
-                                this.inputSteps[i].widget.lockInputs();
+                            for (let it = 0; it < this.inputSteps.length; it++) {
+                                this.inputSteps[it].widget.lockInputs();
                             }
                         }
                         this.state.runningState.appRunState = state.runningState.appRunState;
@@ -918,8 +898,8 @@
 
                 // set the output state (we do this last so that in case we run into an error, we still show that we are running)
                 if (this.inputSteps && state.step) {
-                    for (var i = 0; i < this.inputSteps.length; i++) {
-                        var id = this.inputSteps[i].id;
+                    for (let it = 0; it < this.inputSteps.length; it++) {
+                        const id = this.inputSteps[it].id;
                         if (state.step.hasOwnProperty(id)) {
                             // set the output states
                             if (state.step[id].outputState) {
@@ -974,14 +954,14 @@
                 state = state.toLowerCase();
                 if (state === 'error') {
                     this.setErrorState(true);
-                    for (var i = 0; i < this.inputSteps.length; i++) {
+                    for (let i = 0; i < this.inputSteps.length; i++) {
                         if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
                             this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                             this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
                         }
                     }
                 } else if (state === 'complete' || state === 'done') {
-                    for (var i = 0; i < this.inputSteps.length; i++) {
+                    for (let i = 0; i < this.inputSteps.length; i++) {
                         this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                     }
                     this.state.runningState.runningStep = null;
@@ -1014,18 +994,17 @@
                 //console.debug("Find next steps for app", app);
                 // fetch full info, which contains suggested next steps
                 const params = { ids: [app.info.id] };
-                const result = {};
                 this.methClient.get_app_full_info(
                     params,
                     $.proxy(function (info_list) {
                         //console.debug("Got full info for app:", info_list);
                         const sugg = info_list[0].suggestions;
                         //console.debug("Suggestions for app:", sugg);
-                        const params = { apps: sugg.next_apps, methods: sugg.next_methods };
+                        const _params = { apps: sugg.next_apps, methods: sugg.next_methods };
                         //console.debug("Getting function specs, params=", params);
                         // Pass callback to render each retrieved function spec
                         this.trigger('getFunctionSpecs.Narrative', [
-                            params,
+                            _params,
                             function (specs) {
                                 render_cb(specs);
                             },

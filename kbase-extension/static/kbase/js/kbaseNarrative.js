@@ -13,9 +13,8 @@ define([
     'bluebird',
     'handlebars',
     'narrativeConfig',
-    'jobCommChannel',
+    'common/jobCommChannel',
     'kbaseNarrativeSidePanel',
-    'kbaseNarrativeOutputCell',
     'kbaseNarrativeWorkspace',
     'kbaseNarrativeMethodCell',
     'kbaseAccordion',
@@ -33,22 +32,20 @@ define([
     'text!kbase/templates/update_dialog_body.html',
     'text!kbase/templates/document_version_change.html',
     'narrativeLogin',
-    'common/ui',
-    'common/html',
     'common/runtime',
     'narrativeTour',
     'kb_service/utils',
     'widgets/loadingWidget',
     'kb_service/client/workspace',
+    'util/kbaseApiUtil',
     'bootstrap',
 ], (
     $,
     Promise,
     Handlebars,
     Config,
-    JobCommChannel,
+    JobComms,
     KBaseNarrativeSidePanel,
-    KBaseNarrativeOutputCell,
     KBaseNarrativeWorkspace,
     KBaseNarrativeMethodCell,
     KBaseAccordion,
@@ -66,13 +63,12 @@ define([
     UpdateDialogBodyTemplate,
     DocumentVersionDialogBodyTemplate,
     NarrativeLogin,
-    UI,
-    html,
     Runtime,
     Tour,
     ServiceUtils,
     LoadingWidget,
-    Workspace
+    Workspace,
+    APIUtil
 ) => {
     'use strict';
 
@@ -137,6 +133,7 @@ define([
         this.workspaceRef = null;
         this.workspaceId = this.runtime.workspaceId();
         this.workspaceInfo = {};
+
         this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
@@ -147,10 +144,12 @@ define([
             node: document.querySelector('#kb-loading-blocker'),
             timeout: 20000,
         });
-
-        //Jupyter.keyboard_manager.disable();
         return this;
     };
+
+    function workspaceClient(token) {
+        return new Workspace(Config.url('workspace'), { token });
+    }
 
     Narrative.prototype.isLoaded = () => {
         return Jupyter.notebook._fully_loaded;
@@ -166,29 +165,24 @@ define([
     };
 
     Narrative.prototype.getNarrativeRef = function () {
-        return Promise.try(() => {
-            if (this.workspaceRef) {
+        if (this.workspaceRef) {
+            return Promise.resolve(this.workspaceRef);
+        }
+        return workspaceClient(this.getAuthToken())
+            .get_workspace_info({ id: this.workspaceId })
+            .then((wsInfo) => {
+                const narrId = wsInfo[8]['narrative'];
+                this.workspaceRef = this.workspaceId + '/' + narrId;
                 return this.workspaceRef;
-            }
-            return new Workspace(Config.url('workspace'), {
-                token: this.getAuthToken(),
-            })
-                .get_workspace_info({ id: this.workspaceId })
-                .then((wsInfo) => {
-                    const narrId = wsInfo[8]['narrative'];
-                    this.workspaceRef = this.workspaceId + '/' + narrId;
-                    return this.workspaceRef;
-                });
-        });
+            });
     };
 
     Narrative.prototype.getUserPermissions = function () {
-        const ws = new Workspace(Config.url('workspace'), {
-            token: this.getAuthToken(),
-        });
-        return ws.get_workspace_info({ id: this.workspaceId }).then((wsInfo) => {
-            return wsInfo[5];
-        });
+        return workspaceClient(this.getAuthToken())
+            .get_workspace_info({ id: this.workspaceId })
+            .then((wsInfo) => {
+                return wsInfo[5];
+            });
     };
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
@@ -282,11 +276,14 @@ define([
         const self = this;
         $([Jupyter.events]).on('before_save.Notebook', () => {
             $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
+            $('#kb-save-btn').prop('disabled', true);
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', () => {
-            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-            self.stopVersionCheck = false;
-            self.updateDocumentVersion();
+            self.updateDocumentVersion().then(() => {
+                self.stopVersionCheck = false;
+                $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+                $('#kb-save-btn').prop('disabled', false);
+            });
         });
         $([Jupyter.events]).on('kernel_idle.Kernel', () => {
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
@@ -331,17 +328,17 @@ define([
      * after there's a visible DOM element for it to render in.
      */
     Narrative.prototype.initSharePanel = function () {
-        let sharePanel = $(
+        const sharePanel = $(
                 '<div style="text-align:center"><br><br><img src="' +
                     Config.get('loading_gif') +
                     '"></div>'
             ),
-            shareWidget = null,
             shareDialog = new BootstrapDialog({
                 title: 'Change Share Settings',
                 body: sharePanel,
                 closeButton: true,
             });
+        let shareWidget = null;
         shareDialog.getElement().one('shown.bs.modal', () => {
             shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
                 ws_name_or_id: this.getWorkspaceName(),
@@ -385,11 +382,12 @@ define([
     };
 
     /**
-     * Expects docInfo to be a workspace object info array, especially where the 4th element is
-     * an int > 0.
+     * This checks the loaded Narrative document version against the given value.
+     * If the loaded document version is not the same as the given version parameter,
+     * then the document version mismatch button should be shown.
      */
     Narrative.prototype.checkDocumentVersion = function (docInfo) {
-        if (docInfo.length < 5 || this.stopVersionCheck) {
+        if (this.stopVersionCheck || !docInfo || docInfo.length < 5) {
             return;
         }
         if (docInfo[4] !== this.documentVersionInfo[4]) {
@@ -404,34 +402,25 @@ define([
     };
 
     /**
-     * Expects the usual workspace object info array. If that's present, it's captured. If not,
-     * we run get_object_info_new and fetch it ourselves. Note that it should have its metadata.
+     * Fetches the current narrative ref info from the Workspace.
+     * @returns Promise that resolves when the latest narrative object info has been
+     * retrieved.
      */
-    Narrative.prototype.updateDocumentVersion = function (docInfo) {
-        const self = this;
-        return Promise.try(() => {
-            if (docInfo) {
-                self.documentVersionInfo = docInfo;
-            } else {
-                const workspace = new Workspace(Config.url('workspace'), {
-                    token: self.getAuthToken(),
+    Narrative.prototype.updateDocumentVersion = function () {
+        return this.getNarrativeRef()
+            .then((narrativeRef) => {
+                return workspaceClient(this.getAuthToken()).get_object_info_new({
+                    objects: [{ ref: narrativeRef }],
+                    includeMetadata: 1,
                 });
-                self.getNarrativeRef()
-                    .then((narrativeRef) => {
-                        return workspace.get_object_info_new({
-                            objects: [{ ref: narrativeRef }],
-                            includeMetadata: 1,
-                        });
-                    })
-                    .then((info) => {
-                        self.documentVersionInfo = info[0];
-                    })
-                    .catch((error) => {
-                        // no op for now.
-                        console.error(error);
-                    });
-            }
-        });
+            })
+            .then((info) => {
+                this.documentVersionInfo = info[0];
+            })
+            .catch((error) => {
+                // no op for now.
+                console.error(error);
+            });
     };
 
     Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {
@@ -711,8 +700,8 @@ define([
             open: function () {
                 const that = $(this);
                 // Upon ENTER, click the OK button.
-                that.find('input[type="text"]').keydown((event) => {
-                    if (event.which === Keyboard.keycodes.enter) {
+                that.find('input[type="text"]').keydown((_event) => {
+                    if (_event.which === Keyboard.keycodes.enter) {
                         that.find('.btn-primary').first().click();
                     }
                 });
@@ -804,9 +793,7 @@ define([
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
                 autorender: false,
             });
-            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
-                ws_id: this.getWorkspaceName(),
-            });
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'));
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -833,13 +820,11 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
-            this.updateDocumentVersion()
-                .then(() => this.narrController.render())
-                .finally(() => this.sidePanel.render());
+            this.updateDocumentVersion().finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
             this.loadingWidget.updateProgress('kernel', true);
-            this.jobCommChannel = new JobCommChannel();
+            this.jobCommChannel = new JobComms.JobCommChannel();
             this.jobCommChannel
                 .initCommChannel()
                 .then(() => {
@@ -896,11 +881,15 @@ define([
     /**
      * @method
      * @public
-     * This triggers a save, but saves all cell states first.
+     * This is a wrapper around the Jupyter.notebook.save_checkpoint function. It also handles
+     * state management around checking Narrative versions. Mainly, it shuts off the version check.
+     * Once the `save_checkpoint` function finishes running, it triggers the notebook_saved.Notebook
+     * event, which is caught elsewhere, and used to reactivate the version check.
+     *
+     * This also disables the save button until the save completes to prevent spam and other issues.
      */
     Narrative.prototype.saveNarrative = function () {
         this.stopVersionCheck = true;
-        this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
         this.toggleDocumentVersionBtn(false);
     };
@@ -939,11 +928,9 @@ define([
             }).show();
             return;
         }
-        let cell = Jupyter.notebook.get_selected_cell(),
-            nearIdx = 0;
-        if (cell) {
-            nearIdx = Jupyter.notebook.find_cell_index(cell);
-        }
+        const cell = Jupyter.notebook.get_selected_cell(),
+            nearIdx = cell ? Jupyter.notebook.find_cell_index(cell) : 0;
+
         let objInfo = {};
         // If a string, expect a ref, and fetch the info.
         if (typeof obj === 'string') {
@@ -1006,7 +993,7 @@ define([
                 const newWidget = new KBaseNarrativeMethodCell(
                     $('#' + $(newCell.get_text())[0].id)
                 );
-                var updateStateAndRun = function () {
+                const updateStateAndRun = function () {
                     if (newWidget.$inputWidget) {
                         // if the $inputWidget is not null, we are good to go, so set the parameters
                         newWidget.loadState(parameters);
@@ -1139,6 +1126,7 @@ define([
                     duration: delay,
                 }
             );
+            $('#content-column')[0].classList.add('kb-content-column--expanded');
         } else {
             $('#kb-side-toggle-in').hide(0, () => {
                 $('#left-column').show(
@@ -1154,6 +1142,7 @@ define([
                     { easing: 'swing', duration: delay }
                 );
             });
+            $('#content-column')[0].classList.remove('kb-content-column--expanded');
         }
     };
 
@@ -1182,6 +1171,39 @@ define([
 
     Narrative.prototype.removeWidget = function (cellId) {
         delete this.kbaseWidgets[cellId];
+    };
+
+    /**
+     * This inserts a new bulk import cell below the currently selected cell.
+     * Its input is a map from object type to a the files to be uploaded and the app
+     * used to process them.
+     * {
+     *   fileType: {
+     *     appId: string,
+     *     files: array of files,
+     *     outputSuffix: string, a suggested suffix for the automated output names
+     *   }
+     * }
+     * This returns a Promise that resolves into the cell that was created.
+     * @param {object} bulkInput keys = type ids, values = an object with properties
+     *  - appId - the app id to use for that file type (to be used in fetching the spec)
+     *  - files - array of files to import with that file type
+     */
+    Narrative.prototype.insertBulkImportCell = function (bulkInput) {
+        const cellType = 'app-bulk-import';
+        const cellData = {
+            type: cellType,
+            typesToFiles: bulkInput ? bulkInput : {},
+        };
+        // get a unique array of app ids we need to look up
+        const appIds = [...new Set(Object.values(bulkInput).map((typeInfo) => typeInfo.appId))];
+        return APIUtil.getAppSpecs(appIds).then((appSpecs) => {
+            cellData.specs = appSpecs.reduce((allSpecs, spec) => {
+                allSpecs[spec.info.id] = spec;
+                return allSpecs;
+            }, {});
+            return this.insertAndSelectCellBelow('code', null, cellData);
+        });
     };
 
     return Narrative;

@@ -1,15 +1,15 @@
 define([
+    'jquery',
     'bluebird',
-    'kb_common/html',
-    'common/events',
+    'common/html',
     'common/ui',
     'common/runtime',
-    '../validators/text',
+    '../validation',
     '../inputUtils',
-
+    '../validators/constants',
+    'select2',
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Events, UI, Runtime, Validation, inputUtils) => {
+], ($, Promise, html, UI, Runtime, Validation, inputUtils, Constants) => {
     'use strict';
 
     // Constants
@@ -18,51 +18,72 @@ define([
         select = t('select'),
         option = t('option');
 
+    /**
+     *
+     * @param {object} config has fields:
+     *  - parameterSpec - object - the spec object with parameter info as built by the Spec object
+     *  - availableValues - optional Array of objects - if given, this supercedes the list of
+     *    values given in the parameterSpec.
+     *      as in the parameterSpec.data.constraints.options, each should be an object with the
+     *      structure:
+     *      {
+     *        display: string - the string to display as an option
+     *        value: string - the value to set when selected
+     *      }
+     *  - initialValue - string - the value that should be selected when started
+     *  - disabledValues - array - the values that should be disabled at start (if initialValue is
+     *    here, it's ignored)
+     *  - channelName - string - the bus channel to use
+     *  - showOwnMessages - boolean - if true, this widget shows its own messages
+     *    (better description to come)
+     *  - invalidError - optional string - if present, this will be used for an error if an invalid
+     *    value is somehow selected (typically bad initialization)
+     * @returns
+     */
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            ui,
-            container,
+            invalidError = config.invalidError,
             model = {
-                availableValues: null,
-                value: null,
+                availableValues: config.availableValues || spec.data.constraints.options || [],
+                value: config.initialValue,
+                disabledValues: new Set(config.disabledValues || []),
+                invalidValues: new Set(config.invalidValues || []),
             };
-
-        model.availableValues = spec.data.constraints.options;
-
-        model.availableValuesMap = {};
-        model.availableValues.forEach((item, index) => {
-            item.index = index;
-            model.availableValuesMap[item.value] = item;
-        });
+        let parent, ui, container;
+        model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
 
         function getControlValue() {
             const control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
+                selected = $(control).val();
 
-            if (selected.length === 0) {
-                return spec.data.nullValue;
-            }
-
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            return selected.item(0).value;
+            return selected;
         }
 
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(() => {
-                return Validation.importString(getControlValue());
-            });
+            return Validation.importTextString(getControlValue());
         }
 
         function validate(value) {
             return Promise.try(() => {
-                return Validation.validate(value, spec);
+                const defaultInvalidMessage = `Invalid ${spec.ui.label}: ${value}. Please select a value from the dropdown.`;
+                const validation = Validation.validateTextString(
+                    value || '',
+                    spec.data.constraints,
+                    {
+                        invalidValues: model.invalidValues,
+                        invalidError: invalidError || defaultInvalidMessage,
+                        validValues: model.availableValuesSet,
+                    }
+                );
+                if (validation.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
+                    validation.errorMessage = 'Please select a value from the dropdown.';
+                }
+                return validation;
             });
         }
 
@@ -75,113 +96,97 @@ define([
         // DOM EVENTS
 
         function handleChanged() {
-            return {
-                type: 'change',
-                handler: function () {
-                    importControlValue()
-                        .then((value) => {
-                            model.value = value;
-                            channel.emit('changed', {
-                                newValue: value,
+            const value = importControlValue();
+            setModelValue(value);
+            channel.emit('changed', {
+                newValue: value,
+            });
+            return validate(value)
+                .then((result) => {
+                    if (config.showOwnMessages) {
+                        if (result.isValid) {
+                            ui.setContent('input-container.message', '');
+                        } else {
+                            const message = inputUtils.buildMessageAlert({
+                                title: 'ERROR',
+                                type: 'danger',
+                                id: result.messageId,
+                                message: result.errorMessage,
                             });
-                            return validate(value);
-                        })
-                        .then((result) => {
-                            if (result.isValid) {
-                                if (config.showOwnMessages) {
-                                    ui.setContent('input-container.message', '');
-                                }
-                            } else if (result.diagnosis === 'required-missing') {
-                                // nothing??
-                            } else {
-                                if (config.showOwnMessages) {
-                                    // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
-                                        title: 'ERROR',
-                                        type: 'danger',
-                                        id: result.messageId,
-                                        message: result.errorMessage,
-                                    });
-                                    ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
-                                }
-                            }
-                            channel.emit('validation', result);
-                        })
-                        .catch((err) => {
-                            channel.emit('validation', {
-                                isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: err.message,
-                            });
-                        });
-                },
-            };
+                            ui.setContent('input-container.message', message.content);
+                            message.events.attachEvents();
+                        }
+                    }
+                    channel.emit('validation', result);
+                })
+                .catch((err) => {
+                    channel.emit('validation', {
+                        isValid: false,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                        errorMessage: err.message,
+                    });
+                });
         }
 
-        function makeInputControl(events) {
-            let selected,
-                selectOptions = model.availableValues.map((item) => {
-                    selected = false;
-                    if (item.value === model.value) {
-                        selected = true;
-                    }
-
-                    return option(
-                        {
-                            value: item.value,
-                            selected: selected,
-                        },
-                        item.display
-                    );
-                });
+        function makeInputControl() {
+            const selectOptions = model.availableValues.map((item) => {
+                const attribs = {
+                    value: item.value,
+                };
+                if (model.disabledValues.has(item.value)) {
+                    attribs.disabled = true;
+                }
+                return option(attribs, item.display);
+            });
 
             // CONTROL
             return select(
                 {
-                    id: events.addEvents({ events: [handleChanged()] }),
                     class: 'form-control',
                     dataElement: 'input',
                 },
-                [option({ value: '' }, '')].concat(selectOptions)
+                selectOptions
             );
         }
 
-        function syncModelToControl() {
-            // assuming the model has been modified...
-            const control = ui.getElement('input-container.input');
-            // loop through the options, selecting the one with the value.
-            // unselect
-            if (control.selectedIndex >= 0) {
-                control.options.item(control.selectedIndex).selected = false;
-            }
-            const selectedItem = model.availableValuesMap[model.value];
-            if (selectedItem) {
-                control.options.item(selectedItem.index + 1).selected = true;
-            }
-        }
-
-        function layout(events) {
-            const content = div(
+        function layout() {
+            return div(
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeInputControl(events))]
+                [div({ dataElement: 'input-container' }, makeInputControl())]
             );
-            return {
-                content: content,
-                events: events,
-            };
         }
 
         function setModelValue(value) {
-            if (model.value !== value) {
+            const oldValue = model.value;
+            if (oldValue !== value) {
                 model.value = value;
             }
+            setDisabledValuesFromModel();
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
+        }
+
+        /**
+         * Sets which options should be disabled based on the set of values currently
+         * in the model.disabledValues set.
+         *
+         * Any options not in that set are enabled, all others set disabled. This doesn't
+         * include the currently selected option, which is always enabled.
+         */
+        function setDisabledValuesFromModel() {
+            const control = ui.getElement('input-container.input');
+            model.availableValuesSet.forEach((value) => {
+                const option = control.querySelector(`option[value="${value}"]`);
+                if (model.disabledValues.has(value) && value !== model.value) {
+                    option.setAttribute('disabled', true);
+                } else {
+                    option.removeAttribute('disabled');
+                }
+            });
         }
 
         // LIFECYCLE API
@@ -192,23 +197,38 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                const events = Events.make({ node: container }),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents();
+                container.innerHTML = layout();
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        allowClear: true,
+                        placeholder: 'select an option',
+                        width: '100%',
+                    })
+                    .val(model.value)
+                    .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
+                    .on('change', () => {
+                        handleChanged();
+                    })
+                    .on('select2:clear', () => {
+                        handleChanged();
+                    });
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
+
                 channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
-                // bus.emit('sync');
 
-                setModelValue(config.initialValue);
+                // this replaces the disabledValues set in the model
+                // and updates the view to match
+                channel.on('set-disabled-values', (message) => {
+                    model.disabledValues = new Set(message.values);
+                    setDisabledValuesFromModel();
+                });
+
                 autoValidate();
-                syncModelToControl();
             });
         }
 
@@ -222,8 +242,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

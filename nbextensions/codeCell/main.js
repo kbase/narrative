@@ -1,35 +1,14 @@
 define(
     [
-        'bluebird',
         'jquery',
         'uuid',
         'base/js/namespace',
-        'common/utils',
-        'common/appUtils',
-        'common/props',
         'common/cellUtils',
-        'common/pythonInterop',
-        'common/ui',
-        'common/jupyter',
         'kb_common/html',
         './widgets/codeCell',
         'custom/custom',
     ],
-    (
-        Promise,
-        $,
-        Uuid,
-        Jupyter,
-        utils,
-        AppUtils,
-        Props,
-        cellUtils,
-        PythonInterop,
-        UI,
-        jupyter,
-        html,
-        CodeCell
-    ) => {
+    ($, Uuid, Jupyter, utils, html, CodeCell) => {
         'use strict';
 
         const t = html.tag,
@@ -41,7 +20,7 @@ define(
                     outputArea = this.element.find('.output_wrapper'),
                     showCode = utils.getCellMeta(
                         cell,
-                        'kbase.codeCell.userSettings.showCodeInputArea'
+                        'kbase.codeCell.user-settings.showCodeInputArea'
                     );
 
                 if (showCode) {
@@ -55,7 +34,7 @@ define(
                     outputArea = this.element.find('.output_wrapper'),
                     showCode = utils.getCellMeta(
                         cell,
-                        'kbase.codeCell.userSettings.showCodeInputArea'
+                        'kbase.codeCell.user-settings.showCodeInputArea'
                     );
 
                 if (showCode) {
@@ -94,7 +73,7 @@ define(
                     codeInputArea.classList.toggle('-show');
                     utils.setCellMeta(
                         cell,
-                        'kbase.codeCell.userSettings.showCodeInputArea',
+                        'kbase.codeCell.user-settings.showCodeInputArea',
                         this.isCodeShowing(),
                         true
                     );
@@ -117,6 +96,22 @@ define(
                 return;
             }
 
+            // migrate from 'userSettings' to 'user-settings'
+            if (utils.getCellMeta(cell, 'kbase.codeCell')) {
+                const cellMeta = utils.getCellMeta(cell, 'kbase.codeCell');
+                let oldSettings = cellMeta.userSettings;
+                const newSettings = cellMeta['user-settings'];
+                if (oldSettings) {
+                    if (newSettings) {
+                        // merge, with old (saved) settings taking priority
+                        Object.assign(newSettings, oldSettings);
+                        oldSettings = newSettings;
+                    }
+                    cellMeta['user-settings'] = oldSettings;
+                    delete cellMeta.userSettings;
+                    utils.setCellMeta(cell, 'kbase.codeCell', cellMeta);
+                }
+            }
             specializeCell(cell);
 
             // The kbase property is only used for managing runtime state of the cell
@@ -125,9 +120,9 @@ define(
 
             // Code cell input area is always set to be open by default, but users
             // can chose to override this and this choice should be remembered.
-            // import/job cells dont' show code input area as regular code cells do.
+            // import/job cells don't show code input area as regular code cells do.
             if (utils.getCellMeta(cell, 'kbase.codeCell.jobInfo')) {
-                utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', false);
+                utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', false);
             }
 
             const widget = CodeCell.make({
@@ -141,19 +136,6 @@ define(
             // force toolbar rerender.
             // eslint-disable-next-line no-self-assign
             cell.metadata = cell.metadata;
-        }
-
-        function fixupCell(cell) {
-            if (cell.metadata.kbase && cell.metadata.kbase.type) {
-                return;
-            }
-            return upgradeCell({
-                cell: cell,
-                kbase: {
-                    type: 'code',
-                    language: 'python',
-                },
-            });
         }
 
         function upgradeCell(cell, data) {
@@ -184,7 +166,7 @@ define(
                     subtitle: data.language,
                 },
                 codeCell: {
-                    userSettings: {
+                    'user-settings': {
                         showCodeInputArea: true,
                     },
                 },
@@ -200,32 +182,25 @@ define(
         }
 
         function ensureCodeCell(cell) {
-            if (cell.cell_type === 'code') {
-                if (cell.metadata.kbase) {
-                    if (cell.metadata.kbase.type) {
-                        if (cell.metadata.kbase.type === 'code') {
-                            // fully flocked jupyter/kbase code cell
-                            return true;
-                        } else {
-                            // a typed kbase cell, and not a code cell
-                            return false;
-                        }
-                    } else {
-                        // a code cell with a kbase property but no type specified
-                        // must be a pre-code-cell-extension code cell, which can be
-                        // converted.
-                        fixupCell(cell);
-                        return true;
-                    }
-                } else {
-                    // a plain code cell with no kbase-stuff is possible, but unlikely, still, convert.
-                    fixupCell(cell);
-                    return true;
-                }
-            } else {
-                // not a code cell, sorry.
+            if (cell.cell_type !== 'code') {
                 return false;
             }
+            if (cell.metadata.kbase && cell.metadata.kbase.type) {
+                return cell.metadata.kbase.type === 'code';
+            }
+            // a code cell with a kbase property but no type specified
+            // must be a pre-code-cell-extension code cell, which can be
+            // converted.
+            // a plain code cell with no kbase-stuff is possible, but unlikely
+            // still, convert it.
+            upgradeCell({
+                cell: cell,
+                kbase: {
+                    type: 'code',
+                    language: 'python',
+                },
+            });
+            return true;
         }
 
         function initializeExtension() {
@@ -243,7 +218,6 @@ define(
                 const cell = payload.cell;
                 const setupData = payload.data;
                 const jupyterCellType = payload.type;
-                // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
                 if (jupyterCellType === 'code' && (!setupData || setupData.type === 'code')) {
                     try {
                         upgradeCell(cell, setupData);

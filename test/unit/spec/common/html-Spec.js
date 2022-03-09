@@ -1,7 +1,11 @@
-define(['common/html'], (html) => {
+define(['common/html', 'testUtil'], (html, TestUtil) => {
     'use strict';
 
     describe('html utility library', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         // camelToKebab
         it('Converts camelCaseToHyphen', () => {
             expect(html.camelToKebab('camelCase')).toEqual('camel-case');
@@ -15,7 +19,7 @@ define(['common/html'], (html) => {
             expect(html.genId()).toMatch(/^kb_html_.*$/);
         });
 
-        // Looading
+        // Loading
         it('Makes a loading message', () => {
             let loading = html.loading();
             expect(loading).toEqual(
@@ -26,24 +30,6 @@ define(['common/html'], (html) => {
             expect(loading).toEqual(
                 '<span>Loading... &nbsp;&nbsp;<i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i></span>'
             );
-        });
-
-        // makePanel
-        it('Makes a panel', () => {
-            const panelDef = [
-                {
-                    title: 'Panel 1',
-                    body: 'This is panel 1',
-                },
-                {
-                    title: 'Panel2',
-                    body: 'This is panel 2',
-                },
-            ];
-            const panelContent =
-                '<div class="panel panel-default"><div class="panel-heading"><span class="panel-title"></span></div><div class="panel-body"></div></div>';
-            const panel = html.makePanel(panelDef);
-            expect(panel).toEqual(panelContent);
         });
 
         // makeTabs

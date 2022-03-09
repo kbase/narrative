@@ -1,4 +1,5 @@
-define(['messages', 'heightNotifier'], (Messages, HeightNotifier) => {
+define(['./messages', './heightNotifier'], (Messages, HeightNotifier) => {
+    'use strict';
     function getParams(id) {
         if (!document.getElementById(id).hasAttribute('data-params')) {
             console.warn(

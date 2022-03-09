@@ -1,7 +1,11 @@
-define(['common/props'], (Props) => {
+define(['common/props', 'testUtil'], (Props, TestUtil) => {
     'use strict';
 
     describe('Props core functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Is alive', () => {
             let alive;
             if (Props) {
@@ -39,7 +43,7 @@ define(['common/props'], (Props) => {
             props.setItem('pet', { type: 'dog', name: 'peet' });
             expect(props.getItem('pet')).toEqual({ type: 'dog', name: 'peet' });
         });
-        it('Set two object propertyes', () => {
+        it('Set two object properties', () => {
             const props = Props.make();
             props.setItem(['pet', 'coco'], 'yellow');
             props.setItem(['pet', 'peet'], 'black');

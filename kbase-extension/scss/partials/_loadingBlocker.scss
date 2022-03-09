@@ -1,0 +1,58 @@
+/* Show this over the whole narrative UI until the
+   workspace becomes active.
+
+   This animation was taken from:
+   http://cssdeck.com/labs/load
+
+   It was created by José Barcelon-Godfrey
+   http://cssdeck.com/user/Jmbarcelonco
+
+   -Dan Gunter, Feb 10, 2015
+*/
+
+%kb-loading-blocker-text {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-left: 30%;
+  text-align: left;
+  width: 40%;
+}
+
+.kb-loading-blocker {
+  // .kb-loading-blocker__container
+  &__container {
+    background-color: rgb(255 255 255);
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  // .kb-loading-blocker__header
+  &__header {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  // .kb-loading-blocker__text
+  &__text {
+    @extend %kb-loading-blocker-text;
+
+    // .kb-loading-blocker__text--warning
+    &--warning {
+      @extend %kb-loading-blocker-text;
+
+      display: none;
+      position: absolute;
+    }
+  }
+
+  // .kb-loading-blocker__image_container
+  &__image_container {
+    padding-top: 10%;
+    text-align: center;
+  }
+}

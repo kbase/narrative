@@ -1,0 +1,84 @@
+.kb-error-display {
+  // .kb-error-display__container
+  &__container {
+    @include default-container-padding;
+    // .kb-error-display__container.kb-log__error_container
+    // see _jobLog for styling as part of job status
+    &.kb-log__error_container {
+      padding: 0;
+    }
+  }
+
+  &__summary,
+  &__detail_title,
+  &__stacktrace_title {
+    @include font-h4;
+
+    margin-top: 1rem;
+  }
+  // .kb-error-display__summary
+  &__summary {
+    .kb-app-cell-tab-pane__container--error & {
+      margin-top: 0;
+    }
+  }
+  // .kb-error-display__stacktrace_code
+  &__stacktrace_code {
+    @include code-block;
+  }
+  // .kb-error-display__advice_list
+  &__advice_list {
+    list-style: none;
+    padding-left: 0;
+  }
+}
+
+.access,
+.generic {
+  &-error {
+    // .access-error__container
+    // .generic-error__container
+    &__container {
+      margin: 2rem;
+      text-align: center;
+    }
+
+    // .access-error__heading,
+    // .generic-error__heading
+    &__heading {
+      font-size: 200%;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    // .access-error__text,
+    // .generic-error__text
+    &__text {
+      font-size: 150%;
+      line-height: 2;
+    }
+  }
+}
+
+.access-request {
+  // .access-request-form__container
+  &-form__container {
+    margin-top: 2rem;
+  }
+
+  // .access-request-progress__container
+  &-progress__container {
+    display: none;
+    margin-top: 1rem;
+  }
+
+  // .access-request-result
+  &-result {
+    font-size: 125%;
+    margin-top: 2rem;
+  }
+}
+
+.error-dialog__body {
+  margin: 1rem;
+}

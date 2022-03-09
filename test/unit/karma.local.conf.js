@@ -9,4 +9,7 @@ module.exports = function (config) {
     });
     config.preprocessors = {};
     config.reporters = ['kjhtml', 'brief'];
+    config.exclude = config.exclude.filter((file) => {
+        return file.indexOf('test/unit/spec/') === -1;
+    });
 };

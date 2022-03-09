@@ -635,14 +635,13 @@ define(['common/props'], (Props) => {
 
         let defaultValue;
         let nullValue;
-        let zeroValue;
 
         nullValue = null;
         defaultValue = {};
         Object.keys(groupParams).forEach((id) => {
             defaultValue[id] = groupParams[id].data.defaultValue;
         });
-        zeroValue = defaultValue;
+        const zeroValue = defaultValue;
 
         const structSpec = {
             id: group.id,
@@ -745,8 +744,7 @@ define(['common/props'], (Props) => {
 
     function convertAppSpec(sdkAppSpec) {
         // Parameters
-        let parameterSpecs = {},
-            parameterLayout;
+        const parameterSpecs = {};
 
         // First convert all parameters
 
@@ -770,7 +768,7 @@ define(['common/props'], (Props) => {
 
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
-        parameterLayout = sdkAppSpec.parameters
+        const parameterLayout = sdkAppSpec.parameters
             .filter((parameter) => {
                 if (parameterSpecs[parameter.id]) {
                     return true;
@@ -823,6 +821,6 @@ define(['common/props'], (Props) => {
     }
 
     return {
-        convertAppSpec: convertAppSpec,
+        convertAppSpec,
     };
 });

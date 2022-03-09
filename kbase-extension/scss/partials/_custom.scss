@@ -1,0 +1,388 @@
+/*
+This file is for overriding the Jupyter CSS. Any KBase-component
+CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
+
+(or the specific css file if available)
+*/
+#ipython-main-app {
+  position: relative;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: rgb(51 122 183);
+  color: rgb(255 255 255);
+
+  span {
+    color: rgb(255 255 255) !important;
+  }
+}
+
+#site {
+  overflow: visible;
+}
+
+/* disable the standard notebook, bottom spacer */
+
+#notebook > .end_space {
+  height: 0;
+  min-height: 0;
+}
+
+@media (min-width: 1200px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+@media (min-width: 992px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+.celltoolbar {
+  background: none;
+  border: 0;
+  border-left: 1px solid transparent;
+  height: auto;
+  padding-bottom: 2px;
+  padding-top: 0;
+}
+
+div {
+  &.input_area {
+    border: 1px solid rgb(206 206 206);
+    border-radius: 0;
+    padding-top: 4px;
+  }
+
+  &.output_subarea {
+    max-width: inherit;
+  }
+
+  &.text_cell_input {
+    border: 1px solid rgb(206 206 206);
+    border-radius: 0;
+  }
+
+  &.cell {
+    border: 1px solid use_color('base-lighter');
+    border-left-width: 5px;
+    border-radius: 0;
+    margin: 8px 0;
+    padding: 0;
+
+    &.selected {
+      background: none;
+      border: 1px solid use_color('mid-green');
+      border-left-width: 5px;
+      box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
+      margin-left: 0;
+      padding-left: 0;
+      transition: box-shadow 0.2s ease-in-out;
+
+      &::before {
+        background: none;
+      }
+
+      /* div.cell.selected.kb-error */
+      &.kb-error {
+        border: 1px solid rgb(217 83 79);
+        border-left-width: 5px;
+      }
+    }
+
+    &.opened {
+      padding-top: 0;
+    }
+  }
+
+  &#notebook {  /* FIXME Jupyter css */
+    padding: 0;
+  }
+}
+
+.edit_mode div.cell.selected {
+  background: none;
+  border-left: 5px solid rgb(102 187 106);
+  padding-left: 0;
+}
+
+#notebook_name {
+  color: rgb(0 102 152);
+
+  &:hover {
+    background-color: rgb(224 224 224);
+    cursor: pointer;
+  }
+}
+
+#notebook-container {
+  bottom: 0;
+  box-shadow: none;
+  left: 380px;
+  min-width: 460px;
+  overflow: auto;
+  position: fixed;
+  right: 0;
+  top: 70px;
+  width: auto;
+
+  &::after {
+    content: '';
+    display: block;
+    height: 100px;
+  }
+}
+
+.btn-toolbar {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+  font-size: 16px;
+  padding: 3px 4px;
+}
+
+.btn-subtle {
+  color: rgb(136 136 136);
+  margin: 0;
+
+  .fa {
+    color: rgb(136 136 136);
+
+    &::before {
+      color: rgb(136 136 136);
+    }
+  }
+}
+
+.notebook_app {
+  background-color: rgb(255 255 255);
+  overflow-y: hidden;
+
+  .btn.active {
+    box-shadow: none;
+  }
+
+  .inner_cell {
+    overflow: visible;
+  }
+
+  .celltoolbar > .button_container {
+    flex: 0 auto;
+
+    &:first-child {
+      flex: auto;
+    }
+  }
+
+  .celltoolbar_container {
+    border-bottom: 1px solid use-color('silver');
+  }
+
+  .prompt {
+    color: use-color('silver');
+    padding-top: 0;
+    width: 75px;
+  }
+
+  .cell {
+    &.selected div.text_cell_render,
+    &.unselected div.text_cell_render {
+      border: 1px solid transparent;
+    }
+  }
+
+  .buttons .dropdown-menu {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .btn.disabled .fa {
+    color: use-color('silver');
+  }
+}
+
+/* Fooling around with the narrative cells */
+
+.text_cell {
+  &.kb-cell .rendered_html {
+    table {
+      border: 1px solid rgb(221 221 221);
+    }
+
+    ul {
+      margin: 0;
+    }
+  }
+
+  &.opened.rendered {
+    &.kb-cell .rendered_html {
+      border: 0;
+      padding: 0;
+    }
+
+    &.selected.kb-cell {
+      .rendered_html {
+        border-left: 1px solid use_color('mid-green');
+      }
+
+      &.kb-error .rendered_html {
+        border-left: 1px solid rgb(217 83 79);
+      }
+    }
+
+    &.kb-cell {
+      padding-bottom: 0;
+    }
+  }
+}
+
+.rendered_html {
+  td,
+  th,
+  tr {
+    text-align: inherit;
+  }
+
+  table {
+    table-layout: inherit;
+  }
+}
+
+.cell {
+  &.selected {
+    .prompt {
+      .method-icon {
+        color: rgb(103 58 183);
+      }
+
+      .app-icon {
+        color: rgb(0 150 136);
+      }
+
+      .app-output-icon,
+      .data-viewer-icon,
+      .markdown-icon,
+      .method-output-icon {
+        color: rgb(0 0 0);
+      }
+
+      .error-icon {
+        color: rgb(255 0 0);
+      }
+    }
+
+    .btn-default {
+      color: rgb(0 0 0);
+    }
+  }
+
+  > .inner_cell > .ctb_hideshow {
+    display: block;
+  }
+
+  &.unselected {
+    .btn-default {
+      color: use_color('base-lighter');
+    }
+
+    .app-icon,
+    .method-icon {
+      color: use_color('silver');
+    }
+  }
+}
+
+.kb-btn-icon {
+  display: inline-block;
+  padding: 4px;
+
+  .fa {
+    opacity: 0.5;
+  }
+
+  &:hover .fa {
+    opacity: 1;
+  }
+}
+
+// For some reason Jupyter removes the bottom margin. This causes problems with
+// bootstrap, since bootstrap removes the top margin!
+p {
+  margin-bottom: 1rem;
+}
+
+.prompt {
+  display: none !important;
+}
+
+/*
+ * Jupyter 5.6.0 introduced a "run this cell" button that appears on mouseover.
+ * Cool though this is, it's a problem on app cells.
+ * This hunk of CSS should remove it until we can better work it in to our design.
+ */
+
+div.run_this_cell {
+  display: none;
+  width: 0;
+}
+
+div.code_cell {
+  div.input_prompt {
+    min-width: 0;
+  }
+}
+
+.panel-title {
+  @include font-h4;
+}
+
+/* collapsible Bootstrap toggle */
+[data-toggle=collapse] {
+  cursor: pointer;
+
+  &::before {
+    color: use-color('silver');
+    content: '\f078 ';
+    display: inline-block;
+    font: normal 400 90%/1 $typeface-font-awesome;
+    margin-left: 0;
+    margin-right: 0.2em;
+    text-align: center;
+    vertical-align: baseline;
+    width: 1.2em;
+  }
+
+  &.collapsed::before {
+    content: '\f054 ';
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+  }
+}
+
+/* up/down caret expander */
+[data-toggle=vertical-collapse-after] {
+  cursor: pointer;
+
+  &::after {
+    content: ' \f0d8';
+    display: inline-block;
+    font: normal 400 130%/1 $typeface-font-awesome;
+    text-align: right;
+    vertical-align: baseline;
+    width: 1em;
+  }
+}
+
+.vertical_collapse--open [data-toggle=vertical-collapse-after]::after {
+  content: ' \f0d7';
+}

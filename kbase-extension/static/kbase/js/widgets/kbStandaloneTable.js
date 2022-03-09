@@ -80,6 +80,7 @@
 
 */
 (function () {
+    'use strict';
     const root = this || {};
     const standaloneTable = (root.standaloneTable = {
         about: {
@@ -249,9 +250,9 @@
                 tdata = renderer.settings.tdata;
             } else {
                 // the data has not been parsed, do it now
-                for (var i = 0; i < renderer.settings.data.data.length; i++) {
+                for (let i = 0; i < renderer.settings.data.data.length; i++) {
                     tdata[tdata.length] = {};
-                    for (var h = 0; h < renderer.settings.data.data[i].length; h++) {
+                    for (let h = 0; h < renderer.settings.data.data[i].length; h++) {
                         tdata[tdata.length - 1][header[h]] =
                             renderer.settings.data.data[i][h] || '';
                     }
@@ -262,7 +263,7 @@
 
             // if we are to auto determine sort functions, do so
             if (renderer.settings.sort_autodetect) {
-                for (var i = 0; i < header.length; i++) {
+                for (let i = 0; i < header.length; i++) {
                     if (!renderer.settings.sorttype[i]) {
                         if (!tdata[0] || typeof tdata[0][header[i]].replace != 'function') {
                             renderer.settings.sorttype[i] = 'number';
@@ -281,7 +282,7 @@
             // create filter elements
             const filter = renderer.settings.filter;
             let filter_present = false;
-            for (var i in filter) {
+            for (const i in filter) {
                 if (filter.hasOwnProperty(i)) {
                     if (filter[i].hasOwnProperty('searchword') && filter[i].searchword.length > 0) {
                         filter_present = true;
@@ -295,8 +296,8 @@
                 let newdata = [];
                 if (renderer.settings.filter_changed) {
                     renderer.settings.offset = 0;
-                    for (var i in filter) {
-                        var re;
+                    for (const i in filter) {
+                        let re;
                         if (filter[i].case_sensitive) {
                             re = new RegExp(filter[i].searchword);
                         } else {
@@ -321,9 +322,9 @@
                         }
                     }
                     const htmlFilter = new RegExp('<.+?>', 'ig');
-                    for (var h = 0; h < tdata.length; h++) {
+                    for (let h = 0; h < tdata.length; h++) {
                         let pass = 1;
-                        for (var i in filter) {
+                        for (const i in filter) {
                             let word = tdata[h][header[i]] + '';
                             if (!filter[i].keepHTML) {
                                 word = word.replace(htmlFilter, '');
@@ -416,7 +417,7 @@
             const thead = document.createElement('thead');
             const tr = document.createElement('tr');
             tr.setAttribute('style', 'height: 30px; border-top: 1px solid lightgray;');
-            for (var i = 0; i < header.length; i++) {
+            for (let i = 0; i < header.length; i++) {
                 // check if this column is visible
                 if (!renderer.settings.invisible_columns[i]) {
                     // create sorting elements
@@ -519,9 +520,9 @@
                                 renderer.settings.filter[i].operator = ['=', '<', '>', '><'];
                                 renderer.settings.filter[i].active_operator = 0;
                             }
-                            var selopts = [];
+                            const selopts = [];
                             let numopts = 0;
-                            for (var h = 0; h < tdata.length; h++) {
+                            for (let h = 0; h < tdata.length; h++) {
                                 if (!selopts[tdata[h][header[i]]]) {
                                     numopts++;
                                 }
@@ -538,7 +539,7 @@
                         if (!renderer.settings.filter[i].searchword) {
                             renderer.settings.filter[i].searchword = '';
                         }
-                        var filter_elem;
+                        let filter_elem;
                         if (renderer.settings.filter[i].type == 'text') {
                             const filter_text = document.createElement('input');
                             filter_text.setAttribute('type', 'text');
@@ -620,16 +621,15 @@
                                             } else {
                                                 this.childNodes[x + 1].style.display = '';
                                                 x++;
-                                                renderer.settings.filter[
-                                                    this.i
-                                                ].active_operator = x;
+                                                renderer.settings.filter[this.i].active_operator =
+                                                    x;
                                             }
                                         }
                                     }
                                 };
                                 operator_span.className = 'add-on';
                                 for (
-                                    var h = 0;
+                                    let h = 0;
                                     h < renderer.settings.filter[i].operator.length;
                                     h++
                                 ) {
@@ -668,13 +668,13 @@
                                 'position: absolute; height: 26px; margin-bottom: 0px; margin-top: 2px; z-index: 100; display: none;'
                             );
                             filter_elem.add(new Option('-show all-', ''), null);
-                            var selopts = [];
-                            for (var h = 0; h < tdata.length; h++) {
+                            const selopts = [];
+                            for (let h = 0; h < tdata.length; h++) {
                                 if (tdata[h][header[i]].length) {
                                     selopts[tdata[h][header[i]]] = 1;
                                 }
                             }
-                            for (var h in selopts) {
+                            for (let h in selopts) {
                                 if (typeof selopts[h] != 'function') {
                                     if (h == renderer.settings.filter[i].searchword) {
                                         filter_elem.add(new Option(h, h, true), null);
@@ -688,9 +688,8 @@
                             filter_elem.onchange = function () {
                                 const index = this.index;
                                 const renderer = rendererTable[index];
-                                renderer.settings.filter[this.i].searchword = this.options[
-                                    this.selectedIndex
-                                ].value;
+                                renderer.settings.filter[this.i].searchword =
+                                    this.options[this.selectedIndex].value;
                                 renderer.settings.filter_changed = true;
                                 renderer.render(index);
                             };
@@ -735,9 +734,8 @@
                             filter_elem.onchange = function () {
                                 const index = this.index;
                                 const renderer = rendererTable[index];
-                                renderer.settings.filter[this.i].searchword = this.options[
-                                    this.selectedIndex
-                                ].value;
+                                renderer.settings.filter[this.i].searchword =
+                                    this.options[this.selectedIndex].value;
                                 if (typeof renderer.settings.navigation_callback == 'function') {
                                     const query = [];
                                     for (const x in renderer.settings.filter) {
@@ -770,20 +768,20 @@
 
                     // build header cell
                     const caret = document.createElement('table');
-                    caret.setAttribute('style', 'float: right; margin: 0px; border: none;');
+                    caret.setAttribute('style', 'float: right; margin: 0px; border: 0;');
                     const caret_tr1 = document.createElement('tr');
-                    caret_tr1.setAttribute('style', 'border: none;');
+                    caret_tr1.setAttribute('style', 'border: 0;');
                     const caret_td1 = document.createElement('td');
                     caret_td1.setAttribute(
                         'style',
-                        'padding: 0px 2px; line-height: 0px; border: none;'
+                        'padding: 0px 2px; line-height: 0px; border: 0;'
                     );
                     const caret_tr2 = document.createElement('tr');
-                    caret_tr2.setAttribute('style', 'border: none;');
+                    caret_tr2.setAttribute('style', 'border: 0;');
                     const caret_td2 = document.createElement('td');
                     caret_td2.setAttribute(
                         'style',
-                        'padding: 0px 2px; line-height: 0px; border: none;'
+                        'padding: 0px 2px; line-height: 0px; border: 0;'
                     );
                     caret_td1.appendChild(desc);
                     caret_td2.appendChild(asc);
@@ -882,7 +880,6 @@
                                         return -1;
                                 }
                                 return 1;
-                                break;
                             case 'string':
                                 if (
                                     a[header[sortcol]].replace(/<(.|\n)*?>/g, '') ==
@@ -895,7 +892,6 @@
                                 )
                                     return -1;
                                 return 1;
-                                break;
                         }
                     } else {
                         if (
@@ -929,9 +925,9 @@
             }
 
             // create the table rows
-            for (var i = 0; i < disp.length; i++) {
+            for (let i = 0; i < disp.length; i++) {
                 const tinner_row = document.createElement('tr');
-                for (var h = 0; h < header.length; h++) {
+                for (let h = 0; h < header.length; h++) {
                     if (!renderer.settings.invisible_columns[h]) {
                         const tinner_cell = document.createElement('td');
                         tinner_cell.innerHTML = disp[i][header[h]];
@@ -1012,7 +1008,7 @@
             // create the navigation
             // first, previous
             const prev_td = document.createElement('td');
-            prev_td.setAttribute('style', 'text-align: left; width: 45px; border: none;');
+            prev_td.setAttribute('style', 'text-align: left; width: 45px; border: 0;');
             prev_td.innerHTML = '&nbsp;';
             if (offset > 0) {
                 const first = document.createElement('i');
@@ -1060,7 +1056,7 @@
 
             // next, last
             const next_td = document.createElement('td');
-            next_td.setAttribute('style', 'text-align: right; width: 45px; border: none;');
+            next_td.setAttribute('style', 'text-align: right; width: 45px; border: 0;');
             next_td.innerHTML = '&nbsp;';
             if (offset + rows < (renderer.settings.numrows || tdata.length)) {
                 const last = document.createElement('i');
@@ -1114,7 +1110,7 @@
 
             // display of window offset
             const showing = document.createElement('td');
-            showing.setAttribute('style', 'text-align: center; border: none;');
+            showing.setAttribute('style', 'text-align: center; border: 0;');
             showing.innerHTML =
                 'showing rows ' +
                 ((renderer.settings.offset || offset) + 1) +
@@ -1125,9 +1121,9 @@
 
             // create the table to host navigation
             const bottom_table = document.createElement('table');
-            bottom_table.setAttribute('style', 'width: 100%; border: none;');
+            bottom_table.setAttribute('style', 'width: 100%; border: 0;');
             const bottom_row = document.createElement('tr');
-            bottom_row.setAttribute('style', 'border: none;');
+            bottom_row.setAttribute('style', 'border: 0;');
             bottom_row.appendChild(prev_td);
             bottom_row.appendChild(showing);
             bottom_row.appendChild(next_td);
@@ -1286,16 +1282,16 @@
                 index +
                 ");'><table id='table_colsel_table_" +
                 index +
-                "' style='border: none;'>";
+                "' style='border: 0;'>";
             for (let ii = 0; ii < renderer.settings.header.length; ii++) {
                 let checked = ' checked';
                 if (renderer.settings.invisible_columns[ii]) {
                     checked = '';
                 }
                 colsel_html +=
-                    "<tr style='border: none;'><td style='border: none;'><input style='margin-right: 5px;' type='checkbox'" +
+                    "<tr style='border: 0;'><td style='border: 0;'><input style='margin-right: 5px;' type='checkbox'" +
                     checked +
-                    "></td><td style='border: none;'>" +
+                    "></td><td style='border: 0;'>" +
                     renderer.settings.header[ii] +
                     '</td></tr>';
             }

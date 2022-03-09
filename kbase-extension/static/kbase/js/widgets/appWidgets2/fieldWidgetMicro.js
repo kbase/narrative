@@ -16,7 +16,7 @@ define([
     'common/props',
     'common/runtime',
     './errorControl',
-    'css!google-code-prettify/prettify.css',
+    'css!google-code-prettify/prettify',
 ], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
     'use strict';
 
@@ -357,8 +357,7 @@ define([
                                 return div({ class: 'col-md-3' }, [
                                     label(
                                         {
-                                            class:
-                                                'xcontrol-label kb-app-parameter-name control-label',
+                                            class: 'kb-app-parameter-name control-label',
                                             title: infoTipText,
                                             style: { cursor: 'help' },
                                             id: events.addEvent({
@@ -389,8 +388,7 @@ define([
                                     div(
                                         {
                                             id: ids.feedback,
-                                            class:
-                                                'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
                                             dataElement: 'feedback',
                                             style: {
                                                 width: '3px',

@@ -9,7 +9,6 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
     describe('KBase Display Utility function module', () => {
         let $nameTarget;
         const profilePageUrl = Config.url('profile_page');
-        const iconUrl = 'http://localhost:9876/narrative/static/kbase/images/ajax-loader.gif';
 
         beforeEach(() => {
             $nameTarget = $('<div>');
@@ -133,42 +132,6 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
                 );
                 done();
             });
-        });
-
-        it('getAppIcon() should create a default icons for methods and apps', () => {
-            let $icon = DisplayUtil.getAppIcon({});
-            expect($icon.html()).toContain('method-icon');
-            expect($icon.html()).not.toContain('app-icon');
-
-            $icon = DisplayUtil.getAppIcon({ isApp: true });
-            expect($icon.html()).toContain('app-icon');
-            expect($icon.html()).not.toContain('method-icon');
-        });
-
-        it('getAppIcon() should create a default icons with urls', () => {
-            const $icon = DisplayUtil.getAppIcon({ url: iconUrl });
-            // right now icon is directly an image, but might not always be the case, so
-            // test that we can find the url
-            expect($('<div>').append($icon).html()).toContain(iconUrl);
-            expect($('<div>').append($icon).html()).not.toContain('method-icon');
-            expect($('<div>').append($icon).html()).toContain('default');
-            expect($('<div>').append($icon).html()).not.toContain('app-icon');
-        });
-
-        it('getAppIcon() should use the cursor option', () => {
-            let $icon = DisplayUtil.getAppIcon({
-                url: iconUrl,
-                cursor: 'pointer',
-            });
-            expect($('<div>').append($icon).html()).toContain(iconUrl);
-            expect($('<div>').append($icon).html()).toContain('pointer');
-            expect($('<div>').append($icon).html()).not.toContain('method-icon');
-            expect($('<div>').append($icon).html()).not.toContain('app-icon');
-
-            $icon = DisplayUtil.getAppIcon({ cursor: 'pointer' });
-            expect($('<div>').append($icon).html()).toContain('pointer');
-            expect($('<div>').append($icon).html()).toContain('method-icon');
-            expect($('<div>').append($icon).html()).not.toContain('app-icon');
         });
     });
 });

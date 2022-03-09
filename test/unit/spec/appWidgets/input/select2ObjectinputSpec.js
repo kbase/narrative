@@ -3,9 +3,10 @@ define([
     'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/select2ObjectInput',
+    'widgets/appWidgets2/validators/constants',
     'base/js/namespace',
     'narrativeMocks',
-], ($, TestUtil, Runtime, Select2ObjectInput, Jupyter, Mocks) => {
+], ($, TestUtil, Runtime, Select2ObjectInput, Constants, Jupyter, Mocks) => {
     'use strict';
 
     const AUTH_TOKEN = 'fakeAuthToken';
@@ -94,15 +95,14 @@ define([
         );
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select 2 Object Input tests', () => {
-        let bus, testConfig;
+        let bus, testConfig, container, widget;
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
-        beforeEach(function () {
-            this.node = document.createElement('div');
+        beforeEach(() => {
+            container = document.createElement('div');
             runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
@@ -164,42 +164,44 @@ define([
             });
 
             updateData();
+            widget = Select2ObjectInput.make(testConfig);
         });
 
-        afterEach(() => {
+        afterEach(async () => {
+            if (widget) {
+                await widget.stop();
+            }
             jasmine.Ajax.uninstall();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.narrative = null;
-        });
-
-        it('Should exist', () => {
-            expect(Select2ObjectInput).toBeDefined();
+            container.remove();
         });
 
         it('Should be instantiable', () => {
-            const widget = Select2ObjectInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toBeDefined();
                 expect(widget[fn]).toEqual(jasmine.any(Function));
             });
+            widget = null;
         });
 
         describe('the started widget', () => {
-            beforeEach(async function () {
-                this.widget = Select2ObjectInput.make(testConfig);
-                await this.widget.start({ node: this.node });
+            beforeEach(async () => {
+                await widget.start({ node: container });
             });
 
-            it('Should start and stop', async function () {
-                expect(this.node.childElementCount).toBeGreaterThan(0);
-                const input = this.node.querySelector('select[data-element="input"]');
+            it('Should start and stop', async () => {
+                expect(container.childElementCount).toBeGreaterThan(0);
+                const input = container.querySelector('select[data-element="input"]');
                 expect(input).toBeDefined();
                 expect(input.getAttribute('value')).toBeNull();
 
-                await this.widget.stop();
-                expect(this.node.childElementCount).toBe(0);
+                await widget.stop();
+                expect(container.childElementCount).toBe(0);
+                widget = null;
             });
 
             // this resets the model value but does not change the UI
@@ -208,7 +210,7 @@ define([
                 bus.emit('update', { value: 'foo' });
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeUndefined();
-                    expect(msg.diagnosis).toBe('optional-empty');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.OPTIONAL_EMPTY);
                     done();
                 });
             });
@@ -219,49 +221,47 @@ define([
                 bus.emit('reset-to-defaults');
                 bus.on('validation', (msg) => {
                     expect(msg.errorMessage).toBeUndefined();
-                    expect(msg.diagnosis).toBe('optional-empty');
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.OPTIONAL_EMPTY);
                     done();
                 });
             });
-        });
 
-        // FIXME: it is unclear what the effect of these changes should be
-        // More precise tests should be implemented
-        it('Should respond to changed select2 option', function (done) {
-            const widget = Select2ObjectInput.make(testConfig);
-            const nodeStructures = [];
-            widget
-                .start({ node: this.node })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    const $select = $(this.node).find('select');
-                    const $search =
-                        $select.data('select2').dropdown.$search ||
-                        $select.data('select2').selection.$search;
+            it('Should respond to changed select2 option', async () => {
+                const initialNodeStructure = container.innerHTML;
+                const $select = $(container).find('select');
+                const $search =
+                    $select.data('select2').dropdown.$search ||
+                    $select.data('select2').selection.$search;
 
-                    $search.val('small');
-                    $search.trigger('input');
-
-                    $select.trigger({
-                        type: 'select2: select',
-                        params: {
-                            data: {},
-                        },
-                    });
-                    return TestUtil.wait(1000);
-                })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[1]);
-                    const $select = $(this.node).find('select');
-                    $select.val('stuff').trigger('change');
-                    return TestUtil.wait(1000);
-                })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[2]);
-                    done();
+                $search.val('small').trigger('input');
+                // triggers a fake search, which returns readsItem and readsItem2
+                $select.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: {},
+                    },
                 });
+                await TestUtil.wait(1000);
+
+                // the DOM structure of the select2 element has changed
+                expect(initialNodeStructure).not.toEqual(container.innerHTML);
+                dummyObjInfo.forEach((obj) => {
+                    expect(container.querySelector('select').textContent).toContain(obj.name);
+                    expect($select.data('select2').$results[0].textContent).toContain(obj.name);
+                });
+
+                let validationMessage;
+                bus.on('validation', (msg) => {
+                    validationMessage = msg;
+                });
+                // set the model value, which triggers a validation message
+                $select.val('stuff').trigger('change');
+                await TestUtil.wait(1000);
+                expect(validationMessage).toEqual({
+                    errorMessage: undefined,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                });
+            });
         });
     });
 });

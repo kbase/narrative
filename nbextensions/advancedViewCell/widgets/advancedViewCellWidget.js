@@ -13,14 +13,13 @@ define(
         'kb_service/client/narrativeMethodStore',
         'kb_service/client/workspace',
         'common/pythonInterop',
-        'common/utils',
+        'common/cellUtils',
         'common/ui',
         'common/fsm',
         'common/spec',
         'google-code-prettify/prettify',
         './advancedViewCellWidget-fsm',
-        'css!google-code-prettify/prettify.css',
-        'css!font-awesome.css',
+        'css!google-code-prettify/prettify',
     ],
     (
         $,
@@ -55,41 +54,47 @@ define(
             td = t('td');
 
         function factory(config) {
-            let container;
-            let ui;
-            const workspaceInfo = config.workspaceInfo;
-            const runtime = Runtime.make();
-            const cell = config.cell;
-            const parentBus = config.bus;
-            // TODO: the cell bus should be created and managed through main.js,
-            // that is, the extension.
-            let cellBus;
-            const bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' });
-            const eventManager = BusEventManager.make({
-                bus: runtime.bus(),
-            });
-            // HMM. Sync with metadata, or just keep everything there?
-            const settings = {
-                showAdvanced: {
-                    label: 'Show advanced parameters',
-                    defaultValue: false,
-                    type: 'custom',
+            let container, cellBus, fsm, ui;
+            const workspaceInfo = config.workspaceInfo,
+                runtime = Runtime.make(),
+                cell = config.cell,
+                parentBus = config.bus,
+                // TODO: the cell bus should be created and managed through main.js,
+                // that is, the extension.
+                bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
+                eventManager = BusEventManager.make({
+                    bus: runtime.bus(),
+                }),
+                // HMM. Sync with metadata, or just keep everything there?
+                settings = {
+                    showAdvanced: {
+                        label: 'Show advanced parameters',
+                        defaultValue: false,
+                        type: 'custom',
+                    },
+                    showNotifications: {
+                        label: 'Show the notifications panel',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'notifications',
+                    },
+                    showAboutApp: {
+                        label: 'Show the About App panel',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'about-app',
+                    },
                 },
-                showNotifications: {
-                    label: 'Show the notifications panel',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'notifications',
-                },
-                showAboutApp: {
-                    label: 'Show the About App panel',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'about-app',
-                },
-            };
-            const widgets = {};
-            let fsm;
+                widgets = {},
+                model = Props.make({
+                    data: utils.getMeta(cell, 'viewCell'),
+                    onUpdate: function (props) {
+                        utils.setMeta(cell, 'viewCell', props.getRawObject());
+                    },
+                }),
+                spec = Spec.make({
+                    appSpec: model.getItem('app.spec'),
+                });
 
             if (runtime.config('features.developer')) {
                 settings.showDeveloper = {
@@ -136,10 +141,6 @@ define(
                 ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
             }
 
-            function toBoolean(value) {
-                return !!value;
-            }
-
             function validateModel() {
                 return spec.validateModel(model.getItem('params'));
             }
@@ -170,31 +171,27 @@ define(
             }
 
             function buildPython(cell, cellId, app, params) {
-                const runId = new Uuid(4).format();
-                const fixedApp = fixApp(app);
-                const outputWidgetState =
-                    utils.getCellMeta(cell, 'viewCell.outputWidgetState') || null;
-                const code = PythonInterop.buildAdvancedViewRunner(
-                    cellId,
-                    runId,
-                    fixedApp,
-                    params,
-                    outputWidgetState
-                );
-                // TODO: do something with the runId
+                const runId = new Uuid(4).format(),
+                    fixedApp = fixApp(app),
+                    outputWidgetState =
+                        utils.getCellMeta(cell, 'viewCell.outputWidgetState') || null,
+                    code = PythonInterop.buildAdvancedViewRunner(
+                        cellId,
+                        runId,
+                        fixedApp,
+                        params,
+                        outputWidgetState
+                    );
                 cell.set_text(code);
             }
 
-            function resetPython(cell) {
-                cell.set_text('');
+            function resetPython(_cell) {
+                _cell.set_text('');
             }
 
             function initializeFSM() {
                 let currentState = model.getItem('fsm.currentState');
                 if (!currentState) {
-                    // TODO: evaluate the state of things to try to guess the state?
-                    // Or is this just an error unless it is a new cell?
-                    // currentState = {mode: 'editing', params: 'incomplete'};
                     currentState = { mode: 'new' };
                 }
                 fsm = Fsm.make({
@@ -202,12 +199,8 @@ define(
                     initialState: {
                         mode: 'new',
                     },
-                    //xinitialState: {
-                    //    mode: 'editing', params: 'incomplete'
-                    //},
                     onNewState: function (fsm) {
                         model.setItem('fsm.currentState', fsm.getCurrentState().state);
-                        // save the narrative!
                     },
                     bus: bus,
                 });
@@ -291,8 +284,6 @@ define(
                 model.setItem('notifications', notifications);
                 renderNotifications();
             }
-
-            // WIDGETS
 
             /*
              *
@@ -395,7 +386,6 @@ define(
                                                     body: [div({ dataElement: 'content' })],
                                                 }),
                                                 ui.buildCollapsiblePanel({
-                                                    // title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
                                                     id: configureId,
                                                     title:
                                                         'Configure ' +
@@ -453,21 +443,20 @@ define(
                     );
                 container.innerHTML = content;
                 events.attachEvents(container);
-                $('#' + configureId + ' .collapse')
-                    .on('hidden.bs.collapse', () => {
-                        utils.setCellMeta(
-                            cell,
-                            'kbase.viewCell.user-settings.collapsedConfigurePanel',
-                            true
-                        );
-                    })
-                    .on('shown.bs.collapse', () => {
-                        utils.setCellMeta(
-                            cell,
-                            'kbase.viewCell.user-settings.collapsedConfigurePanel',
-                            false
-                        );
-                    });
+                $('#' + configureId + ' .collapse').on('hidden.bs.collapse', () => {
+                    utils.setCellMeta(
+                        cell,
+                        'kbase.viewCell.user-settings.collapsedConfigurePanel',
+                        true
+                    );
+                });
+                $('#' + configureId + ' .collapse').on('shown.bs.collapse', () => {
+                    utils.setCellMeta(
+                        cell,
+                        'kbase.viewCell.user-settings.collapsedConfigurePanel',
+                        false
+                    );
+                });
             }
 
             function doDeleteCell() {
@@ -541,7 +530,9 @@ define(
                             label = showing ? 'Hide Code' : 'Show Code';
                         ui.setButtonLabel('toggle-code-view', label);
                     });
-
+                    bus.on('show-notifications', () => {
+                        /* no op */
+                    });
                     bus.on('edit-cell-metadata', () => {
                         doEditCellMetadata();
                     });
@@ -627,7 +618,6 @@ define(
                             });
                         widgets.paramsInputWidget = {
                             path: ['parameters-group', 'widget'],
-                            // module: widgetModule,
                             bus: bus,
                             instance: widget,
                         };
@@ -725,7 +715,6 @@ define(
                         });
                     }
                 }
-
                 harvestErrors(validationResult);
                 return messages;
             }
@@ -753,7 +742,6 @@ define(
                         }
                     })
                     .catch((err) => {
-                        alert('internal error');
                         console.error('INTERNAL ERROR', err);
                     });
             }
@@ -764,7 +752,7 @@ define(
                 return syncAppSpec(params.appId, params.appTag)
                     .then(() => {
                         const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                                .filter(toBoolean)
+                                .filter((v) => !!v)
                                 .join('/'),
                             url = '/#appcatalog/app/' + appRef;
                         utils.setCellMeta(
@@ -809,18 +797,6 @@ define(
             }
 
             // INIT
-
-            const model = Props.make({
-                data: utils.getMeta(cell, 'viewCell'),
-                onUpdate: function (props) {
-                    utils.setMeta(cell, 'viewCell', props.getRawObject());
-                    // saveNarrative();
-                },
-            });
-
-            const spec = Spec.make({
-                appSpec: model.getItem('app.spec'),
-            });
 
             return {
                 init: init,

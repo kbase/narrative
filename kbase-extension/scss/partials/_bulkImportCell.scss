@@ -1,0 +1,200 @@
+/*
+  bulk import cell
+*/
+
+$component-border: use-color('silver');
+$panel-separator-color: use_color('mid-blue');
+
+.kb-bulk-import {
+  &__base-node {
+    // everything lives under this
+  }
+
+  &__layout_container {
+    align-items: stretch;
+    display: flex;
+  }
+
+  // kb-bulk-import__prompt
+  &__prompt {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // kb-bulk-import__prompt_status
+  &__prompt_status {}
+
+  // kb-bulk-import__body
+  &__body {
+    align-items: stretch;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  // kb-bulk-import__tab_pane
+  &__tab_pane {
+    align-content: stretch;
+    align-items: stretch;
+    border-top: 2px solid $panel-separator-color;
+    display: flex;
+    flex-direction: row;
+  }
+
+  // kb-bulk-import__tab_pane_widget
+  &__tab_pane_widget {
+    width: 100%;
+  }
+
+  // kb-bulk-import-configure,
+  // kb-bulk-import-info
+  &-configure,
+  &-info {
+    &__container {
+      display: flex;
+    }
+
+    // kb-bulk-import-configure__message
+    &__message {
+      padding: 0.5rem;
+      border: 1px solid $component-border;
+      color: use-color('ink');
+
+      // kb-bulk-import-configure__message_container
+      &_container {
+
+      }
+
+      // kb-bulk-import-configure__message--error
+      &--error {
+        background-color: use-color('error-lightest');
+        border-color: use-color('error-light');
+
+        // kb-bulk-import-configure__message--error-title
+        &-title {
+          color: use-color('error');
+          text-transform: capitalize;
+          margin-right: 0.5rem;
+        }
+      }
+
+      // kb-bulk-import-configure__message--warning-title
+      &--warning {
+        background-color: use-color('warning-lightest');
+        border-color: use-color('warning-light');
+
+        // kb-bulk-import-configure__message--warning-title
+        &-title {
+          color: use-color('warning-darker');
+          text-transform: capitalize;
+          margin-right: 0.5rem;
+        }
+      }
+    }
+
+    // kb-bulk-import-configure__panel--filetype
+    // kb-bulk-import-info__panel--filetype
+    &__panel--filetype {
+      background-color: use-color('base-lightest');
+      width: 24rem;
+    }
+
+    // kb-bulk-import-configure__panel--configure
+    // kb-bulk-import-info__panel--info
+    &__panel--configure,
+    &__panel--info {
+      flex: 1;
+    }
+  }
+}
+
+.kb-field-widget__error_message--parameters {
+  border: 1px solid use_color('error');
+}
+
+.kb-field-cell {
+  // kb-field-cell__param_container
+  &__param_container {
+    margin: 3px;
+  }
+
+  // kb-field-cell__input_control
+  &__input_control select {
+    margin-left: 0;
+  }
+
+  // kb-field-cell__cell_label
+  &__cell_label {
+    margin-bottom: 0;
+    padding-top: 8px;
+  }
+
+  // kb-field-cell__error_message
+  &__error_message {
+    border-color: use_color('error');
+    color: use_color('error');
+
+    .form-control {
+      border-color: use_color('error');
+      color: use_color('error');
+    }
+
+    // select2 is picky and needs its classes overridden.
+    // making a note here in case a select2 update breaks this.
+    .select2-selection {
+      border-color: use_color('error');
+    }
+
+    .select2-container--default .select2-selection--single {
+      .select2-selection__placeholder,
+      .select2-selection__rendered {
+        color: use_color('error');
+      }
+    }
+  }
+
+  // kb-field-cell__message_panel
+  &__message_panel,
+  &__message_panel__duplicate {
+    border: 1px solid $component-border;
+    padding: 0.5em;
+
+    // kb-field-cell__message_panel__error
+    &__error {
+      background-color: use-color('error-lightest');
+      border-color: use-color('error-light');
+      color: use-color('ink');
+
+      &__title {
+        color: use-color('error');
+      }
+    }
+
+    // kb-field-cell__message_panel__warning
+    &__warning {
+      background-color: use-color('warning-lightest');
+      border-color: use-color('warning-light');
+      color: use-color('ink');
+
+      &__title {
+        color: use-color('warning-darker');
+      }
+    }
+  }
+}
+
+.kb-result-tab {
+  &__container {
+    @include default-container-padding;
+    overflow-y: auto;
+    max-height: 70rem;
+  }
+}
+
+.kb-job-status-tab {
+  &__container {
+    @include default-container-padding;
+  }
+}

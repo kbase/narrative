@@ -2,15 +2,15 @@ define([
     'bluebird',
     'kb_common/html',
     '../validators/resolver',
+    '../validators/constants',
     'common/events',
     'common/ui',
-    'common/lang',
+    'util/util',
     '../paramResolver',
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
+], (Promise, html, Validation, Constants, Events, UI, Util, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -20,19 +20,57 @@ define([
         p = t('p'),
         resolver = Resolver.make();
 
+    /**
+     * Creates the Struct Input widget, which displays one or more sub-input widgets in a given
+     * order. This factor expects the following config object:
+     * {
+     *   bus: a message bus from its parent
+     *   paramsChannelName: the unique name of the containing parameters widget channel
+     *   initialValue: an object with the initial input value, should have a key for each of its parameters,
+     *   parameterSpec: the processed parameter spec from sdk.js. This should be an object with the following keys:
+     *     id: string,
+     *     multipleItems: boolean,
+     *     ui: {
+     *       label: string,
+     *       description: string,
+     *       hint: string,
+     *       class: string,
+     *       control: string,
+     *       layout: array of the subparameter ids. They will be laid out in that order,
+     *       advanced: boolean, if true will be hidden in the advanced params
+     *     },
+     *     data: {
+     *       type: string (likely 'struct'),
+     *       constraints {
+     *         required: boolean,
+     *         disableable: boolean
+     *       },
+     *       defaultValue: object, key-value pair for subparams
+     *       nullValue: either object or null,
+     *       zeroValue: object, key-value pair for subparams
+     *     },
+     *     parameters: {
+     *       layout: order layout array as above,
+     *       specs: object, keys = parameter ids, values = subparameter specs to be passed to individual FieldWidgets
+     *     }
+     * }
+     * @param {Object} config
+     * @returns {StructInput} the created widget
+     */
     function factory(config) {
-        let spec = config.parameterSpec,
-            bus = config.bus,
-            container,
+        let container,
             hostNode,
             ui,
+            structFields = {};
+
+        const spec = config.parameterSpec,
+            bus = config.bus,
             viewModel = {
                 data: {},
                 state: {
                     enabled: null,
                 },
             },
-            structFields = {},
             fieldLayout = spec.ui.layout,
             struct = spec.parameters,
             places = {};
@@ -62,7 +100,7 @@ define([
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(lang.copy(spec.defaultValue));
+                setModelValue(Util.copy(spec.defaultValue));
             } else {
                 unsetModelValue();
             }
@@ -70,9 +108,6 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                // var validationOptions = {
-                //     required: spec.data.constraints.required
-                // };
                 return Validation.validate(rawValue, spec);
             });
         }
@@ -90,8 +125,6 @@ define([
                         p('If enabled again, the values will be set to their defaults.'),
                         p('Continue to disable this parameter group?'),
                     ]),
-                    yesLabel: 'Yes',
-                    noLabel: 'No',
                 }).then((confirmed) => {
                     if (!confirmed) {
                         return;
@@ -103,7 +136,7 @@ define([
                         state: viewModel.state,
                     });
                     bus.emit('changed', {
-                        newValue: lang.copy(viewModel.data),
+                        newValue: Util.copy(viewModel.data),
                     });
                     renderSubcontrols();
                 });
@@ -113,13 +146,13 @@ define([
                 // Enable it
                 viewModel.state.enabled = true;
                 button.innerHTML = 'Disable';
-                viewModel.data = lang.copy(spec.data.defaultValue);
+                viewModel.data = Util.copy(spec.data.defaultValue);
             }
             bus.emit('set-param-state', {
                 state: viewModel.state,
             });
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data),
+                newValue: Util.copy(viewModel.data),
             });
             renderSubcontrols();
         }
@@ -194,9 +227,9 @@ define([
 
         function doChanged(id, newValue) {
             // Absorb and propagate the new value...
-            viewModel.data[id] = lang.copy(newValue);
+            viewModel.data[id] = Util.copy(newValue);
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data),
+                newValue: Util.copy(viewModel.data),
             });
 
             // Validate and propagate.
@@ -213,7 +246,7 @@ define([
          * The single input control wraps a field widget, which provides the
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(value, fieldSpec, events) {
+        function makeSingleInputControl(value, fieldSpec) {
             return resolver.loadInputControl(fieldSpec).then((widgetFactory) => {
                 const id = html.genId(),
                     fieldWidget = FieldWidget.make({
@@ -236,9 +269,9 @@ define([
                     }
                 });
                 fieldWidget.bus.on('validation', (message) => {
-                    if (message.diagnosis === 'optional-empty') {
+                    if (message.diagnosis === Constants.DIAGNOSIS.OPTIONAL_EMPTY) {
                         bus.emit('changed', {
-                            newValue: lang.copy(viewModel.data),
+                            newValue: Util.copy(viewModel.data),
                         });
                     }
                 });
@@ -250,6 +283,15 @@ define([
                     bus.emit('touched', {
                         parameter: fieldSpec.id,
                     });
+                });
+
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: (message) => {
+                        return bus.request(message, { key: { type: 'get-parameters' } });
+                    },
                 });
 
                 return {
@@ -302,7 +344,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },
@@ -351,7 +393,7 @@ define([
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
                 events = Events.make({ node: container });
-                viewModel.data = lang.copy(config.initialValue);
+                viewModel.data = Util.copy(config.initialValue);
             });
             return init
                 .then(() => {
@@ -373,7 +415,7 @@ define([
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
-                            viewModel.data = lang.copy(message.value);
+                            viewModel.data = Util.copy(message.value);
                             Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id],
@@ -384,7 +426,7 @@ define([
 
                     bus.on('submit', () => {
                         bus.emit('submitted', {
-                            value: lang.copy(viewModel.data),
+                            value: Util.copy(viewModel.data),
                         });
                     });
 
@@ -397,15 +439,11 @@ define([
         }
 
         function stop() {
-            return Promise.try(() => {
-                if (structFields) {
-                    return Promise.all(
-                        Object.keys(structFields).map((id) => {
-                            return structFields[id].instance.stop();
-                        })
-                    );
-                }
-            }).then(() => {
+            return Promise.all(
+                Object.keys(structFields).map((id) => {
+                    return structFields[id].instance.stop();
+                })
+            ).then(() => {
                 if (hostNode && container) {
                     hostNode.removeChild(container);
                 }
@@ -413,8 +451,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -1,6 +1,11 @@
-define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, SelectInput) => {
+define([
+    'common/runtime',
+    'widgets/appWidgets2/input/selectInput',
+    'testUtil',
+    'widgets/appWidgets2/validators/constants',
+], (Runtime, SelectInput, TestUtil, Constants) => {
     'use strict';
-    let bus, testConfig, runtime, node;
+    let bus, testConfig, runtime, container;
     const required = false,
         defaultValue = 'apple';
 
@@ -30,17 +35,19 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                         ],
                     },
                 },
+                ui: {
+                    label: 'A select input',
+                },
             },
             channelName: _bus.channelName,
             initialValue: 'apple',
         };
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
@@ -49,7 +56,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {
@@ -64,116 +73,219 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             });
         });
 
-        it('Should start and stop a widget', (done) => {
+        it('Should start and stop a widget', () => {
             const widget = SelectInput.make(testConfig);
 
-            widget
-                .start({ node: node })
+            return widget
+                .start({ node: container })
                 .then(() => {
                     // verify it's there.
-                    const inputElem = node.querySelector('select[data-element="input"]');
+                    const inputElem = container.querySelector('select[data-element="input"]');
                     expect(inputElem).toBeDefined();
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(node.childElementCount).toBe(0);
-                    done();
+                    expect(container.childElementCount).toBe(0);
                 });
         });
 
-        it('Should update value via bus', (done) => {
-            //and reset model properly via bus', (done) => {
-            // start with one value, change it, then reset.
-            // check along the way.
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
-            });
+        it('Should update value via bus', () => {
+            // select one value then update it.
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
-                bus.emit('update', { value: 'banana' });
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        resolve();
+                    });
+                    bus.emit('update', { value: 'banana' });
+                });
             });
         });
 
-        it('Should reset to default via bus', (done) => {
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
-            });
+        it('Should reset to default via bus', () => {
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
-                bus.emit('reset-to-defaults');
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        resolve();
+                    });
+                    bus.emit('reset-to-defaults');
+                });
             });
         });
 
-        it('Should respond to input change events with "changed"', (done) => {
+        it('Should respond to input change events with "changed"', () => {
             const widget = SelectInput.make(testConfig);
-            bus.on('changed', (message) => {
-                expect(message.newValue).toEqual('banana');
-                done();
-            });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = 2;
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('changed', (message) => {
+                        expect(message.newValue).toEqual('banana');
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should respond to input change events with "validation"', (done) => {
+        it('Should respond to input change events with "validation"', () => {
             const widget = SelectInput.make(testConfig);
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
-            });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = 1;
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        expect(message.errorMessage).toBeUndefined();
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should show message when configured', (done) => {
+        it('Should show message when configured', () => {
             testConfig.showOwnMessages = true;
             const widget = SelectInput.make(testConfig);
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                // ...detect something?
-                done();
-            });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
-                inputElem.value = 'banana';
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        // ...detect something?
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should return a diagnosis of required-missing if so', (done, fail) => {
+        it('Should return a diagnosis of required-missing if so', () => {
             bus = runtime.bus().makeChannelBus();
             testConfig = buildTestConfig(true, '', bus);
             const widget = SelectInput.make(testConfig);
-            let msgCount = 0,
-                okCount = 0;
-            bus.on('validation', (message) => {
-                msgCount++;
-                if (message.isValid) {
-                    okCount++;
-                }
-                if (msgCount === 2) {
-                    if (okCount > 1) {
-                        fail('too many ok messages');
-                    }
-                }
-                if (!message.isValid) {
-                    expect(message.diagnosis).toBe('required-missing');
-                    done();
-                }
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve, reject) => {
+                    let msgCount = 0,
+                        okCount = 0;
+                    bus.on('validation', (message) => {
+                        msgCount++;
+                        if (message.isValid) {
+                            okCount++;
+                        }
+                        if (msgCount === 2) {
+                            if (okCount > 1) {
+                                reject('too many ok messages');
+                            }
+                        }
+                        if (!message.isValid) {
+                            expect(message.diagnosis).toBe(Constants.DIAGNOSIS.REQUIRED_MISSING);
+                            resolve();
+                        }
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = -1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = -1;
-                inputElem.dispatchEvent(new Event('change'));
+        });
+
+        it('Should show the user a specific error if the given option is not one of the allowed ones', () => {
+            const badOption = 'a very bad option';
+            bus = runtime.bus().makeChannelBus();
+            testConfig = buildTestConfig(true, '', bus);
+            testConfig.initialValue = badOption;
+            const widget = SelectInput.make(testConfig);
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeFalse();
+                        expect(message.diagnosis).toBe(Constants.DIAGNOSIS.INVALID);
+                        expect(message.errorMessage).toBe(
+                            `Invalid ${testConfig.parameterSpec.ui.label}: ${badOption}. Please select a value from the dropdown.`
+                        );
+                        resolve();
+                    });
+                });
+            });
+        });
+
+        it('Should take a list of disabledValues on startup', () => {
+            const config = Object.assign({}, testConfig, { disabledValues: ['carrot'] });
+            const widget = SelectInput.make(config);
+
+            return widget.start({ node: container }).then(() => {
+                // verify it's there.
+                const inputElem = container.querySelector('select[data-element="input"]');
+                const carrotItem = inputElem.querySelector('option[value="carrot"]');
+                expect(carrotItem.hasAttribute('disabled')).toBeTrue();
+                const bananaItem = inputElem.querySelector('option[value="banana"]');
+                expect(bananaItem.hasAttribute('disabled')).toBeFalse();
+            });
+        });
+
+        function checkItems(expectedStates, inputElem) {
+            Object.keys(expectedStates).forEach((item) => {
+                const elem = inputElem.querySelector(`option[value="${item}"]`);
+                expect(elem.hasAttribute('disabled')).toBe(expectedStates[item]);
+            });
+        }
+
+        it('Should obey a message to disable selection options', async () => {
+            const widget = SelectInput.make(testConfig);
+
+            await widget.start({ node: container });
+            // verify it's there and the initial item states are all enabled (i.e. not disabled)
+            const itemsDisabled = {
+                apple: false,
+                banana: false,
+                carrot: false,
+            };
+            const inputElem = container.querySelector('select[data-element="input"]');
+            checkItems(itemsDisabled, inputElem);
+
+            const carrotItem = inputElem.querySelector('option[value="carrot"]');
+            await TestUtil.waitForElementChange(carrotItem, () => {
+                bus.emit('set-disabled-values', {
+                    values: ['carrot'],
+                });
+            });
+            itemsDisabled.carrot = true;
+            checkItems(itemsDisabled, inputElem);
+        });
+
+        it('Should take a set of options that override the options from the parameter spec', () => {
+            const values = [
+                {
+                    display: 'Dirigible',
+                    value: 'dirigible',
+                },
+                {
+                    display: 'Elephant',
+                    value: 'elephant',
+                },
+                {
+                    display: 'Frittata',
+                    value: 'frittata',
+                },
+            ];
+            const config = Object.assign({}, testConfig, {
+                availableValues: values,
+                initialValue: 'elephant',
+            });
+            const widget = SelectInput.make(config);
+            return widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
+                expect(inputElem.value).toEqual('elephant');
+                expect(inputElem.childElementCount).toBe(3);
+                for (const child of inputElem.children) {
+                    expect(['dirigible', 'elephant', 'frittata'].includes(child.value)).toBeTrue();
+                }
             });
         });
     });

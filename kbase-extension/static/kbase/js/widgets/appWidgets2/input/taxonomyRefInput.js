@@ -1,43 +1,24 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
-    'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'common/validation',
+    'common/html',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
-    'util/timeFormat',
     'kb_sdk_clients/genericClient',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
-    'css!font-awesome',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Data,
-    TimeFormat,
-    GenericClient
-) => {
+], (Promise, $, html, Events, Runtime, UI, GenericClient, Constants) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        cssBaseClass = 'kb-select2-taxonomy-ref';
 
     function factory(config) {
         const spec = config.parameterSpec,
@@ -50,16 +31,13 @@ define([
         let parent, container, ui;
 
         function makeInputControl() {
-            let selectOptions;
-            const selectElem = select(
+            return select(
                 {
                     class: 'form-control',
                     dataElement: 'input',
                 },
-                [option({ value: '' }, '')].concat(selectOptions)
+                [option({ value: '' }, '')]
             );
-
-            return selectElem;
         }
 
         // CONTROL
@@ -101,7 +79,7 @@ define([
                 return {
                     isValid: true,
                     validated: true,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     errorMessage: null,
                     value: value,
                     parsedValue: value,
@@ -116,7 +94,7 @@ define([
                     channel.emit('changed', {
                         newValue: result.parsedValue,
                     });
-                } else if (result.diagnosis === 'required-missing') {
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
                         newValue: spec.data.nullValue,
@@ -130,27 +108,12 @@ define([
         }
 
         function doTemplateResult(item) {
-            if (!item.id) {
-                return $(
-                    div(
-                        {
-                            style: {
-                                display: 'block',
-                                height: '20px',
-                            },
-                        },
-                        item.label || ''
-                    )
-                );
-            }
             return $(
                 div(
                     {
-                        style: {
-                            display: 'block',
-                        },
+                        class: `${cssBaseClass}__item`,
                     },
-                    item.label
+                    item.label || ''
                 )
             );
         }
@@ -159,9 +122,7 @@ define([
             return $(
                 div(
                     {
-                        style: {
-                            display: 'block',
-                        },
+                        class: `${cssBaseClass}__item`,
                     },
                     item.label
                 )
@@ -261,9 +222,6 @@ define([
                             getTaxonomyItem(currentValue).then((taxon) => {
                                 callback(taxon);
                             });
-                        },
-                        formatMoreResults: function () {
-                            return 'more???';
                         },
                         language: {
                             loadingMore: function () {
@@ -373,7 +331,9 @@ define([
         function stop() {
             return Promise.try(() => {
                 if (container) {
-                    parent.removeChild(container);
+                    $(ui.getElement('input-container.input')).off('change');
+                    $(ui.getElement('input-container.input')).select2('destroy');
+                    container.remove();
                 }
                 bus.stop();
             });

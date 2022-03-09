@@ -3,9 +3,10 @@ define([
     'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/taxonomyRefInput',
+    'widgets/appWidgets2/validators/constants',
     'base/js/namespace',
     'narrativeMocks',
-], ($, TestUtil, Runtime, TaxonomyRefInput, Jupyter, Mocks) => {
+], ($, TestUtil, Runtime, TaxonomyRefInput, Constants, Jupyter, Mocks) => {
     'use strict';
     const AUTH_TOKEN = 'fakeAuthToken';
 
@@ -26,8 +27,6 @@ define([
         };
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
     describe('TaxonomyRefInput module', () => {
         it('Should exist', () => {
             expect(TaxonomyRefInput).toBeDefined();
@@ -38,17 +37,16 @@ define([
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
-        let bus, testConfig;
+        let bus, testConfig, container, widget, runtime;
 
-        beforeEach(function () {
-            const runtime = Runtime.make();
+        beforeEach(() => {
+            runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
                 userId: 'test_user',
             };
 
-            this.node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
@@ -102,112 +100,114 @@ define([
                 responseText: JSON.stringify(taxonSearchInfo),
                 response: JSON.stringify(taxonSearchInfo),
             });
+            container = document.createElement('div');
+            widget = TaxonomyRefInput.make(testConfig);
         });
 
-        afterEach(() => {
-            jasmine.Ajax.uninstall();
+        afterEach(async () => {
+            if (widget) {
+                await widget.stop();
+            }
+            container.remove();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.narrative = null;
+            jasmine.Ajax.uninstall();
         });
 
         it('Should be instantiable', () => {
-            const widget = TaxonomyRefInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toBeDefined();
                 expect(widget[fn]).toEqual(jasmine.any(Function));
             });
+            widget = null;
         });
 
-        it('Should start and stop', function (done) {
-            const widget = TaxonomyRefInput.make(testConfig);
-            widget
-                .start({ node: this.node })
-                .then(() => {
-                    expect(this.node.childElementCount).toBeGreaterThan(0);
-                    const input = this.node.querySelector('select[data-element="input"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBeNull();
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(this.node.childElementCount).toBe(0);
-                    done();
-                })
-                .catch((err) => {
-                    fail(err);
-                });
-        });
-
-        // this resets the model value but does not change the UI
-        // or emit a message via the bus
-        // ==> cannot easily be tested
-        xit('Should set model value by bus', function (done) {
-            const widget = TaxonomyRefInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeNull();
-                expect(msg.diagnosis).toBe('valid');
-                done();
+        describe('the started widget', () => {
+            beforeEach(async () => {
+                await widget.start({ node: container });
             });
 
-            widget.start({ node: this.node }).then(() => {
-                bus.emit('update', { value: 'foo' });
-            });
-        });
+            afterEach(() => TestUtil.clearRuntime());
 
-        // this resets the model value but does not change the UI
-        // or emit a message via the bus
-        // ==> cannot easily be tested
-        xit('Should reset model value by bus', function (done) {
-            const widget = TaxonomyRefInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeNull();
-                expect(msg.diagnosis).toBe('valid');
-                done();
+            it('Should start and stop', async () => {
+                expect(container.childElementCount).toBeGreaterThan(0);
+                const input = container.querySelector('select[data-element="input"]');
+                expect(input).toBeDefined();
+                expect(input.getAttribute('value')).toBeNull();
+
+                await widget.stop();
+                expect(container.childElementCount).toBe(0);
+                widget = null;
             });
 
-            widget.start({ node: this.node }).then(() => {
-                bus.emit('reset-to-defaults');
-            });
-        });
-
-        // FIXME: it is unclear what the effect of these changes should be
-        // More precise tests should be implemented
-        it('Should respond to changed select2 option', function (done) {
-            const widget = TaxonomyRefInput.make(testConfig);
-            const nodeStructures = [];
-            widget
-                .start({ node: this.node })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    const $select = $(this.node).find('select');
-                    const $search =
-                        $select.data('select2').dropdown.$search ||
-                        $select.data('select2').selection.$search;
-
-                    $search.val('stuff');
-                    $search.trigger('input');
-
-                    $select.trigger({
-                        type: 'select2: select',
-                        params: {
-                            data: {},
-                        },
-                    });
-                })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[1]);
-                    const $select = $(this.node).find('select');
-                    $select.val('stuff').trigger('change');
-                    return TestUtil.wait(1000);
-                })
-                .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[2]);
+            // this resets the model value but does not change the UI
+            // or emit a message via the bus
+            // ==> cannot easily be tested
+            xit('Should set model value by bus', (done) => {
+                bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeNull();
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.VALID);
                     done();
                 });
+
+                widget.start({ node: container }).then(() => {
+                    bus.emit('update', { value: 'foo' });
+                });
+            });
+
+            // this resets the model value but does not change the UI
+            // or emit a message via the bus
+            // ==> cannot easily be tested
+            xit('Should reset model value by bus', (done) => {
+                bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeNull();
+                    expect(msg.diagnosis).toBe(Constants.DIAGNOSIS.VALID);
+                    done();
+                });
+
+                widget.start({ node: container }).then(() => {
+                    bus.emit('reset-to-defaults');
+                });
+            });
+
+            it('Should respond to changed select2 option', async () => {
+                const initialNodeStructure = container.innerHTML;
+                const $select = $(container).find('select');
+                const $search =
+                    $select.data('select2').dropdown.$search ||
+                    $select.data('select2').selection.$search;
+
+                $search.val('stuff').trigger('input');
+
+                // runs doTaxonomySearch
+                $select.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: {},
+                    },
+                });
+
+                await TestUtil.wait(1000);
+                // the DOM structure of the select2 element has changed
+                expect(initialNodeStructure).not.toEqual(container.innerHTML);
+                // "A Hit" should be present as a search result
+                expect($select.data('select2').$results[0].textContent).toContain('A Hit');
+
+                let validationMessage;
+                bus.on('validation', (msg) => {
+                    validationMessage = msg;
+                });
+                // set the model value, which triggers a validation message
+                $select.val('stuff').trigger('change');
+                await TestUtil.wait(1000);
+                expect(validationMessage).toEqual({
+                    errorMessage: null,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                });
+            });
         });
     });
 });

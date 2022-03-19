@@ -425,6 +425,7 @@ class AppManager(object):
             tag: the app tag to run, one of release, beta, or dev
             version: (optional) the specified version to run, if not provided, this will be the most recent
                 for that particular tag
+            shared_params: (optional) any params to be shared by all runs of the app
             params: a list of at least one dictionary. Each dict contains the set of parameters to run the
                 app once.
         cell_id: if provided, this should be a unique id for the Narrative cell that's running the app.
@@ -435,26 +436,43 @@ class AppManager(object):
 
         Example:
         --------
-        run_app_batch([{
-            "app_id": "Some_module/reads_to_contigset",
-            "tag": "release",
-            "version": "1.0.0",
-            "params": [{
-                "read_library_name" : "My_PE_Library",
-                "output_contigset_name" : "My_Contig_Assembly"
-            }, {
-                "read_library_name": "Another_reads_library",
-                "output_contigset_name": "Another_contig_assembly"
-            }]
-        }, {
-            "app_id": "Some_module/contigset_to_genome",
-            "tag": "release",
-            "version": "1.1.0",
-            "params": [{
-                "contigset": "My_contigset",
-                "genome_name": "My_genome"
-            }]
-        }])
+        run_app_bulk(
+            [
+                {
+                    "app_id": "Some_module/reads_to_contigset",
+                    "tag": "release",
+                    "version": "1.0.0",
+                    "shared_params": {
+                        "filter_len": 500
+                    },
+                    "params": [
+                        {
+                            "read_library_name" : "My_PE_Library",
+                            "output_contigset_name" : "My_Contig_Assembly"
+                        }, {
+                            "read_library_name": "Another_reads_library",
+                            "output_contigset_name": "Another_contig_assembly"
+                        }
+                    ]
+                }, {
+                    "app_id": "Some_module/contigset_to_genome",
+                    "tag": "release",
+                    "version": "1.1.0",
+                    "shared_params": {
+                        "filter_len": 1000,
+                        "taxon_id": 121212
+                    },
+                    "params": [
+                        {
+                            "contigset": "My_contigset",
+                            "genome_name": "My_genome"
+                        }
+                    ]
+                }
+            ],
+            cell_id="b74f4e9c-4099-486a-986e-2eedd498c8f3",
+            run_id="61ad148b-be09-4fea-9067-f3632ed1a17e"
+        )
         """
 
         if not isinstance(app_info, list) or len(app_info) == 0:
@@ -467,6 +485,7 @@ class AppManager(object):
         log_app_info = list()
         for info in app_info:
             self._validate_bulk_app_info(info)
+            self._reconstitute_shared_params(info)
             app_id = info["app_id"]
             tag = info.get("tag", "release")
             version = info.get("version")
@@ -538,7 +557,6 @@ class AppManager(object):
         )
 
         child_jobs = Job.from_job_ids(child_ids, return_list=True)
-
         parent_job = Job.from_job_id(
             batch_id,
             children=child_jobs,
@@ -593,6 +611,34 @@ class AppManager(object):
             raise ValueError(
                 f"an app version must be a string, not {app_info['version']}"
             )
+
+    def _reconstitute_shared_params(self, app_info_el: dict) -> None:
+        """
+        Mutate each params dict to include any shared_params
+        app_info_el is structured like:
+        {
+            "app_id": "Some_module/reads_to_contigset",
+            "tag": "release",
+            "version": "1.0.0",
+            "shared_params": {
+                "filter_len": 500
+            },
+            "params": [
+                {
+                    "read_library_name" : "My_PE_Library",
+                    "output_contigset_name" : "My_Contig_Assembly"
+                }, {
+                    "read_library_name": "Another_reads_library",
+                    "output_contigset_name": "Another_contig_assembly"
+                }
+            ]
+        }
+        """
+        if "shared_params" in app_info_el:
+            shared_params = app_info_el.pop("shared_params")
+            for param_set in app_info_el["params"]:
+                for k, v in shared_params.items():
+                    param_set.setdefault(k, v)
 
     def _build_run_job_params(
         self,

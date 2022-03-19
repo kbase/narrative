@@ -5,7 +5,7 @@ from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job, JOB_ATTRS, JOB_ATTR_DEFAULTS
+from biokbase.narrative.jobs.job import Job
 from biokbase.narrative.tests.test_job import get_test_spec
 from IPython.display import HTML, Javascript
 import unittest
@@ -22,6 +22,8 @@ import io
 import copy
 from .util import ConfigTests
 
+CONFIG = ConfigTests()
+WS_NAME = CONFIG.get("app_tests", "public_ws_name")
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
 TOKEN_ID = "ABCDE12345"
 
@@ -39,31 +41,102 @@ def get_method(tag, app_id, live=False):
     )
 
 
+def get_bulk_run_good_inputs():
+    """This DS is meant to be mutated"""
+    return [
+        {
+            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "tag": "release",
+            "version": "1.0.46",
+            "shared_params": {
+                "import_type": "FASTQ/FASTA",
+                "insert_size_mean": 0,
+                "insert_size_std_dev": 0,
+                "interleaved": 1,
+                "read_orientation_outward": "0",
+                "sequencing_tech": "Illumina",
+                "single_genome": 1,
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "file1.fastq",
+                    "fastq_rev_staging_file_name": "file2.fastq",
+                    "sra_staging_file_name": "",
+                    "name": "reads_object_1",
+                },
+                {
+                    "fastq_fwd_staging_file_name": "file2.fastq",
+                    "fastq_rev_staging_file_name": "file3.fastq",
+                    "sra_staging_file_name": "",
+                    "name": "reads_object_2",
+                },
+            ],
+        },
+        {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "tag": "release",
+            "version": "1.0.46",
+            "shared_params": {
+                "import_type": "SRA",
+                "insert_size_mean": 1,
+                "insert_size_std_dev": 1,
+                "interleaved": "1",
+                "read_orientation_outward": "0",
+                "sequencing_tech": "Illumina",
+                "single_genome": "1",
+            },
+            "params": [
+                {
+                    "name": "sra_reads_object",
+                    "sra_staging_file_name": "reads.sra",
+                }
+            ],
+        },
+    ]
+
+
+def iter_bulk_run_good_inputs_param_sets(spec_mapped=False):
+    """
+    Return generator of param_sets
+    These test param_sets get spec mapped in am._build_run_job_params
+    TODO are these tests hardcoded against the deployed app?
+    """
+    for app_info_el in get_bulk_run_good_inputs():
+        shared_params = app_info_el["shared_params"]
+        for param_set in app_info_el["params"]:
+            param_set.update(shared_params)
+            if spec_mapped:
+                for k, v in param_set.items():
+                    if v == "":
+                        param_set[k] = None
+                param_set["workspace_name"] = WS_NAME
+            yield param_set
+
+
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = ConfigTests()
         cls.maxDiff = None
         cls.am = AppManager()
         cls.am.reload()  # class uses non-mocked data
         cls.jm = JobManager()
-        cls.good_app_id = config.get("app_tests", "good_app_id")
-        cls.good_tag = config.get("app_tests", "good_app_tag")
-        cls.bad_app_id = config.get("app_tests", "bad_app_id")
-        cls.bad_tag = config.get("app_tests", "bad_app_tag")
-        cls.test_app_id = config.get("app_tests", "test_app_id")
+        cls.good_app_id = CONFIG.get("app_tests", "good_app_id")
+        cls.good_tag = CONFIG.get("app_tests", "good_app_tag")
+        cls.bad_app_id = CONFIG.get("app_tests", "bad_app_id")
+        cls.bad_tag = CONFIG.get("app_tests", "bad_app_tag")
+        cls.test_app_id = CONFIG.get("app_tests", "test_app_id")
         cls.test_app_version = (
             "056582c691c4df190110b059600d2dc2a3a8b80a"  # where is this coming from?
         )
-        cls.test_app_module_name = config.get("app_tests", "test_app_module_name")
-        cls.test_app_method_name = config.get("app_tests", "test_app_method_name")
-        cls.test_job_id = config.get("app_tests", "test_job_id")
-        cls.test_tag = config.get("app_tests", "test_app_tag")
-        cls.public_ws = config.get("app_tests", "public_ws_name")
-        cls.ws_id = int(config.get("app_tests", "public_ws_id"))
-        cls.app_input_ref = config.get("app_tests", "test_input_ref")
-        cls.batch_app_id = config.get("app_tests", "batch_app_id")
-        cls.test_viewer_app_id = config.get("app_tests", "test_viewer_app_id")
+        cls.test_app_module_name = CONFIG.get("app_tests", "test_app_module_name")
+        cls.test_app_method_name = CONFIG.get("app_tests", "test_app_method_name")
+        cls.test_job_id = CONFIG.get("app_tests", "test_job_id")
+        cls.test_tag = CONFIG.get("app_tests", "test_app_tag")
+        cls.public_ws = CONFIG.get("app_tests", "public_ws_name")
+        cls.ws_id = int(CONFIG.get("app_tests", "public_ws_id"))
+        cls.app_input_ref = CONFIG.get("app_tests", "test_input_ref")
+        cls.batch_app_id = CONFIG.get("app_tests", "batch_app_id")
+        cls.test_viewer_app_id = CONFIG.get("app_tests", "test_viewer_app_id")
         cls.test_app_params = {
             "read_library_names": ["rhodo.art.jgi.reads"],
             "output_contigset_name": "rhodo_contigs",
@@ -82,60 +155,6 @@ class AppManagerTestCase(unittest.TestCase):
             "min_contig_len": None,
             "workspace_name": cls.public_ws,
         }
-
-        cls.bulk_run_good_inputs = [
-            {
-                "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
-                "tag": "release",
-                "version": "1.0.46",
-                "params": [
-                    {
-                        "fastq_fwd_staging_file_name": "file1.fastq",
-                        "fastq_rev_staging_file_name": "file2.fastq",
-                        "sra_staging_file_name": "",
-                        "name": "reads_object_1",
-                        "import_type": "FASTQ/FASTA",
-                        "insert_size_mean": 0,
-                        "insert_size_std_dev": 0,
-                        "interleaved": 1,
-                        "read_orientation_outward": "0",
-                        "sequencing_tech": "Illumina",
-                        "single_genome": 1,
-                    },
-                    {
-                        "fastq_fwd_staging_file_name": "file2.fastq",
-                        "fastq_rev_staging_file_name": "file3.fastq",
-                        "sra_staging_file_name": "",
-                        "name": "reads_object_2",
-                        "import_type": "FASTQ/FASTA",
-                        "insert_size_mean": 0,
-                        "insert_size_std_dev": 0,
-                        "interleaved": 1,
-                        "read_orientation_outward": "0",
-                        "sequencing_tech": "Illumina",
-                        "single_genome": 1,
-                    },
-                ],
-            },
-            {
-                "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
-                "tag": "release",
-                "version": "1.0.46",
-                "params": [
-                    {
-                        "import_type": "SRA",
-                        "insert_size_mean": 1,
-                        "insert_size_std_dev": 1,
-                        "interleaved": "1",
-                        "name": "sra_reads_object",
-                        "read_orientation_outward": "0",
-                        "sequencing_tech": "Illumina",
-                        "single_genome": "1",
-                        "sra_staging_file_name": "reads.sra",
-                    }
-                ],
-            },
-        ]
 
     def setUp(self):
         os.environ["KB_WORKSPACE_ID"] = self.public_ws
@@ -674,7 +693,7 @@ class AppManagerTestCase(unittest.TestCase):
         mock_comm = MagicMock()
         c.return_value.send_comm_message = mock_comm
 
-        test_input = self.bulk_run_good_inputs
+        test_input = get_bulk_run_good_inputs()
 
         dry_run_results = self.am.run_app_bulk(test_input, dry_run=True)
         batch_run_params = dry_run_results["batch_run_params"]
@@ -687,6 +706,11 @@ class AppManagerTestCase(unittest.TestCase):
         for param_set in batch_run_params:
             self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
         self.assertTrue(set(["wsid"]) == set(batch_params.keys()))
+
+        # expect shared_params to have been merged into respective param_sets
+        for exp, outp in zip(iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params):
+            got = outp["params"][0]
+            self.assertDictEqual({**got, **exp}, got)  # assert exp_params <= got_params
 
         def mod(param_set):
             for key, value in param_set.items():
@@ -726,18 +750,7 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_app_bulk__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        test_input = self.bulk_run_good_inputs
-
-        child_job_params = [
-            copy.deepcopy(test_input[0]["params"][0]),
-            copy.deepcopy(test_input[0]["params"][1]),
-            copy.deepcopy(test_input[1]["params"][0]),
-        ]
-        for param_set in child_job_params:
-            for key, value in param_set.items():
-                if value == "":
-                    param_set[key] = None
-            param_set["workspace_name"] = self.public_ws
+        test_input = get_bulk_run_good_inputs()
 
         new_jobs = self.am.run_app_bulk(test_input)
         self.assertIsInstance(new_jobs, dict)
@@ -774,7 +787,7 @@ class AppManagerTestCase(unittest.TestCase):
         for run_id in run_ids:
             self.assertIsNone(
                 self.am.run_app_bulk(
-                    self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
+                    get_bulk_run_good_inputs(), cell_id=cell_id, run_id=run_id
                 )
             )
             self._verify_comm_success(
@@ -824,12 +837,12 @@ class AppManagerTestCase(unittest.TestCase):
         for bad in [None, [], {}]:
             cases.append({"arg": bad, "expected_error": no_info_error})
         for bad_key in ["app_id", "tag", "params"]:
-            app_info = copy.deepcopy(self.bulk_run_good_inputs)
+            app_info = get_bulk_run_good_inputs()
             del app_info[0][bad_key]
             cases.append({"arg": app_info, "expected_error": missing_key_error})
         for app_info_case in app_info_cases:
             for bad_value in app_info_case["bad_values"]:
-                app_info = copy.deepcopy(self.bulk_run_good_inputs)
+                app_info = get_bulk_run_good_inputs()
                 app_info[0][app_info_case["key"]] = bad_value
                 cases.append(
                     {"arg": app_info, "expected_error": app_info_case["error"]}
@@ -855,7 +868,7 @@ class AppManagerTestCase(unittest.TestCase):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
 
-        test_case = copy.deepcopy(self.bulk_run_good_inputs)
+        test_case = get_bulk_run_good_inputs()
         test_case[0]["app_id"] = self.bad_app_id
 
         # should print an error if there is no cell id
@@ -887,12 +900,74 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = comm_mock
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(self.bulk_run_good_inputs),
+            lambda: self.am.run_app_bulk(get_bulk_run_good_inputs()),
             "run_app_bulk",
             'Unable to retrieve system variable: "workspace_id"',
         )
 
     ############# End tests for run_app_bulk #############
+
+    def test_reconstitute_shared_params(self):
+        app_info_el = {
+            "shared_params": {
+                "shared_param_key0": "shared_param_val0",
+                "shared_param_key1": "shared_param_val1"
+            },
+            "params": [
+                {
+                    "param_key00": "param_val00",
+                    "param_key01": "param_val01"
+                }, {
+                    "param_key10": "param_val10",
+                    "param_key11": "param_val11"
+                }
+            ],
+            "other_key": "other_val"
+        }
+
+        # Merge shared_params into each params dict
+        self.am._reconstitute_shared_params(app_info_el)
+        self.assertEqual(
+            {
+                "params": [
+                    {
+                        "param_key00": "param_val00",
+                        "param_key01": "param_val01",
+                        "shared_param_key0": "shared_param_val0",
+                        "shared_param_key1": "shared_param_val1"
+                    }, {
+                        "param_key10": "param_val10",
+                        "param_key11": "param_val11",
+                        "shared_param_key0": "shared_param_val0",
+                        "shared_param_key1": "shared_param_val1"
+                    }
+                ],
+                "other_key": "other_val"
+            },
+            app_info_el
+        )
+
+        # No shared_params means no change
+        self.am._reconstitute_shared_params(app_info_el)
+        self.assertEqual(
+            {
+                "params": [
+                    {
+                        "param_key00": "param_val00",
+                        "param_key01": "param_val01",
+                        "shared_param_key0": "shared_param_val0",
+                        "shared_param_key1": "shared_param_val1"
+                    }, {
+                        "param_key10": "param_val10",
+                        "param_key11": "param_val11",
+                        "shared_param_key0": "shared_param_val0",
+                        "shared_param_key1": "shared_param_val1"
+                    }
+                ],
+                "other_key": "other_val"
+            },
+            app_info_el
+        )
 
     @mock.patch(
         "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client

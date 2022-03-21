@@ -924,50 +924,30 @@ class AppManagerTestCase(unittest.TestCase):
             ],
             "other_key": "other_val"
         }
+        expected = {
+            "params": [
+                {
+                    "param_key00": "param_val00",
+                    "param_key01": "param_val01",
+                    "shared_param_key0": "shared_param_val0",
+                    "shared_param_key1": "shared_param_val1"
+                }, {
+                    "param_key10": "param_val10",
+                    "param_key11": "param_val11",
+                    "shared_param_key0": "shared_param_val0",
+                    "shared_param_key1": "shared_param_val1"
+                }
+            ],
+            "other_key": "other_val"
+        }
 
         # Merge shared_params into each params dict
         self.am._reconstitute_shared_params(app_info_el)
-        self.assertEqual(
-            {
-                "params": [
-                    {
-                        "param_key00": "param_val00",
-                        "param_key01": "param_val01",
-                        "shared_param_key0": "shared_param_val0",
-                        "shared_param_key1": "shared_param_val1"
-                    }, {
-                        "param_key10": "param_val10",
-                        "param_key11": "param_val11",
-                        "shared_param_key0": "shared_param_val0",
-                        "shared_param_key1": "shared_param_val1"
-                    }
-                ],
-                "other_key": "other_val"
-            },
-            app_info_el
-        )
+        self.assertEqual(expected, app_info_el)
 
         # No shared_params means no change
         self.am._reconstitute_shared_params(app_info_el)
-        self.assertEqual(
-            {
-                "params": [
-                    {
-                        "param_key00": "param_val00",
-                        "param_key01": "param_val01",
-                        "shared_param_key0": "shared_param_val0",
-                        "shared_param_key1": "shared_param_val1"
-                    }, {
-                        "param_key10": "param_val10",
-                        "param_key11": "param_val11",
-                        "shared_param_key0": "shared_param_val0",
-                        "shared_param_key1": "shared_param_val1"
-                    }
-                ],
-                "other_key": "other_val"
-            },
-            app_info_el
-        )
+        self.assertEqual(expected, app_info_el)
 
     @mock.patch(
         "biokbase.narrative.jobs.appmanager.specmanager.clients.get", get_mock_client

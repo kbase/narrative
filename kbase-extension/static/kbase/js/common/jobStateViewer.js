@@ -285,7 +285,7 @@ define([
             removeEventHandlers() {
                 this.jobManager.removeEventHandler(
                     jcm.MESSAGE_TYPE.STATUS,
-                    `jobLogViewer_status_${self.jobId}`
+                    `jobStateViewer_status_${self.jobId}`
                 );
             }
 

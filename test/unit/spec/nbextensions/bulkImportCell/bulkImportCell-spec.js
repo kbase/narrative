@@ -30,15 +30,16 @@ define([
     SimpleAppSpec
 ) => {
     'use strict';
+    const APP_ID = 'someApp';
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
-                appId: 'someApp',
+                appId: APP_ID,
                 suffix: '_obj',
             },
         },
         fakeSpecs = {
-            someApp:
+            [APP_ID]:
                 TestBulkImportObject.app.specs[
                     'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
                 ],
@@ -82,7 +83,10 @@ define([
         };
         cell.metadata = {
             kbase: {
-                bulkImportCell: Object.assign({}, state, TestUtil.JSONcopy(TestBulkImportObject)),
+                bulkImportCell: {
+                    ...state,
+                    ...TestUtil.JSONcopy(TestBulkImportObject),
+                },
                 type: 'app-bulk-import',
                 attributes: {
                     id: `${args.cellId}-test-cell`,

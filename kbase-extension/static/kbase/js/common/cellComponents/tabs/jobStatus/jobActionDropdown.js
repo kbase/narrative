@@ -182,9 +182,7 @@ define([
         }
 
         function updateState() {
-            const jobCountsByStatus = Jobs.getCurrentJobCounts(
-                jobManager.model.getItem('exec.jobs.byId')
-            );
+            const jobCountsByStatus = Jobs.getCurrentJobCounts(jobManager.getIndexedJobs());
 
             actionArr.forEach((action) => {
                 const result = action.target.some((status) => {

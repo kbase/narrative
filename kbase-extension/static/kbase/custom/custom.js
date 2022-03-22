@@ -109,7 +109,7 @@ define([
     'notebook/js/cell',
     'common/cellUtils',
     'common/jupyter',
-    'kb_common/html',
+    'common/html',
 
     'components/requirejs/require',
     'narrative_paths',

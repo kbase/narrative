@@ -696,12 +696,10 @@ define([
             render()
                 .then(() => {
                     jobManager.addEventHandler('modelUpdate', {
-                        execMessage: (jobManagerContext) => {
+                        execMessage: () => {
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
-                                Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs.byId')
-                                )
+                                Jobs.createCombinedJobState(jobManager.getIndexedJobs())
                             );
                         },
                         fsmState: () => {
@@ -710,7 +708,7 @@ define([
                                 updateState(fsmState);
                             }
                         },
-                        titleBar: (jobManagerContext) => {
+                        titleBar: () => {
                             const cellCollapsed =
                                     Utils.getCellMeta(
                                         cell,
@@ -723,19 +721,13 @@ define([
 
                             if (cellCollapsed && jobStatusEl) {
                                 jobStatusEl.innerHTML = Jobs.createCombinedJobStateSummary(
-                                    jobManagerContext.model.getItem('exec.jobs.byId')
+                                    jobManager.getIndexedJobs()
                                 );
                             }
                         },
                     });
-                    try {
-                        const fsmState = jobManager.restoreFromSaved();
-                        if (fsmState) {
-                            updateState(fsmState);
-                        }
-                    } catch (e) {
-                        console.error(e);
-                    }
+                    jobManager.restoreFromSaved();
+
                     const expectedFiles = new Set();
                     Object.values(model.getItem('inputs')).forEach((inputs) => {
                         for (const f of inputs.files) {
@@ -756,6 +748,8 @@ define([
                     BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
                 )
                 .then((readyState) => {
+                    jobManager.runHandler('modelUpdate');
+
                     const curState = model.getItem('state');
                     const curReadyState = curState.params;
                     const updatedReadyState = !_.isEqual(readyState, curReadyState);

@@ -10,12 +10,11 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
     /**
      *
      * @param {object} config each tab for a cell needs the following:
-     * - model - a Props object containing the data model for the cell
+     * - jobManager - job manager, containing the data model for the cell
      * - workspaceClient - a workspace client authenticated to the current user
      */
     function ResultsTab(config) {
-        const model = config.model,
-            workspaceClient = config.workspaceClient;
+        const { jobManager, workspaceClient } = config;
         let container = null;
 
         /**
@@ -34,7 +33,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
          * @returns {Array} an array of report ids.
          */
         function getReportRefs() {
-            const jobIndex = model.getItem('exec.jobs.byId');
+            const jobIndex = jobManager.getIndexedJobs();
             const jobStates = Object.values(jobIndex);
 
             const reportRefs = [];

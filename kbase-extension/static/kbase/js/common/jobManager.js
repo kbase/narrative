@@ -17,6 +17,7 @@ define([
 
     // how soon after receiving job status updates from the backend to send the next status request
     const DEFAULT_STATUS_REQUEST_INTERVAL = 2500;
+    const JOBS_BY_ID = 'exec.jobs.byId';
 
     class JobManagerCore {
         /**
@@ -416,8 +417,8 @@ define([
                     throw new Error('Cannot init without a job');
                 }
 
-                if (!this.model.getItem(`exec.jobs.byId.${job.job_id}`)) {
-                    this.model.setItem(`exec.jobs.byId.${job.job_id}`, job);
+                if (!this.model.getItem(`${JOBS_BY_ID}.${job.job_id}`)) {
+                    this.model.setItem(`${JOBS_BY_ID}.${job.job_id}`, job);
                 }
 
                 const self = this;
@@ -449,7 +450,7 @@ define([
              */
             updateModel(jobState) {
                 this.model.setItem('exec.jobState', jobState);
-                this.model.setItem(`exec.jobs.byId.${jobState.job_id}`, jobState);
+                this.model.setItem(`${JOBS_BY_ID}.${jobState.job_id}`, jobState);
                 this.runHandler('modelUpdate', [jobState]);
                 return this.model;
             }
@@ -538,17 +539,17 @@ define([
              * @param {array} jobArray list of jobState objects to update the model with
              */
             updateModel(jobArray) {
-                const jobIndex = this.model.getItem('exec.jobs');
+                const jobIndex = this.model.getItem(JOBS_BY_ID) || {};
                 const batchId = this.model.getItem('exec.jobState.job_id');
                 let batchJob;
                 jobArray.forEach((jobState) => {
                     // update the job object
-                    jobIndex.byId[jobState.job_id] = jobState;
+                    jobIndex[jobState.job_id] = jobState;
                     if (jobState.job_id === batchId) {
                         batchJob = jobState;
                     }
                 });
-                this.model.setItem('exec.jobs', jobIndex);
+                this.model.setItem(JOBS_BY_ID, jobIndex);
                 // check whether the batch parent needs updating
                 if (batchJob) {
                     this.model.setItem('exec.jobState', batchJob);
@@ -636,7 +637,7 @@ define([
                     jobId = jobState.job_id;
 
                 // check if the job object has changed since we last saved it
-                const savedState = this.model.getItem(`exec.jobs.byId.${jobId}`);
+                const savedState = this.model.getItem(`${JOBS_BY_ID}.${jobId}`);
                 if (savedState && _.isEqual(savedState, jobState)) {
                     // return nothing if the state does not need to be updated
                     return;
@@ -658,7 +659,7 @@ define([
                     const missingJobIds = [];
                     // do we have all the children?
                     jobState.child_jobs.forEach((job_id) => {
-                        if (!this.model.getItem(`exec.jobs.byId.${job_id}`)) {
+                        if (!this.model.getItem(`${JOBS_BY_ID}.${job_id}`)) {
                             missingJobIds.push(job_id);
                         }
                     });
@@ -724,7 +725,7 @@ define([
              */
             getCurrentJobsByStatus(rawStatusList, validStates) {
                 const statusList = this._checkStates(rawStatusList, validStates);
-                const jobsById = this.model.getItem('exec.jobs.byId');
+                const jobsById = this.model.getItem(JOBS_BY_ID);
                 if (!statusList || !jobsById || !Object.keys(jobsById).length) {
                     return [];
                 }
@@ -767,7 +768,7 @@ define([
              */
             executeActionOnJobId(args) {
                 const { action, jobId } = args;
-                const jobState = this.model.getItem(`exec.jobs.byId.${jobId}`);
+                const jobState = this.model.getItem(`${JOBS_BY_ID}.${jobId}`);
                 if (jobState && Jobs.canDo(action, jobState)) {
                     const actionJobId =
                         action === 'retry' && jobState.retry_parent ? jobState.retry_parent : jobId;
@@ -960,7 +961,7 @@ define([
 
             restoreFromSaved() {
                 const batchJob = this.model.getItem('exec.jobState'),
-                    allJobs = this.model.getItem('exec.jobs.byId');
+                    allJobs = this.model.getItem(JOBS_BY_ID);
                 if (!batchJob || !allJobs) {
                     return;
                 }
@@ -972,6 +973,14 @@ define([
                 return this.getFsmStateFromJobs();
             }
 
+            /**
+             * Generate job parameters from the app spec and app inputs in a bulk import cell
+             *
+             * @returns {object} appParams, with keys
+             *          app_id: {string} the app ID
+             *          userParams: {object} user-settable parameters
+             *          outputParams: {array} parameters considered to be output files
+             */
             generateJobParams() {
                 const appParams = [];
                 const inputs = this.model.getItem('inputs'),
@@ -1009,7 +1018,7 @@ define([
              * @returns {string} bulk import cell FSM state
              */
             getFsmStateFromJobs() {
-                return Jobs.getFsmStateFromJobs(this.model.getItem('exec.jobs'));
+                return Jobs.getFsmStateFromJobs(this.getIndexedJobs());
             }
 
             /**
@@ -1019,7 +1028,7 @@ define([
              */
 
             _getJobsToUpdate() {
-                const jobsById = this.model.getItem('exec.jobs.byId'),
+                const jobsById = this.getIndexedJobs(),
                     batchJob = this.model.getItem('exec.jobState');
 
                 // no stored jobs
@@ -1083,7 +1092,7 @@ define([
                 }
 
                 const jobInfoIds = new Set(Object.keys(jobInfo));
-                const missingJobIds = Object.keys(this.model.getItem('exec.jobs.byId')).filter(
+                const missingJobIds = Object.keys(this.model.getItem(JOBS_BY_ID)).filter(
                     (jobId) => {
                         return !jobInfoIds.has(jobId);
                     }
@@ -1109,7 +1118,7 @@ define([
              * @returns {object} containing jobs indexed by ID, or undefined if there is none
              */
             getIndexedJobs() {
-                return this.model.getItem('exec.jobs.byId');
+                return this.model.getItem(JOBS_BY_ID);
             }
 
             /**
@@ -1117,7 +1126,7 @@ define([
              * @returns {object} job, if it exists, or undefined
              */
             getJob(jobId) {
-                return this.model.getItem(`exec.jobs.byId.${jobId}`);
+                return this.model.getItem(`${JOBS_BY_ID}.${jobId}`);
             }
 
             /**

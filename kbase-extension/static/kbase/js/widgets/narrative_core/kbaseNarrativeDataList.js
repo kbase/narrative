@@ -959,9 +959,8 @@ define([
                     e.stopPropagation();
                     $alertContainer.empty();
                     const type = objData.objectInfo.type.split('-')[0];
-                    const wsId = objData.objectInfo.wsid;
                     const objId = objData.objectInfo.id;
-                    const objRef = objData.fromPalette ? ref_path : wsId + '/' + objId;
+                    const objRef = objData.fromPalette ? ref_path : objData.objectInfo.ref;
                     const downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
                     new kbaseNarrativeDownloadPanel(downloadPanel, {

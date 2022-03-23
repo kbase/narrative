@@ -43,10 +43,8 @@ jobs:
     - name: Run Narrative Backend Tests
       id: test_backend
       shell: bash -l {0}
-      run: |
-          which pytest
-          make test-backend
-      continue-on-error: true
+      run: make test-backend
+      continue-on-error: false
 
     - name: Run Narrative Frontend Unit Tests
       id: test_frontend

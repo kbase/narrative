@@ -2,7 +2,7 @@
 
 export MY_ORG=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $1}')
 if [ "${GITHUB_BASE_REF}" != "master" ]; then
-    export SUFFIX=_"${GITHUB_BASE_REF}"
+    export SUFFIX=-"${GITHUB_BASE_REF}"
 else
     export SUFFIX=""
 fi

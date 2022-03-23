@@ -20,14 +20,13 @@ docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
 
 docker tag ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" kbase/narrative:tmp
 
-docker build -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" \
-                --build-arg BUILD_DATE=$DATE \
-                --build-arg VCS_REF=$COMMIT \
-                --build-arg BRANCH="$GITHUB_HEAD_REF" \
-                --build-arg PULL_REQUEST="$PR" \
-                --label us.kbase.vcs-pull-req="$PR" \
-                --build-arg NARRATIVE_VERSION="$NARRATIVE_VERSION_NUM" \
-                -f Dockerfile2 \
-                .
+docker build --build-arg BUILD_DATE=$DATE \
+             --build-arg VCS_REF=$COMMIT \
+             --build-arg BRANCH="$GITHUB_HEAD_REF" \
+             --build-arg PULL_REQUEST="$PR" \
+             --label us.kbase.vcs-pull-req="$PR" \
+             --build-arg NARRATIVE_VERSION="$NARRATIVE_VERSION_NUM" \
+             -f Dockerfile2 \
+             -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" .
 docker rmi kbase/narrative:tmp
 docker push ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR"

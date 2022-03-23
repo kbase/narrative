@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2.0.0
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         miniconda-version: 'latest'
         activate-environment: test-environment
@@ -18,7 +18,7 @@ jobs:
         condarc-file: test/condarc.yml
 
     - name: Use Node JS 16.x
-      uses: actions/setup-node@v2.1.2
+      uses: actions/setup-node@v2
       with:
         node-version: 16.x
 
@@ -54,12 +54,10 @@ jobs:
 
     - name: Send to Codecov
       id: send_to_codecov
-      uses: codecov/codecov-action@v1.5.2
+      uses: codecov/codecov-action@v2
       continue-on-error: true
       with:
-        file: |
-          ./python-coverage/coverage.xml
-          ./js-coverage/lcov/lcov.info
+        files: ./python-coverage/coverage.xml, ./js-coverage/lcov/lcov.info
         fail_ci_if_error: true
 
     - name: outcome

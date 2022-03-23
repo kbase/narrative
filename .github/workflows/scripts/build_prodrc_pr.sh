@@ -9,7 +9,6 @@ export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{
 export NARRATIVE_GIT_HASH=`grep '\"git_commit_hash\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g' | sed 's/,//'`
 export MY_APP2="$MY_APP"_version
 
-
 docker login -u "$DOCKER_ACTOR" -p "$DOCKER_TOKEN" ghcr.io
 docker build --build-arg BUILD_DATE="$DATE" \
              --build-arg COMMIT="$COMMIT" \

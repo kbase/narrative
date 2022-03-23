@@ -14,4 +14,3 @@ docker build --build-arg BUILD_DATE="$DATE" \
              --label us.kbase.vcs-pull-req="$PR" \
              -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" .
 docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
-	

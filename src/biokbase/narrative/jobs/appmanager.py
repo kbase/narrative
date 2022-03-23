@@ -189,7 +189,7 @@ class AppManager(object):
         dry_run=False,
     ):
         if params is None:
-            params = list()
+            params = []
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -198,14 +198,14 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
 
         # A list of lists of UPAs, used for each subjob.
-        batch_ws_upas = list()
+        batch_ws_upas = []
         # The list of actual input values, post-mapping.
-        batch_run_inputs = list()
+        batch_run_inputs = []
 
         for param_set in params:
-            spec_params_map = dict(
+            spec_params_map = {
                 (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-            )
+            }
             batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, param_set))
             batch_run_inputs.append(
                 self._map_inputs(
@@ -290,7 +290,7 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         new_job = Job.from_job_id(
             job_id,
@@ -355,7 +355,7 @@ class AppManager(object):
         )
         """
         if params is None:
-            params = dict()
+            params = {}
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -387,7 +387,7 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         new_job = Job.from_job_id(job_id)
 
@@ -429,6 +429,7 @@ class AppManager(object):
             tag: the app tag to run, one of release, beta, or dev
             version: (optional) the specified version to run, if not provided, this will be the most recent
                 for that particular tag
+            shared_params: (optional) any params to be shared by all runs of the app
             params: a list of at least one dictionary. Each dict contains the set of parameters to run the
                 app once.
         cell_id: if provided, this should be a unique id for the Narrative cell that's running the app.
@@ -439,38 +440,56 @@ class AppManager(object):
 
         Example:
         --------
-        run_app_batch([{
-            "app_id": "Some_module/reads_to_contigset",
-            "tag": "release",
-            "version": "1.0.0",
-            "params": [{
-                "read_library_name" : "My_PE_Library",
-                "output_contigset_name" : "My_Contig_Assembly"
-            }, {
-                "read_library_name": "Another_reads_library",
-                "output_contigset_name": "Another_contig_assembly"
-            }]
-        }, {
-            "app_id": "Some_module/contigset_to_genome",
-            "tag": "release",
-            "version": "1.1.0",
-            "params": [{
-                "contigset": "My_contigset",
-                "genome_name": "My_genome"
-            }]
-        }])
+        run_app_bulk(
+            [
+                {
+                    "app_id": "Some_module/reads_to_contigset",
+                    "tag": "release",
+                    "version": "1.0.0",
+                    "shared_params": {
+                        "filter_len": 500
+                    },
+                    "params": [
+                        {
+                            "read_library_name" : "My_PE_Library",
+                            "output_contigset_name" : "My_Contig_Assembly"
+                        }, {
+                            "read_library_name": "Another_reads_library",
+                            "output_contigset_name": "Another_contig_assembly"
+                        }
+                    ]
+                }, {
+                    "app_id": "Some_module/contigset_to_genome",
+                    "tag": "release",
+                    "version": "1.1.0",
+                    "shared_params": {
+                        "filter_len": 1000,
+                        "taxon_id": 121212
+                    },
+                    "params": [
+                        {
+                            "contigset": "My_contigset",
+                            "genome_name": "My_genome"
+                        }
+                    ]
+                }
+            ],
+            cell_id="b74f4e9c-4099-486a-986e-2eedd498c8f3",
+            run_id="61ad148b-be09-4fea-9067-f3632ed1a17e"
+        )
         """
 
         if not isinstance(app_info, list) or len(app_info) == 0:
             raise ValueError(
                 "app_info must be a list with at least one set of app information"
             )
-        batch_run_inputs = list()
+        batch_run_inputs = []
         ws_id = strict_system_variable("workspace_id")
         batch_params = {"wsid": ws_id}  # for EE2.run_job_batch
-        log_app_info = list()
+        log_app_info = []
         for info in app_info:
             self._validate_bulk_app_info(info)
+            self._reconstitute_shared_params(info)
             app_id = info["app_id"]
             tag = info.get("tag", "release")
             version = info.get("version")
@@ -524,7 +543,7 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_job_bulk_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         batch_id = batch_submission["batch_id"]
         child_ids = batch_submission["child_job_ids"]
@@ -542,7 +561,6 @@ class AppManager(object):
         )
 
         child_jobs = Job.from_job_ids(child_ids, return_list=True)
-
         parent_job = Job.from_job_id(
             batch_id,
             children=child_jobs,
@@ -598,6 +616,34 @@ class AppManager(object):
                 f"an app version must be a string, not {app_info['version']}"
             )
 
+    def _reconstitute_shared_params(self, app_info_el: dict) -> None:
+        """
+        Mutate each params dict to include any shared_params
+        app_info_el is structured like:
+        {
+            "app_id": "Some_module/reads_to_contigset",
+            "tag": "release",
+            "version": "1.0.0",
+            "shared_params": {
+                "filter_len": 500
+            },
+            "params": [
+                {
+                    "read_library_name" : "My_PE_Library",
+                    "output_contigset_name" : "My_Contig_Assembly"
+                }, {
+                    "read_library_name": "Another_reads_library",
+                    "output_contigset_name": "Another_contig_assembly"
+                }
+            ]
+        }
+        """
+        if "shared_params" in app_info_el:
+            shared_params = app_info_el.pop("shared_params")
+            for param_set in app_info_el["params"]:
+                for k, v in shared_params.items():
+                    param_set.setdefault(k, v)
+
     def _build_run_job_params(
         self,
         spec: dict,
@@ -643,9 +689,9 @@ class AppManager(object):
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        spec_params_map = dict(
+        spec_params_map = {
             (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
+        }
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
         input_vals = self._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map
@@ -827,7 +873,7 @@ class AppManager(object):
         elif value is None:
             return None
         else:
-            mapped_value = dict()
+            mapped_value = {}
             id_map = spec_param.get("id_mapping", {})
             for param_id in id_map:
                 # ensure that the param referenced in the group param list
@@ -864,7 +910,7 @@ class AppManager(object):
         params is a dict of key-value-pairs, each key is the input_parameter
         field of some parameter.
         """
-        inputs_dict = dict()
+        inputs_dict = {}
         for p in input_mapping:
             # 2 steps - figure out the proper value, then figure out the
             # proper position. value first!
@@ -898,7 +944,7 @@ class AppManager(object):
             arg_position = p.get("target_argument_position", 0)
             target_prop = p.get("target_property", None)
             if target_prop is not None:
-                final_input = inputs_dict.get(arg_position, dict())
+                final_input = inputs_dict.get(arg_position, {})
                 if "/" in target_prop:
                     # This is case when slashes in target_prop separate
                     # elements in nested maps. We ignore escaped slashes
@@ -931,7 +977,7 @@ class AppManager(object):
             else:
                 inputs_dict[arg_position] = p_value
 
-        inputs_list = list()
+        inputs_list = []
         keys = sorted(inputs_dict.keys())
         for k in keys:
             inputs_list.append(inputs_dict[k])
@@ -957,7 +1003,7 @@ class AppManager(object):
                 raise ValueError(
                     'The "symbols" input to the generated value must be an '
                     + "integer > 0!"
-                )
+                ) from None
         if symbols < 1:
             raise ValueError("Must have at least 1 symbol to randomly generate!")
         ret = "".join([chr(random.randrange(0, 26) + ord("A")) for _ in range(symbols)])

@@ -631,9 +631,8 @@ define([
                         app_id: appSpecInfo.id,
                         tag: appSpecInfo.tag || 'release',
                         version: appSpecInfo.git_commit_hash,
-                        params: params[fileType].filePaths.map((filePathParams) => {
-                            return Object.assign({}, filePathParams, params[fileType].params);
-                        }),
+                        params: params[fileType].filePaths,
+                        shared_params: params[fileType].params,
                     };
                     appInfos.push(appInfo);
                 });

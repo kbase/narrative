@@ -2,7 +2,7 @@
 
 export MY_ORG=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $1}')
 if [ "${GITHUB_BASE_REF}" != "master" ]; then
-    export SUFFIX="${GITHUB_BASE_REF}"
+    export SUFFIX=_"${GITHUB_BASE_REF}"
 else
     export SUFFIX=""
 fi
@@ -17,7 +17,7 @@ export MY_APP2="$MY_APP"_version
 
 echo my app is ${MY_APP}
 
-docker login -u "$DOCKER_ACTOR" -p "$DOCKER_TOKEN" ghcr.io
+echo $DOCKER_TOKEN | docker login ghcr.io -u $DOCKER_ACTOR --password-stdin
 docker build --build-arg BUILD_DATE="$DATE" \
              --build-arg COMMIT="$COMMIT" \
              --build-arg BRANCH="$GITHUB_HEAD_REF" \

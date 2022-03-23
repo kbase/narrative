@@ -1,6 +1,6 @@
 ---
 name: Build Prod RC Image
-'on':
+on:
   pull_request:
     branches:
     - master

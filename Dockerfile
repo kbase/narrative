@@ -81,7 +81,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.narrative-version=$NARRATIVE_VERSION \
       maintainer="William Riehl wjriehl@lbl.gov"
 
-# ENTRYPOINT ["/usr/bin/tini", "--"]
 # The entrypoint can be set to "headless-narrative" to run headlessly
 ENTRYPOINT ["/kb/deployment/bin/dockerize"]
 CMD [ "--template", \
@@ -89,7 +88,3 @@ CMD [ "--template", \
       "--template", \
       "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
       "kbase-narrative"]
-#ONBUILD USER root
-#ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg
-#ONBUILD RUN cd /kb/dev_container/narrative && ./fixupURL.sh
-#ONBUILD USER nobody

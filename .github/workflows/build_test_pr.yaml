@@ -1,6 +1,6 @@
 ---
 name: Build Test Image
-'on':
+on:
   pull_request:
     branches:
     - develop

@@ -1,6 +1,6 @@
 ---
 name: Build Truss Branch Image
-'on':
+on:
   pull_request:
     branches:
     - truss

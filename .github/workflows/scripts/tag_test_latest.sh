@@ -16,6 +16,6 @@ tag_image() {
     docker push ghcr.io/"$MY_ORG"/"$1":"latest"
 }
 
-docker login -u "$DOCKER_ACTOR" -p "$DOCKER_TOKEN" ghcr.io
+echo $DOCKER_TOKEN | docker login ghcr.io -u $DOCKER_ACTOR --password-stdin
 tag_image($MY_APP)
 tag_image($MY_APP2)

@@ -1,6 +1,6 @@
 ---
 name: Tag Prod Latest
-'on':
+on:
   pull_request:
     branches:
     - master

@@ -17,8 +17,9 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
-    - name: Set up environment vars
+    - name: Update conda and set environment vars
       run: |
+        conda update -n base -c defaults conda
         echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
 
     - name: Use Node JS 16.x

@@ -1,5 +1,9 @@
 #!/bin/sh
 export NARRATIVE_DIR=$(pwd)
+python --version
+which pytest
+pip freeze
+
 pytest \
     --cov=biokbase.narrative \
     --cov-config=.coveragerc \

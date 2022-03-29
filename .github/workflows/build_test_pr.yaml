@@ -1,6 +1,6 @@
 ---
 name: Build Test Image
-'on':
+on:
   pull_request:
     branches:
     - develop
@@ -24,4 +24,4 @@ jobs:
         SHA: "${{ github.event.pull_request.head.sha }}"
         DOCKER_ACTOR: "${{ secrets.GHCR_USERNAME }}"
         DOCKER_TOKEN: "${{ secrets.GHCR_TOKEN }}"
-      run: "./.github/workflows/scripts/build_test_pr.sh\n"
+      run: "./.github/workflows/scripts/build_pr.sh\n"

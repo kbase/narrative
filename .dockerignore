@@ -1,0 +1,11 @@
+Dockerfile
+.husky
+.github
+.vscode
+js-coverage/
+python-coverage/
+narrbase-image/
+node_modules/
+**/__pycache__
+karma-result.json
+install.log

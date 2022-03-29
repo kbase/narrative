@@ -2,7 +2,7 @@
 
 export MY_ORG=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $1}')
 if [ "${GITHUB_BASE_REF}" != "master" ]; then
-    export SUFFIX="${GITHUB_BASE_REF}"
+    export SUFFIX="-""${GITHUB_BASE_REF}"
 else
     export SUFFIX=""
 fi
@@ -12,27 +12,36 @@ export DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 export BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 export COMMIT=$(echo "$SHA" | cut -c -7)
 export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
-export MY_APP2="$MY_APP"_version
+export NARRATIVE_GIT_HASH=`grep '\"git_commit_hash\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g' | sed 's/,//'`
+export MY_APP_VERSION="$MY_APP"_version
 
-echo $DOCKER_TOKEN | docker login ghcr.io -u $DOCKER_ACTOR --password-stdin
-docker build --build-arg BUILD_DATE="$DATE" \
-             --build-arg COMMIT="$COMMIT" \
+echo building image ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
+
+# echo $DOCKER_TOKEN | docker login ghcr.io -u $DOCKER_ACTOR --password-stdin
+echo docker build --build-arg BUILD_DATE="$DATE" \
+             --build-arg VCS_REF="$COMMIT" \
              --build-arg BRANCH="$GITHUB_HEAD_REF" \
-             --build-arg PULL_REQUEST="$PR" \
+             --build-arg NARRATIVE_VERSION="$NARRATIVE_VERSION_NUM" \
              --label us.kbase.vcs-pull-req="$PR" \
-             -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" .
-docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
+             -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" \
+             .
+echo docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
 
-docker tag ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" kbase/narrative:tmp
+if [ "${GITHUB_BASE_REF}" != "truss" ]; then
 
-docker build -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" \
-                --build-arg BUILD_DATE=$DATE \
+    echo docker tag ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" kbase/narrative:tmp
+
+    echo building image ghcr.io/"$MY_ORG"/"$MY_APP_VERSION":"pr-""$PR"
+    echo docker build --build-arg BUILD_DATE=$DATE \
                 --build-arg VCS_REF=$COMMIT \
                 --build-arg BRANCH="$GITHUB_HEAD_REF" \
-                --build-arg PULL_REQUEST="$PR" \
+                --build-arg NARRATIVE_VERSION="$NARRATIVE_VERSION_NUM" \
+                --build-arg NARRATIVE_GIT_HASH="$NARRATIVE_GIT_HASH" \
                 --label us.kbase.vcs-pull-req="$PR" \
-                --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
+                -t ghcr.io/"$MY_ORG"/"$MY_APP_VERSION":"pr-""$PR" \
                 -f Dockerfile2 \
                 .
-docker rmi kbase/narrative:tmp
-docker push ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR"
+
+    echo docker rmi kbase/narrative:tmp
+    echo docker push ghcr.io/"$MY_ORG"/"$MY_APP_VERSION":"pr-""$PR"
+fi

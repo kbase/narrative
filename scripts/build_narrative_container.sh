@@ -6,18 +6,16 @@ DS=$( date +%Y%m%d%H%M )
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
-HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="6.2"
 
 # Get the current branch, so that we can tag images to branch
 BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
-# Use the branch unless we aere given am explicit DOCKER_TAG
+# Use the branch unless we are given an explicit DOCKER_TAG
 NARRATIVE_VER=${DOCKER_TAG:-$BRANCH}
 COMMIT=`git rev-parse --short HEAD`
 
 WEBROOT_DIR="deployment/services/kbase-ui"
-DOCKERFILE_HEADLESS="Dockerfile_headless"
 
 
 function usage () {
@@ -93,7 +91,7 @@ docker build -t $NAR_NAME:$NARRATIVE_VER \
                 .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
 
-# Give the image a fixed name because dockfile FROM fields cannot take a variable/argument
+# Give the image a fixed name because dockerfile FROM fields cannot take a variable/argument
 # and we're using the output from the previous build in this 2nd container
 docker tag $NAR_NAME:$NARRATIVE_VER kbase/narrative:tmp
 docker build -t $NAR_VER_NAME:$NARRATIVE_VER \

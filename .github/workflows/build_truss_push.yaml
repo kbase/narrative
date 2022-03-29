@@ -1,6 +1,6 @@
 ---
 name: Build Truss Image Push
-'on':
+on:
   push:
     branches:
     - truss

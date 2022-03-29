@@ -1,14 +1,15 @@
 name: CI-unit-testing
 
 on:
-  [push, pull_request]
+  [milestone]
+#  [push, pull_request]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2.0.0
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         miniconda-version: 'latest'
         activate-environment: test-environment
@@ -17,8 +18,13 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
+    - name: Update conda and set environment vars
+      run: |
+        conda update -n base -c defaults conda
+        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
+
     - name: Use Node JS 16.x
-      uses: actions/setup-node@v2.1.2
+      uses: actions/setup-node@v2
       with:
         node-version: 16.x
 
@@ -35,16 +41,13 @@ jobs:
           sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
-
-    - name: Set up environment vars
-      run: |
-        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
+          echo $(which pytest)
 
     - name: Run Narrative Backend Tests
       id: test_backend
       shell: bash -l {0}
       run: make test-backend
-      continue-on-error: true
+      continue-on-error: false
 
     - name: Run Narrative Frontend Unit Tests
       id: test_frontend
@@ -54,12 +57,10 @@ jobs:
 
     - name: Send to Codecov
       id: send_to_codecov
-      uses: codecov/codecov-action@v1.5.2
+      uses: codecov/codecov-action@v2
       continue-on-error: true
       with:
-        file: |
-          ./python-coverage/coverage.xml
-          ./js-coverage/lcov/lcov.info
+        files: ./python-coverage/coverage.xml, ./js-coverage/lcov/lcov.info
         fail_ci_if_error: true
 
     - name: outcome

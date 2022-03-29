@@ -17,11 +17,6 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
-    - name: Update conda and set environment vars
-      run: |
-        conda update -n base -c defaults conda
-        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
-
     - name: Use Node JS 16.x
       uses: actions/setup-node@v2
       with:
@@ -40,13 +35,16 @@ jobs:
           sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
-          echo $(which pytest)
+
+    - name: Set up environment vars
+      run: |
+        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
 
     - name: Run Narrative Backend Tests
       id: test_backend
       shell: bash -l {0}
       run: make test-backend
-      continue-on-error: false
+      continue-on-error: true
 
     - name: Run Narrative Frontend Unit Tests
       id: test_frontend

@@ -1,8 +1,7 @@
 name: CI-integration-testing
 
 on:
-  [milestone]
-#  [push, pull_request]
+  [push, pull_request]
 
 jobs:
   build-and-test:

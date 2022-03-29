@@ -7,17 +7,14 @@ on:
     - master
     - develop
     types:
-    - opened
-    - synchronize
-    - ready_for_review
-    # - closed
+    - closed
 jobs:
   docker_tag:
     runs-on: ubuntu-latest
     steps:
     - name: Check out GitHub Repo
-      # if: github.event_name == 'pull_request' && github.event.action == 'closed' &&
-      #   github.event.pull_request.merged == true
+      if: github.event_name == 'pull_request' && github.event.action == 'closed' &&
+        github.event.pull_request.merged == true
       with:
         ref: "${{ github.event.pull_request.head.sha }}"
       uses: actions/checkout@v2

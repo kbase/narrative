@@ -17,17 +17,11 @@ export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{
 echo MY_APP is $MY_APP
 
 tag_image() {
-    echo Running tag image commands
-    echo docker pull ghcr.io/"$MY_ORG"/"$1":"pr-""$PR"
-    echo docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"latest"
-    echo docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"$NARRATIVE_VERSION_NUM"
-    echo docker push ghcr.io/"$MY_ORG"/"$1":"$NARRATIVE_VERSION_NUM"
-    echo docker push ghcr.io/"$MY_ORG"/"$1":"latest"
-    # docker pull ghcr.io/"$MY_ORG"/"$1":"pr-""$PR"
-    # docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"latest"
-    # docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"$NARRATIVE_VERSION_NUM"
-    # docker push ghcr.io/"$MY_ORG"/"$1":"$NARRATIVE_VERSION_NUM"
-    # docker push ghcr.io/"$MY_ORG"/"$1":"latest"
+    docker pull ghcr.io/"$MY_ORG"/"$1":"pr-""$PR"
+    docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"latest"
+    docker tag ghcr.io/"$MY_ORG"/"$1":"pr-""$PR" ghcr.io/"$MY_ORG"/"$MY_APP":"$NARRATIVE_VERSION_NUM"
+    docker push ghcr.io/"$MY_ORG"/"$1":"$NARRATIVE_VERSION_NUM"
+    docker push ghcr.io/"$MY_ORG"/"$1":"latest"
 }
 
 echo $DOCKER_TOKEN | docker login ghcr.io -u $DOCKER_ACTOR --password-stdin

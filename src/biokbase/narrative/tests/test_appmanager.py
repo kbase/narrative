@@ -726,14 +726,18 @@ class AppManagerTestCase(unittest.TestCase):
         batch_run_params = dry_run_results["batch_run_params"]
         batch_params = dry_run_results["batch_params"]
 
-        expected_batch_run_keys = {["method", "service_ver", "params", "app_id", "meta"]}
+        expected_batch_run_keys = set(
+            ["method", "service_ver", "params", "app_id", "meta"]
+        )
         # expect only the above keys in each batch run params (note the missing wsid key)
         for param_set in batch_run_params:
             self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
-        self.assertTrue(["wsid"] == [batch_params.keys()])
+        self.assertEqual(["wsid"], list(batch_params.keys()))
 
         # expect shared_params to have been merged into respective param_sets
-        for exp, outp in zip(iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params):
+        for exp, outp in zip(
+            iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params
+        ):
             got = outp["params"][0]
             self.assertDictEqual({**got, **exp}, got)  # assert exp_params <= got_params
 
@@ -809,7 +813,7 @@ class AppManagerTestCase(unittest.TestCase):
         # should return None, fire a couple of messages
         for run_id in run_ids:
             self.assertIsNone(
-                self.am.run_app_bulk(
+                self.am.run_app_batch(
                     get_bulk_run_good_inputs(), cell_id=cell_id, run_id=run_id
                 )
             )
@@ -924,8 +928,8 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = comm_mock
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app_bulk(get_bulk_run_good_inputs()),
-            "run_app_bulk",
+            lambda: self.am.run_app_batch(get_bulk_run_good_inputs()),
+            "run_app_batch",
             'Unable to retrieve system variable: "workspace_id"',
         )
 
@@ -935,18 +939,13 @@ class AppManagerTestCase(unittest.TestCase):
         app_info_el = {
             "shared_params": {
                 "shared_param_key0": "shared_param_val0",
-                "shared_param_key1": "shared_param_val1"
+                "shared_param_key1": "shared_param_val1",
             },
             "params": [
-                {
-                    "param_key00": "param_val00",
-                    "param_key01": "param_val01"
-                }, {
-                    "param_key10": "param_val10",
-                    "param_key11": "param_val11"
-                }
+                {"param_key00": "param_val00", "param_key01": "param_val01"},
+                {"param_key10": "param_val10", "param_key11": "param_val11"},
             ],
-            "other_key": "other_val"
+            "other_key": "other_val",
         }
         expected = {
             "params": [
@@ -954,15 +953,16 @@ class AppManagerTestCase(unittest.TestCase):
                     "param_key00": "param_val00",
                     "param_key01": "param_val01",
                     "shared_param_key0": "shared_param_val0",
-                    "shared_param_key1": "shared_param_val1"
-                }, {
+                    "shared_param_key1": "shared_param_val1",
+                },
+                {
                     "param_key10": "param_val10",
                     "param_key11": "param_val11",
                     "shared_param_key0": "shared_param_val0",
-                    "shared_param_key1": "shared_param_val1"
-                }
+                    "shared_param_key1": "shared_param_val1",
+                },
             ],
-            "other_key": "other_val"
+            "other_key": "other_val",
         }
 
         # Merge shared_params into each params dict
@@ -1044,9 +1044,9 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         spec = self.am.spec_manager.get_spec(app_id, tag=tag)
         spec_params = self.am.spec_manager.app_params(spec)
-        spec_params_map = {
+        spec_params_map = dict(
             (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        }
+        )
         mapped_inputs = self.am._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], inputs, spec_params_map
         )

@@ -203,9 +203,9 @@ class AppManager(object):
         batch_run_inputs = []
 
         for param_set in params:
-            spec_params_map = {
+            spec_params_map = dict(
                 (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-            }
+            )
             batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, param_set))
             batch_run_inputs.append(
                 self._map_inputs(
@@ -440,43 +440,37 @@ class AppManager(object):
 
         Example:
         --------
-        run_app_bulk(
-            [
+        run_app_batch([{
+            "app_id": "Some_module/reads_to_contigset",
+            "tag": "release",
+            "version": "1.0.0",
+            "shared_params": {
+                "filter_len": 500
+            },
+            "params": [
                 {
-                    "app_id": "Some_module/reads_to_contigset",
-                    "tag": "release",
-                    "version": "1.0.0",
-                    "shared_params": {
-                        "filter_len": 500
-                    },
-                    "params": [
-                        {
-                            "read_library_name" : "My_PE_Library",
-                            "output_contigset_name" : "My_Contig_Assembly"
-                        }, {
-                            "read_library_name": "Another_reads_library",
-                            "output_contigset_name": "Another_contig_assembly"
-                        }
-                    ]
+                    "read_library_name" : "My_PE_Library",
+                    "output_contigset_name" : "My_Contig_Assembly"
                 }, {
-                    "app_id": "Some_module/contigset_to_genome",
-                    "tag": "release",
-                    "version": "1.1.0",
-                    "shared_params": {
-                        "filter_len": 1000,
-                        "taxon_id": 121212
-                    },
-                    "params": [
-                        {
-                            "contigset": "My_contigset",
-                            "genome_name": "My_genome"
-                        }
-                    ]
+                    "read_library_name": "Another_reads_library",
+                    "output_contigset_name": "Another_contig_assembly"
                 }
-            ],
-            cell_id="b74f4e9c-4099-486a-986e-2eedd498c8f3",
-            run_id="61ad148b-be09-4fea-9067-f3632ed1a17e"
-        )
+            ]
+        }, {
+            "app_id": "Some_module/contigset_to_genome",
+            "tag": "release",
+            "version": "1.1.0",
+            "shared_params": {
+                "filter_len": 1000,
+                "taxon_id": 121212
+            },
+            "params": [
+                {
+                    "contigset": "My_contigset",
+                    "genome_name": "My_genome"
+                }
+            ]
+        }])
         """
 
         if not isinstance(app_info, list) or len(app_info) == 0:
@@ -689,9 +683,9 @@ class AppManager(object):
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        spec_params_map = {
+        spec_params_map = dict(
             (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        }
+        )
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
         input_vals = self._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map

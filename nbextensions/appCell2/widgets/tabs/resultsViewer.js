@@ -5,7 +5,7 @@ define([
     'common/runtime',
     'common/events',
     'kb_service/client/narrativeMethodStore',
-    'kb_common/html',
+    'common/html',
     'util/display',
     'kbaseReportView',
 ], (Promise, $, UI, Runtime, Events, NarrativeMethodStore, html, DisplayUtil, KBaseReportView) => {

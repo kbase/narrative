@@ -119,7 +119,7 @@
         "bootstrap": "3.3.7",
         "bootstrap-slider": "10.6.2",
         "bowser": "1.0.0",
-        "corejs-typeahead": "1.0.1",
+        "corejs-typeahead": "1.3.1",
         "d3": "3.5.6",
         "datatables.net": "1.11.3",
         "datatables.net-bs": "^1.11.5",

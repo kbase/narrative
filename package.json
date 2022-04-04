@@ -72,7 +72,7 @@
         "stylelint-config-sass-guidelines": "^8.0.0",
         "stylelint-config-standard": "^22.0.0",
         "terser": "^5.7.2",
-        "wdio-chromedriver-service": "7.2.8",
+        "wdio-chromedriver-service": "7.3.2",
         "webdriverio": "7.16.16"
     },
     "browserslist": [

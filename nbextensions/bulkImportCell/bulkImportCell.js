@@ -908,12 +908,12 @@ define([
          * Then changes the global cell state to "launching".
          */
         function doRunCellAction() {
+            updateState('launching');
+            switchToTab('launching');
             runStatusListener = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, handleRunStatus);
             busEventManager.add(runStatusListener);
             clearCellMessages();
             cell.execute();
-            updateState('launching');
-            switchToTab('launching');
         }
 
         /**

@@ -4,7 +4,8 @@
         "CELL_ID": "cell_id",
         "CELL_ID_LIST": "cell_id_list",
         "JOB_ID": "job_id",
-        "JOB_ID_LIST": "job_id_list"
+        "JOB_ID_LIST": "job_id_list",
+        "TS": "ts"
     },
     "message_types": {
         "CANCEL": "cancel_job",

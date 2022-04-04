@@ -15,8 +15,8 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
     Load the job-related terms that are shared by front- and back ends.
     """
     full_path = [os.environ["NARRATIVE_DIR"]] + relative_path_to_file
-    config_json = open(os.path.join(*full_path)).read()
-    config = json.loads(config_json)
+    with open(os.path.join(*full_path)) as fh:
+        config = json.load(fh)
     REQUIRED = {
         "message_types": [
             "CANCEL",
@@ -31,7 +31,7 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
             "ERROR",
             "RUN_STATUS",
         ],
-        "params": ["BATCH_ID", "CELL_ID_LIST", "JOB_ID", "JOB_ID_LIST"],
+        "params": ["BATCH_ID", "CELL_ID_LIST", "JOB_ID", "JOB_ID_LIST", "TS"],
     }
 
     # ensure we have all the required message type and param names

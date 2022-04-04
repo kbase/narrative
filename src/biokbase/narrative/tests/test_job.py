@@ -383,7 +383,7 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        job._update_state(None)
+        job._update_state({})
         self.assertFalse(job.was_terminal())
 
     @mock.patch(CLIENTS, get_mock_client)

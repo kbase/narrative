@@ -4,9 +4,11 @@ import os
 import itertools
 import re
 import copy
+import time
 
 from biokbase.narrative.jobs.jobmanager import (
     JobManager,
+    OutputStateErrMsg,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
     JOBS_TYPE_ERR,
@@ -32,9 +34,13 @@ from biokbase.narrative.exception_util import (
     transform_job_exception,
 )
 
+from src.biokbase.narrative.jobs.jobcomm import NO_INPUT_TYPE_ERR
+
 from .util import ConfigTests, validate_job_state
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
+    TIME_NS,
+    TEST_EPOCH_NS,
     MAX_LOG_LINES,
     JOB_COMPLETED,
     JOB_CREATED,
@@ -60,6 +66,7 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_PARENT_CHILDREN,
     BATCH_CHILDREN,
     generate_error,
+    get_test_jobs,
 )
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
@@ -108,7 +115,7 @@ LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG
 
 
 def make_comm_msg(
-    msg_type: str, job_id_like, as_job_request: bool, content: dict = None
+    msg_type: str, job_id_like, as_job_request: bool, content: dict = {}
 ):
     job_arguments = {}
     if type(job_id_like) is dict:
@@ -120,10 +127,9 @@ def make_comm_msg(
 
     msg = {
         "msg_id": "some_id",
-        "content": {"data": {"request_type": msg_type, **job_arguments}},
+        "content": {"data": {"request_type": msg_type, **job_arguments, **content}},
     }
-    if content is not None:
-        msg["content"]["data"].update(content)
+
     if as_job_request:
         return JobRequest(msg)
     else:
@@ -132,6 +138,20 @@ def make_comm_msg(
 
 def get_app_data(*args):
     return {"info": {"name": APP_NAME}}
+
+
+def ts_are_close(t0: int, t1: int, tol: float = 1) -> bool:
+    """Check if two times, in ns, are "close"
+
+    Args:
+        t0 (int): time in ns
+        t1 (int): time in ns
+        tol (float, optional): tolerated discrepancy between the times, in s. Defaults to 1.
+
+    Returns:
+        bool: Whether the two times differ by less than the tolerance
+    """
+    return abs(t1 - t0) * 1e-9 <= 1
 
 
 class JobCommTestCase(unittest.TestCase):
@@ -366,6 +386,22 @@ class JobCommTestCase(unittest.TestCase):
 
         for msg_type in functions:
             req_dict = make_comm_msg(msg_type, None, False)
+            err = JobRequestException(NO_INPUT_TYPE_ERR)
+            with self.assertRaisesRegex(type(err), str(err)):
+                self.jc._handle_comm_message(req_dict)
+            self.check_error_message(req_dict, err)
+
+    def test_req_multiple_inputs__fail(self):
+        functions = [
+            CANCEL,
+            INFO,
+            LOGS,
+            RETRY,
+            STATUS,
+        ]
+
+        for msg_type in functions:
+            req_dict = make_comm_msg(msg_type, {"job_id": "something", "batch_id": "another_thing"}, False)
             err = JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
             with self.assertRaisesRegex(type(err), str(err)):
                 self.jc._handle_comm_message(req_dict)
@@ -446,11 +482,12 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
-                    "error": "Unable to get initial jobs list",
-                    "message": "check_workspace_jobs failed",
-                    "code": -32000,
                     "source": "ee2",
+                    "request": "jc.start_job_status_loop",
                     "name": "JSONRPCError",
+                    "message": "check_workspace_jobs failed",
+                    "error": "Unable to get initial jobs list",
+                    "code": -32000,
                 },
             },
         )
@@ -478,6 +515,7 @@ class JobCommTestCase(unittest.TestCase):
     # ---------------------
 
     @mock.patch(CLIENTS, get_mock_client)
+    @mock.patch(TIME_NS, lambda: TEST_EPOCH_NS)
     def check_job_output_states(
         self,
         output_states=None,
@@ -486,6 +524,7 @@ class JobCommTestCase(unittest.TestCase):
         response_type=STATUS,
         ok_states=[],
         error_states=[],
+        last_checked=TEST_EPOCH_NS,
     ):
         """
         Handle any request that returns a dictionary of job state objects; this
@@ -498,6 +537,7 @@ class JobCommTestCase(unittest.TestCase):
         :param params: params for the comm message (opt)
         :param ok_states: list of job IDs expected to be in the output
         :param error_states: list of job IDs expected to return a not found error
+        :param last_checked: ts in ns
         """
         if output_states is None:
             req_dict = make_comm_msg(request_type, params, False)
@@ -511,6 +551,11 @@ class JobCommTestCase(unittest.TestCase):
             },
             msg,
         )
+
+        if response_type == STATUS:
+            self._check_pop_last_checked(output_states, last_checked)
+        else:
+            self.assertNotIn("last_checked", output_states)
 
         for job_id, state in output_states.items():
             self.assertEqual(ALL_RESPONSE_DATA[STATUS][job_id], state)
@@ -529,6 +574,7 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------------
     # Lookup single job state
     # -----------------------
+    @mock.patch(TIME_NS, lambda: TEST_EPOCH_NS)
     def test_get_job_state__1_ok(self):
         output_states = self.jc.get_job_state(JOB_COMPLETED)
         self.check_job_output_states(
@@ -541,9 +587,22 @@ class JobCommTestCase(unittest.TestCase):
         ):
             self.jc.get_job_state(None)
 
+    def test_lookup_job_state__live_ts(self):
+        output_states = self.jc.get_job_state(JOB_COMPLETED)
+        self.assertTrue(
+            ts_are_close(output_states["last_checked"], time.time_ns())
+        )
+
     # -----------------------
     # Lookup select job states
     # -----------------------
+    def _check_pop_last_checked(self, output_states, last_checked=TEST_EPOCH_NS):
+        self.assertIn("last_checked", output_states)
+        self.assertTrue(
+            last_checked == output_states["last_checked"]
+            or ts_are_close(last_checked, output_states["last_checked"])
+        )
+        del output_states["last_checked"]
 
     def test_get_job_states__job_id__ok(self):
         self.check_job_output_states(
@@ -598,6 +657,7 @@ class JobCommTestCase(unittest.TestCase):
         self.check_batch_id__not_batch_test(STATUS)
 
     @mock.patch(CLIENTS, get_mock_client)
+    @mock.patch(TIME_NS, lambda: TEST_EPOCH_NS)
     def test_get_job_states__job_id_list__ee2_error(self):
         exc = Exception("Test exception")
         exc_message = str(exc)
@@ -612,10 +672,12 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
 
+        self._check_pop_last_checked(msg["content"], TEST_EPOCH_NS)
+
         expected = {id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][id]) for id in ALL_JOBS}
         for job_id in ACTIVE_JOBS:
             # add in the ee2_error message
-            expected[job_id]["error"] = exc_message
+            expected[job_id]["error"] = OutputStateErrMsg.QUERY_EE2_STATES.value % (job_id, exc_message)
 
         self.assertEqual(
             {
@@ -623,6 +685,80 @@ class JobCommTestCase(unittest.TestCase):
                 "content": expected,
             },
             msg,
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states__err(self):
+        """
+        """
+        # what FE would say was the last time the jobs were checked
+        NOW = time.time_ns()
+
+        # mix of terminal and not terminal
+        not_updated_ids = [JOB_COMPLETED, JOB_ERROR, JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
+        # not terminal
+        updated_ids = [BATCH_PARENT, BATCH_RETRY_RUNNING]
+
+        # error ids
+        not_found_ids = [JOB_NOT_FOUND]
+
+        job_ids = not_updated_ids + updated_ids
+        active_ids = list(set(job_ids) & set(ACTIVE_JOBS))
+
+        # output_states will be partitioned as
+        not_found_ids
+        terminal_ids = list(set(job_ids) - set(ACTIVE_JOBS))
+        not_updated_active_ids = list(set(not_updated_ids) & set(active_ids))
+        updated_active_ids = list(set(updated_ids) & set(active_ids))  # (yes, redundant)
+
+        def mock_check_jobs(params):
+            """Update appropriate job states"""
+            lookup_ids = params["job_ids"]
+            self.assertCountEqual(active_ids, lookup_ids)  # sanity check
+
+            job_states_ret = get_test_jobs(lookup_ids)
+            for job_id, job_state in job_states_ret.items():
+                # if job was updated, return an updated version
+                if job_id in updated_active_ids:
+                    job_state["updated"] += 1
+            return job_states_ret
+
+        rq = make_comm_msg(STATUS, job_ids + not_found_ids, False, {"ts": NOW})
+        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
+            output_states = self.jc._handle_comm_message(rq)
+
+        # checks
+        exp_updated_output_states = {
+            job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]) for job_id in updated_active_ids
+        }
+        for job_state in exp_updated_output_states.values():
+            job_state["jobState"]["updated"] += 1
+
+        expected = {
+            # corresponding to not_found_ids
+            **{
+                job_id: {
+                    "job_id": job_id,
+                    "error": OutputStateErrMsg.NOT_FOUND.value % job_id
+                }
+                for job_id in not_found_ids
+            },
+            # corresponding to updated_active_ids
+            **exp_updated_output_states,
+            # corresponding to not_updated_active_ids and terminal_ids
+            **{
+                job_id: {
+                    "job_id": job_id,
+                    "error": OutputStateErrMsg.NOT_UPDATED.value % (job_id, NOW)
+                }
+                for job_id in not_updated_active_ids + terminal_ids
+            },
+        }
+
+        self._check_pop_last_checked(output_states, NOW)
+        self.assertEqual(
+            expected,
+            output_states
         )
 
     # -----------------------
@@ -827,17 +963,20 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     @mock.patch(CLIENTS, get_mock_client)
+    @mock.patch(TIME_NS, lambda: TEST_EPOCH_NS)
     def test_cancel_jobs__job_id_list__failure(self):
         # the mock client will throw an error with BATCH_RETRY_RUNNING
         job_id_list = [JOB_RUNNING, BATCH_RETRY_RUNNING]
         req_dict = make_comm_msg(CANCEL, job_id_list, False)
         output = self.jc._handle_comm_message(req_dict)
         print(output)
+        self._check_pop_last_checked(output)
+
         expected = {
             JOB_RUNNING: ALL_RESPONSE_DATA[STATUS][JOB_RUNNING],
             BATCH_RETRY_RUNNING: {
                 **ALL_RESPONSE_DATA[STATUS][BATCH_RETRY_RUNNING],
-                "error": CANCEL + " failed",
+                "error": OutputStateErrMsg.CANCEL.value % (BATCH_RETRY_RUNNING, CANCEL + " failed"),
             },
         }
 
@@ -1288,14 +1427,19 @@ class JobRequestTestCase(unittest.TestCase):
             rq.job_id_list
 
     def test_request_no_data(self):
-        rq_msg = {"msg_id": "some_id", "content": {}}
-        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
-            JobRequest(rq_msg)
+        rq_msg1 = {"msg_id": "some_id", "content": {}}
+        rq_msg2 = {"msg_id": "some_id", "content": {"data": {}}}
+        rq_msg3 = {"msg_id": "some_id", "content": {"data": None}}
+        rq_msg4 = {"msg_id": "some_id", "content": {"what": "?"}}
+        for msg in [rq_msg1, rq_msg2, rq_msg3, rq_msg4]:
+            with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
+                JobRequest(msg)
 
     def test_request_no_req(self):
-        rq_msg = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
-        rq_msg2 = {"msg_id": "some_other_id", "content": {"data": {}}}
-        for msg in [rq_msg, rq_msg2]:
+        rq_msg1 = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
+        rq_msg2 = {"msg_id": "some_id", "content": {"data": {"request_type": ""}}}
+        rq_msg3 = {"msg_id": "some_id", "content": {"data": {"what": {}}}}
+        for msg in [rq_msg1, rq_msg2, rq_msg3]:
             with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
                 JobRequest(msg)
 

@@ -16,7 +16,7 @@
         "autoprefixer": "^10.2.6",
         "bootstrap-sass": "^3.4.1",
         "chrome-launcher": "^0.14.0",
-        "chromedriver": "^98.0.1",
+        "chromedriver": "^100.0.0",
         "commander": "9.0.0",
         "cssnano": "^5.0.6",
         "eslint": "^8.10.0",

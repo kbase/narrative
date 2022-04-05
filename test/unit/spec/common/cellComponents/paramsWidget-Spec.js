@@ -69,11 +69,11 @@ define([
 
             this.parameters = this.spec.getSpec().parameters;
             this.advancedParamIds = [];
-            for (const [, entry] of Object.entries(this.parameters.specs)) {
+            Object.values(this.parameters.specs).forEach((entry) => {
                 if (entry.ui.advanced) {
                     this.advancedParamIds.push(entry.id);
                 }
-            }
+            });
 
             this.workspaceId = 54745;
             this.initialParams = this.model.getItem('params').fastq_reads.params;

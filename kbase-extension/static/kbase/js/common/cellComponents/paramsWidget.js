@@ -118,7 +118,6 @@ define([
                 });
 
                 fieldWidget.bus.on('validation', (message) => {
-                    // console.log(parameterSpec.id + ': ' + JSON.stringify(message));
                     // only propagate if invalid. value changes come through
                     // the 'changed' message
                     const paramId = parameterSpec.id;
@@ -460,7 +459,6 @@ define([
             }
             return controlPromise
                 .then((inputWidget) => {
-                    // console.log(`starting ${paramSpec.id} with ${initialParams[paramSpec.id]}`)
                     const widget = makeFieldWidget(
                         inputWidget,
                         appSpec,

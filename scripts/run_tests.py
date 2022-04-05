@@ -15,39 +15,52 @@ import threading
 import os
 import signal
 
-KARMA_PORT = 9876
-JUPYTER_PORT = 32323
-
-argparser = argparse.ArgumentParser(description="Run KBase Narrative unit tests")
-argparser.add_argument(
-    "-b", "--browsers", default="Firefox", help="Browsers to use for Karma test"
-)
-argparser.add_argument(
-    "-d", "--debug", action="store_true", help="Whether to enter debug mode in Karma"
-)
+argparser = argparse.ArgumentParser(description="Run KBase Narrative tests")
 argparser.add_argument(
     "-u", "--unit", action="store_true", help="Whether to run unit tests"
 )
 argparser.add_argument(
     "-i", "--integration", action="store_true", help="Whether to run integration tests"
 )
+argparser.add_argument(
+    "-c",
+    "--container",
+    help="Run the tests against the specified docker container, e.g. kbase/narrative:latest",
+)
 options = argparser.parse_args(sys.argv[1:])
 
 nb_server = None
 
+JUPYTER_PORT = 32323
+IP_ADDRESS = "0.0.0.0" if options.container else "127.0.0.1"
+
 
 def run_narrative():
-    print(f"Starting local narrative on {JUPYTER_PORT}")
+
     nb_command = [
         "kbase-narrative",
         "--no-browser",
         '--NotebookApp.allow_origin="*"',
-        "--ip=127.0.0.1",
-        "--port={}".format(JUPYTER_PORT),
+        f"--ip={IP_ADDRESS}",
+        f"--port={JUPYTER_PORT}",
     ]
 
-    if not hasattr(sys, "real_prefix"):
-        nb_command[0] = "kbase-narrative"
+    if options.container:
+        nb_command = [
+            "docker",
+            "run",
+            "-i",
+            "-p",
+            f"{JUPYTER_PORT}:{JUPYTER_PORT}",
+            options.container,
+            # start up args from the Dockerfile
+            "--template",
+            "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json",
+            "--template",
+            "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json",
+        ] + nb_command
+
+    print("running command " + " ".join(nb_command))
 
     nb_server = subprocess.Popen(
         nb_command,
@@ -55,6 +68,8 @@ def run_narrative():
         stdout=subprocess.PIPE,
         preexec_fn=os.setsid,
     )
+
+    print(f"Starting narrative at {IP_ADDRESS}:{JUPYTER_PORT}")
 
     # wait for notebook server to start up
     while 1:
@@ -66,7 +81,6 @@ def run_narrative():
             break
         if "is already in use" in line:
             os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-            # nb_server.terminate()
             raise ValueError(
                 "The port {} was already taken, kill running notebook servers".format(
                     JUPYTER_PORT
@@ -97,11 +111,15 @@ resp = {
 
 
 try:
-    if options.unit:
-        print("starting unit tests")
+    if options.unit or options.integration:
         print("starting narrative")
         nb_server = run_narrative()
         print("narrative started")
+    else:
+        print("No tests specified.")
+
+    if options.unit:
+        print("starting unit tests")
         try:
             print("running isolated unit tests")
             resp["unit_isolated"] = subprocess.check_call(
@@ -120,12 +138,11 @@ try:
             )  # nosec
         except subprocess.CalledProcessError as e:
             resp["unit"] = e.returncode
+
     if options.integration:
         env = os.environ.copy()
         base_url = env.get("BASE_URL", None)
         if base_url is None:
-            if nb_server is None:
-                nb_server = run_narrative()
             base_url = f"http://localhost:{JUPYTER_PORT}"
             env["BASE_URL"] = base_url
         print("starting integration tests")
@@ -138,6 +155,7 @@ try:
             )  # nosec
         except subprocess.CalledProcessError as e:
             resp["integration"] = e.returncode
+
 except Exception as e:
     print(f"Error! {str(e)}")
 finally:

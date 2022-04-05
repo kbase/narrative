@@ -50,19 +50,19 @@ test-backend:
 	@echo "done"
 
 test-frontend:
-	python test/unit/run_tests.py -u -i
+	python scripts/run_tests.py -u -i
 
 # test-frontend-unit should use karma and jasmine to test
 # each of the Javascript components of the Narrative.
 # This is achieved through python test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	python test/unit/run_tests.py -u
+	python scripts/run_tests.py -u
 	@echo "done"
 
 test-integration:
 	@echo "running integration tests"
-	python test/unit/run_tests.py -i
+	python scripts/run_tests.py -i
 	@echo "done"
 
 build-docs:

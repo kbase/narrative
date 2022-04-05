@@ -1,19 +1,35 @@
 ---
 name: Tag Image For Deploy
-'on':
+on:
   repository_dispatch
+
 jobs:
   tag_environments:
     runs-on: ubuntu-latest
     steps:
     - name: Check out GitHub Repo
       uses: actions/checkout@v2
-    - name: Tag Deploy Environments  
-      env:
-        DOCKER_ACTOR: ${{ secrets.GHCR_USERNAME }}
-        DOCKER_TOKEN: ${{ secrets.GHCR_TOKEN  }}
-        IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
-        SHA: ${{ github.event.pull_request.head.sha }}
-        TARGET: ${{ github.event.client_payload.target }}
-        DEV_PROD: ${{ github.event.client_payload.dev_prod }}
-      run: './.github/workflows/scripts/tag_environments.sh'
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
+
+    - name: Tag and Push to Packages
+      shell: bash -l {0}
+      run: |
+        if [ ${{ github.event.client_payload.dev_prod }} == "dev" ] || [ ${{ github.event.client_payload.dev_prod }} == "develop" ]
+        then
+            branch="-develop"
+        else
+            branch=''
+        fi
+        echo "Dev or Prod:" ${{ env.DEV_PROD }}
+
+        docker pull ghcr.io/${{ github.repository }}${branch}:${{ github.event.client_payload.image_tag }}
+
+        docker tag ghcr.io/${{ github.repository }}${branch}:${{ github.event.client_payload.image_tag }} ghcr.io/${{ github.repository }}${branch}:${{ github.event.client_payload.target }}
+
+        docker push ghcr.io/${{ github.repository }}${branch}:${{ github.event.client_payload.target }}

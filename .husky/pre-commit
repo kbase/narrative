@@ -1,4 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run husky_msg && npx lint-staged && npm run compile_css
+npm run husky_msg && npx lint-staged

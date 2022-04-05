@@ -24,20 +24,13 @@ EXPOSE 8888
 
 # install NodeJS 16.x (latest LTS until ~October 2022, https://nodejs.org/en/about/releases/)
 RUN \
-    curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && \
-    sudo apt-get install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
 RUN source activate base && \
-    conda install -c conda-forge ndg-httpsclient==0.5.1 \
-          pyasn1==0.4.5 \
-          pyopenssl==19.0.0 \
-          cryptography==2.7 \
-          idna==2.8 \
-          requests==2.21.0 \
-          beautifulsoup4==4.8.1 \
-          html5lib==1.0.1
+    conda update -n base -c defaults conda
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -57,7 +50,6 @@ RUN \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
-    pip install jupyter-console==6.0.0 && \
     cd /tmp && \
     mkdir /tmp/narrative && \
     chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative ; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
@@ -70,6 +62,7 @@ ENV VERSION_CHECK /narrative_version
 
 # Set the default environment to be CI, can be overriden by passing new CONFIG_ENV setting at container start
 ENV CONFIG_ENV ci
+ENV DOCKER_CONTAINER true
 
 USER nobody
 
@@ -81,7 +74,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.narrative-version=$NARRATIVE_VERSION \
       maintainer="William Riehl wjriehl@lbl.gov"
 
-# ENTRYPOINT ["/usr/bin/tini", "--"]
 # The entrypoint can be set to "headless-narrative" to run headlessly
 ENTRYPOINT ["/kb/deployment/bin/dockerize"]
 CMD [ "--template", \
@@ -89,7 +81,3 @@ CMD [ "--template", \
       "--template", \
       "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
       "kbase-narrative"]
-#ONBUILD USER root
-#ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg
-#ONBUILD RUN cd /kb/dev_container/narrative && ./fixupURL.sh
-#ONBUILD USER nobody

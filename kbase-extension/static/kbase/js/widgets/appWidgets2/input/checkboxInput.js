@@ -81,10 +81,7 @@ define([
 
         function autoValidate() {
             return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                channel.emit('validation', result);
             });
         }
 
@@ -165,10 +162,7 @@ define([
                                         }
                                         validate().then((result) => {
                                             setModelValue(result.parsedValue);
-                                            channel.emit('validation', {
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis,
-                                            });
+                                            channel.emit('validation', result);
                                         });
                                     },
                                 },

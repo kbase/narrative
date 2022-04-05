@@ -7,8 +7,8 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
         baseCss = 'kb-filetype-panel',
         fileTypeIcon = `${baseCss}__filetype_icon`,
         completeIcon = ['fa-check', `${fileTypeIcon}--complete`],
-        incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`];
-    // warningIcon = ['fa-exclamation', `${fileTypeIcon}--warning`];
+        incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`],
+        warningIcon = ['fa-exclamation-circle', `${fileTypeIcon}--warning`];
 
     /**
      * This displays a vertical list of "fileTypes" that can be selected on and
@@ -66,8 +66,8 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
             const events = Events.make(),
                 content = [renderHeader()].concat(renderFileTypes(events)).join('');
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
         }
 
@@ -128,6 +128,14 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                 });
         }
 
+        function addWarningIcon(fileType) {
+            const warningElem = div({
+                class: `${fileTypeIcon} fa ${warningIcon.join(' ')}`,
+                dataElement: 'warning-icon',
+            });
+            ui.getElement(fileType).appendChild(ui.createNode(warningElem));
+        }
+
         /**
          * The state of this component handles what file type is currently selected,
          * and which fileTypes are completed. The basic structure of the state is
@@ -139,7 +147,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
          *      fileType2: false,
          *      ...etc
          *    },
-         *    warning: Set(fileType1, fileType2, etc);
+         *    warnings: Set(fileType1, fileType2, etc);
          * }
          * @param {object} newState - the state object
          */
@@ -147,6 +155,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
             state = newState;
             const selected = `${baseCss}__filetype_button--selected`;
             state.completed = state.completed || {}; // double-check we have the completed set
+            state.warnings = state.warnings || new Set();
             /**
              * Tweaking the visual state -
              * 1. deselect everything
@@ -160,6 +169,11 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                 ui.getElement(`${key}.icon`).classList.remove(...completeIcon, ...incompleteIcon);
                 const icon = state.completed[key] ? completeIcon : incompleteIcon;
                 ui.getElement(`${key}.icon`).classList.add(...icon);
+                // if there's a warning, and the fileType doesn't already have a warning icon,
+                // make one and insert it.
+                if (state.warnings.has(key) && !ui.getElement(`${key}.warning-icon`)) {
+                    addWarningIcon(key);
+                }
             });
             // if the "selected" file type is real, select it
             if (state.selected in fileTypes) {

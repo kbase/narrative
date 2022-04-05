@@ -191,7 +191,8 @@ define([
             const div = html.tag('div'),
                 span = html.tag('span'),
                 iTag = html.tag('i'),
-                strong = html.tag('strong');
+                strong = html.tag('strong'),
+                aTag = html.tag('a');
             const icon = 'fa fa-exclamation-circle';
             let msgType = msg.type;
             if (msgType !== 'warning' && msgType !== 'error') {
@@ -209,6 +210,13 @@ define([
                         [iTag({ class: icon }), strong(` ${msgType}:`)]
                     ),
                     span(msg.message),
+                    msg.link
+                        ? ' ' +
+                          aTag(
+                              { href: msg.link, target: '_blank' },
+                              iTag({ class: 'fa fa-external-link' })
+                          )
+                        : '',
                 ]
             );
         }

@@ -8,6 +8,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
         fileTypeIcon = `${baseCss}__filetype_icon`,
         completeIcon = ['fa-check', `${fileTypeIcon}--complete`],
         incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`];
+    // warningIcon = ['fa-exclamation', `${fileTypeIcon}--warning`];
 
     /**
      * This displays a vertical list of "fileTypes" that can be selected on and
@@ -137,7 +138,8 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
          *      fileType1: true,
          *      fileType2: false,
          *      ...etc
-         *    }
+         *    },
+         *    warning: Set(fileType1, fileType2, etc);
          * }
          * @param {object} newState - the state object
          */

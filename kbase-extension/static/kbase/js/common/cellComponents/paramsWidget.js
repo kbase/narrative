@@ -14,6 +14,8 @@ define([
         form = tag('form'),
         span = tag('span'),
         div = tag('div'),
+        iTag = tag('i'),
+        strong = tag('strong'),
         cssBaseClass = 'kb-app-params';
 
     function factory(config) {
@@ -119,7 +121,10 @@ define([
                     // only propagate if invalid. value changes come through
                     // the 'changed' message
                     const paramId = parameterSpec.id;
-                    advancedParamErrors[paramId] = !message.isValid;
+                    if (paramId in advancedParamErrors) {
+                        advancedParamErrors[paramId] = !message.isValid;
+                    }
+                    showHideAdvancedErrorMessage();
                     if (!message.isValid) {
                         bus.emit('invalid-param-value', {
                             parameter: parameterSpec.id,
@@ -266,9 +271,10 @@ define([
             }
 
             // set labels
-            const messageElem = ui.getElement('advanced-hidden-message');
+            const messageElem = container.querySelector('[data-element="advanced-hidden-message"]');
             messageElem.querySelector('span').textContent = `(${headerLabel})`;
             messageElem.querySelector('button').textContent = buttonLabel;
+            showHideAdvancedErrorMessage();
         }
 
         function renderAdvanced() {
@@ -294,7 +300,12 @@ define([
 
                 ui.setContent(
                     [areaElement, 'advanced-hidden-message'],
-                    span() + showAdvancedButton
+                    [
+                        span({
+                            class: `${cssBaseClass}__toggle--advanced-message`,
+                        }),
+                        showAdvancedButton,
+                    ].join()
                 );
                 showHideAdvanced();
             }
@@ -328,6 +339,31 @@ define([
                 content,
                 events,
             };
+        }
+
+        function showHideAdvancedErrorMessage() {
+            const messageParentSelector = '[data-element="advanced-hidden-message"]';
+            const advancedErrorClass = `${cssBaseClass}__toggle--advanced-errors`;
+            const messageSelector = `${messageParentSelector} .${advancedErrorClass}`;
+            const messageNode = container.querySelector(messageSelector);
+            const hasErrors = Object.values(advancedParamErrors).some((v) => v);
+            if (!settings.showAdvanced && hasErrors && !messageNode) {
+                container.querySelector(messageParentSelector).appendChild(
+                    ui.createNode(
+                        span({ class: advancedErrorClass }, [
+                            iTag({
+                                class: `${advancedErrorClass}--icon fa fa-exclamation-triangle`,
+                            }),
+                            strong(' Warning: '),
+                            span(
+                                'Error in advanced parameter. Show advanced parameters for details.'
+                            ),
+                        ])
+                    )
+                );
+            } else if ((!hasErrors || settings.showAdvanced) && messageNode) {
+                container.querySelector(messageSelector).remove();
+            }
         }
 
         // MESSAGE HANDLERS
@@ -484,7 +520,6 @@ define([
          */
         function start(arg) {
             doAttach(arg.node);
-
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             arg.parameters.layout.forEach((id) => {

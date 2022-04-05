@@ -13,6 +13,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 - SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
 
 - DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+- DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
 
 Dependency Changes
 - Python dependency updates

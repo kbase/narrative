@@ -27,9 +27,8 @@ EXPOSE 8888
 # installs ancient versions of node (6.x) and npm (3.x).
 RUN \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs
-
-RUN source activate base && \
+    apt-get install -y nodejs && \
+    source activate base && \
     conda update -n base -c defaults conda
 
 # Copy in the narrative repo
@@ -39,7 +38,6 @@ ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
 RUN \
-    # source activate base && \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \

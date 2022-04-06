@@ -171,8 +171,13 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                 ui.getElement(`${key}.icon`).classList.add(...icon);
                 // if there's a warning, and the fileType doesn't already have a warning icon,
                 // make one and insert it.
-                if (state.warnings.has(key) && !ui.getElement(`${key}.warning-icon`)) {
+                const warningIconElem = ui.getElement(`${key}.warning-icon`);
+                if (state.warnings.has(key) && !warningIconElem) {
                     addWarningIcon(key);
+                }
+                // if the state has changed so that the warning icon shouldn't be there, remove it.
+                else if (!state.warnings.has(key) && warningIconElem) {
+                    warningIconElem.remove();
                 }
             });
             // if the "selected" file type is real, select it

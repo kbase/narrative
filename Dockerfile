@@ -23,14 +23,14 @@ ARG SKIP_MINIFY
 EXPOSE 8888
 
 # install NodeJS 16.x (latest LTS until ~October 2022, https://nodejs.org/en/about/releases/)
+# N.b. this version of node is not available in the conda `base` environment as kbase/narrbase:6.2
+# installs ancient versions of node (6.x) and npm (3.x).
 RUN \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
-# install pyopenssl cryptography idna and requests is the same as installing
-# requests[security]
-RUN source activate base && \
-    conda update -n base -c defaults conda
+# RUN source activate base && \
+#     conda update -n base -c defaults conda
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -39,6 +39,7 @@ ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
 RUN \
+    source activate base && \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
@@ -60,7 +61,7 @@ RUN \
 # cause JSON parsing to fail - GRRRRR!!!
 ENV VERSION_CHECK /narrative_version
 
-# Set the default environment to be CI, can be overriden by passing new CONFIG_ENV setting at container start
+# Set the default environment to be CI, can be overridden by passing new CONFIG_ENV setting at container start
 ENV CONFIG_ENV ci
 ENV DOCKER_CONTAINER true
 
@@ -74,7 +75,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.narrative-version=$NARRATIVE_VERSION \
       maintainer="William Riehl wjriehl@lbl.gov"
 
-# The entrypoint can be set to "headless-narrative" to run headlessly
+# populate the config files on start up
 ENTRYPOINT ["/kb/deployment/bin/dockerize"]
 CMD [ "--template", \
       "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json", \

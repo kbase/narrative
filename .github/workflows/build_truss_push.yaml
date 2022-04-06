@@ -7,11 +7,11 @@ on:
 
 jobs:
   docker_build:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
     -
       name: Check out GitHub Repo
-      if: github.event.pull_request.draft == false
       with:
         ref: "${{ github.event.pull_request.head.sha }}"
       uses: actions/checkout@v2

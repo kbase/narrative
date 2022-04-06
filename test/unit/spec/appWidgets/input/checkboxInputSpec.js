@@ -85,6 +85,25 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
             expect(container.childElementCount).toBe(0);
         });
 
+        it('should start with a validation message', async () => {
+            let validMsg;
+            bus.on('validation', (msg) => {
+                validMsg = msg;
+            });
+            const widget = CheckboxInput.make(testConfig);
+            await widget.start({ node: container });
+            await TestUtil.wait(500);
+            expect(validMsg).toEqual({
+                isValid: true,
+                errorMessage: undefined,
+                messageId: undefined,
+                diagnosis: 'valid',
+                value: 0,
+                parsedValue: 0,
+            });
+            await widget.stop();
+        });
+
         it('should update model properly', async () => {
             let changeMsg;
             bus.on('changed', (value) => {

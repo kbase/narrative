@@ -116,8 +116,8 @@
             "prettier --ignore-unknown --write"
         ],
         "*.py": [
-            "npm run flake8_files",
-            "npm run black_files"
+            "npm run black_files",
+            "npm run flake8_files"
         ],
         "*.scss": [
             "npm run compile_css"

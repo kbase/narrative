@@ -124,6 +124,8 @@ then
         exit 1
     fi
 
+    # Install sklearn and clustergrammer
+    # ------------------------------
     pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"

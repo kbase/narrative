@@ -16,7 +16,7 @@
         "autoprefixer": "^10.2.6",
         "bootstrap-sass": "^3.4.1",
         "chrome-launcher": "^0.14.0",
-        "chromedriver": "^98.0.1",
+        "chromedriver": "^100.0.0",
         "commander": "9.0.0",
         "cssnano": "^5.0.6",
         "eslint": "^8.10.0",
@@ -72,7 +72,7 @@
         "stylelint-config-sass-guidelines": "^8.0.0",
         "stylelint-config-standard": "^22.0.0",
         "terser": "^5.7.2",
-        "wdio-chromedriver-service": "7.2.8",
+        "wdio-chromedriver-service": "^7.3.2",
         "webdriverio": "7.16.16"
     },
     "browserslist": [
@@ -80,13 +80,14 @@
     ],
     "scripts": {
         "black": "black -v --exclude '.+Impl.py' .",
+        "black_files": "black -v --exclude '.+Impl.py' ",
         "compile_css_no_postcss": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/",
         "compile_css": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat",
         "eslint": "eslint --fix '**/*.js'",
         "eslint-check": "eslint '**/*.js'",
         "eslint-pre-push": "scripts/eslint-pre-push.sh",
-        "flake8_all": "flake8 .",
-        "flake8": "flake8",
+        "flake8": "flake8 .",
+        "flake8_files": "flake8",
         "headless": "kbase-narrative --no-browser --NotebookApp.allow_origin='*' --ip=127.0.0.1 --port=32323",
         "husky_msg": "echo Running git hooks -- see the 'lint-staged' section of package.json for details",
         "install-npm": "node scripts/install-npm.js",
@@ -115,8 +116,11 @@
             "prettier --ignore-unknown --write"
         ],
         "*.py": [
-            "npm run flake8",
-            "npm run black"
+            "npm run black_files",
+            "npm run flake8_files"
+        ],
+        "*.scss": [
+            "npm run compile_css"
         ]
     },
     "dependencies": {

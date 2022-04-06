@@ -1,6 +1,8 @@
 module.exports = function (config) {
     'use strict';
 
+    const narrativeServer = 'http://localhost:32323';
+
     const alwaysExclude = [
         'kbase-extension/static/buildTools/*.js',
         'kbase-extension/static/ext_components/**/test/**/*.js',
@@ -138,11 +140,11 @@ module.exports = function (config) {
             '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
             '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
-            '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
-            '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
-            '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
-            '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
-            '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
+            '/narrative/static/base': `${narrativeServer}/narrative/static/base`,
+            '/narrative/static/notebook': `${narrativeServer}/narrative/static/notebook`,
+            '/narrative/static/components': `${narrativeServer}/narrative/static/components`,
+            '/narrative/static/services': `${narrativeServer}/narrative/static/services`,
+            '/narrative/static/bidi': `${narrativeServer}/narrative/static/bidi`,
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
             '/src/biokbase/narrative/tests/data/': '/base/src/biokbase/narrative/tests/data/',

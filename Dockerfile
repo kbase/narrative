@@ -29,8 +29,8 @@ RUN \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
-# RUN source activate base && \
-#     conda update -n base -c defaults conda
+RUN source activate base && \
+    conda update -n base -c defaults conda
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -39,7 +39,7 @@ ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
 RUN \
-    source activate base && \
+    # source activate base && \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \

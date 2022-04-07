@@ -11,24 +11,22 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 - PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
 - DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
 - SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
-
 - DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
 - DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
+- DATAUP-737 - Overhaul of GitHub Actions to move to using official Docker actions for building, tagging, and uploading images. Move python module installation out of Dockerfile and into the requirements.txt.
 
 Dependency Changes
 - Python dependency updates
-  - bokeh: 2.3.3 -> 2.4.2
-  - coverage: 5.5 -> 6.3.2
+  - coverage: 5.5 -> 6.2
   - decorator: 5.0.9 -> 5.1.1
   - jinja2: 3.0.1 -> 3.0.3
   - jsonschema: 3.2.0 -> 4.4.0
   - markupsafe: 2.0.1 -> 2.1.0
-  - pillow: 8.3.2 -> 9.0.1
+  - pillow: 8.3.2 -> 8.4.0
   - plotly: 5.3.1 -> 5.6.0
   - pygments: 2.10.0 -> 2.11.2
   - pymongo: 3.12.0 -> 4.0.1
   - pytest-cov: 2.12.1 -> 3.0.0
-  - pytest: 6.2.5 -> 7.0.1
   - pyyaml: 5.4.1 -> 6.0
   - requests: 2.26.0 -> 2.27.1
   - rsa: 4.7.2 -> 4.8

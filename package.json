@@ -83,6 +83,7 @@
         "black_files": "black -v --exclude '.+Impl.py' ",
         "compile_css_no_postcss": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/",
         "compile_css": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat",
+        "compile_css_files": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat && git add kbase-extension/static/kbase/css/all_concat.* && echo integrating scss changes from ",
         "eslint": "eslint --fix '**/*.js'",
         "eslint-check": "eslint '**/*.js'",
         "eslint-pre-push": "scripts/eslint-pre-push.sh",
@@ -119,8 +120,8 @@
             "npm run black_files",
             "npm run flake8_files"
         ],
-        "*.scss": [
-            "npm run compile_css"
+        "*.{scss,css,css.map}": [
+            "npm run compile_css_files"
         ]
     },
     "dependencies": {

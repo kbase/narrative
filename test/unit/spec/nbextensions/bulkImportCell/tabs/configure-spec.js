@@ -400,6 +400,11 @@ define([
                 type: 'error',
                 message: 'an error',
             };
+            const warningWithLink = {
+                type: 'warning',
+                message: 'a warning',
+                link: 'https://docs.kbase.us',
+            };
             [
                 {
                     msgs: [defWarning],
@@ -429,6 +434,10 @@ define([
                         },
                     ],
                     label: 'a message with a missing type, defaulting to warning',
+                },
+                {
+                    msgs: [warningWithLink],
+                    label: 'a warning message with a URL',
                 },
             ].forEach((testCase) => {
                 it(`should show ${testCase.label}`, async () => {
@@ -473,6 +482,17 @@ define([
                         const titleElem = msgNode.querySelector(
                             `.kb-bulk-import-configure__message--${msgType}-title`
                         );
+                        // if there's a link on the message, expect it to be rendered
+                        const msgLinkNode = msgNode.querySelector('a');
+                        if (testMsg.link) {
+                            expect(msgLinkNode).not.toBeNull();
+                            expect(msgLinkNode.getAttribute('href')).toEqual(testMsg.link);
+                            expect(msgLinkNode.querySelector('i').classList).toContain(
+                                'fa-external-link'
+                            );
+                        } else {
+                            expect(msgLinkNode).toBeNull();
+                        }
                         // the title should have an icon
                         expect(titleElem.querySelector('i.fa.fa-exclamation-circle')).toBeDefined();
                         expect(titleElem.textContent.toLowerCase()).toContain(msgType);

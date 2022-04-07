@@ -48,7 +48,7 @@
         "karma-mocha-reporter": "^2.2.5",
         "karma-requirejs": "^1.1.0",
         "karma-safari-launcher": "^1.0.0",
-        "lint-staged": "^11.1.2",
+        "lint-staged": "^12.3.6",
         "load-grunt-tasks": "^5.1.0",
         "msw": "0.35.0",
         "postcss": "^8.3.2",

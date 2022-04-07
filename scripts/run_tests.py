@@ -79,7 +79,7 @@ def run_narrative():
         print(line)
         if "The Jupyter Notebook is running at:" in line:
             break
-        if "is already in use" in line:
+        if "is already in use" in line or "port is already allocated" in line:
             os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
             raise ValueError(
                 "The port {} was already taken, kill running notebook servers".format(

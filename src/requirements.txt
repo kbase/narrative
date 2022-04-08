@@ -28,7 +28,7 @@ pyyaml==6.0
 requests==2.27.1
 rsa==4.8
 semantic_version==2.9.0
-setuptools==60.9.3
+setuptools==62.0.0
 simplegeneric==0.8.1
 sympy==1.9
 terminado==0.13.1

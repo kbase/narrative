@@ -726,7 +726,11 @@ define([
                             }
                         },
                     });
-                    jobManager.restoreFromSaved();
+                    // jobManager.restoreFromSaved();
+                    const fsmState = jobManager.restoreFromSaved();
+                    if (fsmState) {
+                        updateState(fsmState);
+                    }
 
                     const expectedFiles = new Set();
                     Object.values(model.getItem('inputs')).forEach((inputs) => {

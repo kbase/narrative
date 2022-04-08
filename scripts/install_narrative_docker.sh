@@ -20,14 +20,22 @@ function console () {
     echo "$now [install_narrative] $1"
 }
 
-# Install Narrative code
-# ----------------------
 source activate base
-console "installing sklearn & clustergrammer_widget'"
+
+# Install Narrative requirements
+# ------------------------------
+console "Installing biokbase requirements from src/requirements.txt"
 pip install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
-pip install --no-dependencies semantic_version sklearn clustergrammer_widget
+
+# Install sklearn and clustergrammer
+# ------------------------------
 # We install clustergrammer_widget and sklearn specially here so that it does not
 # clobber dependencies in the base conda image
+console "installing sklearn & clustergrammer_widget'"
+pip install --no-dependencies semantic_version sklearn clustergrammer_widget
+
+# Install Narrative code
+# ----------------------
 console "Installing biokbase modules"
 cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"

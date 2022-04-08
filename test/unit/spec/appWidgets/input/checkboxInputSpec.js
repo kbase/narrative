@@ -5,7 +5,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
 ) => {
     'use strict';
 
-    fdescribe('Test checkbox data input widget', () => {
+    describe('Test checkbox data input widget', () => {
         let testConfig = {},
             runtime,
             bus,

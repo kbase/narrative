@@ -5,7 +5,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
 ) => {
     'use strict';
 
-    describe('Test checkbox data input widget', () => {
+    fdescribe('Test checkbox data input widget', () => {
         let testConfig = {},
             runtime,
             bus,
@@ -147,7 +147,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 testConfig.initialValue = 'omg_not_a_value';
             });
 
-            it('should show an error if the initial config value is not 1 or 0, and validate with the default value', async () => {
+            it('should show an error if the initial config value is not 1 or 0, without changing the value', async () => {
                 const widget = CheckboxInput.make(testConfig);
                 let validMsg;
                 bus.on('changed', (msg) => {
@@ -157,7 +157,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 await TestUtil.wait(500);
                 const input = container.querySelector('input[type="checkbox"]');
                 expect(input.checked).toBeFalse();
-                expect(validMsg).toEqual({ newValue: 0 });
+                expect(validMsg).toEqual({ newValue: testConfig.initialValue });
                 // it should have the right class
                 const errorContainer = container.querySelector(
                     '.kb-appInput__checkbox_error_container'
@@ -173,14 +173,20 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 );
             });
 
-            it('the error should be dismissable with a button', async () => {
+            it('the error should be dismissable with a button, and propagate the default value', async () => {
                 const widget = CheckboxInput.make(testConfig);
+                let validMsg;
+                bus.on('changed', (msg) => {
+                    validMsg = msg;
+                });
                 await widget.start({ node: container });
                 const elem = container.querySelector('.kb-appInput__checkbox_container');
                 await TestUtil.waitForElementChange(elem, () => {
                     elem.querySelector('button.kb-appInput__checkbox_error__close_button').click();
                 });
                 expect(elem.querySelector('.kb-appInput__checkbox_error_container')).toBeNull();
+                await TestUtil.wait(500);
+                expect(validMsg).toEqual({ newValue: testConfig.parameterSpec.data.defaultValue });
             });
 
             it('the error should be dismissable by changing the checkbox', async () => {

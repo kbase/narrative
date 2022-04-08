@@ -87,16 +87,19 @@ define([
 
         // RENDERING
 
-        function clearInitialValueError() {
+        function clearInitialValueError(useDefaultValue) {
             const inputContainer = container.querySelector(`.${cssBaseClass}_container`);
             inputContainer.classList.remove(cssErrorClass);
             inputContainer.querySelector(`.${cssBaseClass}_error`).remove();
             model.hasInitialValueError = false;
+            if (useDefaultValue) {
+                setModelValue(spec.data.defaultValue);
+                return autoValidate();
+            }
         }
 
         function renderInitialValueError(events) {
-            const defaultVal =
-                config.parameterSpec.data.defaultValue === 1 ? 'checked' : 'unchecked';
+            const defaultVal = spec.data.defaultValue === 1 ? 'checked' : 'unchecked';
             return div(
                 {
                     class: `${cssBaseClass}_error`,
@@ -123,7 +126,7 @@ define([
                                 events: [
                                     {
                                         type: 'click',
-                                        handler: clearInitialValueError,
+                                        handler: () => clearInitialValueError(true),
                                     },
                                 ],
                             }),
@@ -140,7 +143,9 @@ define([
             // CONTROL
             const cssBaseClass = 'kb-appInput__checkbox';
             let checked = false;
-            if (model.value === 1) {
+            if (model.hasInitialValueError) {
+                checked = spec.data.defaultValue === 1;
+            } else if (model.value === 1) {
                 checked = true;
             }
 
@@ -204,9 +209,9 @@ define([
 
                 // initialize based on config.initialValue. If it's not 0 or 1, then
                 // note that we have an initial value error, and set to the default.
-                let initValue = config.initialValue;
+                const initValue = config.initialValue;
                 if (initValue !== 0 && initValue !== 1) {
-                    initValue = config.parameterSpec.data.defaultValue;
+                    // initValue = spec.data.defaultValue;
                     model.hasInitialValueError = true;
                 }
 

@@ -7,7 +7,6 @@ module.exports = function (config) {
         'kbase-extension/static/buildTools/*.js',
         'kbase-extension/static/ext_components/**/test/**/*.js',
         'kbase-extension/static/ext_modules/**/test/**/*.js',
-        'kbase-extension/static/kbase/js/patched-components/**/*',
     ];
     // the following tests should be run separately due to test runner issues
     const isolatedTests = [

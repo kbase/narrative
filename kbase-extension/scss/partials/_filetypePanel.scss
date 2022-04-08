@@ -68,7 +68,12 @@ $filetype-hover-color: use-color('base-lighter');
 
       // .kb-filetype-panel__filetype_icon--incomplete
       &--incomplete {
-        color: use_color('red');
+        color: use_color('error');
+      }
+
+      // .kb-filetype-panel__filetype_icon--warning
+      &--warning {
+        color: use_color('warning-dark');
       }
     }
 

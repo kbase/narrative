@@ -413,7 +413,8 @@ define([
                     typesToFiles[fileType].messages.push({
                         type: 'warning',
                         message:
-                            'Multiple parameters listed in the bulk import specification file. Import can proceed, but only the first line of parameters will be used.',
+                            'Rows in the import file use different parameter sets, which is currently not supported. Please note, parameters in the first input row will be applied to all rows and app runs.',
+                        link: 'https://docs.kbase.us/data/upload-download-guide/uploads/bulk-limitations',
                     });
                 }
 

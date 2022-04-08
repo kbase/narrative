@@ -21,7 +21,7 @@ plotly==5.6.0
 pyasn1==0.4.8
 pycrypto>=2.6
 pygments==2.11.2
-pymongo==4.0.1
+pymongo==4.1.0
 pyopenssl==19.0.0
 pytest-cov==3.0.0
 pyyaml==6.0

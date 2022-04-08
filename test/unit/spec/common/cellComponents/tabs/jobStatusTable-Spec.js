@@ -110,7 +110,7 @@ define([
             },
         },
         assembly: {
-            analysisType: 'Assembly',
+            analysisType: 'FASTA Assembly',
             outputParams: {
                 assembly_name: { value: 'assembly_file.fa', label: 'Assembly object name' },
             },
@@ -201,7 +201,7 @@ define([
                     },
                 ],
             },
-            type: 'Assembly',
+            type: 'FASTA Assembly',
             object: /Assembly object name: assembly_file.fa/,
             displayData: paramDisplayData.assembly,
         },

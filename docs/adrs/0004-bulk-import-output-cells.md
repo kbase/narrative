@@ -29,7 +29,7 @@ Bulk Import cell importer apps that employ an output cell:
 | Importer | Output cell |
 |---|---|
 | Import GenBank as genome from staging | Genome viewer |
-| Import GFF/FASTA as genome from staging | Genome viewer |
+| Import GFF+FASTA as genome from staging | Genome viewer |
 
 Other importer apps with output cells:
 

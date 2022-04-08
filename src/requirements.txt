@@ -31,7 +31,7 @@ semantic_version==2.9.0
 setuptools==60.9.3
 simplegeneric==0.8.1
 sympy==1.9
-terminado==0.13.1
+terminado==0.13.3
 # ensure pip installs all deps
 jupyter-console==6.0.0
 pytest==6.2.5

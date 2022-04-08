@@ -1,12 +1,12 @@
 .git
 .github
+.husky
+cover
 docs
 js-coverage
-python-coverage
 kbase-extension/static/ext_components
-kbase-extension/static/ext_packages
 kbase-extension/static/ext_modules
-kbase-extension/static/kbase/js/patched-components
+kbase-extension/static/ext_packages
 node_modules
-cover
+python-coverage
 venv

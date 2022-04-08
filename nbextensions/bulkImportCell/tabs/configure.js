@@ -168,17 +168,15 @@ define([
          * an xSV file, but only one is used.
          */
         function showConfigMessage() {
-            const messages = typesToFiles[selectedFileType].messages;
-            if (messages) {
-                const messageNode = ui.getElement('input-container.config-message');
-                messages.forEach((msg) => {
-                    if (msg.message) {
-                        // ignore if the actual message is missing.
-                        const elem = renderConfigMessage(msg);
-                        messageNode.appendChild(ui.createNode(elem));
-                    }
-                });
-            }
+            const messages = typesToFiles[selectedFileType].messages || [];
+            const messageNode = ui.getElement('input-container.config-message');
+            messages.forEach((msg) => {
+                if (msg.message) {
+                    // ignore if the actual message is missing.
+                    const elem = renderConfigMessage(msg);
+                    messageNode.appendChild(ui.createNode(elem));
+                }
+            });
         }
 
         /**
@@ -191,7 +189,8 @@ define([
             const div = html.tag('div'),
                 span = html.tag('span'),
                 iTag = html.tag('i'),
-                strong = html.tag('strong');
+                strong = html.tag('strong'),
+                aTag = html.tag('a');
             const icon = 'fa fa-exclamation-circle';
             let msgType = msg.type;
             if (msgType !== 'warning' && msgType !== 'error') {
@@ -209,6 +208,13 @@ define([
                         [iTag({ class: icon }), strong(` ${msgType}:`)]
                     ),
                     span(msg.message),
+                    msg.link
+                        ? ' ' +
+                          aTag(
+                              { href: msg.link, target: '_blank' },
+                              iTag({ class: 'fa fa-external-link' })
+                          )
+                        : '',
                 ]
             );
         }
@@ -283,6 +289,8 @@ define([
          *   - selected {String} the selected file type
          *   - completed {Object} keys = file type ids, values = booleans (true if all parameters
          *      are valid and ready)
+         *   - warnings {Set} a Set of file type ids that have parameters with warnings (e.g. built
+         *      from an xSV file with multiple different parameter sets)
          */
         function getFileTypeState(readyState) {
             const fileTypeCompleted = {};
@@ -290,9 +298,19 @@ define([
             for (const [fileType, status] of Object.entries(readyState)) {
                 fileTypeCompleted[fileType] = status === 'complete';
             }
+            const warningSet = new Set();
+            Object.keys(typesToFiles).forEach((fileType) => {
+                const messages = typesToFiles[fileType].messages || [];
+                messages.forEach((msg) => {
+                    if (msg.type === 'warning') {
+                        warningSet.add(fileType);
+                    }
+                });
+            });
             return {
                 selected: selectedFileType,
                 completed: fileTypeCompleted,
+                warnings: warningSet,
             };
         }
 

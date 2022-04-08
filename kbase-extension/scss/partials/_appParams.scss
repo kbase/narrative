@@ -3,10 +3,18 @@
   &__message--advanced-hidden {
     @include advanced-hidden;
   }
-  // .kb-app-params__toggle--advanced-hidden
-  // &__toggle--advanced-hidden {
-  //   .kb-ui__button_label {}
-  // }
+
+  // .kb-app-params__toggle--advanced-errors
+  &__toggle--advanced-errors {
+    @include base-text;
+    background-color: use-color('error-lightest');
+    color: use-color('ink');
+
+    // .kb-app-params__toggle--advanced-errors--icon
+    &--icon {
+      color: use-color('error');
+    }
+  }
 
   &__fields--parameters {
     // .kb-app-params__fields--parameters-hidden

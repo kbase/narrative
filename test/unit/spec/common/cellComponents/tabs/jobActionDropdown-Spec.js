@@ -108,16 +108,6 @@ define([
                     model: batchJobModel,
                     bus: {},
                 });
-                // {
-                //     model: batchJobModel,
-                //     getCurrentJobsByStatus: () => {
-                //         // nothing
-                //     },
-                //     doJobAction: () => {
-                //         // nothing
-                //     },
-                //     get
-                // };
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });
@@ -173,16 +163,6 @@ define([
                     model: batchJobModel,
                     bus: {},
                 });
-
-                // this.jobManager = {
-                //     model: batchJobModel,
-                //     getCurrentJobsByStatus: () => {
-                //         // nothing
-                //     },
-                //     doJobAction: () => {
-                //         // nothing
-                //     },
-                // };
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });
@@ -331,9 +311,6 @@ define([
                     model: Props.make({ data: {} }),
                     bus: {},
                 });
-                // {
-                //     model: Props.make({ data: {} }),
-                // };
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });

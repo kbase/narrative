@@ -1,8 +1,9 @@
-define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (
-    CheckboxInput,
-    Runtime,
-    TestUtil
-) => {
+define([
+    'widgets/appWidgets2/input/checkboxInput',
+    'common/runtime',
+    'testUtil',
+    'widgets/appWidgets2/validators/constants',
+], (CheckboxInput, Runtime, TestUtil, Constants) => {
     'use strict';
 
     describe('Test checkbox data input widget', () => {
@@ -149,15 +150,23 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
 
             it('should show an error if the initial config value is not 1 or 0, without changing the value', async () => {
                 const widget = CheckboxInput.make(testConfig);
-                let validMsg;
+                let changeMsg, validMsg;
                 bus.on('changed', (msg) => {
+                    changeMsg = msg;
+                });
+                bus.on('validation', (msg) => {
                     validMsg = msg;
                 });
                 await widget.start({ node: container });
                 await TestUtil.wait(500);
                 const input = container.querySelector('input[type="checkbox"]');
                 expect(input.checked).toBeFalse();
-                expect(validMsg).toEqual({ newValue: testConfig.initialValue });
+                expect(changeMsg).toEqual({ newValue: testConfig.initialValue });
+                expect(validMsg).toEqual({
+                    isValid: false,
+                    messageId: Constants.MESSAGE_IDS.INVALID,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                });
                 // it should have the right class
                 const errorContainer = container.querySelector(
                     '.kb-appInput__checkbox_error_container'
@@ -169,7 +178,7 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 ).not.toBeNull();
                 // it should have a message
                 expect(errorContainer.textContent).toContain(
-                    `Invalid value of "${testConfig.initialValue}" for parameter ${testConfig.parameterSpec.ui.label}. Default value unchecked used.`
+                    `Invalid value of "${testConfig.initialValue}" for parameter ${testConfig.parameterSpec.ui.label}. Default value of unchecked used.`
                 );
             });
 

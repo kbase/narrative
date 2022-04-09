@@ -179,7 +179,9 @@ define([
                 case 'required-missing':
                 case 'invalid':
                     state.isValid = false;
-                    showMessage(MESSAGE.error, message.errorMessage);
+                    if (message.errorMessage) {
+                        showMessage(MESSAGE.error, message.errorMessage);
+                    }
                     break;
                 case 'suspect':
                     state.isValid = true;

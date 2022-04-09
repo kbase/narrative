@@ -5,9 +5,10 @@ define([
     'common/ui',
     'common/runtime',
     '../validation',
+    '../validators/constants',
 
     'bootstrap',
-], (Promise, html, Events, UI, Runtime, Validation) => {
+], (Promise, html, Events, UI, Runtime, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -70,6 +71,13 @@ define([
 
         function validate() {
             return Promise.try(() => {
+                if (model.hasInitialValueError) {
+                    return {
+                        isValid: false,
+                        messageId: Constants.MESSAGE_IDS.INVALID,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                    };
+                }
                 const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
@@ -116,7 +124,7 @@ define([
                             strong(' Error: '),
                         ]
                     ),
-                    `Invalid value of "${config.initialValue}" for parameter ${spec.ui.label}. Default value ${defaultVal} used.`,
+                    `Invalid value of "${config.initialValue}" for parameter ${spec.ui.label}. Default value of ${defaultVal} used.`,
                     button(
                         {
                             class: `${cssBaseClass}_error__close_button btn btn-default btn-xs`,
@@ -209,9 +217,8 @@ define([
 
                 // initialize based on config.initialValue. If it's not 0 or 1, then
                 // note that we have an initial value error, and set to the default.
-                const initValue = config.initialValue;
+                const initValue = config.initialValue || spec.data.defaultValue;
                 if (initValue !== 0 && initValue !== 1) {
-                    // initValue = spec.data.defaultValue;
                     model.hasInitialValueError = true;
                 }
 

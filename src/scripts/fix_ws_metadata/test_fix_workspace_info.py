@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 import json
 from . import fix_workspace_info
 from biokbase.workspace.baseclient import ServerError
@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 FAKE_ADMIN_ID = "fakeadmin"
 FAKE_WS_FILE = "fake_workspace_db.json"
-FAKE_WS_DB = dict()
+FAKE_WS_DB = {}
 
 
 def reset_fake_ws_db():

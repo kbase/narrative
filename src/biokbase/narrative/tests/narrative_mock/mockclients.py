@@ -565,7 +565,7 @@ class MockStagingHelper:
         ]
 
 
-class assert_obj_method_called(object):
+class assert_obj_method_called:
     """
     Invocations:
 

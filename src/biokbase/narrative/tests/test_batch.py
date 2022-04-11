@@ -3,8 +3,7 @@ Tests for the app_util module
 """
 import unittest
 from .narrative_mock.mockclients import get_mock_client, MockStagingHelper
-import mock
-from . import util
+from unittest import mock
 from biokbase.narrative.jobs.batch import (
     list_objects,
     list_files,
@@ -284,7 +283,7 @@ class BatchTestCase(unittest.TestCase):
         self.assertEqual(
             len(input_batch), 22
         )  # product of [0,10,20,30,40,50,60,70,80,90,100] and [5,7]
-        len_ranges = dict()
+        len_ranges = {}
         for i in range(0, 101, 10):
             len_ranges[i] = 0
         palindrome_ranges = {5: 0, 7: 0}

@@ -2,7 +2,7 @@
 Tests for the Python side of the UPA api.
 """
 import unittest
-import mock
+from unittest import mock
 from biokbase.narrative.upa import (
     external_tag,
     serialize,

@@ -1,8 +1,9 @@
-define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (
-    CheckboxInput,
-    Runtime,
-    TestUtil
-) => {
+define([
+    'widgets/appWidgets2/input/checkboxInput',
+    'common/runtime',
+    'testUtil',
+    'widgets/appWidgets2/validators/constants',
+], (CheckboxInput, Runtime, TestUtil, Constants) => {
     'use strict';
 
     describe('Test checkbox data input widget', () => {
@@ -147,17 +148,25 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 testConfig.initialValue = 'omg_not_a_value';
             });
 
-            it('should show an error if the initial config value is not 1 or 0, and validate with the default value', async () => {
+            it('should show an error if the initial config value is not 1 or 0, without changing the value', async () => {
                 const widget = CheckboxInput.make(testConfig);
-                let validMsg;
+                let changeMsg, validMsg;
                 bus.on('changed', (msg) => {
+                    changeMsg = msg;
+                });
+                bus.on('validation', (msg) => {
                     validMsg = msg;
                 });
                 await widget.start({ node: container });
                 await TestUtil.wait(500);
                 const input = container.querySelector('input[type="checkbox"]');
                 expect(input.checked).toBeFalse();
-                expect(validMsg).toEqual({ newValue: 0 });
+                expect(changeMsg).toEqual({ newValue: testConfig.initialValue });
+                expect(validMsg).toEqual({
+                    isValid: false,
+                    messageId: Constants.MESSAGE_IDS.INVALID,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                });
                 // it should have the right class
                 const errorContainer = container.querySelector(
                     '.kb-appInput__checkbox_error_container'
@@ -169,18 +178,39 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil']
                 ).not.toBeNull();
                 // it should have a message
                 expect(errorContainer.textContent).toContain(
-                    `Invalid value of "${testConfig.initialValue}" for parameter ${testConfig.parameterSpec.ui.label}. Default value unchecked used.`
+                    `Invalid value of "${testConfig.initialValue}" for parameter ${testConfig.parameterSpec.ui.label}. Default value of unchecked used.`
                 );
             });
 
-            it('the error should be dismissable with a button', async () => {
+            it('the error should be dismissable with a button, and propagate the default value', async () => {
                 const widget = CheckboxInput.make(testConfig);
                 await widget.start({ node: container });
                 const elem = container.querySelector('.kb-appInput__checkbox_container');
                 await TestUtil.waitForElementChange(elem, () => {
                     elem.querySelector('button.kb-appInput__checkbox_error__close_button').click();
                 });
-                expect(elem.querySelector('.kb-appInput__checkbox_error_container')).toBeNull();
+                return new Promise((resolve) => {
+                    // expect 2 changed messages - the initial one with the error, then the second one with
+                    // the default value.
+                    const changeMsgs = [];
+                    bus.on('changed', (changeMsg) => {
+                        changeMsgs.push(changeMsg);
+                        if (changeMsgs.length === 2) {
+                            expect(
+                                elem.querySelector('.kb-appInput__checkbox_error_container')
+                            ).toBeNull();
+                            expect(changeMsgs).toEqual([
+                                {
+                                    newValue: testConfig.initialValue,
+                                },
+                                {
+                                    newValue: testConfig.parameterSpec.data.defaultValue,
+                                },
+                            ]);
+                            resolve();
+                        }
+                    });
+                });
             });
 
             it('the error should be dismissable by changing the checkbox', async () => {

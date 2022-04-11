@@ -10,6 +10,7 @@ module.exports = function (config) {
     ];
     // the following tests should be run separately due to test runner issues
     const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
         'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
         'test/unit/spec/util/appCellUtil-spec.js',
     ];
@@ -64,6 +65,7 @@ module.exports = function (config) {
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false, nocache: true },
+            { pattern: 'src/biokbase/narrative/tests/data/*.json', included: false, nocache: true },
             // JS files
             { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
             { pattern: 'kbase-extension/static/**/*.js', included: false },
@@ -145,6 +147,7 @@ module.exports = function (config) {
             '/narrative/static/bidi': `${narrativeServer}/narrative/static/bidi`,
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
+            '/src/biokbase/narrative/tests/data/': '/base/src/biokbase/narrative/tests/data/',
             // This ensures that the msw api (msw.js) can find mockServerWorker.js service
             // worker library at the canonical location.
             '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',

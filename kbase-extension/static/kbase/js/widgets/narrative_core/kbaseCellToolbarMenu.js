@@ -12,25 +12,11 @@ define([
 
     const t = html.tag,
         div = t('div'),
-        a = t('a'),
         button = t('button'),
         span = t('span'),
         ul = t('ul'),
         li = t('li'),
         cssBaseClass = 'kb-cell-toolbar';
-
-    function getMeta(cell, group, name) {
-        if (!cell.metadata.kbase) {
-            return;
-        }
-        if (name === undefined) {
-            return cell.metadata.kbase[group];
-        }
-        if (!cell.metadata.kbase[group]) {
-            return;
-        }
-        return cell.metadata.kbase[group][name];
-    }
 
     function factory() {
         const readOnly = Jupyter.narrative.readonly;
@@ -49,14 +35,14 @@ define([
         }
 
         function getCellTitle(_cell) {
-            const title = getMeta(_cell, 'attributes', 'title'),
+            const title = utils.getMeta(_cell, 'attributes', 'title'),
                 showTitle = utils.getCellMeta(_cell, 'kbase.cellState.showTitle', true);
 
             return showTitle ? title : '';
         }
 
         function getCellSubtitle(_cell) {
-            const subTitle = getMeta(_cell, 'attributes', 'subtitle'),
+            const subTitle = utils.getMeta(_cell, 'attributes', 'subtitle'),
                 showTitle = utils.getCellMeta(_cell, 'kbase.cellState.showTitle', true);
 
             return showTitle ? subTitle : '';
@@ -248,12 +234,12 @@ define([
                             ''
                         );
                     collapsedCellJobStatus = Jobs.createJobStatusFromFsm(fsmMode, fsmStage);
-                } else if (utils.getCellMeta(_cell, 'kbase.bulkImportCell.state.state')) {
-                    const currentState = utils.getCellMeta(
+                } else if (utils.getCellMeta(_cell, 'kbase.bulkImportCell.exec.jobs')) {
+                    const currentJobs = utils.getCellMeta(
                         _cell,
-                        'kbase.bulkImportCell.state.state'
+                        'kbase.bulkImportCell.exec.jobs.byId'
                     );
-                    collapsedCellJobStatus = Jobs.createJobStatusFromBulkCellFsm(currentState);
+                    collapsedCellJobStatus = Jobs.createCombinedJobStateSummary(currentJobs);
                 }
             }
 
@@ -267,7 +253,12 @@ define([
                         },
                         [
                             // indicates the job status when the cell is collapsed
-                            collapsedCellJobStatus,
+                            span(
+                                {
+                                    dataElement: 'job-status',
+                                },
+                                collapsedCellJobStatus
+                            ),
                             // options dropdown
                             renderOptions(_cell, events),
                             readOnly
@@ -276,7 +267,7 @@ define([
                                       Object.assign({}, buttonBase, {
                                           dataOriginalTitle: 'Move Cell Up',
                                           dataElement: 'cell-move-up',
-                                          'aria-label': 'Move cell up',
+                                          ariaLabel: 'Move cell up',
                                           id: events.addEvent({
                                               type: 'click',
                                               handler: doMoveCellUp,
@@ -290,7 +281,7 @@ define([
                                       Object.assign({}, buttonBase, {
                                           dataOriginalTitle: 'Move Cell Down',
                                           dataElement: 'cell-move-down',
-                                          'aria-label': 'Move cell down',
+                                          ariaLabel: 'Move cell down',
                                           id: events.addEvent({
                                               type: 'click',
                                               handler: doMoveCellDown,
@@ -309,7 +300,7 @@ define([
                                 return button(
                                     Object.assign({}, buttonBase, {
                                         dataElement: 'cell-toggle-expansion',
-                                        'aria-label': 'Expand or Collapse Cell',
+                                        ariaLabel: 'Expand or Collapse Cell',
                                         dataOriginalTitle:
                                             toggleMinMax === 'maximized'
                                                 ? 'Collapse Cell'
@@ -368,18 +359,17 @@ define([
                     ]
                 );
             return {
-                events: events,
-                content: content,
+                events,
+                content,
             };
         }
 
         function getOutdatedWarning(_cell) {
             if (utils.getCellMeta(_cell, 'kbase.appCell.outdated', false)) {
-                return a(
+                return span(
                     {
                         tabindex: '0',
-                        type: 'button',
-                        class: `${buttonClasses} ${cssBaseClass}__button ${cssBaseClass}__icon--outdated`,
+                        class: `${cssBaseClass}__icon--outdated`,
                         dataContainer: 'body',
                         container: 'body',
                         dataToggle: 'popover',
@@ -393,9 +383,8 @@ define([
                             'but the new one may include new features. Add a new "' +
                             utils.getCellMeta(_cell, 'kbase.appCell.newAppName') +
                             '" app cell for the update.',
-                        style: { color: '#f79b22' },
                     },
-                    [span({ class: 'fa fa-exclamation-triangle fa-lg' })]
+                    [span({ class: 'fa fa-exclamation-triangle' })]
                 );
             }
             return '';
@@ -411,7 +400,6 @@ define([
                 $(container).find('[data-toggle="popover"]').popover();
                 rendered.events.attachEvents();
 
-                // try this...
                 container.addEventListener('dblclick', (e) => {
                     doToggleMinMaxCell(e);
                 });

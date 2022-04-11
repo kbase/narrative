@@ -33,7 +33,15 @@ define([], () => {
         const state = {
             tabs: {},
         };
-        ['configure', 'viewConfigure', 'info', 'jobStatus', 'results', 'error'].forEach((tabId) => {
+        [
+            'configure',
+            'viewConfigure',
+            'info',
+            'launching',
+            'jobStatus',
+            'results',
+            'error',
+        ].forEach((tabId) => {
             state.tabs[tabId] = defaultView();
         });
         enabled.forEach((enabledTab) => {
@@ -72,10 +80,10 @@ define([], () => {
         launching: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                    ['viewConfigure', 'info', 'launching'],
+                    ['viewConfigure', 'info', 'launching', 'results']
                 ),
-                defaultTab: 'viewConfigure',
+                defaultTab: 'launching',
                 action: {
                     name: 'cancel',
                     disabled: false,

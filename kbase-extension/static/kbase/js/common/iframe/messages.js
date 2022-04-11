@@ -1,24 +1,22 @@
 define(['bluebird', 'uuid'], (Promise, Uuid) => {
-    function factory(config) {
-        const root = config.root;
-        const name = config.name;
+    'use strict';
 
+    function factory(config) {
+        const { root, name } = config;
         const serviceId = new Uuid(4).format();
 
         let lastId = 0; //: number;
-        let sentCount; //: number;
-        let receivedCount; //: number;
-        const partners = {}; // Map<String, any>;
-        const listeners = {}; //Map<String, Array<any>>;
-        const awaitingResponse = {}; //: Map<String, any>;
+        const partners = {}; // Object<String, any>;
+        const listeners = {}; //Object<String, Array<any>>;
+        const awaitingResponse = {}; //: Object<String, any>;
 
         function genId() {
             lastId += 1;
             return 'msg_' + String(lastId);
         }
 
-        function addPartner(config) {
-            partners[config.name] = config;
+        function addPartner(_config) {
+            partners[_config.name] = _config;
         }
 
         function listen(listener) {
@@ -29,12 +27,8 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
         }
 
         function receive(event) {
-            let origin = event.origin || event.originalEvent.origin,
-                message = event.data,
-                listener,
-                response;
-
-            receivedCount += 1;
+            const message = event.data;
+            let response;
 
             if (!message.address && !message.address.to) {
                 console.warn('Message without address.to - ignored (iframe)', message);
@@ -42,7 +36,6 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
             }
 
             if (message.address.to !== serviceId) {
-                // console.log('not for us (iframe) ... ignoring', message, serviceId);
                 return;
             }
 
@@ -58,9 +51,9 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
             }
 
             if (listeners[message.name]) {
-                listeners[message.name].forEach((listener) => {
+                listeners[message.name].forEach((_listener) => {
                     try {
-                        listener.handler(message);
+                        _listener.handler(message);
                         return;
                     } catch (ex) {
                         console.error('Error handling listener for message ', message, ex);
@@ -69,11 +62,11 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
             }
         }
 
-        function getPartner(name) {
-            if (!partners[name]) {
-                throw new Error('Partner ' + name + ' not registered');
+        function getPartner(_name) {
+            if (!partners[_name]) {
+                throw new Error('Partner ' + _name + ' not registered');
             }
-            return partners[name];
+            return partners[_name];
         }
 
         function send(partnerName, message) {
@@ -83,7 +76,6 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
                 to: partner.serviceId,
                 from: serviceId,
             };
-            sentCount += 1;
             partner.window.postMessage(message, partner.host);
         }
 
@@ -98,7 +90,7 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
         }
 
         function request(partnerName, message) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 sendRequest(partnerName, message, (response) => {
                     resolve(response);
                 });
@@ -114,14 +106,14 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
         }
 
         return Object.freeze({
-            start: start,
-            stop: stop,
-            send: send,
-            request: request,
-            receive: receive,
-            listen: listen,
-            addPartner: addPartner,
-            serviceId: serviceId,
+            start,
+            stop,
+            send,
+            request,
+            receive,
+            listen,
+            addPartner,
+            serviceId,
         });
     }
 

@@ -3727,5 +3727,665 @@
             ]
         },
         "job_id_output_field": "docker"
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },
+                {
+                    "input_parameter": "import_type",
+                    "target_property": "import_type"
+                },
+                {
+                    "input_parameter": "fastq_fwd_staging_file_name",
+                    "target_property": "fastq_fwd_staging_file_name"
+                },
+                {
+                    "input_parameter": "fastq_rev_staging_file_name",
+                    "target_property": "fastq_rev_staging_file_name"
+                },
+                {
+                    "input_parameter": "sra_staging_file_name",
+                    "target_property": "sra_staging_file_name"
+                },
+                {
+                    "input_parameter": "sequencing_tech",
+                    "target_property": "sequencing_tech"
+                },
+                {
+                    "input_parameter": "name",
+                    "target_property": "name"
+                },
+                {
+                    "input_parameter": "single_genome",
+                    "target_property": "single_genome"
+                },
+                {
+                    "input_parameter": "interleaved",
+                    "target_property": "interleaved"
+                },
+                {
+                    "input_parameter": "insert_size_mean",
+                    "target_property": "insert_size_mean"
+                },
+                {
+                    "input_parameter": "insert_size_std_dev",
+                    "target_property": "insert_size_std_dev"
+                },
+                {
+                    "input_parameter": "read_orientation_outward",
+                    "target_property": "read_orientation_outward"
+                }
+            ],
+            "kb_service_method": "import_reads_from_staging",
+            "kb_service_name": "kb_uploadmethods",
+            "kb_service_output_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "wsName"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "obj_ref"
+                    ],
+                    "target_property": "obj_ref",
+                    "target_type_transform": "resolved-ref"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_name"
+                    ],
+                    "target_property": "report_name"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_ref"
+                    ],
+                    "target_property": "report_ref"
+                },
+                {
+                    "constant_value": "16",
+                    "target_property": "report_window_line_height"
+                }
+            ],
+            "kb_service_url": "",
+            "kb_service_version": "bcfe5e28883b83593893f5fe970b45fa4c0b5341"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "tgu2"
+            ],
+            "categories": [
+                "inactive",
+                "reads",
+                "upload"
+            ],
+            "git_commit_hash": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
+            "icon": {
+                "url": "img?method_id=kb_uploadmethods/import_fastq_sra_as_reads_from_staging&image_name=data-pink.png&tag=release"
+            },
+            "id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "input_types": [],
+            "module_name": "kb_uploadmethods",
+            "name": "Import FASTQ/SRA File as Reads from Staging Area",
+            "namespace": "kb_uploadmethods",
+            "output_types": [
+                "KBaseFile.PairedEndLibrary",
+                "KBaseFile.SingleEndLibrary"
+            ],
+            "subtitle": "Import a FASTQ/SRA file into your Narrative as a Reads data object",
+            "tooltip": "Import a FASTQ/SRA file into your Narrative as a Reads data object",
+            "ver": "1.0.51"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "FASTQ/FASTA"
+                ],
+                "description": "Import file type ['FASTQ/FASTA' or 'SRA']",
+                "disabled": 0,
+                "dropdown_options": {
+                    "multiselection": 0,
+                    "options": [
+                        {
+                            "display": "FASTQ/FASTA",
+                            "value": "FASTQ/FASTA"
+                        },
+                        {
+                            "display": "SRA",
+                            "value": "SRA"
+                        }
+                    ]
+                },
+                "field_type": "dropdown",
+                "id": "import_type",
+                "optional": 0,
+                "short_hint": "Import file type ['FASTQ/FASTA' or 'SRA']",
+                "ui_class": "parameter",
+                "ui_name": "Import File Type"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "Valid file extensions for FASTA: .fasta, .fna, .fa   Valid file extensions for FASTQ: .fastq, .fnq, .fq; Compressed files (containing files with vaild extentions): .zip, .gz, .bz2, .tar.gz, .tar.bz2",
+                "disabled": 0,
+                "dynamic_dropdown_options": {
+                    "data_source": "ftp_staging",
+                    "multiselection": 0,
+                    "query_on_empty_input": 1,
+                    "result_array_index": 0,
+                    "service_params": null
+                },
+                "field_type": "dynamic_dropdown",
+                "id": "fastq_fwd_staging_file_name",
+                "optional": 1,
+                "short_hint": "Short read file containing a paired end library in FASTA/FASTQ format",
+                "ui_class": "parameter",
+                "ui_name": "Forward/Left FASTA/FASTQ File Path"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "Valid file extensions for FASTA: .fasta, .fna, .fa   Valid file extensions for FASTQ: .fastq, .fnq, .fq; Compressed files (containing files with vaild extentions): .zip, .gz, .bz2, .tar.gz, .tar.bz2",
+                "disabled": 0,
+                "dynamic_dropdown_options": {
+                    "data_source": "ftp_staging",
+                    "multiselection": 0,
+                    "query_on_empty_input": 1,
+                    "result_array_index": 0,
+                    "service_params": null
+                },
+                "field_type": "dynamic_dropdown",
+                "id": "fastq_rev_staging_file_name",
+                "optional": 1,
+                "short_hint": "Second short read file containing a paired end library in FASTA/FASTQ format.",
+                "ui_class": "parameter",
+                "ui_name": "Reverse/Right FASTA/FASTQ File Path"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "SRA staing file path",
+                "disabled": 0,
+                "dynamic_dropdown_options": {
+                    "data_source": "ftp_staging",
+                    "multiselection": 0,
+                    "query_on_empty_input": 1,
+                    "result_array_index": 0,
+                    "service_params": null
+                },
+                "field_type": "dynamic_dropdown",
+                "id": "sra_staging_file_name",
+                "optional": 1,
+                "short_hint": "SRA staing file path",
+                "ui_class": "parameter",
+                "ui_name": "SRA File Path"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "Illumina"
+                ],
+                "description": "The name of the sequencing technology used to create the reads file",
+                "disabled": 0,
+                "dropdown_options": {
+                    "multiselection": 0,
+                    "options": [
+                        {
+                            "display": "Illumina",
+                            "value": "Illumina"
+                        },
+                        {
+                            "display": "PacBio CLR",
+                            "value": "PacBio CLR"
+                        },
+                        {
+                            "display": "PacBio CCS",
+                            "value": "PacBio CCS"
+                        },
+                        {
+                            "display": "IonTorrent",
+                            "value": "IonTorrent"
+                        },
+                        {
+                            "display": "NanoPore",
+                            "value": "NanoPore"
+                        },
+                        {
+                            "display": "Unknown",
+                            "value": "Unknown"
+                        }
+                    ]
+                },
+                "field_type": "dropdown",
+                "id": "sequencing_tech",
+                "optional": 0,
+                "short_hint": "The name of the sequencing technology used to create the reads file",
+                "ui_class": "parameter",
+                "ui_name": "Sequencing Technology"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "Provide a name for the Reads object that will be created by this importer",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "name",
+                "optional": 0,
+                "short_hint": "Provide a name for the Reads object that will be created by this importer",
+                "text_options": {
+                    "is_output_name": 1,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "valid_ws_types": [
+                        "KBaseFile.SingleEndLibrary",
+                        "KBaseFile.PairedEndLibrary"
+                    ]
+                },
+                "ui_class": "output",
+                "ui_name": "Reads Object Name"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    "1"
+                ],
+                "description": "Select if the reads are from a single genome, leave blank if from a metagenome",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "single_genome",
+                "optional": 0,
+                "short_hint": "Select if the reads are from a single genome, leave blank if from a metagenome",
+                "ui_class": "parameter",
+                "ui_name": "Single Genome"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    "0"
+                ],
+                "description": "Select if reads file is interleaved",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "interleaved",
+                "optional": 0,
+                "short_hint": "Select if reads file is interleaved",
+                "ui_class": "parameter",
+                "ui_name": "Interleaved"
+            },
+            {
+                "advanced": 1,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    "0"
+                ],
+                "description": "Select if reads in a pair point outward",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "read_orientation_outward",
+                "optional": 1,
+                "short_hint": "Select if reads in a pair point outward",
+                "ui_class": "parameter",
+                "ui_name": "Reads Orientation Outward"
+            },
+            {
+                "advanced": 1,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "The standard deviation of insert lengths",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "insert_size_std_dev",
+                "optional": 1,
+                "short_hint": "The standard deviation of insert lengths",
+                "text_options": {
+                    "is_output_name": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "validate_as": "float"
+                },
+                "ui_class": "parameter",
+                "ui_name": "St. Dev. of Insert Size"
+            },
+            {
+                "advanced": 1,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "The mean (average) insert length",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "insert_size_mean",
+                "optional": 1,
+                "short_hint": "The mean (average) insert length",
+                "text_options": {
+                    "is_output_name": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "validate_as": "float"
+                },
+                "ui_class": "parameter",
+                "ui_name": "Mean Insert Size"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "no-display"
+        }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },
+                {
+                    "input_parameter": "text_input",
+                    "target_property": "text_input"
+                },
+                {
+                    "input_parameter": "checkbox_input",
+                    "target_property": "checkbox_input"
+                }
+            ],
+            "kb_service_method": "example_report",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_name"
+                    ],
+                    "target_property": "report_name"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "report_ref"
+                    ],
+                    "target_property": "report_ref"
+                },
+                {
+                    "constant_value": "16",
+                    "target_property": "report_window_line_height"
+                }
+            ],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/report_example",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "Example HTML Report",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "Show an example HTML Report",
+            "tooltip": "Show an example HTML Report",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    ""
+                ],
+                "description": "Some input test goes here",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "text_input",
+                "optional": 1,
+                "short_hint": "Add some text for your report",
+                "text_options": {
+                    "is_output_name": 0,
+                    "placeholder": "",
+                    "regex_constraint": []
+                },
+                "ui_class": "parameter",
+                "ui_name": "Text Input"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    "1"
+                ],
+                "description": "Your report will show this being checked or not",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "checkbox_input",
+                "optional": 0,
+                "short_hint": "Show this off in your report",
+                "ui_class": "parameter",
+                "ui_name": "Checkbox Input"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "no-display"
+        }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "input_parameter": "naptime",
+                    "target_property": "naptime"
+                },
+                {
+                    "input_parameter": "fail",
+                    "target_property": "fail"
+                }
+            ],
+            "kb_service_method": "app_sleep",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [
+                "active"
+            ],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/app_sleep",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "App Sleep",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "A simple test app that sleeps before succeeding or failing.",
+            "tooltip": "A simple test app that sleeps before succeeding or failing.",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "5"
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "naptime",
+                "optional": 0,
+                "short_hint": "How long to sleep in seconds before returning",
+                "text_options": {
+                    "is_output_name": 0,
+                    "min_int": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "valid_ws_types": [],
+                    "validate_as": "int"
+                },
+                "ui_class": "parameter",
+                "ui_name": "Nap length (sec)"
+            },
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "checkbox_options": {
+                    "checked_value": 1,
+                    "unchecked_value": 0
+                },
+                "default_values": [
+                    ""
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "checkbox",
+                "id": "fail",
+                "optional": 0,
+                "short_hint": "If checked, this will raise on error after sleeping.",
+                "ui_class": "parameter",
+                "ui_name": "Fail on wake"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "no-display"
+        }
+    },
+    {
+        "behavior": {
+            "kb_service_input_mapping": [
+                {
+                    "input_parameter": "num_lines",
+                    "target_property": "num_lines"
+                }
+            ],
+            "kb_service_method": "app_logs",
+            "kb_service_name": "NarrativeTest",
+            "kb_service_output_mapping": [
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "num_lines"
+                    ],
+                    "target_property": "num_lines"
+                },
+                {
+                    "service_method_output_path": [
+                        "0",
+                        "prefix"
+                    ],
+                    "target_property": "unique_string"
+                }
+            ],
+            "kb_service_url": "",
+            "kb_service_version": "8d1f8480aee9852e9354cf723f0808fae53b2fcc"
+        },
+        "fixed_parameters": [],
+        "info": {
+            "app_type": "app",
+            "authors": [
+                "wjriehl"
+            ],
+            "categories": [
+                "active"
+            ],
+            "git_commit_hash": "8d1f8480aee9852e9354cf723f0808fae53b2fcc",
+            "id": "NarrativeTest/app_logs",
+            "input_types": [],
+            "module_name": "NarrativeTest",
+            "name": "App Logs",
+            "namespace": "NarrativeTest",
+            "output_types": [],
+            "subtitle": "A test app that generates a number of log lines with a unique string attached.",
+            "tooltip": "A test app that generates a number of log lines with a unique string attached.",
+            "ver": "0.0.2"
+        },
+        "job_id_output_field": "docker",
+        "parameters": [
+            {
+                "advanced": 0,
+                "allow_multiple": 0,
+                "default_values": [
+                    "100"
+                ],
+                "description": "",
+                "disabled": 0,
+                "field_type": "text",
+                "id": "num_lines",
+                "optional": 0,
+                "short_hint": "Number of log lines to generates",
+                "text_options": {
+                    "is_output_name": 0,
+                    "min_int": 0,
+                    "placeholder": "",
+                    "regex_constraint": [],
+                    "valid_ws_types": [],
+                    "validate_as": "int"
+                },
+                "ui_class": "parameter",
+                "ui_name": "Number of lines"
+            }
+        ],
+        "widgets": {
+            "input": "null",
+            "output": "null"
+        }
     }
 ]

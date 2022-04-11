@@ -3,7 +3,7 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define([], () => {
+define(['util/util'], (Utils) => {
     'use strict';
 
     const monthLookup = [
@@ -68,7 +68,7 @@ define([], () => {
          * new Date object directly.
          */
         let d = new Date(time);
-        if (Object.prototype.toString.call(d) !== '[object Date]' || isNaN(d.getTime())) {
+        if (Utils.objectToString(d) !== 'Date' || isNaN(d.getTime())) {
             const t = time.split(/[^0-9]/);
             // if t[0] is 0 or empty string, then just bail now and return null. This means that the
             // given timestamp was not valid.
@@ -80,7 +80,7 @@ define([], () => {
             }
             d = new Date(t[0], t[1] - 1, t[2], t[3], t[4], t[5], t[6]);
             // Test the new Date object
-            if (Object.prototype.toString.call(d) === '[object Date]') {
+            if (Utils.objectToString(d) === 'Date') {
                 // This would mean it has the 'Invalid Date' status.
                 if (isNaN(d.getTime())) {
                     return null;
@@ -95,8 +95,8 @@ define([], () => {
 
     /**
      * @method reformatISOTimeString
-     * Parses the user_and_job_state timestamp and returns it as a user-
-     * readable string in the UTC time.
+     * Parses a timestamp and returns it as a user-readable string
+     * in the UTC time.
      *
      * This assumes that the timestamp string is in the following format:
      *
@@ -137,7 +137,7 @@ define([], () => {
      * @private
      */
     function reformatDate(dateObj) {
-        if (Object.prototype.toString.call(dateObj) !== '[object Date]') {
+        if (Utils.objectToString(dateObj) !== 'Date') {
             return dateObj;
         }
         const addLeadingZero = function (value) {

@@ -3,6 +3,7 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
     ServiceUtils,
     Runtime
 ) => {
+    'use strict';
     function filterObjectInfoByType(objects, types) {
         return objects
             .map((objectInfo) => {
@@ -15,26 +16,6 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
                 return item !== undefined;
             });
     }
-
-    // function getObjectsByTypes(types, bus, onUpdated) {
-    //     return bus.channel('data').when('workspace-data-updated')
-    //         .then(function(message) {
-    //             if (onUpdated) {
-    //                 bus.channel('data').on('workspace-data-updated', function(message) {
-    //                     var result = {
-    //                         data: filterObjectInfoByType(message.objectInfo, types),
-    //                         timestamp: message.timestamp
-    //                     }
-    //                     onUpdated(result);
-    //                 });
-    //             }
-    //             var result = {
-    //                 data: filterObjectInfoByType(message.objectInfo, types),
-    //                 timestamp: message.timestamp
-    //             }
-    //             return result;
-    //         })
-    // }
 
     function getObjectsByTypes(types, connection, onUpdated) {
         const listener = connection.channel('data').plisten({
@@ -50,11 +31,10 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
             },
         });
         return listener.promise.then((message) => {
-            const result = {
+            return {
                 data: filterObjectInfoByType(message.objectInfo, types),
                 timestamp: message.timestamp,
             };
-            return result;
         });
     }
 
@@ -71,9 +51,8 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
             });
 
         // assume (for now) that the refs are valid and not random strings or numbers or objects.
-        const refList = [];
-        refs.forEach((ref) => {
-            refList.push({ ref: ref });
+        const refList = refs.map((ref) => {
+            return { ref };
         });
         return workspace.get_object_info_new({ objects: refList }).then((infos) => {
             const objInfos = {};
@@ -89,7 +68,7 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
     }
 
     return {
-        getObjectsByTypes: getObjectsByTypes,
-        getObjectsByRef: getObjectsByRef,
+        getObjectsByTypes,
+        getObjectsByRef,
     };
 });

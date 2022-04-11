@@ -82,7 +82,7 @@ define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUti
     function checkJobStatus(container, status) {
         const selector = '[data-element="job-status"]';
         if (!status) {
-            expect(container.querySelector(selector)).toBeNull();
+            expect(container.querySelector(selector).textContent).toBe('');
             return;
         }
         expect(container.querySelector(selector).textContent).toBe(status);
@@ -350,7 +350,7 @@ define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUti
             });
         });
 
-        describe('job status summary', () => {
+        describe('job status summary (app cell only)', () => {
             const tests = [
                 { mode: 'error', stage: '', minMax: 'minimized', text: 'error' },
                 { mode: 'internal-error', stage: '', minMax: 'minimized', text: 'error' },

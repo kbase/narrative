@@ -1,13 +1,36 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 import copy
 import functools
 from unittest.mock import call
+
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.narrative.jobs.job import COMPLETED_STATUS
+
+from biokbase.narrative.tests.job_test_constants import (
+    TEST_JOBS,
+    MAX_LOG_LINES,
+    JOB_COMPLETED,
+    BATCH_RETRY_RUNNING,
+    BATCH_PARENT,
+    READS_OBJ_1,
+    READS_OBJ_2,
+    generate_error,
+)
+from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
 WSID_STANDARD = 12345
+NARR_DATE = "2017-03-31T23:42:59+0000"
+NARR_WS = "wjriehl:1490995018528"
+NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
+
+
+def generate_ee2_error(fn):
+    return EEServerError("JSONRPCError", -32000, fn + " failed")
 
 
 def get_nar_obj(i):
@@ -15,28 +38,12 @@ def get_nar_obj(i):
         i,
         "My_Test_Narrative",
         "KBaseNarrative.Narrative",
-        "2017-03-31T23:42:59+0000",
+        NARR_DATE,
         1,
         "wjriehl",
         18836,
-        "wjriehl:1490995018528",
-        "278abf8f0dbf8ab5ce349598a8674a6e",
-        109180038,
-        {},
-    ]
-
-
-def get_nar_obj(i):
-    return [
-        i,
-        "My_Test_Narrative",
-        "KBaseNarrative.Narrative",
-        "2017-03-31T23:42:59+0000",
-        1,
-        "wjriehl",
-        18836,
-        "wjriehl:1490995018528",
-        "278abf8f0dbf8ab5ce349598a8674a6e",
+        NARR_WS,
+        NARR_HASH,
         109180038,
         {},
     ]
@@ -72,33 +79,17 @@ class MockClients:
     """
 
     config = ConfigTests()
-    _ee2_job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
+    _job_state_data = TEST_JOBS
 
-    def __init__(self, token=None):
+    def __init__(self, client_name=None, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.job_info = self.config.load_json_file(
-            self.config.get("jobs", "job_info_file")
-        )
+        self.client_name = client_name
         self.test_job_id = self.config.get("app_tests", "test_job_id")
 
     @property
-    def ee2_job_info(self):
-        return copy.deepcopy(self._ee2_job_info)
-
-    # ----- User and Job State functions -----
-
-    def list_jobs2(self, params):
-        return self.job_info.get("job_info")
-
-    def delete_job(self, job):
-        return "bar"
-
-    def check_workspace_jobs(self, params):
-        info = self.ee2_job_info
-        if params.get("return_list"):
-            info = list(info.values())
-        return info
+    def job_state_data(self):
+        return copy.deepcopy(self._job_state_data)
 
     # ----- Narrative Method Store functions ------
 
@@ -109,7 +100,9 @@ class MockClients:
         return self.config.load_json_file(self.config.get("specs", "type_specs_file"))
 
     def get_method_full_info(self, params):
-        return self.config.load_json_file(self.config.get("specs", "app_infos_file"))
+        return self.config.load_json_file(
+            self.config.get("specs", "app_full_infos_file")
+        )
 
     # ----- Workspace functions -----
 
@@ -174,12 +167,12 @@ class MockClients:
             5,
             "Sbicolor2",
             "KBaseGenomes.Genome-12.3",
-            "2017-03-31T23:42:59+0000",
+            NARR_DATE,
             1,
             "wjriehl",
             18836,
-            "wjriehl:1490995018528",
-            "278abf8f0dbf8ab5ce349598a8674a6e",
+            NARR_WS,
+            NARR_HASH,
             109180038,
             None,
         ]
@@ -188,11 +181,11 @@ class MockClients:
         for obj_ident in params.get(
             "objects", [{"name": "Sbicolor2", "workspace": "whatever"}]
         ):
-            if obj_ident.get("name") == "rhodobacterium.art.q20.int.PE.reads":
+            if obj_ident.get("name") == READS_OBJ_1:
                 infos.append(
                     [
                         7,
-                        "rhodobacterium.art.q20.int.PE.reads",
+                        READS_OBJ_1,
                         "KBaseFile.PairedEndLibrary-2.1",
                         "2018-06-26T19:31:41+0000",
                         1,
@@ -204,11 +197,11 @@ class MockClients:
                         None,
                     ]
                 )
-            elif obj_ident.get("name") == "rhodobacterium.art.q10.PE.reads":
+            elif obj_ident.get("name") == READS_OBJ_2:
                 infos.append(
                     [
                         8,
-                        "rhodobacterium.art.q10.PE.reads",
+                        READS_OBJ_2,
                         "KBaseFile.PairedEndLibrary-2.1",
                         "2018-08-13T23:13:09+0000",
                         1,
@@ -230,12 +223,12 @@ class MockClients:
                 5,
                 "Sbicolor2",
                 "KBaseGenomes.Genome-12.3",
-                "2017-03-31T23:42:59+0000",
+                NARR_DATE,
                 1,
                 "wjriehl",
                 18836,
-                "wjriehl:1490995018528",
-                "278abf8f0dbf8ab5ce349598a8674a6e",
+                NARR_WS,
+                NARR_HASH,
                 109180038,
                 None,
             ]
@@ -246,9 +239,12 @@ class MockClients:
 
     def list_objects(self, params):
         ws_ids = params["ids"]
-        return [get_nar_obj(int(id)) for id in ws_ids]  # assert int
+        return [get_nar_obj(int(id)) for id in ws_ids]
 
-    # ----- Narrative Job Service functions -----
+    # ----- Execution Engine (EE2) functions -----
+
+    def check_workspace_jobs(self, params):
+        return self.job_state_data
 
     def run_job(self, params):
         return self.test_job_id
@@ -259,44 +255,52 @@ class MockClients:
         ]
         return {"batch_id": self.test_job_id, "child_job_ids": child_job_ids}
 
-    def cancel_job(self, job_id):
+    def cancel_job(self, params):
+        if params["job_id"] == BATCH_RETRY_RUNNING:
+            raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
         return {}
-
-    def retry_job(self, params):
-        job_id = params["job_id"]
-        return {"job_id": job_id, "retry_id": job_id[::-1]}
 
     def retry_jobs(self, params):
         job_ids = params["job_ids"]
         results = list()
         for job_id in job_ids:
-            results.append({"job_id": job_id, "retry_id": job_id[::-1]})
+            output = {"job_id": job_id}
+            if job_id in RETRIED_JOBS:
+                output["retry_id"] = RETRIED_JOBS[job_id]
+            elif job_id == BATCH_PARENT:
+                output["error"] = generate_error(job_id, "batch_parent_retry")
+            else:
+                output["error"] = generate_error(job_id, "retry_status")
+
+            results.append(output)
         return results
 
     def get_job_params(self, job_id):
-        return self.ee2_job_info.get(job_id, {}).get("job_input", {})
+        return self.job_state_data.get(job_id, {}).get("job_input", {})
 
     def check_job(self, params):
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        info = self.ee2_job_info.get(job_id, {"job_id": job_id, "status": "unmocked"})
+        job_state = self.job_state_data.get(
+            job_id, {"job_id": job_id, "status": "unmocked"}
+        )
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
-                if f in info:
-                    del info[f]
-        return info
+                if f in job_state:
+                    del job_state[f]
+        return job_state
 
     def check_jobs(self, params):
         job_ids = params.get("job_ids")
-        infos = dict()
+        job_states = dict()
         for job in job_ids:
-            infos[job] = self.check_job(
+            job_states[job] = self.check_job(
                 {"job_id": job, "exclude_fields": params.get("exclude_fields", [])}
             )
         if params.get("return_list"):
-            infos = list(infos.values())
-        return infos
+            job_states = list(job_states.values())
+        return job_states
 
     def get_job_logs(self, params):
         """
@@ -307,17 +311,38 @@ class MockClients:
             is_error 0,1
             line: string
         }
-        there are only 100 "log lines" in total.
         """
-        total_lines = 100
-        skip = params.get("skip_lines", 0)
-        lines = list()
-        if skip < total_lines:
-            for i in range(total_lines - skip):
-                lines.append(
-                    {"is_error": 0, "line": "This is line {}".format(i + skip)}
-                )
-        return {"last_line_number": max(total_lines, skip), "lines": lines}
+        job_id = params["job_id"]
+
+        def log_gen(log_params, total_lines=MAX_LOG_LINES):
+            skip = log_params.get("skip_lines", 0)
+            lines = list()
+            if skip < total_lines:
+                for i in range(total_lines - skip):
+                    lines.append(
+                        {"is_error": 0, "line": "This is line {}".format(i + skip)}
+                    )
+            return {"last_line_number": max(total_lines, skip), "lines": lines}
+
+        if job_id == JOB_COMPLETED:
+            return log_gen(params, total_lines=MAX_LOG_LINES)
+
+        job = self.job_state_data.get(
+            job_id, {"job_id": job_id, "status": "does_not_exist"}
+        )
+
+        if job["status"] == "does_not_exist":
+            raise ServerError(
+                "JSONRPCError", 99, "Job ID is not registered: " + job["job_id"]
+            )
+
+        if job["status"] != COMPLETED_STATUS:
+            raise ServerError(
+                "JSONRPCError", 2, "Cannot find job log with id: " + job["job_id"]
+            )
+
+        # otherwise, return five lines of logs
+        return log_gen(params, total_lines=5)
 
     # ----- Service Wizard functions -----
     def sync_call(self, call, params):
@@ -495,7 +520,7 @@ class MockClients:
 
 
 def get_mock_client(client_name, token=None):
-    return MockClients(token=token)
+    return MockClients(client_name=client_name, token=token)
 
 
 def get_failing_mock_client(client_name, token=None):
@@ -507,25 +532,19 @@ class FailingMockClient:
         pass
 
     def check_workspace_jobs(self, params):
-        raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+        raise generate_ee2_error("check_workspace_jobs")
 
     def check_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Check job failed")
+        raise generate_ee2_error("check_job")
 
     def cancel_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Can't cancel job")
-
-    def retry_job(self, params):
-        raise ServerError("JSONRPCError", -32000, "Job retry failed")
+        raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
 
     def retry_jobs(self, params):
-        raise ServerError("JSONRPCError", -32000, "Jobs retry failed")
-
-    def check_job_canceled(self, params):
-        raise ServerError("JSONRPCError", 1, "Can't cancel job")
+        raise generate_ee2_error(MESSAGE_TYPE["RETRY"])
 
     def get_job_logs(self, params):
-        raise ServerError("JSONRPCError", 2, "Can't get job logs")
+        raise generate_ee2_error(MESSAGE_TYPE["LOGS"])
 
 
 class MockStagingHelper:

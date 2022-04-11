@@ -75,7 +75,16 @@ define(['util/util'], (Utils) => {
         });
 
         describe('the toInteger function', () => {
-            [undefined, null, {}, { a: 1 }, [], () => {}].forEach((input) => {
+            [
+                undefined,
+                null,
+                {},
+                { a: 1 },
+                [],
+                () => {
+                    /* no op */
+                },
+            ].forEach((input) => {
                 it(`should not convert "${input}" to an integer`, () => {
                     expect(() => Utils.toInteger(input)).toThrowError(
                         /cannot be converted to integer/
@@ -144,6 +153,35 @@ define(['util/util'], (Utils) => {
                 const badCases = ['foo', '+', '1234f', 'a 123'];
                 badCases.forEach((bad) => {
                     expect(() => Utils.toFloat(bad)).toThrowError(`Invalid float format: ${bad}`);
+                });
+            });
+        });
+
+        describe('the objectToString method', () => {
+            const tests = [
+                ['Null', null],
+                ['Undefined', undefined],
+                ['Number', 123456],
+                ['Number', 1.23456],
+                ['String', 'string'],
+                ['String', ''],
+                ['Array', [1, 2, 3]],
+                ['Object', { this: 'that' }],
+                [
+                    'Function',
+                    () => {
+                        /* no op */
+                    },
+                ],
+                ['Object', Utils],
+                ['Date', new Date()],
+                ['Set', new Set()],
+            ];
+
+            tests.forEach((test) => {
+                const [type, sample] = test;
+                it(`identifies ${sample} as type ${type}`, () => {
+                    expect(Utils.objectToString(sample)).toEqual(type);
                 });
             });
         });

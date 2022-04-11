@@ -1,14 +1,16 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobActionDropdown',
     'common/dialogMessages',
+    'common/jobManager',
     'common/jobs',
     'common/props',
     'testUtil',
     '/test/data/jobsData',
-], (JobActionDropdown, DialogMessages, Jobs, Props, TestUtil, JobsData) => {
+], (JobActionDropdown, DialogMessages, JobManagerModule, Jobs, Props, TestUtil, JobsData) => {
     'use strict';
 
     let container, jobActionDropdownInstance;
+    const { JobManager } = JobManagerModule;
 
     const batchJobModel = Props.make({
         data: {},
@@ -19,9 +21,10 @@ define([
         return JobActionDropdown.make(
             Object.assign(
                 {
-                    jobManager: {
+                    jobManager: new JobManager({
                         model: batchJobModel,
-                    },
+                        bus: {},
+                    }),
                     devMode: true,
                 },
                 config
@@ -101,15 +104,10 @@ define([
         describe('buttons', () => {
             beforeEach(async function () {
                 container = document.createElement('div');
-                this.jobManager = {
+                this.jobManager = new JobManager({
                     model: batchJobModel,
-                    getCurrentJobsByStatus: () => {
-                        // nothing
-                    },
-                    doJobAction: () => {
-                        // nothing
-                    },
-                };
+                    bus: {},
+                });
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });
@@ -161,15 +159,10 @@ define([
             beforeEach(async function () {
                 container = document.createElement('div');
                 this.clickTarget = document.createElement('button');
-                this.jobManager = {
+                this.jobManager = new JobManager({
                     model: batchJobModel,
-                    getCurrentJobsByStatus: () => {
-                        // nothing
-                    },
-                    doJobAction: () => {
-                        // nothing
-                    },
-                };
+                    bus: {},
+                });
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });
@@ -314,9 +307,10 @@ define([
 
             beforeAll(async function () {
                 container = document.createElement('div');
-                this.jobManager = {
+                this.jobManager = new JobManager({
                     model: Props.make({ data: {} }),
-                };
+                    bus: {},
+                });
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });

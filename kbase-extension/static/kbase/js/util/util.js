@@ -61,6 +61,11 @@ define(['bluebird'], (Promise) => {
         }
     }
 
+    function objectToString(obj) {
+        const type = Object.prototype.toString.call(obj);
+        return type.substring(8, type.length - 1);
+    }
+
     /**
      * Converts a string to a float.
      * If it's not a string (or already a number), this throws an Error.
@@ -86,6 +91,7 @@ define(['bluebird'], (Promise) => {
         copy: copyValue,
         pRequire,
         toInteger,
+        objectToString,
         toFloat,
     });
 });

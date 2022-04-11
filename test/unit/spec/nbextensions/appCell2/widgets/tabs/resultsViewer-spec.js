@@ -161,24 +161,6 @@ define([
             viewerNode.remove();
         });
 
-        it('starts and stops a viewer with a report from a non-batch job', async () => {
-            const model = buildModel({ hasReport: true, isParentJob: false, jobComplete: true });
-            const viewer = ResultsViewer.make({ model });
-            const jobState = TestUtil.JSONcopy(mockFinalJobState);
-            jobState.widget_info = TestUtil.JSONcopy(mockOutputWidgetInfo);
-            await viewer.start({
-                node,
-                jobState,
-                isParentJob: false,
-            });
-            await TestUtil.wait(500);
-            expect(viewer.reportRenderingPromise).not.toBeNull();
-            await viewer.reportRenderingPromise;
-            expect(node.innerHTML).toContain(reportData.text_message);
-            await viewer.stop();
-            expect(node.innerHTML).toBe('');
-        });
-
         it('renders suggested next apps', async () => {
             const model = buildModel({ hasReport: false, isParentJob: false, jobComplete: true });
             const nextMethods = ['SomeModule.someNewMethod'];

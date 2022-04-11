@@ -125,7 +125,7 @@ define([
                     inputControlFactory: inputControlFactory,
                     showHint: true,
                     useRowHighight: true,
-                    initialValue: '',
+                    initialValue: 'x',
                     appSpec: appSpec,
                     parameterSpec: parameterSpec,
                     workspaceId: 56236,
@@ -350,6 +350,22 @@ define([
             expect(container.classList).not.toContain(cellErrorClass);
         });
 
+        it('should not show an error if an invalid message does not contain an errorMessage field', async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            const msgPanel = this.node.querySelector('.' + messagePanelClass);
+            const container = this.node.querySelector('.' + cellClass);
+            await TestUtil.waitForElementChange(msgPanel, () => {
+                this.fieldCellWidgetInstance.bus.emit('validation', {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                });
+            });
+            expect(msgPanel.classList).toContain('hidden');
+            expect(container.classList).not.toContain(cellErrorClass);
+        });
+
         it(`can show both validation and duplicate value errors, and remove them`, async function () {
             await this.fieldCellWidgetInstance.start({
                 node: this.node,
@@ -370,6 +386,7 @@ define([
                 this.fieldCellWidgetInstance.bus.emit('validation', {
                     isValid: false,
                     diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'some invalid error',
                 });
             });
             expect(msgPanel.classList).not.toContain('hidden');

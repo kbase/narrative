@@ -4,8 +4,9 @@ define([
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'util/string',
+    'widgets/appWidgets2/validators/constants',
     'css!google-code-prettify/prettify',
-], (PR, html, Runtime, ErrorControlFactory, StringUtil) => {
+], (PR, html, Runtime, ErrorControlFactory, StringUtil, Constants) => {
     'use strict';
 
     const t = html.tag,
@@ -176,14 +177,14 @@ define([
         function validateField(message) {
             // always clear the existing message to start with
             switch (message.diagnosis) {
-                case 'required-missing':
-                case 'invalid':
+                case Constants.DIAGNOSIS.REQUIRED_MISSING:
+                case Constants.DIAGNOSIS.INVALID:
                     state.isValid = false;
                     if (message.errorMessage) {
                         showMessage(MESSAGE.error, message.errorMessage);
                     }
                     break;
-                case 'suspect':
+                case Constants.DIAGNOSIS.SUSPECT:
                     state.isValid = true;
                     showMessage(MESSAGE.warning, message.shortMessage);
                     break;

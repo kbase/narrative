@@ -6,11 +6,9 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
         const serviceId = new Uuid(4).format();
 
         let lastId = 0; //: number;
-        // let sentCount; //: number;
-        // let receivedCount; //: number;
-        const partners = {}; // Map<String, any>;
-        const listeners = {}; //Map<String, Array<any>>;
-        const awaitingResponse = {}; //: Map<String, any>;
+        const partners = {}; // Object<String, any>;
+        const listeners = {}; //Object<String, Array<any>>;
+        const awaitingResponse = {}; //: Object<String, any>;
 
         function genId() {
             lastId += 1;
@@ -31,8 +29,6 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
         function receive(event) {
             const message = event.data;
             let response;
-
-            // receivedCount += 1;
 
             if (!message.address && !message.address.to) {
                 console.warn('Message without address.to - ignored (iframe)', message);
@@ -80,7 +76,6 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
                 to: partner.serviceId,
                 from: serviceId,
             };
-            // sentCount += 1;
             partner.window.postMessage(message, partner.host);
         }
 

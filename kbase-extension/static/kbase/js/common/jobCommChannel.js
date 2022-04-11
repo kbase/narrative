@@ -33,14 +33,13 @@
 define([
     'bluebird',
     'util/developerMode',
-    'util/util',
     'base/js/namespace',
     'common/runtime',
     'common/jobs',
     'common/jobCommMessages',
     'services/kernels/comm',
     'common/semaphore',
-], (Promise, devMode, Utils, Jupyter, Runtime, Jobs, jcm, JupyterComm, Semaphore) => {
+], (Promise, devMode, Jupyter, Runtime, Jobs, jcm, JupyterComm, Semaphore) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
@@ -427,6 +426,7 @@ define([
 
                 case RESPONSES.STATUS:
                 case RESPONSES.STATUS_ALL:
+                    // TODO: refactor me plz
                     Object.keys(msgData).forEach((jobId) => {
                         if (!this._jobMapping[jobId]) {
                             this._extractMapping(msgData[jobId]);

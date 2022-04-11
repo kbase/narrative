@@ -1,6 +1,4 @@
 define([
-    'jquery',
-    'bluebird',
     'common/simpleLogViewer',
     'common/jobs',
     'common/jobCommMessages',
@@ -9,18 +7,7 @@ define([
     'common/runtime',
     '/test/data/jobsData',
     'testUtil',
-], (
-    $,
-    Promise,
-    SimpleLogViewerModule,
-    Jobs,
-    jcm,
-    JobManagerModule,
-    Props,
-    Runtime,
-    JobsData,
-    TestUtil
-) => {
+], (SimpleLogViewerModule, Jobs, jcm, JobManagerModule, Props, Runtime, JobsData, TestUtil) => {
     'use strict';
 
     const TEST_POLL_INTERVAL = 10;

@@ -1,11 +1,10 @@
 define([
     'common/cellComponents/tabs/results/resultsTab',
     'base/js/namespace',
-    'common/props',
     'testUtil',
     '/test/data/testBulkImportObj',
     '/test/data/jobsData',
-], (ResultsTab, Jupyter, Props, TestUtil, TestBulkImportObject, JobsData) => {
+], (ResultsTab, Jupyter, TestUtil, TestBulkImportObject, JobsData) => {
     'use strict';
 
     const reportObject = {

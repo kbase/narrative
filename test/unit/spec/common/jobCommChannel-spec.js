@@ -771,10 +771,10 @@ define([
                     };
                 }
 
-                const busTests = [];
+                const moreBusTests = [];
                 ['simple', 'complex'].forEach((type) => {
                     Object.keys(requests).forEach((req) => {
-                        busTests.push(generateErrorMessage(type, req));
+                        moreBusTests.push(generateErrorMessage(type, req));
                     });
                 });
                 // these messages do not get passed on to the frontend as they're not very useful
@@ -782,11 +782,11 @@ define([
                     const test = generateErrorMessage('jobRequestException', req);
                     test.expected = [];
                     test.expectedWithMap = [];
-                    busTests.push(test);
+                    moreBusTests.push(test);
                 });
 
                 // no mapping in place
-                busTests.forEach((test) => {
+                moreBusTests.forEach((test) => {
                     it(`should send a ${test.type} message to the bus`, () => {
                         const msg = makeCommMsg(jcm.MESSAGE_TYPE.ERROR, test.message),
                             comm = new JobCommChannel();

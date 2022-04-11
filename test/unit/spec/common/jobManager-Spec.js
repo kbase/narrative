@@ -2,25 +2,13 @@ define([
     'common/jobManager',
     'common/jobs',
     'common/jobCommMessages',
-    'common/looper',
     'common/props',
     'common/runtime',
     'common/ui',
     'testUtil',
     '/test/data/jobsData',
     '/test/data/testBulkImportObj',
-], (
-    JobManagerModule,
-    Jobs,
-    jcm,
-    Looper,
-    Props,
-    Runtime,
-    UI,
-    TestUtil,
-    JobsData,
-    TestBulkImportObject
-) => {
+], (JobManagerModule, Jobs, jcm, Props, Runtime, UI, TestUtil, JobsData, TestBulkImportObject) => {
     'use strict';
 
     const {
@@ -1090,7 +1078,7 @@ define([
                             this.jobManagerInstance.addListener(event, channelType, channelId, {
                                 zzz_resolve_promise: (...args) => {
                                     // eslint-disable-next-line no-unused-vars
-                                    const [_, msg, channel] = args;
+                                    const [, msg, channel] = args;
                                     expect(msg).toEqual(message);
                                     expect(channel).toEqual(channelData);
                                     resolve();
@@ -1200,7 +1188,7 @@ define([
                                 zzz_resolve_promise: (...args) => {
                                     // ensure the args are as expected
                                     // eslint-disable-next-line no-unused-vars
-                                    const [_, msg, channel] = args;
+                                    const [, msg, channel] = args;
                                     expect(msg).toEqual(message);
                                     expect(channel).toEqual(channelData);
                                     resolve();
@@ -1372,7 +1360,7 @@ define([
                                     {
                                         zzz_resolve_promise: (...args) => {
                                             // eslint-disable-next-line no-unused-vars
-                                            const [_, msg, channel] = args;
+                                            const [, msg, channel] = args;
                                             expect(msg).toEqual(messageOne);
                                             expect(channel).toEqual(channelData);
                                             resolve();
@@ -1467,17 +1455,15 @@ define([
                 describe('multiple job updates', () => {
                     const updatedJobStates = {};
 
-                    const terminal = [],
-                        listening = [];
+                    const listening = [];
 
                     JobsData.allJobsWithBatchParent.forEach((job) => {
                         // these jobs should have status listeners after the update
                         if (!job.meta.terminal || job.meta.canRetry) {
                             listening.push(job.job_id);
-                        } else {
-                            // these jobs are terminal and cannot be retried
-                            terminal.push(job.job_id);
                         }
+                        // the remaining jobs are terminal and cannot be retried
+
                         // set up the expected job statuses post-update
                         updatedJobStates[job.job_id] = {
                             ...TestUtil.JSONcopy(job),
@@ -1514,9 +1500,10 @@ define([
                     };
 
                     Object.keys(inputs).forEach((inputName) => {
-                        const { channelType, channelIdList, messageList } = inputs[inputName];
+                        const { thisChannelType, thisChannelIdList, thisMessageList } =
+                            inputs[inputName];
                         it(`updates multiple jobs, ${inputName}`, function () {
-                            setUpHandlerTest(this, event, channelType, channelIdList);
+                            setUpHandlerTest(this, event, thisChannelType, thisChannelIdList);
                             Jobs.populateModelFromJobArray(
                                 this.jobManagerInstance.model,
                                 JobsData.allJobsWithBatchParent
@@ -1526,12 +1513,12 @@ define([
                             spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
 
                             return new Promise((resolve) => {
-                                if (channelType === jcm.CHANNEL.JOB) {
+                                if (thisChannelType === jcm.CHANNEL.JOB) {
                                     // resolve the promise when the last update comes through
                                     this.jobManagerInstance.addListener(
                                         jcm.MESSAGE_TYPE.STATUS,
-                                        channelType,
-                                        channelIdList[channelIdList.length - 1],
+                                        thisChannelType,
+                                        thisChannelIdList[channelIdList.length - 1],
                                         {
                                             zzz_job_action: () => {
                                                 resolve();
@@ -1542,8 +1529,8 @@ define([
                                     // otherwise, there will only be one update
                                     this.jobManagerInstance.addListener(
                                         jcm.MESSAGE_TYPE.STATUS,
-                                        channelType,
-                                        channelIdList[0],
+                                        thisChannelType,
+                                        thisChannelIdList[0],
                                         {
                                             zzz_job_action: () => {
                                                 resolve();
@@ -1551,15 +1538,15 @@ define([
                                         }
                                     );
                                 }
-                                messageList.forEach((message) => {
+                                thisMessageList.forEach((message) => {
                                     const channelId =
-                                        channelType === jcm.CHANNEL.BATCH
-                                            ? channelIdList[0]
+                                        thisChannelType === jcm.CHANNEL.BATCH
+                                            ? thisChannelIdList[0]
                                             : Object.keys(message)[0];
                                     TestUtil.sendBusMessage({
                                         bus: this.bus,
                                         message,
-                                        channelType,
+                                        thisChannelType,
                                         channelId,
                                         type: event,
                                     });
@@ -1577,7 +1564,7 @@ define([
                                 expect(console.error).toHaveBeenCalledTimes(nUpdates);
                                 expect(this.bus.emit).not.toHaveBeenCalled();
 
-                                if (channelType === jcm.CHANNEL.JOB) {
+                                if (thisChannelType === jcm.CHANNEL.JOB) {
                                     // for non-terminal jobs or those that can be retried
                                     // the listener should still be in place
                                     const hasStatusListeners = Object.keys(
@@ -2415,7 +2402,7 @@ define([
                 expect(Object.keys(savedInfo)).toEqual(
                     jasmine.arrayWithExactContents([batchId, ...childIds])
                 );
-                childIds.forEach((id, ix) => {
+                childIds.forEach((_id, ix) => {
                     expect(savedInfo[childIds[ix]]).toEqual(expectedJobParams[ix]);
                 });
                 expect(savedInfo[batchId]).toEqual({

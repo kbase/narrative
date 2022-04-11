@@ -1,5 +1,4 @@
 define([
-    'jquery',
     'bluebird',
     'common/jobStateViewer',
     'common/jobs',
@@ -10,7 +9,6 @@ define([
     '/test/data/jobsData',
     'testUtil',
 ], (
-    $,
     Promise,
     JobStateViewerModule,
     Jobs,

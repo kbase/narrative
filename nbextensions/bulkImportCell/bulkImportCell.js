@@ -704,9 +704,9 @@ define([
                             );
                         },
                         fsmState: () => {
-                            const fsmState = jobManager.getFsmStateFromJobs();
-                            if (fsmState) {
-                                updateState(fsmState);
+                            const newFsmState = jobManager.getFsmStateFromJobs();
+                            if (newFsmState) {
+                                updateState(newFsmState);
                             }
                         },
                         titleBar: () => {
@@ -727,7 +727,7 @@ define([
                             }
                         },
                     });
-                    // jobManager.restoreFromSaved();
+
                     const fsmState = jobManager.restoreFromSaved();
                     if (fsmState) {
                         updateState(fsmState);

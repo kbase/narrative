@@ -1,5 +1,4 @@
 define([
-    'jquery',
     'bluebird',
     'util/jobLogViewer',
     'common/runtime',
@@ -7,7 +6,7 @@ define([
     'common/jobCommMessages',
     '/test/data/jobsData',
     'testUtil',
-], ($, Promise, JobLogViewerModule, Runtime, Jobs, jcm, JobsData, TestUtil) => {
+], (Promise, JobLogViewerModule, Runtime, Jobs, jcm, JobsData, TestUtil) => {
     'use strict';
 
     const { cssBaseClass, stateCssBaseClass, JobLogViewer } = JobLogViewerModule;

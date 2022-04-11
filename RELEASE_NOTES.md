@@ -4,10 +4,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
-- DATAUP-641 - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
-- DATAUP-641 - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
-- DATAUP-641 - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
+### Version 5.0.3
+- DATAUP-641 
+  - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+  - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+  - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
 - PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
 - DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
 - SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.

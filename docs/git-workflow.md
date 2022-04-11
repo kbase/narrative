@@ -20,9 +20,9 @@ There are 3 branches:
 
 - `develop` – Development branch. New features are added off this branch.
 - `staging` – Staging or "release candidate" branch. The branch deployed `narrative-dev`.
-- `master` – Production branch. The branch deployed on `narrative-next` and `narrative`. This branch is used for hotfixes.
+- `main` – Production branch. The branch deployed on `narrative-next` and `narrative`. This branch is used for hotfixes.
 
-Tags on master are used for indicating releases (see "Production releases", below).
+Tags on main are used for indicating releases (see "Production releases", below).
 
 ## Contributing
 

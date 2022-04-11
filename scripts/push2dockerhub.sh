@@ -1,8 +1,8 @@
 #!/bin/bash -x
-# 
+#
 # This script is intended to be run in the deploy stage of a travis build
 # It checks to make sure that this is a not a PR, and that we have the secure
-# environment variables available and then checks if this is either the master
+# environment variables available and then checks if this is either the main
 # or develop branch, otherwise we don't push anything
 #
 # NOTE: IMAGE_NAME is expected to be passed in via the environment so that this
@@ -13,7 +13,7 @@
 
 # Assign the tag to be used for the docker image, and pull the git commit from either
 # the TRAVIS_COMMIT env var if available, or else get the short commit via git cmd
-TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+TAG=`if [ "$TRAVIS_BRANCH" == "main" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
 COMMIT=`git rev-parse --short HEAD`
 
 if ( [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] ); then

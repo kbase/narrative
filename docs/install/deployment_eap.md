@@ -22,23 +22,23 @@ This document describes the manual procedures for creating a VM with the prerequ
 
 ### Install VM with Vagrant
 
-After installing Vagrant and Virtualbox, run  
+After installing Vagrant and Virtualbox, run
 
     vagrant init ubuntu/trusty64
 
-This will create the base Vagrantfile set up to install Ubuntu Trusty (14.04). 
+This will create the base Vagrantfile set up to install Ubuntu Trusty (14.04).
 
 On top of this configuration we need to tweak the VM to utilize more memory (for building the Narrative later) and developer-friendly network interface.
 
 Please the following towards the end of the Vagrantfile, before the final "end".
 
 ```
-config.vm.provider "virtualbox" do |v|  
-    v.memory = 2048  
-    v.cpus = 2  
+config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
 
-end  
+end
 config.vm.network "private_network", type: "dhcp"
 ```
 
@@ -87,9 +87,9 @@ The instructions, condensed from the ubuntu installation page:
 
 https://docs.docker.com/engine/installation/linux/ubuntulinux/
 
-    apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual 
+    apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
     apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-    echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list 
+    echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
     apt-get update
     apt-get -y install docker-engine
     usermod -G docker www-data
@@ -101,7 +101,7 @@ This accomplishes the following:
 - Update Linux to provide the aufs file system for Docker.
 - Install the keys and Docker package repository
 - Install docker
-- Add docker to the standard web-server group, so they can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
+- Add docker to the standard web-server group, so they can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).
 
 ### Install npm and grunt
 
@@ -120,7 +120,7 @@ You should be in the vagrant user directory, which is fine. We'll create a direc
     mkdir kb_narr
     cd kb_narr
 
-We'll be working with some branch of the narrative and kbase-ui repos. For development or testing work, this may be develop, staging, or master (in which case you can leave off the -b option).
+We'll be working with some branch of the narrative and kbase-ui repos. For development or testing work, this may be develop, staging, or main (in which case you can leave off the -b option).
 
     git clone -b develop http://github.com/kbase/narrative
     git clone -b develop http://github.com/kbase/kbase-ui
@@ -168,7 +168,7 @@ We need to copy that file into the nginx configuration, replacing the default fi
 edit the file
 
     vi /etc/nginx/sites-available/kbase.conf
-    
+
  change the Lua package path path (all one line)
 
     lua_package_path "/kb/deployment/services/narrative/docker/?;/kb/deployment/services/narrative/docker/?.lua;;";
@@ -194,7 +194,7 @@ Add this in the server section at the top:
 listen 443 ssl;
 ssl_certificate /kb/deployment/ssl/server.crt;
 ssl_certificate_key /kb/deployment/ssl/server.key.insecure;
-ssl_protocols TLSv1 TLSv1.1 TLSv1.2; 
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 ```
 
 ### Install the ssl certs
@@ -326,15 +326,15 @@ To keep track of older containers when a new one is produced, we create a new ta
 You can see which containers are active or exited with:
 
     sudo docker ps -a
-    
+
 This will produce output like the following:
 
     CONTAINER ID        IMAGE               COMMAND                CREATED             STATUS              PORTS               NAMES
-    1ac7e90b1fd1        307229146f62        /bin/bash /kb/deploy   16 minutes ago      Exit 0                                  angry_hawking            
-    fd422e25764d        c5fed90988a7        /bin/sh -c chown -R    16 minutes ago      Exit 0                                  dreamy_brattain          
-    bfbbc43c4891        b85d26996925        /bin/bash /kb/deploy   16 minutes ago      Exit 0                                  agitated_galileo         
-    b0777eb1a986        0fdb9a76b30b        /bin/sh -c #(nop) CM   16 minutes ago      Exit 0                                  furious_poincare         
-    46c6d2d7d4d0        f8c50afbfbe4        /bin/sh -c cd /tmp/n   16 minutes ago      Exit 0                                  angry_archimedes         
+    1ac7e90b1fd1        307229146f62        /bin/bash /kb/deploy   16 minutes ago      Exit 0                                  angry_hawking
+    fd422e25764d        c5fed90988a7        /bin/sh -c chown -R    16 minutes ago      Exit 0                                  dreamy_brattain
+    bfbbc43c4891        b85d26996925        /bin/bash /kb/deploy   16 minutes ago      Exit 0                                  agitated_galileo
+    b0777eb1a986        0fdb9a76b30b        /bin/sh -c #(nop) CM   16 minutes ago      Exit 0                                  furious_poincare
+    46c6d2d7d4d0        f8c50afbfbe4        /bin/sh -c cd /tmp/n   16 minutes ago      Exit 0                                  angry_archimedes
     ...
 
 All of those with status “Exit 0” can be safely deleted. This command will find them and remove them, saving quite a bit of disk space:
@@ -367,12 +367,12 @@ where 123... is the ip address of the VM.
 
 ## Troubleshooting
 
-Different logs can be checked in a couple ways.  
-`/var/log/upstart/docker.log`  
+Different logs can be checked in a couple ways.
+`/var/log/upstart/docker.log`
 contains the startup and shutdown commands for the logs.
-`/var/log/nginx/access.log`  
-and  
-`/var/log/nginx/error.log`  
+`/var/log/nginx/access.log`
+and
+`/var/log/nginx/error.log`
 contain the usual Nginx info, but they’re handy for debugging Lua problems.
 
 To look into a container for potential Narrative problems, run:
@@ -382,13 +382,13 @@ To look into a container for potential Narrative problems, run:
 This shows a list of all running containers along with the username of the person running it (sorry for formatting)
 
     CONTAINER ID        IMAGE                       COMMAND                CREATED             STATUS              PORTS                     NAMES
-    972f371bc2fc        kbase/narrative:20140624   /bin/bash /kb/deploy   3 minutes ago       Up 3 minutes        0.0.0.0:49153->8888/tcp   wjriehl  
+    972f371bc2fc        kbase/narrative:20140624   /bin/bash /kb/deploy   3 minutes ago       Up 3 minutes        0.0.0.0:49153->8888/tcp   wjriehl
 
 You can use the container ID to look at the container’s stdout and stderr with the command
 
     docker logs 972f371bc2fc
 
-(or other ID)  
+(or other ID)
 
 That’s a fragment of a longer id. If that’s not unique in your list, you can get the whole thing with
 
@@ -396,7 +396,7 @@ That’s a fragment of a longer id. If that’s not unique in your list, you can
 
 ### Stopping and removing a running container
 
-A container will remain up as long as a user maintains a websocket connection to their Narrative. Once the session is closed for more than a few minutes, a reaping daemon will come through and remove that container. 
+A container will remain up as long as a user maintains a websocket connection to their Narrative. Once the session is closed for more than a few minutes, a reaping daemon will come through and remove that container.
 
 There have been a few cases where this didn’t happen properly and users don’t see updated changes. A container can be manually shut down and removed with this command:
 

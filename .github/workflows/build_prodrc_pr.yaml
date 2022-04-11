@@ -3,7 +3,6 @@ name: Build Prod RC Image
 on:
   pull_request:
     branches:
-    - master
     - main
     types:
     - opened

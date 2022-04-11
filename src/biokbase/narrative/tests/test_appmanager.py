@@ -2,8 +2,8 @@
 Tests for the app manager.
 """
 import unittest
-import mock
-from mock import MagicMock
+from unittest import mock
+from unittest.mock import MagicMock
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
 from biokbase.narrative.jobs.jobmanager import JobManager

@@ -21,7 +21,7 @@ This document describes how to release and deploy the Narrative Interface app on
 ### KBase Environments
 
 The various KBase environments are all used used for slightly different purposes:
--   **ci** <https://ci.kbase.us> is intended for testing and demoing of new features that may not always work right. It's also intended to be continuously upgraded and redeployed. 
+-   **ci** <https://ci.kbase.us> is intended for testing and demoing of new features that may not always work right. It's also intended to be continuously upgraded and redeployed.
 -   **next** <https://next.kbase.us> is used for final internal testing before being promoted to the public-facing environments - appdev and production. Most services should be up to date here, and this is used for final integration and acceptance testing.
 -   **appdev** <https://appdev.kbase.us> is used primarily for KBase app development using the [KBase SDK](https://kbase.github.io/kb_sdk_docs/). This environment mirrors the production environment, but allows for finding and running apps in "dev" mode.
 -   **prod** <https://narrative.kbase.us> is the main production environment. This is the place where most users will use KBase and run apps that have either been entirely released or have been made available for beta testing.
@@ -56,7 +56,7 @@ To see your changes once the new image is created, simply open a narrative on CI
     -   `package.json`, `package-lock.json`, `src/config.json`, `src/config.json.templ`, `src/biokbase/narrative/__init__.py`
     -   Major - backward incompatible changes, like the move from Python 2 -> Python 3, or Narrative typed object changes. These are generally considered to be changes that have a strong impact on the Narrative Interface and are hard or impossible to move backward from.
     -   Minor - new features that don't affect compatibility.
-    -   Patch - adjustments to existing features, bug fixes.  
+    -   Patch - adjustments to existing features, bug fixes.
 
 2.  Add release notes in `RELEASE_NOTES.md`
     -   Add a new heading with the updated version.
@@ -65,17 +65,17 @@ To see your changes once the new image is created, simply open a narrative on CI
 3.  PR these changes to the develop branch.
     -   Ensure that tests pass.
 
-4.  PR the develop branch to the master branch.
+4.  PR the develop branch to the main branch.
     -   Deploy on the narrative-dev environment.
     -   Ensure that things work as expected.
 
 5.  Create a new release in the narrative repo on GitHub.
     -   Create a new tag with the new version number, prefixed with v (e.g. v4.2.1).
-    -   Set the new tag against the `master` branch.
+    -   Set the new tag against the `main` branch.
     -   Put the recent notes in the description.
 ### Deploying Next, Appdev, & Prod
 
-The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [production](https://narrative.kbase.us) environments are all deployed using a production image. 
+The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [production](https://narrative.kbase.us) environments are all deployed using a production image.
 
 ### Deploying Narrative-Refactor
 
@@ -87,11 +87,11 @@ The [narrative-dev](https://narrative-dev.kbase.us) environment is meant for pre
 
 #### Create Release Image
 
-1.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge the `develop` branch into `master`.
+1.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge the `develop` branch into `main`.
 2.  Ensure the automated tests complete successfully.
 3.  Complete the review and merge the PR.
 
-Once a pull request is merged from `develop` to `master` a new _production_ image will be available at:
+Once a pull request is merged from `develop` to `main` a new _production_ image will be available at:
 `ghcr.io/kbase/narrative:latest`.
 
 #### Tag & Deploy Image (admins only)

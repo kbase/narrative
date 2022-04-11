@@ -29,7 +29,8 @@ RUN \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && \
     source activate base && \
-    conda update -n base -c defaults conda
+    conda update -n base -c defaults conda && \
+    python -m pip install --upgrade pip setuptools wheel
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative

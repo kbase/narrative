@@ -13,7 +13,7 @@ Design a development process and write related automation that:
 1. Provides multiple test/check points througout the development process including:
     - Build tests that are created at the beginning of the code review (PR) process _pre_-merge
     - Images that can be tested both before and after merges to the `develop` branch
-    - Release candidate images that can be tested prior to production releases (aka merges to `master`)
+    - Release candidate images that can be tested prior to production releases (aka merges to `main`)
 1. Reduces excessive or redundant build testing through the use of Draft/WIP pull requests
 1. Enables manual build triggering as needed through the Draft/WIP vs. "Ready for Review" pull requests
 1. Allows for easy ad-hoc deployment of images to any environment (assuming above safeguards are in place)
@@ -25,9 +25,9 @@ Design a development process and write related automation that:
 
 #### Release Cycle Pt. 1:
 
-- An official "release" (version bump) is merged from develop to master.
+- An official "release" (version bump) is merged from develop to main.
 - The production Docker image `<appname>:latest` is then updated and pushed to GitHub Packages.
-- After this release update is complete, a new Draft/WIP PR for the next release is created (again a merge from develop to master). 
+- After this release update is complete, a new Draft/WIP PR for the next release is created (again a merge from develop to main).
 
 #### Development Cycle:
 
@@ -37,15 +37,15 @@ Design a development process and write related automation that:
     - Note that this image is intentionally separate from the prod `<appname>` image.
 - (Optional) - After the `<appname>-develop:pr#` image build & upload is complete, some process (PR labeling or a PR comment) "enables" this image to be tested in appdev, ci, and/or next.
 - Through some process, we test the image in these environments.
-    - Note that if we simply use the `<appname>-develop:pr#` nomenclature, the above "test environment enabling" may not be needed. 
+    - Note that if we simply use the `<appname>-develop:pr#` nomenclature, the above "test environment enabling" may not be needed.
     - Simply specifying which PR# tag you want to pull in each environment would suffice.
 - Once all testing is complete, the code is merged to develop.
 
 #### Release Cycle Pt. 2
 
-- Once all development for a release is complete, the aforementioned "Release PR" (aka the long-running Draft/WIP PR that will merge from develop to master) is taken out of WIP/Draft mode.
+- Once all development for a release is complete, the aforementioned "Release PR" (aka the long-running Draft/WIP PR that will merge from develop to main) is taken out of WIP/Draft mode.
 - Taking the Release PR out of Draft/WIP will trigger one final build test from the develop branch.
-- Once this image has passed the initial build test, the repo owner can merge the Release PR to master.
+- Once this image has passed the initial build test, the repo owner can merge the Release PR to main.
 - Once merged, the final build image will be uploaded to the prod `<appname>:latest` image.
 - Process starts again by creating a new Draft/WIP Release PR for the next release.
 
@@ -67,8 +67,8 @@ Design a development process and write related automation that:
 | ----------- | ----------- |----------- |----------- |
 | Dev      | _appname_-develop:pr-## | Pre-merge dev PR build| \*See `Improvements` section|
 | Pre-Stage   | _appname_-develop:latest | Latest post-mere dev PR build | |
-| Stage      | _appname_:pr-##       | Pre-merge dev -> master release candidate | |
-| Prod   | _appname_:latest        | Production (post-merge master) build | |
+| Stage      | _appname_:pr-##       | Pre-merge dev -> main release candidate | |
+| Prod   | _appname_:latest        | Production (post-merge main) build | |
 
 #### Deployment
 

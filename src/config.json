@@ -379,7 +379,7 @@
         "ws_browser": "https://narrative-refactor.kbase.us/#ws",
         "google_analytics_id": "UA-131054609-1"
     },
-    "release_notes": "https://github.com/kbase/narrative/blob/master/RELEASE_NOTES.md",
+    "release_notes": "https://github.com/kbase/narrative/blob/main/RELEASE_NOTES.md",
     "tooltip": {
         "hideDelay": 0,
         "showDelay": 750

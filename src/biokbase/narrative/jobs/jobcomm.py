@@ -24,7 +24,7 @@ MISSING_REQUEST_TYPE_ERR = "Missing request type in job channel message!"
 LOOKUP_TIMER_INTERVAL = 5
 
 
-class JobRequest:
+class JobRequest(object):
     """
     A small wrapper for job comm channel request data.
     This generally comes in the form of a packet from the kernel Comm object.
@@ -187,8 +187,8 @@ class JobComm:
 
         try:
             return req.job_id_list
-        except Exception:
-            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
+        except Exception as ex:
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
 
     def start_job_status_loop(
         self,
@@ -436,7 +436,7 @@ class JobComm:
             other fields about the error, dependent on the content.
         }
         """
-        error_content = dict()
+        error_content = {}
         if isinstance(req, JobRequest):
             error_content["request"] = req.rq_data
             error_content["source"] = req.request_type

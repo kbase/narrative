@@ -1452,7 +1452,7 @@ define([
                     });
                 });
 
-                describe('multiple job updates', () => {
+                function prepStatusUpdateTests() {
                     const updatedJobStates = {};
 
                     const listening = [];
@@ -1498,12 +1498,16 @@ define([
                             messageList: [batchMessage],
                         },
                     };
+                    return { inputs, listening, updatedJobStates };
+                }
+
+                describe('multiple job updates', () => {
+                    const { inputs, listening, updatedJobStates } = prepStatusUpdateTests();
 
                     Object.keys(inputs).forEach((inputName) => {
-                        const { thisChannelType, thisChannelIdList, thisMessageList } =
-                            inputs[inputName];
+                        const { channelType, channelIdList, messageList } = inputs[inputName];
                         it(`updates multiple jobs, ${inputName}`, function () {
-                            setUpHandlerTest(this, event, thisChannelType, thisChannelIdList);
+                            setUpHandlerTest(this, event, channelType, channelIdList);
                             Jobs.populateModelFromJobArray(
                                 this.jobManagerInstance.model,
                                 JobsData.allJobsWithBatchParent
@@ -1513,12 +1517,12 @@ define([
                             spyOn(this.jobManagerInstance, 'updateModel').and.callThrough();
 
                             return new Promise((resolve) => {
-                                if (thisChannelType === jcm.CHANNEL.JOB) {
+                                if (channelType === jcm.CHANNEL.JOB) {
                                     // resolve the promise when the last update comes through
                                     this.jobManagerInstance.addListener(
                                         jcm.MESSAGE_TYPE.STATUS,
-                                        thisChannelType,
-                                        thisChannelIdList[channelIdList.length - 1],
+                                        channelType,
+                                        channelIdList[channelIdList.length - 1],
                                         {
                                             zzz_job_action: () => {
                                                 resolve();
@@ -1529,8 +1533,8 @@ define([
                                     // otherwise, there will only be one update
                                     this.jobManagerInstance.addListener(
                                         jcm.MESSAGE_TYPE.STATUS,
-                                        thisChannelType,
-                                        thisChannelIdList[0],
+                                        channelType,
+                                        channelIdList[0],
                                         {
                                             zzz_job_action: () => {
                                                 resolve();
@@ -1538,15 +1542,15 @@ define([
                                         }
                                     );
                                 }
-                                thisMessageList.forEach((message) => {
+                                messageList.forEach((message) => {
                                     const channelId =
-                                        thisChannelType === jcm.CHANNEL.BATCH
-                                            ? thisChannelIdList[0]
+                                        channelType === jcm.CHANNEL.BATCH
+                                            ? channelIdList[0]
                                             : Object.keys(message)[0];
                                     TestUtil.sendBusMessage({
                                         bus: this.bus,
                                         message,
-                                        thisChannelType,
+                                        channelType,
                                         channelId,
                                         type: event,
                                     });
@@ -1564,7 +1568,7 @@ define([
                                 expect(console.error).toHaveBeenCalledTimes(nUpdates);
                                 expect(this.bus.emit).not.toHaveBeenCalled();
 
-                                if (thisChannelType === jcm.CHANNEL.JOB) {
+                                if (channelType === jcm.CHANNEL.JOB) {
                                     // for non-terminal jobs or those that can be retried
                                     // the listener should still be in place
                                     const hasStatusListeners = Object.keys(

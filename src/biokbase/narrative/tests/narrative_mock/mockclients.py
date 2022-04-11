@@ -56,7 +56,7 @@ class MockClients:
     as a test function decorator, like this:
 
     <top of file>
-    from mockclients import get_mock_client
+    from unittest.mockclients import get_mock_client
 
     class MyTestCase(unittest.TestCase):
         @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)

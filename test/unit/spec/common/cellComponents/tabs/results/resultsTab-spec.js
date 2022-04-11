@@ -1,10 +1,10 @@
 define([
     'common/cellComponents/tabs/results/resultsTab',
     'base/js/namespace',
-    'common/props',
     'testUtil',
     '/test/data/testBulkImportObj',
-], (ResultsTab, Jupyter, Props, TestUtil, TestBulkImportObject) => {
+    '/test/data/jobsData',
+], (ResultsTab, Jupyter, TestUtil, TestBulkImportObject, JobsData) => {
     'use strict';
 
     const reportObject = {
@@ -32,6 +32,8 @@ define([
         null,
     ];
 
+    const testJob = JobsData.jobsByStatus.completed[0];
+
     describe('test the bulk import cell results tab', () => {
         let container;
         beforeAll(() => {
@@ -47,10 +49,13 @@ define([
                 get_object_info_new: () => Promise.resolve([]),
             };
             container = document.createElement('div');
-            this.model = Props.make({
-                data: TestBulkImportObject,
-                onUpdate: () => {},
-            });
+
+            // mimic the function of the job manager
+            this.jobManager = {
+                getIndexedJobs: () => {
+                    return { [testJob.job_id]: testJob };
+                },
+            };
         });
 
         afterEach(() => {
@@ -64,7 +69,7 @@ define([
 
         it('should start and render itself', function () {
             const resultsTabInstance = ResultsTab.make({
-                model: this.model,
+                jobManager: this.jobManager,
                 workspaceClient: this.workspaceClient,
             });
             return resultsTabInstance
@@ -80,7 +85,7 @@ define([
 
         it('should stop itself and empty the node it was in', function () {
             const resultsTabInstance = ResultsTab.make({
-                model: this.model,
+                jobManager: this.jobManager,
                 workspaceClient: this.workspaceClient,
             });
             return resultsTabInstance
@@ -104,7 +109,7 @@ define([
                 get_object_info_new: () => Promise.resolve([newObjectInfo]),
             };
             const resultsTabInstance = ResultsTab.make({
-                model: this.model,
+                jobManager: this.jobManager,
                 workspaceClient,
             });
             return resultsTabInstance
@@ -130,7 +135,7 @@ define([
                 get_object_info_new: () => Promise.reject(new Error('workspace not available')),
             };
             const resultsTab = ResultsTab.make({
-                model: this.model,
+                jobManager: this.jobManager,
                 workspaceClient,
             });
 
@@ -149,7 +154,7 @@ define([
                 get_object_info_new: () => Promise.resolve([null]),
             };
             const resultsTab = ResultsTab.make({
-                model: this.model,
+                jobManager: this.jobManager,
                 workspaceClient,
             });
 

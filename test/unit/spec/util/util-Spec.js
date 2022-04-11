@@ -3,7 +3,7 @@ define(['util/util'], (Utils) => {
 
     describe('Basic Util functions', () => {
         it('should have expected functions', () => {
-            ['copy', 'pRequire', 'toInteger'].forEach((fn) => {
+            ['copy', 'pRequire', 'toInteger', 'toFloat'].forEach((fn) => {
                 expect(Utils[fn]).toEqual(jasmine.any(Function));
             });
         });
@@ -75,7 +75,16 @@ define(['util/util'], (Utils) => {
         });
 
         describe('the toInteger function', () => {
-            [undefined, null, {}, { a: 1 }, [], () => {}].forEach((input) => {
+            [
+                undefined,
+                null,
+                {},
+                { a: 1 },
+                [],
+                () => {
+                    /* no op */
+                },
+            ].forEach((input) => {
                 it(`should not convert "${input}" to an integer`, () => {
                     expect(() => Utils.toInteger(input)).toThrowError(
                         /cannot be converted to integer/
@@ -108,7 +117,71 @@ define(['util/util'], (Utils) => {
             it('should fail to convert non-integer strings', () => {
                 const badCases = ['-1.1', '0.00000001', '1.1', 'foo', '1 '];
                 badCases.forEach((bad) => {
-                    expect(() => Utils.toInteger(bad)).toThrowError('Invalid integer format');
+                    expect(() => Utils.toInteger(bad)).toThrowError(
+                        `Invalid integer format: ${bad}`
+                    );
+                });
+            });
+        });
+
+        describe('the toFloat function', () => {
+            [undefined, null, {}, { a: 1 }, [], () => {}].forEach((input) => {
+                it(`should not convert "${input}" to a float`, () => {
+                    expect(() => Utils.toFloat(input)).toThrowError(/cannot be converted to float/);
+                });
+            });
+
+            it('should convert number strings', () => {
+                const okCases = {
+                    '-1': -1,
+                    '+1': 1,
+                    1: 1,
+                    100000000: 100000000,
+                    0: 0,
+                    '-1.12': -1.12,
+                    123.456: 123.456,
+                    123.0: 123.0,
+                    123.0000000000001: 123.0000000000001,
+                    '1e3': 1000,
+                };
+                Object.keys(okCases).forEach((testCase) => {
+                    expect(Utils.toFloat(testCase)).toEqual(okCases[testCase]);
+                });
+            });
+
+            it('should fail to convert non-number strings', () => {
+                const badCases = ['foo', '+', '1234f', 'a 123'];
+                badCases.forEach((bad) => {
+                    expect(() => Utils.toFloat(bad)).toThrowError(`Invalid float format: ${bad}`);
+                });
+            });
+        });
+
+        describe('the objectToString method', () => {
+            const tests = [
+                ['Null', null],
+                ['Undefined', undefined],
+                ['Number', 123456],
+                ['Number', 1.23456],
+                ['String', 'string'],
+                ['String', ''],
+                ['Array', [1, 2, 3]],
+                ['Object', { this: 'that' }],
+                [
+                    'Function',
+                    () => {
+                        /* no op */
+                    },
+                ],
+                ['Object', Utils],
+                ['Date', new Date()],
+                ['Set', new Set()],
+            ];
+
+            tests.forEach((test) => {
+                const [type, sample] = test;
+                it(`identifies ${sample} as type ${type}`, () => {
+                    expect(Utils.objectToString(sample)).toEqual(type);
                 });
             });
         });

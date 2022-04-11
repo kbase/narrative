@@ -3,14 +3,15 @@
  * The viewer updates based on changes to the job state and view model.
  * It reports the current job state, runtime, and how long it has been / was queued for.
  */
-define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html', 'common/jobs'], (
-    Promise,
-    Runtime,
-    UI,
-    format,
-    html,
-    Jobs
-) => {
+define([
+    'bluebird',
+    'common/runtime',
+    'common/ui',
+    'common/format',
+    'common/html',
+    'common/jobs',
+    'common/jobCommMessages',
+], (Promise, Runtime, UI, format, html, Jobs, jcm) => {
     'use strict';
 
     const t = html.tag,
@@ -254,8 +255,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
             ui,
             jobState = null,
             listeningForJob = false,
-            jobId,
-            parentJobId;
+            jobId;
 
         const viewModel = {
             lastUpdated: {
@@ -323,8 +323,8 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
             if (listeningForJob) {
                 return;
             }
-            runtime.bus().emit('request-job-updates-start', {
-                jobId,
+            runtime.bus().emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: jobId,
             });
             listeningForJob = true;
         }
@@ -342,7 +342,11 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
          * @param {object} message
          */
         function handleJobStatusUpdate(message) {
-            jobState = message.jobState;
+            if (!(jobId in message)) {
+                return;
+            }
+
+            jobState = message[jobId].jobState;
             switch (jobState.status) {
                 case 'queued':
                 case 'created':
@@ -358,7 +362,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                     break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.status, message);
+                    console.error('Unknown job status', jobState.status, message[jobId]);
                     throw new Error('Unknown job status ' + jobState.status);
             }
         }
@@ -370,12 +374,13 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
          */
         function listenForJobStatus() {
             listeners.push(
+                // listen for job-related bus messages
                 runtime.bus().listen({
                     channel: {
-                        jobId: jobId,
+                        [jcm.CHANNEL.JOB]: jobId,
                     },
                     key: {
-                        type: 'job-status',
+                        type: jcm.MESSAGE_TYPE.STATUS,
                     },
                     handle: handleJobStatusUpdate,
                 })
@@ -400,9 +405,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                     ui = UI.make({ node: container });
 
                     container.innerHTML = renderRunStats();
-
                     jobId = arg.jobId;
-                    parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
                     listeners.push(
                         runtime.bus().on('clock-tick', () => {
@@ -413,9 +416,8 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                     listenForJobStatus();
 
                     // request a new job status update from the kernel on start
-                    runtime.bus().emit('request-job-status', {
-                        jobId: jobId,
-                        parentJobId: parentJobId,
+                    runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: jobId,
                     });
                     listeningForJob = true;
 

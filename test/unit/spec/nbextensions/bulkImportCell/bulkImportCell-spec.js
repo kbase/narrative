@@ -4,6 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
+    'common/jobCommMessages',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -18,6 +19,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
+    jcm,
     Runtime,
     Mocks,
     TestUtil,
@@ -28,15 +30,16 @@ define([
     SimpleAppSpec
 ) => {
     'use strict';
+    const APP_ID = 'someApp';
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
-                appId: 'someApp',
+                appId: APP_ID,
                 suffix: '_obj',
             },
         },
         fakeSpecs = {
-            someApp:
+            [APP_ID]:
                 TestBulkImportObject.app.specs[
                     'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
                 ],
@@ -80,7 +83,10 @@ define([
         };
         cell.metadata = {
             kbase: {
-                bulkImportCell: Object.assign({}, state, TestUtil.JSONcopy(TestBulkImportObject)),
+                bulkImportCell: {
+                    ...state,
+                    ...TestUtil.JSONcopy(TestBulkImportObject),
+                },
                 type: 'app-bulk-import',
                 attributes: {
                     id: `${args.cellId}-test-cell`,
@@ -219,49 +225,6 @@ define([
                 ]);
             });
 
-            it('should build a bulk import cell with appParameters premade info', () => {
-                const inFileName = 'dvh.fasta',
-                    objName = 'dvh_assembly',
-                    testInputs = {
-                        dataType: {
-                            files: [],
-                            appId: 'simpleApp',
-                            outputSuffix: '_obj',
-                            appParameters: [
-                                {
-                                    staging_file_subdir_path: inFileName,
-                                    assembly_name: objName,
-                                    type: 'sag', // not default
-                                    min_contig_length: 1000, // not default
-                                },
-                            ],
-                        },
-                    },
-                    fakeSpecs = { simpleApp: SimpleAppSpec };
-                const cell = Mocks.buildMockCell('code');
-                const cellWidget = BulkImportCell.make({
-                    cell,
-                    importData: testInputs,
-                    specs: fakeSpecs,
-                    initialize: true,
-                });
-                expect(cellWidget).toBeDefined();
-                expect(cell.metadata.kbase).toBeDefined();
-                expect(cell.metadata.kbase.bulkImportCell.params.dataType.filePaths).toEqual([
-                    {
-                        staging_file_subdir_path: inFileName,
-                        assembly_name: objName,
-                    },
-                ]);
-                expect(cell.metadata.kbase.bulkImportCell.inputs.dataType.files).toEqual([
-                    inFileName,
-                ]);
-                expect(cell.metadata.kbase.bulkImportCell.params.dataType.params).toEqual({
-                    type: 'sag',
-                    min_contig_length: 1000,
-                });
-            });
-
             it('should have a cell that can render its icon', () => {
                 const cell = Mocks.buildMockCell('code');
                 const cellWidget = BulkImportCell.make({
@@ -303,6 +266,95 @@ define([
                         initialize: false,
                     })
                 ).toThrow();
+            });
+
+            describe('xsv specific setup', () => {
+                const inFiles = ['dvh.fasta', 'styphi.fasta', 'mex.fasta'],
+                    appParams1 = {
+                        staging_file_subdir_path: inFiles[0],
+                        assembly_name: 'object1',
+                        type: 'sag', // not default
+                        min_contig_length: 1000, // not default
+                    },
+                    appParams2 = {
+                        staging_file_subdir_path: inFiles[1],
+                        assembly_name: 'object2',
+                        type: 'sag', // not default
+                        min_contig_length: 1000, // not default
+                    },
+                    appParams3 = {
+                        staging_file_subdir_path: inFiles[2],
+                        assembly_name: 'object3',
+                        type: 'mag',
+                        min_contig_length: 1250,
+                    },
+                    testInputs = {
+                        dataType: {
+                            files: [],
+                            appId: 'simpleApp',
+                            outputSuffix: '_obj',
+                            appParameters: [],
+                        },
+                    },
+                    fakeSpecs = { simpleApp: SimpleAppSpec };
+
+                [
+                    {
+                        appParams: [appParams1],
+                        hasWarning: false,
+                        label: 'single app params row',
+                    },
+                    {
+                        appParams: [appParams1, appParams2],
+                        hasWarning: false,
+                        label: 'multiple app params row',
+                    },
+                    {
+                        appParams: [appParams1, appParams2, appParams3],
+                        hasWarning: true,
+                        label: 'multiple app params row',
+                    },
+                ].forEach((testCase) => {
+                    it(`should build a bulk import cell with appParameters premade info, ${
+                        testCase.label
+                    }, with${testCase.hasWarning ? '' : 'out'} a warning`, () => {
+                        const inputs = TestUtil.JSONcopy(testInputs);
+                        inputs.dataType.appParameters = testCase.appParams;
+                        const cell = Mocks.buildMockCell('code');
+                        const cellWidget = BulkImportCell.make({
+                            cell,
+                            importData: inputs,
+                            specs: fakeSpecs,
+                            initialize: true,
+                        });
+                        expect(cellWidget).toBeDefined();
+                        expect(cell.metadata.kbase).toBeDefined();
+
+                        const biMeta = cell.metadata.kbase.bulkImportCell;
+
+                        expect(biMeta.params.dataType.filePaths).toEqual(
+                            testCase.appParams.map((params) => {
+                                return {
+                                    staging_file_subdir_path: params.staging_file_subdir_path,
+                                    assembly_name: params.assembly_name,
+                                };
+                            })
+                        );
+                        expect(biMeta.inputs.dataType.files).toEqual(
+                            inFiles.slice(0, testCase.appParams.length)
+                        );
+                        expect(biMeta.params.dataType.params).toEqual({
+                            type: 'sag',
+                            min_contig_length: 1000,
+                        });
+                        if (testCase.hasWarning) {
+                            expect(biMeta.inputs.dataType.messages.length).toBe(1);
+                            expect(biMeta.inputs.dataType.messages[0].type).toEqual('warning');
+                        } else {
+                            expect(biMeta.inputs.dataType.messages).not.toBeDefined();
+                        }
+                    });
+                });
             });
         });
 
@@ -360,7 +412,7 @@ define([
                         {},
                         {
                             channel: {
-                                cell: cell.metadata.kbase.attributes.id,
+                                [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                             },
                             key: {
                                 type: 'delete-cell',
@@ -428,6 +480,7 @@ define([
                     const runButton = cell.element[0].querySelector(selectors.run);
                     const cancelButton = cell.element[0].querySelector(selectors.cancel);
                     spyOn(console, 'error');
+                    spyOn(Jupyter.narrative, 'saveNarrative');
                     await TestUtil.waitForElementState(cancelButton, () => {
                         return (
                             !runButton.classList.contains('disabled') &&
@@ -441,9 +494,9 @@ define([
                         return !cancelButton.classList.contains('hidden');
                     });
                     checkTabState(cell, {
-                        selectedTab: 'viewConfigure',
-                        enabledTabs: ['viewConfigure', 'info'],
-                        visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                        selectedTab: 'launching',
+                        enabledTabs: ['viewConfigure', 'info', 'launching'],
+                        visibleTabs: ['viewConfigure', 'info', 'launching', 'results'],
                     });
 
                     // wait for the cell to receive the run status message and transition
@@ -462,19 +515,24 @@ define([
                             );
                             runtime.bus().send(message, {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             });
                         }
                     );
-                    expect(console.error.calls.allArgs()).toEqual([['running execute!']]);
+                    expect(console.error.calls.allArgs()).toContain(['running execute!']);
                     expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                         testCase.updatedState
                     );
                     checkTabState(cell, testCase);
+                    if (testCase.msgEvent === 'launched_job_batch') {
+                        expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+                    } else {
+                        expect(Jupyter.narrative.saveNarrative).not.toHaveBeenCalled();
+                    }
                 });
             });
 
@@ -652,9 +710,12 @@ define([
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    ['request-job-updates-start', { batchId }],
-                                    ['request-job-cancel', { jobIdList: [batchId] }],
-                                    ['request-job-updates-stop', { batchId }],
+                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [
+                                        jcm.MESSAGE_TYPE.CANCEL,
+                                        { [jcm.PARAM.JOB_ID_LIST]: [batchId] },
+                                    ],
                                     [
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
@@ -744,10 +805,10 @@ define([
                             },
                             {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             }
                         );
@@ -757,11 +818,9 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    ['request-job-updates-start', { batchId }],
-                    ['request-job-info', { batchId }],
-                    ['request-job-cancel', { jobIdList: [batchId] }],
-                    ['request-job-updates-stop', { batchId }],
-                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

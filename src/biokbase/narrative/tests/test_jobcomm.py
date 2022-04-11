@@ -3,43 +3,44 @@ from unittest import mock
 import os
 import itertools
 import re
+import copy
 
-from biokbase.narrative.exception_util import transform_job_exception
-from biokbase.narrative.jobs.jobcomm import exc_to_msg
-import biokbase.narrative.jobs.jobcomm
-import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobmanager import (
+    JobManager,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
     JOBS_TYPE_ERR,
-    JOBS_MISSING_FALSY_ERR,
-    get_error_output_state,
+    JOBS_MISSING_ERR,
 )
 from biokbase.narrative.jobs.jobcomm import (
     JobRequest,
     JobComm,
+    exc_to_msg,
     JOB_NOT_PROVIDED_ERR,
     JOBS_NOT_PROVIDED_ERR,
+    BATCH_NOT_PROVIDED_ERR,
+    CELLS_NOT_PROVIDED_ERR,
+    ONE_INPUT_TYPE_ONLY_ERR,
+    INVALID_REQUEST_ERR,
+    MISSING_REQUEST_TYPE_ERR,
+    MESSAGE_TYPE,
+    PARAM,
 )
 from biokbase.narrative.exception_util import (
     NarrativeException,
-    JobIDException,
+    JobRequestException,
+    transform_job_exception,
 )
 
 from .util import ConfigTests, validate_job_state
-from .narrative_mock.mockcomm import MockComm
-from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    MockClients,
-)
-from .test_job import (
+from biokbase.narrative.tests.job_test_constants import (
+    CLIENTS,
+    MAX_LOG_LINES,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
     JOB_ERROR,
-    JOB_NOT_FOUND,
     BATCH_PARENT,
     BATCH_COMPLETED,
     BATCH_TERMINATED,
@@ -48,34 +49,78 @@ from .test_job import (
     BATCH_RETRY_COMPLETED,
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
-    ALL_JOBS,
+    JOB_NOT_FOUND,
+    BAD_JOB_ID,
+    BAD_JOB_ID_2,
     JOBS_TERMINALITY,
-    TERMINAL_JOBS,
+    ALL_JOBS,
+    BAD_JOBS,
     ACTIVE_JOBS,
+    REFRESH_STATE,
+    BATCH_PARENT_CHILDREN,
     BATCH_CHILDREN,
-    get_test_job,
-    get_test_spec,
-    TEST_SPECS,
-    get_test_job_states,
-    get_cell_2_jobs,
+    generate_error,
 )
-from .test_jobmanager import get_test_job_info, get_test_job_infos
+from biokbase.narrative.tests.generate_test_results import (
+    ALL_RESPONSE_DATA,
+    RETRIED_JOBS,
+    TEST_CELL_ID_LIST,
+    TEST_CELL_IDs,
+    JOBS_BY_CELL_ID,
+)
 
+from .narrative_mock.mockcomm import MockComm
+from .narrative_mock.mockclients import (
+    get_mock_client,
+    get_failing_mock_client,
+    generate_ee2_error,
+    MockClients,
+)
 
 APP_NAME = "The Best App in the World"
-EXP_ALL_STATE_IDS = ALL_JOBS  # or ACTIVE_JOBS
+
+NO_JOBS_MAPPING = {
+    "jobs": {},
+    "mapping": {
+        "a": set(),
+        "b": set(),
+        "c": set(),
+    },
+}
+
+BATCH_ID = PARAM["BATCH_ID"]
+JOB_ID = PARAM["JOB_ID"]
+JOB_ID_LIST = PARAM["JOB_ID_LIST"]
+CELL_ID_LIST = PARAM["CELL_ID_LIST"]
+
+CANCEL = MESSAGE_TYPE["CANCEL"]
+CELL_JOB_STATUS = MESSAGE_TYPE["CELL_JOB_STATUS"]
+ERROR = MESSAGE_TYPE["ERROR"]
+INFO = MESSAGE_TYPE["INFO"]
+LOGS = MESSAGE_TYPE["LOGS"]
+RETRY = MESSAGE_TYPE["RETRY"]
+START_UPDATE = MESSAGE_TYPE["START_UPDATE"]
+STATUS = MESSAGE_TYPE["STATUS"]
+STATUS_ALL = MESSAGE_TYPE["STATUS_ALL"]
+STOP_UPDATE = MESSAGE_TYPE["STOP_UPDATE"]
+
+LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG_LINES)]
 
 
 def make_comm_msg(
     msg_type: str, job_id_like, as_job_request: bool, content: dict = None
 ):
-    if type(job_id_like) is list:
-        job_id_key = "job_id_list"
-    else:
-        job_id_key = "job_id"
+    job_arguments = {}
+    if type(job_id_like) is dict:
+        job_arguments = job_id_like
+    elif type(job_id_like) is list:
+        job_arguments[JOB_ID_LIST] = job_id_like
+    elif job_id_like:
+        job_arguments[JOB_ID] = job_id_like
+
     msg = {
         "msg_id": "some_id",
-        "content": {"data": {"request_type": msg_type, job_id_key: job_id_like}},
+        "content": {"data": {"request_type": msg_type, **job_arguments}},
     }
     if content is not None:
         msg["content"]["data"].update(content)
@@ -94,44 +139,131 @@ class JobCommTestCase(unittest.TestCase):
 
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobcomm.Comm", MockComm)
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def setUpClass(cls):
-        cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         config = ConfigTests()
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
-
-        cls.jc = biokbase.narrative.jobs.jobcomm.JobComm()
+        cls.jm = JobManager()
+        cls.jc = JobComm()
         cls.jc._comm = MockComm()
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def setUp(self):
         self.jc._comm.clear_message_cache()
         self.jc._jm.initialize_jobs()
         self.jc.stop_job_status_loop()
-        self.job_states = get_test_job_states()
 
-    def check_error_message(self, source, input_, err):
+    def check_error_message(self, req, err, extra_params={}):
         """
         response when no input was submitted with a query
         args:
-          input: the dict with job_id/job_id_list key and value
-          source: the request that was called
-          name: the type of exception
-          message: the error message
+            req: the JobRequest, dictionary, or string passed when throwing the error
+            extra_params: any extra content
+            err: the error object produced
+
+        error message produced will contain:
+            request: the input that generated the error
+            source: the request that was called
+            extra_params
+            name: the type of exception
+            message: the error message
         """
+        if isinstance(req, JobRequest):
+            request = req.rq_data
+            source = req.request_type
+        elif isinstance(req, dict):
+            request = req["content"]["data"]
+            source = req["content"]["data"]["request_type"]
+        elif isinstance(req, str):
+            request = req
+            source = req
+
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": request,
                     "source": source,
-                    **input_,
+                    **extra_params,
                     "name": type(err).__name__,
                     "message": str(err),
                 },
             },
-            msg["data"],
+            msg,
         )
+
+    def check_job_id_list__no_jobs(self, request_type):
+        job_id_list = [None, ""]
+        req_dict = make_comm_msg(request_type, job_id_list, False)
+        req = make_comm_msg(request_type, job_id_list, True)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
+
+        # using handler
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
+
+        # run directly
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._msg_map[request_type](req)
+
+    def check_job_id_list__dne_jobs(self, request_type, response_type=None):
+        job_id_list = [None, "", JOB_NOT_FOUND, JOB_NOT_FOUND, BAD_JOB_ID]
+        expected_output = {
+            {"job_id": job_id, "error": generate_error(job_id, "not_found")}
+            for job_id in job_id_list
+            if job_id
+        }
+        req_dict = make_comm_msg(request_type, job_id_list, False)
+        self.jc._handle_comm_message(req_dict)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": response_type if response_type else request_type,
+                "content": expected_output,
+            },
+            msg,
+        )
+
+    def check_id_error(self, req_dict, err):
+        self.jc._comm.clear_message_cache()
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
+
+    def check_job_id__no_job_test(self, request_type):
+        for job_id in [None, ""]:
+            self.jc._comm.clear_message_cache()
+            req_dict = make_comm_msg(request_type, {JOB_ID: job_id}, False)
+            req = make_comm_msg(request_type, {JOB_ID: job_id}, True)
+            err = JobRequestException(JOBS_MISSING_ERR, [job_id])
+            self.check_id_error(req_dict, err)
+
+            # run directly
+            with self.assertRaisesRegex(type(err), re.escape(str(err))):
+                self.jc._msg_map[request_type](req)
+
+    def check_job_id__dne_test(self, request_type):
+        req_dict = make_comm_msg(request_type, {JOB_ID: JOB_NOT_FOUND}, False)
+        err = JobRequestException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
+        self.check_id_error(req_dict, err)
+
+    def check_batch_id__no_job_test(self, request_type):
+        for job_id in [None, ""]:
+            req_dict = make_comm_msg(request_type, {BATCH_ID: job_id}, False)
+            err = JobRequestException(JOB_NOT_REG_ERR, job_id)
+            self.check_id_error(req_dict, err)
+
+    def check_batch_id__dne_test(self, request_type):
+        req_dict = make_comm_msg(request_type, {BATCH_ID: JOB_NOT_FOUND}, False)
+        err = JobRequestException(JOB_NOT_REG_ERR, JOB_NOT_FOUND)
+        self.check_id_error(req_dict, err)
+
+    def check_batch_id__not_batch_test(self, request_type):
+        req_dict = make_comm_msg(request_type, {BATCH_ID: BATCH_COMPLETED}, False)
+        err = JobRequestException(JOB_NOT_BATCH_ERR, BATCH_COMPLETED)
+        self.check_id_error(req_dict, err)
 
     # ---------------------
     # Send comms methods
@@ -139,103 +271,110 @@ class JobCommTestCase(unittest.TestCase):
     def test_send_comm_msg_ok(self):
         self.jc.send_comm_message("some_msg", {"foo": "bar"})
         msg = self.jc._comm.last_message
-        self.assertDictEqual(
+        self.assertEqual(
             msg,
             {
-                "content": None,
-                "data": {"content": {"foo": "bar"}, "msg_type": "some_msg"},
+                "msg_type": "some_msg",
+                "content": {"foo": "bar"},
             },
         )
         self.jc._comm.clear_message_cache()
 
     def test_send_error_msg__JobRequest(self):
-        msg = make_comm_msg("bar", "aeaeae", True)
-        self.jc.send_error_message("foo", msg, {"extra": "field"})
+        req = make_comm_msg("bar", "aeaeae", True)
+        self.jc.send_error_message(req, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "foo",
-                "content": {"source": "bar", "job_id": "aeaeae", "extra": "field"},
+                "msg_type": ERROR,
+                "content": {
+                    "source": "bar",
+                    "extra": "field",
+                    "request": req.rq_data,
+                },
             },
-            msg["data"],
+            msg,
         )
 
     def test_send_error_msg__dict(self):
-        msg = make_comm_msg("bar", "aeaeae", False)
-        self.jc.send_error_message("foo", msg, {"extra": "field"})
+        req_dict = make_comm_msg("bar", "aeaeae", False)
+        self.jc.send_error_message(req_dict, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "foo",
-                "content": {"source": "bar", "job_id": "aeaeae", "extra": "field"},
+                "msg_type": ERROR,
+                "content": {
+                    "source": "bar",
+                    "extra": "field",
+                    "request": req_dict["content"]["data"],
+                },
             },
-            msg["data"],
+            msg,
         )
 
     def test_send_error_msg__None(self):
-        self.jc.send_error_message("foo", None, {"extra": "field"})
+        self.jc.send_error_message(None, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"msg_type": "foo", "content": {"source": None, "extra": "field"}},
-            msg["data"],
+            {
+                "msg_type": ERROR,
+                "content": {
+                    "source": None,
+                    "extra": "field",
+                    "request": None,
+                },
+            },
+            msg,
         )
 
     def test_send_error_msg__str(self):
         source = "test_jobcomm"
-        self.jc.send_error_message("foo", source, {"extra": "field"})
+        self.jc.send_error_message(source, {"extra": "field"})
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"msg_type": "foo", "content": {"source": source, "extra": "field"}},
-            msg["data"],
+            {
+                "msg_type": ERROR,
+                "content": {
+                    "source": source,
+                    "extra": "field",
+                    "request": source,
+                },
+            },
+            msg,
         )
 
     # ---------------------
     # Requests
     # ---------------------
+    @mock.patch(CLIENTS, get_mock_client)
     def test_req_no_inputs__succeed(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "all_status",
-                }
-            },
-        }
-        self.jc._handle_comm_message(msg)
+        req_dict = make_comm_msg(STATUS_ALL, None, False)
+        self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        self.assertEqual("job_status_all", msg["data"]["msg_type"])
+        self.assertEqual(STATUS_ALL, msg["msg_type"])
 
     def test_req_no_inputs__fail(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "job_status_batch",
-                }
-            },
-        }
-        err = JobIDException(JOB_NOT_PROVIDED_ERR)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(msg)
-        self.check_error_message("job_status_batch", {}, err)
+        functions = [
+            CANCEL,
+            INFO,
+            LOGS,
+            RETRY,
+            START_UPDATE,
+            STATUS,
+            STOP_UPDATE,
+        ]
 
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "retry_job",
-                }
-            },
-        }
-        err = JobIDException(JOBS_NOT_PROVIDED_ERR)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(msg)
-        self.check_error_message("retry_job", {}, err)
+        for msg_type in functions:
+            req_dict = make_comm_msg(msg_type, None, False)
+            err = JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
+            with self.assertRaisesRegex(type(err), str(err)):
+                self.jc._handle_comm_message(req_dict)
+            self.check_error_message(req_dict, err)
 
     # ---------------------
     # Start job status loop
     # ---------------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_start_stop_job_status_loop(self):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
@@ -244,10 +383,14 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status_all",
-                "content": get_test_job_states(ACTIVE_JOBS),
+                "msg_type": STATUS_ALL,
+                "content": {
+                    id: ALL_RESPONSE_DATA[STATUS][id]
+                    for id in REFRESH_STATE
+                    if REFRESH_STATE[id]
+                },
             },
-            msg["data"],
+            msg,
         )
         self.assertTrue(self.jc._running_lookup_loop)
         self.assertIsNotNone(self.jc._lookup_timer)
@@ -256,10 +399,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_start_job_status_loop__cell_ids(self):
-        cell_2_jobs = get_cell_2_jobs()
-        cell_ids = list(cell_2_jobs.keys())
+        cell_ids = list(JOBS_BY_CELL_ID.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
@@ -274,15 +416,17 @@ class JobCommTestCase(unittest.TestCase):
 
                 exp_job_ids = [
                     job_id
-                    for cell_id, job_ids in cell_2_jobs.items()
+                    for cell_id, job_ids in JOBS_BY_CELL_ID.items()
                     for job_id in job_ids
-                    if cell_id in combo and not JOBS_TERMINALITY[job_id]
+                    if cell_id in combo and REFRESH_STATE[job_id]
                 ]
                 exp_msg = {
                     "msg_type": "job_status_all",
-                    "content": get_test_job_states(exp_job_ids),
+                    "content": {
+                        id: ALL_RESPONSE_DATA[STATUS][id] for id in exp_job_ids
+                    },
                 }
-                self.assertEqual(exp_msg, msg["data"])
+                self.assertEqual(exp_msg, msg)
 
                 if len(exp_job_ids):
                     self.assertTrue(self.jc._running_lookup_loop)
@@ -293,341 +437,371 @@ class JobCommTestCase(unittest.TestCase):
                     self.assertFalse(self.jc._running_lookup_loop)
                     self.assertIsNone(self.jc._lookup_timer)
 
+    @mock.patch(CLIENTS, get_failing_mock_client)
+    def test_start_job_status_loop__initialise_jobs_error(self):
+        # check_workspace_jobs throws an EEServerError
+        self.jc.start_job_status_loop(init_jobs=True)
+        self.assertEqual(
+            self.jc._comm.last_message,
+            {
+                "msg_type": ERROR,
+                "content": {
+                    "error": "Unable to get initial jobs list",
+                    "message": "check_workspace_jobs failed",
+                    "code": -32000,
+                    "source": "ee2",
+                    "name": "JSONRPCError",
+                },
+            },
+        )
+        self.assertFalse(self.jc._running_lookup_loop)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_start_job_status_loop__no_jobs_stop_loop(self):
+        # reset the job manager so there are no jobs
+        self.jm._running_jobs = {}
+        self.jm._jobs_by_cell_id = {}
+        self.jm = JobManager()
+        self.assertEqual(self.jm._running_jobs, {})
+        # this will trigger a call to _get_all_job_states
+        # a message containing all jobs (i.e. {}) will be sent out
+        # when it returns 0 jobs, the JobComm will run stop_job_status_loop
+        self.jc.start_job_status_loop()
+        self.assertFalse(self.jc._running_lookup_loop)
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertEqual(
+            self.jc._comm.last_message, {"msg_type": STATUS_ALL, "content": {}}
+        )
+
     # ---------------------
     # Lookup all job states
     # ---------------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_lookup_all_job_states__ok(self):
 
-        req = make_comm_msg("all_status", None, True)
-        states = self.jc._lookup_all_job_states(req)
+    @mock.patch(CLIENTS, get_mock_client)
+    def check_job_output_states(
+        self,
+        output_states=None,
+        params={},
+        request_type=STATUS,
+        response_type=STATUS,
+        ok_states=[],
+        error_states=[],
+    ):
+        """
+        Handle any request that returns a dictionary of job state objects; this
+        includes STATUS, CANCEL, START_UPDATE, STOP_UPDATE, and more.
+        The output of the query is verified against the stored job states.
+
+        :param output_states: output [if query has already been run] (opt)
+        :param request_type: (opt) defaults to STATUS
+        :param response_type: (opt) defaults to STATUS
+        :param params: params for the comm message (opt)
+        :param ok_states: list of job IDs expected to be in the output
+        :param error_states: list of job IDs expected to return a not found error
+        """
+        if output_states is None:
+            req_dict = make_comm_msg(request_type, params, False)
+            output_states = self.jc._handle_comm_message(req_dict)
+
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status_all",
-                "content": get_test_job_states(ACTIVE_JOBS),
+                "msg_type": response_type,
+                "content": output_states,
             },
-            msg["data"],
+            msg,
         )
-        for job_id, state in states.items():
-            self.assertIsInstance(job_id, str)
-            validate_job_state(state)
+
+        for job_id, state in output_states.items():
+            self.assertEqual(ALL_RESPONSE_DATA[STATUS][job_id], state)
+            if job_id in ok_states:
+                validate_job_state(state)
+            else:
+                # every valid job ID should be in either error_states or ok_states
+                self.assertIn(job_id, error_states)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_all_job_states__ok(self):
+        self.check_job_output_states(
+            request_type=STATUS_ALL, response_type=STATUS_ALL, ok_states=ALL_JOBS
+        )
 
     # -----------------------
     # Lookup single job state
     # -----------------------
-    def test_lookup_job_state__1_ok(self):
-        output_states = self.jc.lookup_job_state(JOB_COMPLETED)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": output_states,
-            },
-            msg["data"],
+    def test_get_job_state__1_ok(self):
+        output_states = self.jc.get_job_state(JOB_COMPLETED)
+        self.check_job_output_states(
+            output_states=output_states, ok_states=[JOB_COMPLETED]
         )
-        for job_id, state in output_states.items():
-            self.assertEqual(self.job_states[job_id], state)
-            validate_job_state(state)
 
-    def test_lookup_job_state__no_job(self):
+    def test_get_job_state__no_job(self):
         with self.assertRaisesRegex(
-            JobIDException, re.escape(f"{JOBS_MISSING_FALSY_ERR}: {[None]}")
+            JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[None]}")
         ):
-            self.jc.lookup_job_state(None)
+            self.jc.get_job_state(None)
 
     # -----------------------
     # Lookup select job states
     # -----------------------
-    def test_lookup_job_states__1_ok(self):
+
+    def test_get_job_states__job_id__ok(self):
+        self.check_job_output_states(
+            params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED]
+        )
+
+    def test_get_job_states__job_id__dne(self):
+        self.check_job_output_states(
+            params={JOB_ID: JOB_NOT_FOUND}, error_states=[JOB_NOT_FOUND]
+        )
+
+    def test_get_job_states__job_id__invalid(self):
+        self.check_job_id__no_job_test(STATUS)
+
+    def test_get_job_states__job_id_list__1_ok(self):
         job_id_list = [JOB_COMPLETED]
-        req = make_comm_msg("job_status", job_id_list, True)
-        output_states = self.jc._lookup_job_states(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": output_states,
-            },
-            msg["data"],
+        self.check_job_output_states(
+            params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
         )
-        for job_id, state in output_states.items():
-            self.assertEqual(self.job_states[job_id], state)
-            validate_job_state(state)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_lookup_job_states__2_ok(self):
+    def test_get_job_states__job_id_list__2_ok(self):
         job_id_list = [JOB_COMPLETED, BATCH_PARENT]
-        req = make_comm_msg("job_status", job_id_list, True)
-        output_states = self.jc._lookup_job_states(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": output_states,
-            },
-            msg["data"],
+        self.check_job_output_states(
+            params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
         )
-        for job_id, state in output_states.items():
-            self.assertEqual(self.job_states[job_id], state)
-            validate_job_state(state)
 
-    def test_lookup_job_states__no_job(self):
-        job_id_list = [None]
-        req = make_comm_msg("job_status", job_id_list, False)
-        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_status", {"job_id_list": job_id_list}, err)
-
-    def test_lookup_job_states__ok_bad(self):
-        job_id_list = ["nope", JOB_COMPLETED]
-        req = make_comm_msg("job_status", job_id_list, True)
-        output_states = self.jc._lookup_job_states(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_status", "content": output_states},
-            msg["data"],
+    def test_get_job_states__job_id_list__ok_bad(self):
+        job_id_list = [BAD_JOB_ID, JOB_COMPLETED]
+        self.check_job_output_states(
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=[JOB_COMPLETED],
+            error_states=[BAD_JOB_ID],
         )
-        for job_id, state in output_states.items():
-            if job_id in self.job_states:
-                self.assertEqual(self.job_states[job_id], state)
-                validate_job_state(state)
-            else:
-                self.assertEqual(get_error_output_state(job_id), state)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_lookup_job_states__ee2_error(self):
-        def mock_check_jobs(self, params):
-            raise Exception("Test exception")
+    def test_get_job_states__job_id_list__no_jobs(self):
+        self.check_job_id_list__no_jobs(STATUS)
+
+    def test_get_job_states__batch_id__ok(self):
+        self.check_job_output_states(
+            request_type=STATUS,
+            params={BATCH_ID: BATCH_PARENT},
+            ok_states=BATCH_PARENT_CHILDREN,
+        )
+
+    def test_get_job_states__batch_id__dne(self):
+        self.check_batch_id__dne_test(STATUS)
+
+    def test_get_job_states__batch_id__no_job(self):
+        self.check_batch_id__no_job_test(STATUS)
+
+    def test_get_job_states__batch_id__not_batch(self):
+        self.check_batch_id__not_batch_test(STATUS)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states__job_id_list__ee2_error(self):
+        exc = Exception("Test exception")
+        exc_message = str(exc)
+
+        def mock_check_jobs(params):
+            raise exc
 
         job_id_list = ALL_JOBS
-        req = make_comm_msg("job_status", job_id_list, True)
+        req_dict = make_comm_msg(STATUS, job_id_list, False)
+
         with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
-            self.jc._lookup_job_states(req)
+            self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
+
+        expected = {id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][id]) for id in ALL_JOBS}
+        for job_id in ACTIVE_JOBS:
+            # add in the ee2_error message
+            expected[job_id]["error"] = exc_message
+
         self.assertEqual(
             {
-                "msg_type": "job_status",
-                "content": {
-                    **get_test_job_states(TERMINAL_JOBS),
-                    **{
-                        job_id: get_error_output_state(job_id, "ee2_error")
-                        for job_id in ACTIVE_JOBS
-                    },
-                },
+                "msg_type": STATUS,
+                "content": expected,
             },
-            msg["data"],
+            msg,
         )
 
     # -----------------------
-    # Lookup batch job states
+    # get cell job states
     # -----------------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_lookup_job_states_batch__ok(self):
-        job_id = BATCH_PARENT
-        req = make_comm_msg("job_status_batch", job_id, False)
-        self.jc._handle_comm_message(req)
+
+    def test_get_job_states_by_cell_id__job_req_none(self):
+        cell_id_list = None
+        req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
+
+    def test_get_job_states_by_cell_id__empty_cell_id_list(self):
+        cell_id_list = []
+        req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        err = JobRequestException(CELLS_NOT_PROVIDED_ERR)
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states_by_cell_id__invalid_cell_id_list(self):
+        cell_id_list = ["a", "b", "c"]
+        req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status",
-                "content": {
-                    job_id: self.job_states[job_id]
-                    for job_id in [BATCH_PARENT] + BATCH_CHILDREN
-                },
+                "msg_type": CELL_JOB_STATUS,
+                "content": NO_JOBS_MAPPING,
             },
-            msg["data"],
+            msg,
         )
 
-    def test_lookup_job_states_batch__dne(self):
-        job_id = JOB_NOT_FOUND
-        req = make_comm_msg("job_status_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        msg = self.jc._comm.peek_message(-2)
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states_by_cell_id__invalid_cell_id_list_req(self):
+        cell_id_list = ["a", "b", "c"]
+        req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        result = self.jc._handle_comm_message(req_dict)
+        self.assertEqual(result, NO_JOBS_MAPPING)
+        msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status",
-                "content": {JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND)},
+                "msg_type": CELL_JOB_STATUS,
+                "content": NO_JOBS_MAPPING,
             },
-            msg["data"],
+            msg,
         )
-        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
 
-    def test_lookup_job_states_batch__no_job(self):
-        job_id = None
-        req = make_comm_msg("job_status_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states_by_cell_id__all_results(self):
+        cell_id_list = TEST_CELL_ID_LIST
+        expected_ids = ALL_JOBS
+        expected_states = {id: ALL_RESPONSE_DATA[STATUS][id] for id in expected_ids}
 
-    def test_lookup_job_states_batch__not_batch(self):
-        job_id = JOB_CREATED
-        req = make_comm_msg("job_status_batch", job_id, False)
-        err = JobIDException(JOB_NOT_BATCH_ERR, job_id)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_status_batch", {"job_id": job_id}, err)
+        req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
+        self.jc._handle_comm_message(req_dict)
+        msg = self.jc._comm.last_message
+        self.assertEqual(set(msg.keys()), set(["msg_type", "content"]))
+        self.assertEqual(msg["msg_type"], CELL_JOB_STATUS)
+        self.assertEqual(msg["content"]["jobs"], expected_states)
+        self.assertEqual(set(cell_id_list), set(msg["content"]["mapping"].keys()))
+        for key in msg["content"]["mapping"].keys():
+            self.assertEqual(
+                set(TEST_CELL_IDs[key]), set(msg["content"]["mapping"][key])
+            )
 
     # -----------------------
     # Lookup job info
     # -----------------------
-    def test_lookup_job_info__ok(self):
-        job_id_list = ALL_JOBS
-        req = make_comm_msg("job_info", job_id_list, True)
-        self.jc._lookup_job_info(req)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def check_job_info_results(self, job_args, job_id_list):
+        req_dict = make_comm_msg(INFO, job_args, False)
+        self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
+        expected = {id: ALL_RESPONSE_DATA[INFO][id] for id in job_id_list}
         self.assertEqual(
             {
-                "msg_type": "job_info",
-                "content": get_test_job_infos(job_id_list),
+                "msg_type": INFO,
+                "content": expected,
             },
-            msg["data"],
+            msg,
         )
 
-    def test_lookup_job_info__no_job(self):
-        job_id_list = [None]
-        req = make_comm_msg("job_info", job_id_list, False)
-        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_info", {"job_id_list": job_id_list}, err)
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_info__job_id__ok(self):
+        self.check_job_info_results({JOB_ID: JOB_COMPLETED}, [JOB_COMPLETED])
 
-    def test_lookup_job_info__ok_bad(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_info__job_id__dne(self):
+        self.check_job_info_results({JOB_ID: JOB_NOT_FOUND}, [JOB_NOT_FOUND])
+
+    def test_get_job_info__job_id__invalid(self):
+        self.check_job_id__no_job_test(INFO)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_info__job_id_list__ok(self):
+        self.check_job_info_results(ALL_JOBS, ALL_JOBS)
+
+    def test_get_job_info__job_id_list__no_jobs(self):
+        self.check_job_id_list__no_jobs(INFO)
+
+    def test_get_job_info__job_id_list__ok_bad(self):
         job_id_list = [JOB_COMPLETED, JOB_NOT_FOUND]
-        req = make_comm_msg("job_info", job_id_list, True)
-        self.jc._lookup_job_info(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": {
-                    JOB_COMPLETED: get_test_job_info(JOB_COMPLETED),
-                    JOB_NOT_FOUND: "does_not_exist",
-                },
-            },
-            msg["data"],
-        )
+        self.check_job_info_results(job_id_list, job_id_list)
 
-    # ------------
-    # Lookup batch job infos
-    # ------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_lookup_job_info_batch__ok(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_info__batch_id__ok(self):
         job_id = BATCH_PARENT
-        req = make_comm_msg("job_info_batch", job_id, True)
-        self.jc._lookup_job_info_batch(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
-            },
-            msg["data"],
-        )
+        self.check_job_info_results({BATCH_ID: job_id}, BATCH_PARENT_CHILDREN)
 
-    def test_lookup_job_info_batch__no_job(self):
-        job_id = None
-        req = make_comm_msg("job_info_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_info_batch", {"job_id": job_id}, err)
+    def test_get_job_info__batch_id__no_job(self):
+        self.check_batch_id__no_job_test(INFO)
 
-    def test_lookup_job_info_batch__dne(self):
-        job_id = JOB_NOT_FOUND
-        req = make_comm_msg("job_info_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_info_batch", {"job_id": job_id}, err)
+    def test_get_job_info__batch_id__dne(self):
+        self.check_batch_id__dne_test(INFO)
 
-    def test_lookup_job_info_batch__not_batch(self):
-        job_id = BATCH_COMPLETED
-        req = make_comm_msg("job_info_batch", job_id, False)
-        err = JobIDException(JOB_NOT_BATCH_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_info_batch", {"job_id": job_id}, err)
+    def test_get_job_info__batch_id__not_batch(self):
+        self.check_batch_id__not_batch_test(INFO)
 
     # ------------
     # Cancel list of jobs
     # ------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_cancel_jobs__single_job_id_in(self):
-        job_id = JOB_RUNNING
-        req = make_comm_msg("cancel_job", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": {
-                    JOB_RUNNING: self.job_states[JOB_RUNNING],
-                },
-            },
-            msg["data"],
+    def test_cancel_jobs__job_id__ok(self):
+        self.check_job_output_states(
+            request_type=CANCEL, params={JOB_ID: JOB_RUNNING}, ok_states=[JOB_RUNNING]
         )
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_cancel_jobs__1_ok(self):
+    def test_cancel_jobs__job_id__dne(self):
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID: JOB_NOT_FOUND},
+            error_states=[JOB_NOT_FOUND],
+        )
+
+    def test_cancel_jobs__job_id__invalid(self):
+        self.check_job_id__no_job_test(CANCEL)
+        job_id_list = [None, ""]
+        for job_id in job_id_list:
+            req_dict = make_comm_msg(CANCEL, {JOB_ID: job_id}, False)
+            err = JobRequestException(JOBS_MISSING_ERR, [job_id])
+            with self.assertRaisesRegex(type(err), re.escape(str(err))):
+                self.jc._handle_comm_message(req_dict)
+            self.check_error_message(req_dict, err)
+
+    def test_cancel_jobs__job_id_list__1_ok(self):
         job_id_list = [JOB_RUNNING]
-        req = make_comm_msg("cancel_job", job_id_list, True)
-        self.jc._cancel_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": {
-                    JOB_RUNNING: self.job_states[JOB_RUNNING],
-                },
-            },
-            msg["data"],
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=job_id_list,
         )
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_cancel_jobs__2_ok(self):
+    def test_cancel_jobs__job_id_list__2_ok(self):
         job_id_list = [JOB_CREATED, JOB_RUNNING, None]
-        req = make_comm_msg("cancel_job", job_id_list, True)
-        self.jc._cancel_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": {
-                    JOB_CREATED: self.job_states[JOB_CREATED],
-                    JOB_RUNNING: self.job_states[JOB_RUNNING],
-                },
-            },
-            msg["data"],
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=[JOB_CREATED, JOB_RUNNING],
         )
 
-    def test_cancel_jobs__no_job(self):
+    def test_cancel_jobs__job_id_list__no_jobs(self):
         job_id_list = None
-        # Create req manually because want job_id_list to be not list
-        req = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {"request_type": "cancel_job", "job_id_list": job_id_list}
-            },
-        }
-        err = TypeError(JOBS_TYPE_ERR)
+        req_dict = make_comm_msg(CANCEL, {JOB_ID_LIST: job_id_list}, False)
+        err = JobRequestException(JOBS_TYPE_ERR)
         with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
+            self.jc._handle_comm_message(req_dict)
 
         job_id_list = [None, ""]
-        req = make_comm_msg("cancel_job", job_id_list, False)
-        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
+        req_dict = make_comm_msg(CANCEL, job_id_list, False)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("cancel_job", {"job_id_list": job_id_list}, err)
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_cancel_jobs__some_bad_jobs(self):
-        FAKE_JOB = "fake_job_id"
+    def test_cancel_jobs__job_id_list__ok_bad(self):
         job_id_list = [
             None,
             JOB_NOT_FOUND,
@@ -635,159 +809,162 @@ class JobCommTestCase(unittest.TestCase):
             "",
             JOB_RUNNING,
             JOB_CREATED,
-            FAKE_JOB,
+            BAD_JOB_ID,
         ]
-        req = make_comm_msg("cancel_job", job_id_list, True)
-        self.jc._cancel_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": {
-                    JOB_RUNNING: self.job_states[JOB_RUNNING],
-                    JOB_CREATED: self.job_states[JOB_CREATED],
-                    JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND),
-                    FAKE_JOB: get_error_output_state(FAKE_JOB),
-                },
-            },
-            msg["data"],
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=[JOB_CREATED, JOB_RUNNING],
+            error_states=[JOB_NOT_FOUND, BAD_JOB_ID],
         )
 
-    def test_cancel_jobs__all_bad_jobs(self):
-        FAKE_JOB = "fake_job_id"
-        job_id_list = [None, "", JOB_NOT_FOUND, JOB_NOT_FOUND, FAKE_JOB]
-        req = make_comm_msg("cancel_job", job_id_list, True)
-        self.jc._cancel_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": {
-                    JOB_NOT_FOUND: get_error_output_state(JOB_NOT_FOUND),
-                    FAKE_JOB: get_error_output_state(FAKE_JOB),
-                },
-            },
-            msg["data"],
+    def test_cancel_jobs__job_id_list__all_bad_jobs(self):
+        job_id_list = [None, "", JOB_NOT_FOUND, JOB_NOT_FOUND, BAD_JOB_ID]
+        self.check_job_output_states(
+            request_type=CANCEL,
+            params={JOB_ID_LIST: job_id_list},
+            error_states=[JOB_NOT_FOUND, BAD_JOB_ID],
         )
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
-    def test_cancel_jobs__failure(self):
-        job_id_list = [JOB_RUNNING]
-        req = make_comm_msg("cancel_job", job_id_list, False)
-        with self.assertRaises(NarrativeException) as e:
-            self.jc._handle_comm_message(req)
-        self.assertIn("Can't cancel job", str(e.exception))
-        msg = self.jc._comm.last_message
-        self.assertEqual("job_comm_error", msg["data"]["msg_type"])
-        self.assertEqual("cancel_job", msg["data"]["content"]["source"])
-        self.assertEqual(job_id_list, msg["data"]["content"]["job_id_list"])
-        self.assertEqual("Unable to cancel job", msg["data"]["content"]["error"])
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_cancel_jobs__job_id_list__failure(self):
+        # the mock client will throw an error with BATCH_RETRY_RUNNING
+        job_id_list = [JOB_RUNNING, BATCH_RETRY_RUNNING]
+        req_dict = make_comm_msg(CANCEL, job_id_list, False)
+        output = self.jc._handle_comm_message(req_dict)
+        print(output)
+        expected = {
+            JOB_RUNNING: ALL_RESPONSE_DATA[STATUS][JOB_RUNNING],
+            BATCH_RETRY_RUNNING: {
+                **ALL_RESPONSE_DATA[STATUS][BATCH_RETRY_RUNNING],
+                "error": CANCEL + " failed",
+            },
+        }
+
+        self.assertEqual(output, expected)
+        self.assertEqual(
+            self.jc._comm.last_message,
+            {
+                "msg_type": STATUS,
+                "content": expected,
+            },
+        )
 
     # ------------
     # Retry list of jobs
     # ------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_retry_jobs_1_ok(self):
-        job_id_list = [JOB_TERMINATED]
-        req = make_comm_msg("retry_job", job_id_list, True)
-        self.jc._retry_jobs(req)
-        msg = self.jc._comm.last_message
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def check_retry_jobs(self, job_args, job_id_list):
+        req_dict = make_comm_msg(RETRY, job_args, False)
+        expected = {id: ALL_RESPONSE_DATA[RETRY][id] for id in job_id_list if id}
+        retry_data = self.jc._handle_comm_message(req_dict)
+        self.assertEqual(expected, retry_data)
+        retry_msg = self.jc._comm.pop_message()
         self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
+            {
+                "msg_type": RETRY,
+                "content": expected,
+            },
+            retry_msg,
         )
-        self.assertEqual("new_job", msg["data"]["msg_type"])
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_retry_jobs_2_ok(self):
-        job_id_list = [JOB_TERMINATED, JOB_ERROR, None]
-        req = make_comm_msg("retry_job", job_id_list, True)
-        self.jc._retry_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]},
-            msg["data"]["content"],
-        )
-        self.assertEqual("new_job", msg["data"]["msg_type"])
+    def test_retry_jobs__job_id__ok(self):
+        job_id_list = [BATCH_TERMINATED_RETRIED]
+        self.check_retry_jobs({JOB_ID: BATCH_TERMINATED_RETRIED}, job_id_list)
 
-    def test_retry_jobs_no_job(self):
-        job_id_list = [None, ""]
-        req = make_comm_msg("retry_job", job_id_list, False)
-        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
-        with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("retry_job", {"job_id_list": job_id_list}, err)
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_retry_jobs__job_id__dne(self):
+        job_id_list = [JOB_NOT_FOUND]
+        self.check_retry_jobs({JOB_ID: JOB_NOT_FOUND}, job_id_list)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_retry_jobs_some_bad_jobs(self):
-        job_id_list = [JOB_TERMINATED, "nope", "no"]
-        req = make_comm_msg("retry_job", job_id_list, True)
-        self.jc._retry_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
-        )
-        self.assertEqual("new_job", msg["data"]["msg_type"])
+    def test_retry_jobs__job_id__invalid(self):
+        self.check_job_id__no_job_test(RETRY)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_retry_jobs_all_bad_jobs(self):
-        job_id_list = ["nope", "no"]
-        req = make_comm_msg("retry_job", job_id_list, True)
-        self.jc._retry_jobs(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual({"job_id_list": []}, msg["data"]["content"])
-        self.assertEqual("new_job", msg["data"]["msg_type"])
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_retry_jobs__job_id_list__2_ok(self):
+        job_id_list = [BATCH_TERMINATED_RETRIED, BATCH_ERROR_RETRIED, None]
+        self.check_retry_jobs(job_id_list, job_id_list)
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
-    def test_retry_jobs_failure(self):
+    def test_retry_jobs__job_id_list__no_jobs(self):
+        self.check_job_id_list__no_jobs(RETRY)
+
+    def test_retry_jobs__job_id_list__ok_bad(self):
+        job_id_list = [BATCH_TERMINATED_RETRIED, BAD_JOB_ID, BAD_JOB_ID_2]
+        self.check_retry_jobs(job_id_list, job_id_list)
+
+    def test_retry_jobs__job_id_list__all_jobs(self):
+        job_id_list = ALL_JOBS + BAD_JOBS
+        for job_id in job_id_list:
+            self.check_retry_jobs({JOB_ID: job_id}, [job_id])
+        self.check_retry_jobs(job_id_list, job_id_list)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_retry_jobs__job_id_list__all_bad_jobs(self):
+        job_id_list = [BAD_JOB_ID, BAD_JOB_ID_2]
+        self.check_retry_jobs(job_id_list, job_id_list)
+
+    @mock.patch(CLIENTS, get_failing_mock_client)
+    def test_retry_jobs__job_id_list__failure(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
-        req = make_comm_msg("retry_job", job_id_list, False)
-        with self.assertRaises(NarrativeException) as e:
-            self.jc._handle_comm_message(req)
-        self.assertIn("Jobs retry failed", str(e.exception))
+        req_dict = make_comm_msg(RETRY, job_id_list, False)
+        err = transform_job_exception(
+            generate_ee2_error(RETRY), "Unable to retry job(s)"
+        )
+
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+
         msg = self.jc._comm.last_message
-        self.assertEqual("job_comm_error", msg["data"]["msg_type"])
-        self.assertEqual(job_id_list, msg["data"]["content"]["job_id_list"])
-        self.assertEqual("Unable to retry job(s)", msg["data"]["content"]["error"])
+        self.assertEqual(
+            msg,
+            {
+                "msg_type": ERROR,
+                "content": {
+                    "request": req_dict["content"]["data"],
+                    "source": RETRY,
+                    "name": "JSONRPCError",
+                    "error": "Unable to retry job(s)",
+                    "code": -32000,
+                    "message": RETRY + " failed",
+                },
+            },
+        )
 
     # -----------------
     # Fetching job logs
     # -----------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_get_job_logs_ok(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__job_id__ok(self):
         job_id = JOB_COMPLETED
-        lines_available = 100  # just for convenience if the mock changes
+        lines_available = MAX_LOG_LINES  # just for convenience if the mock changes
         # first_line, num_lines, latest, number of lines in output
         cases = [
-            (0, 10, False, 10),
-            (-100, 10, False, 10),
-            (50, 20, False, 20),
+            (0, 1, False, 1),
+            (-100, 1, False, 1),
+            (5, 2, False, 2),
             (0, 5000, False, lines_available),
             (0, None, False, lines_available),
-            (80, None, False, 20),
-            (0, 10, True, 10),
-            (-100, 10, True, 10),
-            (50, 20, True, 20),
+            (8, None, False, 2),
+            (0, 1, True, 1),
+            (-100, 1, True, 1),
+            (5, 2, True, 2),
             (0, 5000, True, lines_available),
             (0, None, True, lines_available),
-            (80, None, True, lines_available),
+            (8, None, True, lines_available),
         ]
         for c in cases:
             content = {"first_line": c[0], "num_lines": c[1], "latest": c[2]}
-            req = make_comm_msg("job_logs", job_id, True, content)
-            self.jc._get_job_logs(req)
+            req_dict = make_comm_msg(LOGS, [job_id], False, content)
+            self.jc._handle_comm_message(req_dict)
             msg = self.jc._comm.last_message
-            self.assertEqual(job_id, msg["data"]["content"]["job_id"])
-            self.assertEqual(None, msg["data"]["content"]["batch_id"])
-            self.assertEqual("job_logs", msg["data"]["msg_type"])
-            self.assertEqual(lines_available, msg["data"]["content"]["max_lines"])
-            self.assertEqual(c[3], len(msg["data"]["content"]["lines"]))
-            self.assertEqual(c[2], msg["data"]["content"]["latest"])
+            self.assertEqual(LOGS, msg["msg_type"])
+            msg_content = msg["content"][job_id]
+            self.assertEqual(job_id, msg_content["job_id"])
+            self.assertEqual(None, msg_content["batch_id"])
+            self.assertEqual(lines_available, msg_content["max_lines"])
+            self.assertEqual(c[3], len(msg_content["lines"]))
+            self.assertEqual(c[2], msg_content["latest"])
             first = 0 if c[1] is None and c[2] is True else c[0]
             n_lines = c[1] if c[1] else lines_available
             if first < 0:
@@ -795,53 +972,140 @@ class JobCommTestCase(unittest.TestCase):
             if c[2]:
                 first = lines_available - min(n_lines, lines_available)
 
-            self.assertEqual(first, msg["data"]["content"]["first"])
-            for idx, line in enumerate(msg["data"]["content"]["lines"]):
+            self.assertEqual(first, msg_content["first"])
+            for idx, line in enumerate(msg_content["lines"]):
                 self.assertIn(str(first + idx), line["line"])
                 self.assertEqual(0, line["is_error"])
 
-    @mock.patch(
-        "biokbase.narrative.clients.get",
-        get_failing_mock_client,
-    )
-    def test_get_job_logs_failure(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg("job_logs", job_id, False)
-        with self.assertRaises(NarrativeException) as e:
-            self.jc._handle_comm_message(req)
-        self.assertIn("Can't get job logs", str(e.exception))
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__job_id__failure(self):
+        job_id = JOB_CREATED
+        req_dict = make_comm_msg(LOGS, job_id, False)
+        self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        self.assertEqual("job_comm_error", msg["data"]["msg_type"])
-        self.assertEqual("Unable to retrieve job logs", msg["data"]["content"]["error"])
+        self.assertEqual(
+            msg,
+            {
+                "msg_type": LOGS,
+                "content": {
+                    JOB_CREATED: {
+                        "job_id": JOB_CREATED,
+                        "batch_id": None,
+                        "error": "Cannot find job log with id: " + JOB_CREATED,
+                    }
+                },
+            },
+        )
 
-    def test_get_job_logs_no_job(self):
+    def test_get_job_logs__job_id__no_job(self):
         job_id = None
-        req = make_comm_msg("job_logs", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_logs", {"job_id": job_id}, err)
+        req_dict = make_comm_msg(LOGS, {JOB_ID: job_id}, False)
+        err = JobRequestException(JOBS_MISSING_ERR, [job_id])
+        with self.assertRaisesRegex(type(err), re.escape(str(err))):
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
 
-    def test_get_job_logs_bad_job(self):
-        job_id = "bad_job"
-        req = make_comm_msg("job_logs", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("job_logs", {"job_id": job_id}, err)
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__job_id__job_dne(self):
+        req_dict = make_comm_msg(LOGS, JOB_NOT_FOUND, False)
+        self.jc._handle_comm_message(req_dict)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            msg,
+            {
+                "msg_type": LOGS,
+                "content": {
+                    JOB_NOT_FOUND: {
+                        "job_id": JOB_NOT_FOUND,
+                        "error": generate_error(JOB_NOT_FOUND, "not_found"),
+                    }
+                },
+            },
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail(self):
+        req_dict = make_comm_msg(
+            LOGS, [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND], False
+        )
+        self.jc._handle_comm_message(req_dict)
+        msg = self.jc._comm.last_message
+        self.assertEqual(LOGS, msg["msg_type"])
+
+        self.assertEqual(
+            msg["content"],
+            {
+                JOB_COMPLETED: {
+                    "job_id": JOB_COMPLETED,
+                    "first": 0,
+                    "max_lines": MAX_LOG_LINES,
+                    "latest": False,
+                    "batch_id": None,
+                    "lines": LOG_LINES,
+                },
+                JOB_CREATED: {
+                    "job_id": JOB_CREATED,
+                    "batch_id": None,
+                    "error": generate_error(JOB_CREATED, "no_logs"),
+                },
+                JOB_NOT_FOUND: {
+                    "job_id": JOB_NOT_FOUND,
+                    "error": generate_error(JOB_NOT_FOUND, "not_found"),
+                },
+            },
+        )
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail__with_params(
+        self,
+    ):
+        num_lines = int(MAX_LOG_LINES / 5)
+        first = MAX_LOG_LINES - num_lines
+        lines = LOG_LINES[-num_lines::]
+
+        req_dict = make_comm_msg(
+            LOGS,
+            [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND],
+            False,
+            content={"num_lines": num_lines, "latest": True},
+        )
+        self.jc._handle_comm_message(req_dict)
+        msg = self.jc._comm.last_message
+        self.assertEqual(LOGS, msg["msg_type"])
+
+        self.assertEqual(
+            msg["content"],
+            {
+                JOB_COMPLETED: {
+                    "job_id": JOB_COMPLETED,
+                    "first": first,
+                    "max_lines": MAX_LOG_LINES,
+                    "latest": True,
+                    "batch_id": None,
+                    "lines": lines,
+                },
+                JOB_CREATED: {
+                    "job_id": JOB_CREATED,
+                    "batch_id": None,
+                    "error": generate_error(JOB_CREATED, "no_logs"),
+                },
+                JOB_NOT_FOUND: {
+                    "job_id": JOB_NOT_FOUND,
+                    "error": generate_error(JOB_NOT_FOUND, "not_found"),
+                },
+            },
+        )
 
     # ------------------------
     # Modify job update
     # ------------------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_modify_job_update__start__ok(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_modify_job_update__job_id_list__start__ok(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
-        req = make_comm_msg("start_job_update", job_id_list, True)
-        self.jc._modify_job_updates(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
-            msg["data"],
+        self.check_job_output_states(
+            request_type=START_UPDATE,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=[JOB_COMPLETED, JOB_CREATED, BATCH_PARENT],
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
@@ -849,74 +1113,79 @@ class JobCommTestCase(unittest.TestCase):
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
+                    REFRESH_STATE[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_modify_job_update__stop__ok(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_modify_job_update__job_id_list__stop__ok(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
-        req = make_comm_msg("stop_job_update", job_id_list, True)
-        self.jc._modify_job_updates(req)
+        self.check_job_output_states(
+            request_type=STOP_UPDATE,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=[JOB_COMPLETED, JOB_CREATED, BATCH_PARENT],
+        )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
+                    False,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    REFRESH_STATE[job_id],
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    def test_modify_job_update__no_job(self):
+    def test_modify_job_update__job_id_list__no_jobs(self):
         job_id_list = [None]
-        req = make_comm_msg("start_job_update", job_id_list, False)
-        err = JobIDException(JOBS_MISSING_FALSY_ERR, job_id_list)
+        req_dict = make_comm_msg(START_UPDATE, job_id_list, False)
+        err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
         with self.assertRaisesRegex(type(err), re.escape(str(err))):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("start_job_update", {"job_id_list": job_id_list}, err)
+            self.jc._handle_comm_message(req_dict)
+        self.check_error_message(req_dict, err)
 
-    def test_modify_job_update__stop__ok_bad_job(self):
-        job_id_list = [JOB_COMPLETED]
-        req = make_comm_msg("stop_job_update", job_id_list + [JOB_NOT_FOUND], True)
-        self.jc._modify_job_updates(req)
+    def test_modify_job_update__job_id_list__stop__ok_bad_job(self):
+        job_id_list = [JOB_COMPLETED, JOB_CREATED]
+        self.check_job_output_states(
+            request_type=STOP_UPDATE,
+            params={JOB_ID_LIST: [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND]},
+            ok_states=[JOB_COMPLETED, JOB_CREATED],
+            error_states=[JOB_NOT_FOUND],
+        )
+
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
-                )
+                self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    REFRESH_STATE[job_id],
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_modify_job_update__stop__loop_still_running(self):
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_modify_job_update__job_id_list__stop__loop_still_running(self):
         """Lookup loop should not get stopped"""
         self.jc.start_job_status_loop()
 
         job_id_list = [JOB_COMPLETED, BATCH_PARENT, JOB_RUNNING]
-        req = make_comm_msg("stop_job_update", job_id_list, True)
-        self.jc._modify_job_updates(req)
+        self.check_job_output_states(
+            request_type=STOP_UPDATE,
+            params={JOB_ID_LIST: job_id_list},
+            ok_states=job_id_list,
+        )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
-                )
+                self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
+                    REFRESH_STATE[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -924,16 +1193,14 @@ class JobCommTestCase(unittest.TestCase):
     # ------------------------
     # Modify job update batch
     # ------------------------
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_modify_job_update_batch__start__ok(self):
-        job_id = BATCH_PARENT
-        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
-        req = make_comm_msg("start_job_update_batch", job_id, True)
-        self.jc._modify_job_updates_batch(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
-            msg["data"],
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_modify_job_update__batch_id__start__ok(self):
+        batch_id = BATCH_PARENT
+        job_id_list = BATCH_PARENT_CHILDREN
+        self.check_job_output_states(
+            request_type=START_UPDATE,
+            params={BATCH_ID: batch_id},
+            ok_states=job_id_list,
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
@@ -941,266 +1208,61 @@ class JobCommTestCase(unittest.TestCase):
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
+                    REFRESH_STATE[job_id],
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_modify_job_update_batch__stop__ok(self):
-        job_id = BATCH_PARENT
-        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
-        req = make_comm_msg("stop_job_update_batch", job_id, True)
-        self.jc._modify_job_updates_batch(req)
-        for job_id in ALL_JOBS:
-            if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
-                )
-            else:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]),
-                )
-        self.assertIsNone(self.jc._lookup_timer)
-        self.assertFalse(self.jc._running_lookup_loop)
-
-    def test_modify_job_update_batch__no_job(self):
-        job_id = None
-        req = make_comm_msg("start_job_update_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("start_job_update_batch", {"job_id": job_id}, err)
-
-    def test_modify_job_update_batch__bad_job(self):
-        job_id = JOB_NOT_FOUND
-        req = make_comm_msg("start_job_update_batch", job_id, False)
-        err = JobIDException(JOB_NOT_REG_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("start_job_update_batch", {"job_id": job_id}, err)
-
-    def test_modify_job_update_batch__not_batch(self):
-        job_id = JOB_RUNNING
-        req = make_comm_msg("start_job_update_batch", job_id, False)
-        err = JobIDException(JOB_NOT_BATCH_ERR, job_id)
-        with self.assertRaisesRegex(type(err), str(err)):
-            self.jc._handle_comm_message(req)
-        self.check_error_message("start_job_update_batch", {"job_id": job_id}, err)
-
-    # ------------------------
-    # Handle bad comm messages
-    # ------------------------
-    def test_handle_comm_message_bad(self):
-        with self.assertRaises(ValueError) as e:
-            self.jc._handle_comm_message({"foo": "bar"})
-        self.assertIn("Improperly formatted job channel message!", str(e.exception))
-        with self.assertRaises(ValueError) as e:
-            self.jc._handle_comm_message({"content": {"data": {"request_type": None}}})
-        self.assertIn("Missing request type in job channel message!", str(e.exception))
-
-    def test_handle_comm_message_unknown(self):
-        unknown = "NotAJobRequest"
-        with self.assertRaises(ValueError) as e:
-            self.jc._handle_comm_message(
-                {"content": {"data": {"request_type": unknown}}}
-            )
-        self.assertIn(f"Unknown KBaseJobs message '{unknown}'", str(e.exception))
-
-    # From here, this test the ability for the _handle_comm_message function to
-    # deal with the various types of messages that will get passed to it. While
-    # the majority of the tests above are sent directly to the function to be
-    # tested, these just craft the message and pass it to the message handler.
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_all_states_msg(self):
-        req = make_comm_msg("all_status", None, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_status_all")
-        states = msg["data"]["content"]
-        self.assertIsInstance(states, dict)
-        for job_id in states:
-            validate_job_state(states[job_id])
-
-    def test_handle_job_status_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg("job_status", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_status")
-        validate_job_state(msg["data"]["content"][JOB_COMPLETED])
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_job_info_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg("job_info", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_info", "content": {job_id: get_test_job_info(job_id)}},
-            msg["data"],
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_modify_job_update__batch_id__stop__ok(self):
+        batch_id = BATCH_PARENT
+        job_id_list = BATCH_PARENT_CHILDREN
+        self.check_job_output_states(
+            request_type=STOP_UPDATE,
+            params={BATCH_ID: batch_id},
+            ok_states=job_id_list,
         )
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_job_status_batch_msg(self):
-        job_id = BATCH_PARENT
-        req = make_comm_msg("job_status_batch", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": get_test_job_states([BATCH_PARENT] + BATCH_CHILDREN),
-            },
-            msg["data"],
-        )
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_job_info_batch_msg(self):
-        job_id = BATCH_PARENT
-        req = make_comm_msg("job_info_batch", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
-            },
-            msg["data"],
-        )
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_cancel_job_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg("cancel_job", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_status")
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_start_job_update_msg(self):
-        job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
-        req = make_comm_msg("start_job_update", job_id_list, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
-            msg["data"],
-        )
-        for job_id in ALL_JOBS:
-            if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    True,
-                )
-            else:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
-                )
-        self.assertTrue(self.jc._lookup_timer)
-        self.assertTrue(self.jc._running_lookup_loop)
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_stop_job_update_msg(self):
-        job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
-        req = make_comm_msg("stop_job_update", job_id_list, False)
-        self.jc._handle_comm_message(req)
-        for job_id in ALL_JOBS:
-            if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    False,  # not JOBS_TERMINALITY[job_id],
-                )
-            else:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
-                )
-        self.assertIsNone(self.jc._lookup_timer)
-        self.assertFalse(self.jc._running_lookup_loop)
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_start_job_update_batch_msg(self):
-        job_id = BATCH_PARENT
-        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
-        req = make_comm_msg("start_job_update_batch", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
-            msg["data"],
-        )
-        for job_id in ALL_JOBS:
-            if job_id in job_id_list:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    True,
-                )
-            else:
-                self.assertEqual(
-                    self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
-                )
-        self.assertTrue(self.jc._lookup_timer)
-        self.assertTrue(self.jc._running_lookup_loop)
-
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_stop_job_update_batch_msg(self):
-        job_id = BATCH_PARENT
-        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
-        req = make_comm_msg("stop_job_update_batch", job_id, False)
-        self.jc._handle_comm_message(req)
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(self.jm._running_jobs[job_id]["refresh"], False)
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    not JOBS_TERMINALITY[job_id],
+                    REFRESH_STATE[job_id],
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_latest_job_logs_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg(
-            "job_logs", job_id, False, content={"num_lines": 10, "latest": True}
-        )
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_logs")
-        self.assertEqual(msg["data"]["content"]["job_id"], job_id)
-        self.assertTrue(msg["data"]["content"]["latest"])
-        self.assertEqual(msg["data"]["content"]["first"], 90)
-        self.assertEqual(msg["data"]["content"]["max_lines"], 100)
-        self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
+    def test_modify_job_update__batch_id__no_job(self):
+        self.check_batch_id__no_job_test(START_UPDATE)
+        self.check_batch_id__no_job_test(STOP_UPDATE)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_job_logs_msg(self):
-        job_id = JOB_COMPLETED
-        req = make_comm_msg(
-            "job_logs", job_id, False, content={"num_lines": 10, "first_line": 0}
-        )
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_logs")
-        self.assertEqual(msg["data"]["content"]["job_id"], job_id)
-        self.assertFalse(msg["data"]["content"]["latest"])
-        self.assertEqual(msg["data"]["content"]["first"], 0)
-        self.assertEqual(msg["data"]["content"]["max_lines"], 100)
-        self.assertEqual(len(msg["data"]["content"]["lines"]), 10)
+    def test_modify_job_update__batch_id__bad_job(self):
+        self.check_batch_id__dne_test(START_UPDATE)
+        self.check_batch_id__dne_test(STOP_UPDATE)
 
-    @mock.patch("biokbase.narrative.clients.get", get_mock_client)
-    def test_handle_cancel_job_msg_with_job_id_list(self):
-        job_id_list = [JOB_COMPLETED]
-        req = make_comm_msg("cancel_job", job_id_list, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_status")
+    def test_modify_job_update__batch_id__not_batch(self):
+        self.check_batch_id__not_batch_test(START_UPDATE)
+        self.check_batch_id__not_batch_test(STOP_UPDATE)
+
+    # ------------------------
+    # Handle bad comm messages
+    # ------------------------
+    def test_handle_comm_message_bad(self):
+        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
+            self.jc._handle_comm_message({"foo": "bar"})
+
+        with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
+            self.jc._handle_comm_message({"content": {"data": {"request_type": None}}})
+
+    def test_handle_comm_message_unknown(self):
+        unknown = "NotAJobRequest"
+        with self.assertRaisesRegex(
+            JobRequestException, re.escape(f"Unknown KBaseJobs message '{unknown}'")
+        ):
+            self.jc._handle_comm_message(
+                {"content": {"data": {"request_type": unknown}}}
+            )
 
 
 class JobRequestTestCase(unittest.TestCase):
@@ -1217,133 +1279,66 @@ class JobRequestTestCase(unittest.TestCase):
         }
         rq = JobRequest(rq_msg)
         self.assertEqual(rq.msg_id, "some_id")
-        self.assertEqual(rq.request, "a_request")
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+        self.assertEqual(rq.request_type, "a_request")
+        self.assertEqual(rq.raw_request, rq_msg)
+        self.assertEqual(rq.rq_data, {"request_type": "a_request"})
+        with self.assertRaisesRegex(JobRequestException, JOB_NOT_PROVIDED_ERR):
             rq.job_id
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOBS_NOT_PROVIDED_ERR):
             rq.job_id_list
 
     def test_request_no_data(self):
         rq_msg = {"msg_id": "some_id", "content": {}}
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
             JobRequest(rq_msg)
-        self.assertIn("Improperly formatted job channel message!", str(e.exception))
 
     def test_request_no_req(self):
         rq_msg = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
         rq_msg2 = {"msg_id": "some_other_id", "content": {"data": {}}}
         for msg in [rq_msg, rq_msg2]:
-            with self.assertRaises(ValueError) as e:
+            with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
                 JobRequest(msg)
-            self.assertIn(
-                "Missing request type in job channel message!", str(e.exception)
-            )
 
-    def test_request_both_inputs(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "job_status",
-                    "job_id": "ababab",
-                    "job_id_list": [],
-                }
+    def test_request_more_than_one_input(self):
+        """Ensure that supplying more than one job ID-like input raises an error"""
+        combos = itertools.combinations(
+            [
+                {JOB_ID: "job_id"},
+                {JOB_ID_LIST: ["job_1_id", "job_2_id"]},
+                {BATCH_ID: "batch_id"},
+            ],
+            2,
+        )
+        for co in combos:
+            msg = make_comm_msg(STATUS, {**co[0], **co[1]}, False)
+            with self.assertRaisesRegex(JobRequestException, ONE_INPUT_TYPE_ONLY_ERR):
+                JobRequest(msg)
+
+        # all three
+        msg = make_comm_msg(
+            STATUS,
+            {
+                JOB_ID: "job_id",
+                BATCH_ID: "batch_id",
+                JOB_ID_LIST: [],
             },
-        }
-        with self.assertRaisesRegex(ValueError, "Both job_id and job_id_list present"):
+            False,
+        )
+        with self.assertRaisesRegex(JobRequestException, ONE_INPUT_TYPE_ONLY_ERR):
             JobRequest(msg)
 
     def test_request__no_input(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "job_status",
-                }
-            },
-        }
+        msg = make_comm_msg(STATUS, {}, False)
         req = JobRequest(msg)
 
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOB_NOT_PROVIDED_ERR):
             req.job_id
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
+        with self.assertRaisesRegex(JobRequestException, JOBS_NOT_PROVIDED_ERR):
             req.job_id_list
-
-    def _check_rq_equal(self, rq0, rq1):
-        self.assertEqual(rq0.msg_id, rq1.msg_id)
-        self.assertEqual(rq0.rq_data, rq1.rq_data)
-        self.assertEqual(rq0.request, rq1.request)
-        self.assertEqual(rq0.job_id, rq1.job_id)
-
-    def test_convert_to_using_job_id_list(self):
-        rq_msg = make_comm_msg("a_request", "a", False)
-        rq = JobRequest._convert_to_using_job_id_list(rq_msg)
-        self.assertEqual(rq.request, "a_request")
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rq.job_id
-        self.assertEqual(rq.job_id_list, ["a"])
-
-    def test_split_request_by_job_id(self):
-        rq_msg = make_comm_msg("a_request", ["a", "b", "c"], False)
-        rqa0 = make_comm_msg("a_request", "a", True)
-        rqb0 = make_comm_msg("a_request", "b", True)
-        rqc0 = make_comm_msg("a_request", "c", True)
-        rqa1, rqb1, rqc1 = JobRequest._split_request_by_job_id(rq_msg)
-        self._check_rq_equal(rqa0, rqa1)
-        self._check_rq_equal(rqb0, rqb1)
-        self._check_rq_equal(rqc0, rqc1)
-
-    def test_translate_require_job_id(self):
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID[0], "a", False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        self.assertEqual(rqs[0].job_id, "a")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[0].job_id_list
-
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID[0], ["a", "b"], False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 2)
-        self.assertEqual(rqs[0].job_id, "a")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[0].job_id_list
-        self.assertEqual(rqs[1].job_id, "b")
-        with self.assertRaisesRegex(JobIDException, JOBS_NOT_PROVIDED_ERR):
-            rqs[1].job_id_list
-
-    def test_translate_require_job_id_list(self):
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], "a", False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rqs[0].job_id
-        self.assertEqual(rqs[0].job_id_list, ["a"])
-
-        rq_msg = make_comm_msg(JobRequest.REQUIRE_JOB_ID_LIST[0], ["a", "b"], False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-        with self.assertRaisesRegex(JobIDException, JOB_NOT_PROVIDED_ERR):
-            rqs[0].job_id
-        self.assertEqual(rqs[0].job_id_list, ["a", "b"])
-
-    def test_translate_doesnt_require_any_job_ids(self):
-        rq_msg = make_comm_msg("all_status", None, False)
-        rqs = JobRequest.translate(rq_msg)
-        self.assertEqual(len(rqs), 1)
-
-    def test_translate_both_inputs(self):
-        msg = {
-            "msg_id": "some_id",
-            "content": {
-                "data": {
-                    "request_type": "job_status",
-                    "job_id": "ababab",
-                    "job_id_list": [],
-                }
-            },
-        }
-        with self.assertRaisesRegex(ValueError, "Both job_id and job_id_list present"):
-            JobRequest.translate(msg)
+        with self.assertRaisesRegex(JobRequestException, BATCH_NOT_PROVIDED_ERR):
+            req.batch_id
+        with self.assertRaisesRegex(JobRequestException, CELLS_NOT_PROVIDED_ERR):
+            req.cell_id_list
 
 
 class exc_to_msgTestCase(unittest.TestCase):
@@ -1393,20 +1388,20 @@ class exc_to_msgTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
                     "source": req_type,
-                    "job_id_list": job_id_list,
                     "name": "RuntimeError",
                     "message": message,
+                    "request": req.rq_data,
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_with_nested_try__succeed(self):
         job_id_list = [BATCH_ERROR_RETRIED, JOB_RUNNING]
-        req_type = "cancel_job"
+        req_type = CANCEL
         req = make_comm_msg(req_type, job_id_list, True)
         message = (
             "If the majority knew of the root of this evil, "
@@ -1443,10 +1438,10 @@ class exc_to_msgTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": req.rq_data,
                     "source": req_type,
-                    "job_id_list": job_id_list,
                     # Below are from transform_job_exception
                     "name": "Exception",
                     "message": message,
@@ -1454,12 +1449,12 @@ class exc_to_msgTestCase(unittest.TestCase):
                     "code": -1,
                 },
             },
-            msg["data"],
+            msg,
         )
 
-    def test_JobIDException(self):
+    def test_JobRequestException(self):
         job_id = BATCH_PARENT
-        req_type = "job_info_all"
+        req_type = INFO
         req = make_comm_msg(req_type, job_id, True)
         message = (
             "Because even if I should speak, "
@@ -1469,27 +1464,27 @@ class exc_to_msgTestCase(unittest.TestCase):
         )
 
         def f():
-            raise JobIDException(message, "a0a0a0")
+            raise JobRequestException(message, "a0a0a0")
 
-        with self.assertRaisesRegex(JobIDException, f"{message}: a0a0a0"):
+        with self.assertRaisesRegex(JobRequestException, f"{message}: a0a0a0"):
             self.foo(req, f)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": req.rq_data,
                     "source": req_type,
-                    "job_id": job_id,
-                    "name": "JobIDException",
+                    "name": "JobRequestException",
                     "message": f"{message}: a0a0a0",
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_ValueError(self):
         job_id_list = [JOB_RUNNING, JOB_COMPLETED]
-        req_type = "job_status"
+        req_type = STATUS
         req = make_comm_msg(req_type, job_id_list, True)
         message = (
             "Caste is the granting or withholding of respect, status, "
@@ -1506,21 +1501,21 @@ class exc_to_msgTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": req.rq_data,
                     "source": req_type,
-                    "job_id_list": job_id_list,
                     "name": "ValueError",
                     "message": message,
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_dict_req__no_err(self):
         job_id = JOB_ERROR
-        req_type = "retry_job"
-        req = make_comm_msg(req_type, job_id, False)
+        req_type = RETRY
+        req_dict = make_comm_msg(req_type, job_id, False)
         message = (
             "Casteism can mean seeking to keep those on your "
             "disfavored rung from gaining on you, to curry the "
@@ -1531,14 +1526,14 @@ class exc_to_msgTestCase(unittest.TestCase):
         def f():
             print(message)
 
-        self.foo(req, f)
+        self.foo(req_dict, f)
         msg = self.jc._comm.last_message
         self.assertIsNone(msg)
 
     def test_dict_req__error_down_the_stack(self):
         job_id = JOB_CREATED
-        req_type = "job_status"
-        req = make_comm_msg(req_type, job_id, False)
+        req_type = STATUS
+        req_dict = make_comm_msg(req_type, job_id, False)
         message = (
             "Caste is the granting or witholding of "
             "respect, status, honor, attention, priveliges, "
@@ -1555,28 +1550,27 @@ class exc_to_msgTestCase(unittest.TestCase):
                 f(i - 1)
 
         with self.assertRaisesRegex(ValueError, message):
-            self.foo(req, f)
+            self.foo(req_dict, f)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": req_dict["content"]["data"],
                     "source": req_type,
-                    "job_id": job_id,
                     "name": "ValueError",
                     "message": message,
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_dict_req__both_inputs(self):
-        job_id = JOB_CREATED
-        job_id_list = []
-        req_type = "job_status"
+        req_type = STATUS
         # can give it both job_id and job_id_list since it's not a JobRequest
-        req = make_comm_msg(req_type, job_id, False)
-        req["content"]["data"]["job_id_list"] = job_id_list
+        req_dict = make_comm_msg(
+            req_type, {JOB_ID: JOB_CREATED, JOB_ID_LIST: []}, False
+        )
         message = (
             "What some people call racism could be seen as merely "
             "one manifestation of the degree to which we have internalized "
@@ -1587,20 +1581,19 @@ class exc_to_msgTestCase(unittest.TestCase):
             raise ValueError(message)
 
         with self.assertRaisesRegex(ValueError, message):
-            self.foo(req, f)
+            self.foo(req_dict, f)
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
+                    "request": req_dict["content"]["data"],
                     "source": req_type,
-                    "job_id": job_id,
-                    "job_id_list": job_id_list,
                     "name": "ValueError",
                     "message": message,
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_None_req(self):
@@ -1616,14 +1609,15 @@ class exc_to_msgTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
                     "source": source,
                     "name": "ValueError",
                     "message": message,
+                    "request": None,
                 },
             },
-            msg["data"],
+            msg,
         )
 
     def test_str_req(self):
@@ -1639,12 +1633,13 @@ class exc_to_msgTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_comm_error",
+                "msg_type": ERROR,
                 "content": {
                     "source": source,
                     "name": "ValueError",
                     "message": message,
+                    "request": source,
                 },
             },
-            msg["data"],
+            msg,
         )

@@ -14,11 +14,15 @@ define([
         form = tag('form'),
         span = tag('span'),
         div = tag('div'),
+        iTag = tag('i'),
+        strong = tag('strong'),
         cssBaseClass = 'kb-app-params';
 
     function factory(config) {
         const viewOnly = config.viewOnly || false;
         const { bus, workspaceId, paramIds, initialParams } = config;
+        // key = param id, value = boolean, true if is in error
+        const advancedParamErrors = {};
         const runtime = Runtime.make(),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
@@ -28,7 +32,8 @@ define([
             widgets = [];
         let container,
             ui,
-            places = {};
+            places = {},
+            numAdvanced = 0;
 
         // DATA
         /*
@@ -115,6 +120,11 @@ define([
                 fieldWidget.bus.on('validation', (message) => {
                     // only propagate if invalid. value changes come through
                     // the 'changed' message
+                    const paramId = parameterSpec.id;
+                    if (paramId in advancedParamErrors) {
+                        advancedParamErrors[paramId] = !message.isValid;
+                    }
+                    showHideAdvancedErrorMessage();
                     if (!message.isValid) {
                         bus.emit('invalid-param-value', {
                             parameter: parameterSpec.id,
@@ -244,44 +254,42 @@ define([
                     areaSelector + ' [data-advanced-parameter]'
                 );
 
-            //remove or add the hidden field class
+            // remove or add the hidden field class
             for (const [, entry] of Object.entries(advancedInputs)) {
                 entry.classList.toggle(`${cssBaseClass}__fields--parameters-hidden`);
             }
 
-            return advancedInputs;
+            // edit the labels
+            let headerLabel = `${numAdvanced} advanced parameter${numAdvanced > 1 ? 's' : ''}`,
+                buttonLabel;
+            if (settings.showAdvanced) {
+                headerLabel += ' showing';
+                buttonLabel = 'hide advanced';
+            } else {
+                headerLabel += ' hidden';
+                buttonLabel = 'show advanced';
+            }
+
+            // set labels
+            const messageElem = container.querySelector('[data-element="advanced-hidden-message"]');
+            messageElem.querySelector('span').textContent = `(${headerLabel})`;
+            messageElem.querySelector('button').textContent = buttonLabel;
+            showHideAdvancedErrorMessage();
         }
 
         function renderAdvanced() {
-            //remove or add the hidden field class
-            const areaElement = 'parameters-area',
-                advancedInputs = showHideAdvanced();
+            // remove or add the hidden field class
+            const areaElement = 'parameters-area';
 
-            // Also update the count in the paramters.
+            // Also update the count in the parameters.
             const events = Events.make({ node: container });
 
-            let showAdvancedButton,
-                label,
-                message = String(advancedInputs.length) + ' advanced parameter';
-
-            if (!advancedInputs.length) {
+            if (numAdvanced === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
             } else {
-                if (advancedInputs.length > 1) {
-                    message += 's';
-                }
-
-                if (settings.showAdvanced) {
-                    message += ' showing';
-                    label = 'hide advanced';
-                } else {
-                    label = 'show advanced';
-                    message += ' hidden';
-                }
-
-                showAdvancedButton = ui.buildButton({
+                const showAdvancedButton = ui.buildButton({
                     class: `${cssBaseClass}__toggle--advanced-hidden`,
-                    label,
+                    label: '',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
@@ -292,10 +300,15 @@ define([
 
                 ui.setContent(
                     [areaElement, 'advanced-hidden-message'],
-                    '(' + message + ') ' + showAdvancedButton
+                    [
+                        span({
+                            class: `${cssBaseClass}__toggle--advanced-message`,
+                        }),
+                        showAdvancedButton,
+                    ].join()
                 );
+                showHideAdvanced();
             }
-
             events.attachEvents();
         }
 
@@ -323,9 +336,34 @@ define([
 
             const content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
-                content: content,
-                events: events,
+                content,
+                events,
             };
+        }
+
+        function showHideAdvancedErrorMessage() {
+            const messageParentSelector = '[data-element="advanced-hidden-message"]';
+            const advancedErrorClass = `${cssBaseClass}__toggle--advanced-errors`;
+            const messageSelector = `${messageParentSelector} .${advancedErrorClass}`;
+            const messageNode = container.querySelector(messageSelector);
+            const hasErrors = Object.values(advancedParamErrors).some((v) => v);
+            if (!settings.showAdvanced && hasErrors && !messageNode) {
+                container.querySelector(messageParentSelector).appendChild(
+                    ui.createNode(
+                        span({ class: advancedErrorClass }, [
+                            iTag({
+                                class: `${advancedErrorClass}--icon fa fa-exclamation-triangle`,
+                            }),
+                            strong(' Warning: '),
+                            span(
+                                'Error in advanced parameter. Show advanced parameters for details.'
+                            ),
+                        ])
+                    )
+                );
+            } else if ((!hasErrors || settings.showAdvanced) && messageNode) {
+                container.querySelector(messageSelector).remove();
+            }
         }
 
         // MESSAGE HANDLERS
@@ -333,7 +371,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus,
+                bus,
             });
             const layout = renderLayout();
             container.innerHTML = layout.content;
@@ -366,6 +404,12 @@ define([
             });
         }
 
+        /**
+         * Also sets the number of advanced parameters, and initializes the
+         * advancedParamErrors object.
+         * @param {*} params
+         * @returns
+         */
         function makeParamsLayout(params) {
             const view = {},
                 paramMap = {};
@@ -379,6 +423,10 @@ define([
                 .map((parameterId) => {
                     const elementId = html.genId();
                     const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;
+                    if (advanced) {
+                        advancedParamErrors[parameterId] = false; // init these to be no error
+                        numAdvanced++;
+                    }
 
                     view[parameterId] = {
                         id: elementId,
@@ -447,7 +495,7 @@ define([
             const params = model.getItem('parameterSpecs');
             const filteredParams = makeParamsLayout(params);
 
-            //if there aren't any parameters we can just hide the whole area
+            // if there aren't any parameters we can just hide the whole area
             if (!filteredParams.layout.length) {
                 return Promise.resolve(ui.getElement('parameters-area').classList.add('hidden'));
             }
@@ -459,7 +507,7 @@ define([
                     await createParameterWidget(appSpec, filteredParams, parameterId);
                 })
             ).then(() => {
-                renderAdvanced();
+                renderAdvanced(filteredParams.advancedIds);
             });
         }
 
@@ -472,7 +520,6 @@ define([
          */
         function start(arg) {
             doAttach(arg.node);
-
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             arg.parameters.layout.forEach((id) => {
@@ -520,9 +567,7 @@ define([
         return {
             start,
             stop,
-            bus: function () {
-                return bus;
-            },
+            bus: () => bus,
         };
     }
 

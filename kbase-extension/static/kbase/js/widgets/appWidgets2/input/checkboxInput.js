@@ -1,20 +1,26 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     '../validation',
+    '../validators/constants',
 
     'bootstrap',
-], (Promise, html, Events, UI, Runtime, Validation) => {
+], (Promise, html, Events, UI, Runtime, Validation, Constants) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
+        span = t('span'),
+        strong = t('strong'),
+        button = t('button'),
+        iTag = t('i'),
         input = t('input'),
-        label = t('label');
+        cssBaseClass = 'kb-appInput__checkbox',
+        cssErrorClass = `${cssBaseClass}_error_container`;
 
     function factory(config) {
         const spec = config.parameterSpec,
@@ -22,8 +28,8 @@ define([
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
             model = {
-                updates: 0,
                 value: undefined,
+                hasInitialValueError: false,
             };
         let parent, container, ui;
 
@@ -52,9 +58,8 @@ define([
             return 0;
         }
 
-        // FIXME: where is the 'input-control' element?
         function syncModelToControl() {
-            const control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-container.input');
             if (model.value === 1) {
                 control.checked = true;
             } else {
@@ -66,6 +71,13 @@ define([
 
         function validate() {
             return Promise.try(() => {
+                if (model.hasInitialValueError) {
+                    return {
+                        isValid: false,
+                        messageId: Constants.MESSAGE_IDS.INVALID,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                    };
+                }
                 const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
@@ -77,45 +89,106 @@ define([
 
         function autoValidate() {
             return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                channel.emit('validation', result);
             });
         }
 
         // RENDERING
 
+        function clearInitialValueError(useDefaultValue) {
+            const inputContainer = container.querySelector(`.${cssBaseClass}_container`);
+            inputContainer.classList.remove(cssErrorClass);
+            inputContainer.querySelector(`.${cssBaseClass}_error`).remove();
+            model.hasInitialValueError = false;
+            if (useDefaultValue) {
+                setModelValue(spec.data.defaultValue);
+                return autoValidate();
+            }
+        }
+
+        function renderInitialValueError(events) {
+            const defaultVal = spec.data.defaultValue === 1 ? 'checked' : 'unchecked';
+            return div(
+                {
+                    class: `${cssBaseClass}_error`,
+                },
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}_error_container__title`,
+                        },
+                        [
+                            iTag({
+                                class: 'fa fa-exclamation-triangle',
+                            }),
+                            strong(' Error: '),
+                        ]
+                    ),
+                    `Invalid value of "${config.initialValue}" for parameter ${spec.ui.label}. Default value of ${defaultVal} used.`,
+                    button(
+                        {
+                            class: `${cssBaseClass}_error__close_button btn btn-default btn-xs`,
+                            type: 'button',
+                            title: 'close',
+                            id: events.addEvents({
+                                events: [
+                                    {
+                                        type: 'click',
+                                        handler: () => clearInitialValueError(true),
+                                    },
+                                ],
+                            }),
+                        },
+                        span({
+                            class: 'fa fa-times',
+                        })
+                    ),
+                ]
+            );
+        }
+
         function makeInputControl(events) {
             // CONTROL
+            const cssBaseClass = 'kb-appInput__checkbox';
             let checked = false;
-            if (model.value === 1) {
+            if (model.hasInitialValueError) {
+                checked = spec.data.defaultValue === 1;
+            } else if (model.value === 1) {
                 checked = true;
             }
-            return label([
-                input({
-                    id: events.addEvents({
-                        events: [
-                            {
-                                type: 'change',
-                                handler: function () {
-                                    validate().then((result) => {
-                                        setModelValue(result.parsedValue);
-                                        channel.emit('validation', {
-                                            errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis,
+
+            return div(
+                {
+                    class: `${cssBaseClass}_container ${
+                        model.hasInitialValueError ? cssErrorClass : ''
+                    }`,
+                },
+                [
+                    input({
+                        id: events.addEvents({
+                            events: [
+                                {
+                                    type: 'change',
+                                    handler: function () {
+                                        if (model.hasInitialValueError) {
+                                            clearInitialValueError();
+                                        }
+                                        validate().then((result) => {
+                                            setModelValue(result.parsedValue);
+                                            channel.emit('validation', result);
                                         });
-                                    });
+                                    },
                                 },
-                            },
-                        ],
+                            ],
+                        }),
+                        type: 'checkbox',
+                        dataElement: 'input',
+                        checked,
+                        value: 1,
                     }),
-                    type: 'checkbox',
-                    dataElement: 'input',
-                    checked: checked,
-                    value: 1,
-                }),
-            ]);
+                    model.hasInitialValueError ? renderInitialValueError(events) : '',
+                ]
+            );
         }
 
         function render(events) {
@@ -142,16 +215,22 @@ define([
                     node: container,
                 });
 
-                setModelValue(config.initialValue);
+                // initialize based on config.initialValue. If it's not 0 or 1, then
+                // note that we have an initial value error, and set to the default.
+                const initValue = config.initialValue || spec.data.defaultValue;
+                if (initValue !== 0 && initValue !== 1) {
+                    model.hasInitialValueError = true;
+                }
+
+                setModelValue(initValue);
                 container.innerHTML = render(events);
                 events.attachEvents();
-
-                autoValidate();
 
                 // Listen for events from the containing environment.
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
+                    syncModelToControl();
                 });
 
                 channel.on('update', (message) => {
@@ -159,7 +238,7 @@ define([
                     syncModelToControl();
                 });
 
-                return null;
+                return autoValidate();
             });
         }
 
@@ -175,8 +254,8 @@ define([
         // INIT
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -264,12 +264,12 @@ define([
             const menuOptions = [
                 'SRA Reads',
                 'GenBank Genome',
-                'GFF/FASTA Genome',
-                'GFF/FASTA Metagenome',
+                'GFF+FASTA Genome',
+                'GFF+FASTA Metagenome',
                 'Expression Matrix',
                 'Media',
                 'FBA Model',
-                'Assembly',
+                'FASTA Assembly',
                 'Phenotype Set',
                 'Sample Set',
             ];

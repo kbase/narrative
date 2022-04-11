@@ -18,11 +18,11 @@
         },
         {
             "id": "gff_genome",
-            "name": "GFF/FASTA Genome"
+            "name": "GFF+FASTA Genome"
         },
         {
             "id": "gff_metagenome",
-            "name": "GFF/FASTA Metagenome"
+            "name": "GFF+FASTA Metagenome"
         },
         {
             "id": "expression_matrix",
@@ -38,7 +38,7 @@
         },
         {
             "id": "assembly",
-            "name": "Assembly"
+            "name": "FASTA Assembly"
         },
         {
             "id": "phenotype_set",

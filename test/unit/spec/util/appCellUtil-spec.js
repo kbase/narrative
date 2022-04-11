@@ -418,7 +418,7 @@ define([
 
         const uploaders = {
                 dropdown_order: [
-                    { id: 'assembly', name: 'Assembly' },
+                    { id: 'assembly', name: 'FASTA Assembly' },
                     { id: 'fastq_reads_interleaved', name: 'FASTQ Reads Interleaved' },
                     { id: 'fastq_reads_noninterleaved', name: 'FASTQ Reads NonInterleaved' },
                     { id: 'sra_reads', name: 'SRA Reads' },
@@ -431,7 +431,7 @@ define([
                 unknown_type: {},
             },
             expectedFileTypeMapping = {
-                assembly: 'Assembly',
+                assembly: 'FASTA Assembly',
                 fastq_reads_interleaved: 'FASTQ Reads Interleaved',
                 fastq_reads_noninterleaved: 'FASTQ Reads NonInterleaved',
                 sra_reads: 'SRA Reads',
@@ -452,7 +452,7 @@ define([
                 const output = Util.generateFileTypeMappings(ttf);
                 expect(output).toEqual({
                     fileTypesDisplay: {
-                        assembly: { label: 'Assembly' },
+                        assembly: { label: 'FASTA Assembly' },
                         fastq_reads_interleaved: {
                             label: 'FASTQ Reads Interleaved',
                         },

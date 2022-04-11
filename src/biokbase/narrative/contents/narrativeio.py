@@ -535,9 +535,9 @@ class KBaseWSManagerMixin(object):
             for i in range(0, len(ws_ids), MAX_WORKSPACES):
                 res += ws.list_objects(
                     {
-                        "ids": ws_ids[i:i + MAX_WORKSPACES],
+                        "ids": ws_ids[i : i + MAX_WORKSPACES],
                         "type": NARRATIVE_TYPE,
-                        "includeMetadata": 1
+                        "includeMetadata": 1,
                     }
                 )
         except ServerError as err:

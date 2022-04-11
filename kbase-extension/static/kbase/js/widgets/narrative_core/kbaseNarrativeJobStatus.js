@@ -14,6 +14,7 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
+    'common/jobCommMessages',
     'common/runtime',
     'common/semaphore',
     'common/cellUtils',
@@ -38,6 +39,7 @@ define([
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
+    jcm,
     Runtime,
     Semaphore,
     utils,
@@ -119,10 +121,6 @@ define([
                 this.state = utils.getCellMeta(this.cell, 'kbase.codeCell.jobInfo.state');
             }
 
-            // if (cellMeta && cellMeta.codeCell && cellMeta.codeCell && cellMeta.codeCell.jobInfo.state.jobId === this.jobId) {
-            //     // use this and not the state input.
-            //     this.state = cellMeta.codeCell.jobInfo.state;
-            // }
             if (cellMeta && cellMeta.attributes && cellMeta.attributes.id) {
                 this.cellId = cellMeta.attributes.id;
             } else {
@@ -142,36 +140,42 @@ define([
             Semaphore.make()
                 .when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(() => {
+                    // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
-                            jobId: this.jobId,
+                            [jcm.CHANNEL.JOB]: this.jobId,
                         },
                         key: {
-                            type: 'job-info',
+                            type: jcm.MESSAGE_TYPE.INFO,
                         },
                         handle: function (message) {
-                            this.handleJobInfo(message);
+                            if (message[this.jobId]) {
+                                this.handleJobInfo(message[this.jobId]);
+                            }
                         }.bind(this),
                     });
 
+                    // listen for job-related bus messages
                     this.busConnection.listen({
                         channel: {
-                            jobId: this.jobId,
+                            [jcm.CHANNEL.JOB]: this.jobId,
                         },
                         key: {
-                            type: 'job-status',
+                            type: jcm.MESSAGE_TYPE.STATUS,
                         },
                         handle: function (message) {
-                            this.handleJobStatus(message);
+                            if (message[this.jobId]) {
+                                this.handleJobStatus(message[this.jobId]);
+                            }
                         }.bind(this),
                     });
 
-                    this.channel.emit('request-job-info', {
-                        jobId: this.jobId,
+                    this.channel.emit(jcm.MESSAGE_TYPE.INFO, {
+                        [jcm.PARAM.JOB_ID]: this.jobId,
                     });
 
-                    this.channel.emit('request-job-status', {
-                        jobId: this.jobId,
+                    this.channel.emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: this.jobId,
                     });
                 })
                 .catch((err) => {
@@ -181,10 +185,10 @@ define([
         },
 
         handleJobInfo: function (info) {
-            if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
+            if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.app_name) {
                 const { metadata } = this.cell;
                 if (metadata.kbase && metadata.kbase.attributes) {
-                    metadata.kbase.attributes.title = info.jobInfo.app_name;
+                    metadata.kbase.attributes.title = info.app_name;
                     metadata.kbase.attributes.subtitle = 'App Status';
                     metadata.kbase.attributes.icon = 'code';
                 }
@@ -497,8 +501,8 @@ define([
                 case 'completed':
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
-                        this.channel.emit('request-job-updates-stop', {
-                            jobId: this.jobId,
+                        this.channel.emit(jcm.MESSAGE_TYPE.STOP_UPDATE, {
+                            [jcm.PARAM.JOB_ID]: this.jobId,
                         });
                     }
                     // TODO: we need to remove all of the job listeners at this point, but
@@ -521,15 +525,15 @@ define([
         },
 
         requestJobInfo: function () {
-            this.channel.emit('request-job-info', {
-                jobId: this.jobId,
+            this.channel.emit(jcm.MESSAGE_TYPE.INFO, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
             });
         },
 
         requestJobStatus: function () {
             window.setTimeout(() => {
-                this.channel.emit('request-job-status', {
-                    jobId: this.jobId,
+                this.channel.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: this.jobId,
                 });
             }, this.statusRequestInterval);
         },

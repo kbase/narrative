@@ -132,12 +132,69 @@ define([], () => {
             },
         };
 
+    const STATE = {
+        NEW: {
+            mode: 'new',
+        },
+        INTERNAL_ERROR: {
+            mode: 'internal-error',
+        },
+        EDITING_INCOMPLETE: {
+            mode: 'editing',
+            params: 'incomplete',
+        },
+        EDITING_COMPLETE: {
+            mode: 'editing',
+            params: 'complete',
+            code: 'built',
+        },
+        EDITING_BATCH_INCOMPLETE: {
+            mode: 'editing-batch',
+            params: 'incomplete',
+        },
+        EDITING_BATCH_COMPLETE: {
+            mode: 'editing-batch',
+            params: 'complete',
+            code: 'built',
+        },
+        EXECUTE_REQUESTED: {
+            mode: 'execute-requested',
+        },
+        PROCESSING_LAUNCHED: {
+            mode: 'processing',
+            stage: 'launched',
+        },
+        PROCESSING_QUEUED: {
+            mode: 'processing',
+            stage: 'queued',
+        },
+        PROCESSING_RUNNING: {
+            mode: 'processing',
+            stage: 'running',
+        },
+        COMPLETED: {
+            mode: 'success',
+        },
+        TERMINATED: {
+            mode: 'canceled',
+        },
+        CANCELING: {
+            mode: 'canceling',
+        },
+        LAUNCH_ERROR: {
+            mode: 'error',
+            stage: 'launching',
+        },
+        RUNTIME_ERROR: {
+            mode: 'error',
+            stage: 'runtime',
+        },
+    };
+
     const appStates = [
         // new
         {
-            state: {
-                mode: 'new',
-            },
+            state: STATE.NEW,
             ui: {
                 tabs: {
                     info: {
@@ -166,22 +223,11 @@ define([], () => {
                     disabled: true,
                 },
             },
-            next: [
-                {
-                    mode: 'internal-error',
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-            ],
+            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE],
         },
         // editing - incomplete
         {
-            state: {
-                mode: 'editing',
-                params: 'incomplete',
-            },
+            state: STATE.EDITING_INCOMPLETE,
             ui: {
                 tabs: standardModeTabs,
                 actionButton: {
@@ -190,31 +236,15 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.EDITING_INCOMPLETE,
+                STATE.EDITING_COMPLETE,
+                STATE.EDITING_BATCH_INCOMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // editing - complete
         {
-            state: {
-                mode: 'editing',
-                params: 'complete',
-                code: 'built',
-            },
+            state: STATE.EDITING_COMPLETE,
             ui: {
                 tabs: standardModeTabs,
                 actionButton: {
@@ -223,60 +253,22 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'execute-requested',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launched',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.EDITING_INCOMPLETE,
+                STATE.EDITING_BATCH_INCOMPLETE,
+                STATE.EDITING_COMPLETE,
+                STATE.EXECUTE_REQUESTED,
+                STATE.PROCESSING_LAUNCHED,
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.LAUNCH_ERROR,
+                STATE.RUNTIME_ERROR,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // batch editing - incomplete
         {
-            state: {
-                mode: 'editing-batch',
-                params: 'incomplete',
-            },
+            state: STATE.EDITING_BATCH_INCOMPLETE,
             ui: {
                 tabs: batchModeTabs,
                 actionButton: {
@@ -285,31 +277,15 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'editing-batch',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.EDITING_BATCH_INCOMPLETE,
+                STATE.EDITING_BATCH_COMPLETE,
+                STATE.EDITING_INCOMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // batch editing - complete
         {
-            state: {
-                mode: 'editing-batch',
-                params: 'complete',
-                code: 'built',
-            },
+            state: STATE.EDITING_BATCH_COMPLETE,
             ui: {
                 tabs: batchModeTabs,
                 actionButton: {
@@ -318,59 +294,22 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'execute-requested',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launched',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.EDITING_INCOMPLETE,
+                STATE.EDITING_BATCH_INCOMPLETE,
+                STATE.EDITING_BATCH_COMPLETE,
+                STATE.EXECUTE_REQUESTED,
+                STATE.PROCESSING_LAUNCHED,
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.LAUNCH_ERROR,
+                STATE.RUNTIME_ERROR,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // execute-requested
         {
-            state: {
-                mode: 'execute-requested',
-            },
+            state: STATE.EXECUTE_REQUESTED,
             doc: [
                 'This state is entered when the cell is first executing, and before the back end has received the code and begun processing it.',
                 'It is necessary to allow the UI to immediately switch to running mode, as there can be significant latency between ',
@@ -430,55 +369,21 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launched',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.PROCESSING_LAUNCHED,
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.CANCELING,
+                STATE.TERMINATED,
+                STATE.LAUNCH_ERROR,
+                STATE.RUNTIME_ERROR,
+                STATE.EDITING_COMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // processing - launched
         {
-            state: {
-                mode: 'processing',
-                stage: 'launched',
-            },
+            state: STATE.PROCESSING_LAUNCHED,
             ui: {
                 tabs: {
                     info: {
@@ -531,51 +436,21 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'processing',
-                    stage: 'launched',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.PROCESSING_LAUNCHED,
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.CANCELING,
+                STATE.TERMINATED,
+                STATE.LAUNCH_ERROR,
+                STATE.RUNTIME_ERROR,
+                STATE.EDITING_COMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // processing - queued
         {
-            state: {
-                mode: 'processing',
-                stage: 'queued',
-            },
+            state: STATE.PROCESSING_QUEUED,
             ui: {
                 tabs: uiTabs.inProgress,
                 actionButton: {
@@ -606,52 +481,24 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.CANCELING,
+                STATE.TERMINATED,
                 // This can happen if there is no in-progress message received
                 // before an error occurs.
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
+                STATE.RUNTIME_ERROR,
                 // This can happen if the job disappeared while the app thinks
                 // it is queued, yet the user still wants to cancel (which can't really
                 // cancel, it just has to return to editing mode).
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.EDITING_COMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // processing - running
         {
-            state: {
-                mode: 'processing',
-                stage: 'running',
-            },
+            state: STATE.PROCESSING_RUNNING,
             ui: {
                 tabs: uiTabs.inProgress,
                 actionButton: {
@@ -682,127 +529,18 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
-        },
-        // processing - partial complete
-        {
-            state: {
-                mode: 'processing',
-                stage: 'partial-complete',
-            },
-            ui: {
-                tabs: {
-                    info: {
-                        enabled: true,
-                    },
-                    configure: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                    viewConfigure: {
-                        enabled: true,
-                    },
-                    jobStatus: {
-                        enabled: true,
-                    },
-                    results: {
-                        enabled: true,
-                    },
-                    error: {
-                        enabled: false,
-                        hidden: true,
-                    },
-                },
-                actionButton: {
-                    name: 'cancel',
-                },
-            },
-            on: {
-                enter: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
-                },
-                resume: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
-                },
-                exit: {
-                    messages: [
-                        {
-                            emit: 'stop-running',
-                        },
-                    ],
-                },
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete',
-                },
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.PROCESSING_RUNNING,
+                STATE.COMPLETED,
+                STATE.CANCELING,
+                STATE.TERMINATED,
+                STATE.RUNTIME_ERROR,
+                STATE.EDITING_COMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // cancelling the app run
         {
-            state: {
-                mode: 'canceling',
-            },
+            state: STATE.CANCELING,
             ui: {
                 tabs: uiTabs.inProgress,
                 actionButton: {
@@ -834,37 +572,20 @@ define([], () => {
                 },
             },
             next: [
-                {
-                    mode: 'canceled',
-                },
+                STATE.TERMINATED,
                 // In case the cancellation request was denied
-                {
-                    mode: 'processing',
-                    stage: 'running',
-                },
+                STATE.PROCESSING_QUEUED,
+                STATE.PROCESSING_RUNNING,
                 // In case the cancelling request did not succeed and the job meanwhile finished.
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
+                STATE.COMPLETED,
+                STATE.RUNTIME_ERROR,
+                STATE.EDITING_COMPLETE,
+                STATE.INTERNAL_ERROR,
             ],
         },
         // app run cancelled
         {
-            state: {
-                mode: 'canceled',
-            },
+            state: STATE.TERMINATED,
             ui: {
                 tabs: {
                     info: {
@@ -916,22 +637,11 @@ define([], () => {
                     ],
                 },
             },
-            next: [
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-            ],
+            next: [STATE.TERMINATED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
-        // success
+        // completed
         {
-            state: {
-                mode: 'success',
-            },
+            state: STATE.COMPLETED,
             ui: {
                 tabs: {
                     info: {
@@ -964,72 +674,41 @@ define([], () => {
                 enter: {
                     messages: [
                         {
-                            emit: 'on-success',
+                            emit: 'on-completed',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'resume-success',
+                            emit: 'resume-completed',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-success',
+                            emit: 'exit-completed',
                         },
                     ],
                 },
             },
-            next: [
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
+            next: [STATE.COMPLETED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // launch error
         {
-            state: {
-                mode: 'error',
-                stage: 'launching',
-            },
+            state: STATE.LAUNCH_ERROR,
             ui: {
                 tabs: uiTabs.error,
                 actionButton: {
                     name: 'reRunApp',
                 },
             },
-            next: [
-                {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
+            next: [STATE.LAUNCH_ERROR, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // error during job execution (including whilst queueing)
         {
-            state: {
-                mode: 'error',
-                stage: 'runtime',
-            },
+            state: STATE.RUNTIME_ERROR,
             ui: {
                 tabs: Object.assign({}, uiTabs.error, { jobStatus: { enabled: true } }),
                 actionButton: {
@@ -1059,45 +738,23 @@ define([], () => {
                     ],
                 },
             },
-            next: [
-                {
-                    mode: 'error',
-                    stage: 'runtime',
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
+            next: [STATE.RUNTIME_ERROR, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // A fatal error represents an app cell which cannot operate.
         {
-            state: {
-                mode: 'internal-error',
-            },
+            state: STATE.INTERNAL_ERROR,
             ui: {
                 tabs: uiTabs.error,
                 actionButton: {
                     name: 'resetApp',
                 },
             },
-            next: [
-                {
-                    mode: 'internal-error',
-                },
-                // We will let a user attempt to reset the app.
-                {
-                    mode: 'new',
-                },
-            ],
+            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE, STATE.EDITING_COMPLETE],
         },
     ];
 
     return {
         appStates,
+        STATE,
     };
 });

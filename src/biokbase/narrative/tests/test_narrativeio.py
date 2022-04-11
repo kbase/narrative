@@ -4,7 +4,10 @@ Narrative and workspace service.
 """
 import unittest
 from unittest.mock import patch
-from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin, LIST_OBJECTS_FIELDS
+from biokbase.narrative.contents.narrativeio import (
+    KBaseWSManagerMixin,
+    LIST_OBJECTS_FIELDS,
+)
 from biokbase.narrative.common.exceptions import WorkspaceError
 import biokbase.auth
 from tornado.web import HTTPError
@@ -523,7 +526,9 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__0_ws_ids(self):
         ws_ids = {"workspaces": [], "pub": []}
 
-        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
             nar_l = self.mixin.list_narratives()
 
         self.assertEqual([], nar_l)
@@ -533,7 +538,9 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__9999_ws_ids(self):
         ws_ids = {"workspaces": list(range(9999)), "pub": []}
 
-        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
             nar_l = self.mixin.list_narratives()
 
         self.assertEqual([get_exp_nar(i) for i in range(9999)], nar_l)
@@ -543,7 +550,9 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__10000_ws_ids(self):
         ws_ids = {"workspaces": list(range(10000)), "pub": []}
 
-        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
             nar_l = self.mixin.list_narratives()
 
         self.assertEqual([get_exp_nar(i) for i in range(10000)], nar_l)
@@ -553,7 +562,9 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__10001_ws_ids(self):
         ws_ids = {"workspaces": list(range(10000)), "pub": [10000]}
 
-        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
+        with patch.object(
+            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
+        ):
             nar_l = self.mixin.list_narratives()
 
         self.assertEqual([get_exp_nar(i) for i in range(10001)], nar_l)

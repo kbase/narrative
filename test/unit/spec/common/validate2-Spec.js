@@ -1,11 +1,10 @@
 define([
     'bluebird',
     'widgets/appWidgets2/validation',
-    'widgets/appWidgets2/validators/int',
     'widgets/appWidgets2/validators/resolver',
     'widgets/appWidgets2/validators/constants',
     'testUtil',
-], (Promise, Validation, IntValidation, ValidationResolver, Constants, TestUtil) => {
+], (Promise, Validation, ValidationResolver, Constants, TestUtil) => {
     'use strict';
 
     describe('Validator2 core functions', () => {
@@ -99,144 +98,6 @@ define([
                     max_length: 10,
                 })
             ).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
-        });
-
-        // INTEGER
-        it('Validate an integer without constraints', (done) => {
-            const spec = {
-                data: {
-                    constraints: {},
-                },
-            };
-            wrap(IntValidation.validate(42, spec)).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
-        });
-        it('Validate an integer, required, valid value', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(42, spec)).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
-        });
-        it('Validate an integer, required, empty string value', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                    },
-                },
-            };
-            wrap(IntValidation.validate('', spec)).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
-        });
-        it('Validate an integer, required, null value', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(null, spec)).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
-        });
-        it('Validate an integer, required, NaN value', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(0 / 0, spec)).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
-        });
-        it('Validate an integer, required, float value', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(1.23, spec)).then((result) => {
-                expect(result.isValid).toEqual(false);
-                done();
-            });
-        });
-        it('Validate an integer, required, range given, within range', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                        min_int: 5,
-                        max_int: 10,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(7, spec)).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
-        });
-        it('Validate an integer, required, range given, below range', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                        min_int: 5,
-                        max_int: 10,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(3, spec)).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
-        });
-        it('Validate an integer, required, range given, above range', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                        min_int: 5,
-                        max_int: 10,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(24, spec)).then((result) => {
-                expect(result.isValid).toEqual(true);
-                done();
-            });
-        });
-        it('Validate an integer, required, range given, wrong type (date)', (done) => {
-            const spec = {
-                data: {
-                    constraints: {
-                        required: true,
-                        min_int: 5,
-                        max_int: 10,
-                    },
-                },
-            };
-            wrap(IntValidation.validate(new Date(), spec)).then((result) => {
                 expect(result.isValid).toEqual(false);
                 done();
             });
@@ -383,7 +244,7 @@ define([
                         result: {
                             isValid: false,
                             diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be numeric',
+                            errorMessage: 'Invalid integer format: abc',
                         },
                     },
                 ],

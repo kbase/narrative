@@ -170,7 +170,7 @@ define(['common/pythonInterop', 'testUtil'], (PythonInterop, TestUtil) => {
                 ],
                 code =
                     'from biokbase.narrative.jobs.appmanager import AppManager\n' +
-                    'AppManager().run_app_batch(\n' +
+                    'AppManager().run_legacy_batch_app(\n' +
                     '    "MyModule/my_app",\n' +
                     '    [{\n' +
                     '        "arg1": 1,\n' +
@@ -222,7 +222,7 @@ define(['common/pythonInterop', 'testUtil'], (PythonInterop, TestUtil) => {
                 ],
                 expectedCode = [
                     'from biokbase.narrative.jobs.appmanager import AppManager',
-                    'AppManager().run_app_bulk(',
+                    'AppManager().run_app_batch(',
                     '    [{',
                     '        "app_id": "some_module/some_app",',
                     '        "tag": "release",',

@@ -4,6 +4,39 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 5.0.3
+- DATAUP-641 
+  - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+  - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+  - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
+- PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
+- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+- SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
+- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+- DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
+- DATAUP-737 - Overhaul of GitHub Actions to move to using official Docker actions for building, tagging, and uploading images. Move python module installation out of Dockerfile and into the requirements.txt.
+
+Dependency Changes
+- Python dependency updates
+  - coverage: 5.5 -> 6.2
+  - cryptography: 2.7 -> 3.3.2
+  - decorator: 5.0.9 -> 5.1.1
+  - jinja2: 3.0.1 -> 3.1.1
+  - jsonschema: 3.2.0 -> 4.4.0
+  - markupsafe: 2.0.1 -> 2.1.1
+  - pillow: 8.3.2 -> 8.4.0
+  - plotly: 5.3.1 -> 5.6.0
+  - pygments: 2.10.0 -> 2.11.2
+  - pymongo: 3.12.0 -> 4.1.0
+  - pytest-cov: 2.12.1 -> 3.0.0
+  - pyyaml: 5.4.1 -> 6.0
+  - requests: 2.26.0 -> 2.27.1
+  - rsa: 4.7.2 -> 4.8
+  - semantic_version: 2.8.5 -> 2.9.0
+  - setuptools: 57.4.0 -> 62.0.0
+  - sympy: 1.8 -> 1.10.1
+  - terminado: 0.11.1 -> 0.13.3
+
 ### Version 5.0.2
 - SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
 - DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
@@ -35,7 +68,7 @@ Code Changes
   - Read Assemblies
   - GFF metagenomes
   - Genbank genomes
-- Redesigned the Data Import Tab 
+- Redesigned the Data Import Tab
   - It now suggests object upload type based on file suffix.
   - Files are now selected for import by clicking a checkbox (or selecting a type), then clicking “Import Selected”
   - The Import Tab file browser has been improved and remembers selections more consistently
@@ -66,7 +99,7 @@ DATAUP-71 - added automated linting and code quality tools to the Narrative repo
 Code changes
 - DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
 - PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
-- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly. 
+- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly.
 
 Dependency Changes
 - Python dependency updates
@@ -78,7 +111,7 @@ Dependency Changes
 - Javascript dependency updates
   - @wdio/browserstack-service 7.9.1 -> 7.11.1
   - @wdio/cli 7.9.1 -> 7.11.1
-  - @wdio/local-runner 7.9.1 -> 7.11.1 
+  - @wdio/local-runner 7.9.1 -> 7.11.1
   - @wdio/mocha-framework 7.9.1 -> 7.11.1
   - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
   - @wdio/spec-reporter 7.9.0 -> 7.10.1

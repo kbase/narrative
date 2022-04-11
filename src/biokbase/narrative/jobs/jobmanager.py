@@ -13,7 +13,7 @@ from biokbase.narrative.common import kblogging
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception,
-    JobIDException,
+    JobRequestException,
 )
 
 """
@@ -33,26 +33,25 @@ JOB_NOT_REG_ERR = "Job ID is not registered"
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
-JOBS_MISSING_FALSY_ERR = "Job IDs are missing or all falsy"
+JOBS_MISSING_ERR = "No valid job IDs provided"
 
-
-def get_error_output_state(job_id, error="does_not_exist"):
-    if error not in ["does_not_exist", "ee2_error"]:
-        raise ValueError(f"Unknown error type: {error}")
-    return {"state": {"job_id": job_id, "status": error}}
+CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
+DOES_NOT_EXIST = "does_not_exist"
 
 
 class JobManager(object):
     """
     The KBase Job Manager class. This handles all jobs and makes their status available.
-    On status lookups, it feeds the results to the KBaseJobs channel that the front end
+    It sends the results to the KBaseJobs channel that the front end
     listens to.
     """
 
     __instance = None
 
-    # keys = job_id, values = { refresh = 1/0, job = Job object }
+    # keys: job_id, values: { refresh = 1/0, job = Job object }
     _running_jobs = dict()
+    # keys: cell_id, values: set(job_1_id, job_2_id, job_3_id)
+    _jobs_by_cell_id = dict()
 
     _log = kblogging.get_logger(__name__)
 
@@ -73,12 +72,63 @@ class JobManager(object):
 
         return states
 
+    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+        """
+        Deduplicates the input job list, maintaining insertion order
+        Any jobs not present in self._running_jobs are added to an error list
+
+        :param input_ids: a list of putative job IDs
+        :return results: tuple with items "job_ids", containing valid IDs;
+        and "error_ids", for jobs that the narrative backend does not know about
+        """
+        if not isinstance(input_ids, list):
+            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
+
+        job_ids = []
+        error_ids = []
+        for input_id in input_ids:
+            if input_id and input_id not in job_ids + error_ids:
+                if input_id in self._running_jobs:
+                    job_ids.append(input_id)
+                else:
+                    error_ids.append(input_id)
+
+        if not len(job_ids) + len(error_ids):
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
+
+        return job_ids, error_ids
+
+    def register_new_job(self, job: Job, refresh: bool = None) -> None:
+        """
+        Registers a new Job with the manager and stores the job locally.
+        This should only be invoked when a new Job gets started.
+
+        Parameters:
+        -----------
+        job : biokbase.narrative.jobs.job.Job object
+            The new Job that was started.
+        """
+        kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
+
+        if refresh is None:
+            refresh = not job.was_terminal()
+        self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
+
+        # add the new job to the _jobs_by_cell_id mapping if there is a cell_id present
+        if job.cell_id:
+            if job.cell_id not in self._jobs_by_cell_id.keys():
+                self._jobs_by_cell_id[job.cell_id] = set()
+
+            self._jobs_by_cell_id[job.cell_id].add(job.job_id)
+            if job.batch_id:
+                self._jobs_by_cell_id[job.cell_id].add(job.batch_id)
+
     def initialize_jobs(self, cell_ids: List[str] = None) -> None:
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
         So it does the following steps.
-        1. app_util.system_variable('workspace_id')
+        1. gets the current workspace ID from app_util.system_variable('workspace_id')
         2. get list of jobs with that ws id from ee2 (also gets tag, cell_id, run_id)
         3. initialize the Job objects and add them to the running jobs list
         4. start the status lookup loop.
@@ -101,7 +151,6 @@ class JobManager(object):
 
         self._running_jobs = dict()
         job_states = self._reorder_parents_children(job_states)
-
         for job_state in job_states.values():
             child_jobs = None
             if job_state.get("batch_job"):
@@ -114,7 +163,8 @@ class JobManager(object):
 
             # Set to refresh when job is not in terminal state
             # and when job is present in cells (if given)
-            refresh = not job.was_terminal()
+            # and when it is not part of a batch
+            refresh = not job.was_terminal() and not job.batch_id
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 
@@ -143,120 +193,25 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job(self, input_id: str) -> None:
-        if input_id not in self._running_jobs:
-            raise JobIDException(JOB_NOT_REG_ERR, input_id)
-
-    def _check_job_list(self, input_ids: List[str]) -> Tuple[List[str], List[str]]:
+    def get_job(self, job_id):
         """
-        Deduplicates the input job list, maintaining insertion order
-        Any jobs not present in self._running_jobs are added to an error list
-
-        :param input_ids: a list of putative job IDs
-        :return results: tuple with items "job_ids", containing valid IDs;
-        and "error_ids", for jobs that the narrative backend does not know about
+        Returns a Job with the given job_id.
+        Raises a JobRequestException if not found.
         """
-        if not isinstance(input_ids, list):
-            raise TypeError(f"{JOBS_TYPE_ERR}: {input_ids}")
-
-        job_ids = []
-        error_ids = []
-        for input_id in input_ids:
-            if input_id and input_id not in job_ids + error_ids:
-                if input_id in self._running_jobs:
-                    job_ids.append(input_id)
-                else:
-                    error_ids.append(input_id)
-
-        if not len(job_ids) + len(error_ids):
-            raise JobIDException(JOBS_MISSING_FALSY_ERR, input_ids)
-
-        return job_ids, error_ids
-
-    def list_jobs(self):
-        """
-        List all job ids, their info, and status in a quick HTML format.
-        """
-        try:
-            all_states = self.lookup_all_job_states(ignore_refresh_flag=True)
-            state_list = [copy.deepcopy(s["state"]) for s in all_states.values()]
-
-            if not len(state_list):
-                return "No running jobs!"
-
-            state_list = sorted(state_list, key=lambda s: s.get("created", 0))
-            for state in state_list:
-                job = self.get_job(state["job_id"])
-                state["created"] = datetime.fromtimestamp(
-                    state["created"] / 1000.0
-                ).strftime("%Y-%m-%d %H:%M:%S")
-                state["run_time"] = "Not started"
-                state["owner"] = job.user
-                state["app_id"] = job.app_id
-                exec_start = state.get("running", None)
-
-                if state.get("finished"):
-                    finished_time = datetime.fromtimestamp(
-                        state.get("finished") / 1000.0
-                    )
-                    state["finish_time"] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
-                    if exec_start:
-                        exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
-                        delta = finished_time - exec_start_time
-                        delta = delta - timedelta(microseconds=delta.microseconds)
-                        state["run_time"] = str(delta)
-                elif exec_start:
-                    exec_start_time = datetime.fromtimestamp(
-                        exec_start / 1000.0
-                    ).replace(tzinfo=timezone.utc)
-                    delta = datetime.now(timezone.utc) - exec_start_time
-                    delta = delta - timedelta(microseconds=delta.microseconds)
-                    state["run_time"] = str(delta)
-
-            tmpl = """
-            <table class="table table-bordered table-striped table-condensed">
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Submitted</th>
-                    <th>Submitted By</th>
-                    <th>Status</th>
-                    <th>Run Time</th>
-                    <th>Complete Time</th>
-                </tr>
-                {% for j in jobs %}
-                <tr>
-                    <td>{{ j.job_id|e }}</td>
-                    <td>{{ j.app_id|e }}</td>
-                    <td>{{ j.created|e }}</td>
-                    <td>{{ j.user|e }}</td>
-                    <td>{{ j.status|e }}</td>
-                    <td>{{ j.run_time|e }}</td>
-                    <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            """
-            return HTML(Template(tmpl).render(jobs=state_list))
-
-        except Exception as e:
-            kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
-            raise
+        if job_id not in self._running_jobs:
+            raise JobRequestException(JOB_NOT_REG_ERR, job_id)
+        return self._running_jobs[job_id]["job"]
 
     def _construct_job_output_state_set(
-        self, job_ids: list, states: dict = None
+        self, job_ids: List[str], states: dict = None
     ) -> dict:
         """
         Builds a set of job states for the list of job ids.
+        :param job_ids: list of job IDs (may be empty)
         :param states: dict, where each value is a state is from EE2
         """
-        # if cached, use 'em.
-        # otherwise, lookup.
-        # do transform
-        # cache terminal ones.
-        # return all.
         if not isinstance(job_ids, list):
-            raise ValueError("job_ids must be a list")
+            raise JobRequestException("job_ids must be a list")
 
         if not len(job_ids):
             return {}
@@ -288,45 +243,34 @@ class JobManager(object):
                     }
                 )
             except Exception as e:
+                error_message = str(e)
                 kblogging.log_event(
-                    self._log, "_construct_job_output_state_set", {"err": str(e)}
+                    self._log,
+                    "_construct_job_output_state_set",
+                    {"exception": error_message},
                 )
-                for job_id in jobs_to_lookup:
-                    output_states[job_id] = get_error_output_state(job_id, "ee2_error")
 
-        for job_id, state in fetched_states.items():
-            output_states[job_id] = self.get_job(job_id).output_state(state)
+            # fill in the output states for the missing jobs
+            # if the job fetch failed, add an error message to the output
+            # and return the cached job state
+            for job_id in jobs_to_lookup:
+                job = self.get_job(job_id)
+                if job_id in fetched_states:
+                    output_states[job_id] = job.output_state(fetched_states[job_id])
+                else:
+                    # fetch the current state without updating it
+                    output_states[job_id] = job.output_state({})
+                    # add an error field with the error message from the failed look up
+                    output_states[job_id]["error"] = error_message
+
         return output_states
 
-    def lookup_job_info(self, job_ids: List[str]) -> dict:
-        """
-        Sends the info over the comm channel as these packets:
-        {
-            app_id: module/name,
-            app_name: random string,
-            job_id: string,
-            job_params: dictionary,
-            batch_id: string,
-        }
-        Will set packet to "does_not_exist" if job_id doesn't exist.
-        """
+    def get_job_states(self, job_ids: List[str]) -> dict:
         job_ids, error_ids = self._check_job_list(job_ids)
+        output_states = self._construct_job_output_state_set(job_ids)
+        return self.add_errors_to_results(output_states, error_ids)
 
-        infos = dict()
-        for job_id in job_ids:
-            job = self.get_job(job_id)
-            infos[job_id] = {
-                "app_id": job.app_id,
-                "app_name": job.app_name,
-                "job_id": job_id,
-                "job_params": job.params,
-                "batch_id": job.batch_id,
-            }
-        for error_id in error_ids:
-            infos[error_id] = "does_not_exist"
-        return infos
-
-    def lookup_all_job_states(self, ignore_refresh_flag=False):
+    def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
         Fetches states for all running jobs.
         If ignore_refresh_flag is True, then returns states for all jobs this
@@ -337,6 +281,7 @@ class JobManager(object):
             Even if the job is stopped, or completed, fetch and return its state from the service.
         """
         jobs_to_lookup = list()
+
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
             if self._running_jobs[job_id]["refresh"] or ignore_refresh_flag:
@@ -345,57 +290,99 @@ class JobManager(object):
             return self._construct_job_output_state_set(jobs_to_lookup)
         return dict()
 
-    def register_new_job(self, job: Job, refresh: bool = None) -> None:
+    def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
         """
-        Registers a new Job with the manager and stores the job locally.
-        This should only be invoked when a new Job gets started.
+        Finds jobs with a cell_id in cell_id_list
+        Mappings of job ID to cell ID are added when new jobs are registered
+        Returns a list of job IDs and a mapping of cell IDs to the list of
+        job IDs associated with the cell.
+        """
+        if not cell_id_list:
+            raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
-        Parameters:
-        -----------
-        job : biokbase.narrative.jobs.job.Job object
-            The new Job that was started.
-        """
-        kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
+        cell_to_job_mapping = {
+            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
+            for id in cell_id_list
+        }
+        # union of all the job_ids in the cell_to_job_mapping
+        job_id_list = set().union(*cell_to_job_mapping.values())
+        return (job_id_list, cell_to_job_mapping)
 
-        if refresh is None:
-            refresh = not job.was_terminal()
-        self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
+    def get_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
+        """
+        Fetch job states for jobs with a cell_id in cell_id_list
+        Returns a dictionary of job states keyed by job ID and a mapping of
+        cell IDs to the list of job IDs associated with the cell.
+        """
+        (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
+            cell_id_list
+        )
+        job_states = {}
+        if len(jobs_to_lookup) > 0:
+            job_states = self._construct_job_output_state_set(list(jobs_to_lookup))
 
-    def get_job(self, job_id):
+        return {"jobs": job_states, "mapping": cell_to_job_mapping}
+
+    def get_job_info(self, job_ids: List[str]) -> dict:
         """
-        Returns a Job with the given job_id.
-        Raises a JobIDException if not found.
+        Sends the info over the comm channel as these packets:
+        {
+            app_id: module/name,
+            app_name: random string,
+            job_id: string,
+            job_params: dictionary,
+            batch_id: string,
+        }
+        Will set packet to the generic job not found message if job_id doesn't exist.
         """
-        self._check_job(job_id)
-        return self._running_jobs[job_id]["job"]
+        job_ids, error_ids = self._check_job_list(job_ids)
+
+        infos = dict()
+        for job_id in job_ids:
+            job = self.get_job(job_id)
+            infos[job_id] = {
+                "app_id": job.app_id,
+                "app_name": job.app_name,
+                "batch_id": job.batch_id,
+                "job_id": job_id,
+                "job_params": job.params,
+            }
+        return self.add_errors_to_results(infos, error_ids)
 
     def get_job_logs(
         self,
         job_id: str,
         first_line: int = 0,
         num_lines: int = None,
-        latest_only: bool = False,
+        latest: bool = False,
     ) -> dict:
         """
-        Raises a Value error if the job_id doesn't exist or is not present.
         :param job_id: str - the job id from the execution engine
         :param first_line: int - the first line to be requested by the log. 0-indexed. If < 0,
             this will be set to 0
         :param num_lines: int - the maximum number of lines to return.
             if < 0, will be reset to 0.
             if None, then will not be considered, and just return all the lines.
-        :param latest_only: bool - if True, will only return the most recent max_lines
-            of logs. This overrides the first_line parameter if set to True. So if the call made
-            is get_job_logs(id, first_line=0, num_lines=5, latest_only=True), and there are 100
+        :param latest: bool - if True, will only return the most recent max_lines
+            of logs. This overrides the first_line parameter if set to True. If the call made is
+            get_job_logs(id, first_line=0, num_lines=5, latest=True), and there are 100
             log lines available, then lines 96-100 will be returned.
         :returns: dict with keys:
             job_id:     string
             batch_id:   string | None
             first:      int - the first line returned
+            latest:     bool - whether the latest lines were returned
             max_lines:  int - the number of logs lines currently available for that job
             lines:      list - the lines themselves, fresh from the server. These are all tiny dicts with keys
                 "line" - the log line string
                 "is_error" - either 0 or 1
+
+            If there is an error when retrieving logs (e.g. the job
+            has yet to start or it is a batch job and does not generate
+            logs), the return structure will be:
+                job_id:     string
+                batch_id:   string | None
+                error:      string - error message
         """
         job = self.get_job(job_id)
 
@@ -405,7 +392,7 @@ class JobManager(object):
             num_lines = 0
 
         try:
-            if latest_only:
+            if latest:
                 (max_lines, logs) = job.log()
                 if num_lines is None or max_lines <= num_lines:
                     first_line = 0
@@ -419,18 +406,41 @@ class JobManager(object):
                 "job_id": job.job_id,
                 "batch_id": job.batch_id,
                 "first": first_line,
+                "latest": True if latest else False,
                 "max_lines": max_lines,
                 "lines": logs,
             }
         except Exception as e:
-            raise transform_job_exception(e, "Unable to retrieve job logs")
+            return {
+                "job_id": job.job_id,
+                "batch_id": job.batch_id,
+                "error": e.message,
+            }
+
+    def get_job_logs_for_list(
+        self,
+        job_id_list: List[str],
+        first_line: int = 0,
+        num_lines: int = None,
+        latest: bool = False,
+    ) -> dict:
+        """
+        Fetch the logs for a list of jobs. Note that the parameters supplied are applied to all jobs.
+        """
+        job_ids, error_ids = self._check_job_list(job_id_list)
+
+        output = {}
+        for job_id in job_ids:
+            output[job_id] = self.get_job_logs(job_id, first_line, num_lines, latest)
+
+        return self.add_errors_to_results(output, error_ids)
 
     def cancel_jobs(self, job_id_list: List[str]) -> dict:
         """
         Cancel a list of running jobs, placing them in a canceled state
         Does NOT delete the jobs.
         If the job_ids are not present or are not found in the Narrative,
-        a ValueError is raised.
+        a JobRequestException is raised.
 
         Results are returned as a dict of job status objects keyed by job id
 
@@ -439,19 +449,18 @@ class JobManager(object):
 
         """
         job_ids, error_ids = self._check_job_list(job_id_list)
-
+        error_states = dict()
         for job_id in job_ids:
             if not self.get_job(job_id).was_terminal():
-                self._cancel_job(job_id)
+                error = self._cancel_job(job_id)
+                if error:
+                    error_states[job_id] = error.message
 
         job_states = self._construct_job_output_state_set(job_ids)
+        for job_id in error_states:
+            job_states[job_id]["error"] = error_states[job_id]
 
-        for job_id in error_ids:
-            job_states[job_id] = {
-                "state": {"job_id": job_id, "status": "does_not_exist"}
-            }
-
-        return job_states
+        return self.add_errors_to_results(job_states, error_ids)
 
     def _cancel_job(self, job_id: str) -> None:
         # Stop updating the job status while we try to cancel.
@@ -459,22 +468,24 @@ class JobManager(object):
         is_refreshing = self._running_jobs[job_id].get("refresh", False)
         self._running_jobs[job_id]["refresh"] = False
         self._running_jobs[job_id]["canceling"] = True
-
+        error = None
         try:
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
-            raise transform_job_exception(e, "Unable to cancel job")
-        finally:
-            self._running_jobs[job_id]["refresh"] = is_refreshing
-            del self._running_jobs[job_id]["canceling"]
+            error = transform_job_exception(e, "Unable to cancel job")
+        self._running_jobs[job_id]["refresh"] = is_refreshing
+        del self._running_jobs[job_id]["canceling"]
+        return error
 
-    def retry_jobs(self, job_id_list: List[str]) -> List[dict]:
+    def retry_jobs(self, job_id_list: List[str]) -> dict:
         """
         Returns
         [
             {
+                "job_id": job_id,
                 "job": {"state": {"job_id": job_id, "status": status, ...} ...},
-                "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
+                "retry_id": retry_id,
+                "retry": {"state": {"job_id": retry_id, "status": status, ...} ...}
             },
             {
                 "job": {"state": {"job_id": job_id, "status": status, ...} ...},
@@ -482,8 +493,8 @@ class JobManager(object):
             }
             ...
             {
-                "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
-                "error": "does_not_exist"
+                "job": {"state": {"job_id": job_id, "status": DOES_NOT_EXIST}},
+                "error": f"Cannot find job with ID {job_id}",
             }
         ]
         where the innermost dictionaries are job states from ee2 and are within the
@@ -506,35 +517,36 @@ class JobManager(object):
             retry_ids, self._create_jobs(retry_ids)  # add to self._running_jobs index
         )
         job_states = {**orig_states, **retry_states}
+
+        results_by_job_id = {}
         # fill in the job state details
         for result in retry_results:
-            result["job"] = job_states[result["job_id"]]
-            del result["job_id"]
+            job_id = result["job_id"]
+            results_by_job_id[job_id] = {"job_id": job_id, "job": job_states[job_id]}
             if "retry_id" in result:
-                result["retry"] = job_states[result["retry_id"]]
-                del result["retry_id"]
-        for job_id in error_ids:
-            retry_results.append(
-                {
-                    "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
-                    "error": "does_not_exist",
-                }
-            )
+                retry_id = result["retry_id"]
+                results_by_job_id[job_id]["retry_id"] = retry_id
+                results_by_job_id[job_id]["retry"] = job_states[retry_id]
+            if "error" in result:
+                results_by_job_id[job_id]["error"] = result["error"]
+        return self.add_errors_to_results(results_by_job_id, error_ids)
 
-        return retry_results
-
-    def get_job_states(self, job_ids: List[str]) -> dict:
-        job_ids, error_ids = self._check_job_list(job_ids)
-        output_states = self._construct_job_output_state_set(job_ids)
+    def add_errors_to_results(self, results: dict, error_ids: List[str]) -> dict:
+        """
+        Add the generic "not found" error for each job_id in error_ids
+        """
         for error_id in error_ids:
-            output_states[error_id] = get_error_output_state(error_id)
-        return output_states
+            results[error_id] = {
+                "job_id": error_id,
+                "error": f"Cannot find job with ID {error_id}",
+            }
+        return results
 
     def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:
         """
         Modifies how many things want to get the job updated.
         If this sets the current "refresh" key to be less than 0, it gets reset to 0.
-        If the job isn't present or None, a ValueError is raised.
+        Jobs that are not present in the _running_jobs dictionary are ignored.
         """
         job_ids, _ = self._check_job_list(job_ids)
 
@@ -547,7 +559,7 @@ class JobManager(object):
         """
         batch_job = self.get_job(batch_id)
         if not batch_job.batch_job:
-            raise JobIDException(JOB_NOT_BATCH_ERR, batch_id)
+            raise JobRequestException(JOB_NOT_BATCH_ERR, batch_id)
 
         child_ids = batch_job.child_jobs
 
@@ -571,3 +583,76 @@ class JobManager(object):
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)
 
         return [batch_id] + child_ids
+
+    def list_jobs(self):
+        """
+        List all job ids, their info, and status in a quick HTML format.
+        """
+        try:
+            all_states = self.get_all_job_states(ignore_refresh_flag=True)
+            state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
+
+            if not len(state_list):
+                return "No running jobs!"
+
+            state_list = sorted(state_list, key=lambda s: s.get("created", 0))
+            for state in state_list:
+                job = self.get_job(state["job_id"])
+                state["created"] = datetime.fromtimestamp(
+                    state["created"] / 1000.0
+                ).strftime("%Y-%m-%d %H:%M:%S")
+                state["run_time"] = "Not started"
+                state["user"] = job.user
+                state["app_id"] = job.app_id
+                state["batch_id"] = job.batch_id
+                exec_start = state.get("running", None)
+
+                if state.get("finished"):
+                    finished_time = datetime.fromtimestamp(
+                        state.get("finished") / 1000.0
+                    )
+                    state["finish_time"] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
+                    if exec_start:
+                        exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
+                        delta = finished_time - exec_start_time
+                        delta = delta - timedelta(microseconds=delta.microseconds)
+                        state["run_time"] = str(delta)
+                elif exec_start:
+                    exec_start_time = datetime.fromtimestamp(
+                        exec_start / 1000.0
+                    ).replace(tzinfo=timezone.utc)
+                    delta = datetime.now(timezone.utc) - exec_start_time
+                    delta = delta - timedelta(microseconds=delta.microseconds)
+                    state["run_time"] = str(delta)
+
+            tmpl = """
+            <table class="table table-bordered table-striped table-condensed">
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Submitted</th>
+                    <th>Batch ID</th>
+                    <th>Submitted By</th>
+                    <th>Status</th>
+                    <th>Run Time</th>
+                    <th>Complete Time</th>
+                </tr>
+                {% for j in jobs %}
+                <tr>
+                    <td class="job_id">{{ j.job_id|e }}</td>
+                    <td class="app_id">{{ j.app_id|e }}</td>
+                    <td class="created">{{ j.created|e }}</td>
+                    <td class="batch_id">{{ j.batch_id|e }}</td>
+                    <td class="user">{{ j.user|e }}</td>
+                    <td class="status">{{ j.status|e }}</td>
+                    <td class="run_time">{{ j.run_time|e }}</td>
+                    <td class="finish_time">{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            """
+            return HTML(Template(tmpl).render(jobs=state_list))
+
+        except Exception as e:
+            kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
+            raise

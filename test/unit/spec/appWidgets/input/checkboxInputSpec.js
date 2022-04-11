@@ -184,18 +184,33 @@ define([
 
             it('the error should be dismissable with a button, and propagate the default value', async () => {
                 const widget = CheckboxInput.make(testConfig);
-                let validMsg;
-                bus.on('changed', (msg) => {
-                    validMsg = msg;
-                });
                 await widget.start({ node: container });
                 const elem = container.querySelector('.kb-appInput__checkbox_container');
                 await TestUtil.waitForElementChange(elem, () => {
                     elem.querySelector('button.kb-appInput__checkbox_error__close_button').click();
                 });
-                expect(elem.querySelector('.kb-appInput__checkbox_error_container')).toBeNull();
-                await TestUtil.wait(500);
-                expect(validMsg).toEqual({ newValue: testConfig.parameterSpec.data.defaultValue });
+                // expect 2 changed messages - the initial one with the error, then the second one with
+                // the default value.
+                const changeMsgs = [];
+                return new Promise((resolve) => {
+                    bus.on('changed', (changeMsg) => {
+                        changeMsgs.push(changeMsg);
+                        if (changeMsgs.length === 2) {
+                            expect(
+                                elem.querySelector('.kb-appInput__checkbox_error_container')
+                            ).toBeNull();
+                            expect(changeMsgs).toEqual([
+                                {
+                                    newValue: testConfig.initialValue,
+                                },
+                                {
+                                    newValue: testConfig.parameterSpec.data.defaultValue,
+                                },
+                            ]);
+                            resolve();
+                        }
+                    });
+                });
             });
 
             it('the error should be dismissable by changing the checkbox', async () => {

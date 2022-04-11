@@ -1421,7 +1421,9 @@ define(
 
             function doJobStatus(message) {
                 const existingState = model.getItem('exec.jobState'),
-                    existingJobId = existingState.job_id,
+                    existingJobId = existingState
+                        ? existingState.job_id
+                        : model.getItem('exec.launchState.job_id'),
                     newJobState = message[existingJobId].jobState,
                     { outputWidgetInfo } = message[existingJobId],
                     forceRender =
@@ -2021,7 +2023,7 @@ define(
                             startListeningForJobMessages(jobState.job_id);
                             requestJobStatus(jobState.job_id);
                         } else if (!jobState && model.getItem('exec.launchState.job_id')) {
-                            startListeningForJobMessages(jobState.job_id);
+                            startListeningForJobMessages(model.getItem('exec.launchState.job_id'));
                         } else {
                             renderUI();
                         }

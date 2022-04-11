@@ -507,7 +507,7 @@ define([
                     await createParameterWidget(appSpec, filteredParams, parameterId);
                 })
             ).then(() => {
-                renderAdvanced(filteredParams.advancedIds);
+                renderAdvanced();
             });
         }
 

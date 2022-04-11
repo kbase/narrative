@@ -704,7 +704,7 @@ define([
                     const jobState = this.jobManager.getJob(this.jobId) || { job_id: this.jobId };
 
                     // initial render
-                    if (jobState && jobState.status) {
+                    if (jobState.status) {
                         this.handleJobStatus({ jobState });
                     } else {
                         // some kind of 'await job info' message

@@ -189,10 +189,10 @@ define([
                 await TestUtil.waitForElementChange(elem, () => {
                     elem.querySelector('button.kb-appInput__checkbox_error__close_button').click();
                 });
-                // expect 2 changed messages - the initial one with the error, then the second one with
-                // the default value.
-                const changeMsgs = [];
                 return new Promise((resolve) => {
+                    // expect 2 changed messages - the initial one with the error, then the second one with
+                    // the default value.
+                    const changeMsgs = [];
                     bus.on('changed', (changeMsg) => {
                         changeMsgs.push(changeMsg);
                         if (changeMsgs.length === 2) {

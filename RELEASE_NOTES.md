@@ -23,7 +23,8 @@ Dependency Changes
   - jquery-ui: 1.12.1 -> 1.13.1
   - js-yaml: 3.3.1 -> 3.14.1
   - underscore: 1.8.3 -> 1.13.2
-
+- Python dependency updates
+  - setuptools 62.0.0 -> 62.1.0
 
 ### Version 5.0.3
 - DATAUP-641

@@ -453,7 +453,7 @@ define([
                     messageId = Constants.MESSAGE_IDS.OBJ_NO_INT;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|.|_-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9.|_-]+$/.test(parsedValue)) {
                     messageId = Constants.MESSAGE_IDS.OBJ_INVALID;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
@@ -646,7 +646,7 @@ define([
         }
 
         function stringToBoolean(value) {
-            switch (value.toLowerCase(value)) {
+            switch (value.toLowerCase()) {
                 case 'true':
                 case 't':
                 case 'yes':

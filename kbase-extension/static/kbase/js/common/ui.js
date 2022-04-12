@@ -1193,7 +1193,7 @@ define([
                     fontSize = jsonBlockWidgetConfig.fontSize || 0.8;
 
                 function render(obj) {
-                    const specText = JSON.stringify(obj, false, indent),
+                    const specText = JSON.stringify(obj, null, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre(
                         {

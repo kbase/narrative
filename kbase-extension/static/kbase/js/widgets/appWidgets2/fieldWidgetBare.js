@@ -10,20 +10,18 @@
 define([
     'bluebird',
     'google-code-prettify/prettify',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
-    'common/props',
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify',
-], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
+], (Promise, PR, html, Events, UI, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
         span = t('span'),
-        label = t('label'),
         button = t('button'),
         table = t('table'),
         tr = t('tr'),
@@ -39,20 +37,15 @@ define([
         };
 
     function factory(config) {
-        let ui,
-            runtime = Runtime.make(),
+        let ui, places, parent, container, inputControl, enabled;
+        const runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
                 description: 'Field bus',
             }),
-            places,
-            parent,
-            container,
             inputControlFactory = config.inputControlFactory,
-            inputControl,
             options = {},
             fieldId = html.genId(),
-            spec = config.parameterSpec,
-            enabled;
+            spec = config.parameterSpec;
 
         try {
             inputControl = inputControlFactory.make({
@@ -171,12 +164,6 @@ define([
             places.messagePanel.classList.add('hidden');
         }
 
-        function hideError() {
-            places.field.classList.remove('-error');
-            places.messagePanel.classList.add('hidden');
-            places.feedbackIndicator.className = '';
-        }
-
         function feedbackNone() {
             if (places.feedbackIndicator) {
                 places.feedbackIndicator.className = '';
@@ -206,13 +193,13 @@ define([
             }
         }
 
-        function rawSpec(spec) {
-            const specText = JSON.stringify(spec, false, 3),
+        function rawSpec() {
+            const specText = JSON.stringify(spec, null, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
-        function parameterInfoContent(spec) {
+        function parameterInfoContent() {
             return div({ style: { padding: '0px' } }, [
                 div({ style: { fontWeight: 'bold' } }, spec.ui.label),
                 div({ style: { fontStyle: 'italic' } }, spec.id),
@@ -220,7 +207,7 @@ define([
             ]);
         }
 
-        function parameterInfoTypeRules(spec) {
+        function parameterInfoTypeRules() {
             switch (spec.data.type) {
                 case 'float':
                 case 'int':
@@ -231,7 +218,7 @@ define([
             }
         }
 
-        function parameterInfoRules(spec) {
+        function parameterInfoRules() {
             return table(
                 { class: 'table table-striped' },
                 [
@@ -250,15 +237,8 @@ define([
                             ]);
                         }
                     })(),
-                ].concat(parameterInfoTypeRules(spec))
+                ].concat(parameterInfoTypeRules())
             );
-        }
-
-        function parameterInfoLittleTip(spec) {
-            return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
         }
 
         function renderInfoTip() {
@@ -284,17 +264,17 @@ define([
                             {
                                 label: 'About',
                                 name: 'about',
-                                content: parameterInfoContent(spec),
+                                content: parameterInfoContent(),
                             },
                             {
                                 label: 'Rules',
                                 name: 'rules',
-                                content: parameterInfoRules(spec),
+                                content: parameterInfoRules(),
                             },
                             {
                                 label: 'Spec',
                                 name: 'spec',
-                                content: rawSpec(spec),
+                                content: rawSpec(),
                             },
                         ],
                     })
@@ -302,7 +282,7 @@ define([
             ]);
         }
 
-        function render(events) {
+        function render() {
             const ids = {
                 fieldPanel: html.genId(),
                 messagePanel: html.genId(),
@@ -413,7 +393,7 @@ define([
                     node: container,
                 });
 
-                const rendered = render(events);
+                const rendered = render();
                 container.innerHTML = rendered.content;
                 events.attachEvents();
                 // TODO: use the pattern in which the render returns an object,
@@ -470,16 +450,10 @@ define([
                             break;
                     }
                 });
-                // bus.on('touched', function (message) {
-                //     places.feedback.style.backgroundColor = 'yellow';
-                // });
-                // bus.on('changed', function () {
-                //     places.feedback.style.backgroundColor = '';
-                // });
-                bus.on('enable', (message) => {
+                bus.on('enable', () => {
                     doEnable();
                 });
-                bus.on('disable', (message) => {
+                bus.on('disable', () => {
                     doDisable();
                 });
 

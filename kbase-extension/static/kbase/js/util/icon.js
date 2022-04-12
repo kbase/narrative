@@ -64,18 +64,20 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         let parsed_color, r, g, b;
 
         // XXX: Assume color is in form '#RRGGBB'
-        if (color[0] == '#') {
-            parsed_color = color.match(/#(..)(..)(..)/);
-            r = parseInt(parsed_color[1], 16);
-            g = parseInt(parsed_color[2], 16);
-            b = parseInt(parsed_color[3], 16);
-        }
-        // XXX: Assume color is in form "rgb(#,#,#)"
-        else {
-            parsed_color = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-            r = parsed_color[1];
-            g = parsed_color[2];
-            b = parsed_color[3];
+        if (color) {
+            if (color[0] == '#') {
+                parsed_color = color.match(/#(..)(..)(..)/);
+                r = parseInt(parsed_color[1], 16);
+                g = parseInt(parsed_color[2], 16);
+                b = parseInt(parsed_color[3], 16);
+            }
+            // XXX: Assume color is in form "rgb(#,#,#)"
+            else {
+                parsed_color = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+                r = parsed_color[1];
+                g = parsed_color[2];
+                b = parsed_color[3];
+            }
         }
         // Add circles with lighter colors
         for (let i = num_stacked_circles; i > 0; i--) {

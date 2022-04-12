@@ -11,7 +11,7 @@ define([
     'bluebird',
     'jquery',
     'google-code-prettify/prettify',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
@@ -29,7 +29,6 @@ define([
         th = t('th'),
         td = t('td'),
         pre = t('pre'),
-        textarea = t('textarea'),
         classSets = {
             standard: {
                 nameColClass: 'col-md-2',
@@ -44,12 +43,10 @@ define([
         };
 
     function factory(config) {
-        let ui,
-            bus = config.bus,
-            places,
-            container,
+        let ui, places, container, inputControl;
+
+        const bus = config.bus,
             inputControlFactory = config.inputControlFactory,
-            inputControl,
             options = {},
             fieldId = html.genId(),
             spec = config.parameterSpec;
@@ -71,7 +68,6 @@ define([
             }).make();
         }
 
-        // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;
         options.classes = classSets.standard;
 
@@ -145,25 +141,15 @@ define([
             places.$messagePanel.addClass('hidden');
         }
 
-        function hideError() {
-            places.$field.removeClass('-error');
-            places.$messagePanel.addClass('hidden');
-            places.$feedbackIndicator.removeClass();
-        }
-
         function feedbackNone() {
             places.$feedbackIndicator.removeClass().hide();
         }
 
         function feedbackOk() {
-            places.$feedbackIndicator
-                .removeClass()
-                // .addClass('kb-app-parameter-accepted-glyph fa fa-check')
-                .prop('title', 'input is ok')
-                .show();
+            places.$feedbackIndicator.removeClass().prop('title', 'input is ok').show();
         }
 
-        function feedbackRequired(row) {
+        function feedbackRequired() {
             places.$feedbackIndicator
                 .removeClass()
                 .addClass('kb-app-parameter-required-glyph fa fa-arrow-left')
@@ -171,20 +157,20 @@ define([
                 .show();
         }
 
-        function feedbackError(row) {
+        function feedbackError() {
             places.$feedbackIndicator
                 .removeClass()
                 .addClass('kb-app-parameter-required-glyph fa fa-ban')
                 .show();
         }
 
-        function rawSpec(spec) {
-            const specText = JSON.stringify(spec.spec, false, 3),
+        function rawSpec() {
+            const specText = JSON.stringify(spec.spec, null, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
-        function parameterInfoContent(spec) {
+        function parameterInfoContent() {
             return div({ style: { padding: '4px' } }, [
                 div({ style: { fontWeight: 'bold' } }, spec.label()),
                 div({ style: { fontStyle: 'italic' } }, spec.name()),
@@ -192,7 +178,7 @@ define([
             ]);
         }
 
-        function parameterInfoTypeRules(spec) {
+        function parameterInfoTypeRules() {
             switch (spec.dataType()) {
                 case 'float':
                     return [
@@ -232,7 +218,7 @@ define([
             }
         }
 
-        function parameterInfoRules(spec) {
+        function parameterInfoRules() {
             return table(
                 { class: 'table table-striped' },
                 [
@@ -265,15 +251,8 @@ define([
                             ]);
                         }
                     })(),
-                ].concat(parameterInfoTypeRules(spec))
+                ].concat(parameterInfoTypeRules())
             );
-        }
-
-        function parameterInfoLittleTip(spec) {
-            return spec.dataType();
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
         }
 
         function renderInfoTip() {
@@ -285,7 +264,6 @@ define([
             }
 
             return div([
-                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div(
                     { dataElement: 'big-tip', class: 'hidden' },
                     html.makeTabs({
@@ -299,54 +277,26 @@ define([
                             {
                                 label: 'About',
                                 name: 'about',
-                                content: parameterInfoContent(spec),
+                                content: parameterInfoContent(),
                             },
                             {
                                 label: 'Rules',
                                 name: 'rules',
-                                content: parameterInfoRules(spec),
+                                content: parameterInfoRules(),
                             },
                             {
                                 label: 'Spec',
                                 name: 'spec',
-                                content: rawSpec(spec),
+                                content: rawSpec(),
                             },
                         ],
                     })
                 ),
             ]);
         }
-        //        function renderLabelTip() {
-        //            return div([
-        //                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
-        //            ]);
-        //        }
 
-        function render(events) {
-            let placeholder = '',
-                fieldContainer,
-                feedbackTip,
-                nameCol,
-                inputCol,
-                hintCol;
-
-            // PLACHOLDER (todo: put it somewhere!)
-            if (spec.text_options && spec.text_options.placeholder) {
-                placeholder = spec.text_options.placeholder.replace(/(\r\n|\n|\r)/gm, '');
-            }
-
-            // FEEDBACK
-            if (spec.required()) {
-                feedbackTip = span({
-                    class: 'kb-app-parameter-required-glyph fa fa-arrow-left',
-                    title: 'required field',
-                    dataElement: 'feedback',
-                });
-            }
-
+        function render() {
             const infoId = html.genId();
-
-            console.log('HERE, really?');
 
             let advanced;
             if (spec.spec.advanced) {
@@ -355,7 +305,7 @@ define([
                 advanced = '';
             }
 
-            const content = div(
+            return div(
                 {
                     class: [
                         'form-horizontal',
@@ -390,22 +340,7 @@ define([
                                         style: { width: '30px', padding: '0' },
                                     },
                                     [div({ dataElement: 'indicator' })]
-                                ) /*
-                        div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
-                            div({ dataElement: 'info' }, button({
-                                    class: 'btn btn-link btn-xs',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function() {
-                                            var bigTip = container.querySelector('[data-element="big-tip"]');
-                                            bigTip.classList.toggle('hidden');
-                                        }
-                                    })
-                                },
-                                span({ class: 'fa fa-info-circle' })
-                            ))
-                        ])*/,
+                                ),
                             ]),
                         ]
                     ),
@@ -424,18 +359,15 @@ define([
                     ]),
                 ]
             );
-
-            return content;
         }
 
         // LIFECYCLE
 
         function attach(node) {
             return Promise.try(() => {
-                let events = Events.make(),
-                    $container;
+                const events = Events.make();
                 container = node;
-                container.innerHTML = render(events);
+                container.innerHTML = render();
                 events.attachEvents(container);
                 ui = UI.make({ node: container });
                 // TODO: use the pattern in which the redner returns an object,
@@ -444,7 +376,7 @@ define([
                 PR.prettyPrint(null, container);
 
                 // create the "places" shortcuts.
-                $container = $(container);
+                const $container = $(container);
                 places = {
                     $field: $container.find('#' + fieldId),
                     $fieldPanel: $container.find('[data-element="field-panel"]'),
@@ -499,15 +431,11 @@ define([
                             break;
                     }
                 });
-                bus.on('touched', (message) => {
+                bus.on('touched', () => {
                     places.$feedback.css('background-color', 'yellow');
-                    // console.log('FIELD detected touched');
                 });
                 bus.on('changed', () => {
                     places.$feedback.css('background-color', '');
-                });
-                bus.on('saved', (message) => {
-                    console.log('FIELD detected saved');
                 });
                 if (inputControl.start) {
                     return inputControl.start().then(() => {

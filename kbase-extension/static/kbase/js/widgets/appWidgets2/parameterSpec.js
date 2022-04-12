@@ -6,8 +6,7 @@ define([], () => {
     function factory(config) {
         const spec = config.parameterSpec,
             multiple = spec.allow_multiple ? true : false,
-            _required = spec.optional ? false : true,
-            isOutputName = spec.text_options && spec.text_options.is_output_name;
+            _required = spec.optional ? false : true;
 
         function id() {
             return spec.id;
@@ -31,14 +30,6 @@ define([], () => {
 
         function info() {
             return 'info disabled for now';
-            //            return table({class: 'table table-striped'}, [
-            //                tr([
-            //                    th('Types'),
-            //                    tr(td(table({class: 'table'}, spec.text_options.valid_ws_types.map(function (type) {
-            //                        return tr(td(type));
-            //                    }))))
-            //                ])
-            //            ]);
         }
 
         function multipleItems() {
@@ -54,20 +45,7 @@ define([], () => {
         }
 
         function isAdvanced() {
-            if (spec.advanced === 1) {
-                return true;
-            }
-            return false;
-        }
-
-        function customTextSubdata() {
-            // try dispatching on name...
-            switch (spec.id) {
-                case 'input_property_x':
-                    return 'sample_property';
-                case 'input_property_y':
-                    return 'sample_property';
-            }
+            return spec.advanced === 1;
         }
 
         function dataType() {
@@ -189,7 +167,7 @@ define([], () => {
                 case 'workspaceObjectName':
                     return defaultValue;
                 case 'boolean':
-                    return coerceToBoolean(defaultValue);
+                    return !!defaultValue;
                 default:
                     // Assume it is a string...
                     return defaultValue;
@@ -214,7 +192,7 @@ define([], () => {
             if (typeof value !== 'string') {
                 return 0;
             }
-            switch (value.toLowerCase(value)) {
+            switch (value.toLowerCase()) {
                 case 'true':
                 case 't':
                 case 'yes':
@@ -234,23 +212,17 @@ define([], () => {
             const defaultValues = spec.default_values || [];
             // No default value and not required? null value
 
-            // special special cases.
-            switch (spec.field_type) {
-                case 'checkbox':
-                    /*
-                     * handle the special case of a checkbox with no or empty
-                     * default value. It will promote to the "unchecked value"
-                     * TODO: more cases of bad default value? Or a generic
-                     * default value validator?
-                     */
-                    if (!defaultValues || defaultValues.length === 0) {
-                        return spec.checkbox_options.unchecked_value;
-                    } else {
-                        return coerceToIntBoolean(defaultValues[0]);
-                    }
-                case 'custom_textsubdata':
-                    if (!defaultValues) {
-                    }
+            /*
+             * handle the special case of a checkbox with no or empty
+             * default value. It will promote to the "unchecked value"
+             * TODO: more cases of bad default value? Or a generic
+             * default value validator?
+             */
+            if (spec.field_type === 'checkbox') {
+                if (!defaultValues || defaultValues.length === 0) {
+                    return spec.checkbox_options.unchecked_value;
+                }
+                return coerceToIntBoolean(defaultValues[0]);
             }
 
             if (!defaultValues && !required()) {
@@ -465,9 +437,8 @@ define([], () => {
                         map: function (subdata) {
                             const collected = {};
                             Object.keys(subdata).forEach((key) => {
-                                let id,
-                                    name,
-                                    column = subdata[key];
+                                let id, name;
+                                const column = subdata[key];
                                 column.forEach((value) => {
                                     if (
                                         value.category === 'DataSeries' &&

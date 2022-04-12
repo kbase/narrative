@@ -63,7 +63,7 @@ define([
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
-                accept: function (file, done) {
+                accept: function (_, done) {
                     done();
                 },
                 headers: { Authorization: Runtime.make().authToken() },
@@ -106,7 +106,7 @@ define([
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
                 })
-                .on('sending', (file, xhr, data) => {
+                .on('sending', (file, _xhr, data) => {
                     $dropzoneElem.find('#global-info').removeClass('hide');
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
@@ -167,7 +167,7 @@ define([
                         errorText = 'File size exceeds maximum of 20GB. Please ';
                         $errorMessage.text('Error: ' + errorText);
                         $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
-                    } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
+                    } else if (erroredFile.xhr && erroredFile.xhr.responseText) {
                         errorText = erroredFile.xhr.responseText;
                         $errorMessage.text('Error: ' + errorText);
                     } else {
@@ -210,12 +210,10 @@ define([
                     this.deleteClearAllButton();
                 });
 
-            const $buttonContainer = $('<div>')
+            return $('<div>')
                 .attr('id', 'clear-all-btn-container')
                 .addClass('text-center')
                 .append($clearAllBtn);
-
-            return $buttonContainer;
         },
 
         deleteClearAllButton: function () {

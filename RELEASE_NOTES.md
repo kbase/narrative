@@ -4,8 +4,29 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Unreleased
+
+Dependency Changes
+- Javascript dependency updates
+  - @wdio/browserstack-service: 7.16.16 -> 7.19.3
+  - @wdio/cli: 7.16.16 -> 7.19.3
+  - @wdio/local-runner: 7.16.6 -> 7.19.3
+  - @wdio/mocha-framework: 7.16.15 -> 7.19.3
+  - @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
+  - @wdio/spec-reporter: 7.16.14 -> 7.19.1
+  - commander: 9.0.0 -> 9.1.0
+  - selenium-standalone: 8.0.9 -> 8.0.10
+  - webdriverio: 7.16.16 -> 7.19.3
+  - corejs-typeahead: 1.6.1 -> 1.3.1
+  - datatables.net: 1.11.3 -> 1.11.5
+  - handlebars: 4.0.5 -> 4.7.7
+  - jquery-ui: 1.12.1 -> 1.13.1
+  - js-yaml: 3.3.1 -> 3.14.1
+  - underscore: 1.8.3 -> 1.13.2
+
+
 ### Version 5.0.3
-- DATAUP-641 
+- DATAUP-641
   - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
   - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
   - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.

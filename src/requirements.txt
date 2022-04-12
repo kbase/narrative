@@ -26,10 +26,10 @@ pyyaml==6.0
 requests==2.27.1
 rsa==4.8
 semantic_version==2.9.0
-setuptools==62.0.0
+setuptools==62.1.0
 simplegeneric==0.8.1
 sympy==1.10.1
 terminado==0.13.3
 # ensure pip installs all deps
 jupyter-console==6.0.0
-pytest==6.2.5
+pytest==7.1.1

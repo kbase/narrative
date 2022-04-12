@@ -1,22 +1,17 @@
-/*global define*/
-/*jslint browser:true,white:true,single:true */
-
 /*
  * Provides app spec functionality.
  */
 
-define([
-    'require',
-    'bluebird',
-    'common/lang',
-    'common/sdk',
-    'common/specValidation',
-    'widgets/appWidgets2/validators/resolver'
-], function(require, Promise, lang, sdk, Validation, validationResolver) {
+define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/resolver'], (
+    Promise,
+    Util,
+    sdk,
+    validationResolver
+) => {
     'use strict';
 
     function factory(config) {
-        var spec;
+        let spec;
 
         if (config.spec) {
             spec = config.spec;
@@ -30,86 +25,93 @@ define([
             return spec;
         }
 
-        /*
-         * Make a "shell" model based on the spec. Recursively build an object
-         * with properties as defined by the spec.
-         * Effectively this means that only the top level is represented, since
+        /**
+         * Makes a 'model' object (not a view model yet, really, because it's just data) from the
+         * given spec.
+         * It does this by:
+         *  The top level spec is treated as a struct.
+         *  The default value for each paraemter is simply set as the value for the given parameter
+         *    on a model object.
+         *  If appType = "bulkImport", this is further separated into "filePaths" and "params"
+         *    sub-objects.
+         * @param {string} appType
          */
-        function makeEmptyModel() {
-            var model = {};
-            spec.parameters.layout.forEach(function(id) {
-                model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
-            });
-            return model;
-        }
-
-        /*
-        Makes a model (not a view model quite yet, really, because just data)
-        from the given spec.
-        It does this by:
-        The top level spec is treated as a struct.
-        The default value for each paramater is simply set as the value for the given parameter
-        on a model object.
-        One exception is that if a parameter is a
-        */
-        function makeDefaultedModel() {
-            var model = {};
-            spec.parameters.layout.forEach(function(id) {
-                var paramSpec = spec.parameters.specs[id];
-                var modelValue;
+        function makeDefaultedModel(appType) {
+            const model = {};
+            if (appType === 'bulkImport') {
+                model['params'] = {};
+            }
+            spec.parameters.layout.forEach((id) => {
+                const paramSpec = spec.parameters.specs[id];
+                let modelValue;
                 if (paramSpec.data.type === 'struct') {
                     if (paramSpec.data.constraints.required) {
-                        modelValue = lang.copy(paramSpec.data.defaultValue);
+                        modelValue = Util.copy(paramSpec.data.defaultValue);
                     } else {
                         modelValue = paramSpec.data.nullValue;
                     }
                 } else {
-                    modelValue = lang.copy(paramSpec.data.defaultValue);
+                    modelValue = Util.copy(paramSpec.data.defaultValue);
                 }
-                model[id] = modelValue;
+                if (appType === 'bulkImport') {
+                    model.params[id] = modelValue;
+                } else {
+                    model[id] = modelValue;
+                }
             });
             return model;
         }
 
-        var typeToValidatorModule = {
-            string: 'text',
-            int: 'int',
-            float: 'float',
-            sequence: 'sequence',
-            struct: 'struct'
-        }
-
-        function getValidatorModule(fieldSpec) {
-            var moduleName = typeToValidatorModule[fieldSpec.data.type];
-            if (!moduleName) {
-                throw new Error('No validator for type: ' + fieldSpec.data.type);
-            }
-            return moduleName;
-        }
-
+        /**
+         * Validates the model (object that maps from parameter id to current value) against
+         * this spec. This returns a Promise that resolves into a map from parameter ids to
+         * validations.
+         * @param {object} model the object containing the data model to validate
+         * should have key-value pairs for each parameter id.
+         * @returns Promise that resolves into a mapping from parameter id -> validation
+         * structure
+         */
         function validateModel(model) {
-            // TODO: spec at the top level should be a struct...
-            // return;
-            var validationMap = {};
-            spec.parameters.layout.forEach(function(id) {
-                var fieldValue = model[id];
-                var fieldSpec = spec.parameters.specs[id];
-                validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
+            return validateParams(spec.parameters.layout, model, {});
+        }
+
+        /**
+         * A trimmed version of validateModel that's specific for a few params.
+         * Given an array of parameter ids and an object with key-value pairs from
+         * paramId -> value, validate the set. Only the given parameter ids are validated.
+         * Any others are ignored.
+         *
+         * This returns a Promise that resolves into key-value pairs of parameter id ->
+         * validation response.
+         * @param {array} paramIds - the array of parameter ids to validate
+         * @param {object} values - an object where the key is the parameter id, and the value has
+         *  both the value, and arbitrary options to be passed to the specific validator.
+         * @param {object} options
+         */
+        function validateParams(paramIds, values, options) {
+            const validationMap = {};
+            options = options || {};
+            paramIds.forEach((id) => {
+                validationMap[id] = validationResolver.validate(
+                    values[id],
+                    spec.parameters.specs[id],
+                    options[id] || {}
+                );
             });
             return Promise.props(validationMap);
         }
 
         return Object.freeze({
-            getSpec: getSpec,
-            makeEmptyModel: makeEmptyModel,
-            makeDefaultedModel: makeDefaultedModel,
-            validateModel: validateModel
+            getSpec,
+            makeDefaultedModel,
+            validateModel,
+            validateParams,
         });
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

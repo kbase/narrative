@@ -1,0 +1,85 @@
+// filetype panel stuff
+
+$component-border: use-color('silver');
+$filetype-highlight-color: use-color('white');
+$filetype-hover-color: use-color('base-lighter');
+
+%file_type_button {
+  background-color: inherit;
+  border: 0 solid $component-border;
+  border-top-width: 1px;
+  display: flex;
+  flex-direction: row;
+  padding: 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.kb-filetype-panel{
+  &__header {
+    @include font-h4;
+
+    border-bottom: 1px solid $component-border;
+    padding: 8px;
+
+    &_icon {
+      color: rgb(0 0 0);
+      padding: 8px 6px 8px 8px;
+    }
+  }
+
+  &__filetype {
+    // .kb-filetype-panel__filetype_button
+    &_button {
+      @extend %file_type_button;
+
+      @include base-text;
+
+      &:hover:not(&--selected) {
+        @extend %file_type_button;
+
+        background-color: $filetype-hover-color;
+        cursor: pointer;
+      }
+
+      // .kb-filetype-panel__filetype_button--selected
+      &--selected {
+        @extend %file_type_button;
+
+        background-color: $filetype-highlight-color;
+        box-shadow: 0 3px 2px -2px use-color('base');
+      }
+
+      &--selected + .kb-bulk-import__filetype-panel__filetype_button {
+        box-shadow: inset 0 3px 2px -2px use-color('base');
+      }
+    }
+
+    // .kb-filetype-panel__filetype_icon
+    &_icon {
+      padding: 2px 8px 0;
+      text-align: center;
+      width: 3rem;
+
+      // .kb-filetype-panel__filetype_icon--complete
+      &--complete {
+        color: use_color('green');
+      }
+
+      // .kb-filetype-panel__filetype_icon--incomplete
+      &--incomplete {
+        color: use_color('error');
+      }
+
+      // .kb-filetype-panel__filetype_icon--warning
+      &--warning {
+        color: use_color('warning-dark');
+      }
+    }
+
+    // .kb-filetype-panel__filetype_label
+    &_label {
+      flex: 1;
+    }
+  }
+}

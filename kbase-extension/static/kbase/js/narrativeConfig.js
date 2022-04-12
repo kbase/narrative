@@ -1,5 +1,3 @@
-/*global define,window,console,require*/
-/*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
  * This returns a Promise that will eventually hold the results.
@@ -20,8 +18,8 @@ define([
     'json!kbase/config/cdn-service-config.json',
     'json!kbase/config/feature-config.json',
     'json!kbase/config/staging_upload.json',
-    'require'
-], function (
+    'require',
+], (
     paths,
     $,
     Promise,
@@ -31,13 +29,13 @@ define([
     FeatureSet,
     StagingUpload,
     localRequire
-) {
+) => {
     'use strict';
 
-    var config, debug;
+    let config, debug;
 
     // Get the workspace id from the URL
-    var workspaceId = null,
+    let workspaceId = null,
         objectId = null,
         narrativeRef = null;
     // m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
@@ -57,22 +55,22 @@ define([
 
     In both cases, we are only interested in the final path component, and only the
     workspace id part of that.
-    Note that the url is always versionless. Although narratives have versions 
-    (as objects, of course they do!), they generally are not designed to be usable 
+    Note that the url is always versionless. Although narratives have versions
+    (as objects, of course they do!), they generally are not designed to be usable
     directly.
-    Later code performs a lookup of the narrative workspace object to get the 
+    Later code performs a lookup of the narrative workspace object to get the
     object id if it is not provided in the url.
     */
 
     // Using the location's pathname, we don't get the fragment.
     const path = window.location.pathname;
-    // The following regex pattern will match for ws.<wsid>.obj.<objid>, 
+    // The following regex pattern will match for ws.<wsid>.obj.<objid>,
     // ws.<wsid>.obj.<objid>.ver.<version>, and
     // <wsid>
     const narrativeIDRegex = /.*\/(?:(?:ws.(\d+).obj.(\d+)(?:.ver.(\d+))?)|(\d*))$/;
     const pathMatchResults = path.match(narrativeIDRegex);
     if (pathMatchResults) {
-        // Note that wsid1 will be populated for the legacy form, and 
+        // Note that wsid1 will be populated for the legacy form, and
         // wsid2 for the modern form.
         const [, workspaceId1, _objectId, _objectVersion, workspaceId2] = pathMatchResults;
         workspaceId = parseInt(workspaceId1 || workspaceId2);
@@ -80,7 +78,7 @@ define([
         // I think this is a remnant which should be removed from the codebase, but is
         // out of scope for what I'm doing now which is ensuring that url fragments
         // (the #hash part of the url) don't break the narrative.
-        // All code that I can find uses getNarrativeRef() from kbaseNarrative.js to 
+        // All code that I can find uses getNarrativeRef() from kbaseNarrative.js to
         // obtain a workspaceId/objectId narrative id. And that method gets the workspace
         // info for the workspace id provided in the url, and uses the 'narrative' metadata
         // field to discover the object id for the narrative object.
@@ -114,7 +112,8 @@ define([
         data_panel: ConfigSet.data_panel,
         comm_wait_timeout: ConfigSet.comm_wait_timeout,
         auth_cookie: ConfigSet.auth_cookie,
-        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms
+        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms,
+        upload: ConfigSet.upload,
     };
 
     debug = config.mode === 'debug';
@@ -123,18 +122,18 @@ define([
     // Add a remote UI-common to the Require.js config
     require.config({
         paths: {
-            uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
-        }
+            uiCommonPaths: config.urls.ui_common_root + 'widget-paths',
+        },
     });
 
     window.kbconfig = config;
-    Object.keys(ServiceSet).forEach(function (key) {
+    Object.keys(ServiceSet).forEach((key) => {
         config[key] = ServiceSet[key];
     });
 
     config['services'] = {};
-    Object.keys(config.urls).forEach(function (key) {
-        config.services[key] = { 'url': config.urls[key], 'name': key };
+    Object.keys(config.urls).forEach((key) => {
+        config.services[key] = { url: config.urls[key], name: key };
     });
 
     function assertConfig() {
@@ -154,7 +153,7 @@ define([
      * and just run the callback.
      */
     function updateConfig() {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             if (window.kbconfig) {
                 resolve(window.kbconfig);
             }
@@ -162,66 +161,80 @@ define([
             assertConfig();
             if (!config.use_local_widgets) {
                 // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
-                require(['uiCommonPaths'], function (pathConfig) {
-                    for (var name in pathConfig.paths) {
-                        pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
+                require(['uiCommonPaths'], (pathConfig) => {
+                    for (const name in pathConfig.paths) {
+                        pathConfig.paths[name] =
+                            config.urls.ui_common_root + pathConfig.paths[name];
                     }
                     require.config(pathConfig);
                     config.new_paths = pathConfig;
                     resolve(config);
-                }, function () {
-                    console.warn("Unable to get updated widget paths. Sticking with what we've got.");
+                }, () => {
+                    console.warn(
+                        "Unable to get updated widget paths. Sticking with what we've got."
+                    );
                     resolve(config);
                 });
             } else {
                 resolve(config);
             }
-        }).then(function (config) {
-            console.log('Config: fetching remote data configuration.');
-            return Promise.resolve($.ajax({
-                dataType: 'json',
-                cache: false,
-                url: config.urls.data_panel_sources
-            }));
-        }).then(function (dataCategories) {
-            console.log('Config: processing remote data configuration.');
-            var env = config.environment;
-            // little bit of a hack, but dev should => ci for all things data.
-            // it doesn't seem worth making a new dev block for the example data.
-            if (env === 'dev') {
-                env = 'ci';
-            }
-            config.publicCategories = dataCategories[env].publicData;
-            config.exampleData = dataCategories[env].exampleData;
-            return Promise.try(function () {
-                return config;
-            });
-        }).catch(function (error) {
-            console.error('Config: unable to process remote data configuration options. Searching locally.');
-            // hate embedding this stuff, but it seems the only good way.
-            // the filename is the last step of that url path (after the last /)
-            var path = config.urls.data_panel_sources.split('/');
-
-            return Promise.resolve($.ajax({
-                dataType: 'json',
-                cache: false,
-                url: 'static/kbase/config/' + path[path.length - 1]
-            }))
-                .then(function (dataCategories) {
-                    console.log('Config: processing local data configuration.');
-                    var env = config.environment;
-                    if (env === 'dev') {
-                        env = 'ci';
-                    }
-                    config.publicCategories = dataCategories[env].publicData;
-                    config.exampleData = dataCategories[env].exampleData;
-                    return config;
-                })
-                .catch(function (error) {
-                    console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+        })
+            .then((config) => {
+                console.log('Config: fetching remote data configuration.');
+                return Promise.resolve(
+                    $.ajax({
+                        dataType: 'json',
+                        cache: false,
+                        url: config.urls.data_panel_sources,
+                    })
+                );
+            })
+            .then((dataCategories) => {
+                console.log('Config: processing remote data configuration.');
+                let env = config.environment;
+                // little bit of a hack, but dev should => ci for all things data.
+                // it doesn't seem worth making a new dev block for the example data.
+                if (env === 'dev') {
+                    env = 'ci';
+                }
+                config.publicCategories = dataCategories[env].publicData;
+                config.exampleData = dataCategories[env].exampleData;
+                return Promise.try(() => {
                     return config;
                 });
-        });
+            })
+            .catch(() => {
+                console.error(
+                    'Config: unable to process remote data configuration options. Searching locally.'
+                );
+                // hate embedding this stuff, but it seems the only good way.
+                // the filename is the last step of that url path (after the last /)
+                const path = config.urls.data_panel_sources.split('/');
+
+                return Promise.resolve(
+                    $.ajax({
+                        dataType: 'json',
+                        cache: false,
+                        url: 'static/kbase/config/' + path[path.length - 1],
+                    })
+                )
+                    .then((dataCategories) => {
+                        console.log('Config: processing local data configuration.');
+                        let env = config.environment;
+                        if (env === 'dev') {
+                            env = 'ci';
+                        }
+                        config.publicCategories = dataCategories[env].publicData;
+                        config.exampleData = dataCategories[env].exampleData;
+                        return config;
+                    })
+                    .catch(() => {
+                        console.error(
+                            'Config: unable to process local configuration options, too! Public and Example data unavailable!'
+                        );
+                        return config;
+                    });
+            });
     }
 
     /**
@@ -254,6 +267,6 @@ define([
         getConfig: getConfig,
         url: url,
         get: get,
-        debug: debug
+        debug: debug,
     };
 });

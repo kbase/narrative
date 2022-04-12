@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 /*
  Object selector
  The object selector's jobs is to provide access to existing editable objects of the
@@ -19,30 +16,27 @@ define([
     'kb_service/utils',
     // LOCAL
     'common/ui',
-    'common/dom',
     'common/runtime',
     'common/events',
     'common/props',
     'common/error',
-    'common/data'
-
-], function(
+    'common/data',
+], (
     Promise,
     html,
     GenericClient,
     sdkClientExceptions,
     serviceUtils,
     UI,
-    Dom,
     Runtime,
     Events,
     Props,
     kbError,
     Data
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         select = t('select'),
@@ -52,25 +46,27 @@ define([
         button = t('button');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             workspaceInfo = config.workspaceInfo,
-            parent, container,
+            parent,
+            container,
             ui,
             // bus = runtime.bus().makeChannelBus({ description: 'object selector bus' }),
             bus = runtime.bus().connect(),
             channelName = bus.genName(),
             channel = bus.channel(channelName),
             model = Props.make(),
-            availableReadsSets, availableReadsSetsMap;
+            availableReadsSets,
+            availableReadsSetsMap;
 
         function doCreate(e) {
             e.preventDefault();
             e.stopPropagation();
-            var name = ui.getElement('new-object-name').value;
+            const name = ui.getElement('new-object-name').value;
             // value = ui.getElement('new-object-type').value;
             channel.emit('create-new-set', {
-                name: name
-                    // type: value
+                name: name,
+                // type: value
             });
             return false;
         }
@@ -82,31 +78,40 @@ define([
         }
 
         function renderLayout() {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div([
                     div({ class: 'form-inline' }, [
                         'Select a Reads Set to edit: ',
-                        span({ dataElement: 'object-selector' })
+                        span({ dataElement: 'object-selector' }),
                     ]),
                     div({ style: { fontStyle: 'italic' } }, 'or'),
-                    form({
-                        class: 'form-inline',
-                        id: events.addEvent({ type: 'submit', handler: doCreate })
-                    }, [
-                        span({ style: { padding: '0 4px 0 0' } }, 'Create a new Reads Set named:'),
-                        input({ dataElement: 'new-object-name', class: 'form-control' }),
-                        ' ',
-                        button({
-                            class: 'btn btn-primary',
-                            type: 'button',
-                            id: events.addEvent({ type: 'click', handler: doCreate })
-                        }, 'Create')
-                    ])
+                    form(
+                        {
+                            class: 'form-inline',
+                            id: events.addEvent({ type: 'submit', handler: doCreate }),
+                        },
+                        [
+                            span(
+                                { style: { padding: '0 4px 0 0' } },
+                                'Create a new Reads Set named:'
+                            ),
+                            input({ dataElement: 'new-object-name', class: 'form-control' }),
+                            ' ',
+                            button(
+                                {
+                                    class: 'btn btn-primary',
+                                    type: 'button',
+                                    id: events.addEvent({ type: 'click', handler: doCreate }),
+                                },
+                                'Create'
+                            ),
+                        ]
+                    ),
                 ]);
 
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -116,22 +121,22 @@ define([
             parent = node;
             container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
-            var layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
         }
 
         function selectItem(ref) {
-            // this is (currently) a select, so we need to 
+            // this is (currently) a select, so we need to
             // unselect any selected item and
             // find the matching option and select it
             //console.log('autoselect', ref);
-            var control = ui.getElement('object-selector').querySelector('select');
+            const control = ui.getElement('object-selector').querySelector('select');
 
-            var selected = Array.prototype.slice.call(control.selectedOptions);
-            selected.forEach(function(option) {
+            const selected = Array.prototype.slice.call(control.selectedOptions);
+            selected.forEach((option) => {
                 option.selected = false;
-            })
+            });
 
             // var selected = control.querySelectorAll('[selected]');
             // //console.log('autoselect', control, selected);
@@ -141,7 +146,7 @@ define([
             //     }
             // }
 
-            for (var i = 0; i < control.options.length; i += 1) {
+            for (let i = 0; i < control.options.length; i += 1) {
                 if (control.options.item(i).value === ref) {
                     control.options.item(i).selected = true;
                     break;
@@ -153,7 +158,6 @@ define([
             //         option.selected = true;
             //     }
             // })
-
 
             // var newlySelected = control.querySelector('option[value="' + ref + '"]');
 
@@ -167,7 +171,7 @@ define([
         }
 
         function selectCurrentItem() {
-            var ref = model.getItem('objectRef');
+            const ref = model.getItem('objectRef');
             if (!ref) {
                 return;
             }
@@ -176,7 +180,7 @@ define([
 
         function emitChanged() {
             channel.emit('changed', {
-                objectInfo: availableReadsSetsMap[model.getItem('objectRef')]
+                objectInfo: availableReadsSetsMap[model.getItem('objectRef')],
             });
         }
 
@@ -185,52 +189,48 @@ define([
             emitChanged();
         }
 
-        function doDataUpdated(newData) {
-
-        }
+        function doDataUpdated(newData) {}
 
         function fetchData() {
-            var types = ['KBaseSets.ReadsSet'];
-            return Data.getObjectsByTypes(types, bus, function(newData) {
-                    doDataUpdated(newData.data);
-                })
-                .then(function(result) {
-                    availableReadsSetsMap = {};
-                    availableReadsSets = result.data;
-                    result.data.forEach(function(resultItem) {
-                        // var info = serviceUtils.objectInfoToObject(resultItem);
-                        availableReadsSetsMap[resultItem.ref] = resultItem;
-                    });
-                    return result.data;
+            const types = ['KBaseSets.ReadsSet'];
+            return Data.getObjectsByTypes(types, bus, (newData) => {
+                doDataUpdated(newData.data);
+            }).then((result) => {
+                availableReadsSetsMap = {};
+                availableReadsSets = result.data;
+                result.data.forEach((resultItem) => {
+                    // var info = serviceUtils.objectInfoToObject(resultItem);
+                    availableReadsSetsMap[resultItem.ref] = resultItem;
                 });
+                return result.data;
+            });
         }
 
         function fetchDatax() {
-            var setApiClient = new GenericClient({
+            const setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
-                    version: 'dev'
+                    version: 'dev',
                 }),
                 params = {
                     workspace: String(workspaceInfo.name),
-                    include_set_item_info: 1
+                    include_set_item_info: 1,
                 };
 
-            return setApiClient.callFunc('list_sets', [params])
-                .then(function(result) {
-                    availableReadsSetsMap = {};
-                    availableReadsSets = result[0].sets.map(function(resultItem) {
-                        var info = serviceUtils.objectInfoToObject(resultItem.info);
-                        availableReadsSetsMap[info.ref] = info;
-                        return info;
-                    });
+            return setApiClient.callFunc('list_sets', [params]).then((result) => {
+                availableReadsSetsMap = {};
+                availableReadsSets = result[0].sets.map((resultItem) => {
+                    const info = serviceUtils.objectInfoToObject(resultItem.info);
+                    availableReadsSetsMap[info.ref] = info;
+                    return info;
                 });
+            });
         }
 
         function renderAvailableObjects() {
-            var events = Events.make({
-                    node: container
+            const events = Events.make({
+                    node: container,
                 }),
                 controlNode = ui.getElement('object-selector'),
                 selectedItem = model.getItem('objectRef');
@@ -238,31 +238,45 @@ define([
             controlNode.innerHTML = html.loading();
 
             return fetchData()
-                .then(function() {
-                    var content = (function() {
+                .then(() => {
+                    const content = (function () {
                         if (availableReadsSets.length === 0) {
-                            return span({ style: { fontWeight: 'bold', fontStyle: 'italic', color: '#CCC' } }, [
-                                'No Reads Sets yet in this Narrative -- you can create one below'
-                            ]);
+                            return span(
+                                {
+                                    style: {
+                                        fontWeight: 'bold',
+                                        fontStyle: 'italic',
+                                        color: '#CCC',
+                                    },
+                                },
+                                ['No Reads Sets yet in this Narrative -- you can create one below']
+                            );
                         }
-                        return select({
+                        return select(
+                            {
                                 class: 'form-control',
-                                id: events.addEvent({ type: 'change', handler: doItemSelected })
-                            }, [option({ value: '' }, '-- No reads set selected --')]
-                            .concat(availableReadsSets.map(function(objectInfo) {
-                                var selected = false;
-                                if (selectedItem === objectInfo.ref) {
-                                    selected = true;
-                                }
-                                return option({ value: objectInfo.ref, selected: selected }, objectInfo.name);
-                            })));
-                    }());
+                                id: events.addEvent({ type: 'change', handler: doItemSelected }),
+                            },
+                            [option({ value: '' }, '-- No reads set selected --')].concat(
+                                availableReadsSets.map((objectInfo) => {
+                                    let selected = false;
+                                    if (selectedItem === objectInfo.ref) {
+                                        selected = true;
+                                    }
+                                    return option(
+                                        { value: objectInfo.ref, selected: selected },
+                                        objectInfo.name
+                                    );
+                                })
+                            )
+                        );
+                    })();
 
                     controlNode.innerHTML = content;
                     events.attachEvents();
                     return availableReadsSets.length;
                 })
-                .catch(sdkClientExceptions.RequestError, function(err) {
+                .catch(sdkClientExceptions.RequestError, (err) => {
                     throw new kbError.KBError({
                         type: 'GeneralError',
                         original: err,
@@ -271,8 +285,8 @@ define([
                         detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
                         advice: [
                             'This problem may be temporary -- try again later',
-                            'You may wish to <href="https://kbase.us/contact">report this error to kbase</a>'
-                        ]
+                            'You may wish to <href="https://www.kbase.us/support">report this error to kbase</a>',
+                        ],
                     });
                 });
         }
@@ -309,37 +323,35 @@ define([
         //            });
         //        }
 
-
         /*
-         * Now 
+         * Now
          */
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 doAttach(arg.node);
                 model.setItem('objectRef', arg.selectedSet);
                 renderAvailableObjects()
-                    .then(function() {
+                    .then(() => {
                         selectCurrentItem();
                     })
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.log('ERROR', err);
                         channel.emit('fatal-error', {
                             location: 'render-available-objects',
-                            error: err
+                            error: err,
                         });
                     });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // TODO: stop the bus!
-                bus.stop()
-                    .then(function() {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                    });
+                bus.stop().then(() => {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                });
             });
         }
 
@@ -350,13 +362,13 @@ define([
         return {
             start: start,
             stop: stop,
-            channel: channel
+            channel: channel,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

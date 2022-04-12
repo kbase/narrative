@@ -1,15 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'KBaseFBA.FBA',
-    'KBModeling'
-], function(Widget, kbm) {
-    describe('Test the KBaseFBA.FBA widget', function() {
-        it('Should load the module', function() {
-            var api = new KBModeling('token');
+define(['KBaseFBA.FBA', 'KBModeling', 'testUtil'], (Widget, kbm, TestUtil) => {
+    'use strict';
+
+    describe('Test the KBaseFBA.FBA widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('Should load the module', () => {
+            const api = new KBModeling('token');
             expect(api.KBaseFBA_FBA).toBeDefined();
         });
     });

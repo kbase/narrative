@@ -1,0 +1,16 @@
+[flake8]
+max-line-length = 88
+# E203: whitespace before ‘,’, ‘;’, or ‘:’
+# E501: line length
+# W503: line break after binary operator
+ignore = E203, E501, W503
+extend-exclude =
+*.pyc,
+.github,
+.husky,
+deployment,
+docs,
+node_modules,
+js-coverage,
+python-coverage,
+src/build

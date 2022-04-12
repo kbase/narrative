@@ -1,22 +1,40 @@
-<div class="row file-row" style="width:100%; border: 1px solid #EEE; margin: 2px 0; padding: 5px 0">
-    <div class="col-md-7" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-        <span class="name" data-dz-name></span>
-        <strong class="error text-danger" data-dz-errormessage></strong>
-    </div>
-    <div class="col-md-1" style="">
-        <span class="size pull-right" data-dz-size></span>
-    </div>
-    <div class="col-md-3 text-center">
-        <div id="status-message" style="display:none"></div>
-        <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="margin-bottom: inherit; margin-left: 5px">
-            <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+<div class="row file-row dz-file">
+    <div id="dz_file_row_1" class="row">
+        <div class="col-md-7">
+            <div class="dz-file__name" data-dz-name></div>
+        </div>
+        <div class="col-md-1 ">
+            <span class="size pull-right" data-dz-size></span>
+        </div>
+        <div id="upload_progress_and_cancel" class ="dz-file__upload-progress">
+            <div class="col-md-3 text-center">
+                <div class="progress progress-striped active dz-file__progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-bar progress-bar-success" data-dz-uploadprogress></div>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="pull-right">
+                    <button data-dz-remove class="btn btn-xs btn-danger cancel">
+                        <i class="fa fa-lg fa-fw fa-ban"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div id="error_icon" class="pull-right dz-file__status dz-file__status__error">
+                <span>Error</span>
+                <i class="fa fa-2x fa-exclamation-triangle dz-file__status__icon" aria-hidden="true"></i>
+            </div>
+            <div id="success_icon" class="pull-right dz-file__status dz-file__status__success">
+                <span>Completed</span>
+                <i class="fa fa-2x fa-check-circle dz-file__status__icon" aria-hidden="true"></i>
+            </div>
         </div>
     </div>
-    <div class="col-md-1">
-        <div class="pull-right">
-            <button data-dz-remove class="btn btn-xs btn-danger cancel">
-                <i class="fa fa-lg fa-fw fa-ban"></i>
-            </button>
+    <div class="row">
+        <div class="col-md-7">
+            <div id="error_message" class="dz-file__msg" data-dz-errormessage></div>
+            <div id="success_message" class="dz-file__msg dz-file__msg__success">Successfully moved to staging area!</div>
         </div>
     </div>
 </div>

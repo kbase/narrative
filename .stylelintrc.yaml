@@ -1,0 +1,60 @@
+extends:
+- stylelint-config-standard
+- stylelint-config-sass-guidelines
+
+plugins:
+- stylelint-color-format
+- stylelint-scss
+# - stylelint-no-indistinguishable-colors
+
+ignoreFiles:
+- kbase-extension/static/**/*.{less,scss,css}
+
+rules:
+  color-named: never
+  color-no-hex: true
+  color-format/format:
+    format: rgb
+  color-function-notation: modern
+  declaration-block-no-redundant-longhand-properties: true
+  declaration-block-no-shorthand-property-overrides: true
+  font-family-no-missing-generic-family-keyword:
+    - true
+    - ignoreFontFamilies:
+        - FontAwesome
+        - "Glyphicons Halflings"
+        - kbase-icons
+  function-url-quotes: never
+  length-zero-no-unit: true
+  max-nesting-depth: 10
+  no-descending-specificity: null
+  # set to true to enable
+  # plugin/stylelint-no-indistinguishable-colors: false
+  selector-class-pattern: null
+  selector-max-compound-selectors: 5
+  selector-max-class: 5
+  selector-max-id: 1
+  selector-no-qualifying-type:
+  - true
+  - ignore:
+    - attribute
+    - class
+  shorthand-property-no-redundant-values: true
+  unit-allowed-list:
+    - [em, px, rem, "%"]
+    - ignoreProperties:
+        x:
+          - background-image
+        s:
+          - transition
+        deg:
+          - background
+  value-keyword-case:
+    - lower
+    - ignoreKeywords: [
+        /^\$/
+      ]
+    - ignoreProperties: [
+        "/^font.*/",
+        url
+      ]

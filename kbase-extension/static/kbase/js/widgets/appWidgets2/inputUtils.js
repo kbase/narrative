@@ -1,87 +1,71 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'kb_common/html',
-    'common/events',
-    'common/ui'
-], function (
-    html,
-    Events,
-    UI
-    ) {
+define(['common/html', 'common/events', 'common/ui'], (html, Events, UI) => {
     'use strict';
-    
-    var t = html.tag,
-        div = t('div'), span = t('span'), button = t('button'),
-        ui = UI.make({node: document.body});
-        
-    function showMessageDialog(id) {
+
+    const t = html.tag,
+        div = t('div'),
+        b = t('b'),
+        button = t('button'),
+        ui = UI.make({ node: document.body });
+
+    function showMessageDialog(title, id) {
         ui.showInfoDialog({
-            title: 'MESSAGE TITLE',
-            body: 'Message id: ' + id
+            title,
+            body: 'Message id: ' + id,
         });
     }
-        
 
     function buildMessageAlert(messageDef) {
-        var events = Events.make({node: document.body}),
-            content = div({
-                class: 'alert alert-' + messageDef.type,
-                role: 'alert'
-            }, [
-                span({style: {fontWeight: 'bold'}}, messageDef.title),
-                ': ',
-                messageDef.message,
-                ' ',
-                button({
-                    type: 'button',
-                    class: 'btn btn-link alert-link',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function () {
-                            showMessageDialog(messageDef.id);
-                        }
-                    })
-                }, ui.buildIcon({name: 'info-circle'}))
-            ]);
+        const events = Events.make(),
+            content = div(
+                {
+                    class: 'alert alert-' + messageDef.type,
+                    role: 'alert',
+                },
+                [
+                    b(messageDef.title),
+                    `: ${messageDef.message} `,
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-link alert-link',
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    showMessageDialog(messageDef.title || 'Error', messageDef.id);
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'info-circle' })
+                    ),
+                ]
+            );
         return {
-            events: events,
-            content: content
+            events,
+            content,
         };
     }
 
-//    function buildErrorMessage(error) {
-//        var component = buildInputMessage({
-//            title: 'ERROR',
-//            type: 'danger',
-//            message: error.message,
-//            id: error.mesageId
-//        });
-//        places.$messagePanel
-//            .removeClass('hidden');
-//        places.$message
-//            .html(component.content)
-//            .addClass('-error');
-//        component.events.attachEvents(document.body);
-//    }
-//
-//    function setWarning(warning) {
-//        var component = buildInputMessage({
-//            title: 'Warning',
-//            type: 'warning',
-//            message: warning.message,
-//            id: warning.message
-//        });
-//        places.$messagePanel
-//            .removeClass('hidden');
-//        places.$message
-//            .html(component.content)
-//            .addClass('-warning');
-//        component.events.attachEvents(document.body);
-//    }
+    /**
+     * Creates a little input group addon div to show that the input should be greater than or
+     * equal to some value. Value is expected to be either a number or string, but this isn't
+     * strictly enforced. It'll be cast as a string either way.
+     * @param {Number} value the number to represent as a boundary
+     * @param {Boolean} isMin if true, then render as "value <=", else render as "<= value"
+     * @returns {String} an HTML div element.
+     */
+    function numericalBoundaryDiv(value, isMin) {
+        value = String(value);
+        const text = isMin ? `${value} &#8804; ` : ` &#8804; ${value}`;
+        return div(
+            {
+                class: 'input-group-addon kb-input-group-addon',
+            },
+            text
+        );
+    }
 
     return {
-        buildMessageAlert: buildMessageAlert
+        buildMessageAlert,
+        numericalBoundaryDiv,
     };
 });

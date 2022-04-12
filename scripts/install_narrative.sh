@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # installer steps
-# 0. prereqs = npm, bower, conda, pip, Python 3+
+# 0. prereqs = npm, conda, pip, Python 3+
 
 
 # given a virtual environment, install jupyter notebook, and the KBase goodies on top
@@ -98,49 +98,50 @@ then
     cd $NARRATIVE_ROOT_DIR
     log "Installing front end build components with npm"
     npm install 2>&1 | tee -a ${logfile}
-    log "Installing front end components with bower"
-    bower install -V --allow-root --config.interactive=false 2>&1 | tee -a ${logfile}
+    npm run install-npm
 
     # Install IPython
     # ---------------
     log "Installing IPython version $IPYTHON_VERSION"
-    conda install -y ipython==$IPYTHON_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install ipython=="$IPYTHON_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Install Jupyter Notebook
     # ------------------------
     log "Installing Jupyter notebook version $NOTEBOOK_VERSION"
-    conda install -y notebook==$NOTEBOOK_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install notebook=="$NOTEBOOK_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"
-    conda install -y ipywidgets==$IPYWIDGETS_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install ipywidgets=="$IPYWIDGETS_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Install Narrative requirements
     # ------------------------------
     log "Installing biokbase requirements from src/requirements.txt"
-    cd $NARRATIVE_ROOT_DIR/src
-    pip install -r requirements.txt 2>&1 | tee -a ${logfile}
+    cd "$NARRATIVE_ROOT_DIR/src"
+    pip --no-cache-dir install -r requirements.txt 2>&1 | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
     fi
 
-    pip install pandas sklearn clustergrammer_widget | tee -a ${logfile}
+    # Install sklearn and clustergrammer
+    # ------------------------------
+    pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
     fi
-    cd $NARRATIVE_ROOT_DIR
+    cd "$NARRATIVE_ROOT_DIR"
 fi
 
 # Install Narrative code
 # ----------------------
 log "Installing biokbase modules"
-cd $NARRATIVE_ROOT_DIR/src
+cd "$NARRATIVE_ROOT_DIR/src"
 log "Running local 'setup.py'"
-python setup.py install 2>&1 | tee -a ${logfile}
+python setup.py install 2>&1 | tee -a "${logfile}"
 log "Done installing biokbase."
-cd $NARRATIVE_ROOT_DIR
+cd "$NARRATIVE_ROOT_DIR"
 
 if [ ! $update_only -eq 1 ]
 then
@@ -150,18 +151,18 @@ then
     i=0
     while read s
         do
-            echo $s
+            echo "$s"
             if [ $i = 0 ]
                 then
                 echo d=`pwd`
                 echo e=$(dirname `which python`)
                 i=1
             fi
-    done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
+    done < "$SCRIPT_TEMPLATE" > "$SCRIPT_TGT"
     d=$(dirname `which python`)
-    chmod 0755 $SCRIPT_TGT
+    chmod 0755 "$SCRIPT_TGT"
     log "Putting new $SCRIPT_TGT command under $d"
-    /bin/mv $SCRIPT_TGT $d
+    /bin/mv "$SCRIPT_TGT" "$d"
     log "Done installing scripts"
 
     log "Installing nbextensions"

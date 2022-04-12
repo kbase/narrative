@@ -6,10 +6,7 @@
 {% block stylesheet %}
 {{super()}}
 <style type="text/css">
-/* disable initial hide */
-div#header, div#site {
-    display: block;
-}
+  #header, #site { display: block }
 </style>
 {% endblock %}
 
@@ -18,7 +15,7 @@ div#header, div#site {
 
 {% block site %}
 
-<div class="error">
+<div id="error_container" class="error">
     {% block h1_error %}
     <h1>{{status_code}} : {{status_message}}</h1>
     {% endblock h1_error %}

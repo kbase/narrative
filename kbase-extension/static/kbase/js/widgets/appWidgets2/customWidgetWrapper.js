@@ -1,126 +1,112 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'bluebird',
-    'kb_common/html',
-    'base/js/namespace',
-    'common/runtime'
-], function (
+define(['bluebird', 'jquery', 'base/js/namespace', 'common/runtime', 'common/jobCommMessages'], (
     Promise,
-    html,
+    $,
     Jupyter,
-    Runtime
-    ) {
+    Runtime,
+    jcm
+) => {
     'use strict';
 
-    var t = html.tag,
-        div = t('div'), pre = t('pre');
-
     function factory(config) {
-        var parent, container,
-            cellId = config.cellId,
-            cellBus,
+        const cellId = config.cellId,
             runtime = Runtime.make(),
             // our state
-            appId = config.app.id,
-            appVersion = config.app.version,
-            appTag = config.app.tag,
-            appSpec = config.app.spec,
-            wrappedWidget;
+            appSpec = config.app.spec;
+        let container, wrappedWidget;
 
         /*
          * This is a fake widget finder for now...
          * At the moment widget ids are still jquery widget ids which operate
-         * under the given widget id as both a jquery widget name and 
+         * under the given widget id as both a jquery widget name and
          * amd module name (see narrative_paths.js for the mapping)
          */
         function findWidget(widgetId) {
             return {
-                modulePath: widgetId
+                modulePath: widgetId,
             };
         }
 
         function runCustomWidget() {
-            var widgetDef = findWidget(appSpec.widgets.input);
-            require([
-                widgetDef.modulePath
-            ], function (Widget) {
+            const widgetDef = findWidget(appSpec.widgets.input);
+            require([widgetDef.modulePath], (Widget) => {
                 wrappedWidget = new Widget($(container), {
-                    appSpec: appSpec,
-                    workspaceName: Jupyter.narrative.getWorkspaceName()
+                    appSpec,
+                    workspaceName: Jupyter.narrative.getWorkspaceName(),
                 });
-                appSpec.parameters.forEach(function (parameter) {
-                    wrappedWidget.addInputListener(parameter.id, function (data) {
-                        runtime.bus().send({
-                            id: parameter.id,
-                            value: data.val
-                        }, {
-                            channel: {
-                                cell: cellId
+                appSpec.parameters.forEach((parameter) => {
+                    wrappedWidget.addInputListener(parameter.id, (data) => {
+                        runtime.bus().send(
+                            {
+                                id: parameter.id,
+                                value: data.val,
                             },
-                            key: {
-                                type: 'parameter-changed'
+                            {
+                                channel: {
+                                    [jcm.CHANNEL.CELL]: cellId,
+                                },
+                                key: {
+                                    type: 'parameter-changed',
+                                },
                             }
-                        });
-
-                        // changedParameters[parameter.id] = data.val;
-                        // console.log('CHANGED', data);
-                        // Update the param in the metadata ...
+                        );
                     });
                 });
             });
         }
 
         function start(params) {
-            return Promise.try(function () {
-                var parent = params.root;
+            return Promise.try(() => {
+                const parent = params.root;
 
                 container = parent.appendChild(document.createElement('div'));
 
                 // Get sorted out with the app and the input widget.
                 // container.innerHTML = render();
                 runCustomWidget();
-                
-                runtime.bus().send({}, {
-                    channel: {
-                        cell: cellId
-                    },
-                    key: {
-                        type: 'sync-params'
+
+                runtime.bus().send(
+                    {},
+                    {
+                        channel: {
+                            [jcm.CHANNEL.CELL]: cellId,
+                        },
+                        key: {
+                            type: 'sync-params',
+                        },
                     }
-                });
+                );
+                // listen for cell-related bus messages
                 runtime.bus().listen({
                     channel: {
-                        cell: cellId
+                        [jcm.CHANNEL.CELL]: cellId,
                     },
                     key: {
-                        type: 'parameter-value'
+                        type: 'parameter-value',
                     },
                     handle: function (message) {
                         wrappedWidget.setParameterValue(message.id, message.value);
-                    }                    
-                })
-                
-                runtime.bus().on('workspace-changed', function () {
+                    },
+                });
+
+                runtime.bus().on('workspace-changed', () => {
                     wrappedWidget.refresh();
                 });
             });
         }
 
         function stop() {
-
+            // no op
         }
 
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

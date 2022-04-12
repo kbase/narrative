@@ -1,0 +1,41 @@
+// .kb-appInput
+.kb-appInput {
+    // .kb-appInput__checkbox
+    &__checkbox {
+        //.kb-appInput__checkbox_container
+        &_container {
+            display: flex;
+        };
+
+        //.kb-appInput__checkbox_error
+        &_error {
+            margin-left: 1rem;
+            display: flex;
+            width: 100%;
+
+            &_container {
+                border: 1px solid use-color('error-light');
+                padding: 0.5em;
+                background-color: use-color('error-lightest');
+                color: use-color('ink');
+
+                &__title {
+                    color: use-color('error');
+                    margin-right: 0.5rem;
+                }
+
+            }
+
+            //.kb-appInput__checkbox_error__close_button
+            &__close_button {
+                margin-left: auto;
+                border: 0;
+                background: none;
+
+                &:hover {
+                    background: none;
+                }
+            }
+        }
+    }
+}

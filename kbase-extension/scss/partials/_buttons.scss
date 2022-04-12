@@ -1,0 +1,124 @@
+// A flat button, with no unselected background color, but with hover and click styles
+
+.btn.kb-flat-btn {
+  background-color: rgb(255 255 255);
+  border: 0;
+  color: use_color('base');
+  margin: 0;
+  text-shadow: none !important;
+
+  .kb-nav-btn-txt {
+    font-size: 13px;
+    margin-top: -5px;
+  }
+
+  &:active,
+  &:hover {
+    background-color: use_color('base-lighter');
+  }
+}
+
+.kb-flat-btn-wrapper {
+  // don't add shadows here
+  box-shadow: none;
+}
+
+/**
+  KBase button, 2021 style: no borders, rounded corners, uppercased text
+
+  The basic template below is based heavily on the button constructor in bootstrap 3.4
+  (see `bootstrap-sass` in the `node_modules` directory)
+
+  There are two button-related mixins also available from bootstrap-sass:
+
+  @mixin button-variant($color, $background, $border)
+
+  to generate the various buttons states for a given colour scheme, and
+
+  @mixin button-size($padding-vertical, $padding-horizontal, $font-size, $line-height, $border-radius)
+
+  to generate buttons of different sizes
+
+  see `node_modules/bootstrap-sass/assets/stylesheets/bootstrap/mixins/_buttons.scss` for the source
+
+  Example usage:
+
+  .kb-new-thing__button {
+    // basic button styling
+    @extend %kbase-button;
+
+    // creates variants with text colour 'primary', bg colour 'primary-lightest', and transparent borders
+    @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+  }
+
+  Hover, active, focus, etc., states are all generated automatically.
+
+*/
+
+%kbase-button {
+  // uses the mixin from bootstrap-sass
+  @include button-size($padding-base-vertical, $padding-base-horizontal, $font-size-base, $line-height-base, $btn-border-radius-base);
+
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-block;
+  font-family: $typeface-page-text;
+  font-weight: $btn-font-weight;
+  text-align: center;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  user-select: none;
+  vertical-align: middle;
+  white-space: nowrap;
+
+  &,
+  &:active,
+  &.active {
+    &:focus,
+    &.focus {
+      outline: 5px auto Highlight;
+      outline: 5px auto -webkit-focus-ring-color;
+      outline-offset: -2px;
+    }
+  }
+
+  &:hover,
+  &:focus,
+  &.focus {
+    color: $btn-default-color;
+    text-decoration: none;
+  }
+
+  &:active,
+  &.active {
+    background-image: none;
+    box-shadow: inset 0 3px 5px rgb(0 0 0 / 0.125);
+    outline: 0;
+  }
+
+  &.disabled,
+  &[disabled],
+  fieldset[disabled] & {
+    box-shadow: none;
+    cursor: $cursor-disabled;
+    opacity: 0.8;
+  }
+}
+
+%kbase-button-xs {
+  @extend %kbase-button;
+
+  @include button-size($padding-xs-vertical, $padding-xs-horizontal, $font-size-small, $line-height-small, $btn-border-radius-small);
+}
+
+%kbase-button-sm {
+  @extend %kbase-button;
+
+  @include button-size($padding-small-vertical, $padding-small-horizontal, $font-size-small, $line-height-small, $btn-border-radius-small);
+}
+
+%kbase-button-lg {
+  @extend %kbase-button;
+
+  @include button-size($padding-large-vertical, $padding-large-horizontal, $font-size-large, $line-height-large, $btn-border-radius-large);
+}

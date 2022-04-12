@@ -27,140 +27,114 @@ Widget to create an accordion control. Easy to use!
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
-
-
+define(['kbwidget', 'jquery'], (KBWidget, $) => {
+    'use strict';
     return KBWidget({
-        name : 'kbaseAccordion',
-        version: "1.0.0",
+        name: 'kbaseAccordion',
+        version: '1.0.0',
         options: {
-            fontSize : '100%',
+            fontSize: '100%',
         },
 
-        init: function(options) {
-
+        init: function (options) {
             this._super(options);
 
             if (this.options.client) {
                 this.client = this.options.client;
             }
 
-            this.appendUI( $( this.$elem ) );
+            this.appendUI($(this.$elem));
 
             return this;
-
         },
 
-        appendUI : function ($elem, elements) {
-
+        appendUI: function ($elem, elements) {
             if (elements == undefined) {
                 elements = this.options.elements;
             }
 
-            var fontSize = this.options.fontSize;
+            const fontSize = this.options.fontSize;
 
-            var $block =
-                $('<div></div>')
-                    .addClass('accordion')
-                    .css('font-size', fontSize)
-                    .attr('id', 'accordion')
-            ;
-
+            const $block = $('<div></div>')
+                .addClass('accordion')
+                .css('font-size', fontSize)
+                .attr('id', 'accordion');
             $.each(
                 elements,
-                $.proxy(
-                    function (idx, val) {
+                $.proxy(function (idx, val) {
+                    if (val.fontMultiplier == undefined) {
+                        val.fontMultiplier = this.options.fontMultiplier;
+                    }
 
-                        if (val.fontMultiplier == undefined) {
-                            val.fontMultiplier = this.options.fontMultiplier;
-                        }
-
-                        $block.append(
-                            $('<div></div>')
-                                .addClass('panel panel-default')
-                                .css('margin-bottom', '2px')
-                                .append(
-                                    $('<div></div>')
-                                        .addClass('panel-heading')
-                                        .css('padding', '0px')
-                                        .append(
-                                            $('<i></i>')
-                                                .css('margin-right', '5px')
-                                                .css('margin-left', '3px')
-                                                .addClass('fa')
-                                                .addClass(val.open ? 'fa-chevron-down' : 'fa-chevron-right')
-                                                .addClass('pull-left')
-                                                .css('height', (22 * val.fontMultiplier) + 'px')
-                                                .css('line-height', (22 * val.fontMultiplier) + 'px')
-                                                .css('color', 'gray')
-                                        )
-                                        .append(
-                                            $('<a></a>')
-                                                .css('padding', '0px')
-                                                .attr('href', '#')
-                                                .attr('title', val.title)
-                                                .css('height', (22 * val.fontMultiplier) + 'px')
-                                                .css('line-height', (22 * val.fontMultiplier) + 'px')
-                                                .css('font-size', (100 * val.fontMultiplier) + '%')
-
-                                                .append(val.title)
-                                                //.text(val.title)
-                                        )
-                                        .bind(
-                                            'click',
-                                                function(e) {
-                                                    e.preventDefault();
-                                                    var $opened = $(this).closest('.panel').find('.in');
-                                                    var $target = $(this).next();
-
-                                                    if ($opened != undefined) {
-                                                        $opened.collapse('hide');
-                                                        var $i = $opened.parent().first().find('i');
-                                                        $i.removeClass('fa fa-chevron-down');
-                                                        $i.addClass('fa fa-chevron-right');
-                                                    }
-
-                                                    if ($target.get(0) != $opened.get(0)) {
-                                                        $target.collapse('show');
-                                                        var $i = $(this).parent().find('i');
-                                                        $i.removeClass('fa fa-chevron-right');
-                                                        $i.addClass('fa fa-chevron-down');
-                                                    }
-
-                                                }
+                    $block.append(
+                        $('<div></div>')
+                            .addClass('panel panel-default')
+                            .css('margin-bottom', '2px')
+                            .append(
+                                $('<div></div>')
+                                    .addClass('panel-heading')
+                                    .css('padding', '0')
+                                    .append(
+                                        $('<i></i>')
+                                            .css('margin-right', '5px')
+                                            .css('margin-left', '3px')
+                                            .addClass('fa')
+                                            .addClass(
+                                                val.open ? 'fa-chevron-down' : 'fa-chevron-right'
                                             )
-                                )
-                                .append(
-                                    $('<div></div>')
-                                        .addClass('panel-body collapse')
-                                        .addClass(val.open ? 'in' : '')
-                                        .css('padding-top', '9px')
-                                        .css('padding-bottom', '9px')
-                                        .append(val.body)
+                                            .addClass('pull-left')
+                                            .css('height', 22 * val.fontMultiplier + 'px')
+                                            .css('line-height', 22 * val.fontMultiplier + 'px')
+                                            .css('color', 'gray')
                                     )
+                                    .append(
+                                        $('<a></a>')
+                                            .css('padding', '0')
+                                            .attr('href', '#')
+                                            .attr('title', val.title)
+                                            .css('height', 22 * val.fontMultiplier + 'px')
+                                            .css('line-height', 22 * val.fontMultiplier + 'px')
+                                            .css('font-size', 100 * val.fontMultiplier + '%')
+
+                                            .append(val.title)
+                                        //.text(val.title)
+                                    )
+                                    .bind('click', function (e) {
+                                        e.preventDefault();
+                                        const $opened = $(this).closest('.panel').find('.in');
+                                        const $target = $(this).next();
+
+                                        if ($opened != undefined) {
+                                            $opened.collapse('hide');
+                                            const $i = $opened.parent().first().find('i');
+                                            $i.removeClass('fa fa-chevron-down');
+                                            $i.addClass('fa fa-chevron-right');
+                                        }
+
+                                        if ($target.get(0) != $opened.get(0)) {
+                                            $target.collapse('show');
+                                            const $i = $(this).parent().find('i');
+                                            $i.removeClass('fa fa-chevron-right');
+                                            $i.addClass('fa fa-chevron-down');
+                                        }
+                                    })
                             )
-                        ;
-                    },
-                    this
-                )
+                            .append(
+                                $('<div></div>')
+                                    .addClass('panel-body collapse')
+                                    .addClass(val.open ? 'in' : '')
+                                    .css('padding-top', '9px')
+                                    .css('padding-bottom', '9px')
+                                    .append(val.body)
+                            )
+                    );
+                }, this)
             );
 
             this._rewireIds($block, this);
 
             $elem.append($block);
-//            $block.find('.panel-body').collapse('hide');
-
+            //            $block.find('.panel-body').collapse('hide');
         },
-
     });
-
 });

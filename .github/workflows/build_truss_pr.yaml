@@ -1,0 +1,32 @@
+---
+name: Build Truss Branch Image
+on:
+  pull_request:
+    branches:
+    - truss
+    types:
+    - opened
+    - synchronize
+    - ready_for_review
+
+jobs:
+  run_build_and_push:
+    uses: ./.github/workflows/build_and_push_image.yml
+    secrets:
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
+  run_unit_tests:
+    uses: ./.github/workflows/unit_test.yml
+    needs: run_build_and_push
+    secrets:
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
+  run_integration_tests:
+    uses: ./.github/workflows/integration_test.yml
+    needs: run_build_and_push
+    secrets:
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      NARRATIVE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}

@@ -1,57 +1,41 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/props',
     'common/runtime',
     '../inputUtils',
-    '../validators/int',
+    '../validation',
+    '../validators/constants',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils,
-    Validation
-) {
+], (Promise, html, Events, UI, Props, Runtime, InputUtils, Validation, Constants) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: spec.data.nullValue,
+                },
+                onUpdate: function () {},
+            });
+
+        let parent, container, ui;
 
         // CONTROL
 
         function getControlValue() {
             return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(value) {
-            var stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = String(value);
-            }
-
-            ui.getElement('input-container.input').value = stringValue;
         }
 
         // MODEL
@@ -72,34 +56,32 @@ define([
             setModelValue(spec.data.constraints.defaultValue);
         }
 
-        // sync the dom to the model.
-        function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
-        }
-
-
         // VALIDATION
 
         function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
+            return Promise.try(() => {
+                return Validation.validateIntString(value, spec.data.constraints, {
+                    nonIntError: 'Invalid parameter format, please enter an integer.',
+                });
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
-        }
-
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
             });
         }
 
-        var autoChangeTimer;
+        function importControlValue() {
+            return Promise.try(() => {
+                return Validation.importIntString(
+                    getControlValue(),
+                    'Invalid parameter format, please enter an integer.'
+                );
+            });
+        }
+
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -109,98 +91,108 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
+            const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
+                    const target = e.target;
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = InputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
+                                    // FIXME: when enabled, this (silently) throws error
+                                    // "Error: could not find node for #kb_html_.+"
+                                    //
+                                    // message.events.attachEvents();
                                 }
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: err.message
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
         function makeInputControl(currentValue, events) {
             // CONTROL
-            var initialControlValue,
-                min = spec.data.constraints.min,
+            const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            if (typeof currentValue === 'number') {
-                initialControlValue = String(currentValue);
-            }
-            return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
-                div({ class: 'input-group', style: { width: '100%' } }, [
-                    (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
-                    input({
-                        id: events.addEvents({
-                            events: [handleChanged(), handleTouched()]
+
+            return div(
+                {
+                    style: { width: '100%' },
+                    dataElement: 'input-wrapper',
+                },
+                [
+                    div({ class: 'input-group', style: { width: '100%' } }, [
+                        typeof min === 'number' ? InputUtils.numericalBoundaryDiv(min, true) : '',
+                        input({
+                            id: events.addEvents({
+                                events: [handleChanged(), handleTouched()],
+                            }),
+                            class: 'form-control',
+                            dataElement: 'input',
+                            dataType: 'int',
+                            value: currentValue,
+                            style: {
+                                textAlign: 'right',
+                            },
                         }),
-                        class: 'form-control',
-                        dataElement: 'input',
-                        dataType: 'int',
-                        value: initialControlValue,
-                        style: {
-                            textAlign: 'right'
-                        }
+                        typeof max === 'number' ? InputUtils.numericalBoundaryDiv(max, false) : '',
+                    ]),
+                    div({
+                        dataElement: 'message',
+                        style: { backgroundColor: 'red', color: 'white' },
                     }),
-                    (typeof max === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
-                ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
-            ]);
+                ]
+            );
         }
 
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(model.getItem('value'), events);
 
                 ui.setContent('input-container', inputControl);
@@ -209,55 +201,47 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
-
-
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents(container);
-                // model.setItem('value', message.value);
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
 
-                // TODO: since we now rely on initialValue -- perhaps 
-                // we can omit the 'sync' event or at least in cases
-                // in which the initial value is known to be available.
-                // bus.emit('sync');
-
-                return render()
-                    .then(function() {
-                        return autoValidate();
-                    });
+                return render().then(() => {
+                    return autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -266,25 +250,17 @@ define([
         }
 
         // INIT
-
-        model = Props.make({
-            data: {
-                value: spec.data.nullValue
-            },
-            onUpdate: function() {}
-        });
-
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

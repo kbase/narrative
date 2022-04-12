@@ -1,0 +1,56 @@
+.kb-user-menu {
+  // .kb-user-menu__menu
+  &__menu {
+    display: inline-block;
+    // .kb-user-menu__menu_caret
+    // .caret required to override bootstrap
+    &_caret.caret {
+      margin-left: 5px;
+    }
+  }
+
+  &__icon {
+    // .kb-user-menu__icon--gravatar
+    &--gravatar {
+      width: 40px;
+    }
+    // .kb-user-menu__icon--signout
+    // .kb-user-menu__icon--user
+    &--signout,
+    &--user {
+      // .fa required to override fontawesome font sizing
+      &.fa {
+        font-size: 150%;
+        margin-right: 10px;
+      }
+    }
+  }
+
+  &__block {
+    // .kb-user-menu__block--name
+    &--name {
+      display: inline-block;
+    }
+    // .kb-user-menu__block--userName
+    // .kb-user-menu__block--displayName
+    &--userName,
+    &--displayName {
+      display: block;
+    }
+    // .kb-user-menu__block--displayName
+    &--displayName {
+      font-style: italic;
+    }
+    // .kb-user-menu__block--signout-icon
+    // .kb-user-menu__block--user-icon
+    &--signout-icon,
+    &--user-icon {
+      display: inline-block;
+      width: 34px;
+    }
+    // .kb-user-menu__block--user-icon
+    &--user-icon {
+      vertical-align: top;
+    }
+  }
+}

@@ -1,140 +1,89 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validation',
-    'common/events',
-    'common/runtime',
-    'common/dom',
-    'bootstrap',
-    'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+define(['bluebird', 'common/html', 'common/ui', 'bootstrap'], (Promise, html, UI) => {
     'use strict';
 
-    var t = html.tag,
-        div = t('div'),
-        input = t('input');
+    const div = html.tag('div'),
+        input = html.tag('input');
 
     function factory(config) {
-        var options = {},
-            spec = config.parameterSpec,
-            parent,
-            container,
-            bus = config.bus,
-            model = {
-                value: undefined
-            },
-            dom;
+        const spec = config.parameterSpec,
+            bus = config.bus;
+        let container,
+            ui,
+            value = config.initialValue;
 
-        options.enabled = true;
-
-        function setModelValue(value) {
-            return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
-                    render();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    render();
-                });
-        }
-
-        function resetModelValue() {
-            if (spec.data.defaultValue) {
-                setModelValue(spec.data.defaultValue);
+        function setModelValue(newValue) {
+            value = newValue;
+            const inputField = ui.getElement('input');
+            if (value === null || value === undefined) {
+                inputField.removeAttribute('value');
             } else {
-                unsetModelValue();
+                inputField.setAttribute('value', newValue);
             }
         }
 
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-        function makeInputControl(currentValue, events, bus) {
-            return input({
-                class: 'form-control',
-                dataElement: 'input',
-                value: currentValue,
-                readonly: true,
-                disabled: true
-            });
+        function resetModelValue() {
+            setModelValue(spec.data.defaultValue);
         }
 
         function render() {
-            Promise.try(function() {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
-
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
+            const inputControl = input({
+                class: 'form-control',
+                dataElement: 'input',
+                value,
+                readonly: true,
+                disabled: true,
             });
+            ui.setContent('input-container', inputControl);
         }
 
-        function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
-            return {
-                content: content,
-                events: events
-            };
+        function layout() {
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
         }
 
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+            return Promise.try(() => {
+                bus.on('run', (message) => {
+                    container = message.node;
+                    ui = UI.make({ node: container });
 
-                    var events = Events.make(),
-                        theLayout = layout(events);
+                    container.innerHTML = layout();
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
-
-
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function() {
+                    bus.on('refresh', () => {});
 
-                    });
-
+                    render();
                     bus.emit('sync');
                 });
             });
         }
 
+        function stop() {
+            return Promise.try(() => {
+                container.innerHTML = '';
+            });
+        }
+
         return {
-            start: start
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

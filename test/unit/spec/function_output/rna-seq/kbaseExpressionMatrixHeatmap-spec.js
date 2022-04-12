@@ -1,14 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseExpressionMatrixHeatmap'
-], function(Widget) {
-    describe('Test the kbaseExpressionMatrixHeatmap widget', function() {
-        it('Should do things', function() {
+define(['kbaseExpressionMatrixHeatmap', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
 
+    describe('The kbaseExpressionMatrixHeatmap widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

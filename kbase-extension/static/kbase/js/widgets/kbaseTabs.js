@@ -32,66 +32,50 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbaseDeletePrompt'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		kbaseDeletePrompt
-	) {
-
+define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
+    KBWidget,
+    bootstrap,
+    $,
+    kbaseDeletePrompt
+) => {
+    'use strict';
     return KBWidget({
+        name: 'kbaseTabs',
 
-        name: "kbaseTabs",
+        version: '1.0.0',
 
-        version: "1.0.0",
-
-        _accessors : ['tabsHeight'],
+        _accessors: ['tabsHeight'],
 
         options: {
-            tabPosition : 'top',
-            canDelete : false,
-            borderColor : 'lightgray',
+            tabPosition: 'top',
+            canDelete: false,
+            borderColor: 'lightgray',
         },
 
-        init: function(options) {
-
+        init: function (options) {
             this._super(options);
 
             this.data('tabs', {});
             this.data('nav', {});
 
-            this.appendUI( $( this.$elem ) );
+            this.appendUI($(this.$elem));
 
             return this;
-
         },
 
-        appendUI : function ($elem, tabs) {
-
+        appendUI: function ($elem, tabs) {
             if (tabs == undefined) {
                 tabs = this.options.tabs;
             }
 
-            var $block =
-                $('<div></div>')
-                    .addClass('tabbable')
-            ;
-
-            var $tabs = $('<div></div>')
+            const $block = $('<div></div>').addClass('tabbable');
+            const $tabs = $('<div></div>')
                 .addClass('tab-content')
                 .attr('id', 'tabs-content')
-                .css('height', this.tabsHeight())
-            ;
-            var $nav = $('<ul></ul>')
+                .css('height', this.tabsHeight());
+            const $nav = $('<ul role="tablist"></ul>')
                 .addClass('nav nav-tabs')
-                .attr('id', 'tabs-nav')
-            ;
+                .attr('id', 'tabs-nav');
             $block.append($nav).append($tabs);
             /*if (this.options.tabPosition == 'top') {
                 $block.addClass('tabs-above');
@@ -122,20 +106,17 @@ define (
                     }, this)
                 );
             }
-
         },
 
-        addTab : function (tab) {
-
+        addTab: function (tab) {
             if (tab.canDelete == undefined) {
                 tab.canDelete = this.options.canDelete;
             }
 
-            var $tab = $('<div></div>')
-                .addClass('tab-pane fade');
+            const $tab = $('<div role="tabpanel"></div>').addClass('tab-pane fade');
 
             $tab.hasContent = false;
-            if(tab.content) {
+            if (tab.content) {
                 $tab.append(tab.content);
                 $tab.hasContent = true;
             }
@@ -146,87 +127,92 @@ define (
                 $tab.css('padding', '3px');
             }
 
-            var $that = this;   //thanks bootstrap! You suck!
+            const $that = this; //thanks bootstrap! You suck!
 
-
-            var $nav = $('<li></li>')
+            const $nav = $('<li role="tab"></li>')
                 .css('white-space', 'nowrap')
                 .append(
                     $('<a></a>')
                         .attr('href', '#')
                         .text(tab.tab)
                         .attr('data-tab', tab.tab)
-                        .bind('click',
-                            function (e) {
-                                e.preventDefault();
-                                e.stopPropagation();
+                        .bind('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                                var previous = $that.data('tabs-nav').find('.active:last a')[0];
+                            const previous = $that.data('tabs-nav').find('.active:last a')[0];
 
-                                //we can't just call 'show' directly, since it requires an href or data-target attribute
-                                //on the link which MUST be an idref to something else in the dom. We don't have those,
-                                //so we just do what show does and call activate directly.
-                                //
-                                //oh, but we can't just say $(this).tab('activate',...) because bootstrap is specifically
-                                //wired up not to pass along any arguments to methods invoked in this manner.
-                                //
-                                //Because bootstrap -sucks-.
-                                $.fn.tab.Constructor.prototype.activate.call(
-                                    $(this),
-                                    $(this).parent('li'),
-                                    $that.data('tabs-nav')
-                                );
+                            //we can't just call 'show' directly, since it requires an href or data-target attribute
+                            //on the link which MUST be an idref to something else in the dom. We don't have those,
+                            //so we just do what show does and call activate directly.
+                            //
+                            //oh, but we can't just say $(this).tab('activate',...) because bootstrap is specifically
+                            //wired up not to pass along any arguments to methods invoked in this manner.
+                            //
+                            //Because bootstrap -sucks-.
+                            $.fn.tab.Constructor.prototype.activate.call(
+                                $(this),
+                                $(this).parent('li'),
+                                $that.data('tabs-nav')
+                            );
 
-                                $.fn.tab.Constructor.prototype.activate.call(
-                                    $(this),
-                                    $tab,
-                                    $tab.parent(),
-                                    function () {
-                                        $(this).trigger({
-                                            type            : 'shown',
-                                            relatedTarget   : previous
-                                        })
+                            $.fn.tab.Constructor.prototype.activate.call(
+                                $(this),
+                                $tab,
+                                $tab.parent(),
+                                function () {
+                                    $(this).trigger({
+                                        type: 'shown',
+                                        relatedTarget: previous,
                                     });
-                                if(!$tab.hasContent) {
-                                    if(tab.showContentCallback) {
-                                        $tab.append(tab.showContentCallback($tab));
-                                        if (! tab.dynamicContent) {
-                                          $tab.hasContent = true;
-                                        }
+                                }
+                            );
+                            if (!$tab.hasContent) {
+                                if (tab.showContentCallback) {
+                                    $tab.append(tab.showContentCallback($tab));
+                                    if (!tab.dynamicContent) {
+                                        $tab.hasContent = true;
                                     }
                                 }
                             }
+                            if (tab.onShown) {
+                                try {
+                                    tab.onShown();
+                                } catch (ex) {
+                                    console.error('Error in "onShown"', ex);
+                                }
+                            }
+                        })
+                        .append(
+                            $('<button></button>')
+                                .addClass('btn btn-default btn-xs')
+                                //.append($('<i></i>').addClass(this.closeIcon()))
+                                .append($('<span>').append('&#x2716;'))
+                                .css('padding', '0px')
+                                .css('width', '12px')
+                                .css('height', '12px')
+                                .css('margin-left', '10px')
+                                .css('font-size', '10px')
+                                .css('margin-bottom', '3px')
+                                .css('border', '0')
+                                //.attr('title', this.deleteTabToolTip(tab.tab))
+                                .tooltip()
+                                .bind(
+                                    'click',
+                                    $.proxy(function (e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+
+                                        if (tab.deleteCallback != undefined) {
+                                            tab.deleteCallback(tab.tab);
+                                        } else {
+                                            this.deletePrompt(tab.tab);
+                                        }
+                                    }, this)
+                                )
                         )
-                    .append(
-                        $('<button></button>')
-                            .addClass('btn btn-default btn-xs')
-                            //.append($('<i></i>').addClass(this.closeIcon()))
-                            .append($('<span>').append("&#x2716;"))
-                            .css('padding', '0px')
-                            .css('width', '12px')
-                            .css('height', '12px')
-                            .css('margin-left', '10px')
-                            .css('font-size', '10px')
-                            .css('margin-bottom', '3px')
-                            .css('border', '0')
-                            //.attr('title', this.deleteTabToolTip(tab.tab))
-                            .tooltip()
-                            .bind('click', $.proxy(function (e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-
-                                if (tab.deleteCallback != undefined) {
-                                    tab.deleteCallback(tab.tab);
-                                }
-                                else {
-                                    this.deletePrompt(tab.tab);
-                                }
-                            },this))
-                    )
-                )
-            ;
-
-            if (! tab.canDelete) {
+                );
+            if (!tab.canDelete) {
                 $nav.find('button').remove();
             }
 
@@ -236,38 +222,37 @@ define (
             this.data('tabs-content').append($tab);
             this.data('tabs-nav').append($nav);
 
-            var tabCount = 0;
-            for (t in this.data('tabs')) { tabCount++; }
+            const tabCount = this.data('tabs').length;
+
             if (tab.show || tabCount == 1) {
                 this.showTab(tab.tab);
             }
         },
 
-        closeIcon : function () { return 'icon-remove'; },
+        closeIcon: function () {
+            return 'icon-remove';
+        },
 
-        deleteTabToolTip : function (tabName) {
+        deleteTabToolTip: function (tabName) {
             return 'Remove ' + tabName;
         },
 
-        hasTab : function(tabName) {
+        hasTab: function (tabName) {
             return this.data('tabs')[tabName];
         },
 
-        showTab : function (tab) {
-            if (this.shouldShowTab(tab)) {
-                this.data('nav')[tab].find('a').trigger('click');
-            }
+        showTab: function (tab) {
+            this.data('nav')[tab].find('a').trigger('click');
         },
 
-        removeTab : function (tabName) {
-            var $tab = this.data('tabs')[tabName];
-            var $nav = this.data('nav')[tabName];
+        removeTab: function (tabName) {
+            const $tab = this.data('tabs')[tabName];
+            const $nav = this.data('nav')[tabName];
 
             if ($nav.hasClass('active')) {
                 if ($nav.next('li').length) {
                     $nav.next().find('a').trigger('click');
-                }
-                else {
+                } else {
                     $nav.prev('li').find('a').trigger('click');
                 }
             }
@@ -279,37 +264,27 @@ define (
             this.data('nav')[tabName] = undefined;
         },
 
-        shouldShowTab : function (tab) { return 1; },
-
-        deletePrompt : function(tabName) {
-            var $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
-                    name     : tabName,
-                    callback : this.deleteTabCallback(tabName),
-                }
-            );
+        deletePrompt: function (tabName) {
+            const $deleteModal = new kbaseDeletePrompt($('<div></div>'), {
+                name: tabName,
+                callback: this.deleteTabCallback(tabName),
+            });
             $deleteModal.openPrompt();
         },
 
-        deleteTabCallback : function (tabName) {
-
-            return $.proxy(function(e, $prompt) {
+        deleteTabCallback: function (tabName) {
+            return $.proxy(function (e, $prompt) {
                 if ($prompt != undefined) {
                     $prompt.closePrompt();
                 }
 
-                if (this.shouldDeleteTab(tabName)) {
-                    this.removeTab(tabName);
-                }
+                this.removeTab(tabName);
             }, this);
         },
 
-        shouldDeleteTab : function (tabName) { return 1; },
-
-        activeTab : function() {
-            var activeNav = this.data('tabs-nav').find('.active:last a')[0];
+        activeTab: function () {
+            const activeNav = this.data('tabs-nav').find('.active:last a')[0];
             return $(activeNav).attr('data-tab');
         },
-
     });
-
 });

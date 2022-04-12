@@ -21,7 +21,7 @@ dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
 
 run-dev-image:
-	ENV=$(ENV) bash scripts/local-dev-run.sh
+	ENV=$(ENV) sh scripts/local-dev-run.sh
 
 install:
 	bash $(INSTALLER)
@@ -30,15 +30,15 @@ install:
 # local venv.
 build-travis-narrative:
 	bash $(INSTALLER) && \
-	grunt minify && \
+	npm run minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
 	jupyter notebook --version
 
-test: test-backend test-frontend-unit test-frontend-e2e
+test: test-backend test-frontend
 	@echo "done running backend and frontend test scripts"
 
-# test-backend should use nose, or the like, to test our
+# test-backend uses pytest to test our
 # Python extensions to the IPython notebook.
 #
 # Testing the IPython notebook itself is out of the scope
@@ -49,20 +49,20 @@ test-backend:
 	sh $(BACKEND_TEST_SCRIPT)
 	@echo "done"
 
+test-frontend:
+	python scripts/run_tests.py -u -i
+
 # test-frontend-unit should use karma and jasmine to test
 # each of the Javascript components of the Narrative.
-# This is achieved through the grunt test invocation
+# This is achieved through python test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	python test/unit/run_tests.py
+	python scripts/run_tests.py -u
 	@echo "done"
 
-# test-frontend-e2e should use Selenium to perform an end-
-# to-end test of the front end components, with a running
-# Narrative system.
-test-frontend-e2e:
-	@echo "running frontend end-to-end tests"
-	cd $(FRONTEND_TEST_DIR)
+test-integration:
+	@echo "running integration tests"
+	python scripts/run_tests.py -i
 	@echo "done"
 
 build-docs:

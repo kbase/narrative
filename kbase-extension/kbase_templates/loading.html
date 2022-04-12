@@ -1,15 +1,15 @@
-<div id="kb-loading-blocker">
-    <div class="kb-loading-text loading-warning alert alert-danger">
+<div id="kb-loading-blocker" class="kb-loading-blocker__container">
+    <div class="kb-loading-blocker__text--warning alert alert-danger">
         Sorry, the KBase Narrative appears to be taking a long time to load. This could be due to a slow internet connection, or a problem with the Narrative itself. If this seems to be taking much longer than you expect, you can try holding the shift key and reloading this page.
     </div>
-    <div style="text-align:center; padding-top:10%">
+    <div class="kb-loading-blocker__image_container">
         <img src="{{ static_url("kbase/images/kbase_animated_logo.gif") }}"></img>
     </div>
-    <p>Connecting to KBase services...</p>
-    <div class="progress-container kb-loading-text">
+    <p class="kb-loading-blocker__header">Connecting to KBase services...</p>
+    <div class="progress-container kb-loading-blocker__text">
         <div class="progress">
             <div class="progress-bar progress-bar-striped active" role="progressbar"
-                 aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                 aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0">
             </div>
         </div>
         <div id="kb-loading-progress">
@@ -22,7 +22,7 @@
                 <span class="kb-progress-stage pull-right"></span>
             </div>
             <div data-element="apps">
-                <span>Loading available Apps...</span>
+                <span>Loading available apps...</span>
                 <span class="kb-progress-stage pull-right"></span>
             </div>
             <div data-element="kernel">

@@ -1,50 +1,22 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'require',
-    'kb_common/html',
-    '../validators/text',
-    'common/events',
+    '../validation',
+    'util/util',
     'common/ui',
     'common/props',
     'common/runtime',
 
     'bootstrap',
-    'css!font-awesome'
-], function (
-    Promise,
-    require,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime
-) {
+], (Promise, Validation, Util, UI, Props, Runtime) => {
     'use strict';
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            subtype = spec.data.constraints.type,
-            parent,
-            container,
-            ui,
-            model,
-            inputWidget;
-
-        // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(newValue) {
-            ui.getElement('input-container.input').value = newValue;
-        }
+            subtype = spec.data.constraints.type;
+        let parent, container, ui, inputWidget;
 
         // MODEL
 
@@ -64,68 +36,43 @@ define([
 
         // sync the dom to the model.
         function syncModelToControl() {
-            console.log('syncing...', inputWidget, model.getItem('value', null));
-            // if (inputWidget) {
-            //     inputWidget.setValue(model.getItem('value', null));
-            // }
-            // setControlValue(model.getItem('value', null));
+            console.warn('syncing...', inputWidget, model.getItem('value', null));
         }
-
-
 
         // VALIDATION
 
-        function importControlValue() {
-            return Promise.try(function () {
-                return Validation.importString(getControlValue());
-            });
-        }
-
         function validate(value) {
-            return Promise.try(function () {
-                return Validation.validate(value, spec);
+            return Promise.try(() => {
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function (result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // DOM & RENDERING
 
-        function prequire(module) {
-            return new Promise(function (resolve, reject) {
-                require([module], function (Module) {
-                    resolve(Module);
-                }, function (err) {
-                    reject(err);
-                });
-            });
-        }
-
-        function makeCustomWidget(arg) {
-
-            // For now all custom inputs live in the 
+        function makeCustomWidget() {
+            // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
-            return prequire('./customInputs/' + subtype + 'Input')
-                .then(function (Module) {
-                    var inputWidget = Module.make({
-                        runtime: runtime
-                    });
-
-                    inputWidget.channel.on('changed', function (message) {
-                        model.setItem('value', message.newValue);
-                        channel.emit('changed', {
-                            newValue: message.newValue
-                        });
-                    });
-
-                    return inputWidget;
+            return Util.pRequire(['./customInputs/' + subtype + 'Input']).spread((Module) => {
+                const inputWidget = Module.make({
+                    runtime: runtime,
                 });
+
+                inputWidget.channel.on('changed', (message) => {
+                    model.setItem('value', message.newValue);
+                    channel.emit('changed', {
+                        newValue: message.newValue,
+                    });
+                });
+
+                return inputWidget;
+            });
         }
 
         // EVENT HANDLERS
@@ -134,53 +81,51 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
                 return makeCustomWidget()
-                    .then(function (customWidget) {
+                    .then((customWidget) => {
                         inputWidget = customWidget;
                         return customWidget.start({
                             node: container,
-                            initialValue: model.getItem('value', null)
+                            initialValue: model.getItem('value', null),
                         });
                     })
-                    .then(function () {
-
-                        channel.on('reset-to-defaults', function () {
+                    .then(() => {
+                        channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
-                        channel.on('update', function (message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                             syncModelToControl();
                             autoValidate();
                         });
-                        channel.on('focus', function () {
+                        channel.on('focus', () => {
                             doFocus();
                         });
                         // channel.emit('sync');
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         UI.showErrorDialog({
                             title: 'Error',
                             error: {
                                 name: 'Error',
                                 message: err.message,
                                 detail: 'detail here',
-                                resolution: 'how to resolve here.'
-                            }
+                                resolution: 'how to resolve here.',
+                            },
                         });
                         console.error('ERROR', err);
                     });
@@ -188,8 +133,7 @@ define([
         }
 
         function stop() {
-            return inputWidget.stop()
-            .then(function () {
+            return inputWidget.stop().then(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -199,24 +143,24 @@ define([
 
         // INIT
 
-        model = Props.make({
+        const model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function () {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,71 +1,126 @@
-/*jslint white: true*/
-/*global module */
-// process.env.CHROME_BIN = require('puppeteer').executablePath();
 module.exports = function (config) {
     'use strict';
+
+    const narrativeServer = 'http://localhost:32323';
+
+    const alwaysExclude = [
+        'kbase-extension/static/buildTools/*.js',
+        'kbase-extension/static/ext_components/**/test/**/*.js',
+        'kbase-extension/static/ext_modules/**/test/**/*.js',
+    ];
+    // the following tests should be run separately due to test runner issues
+    const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
+        'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
+        'test/unit/spec/util/appCellUtil-spec.js',
+    ];
+
     config.set({
         basePath: '../../',
-        frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
         client: {
             jasmine: {
                 failFast: false,
-                DEFAULT_TIMEOUT_INTERVAL: 20000
-            }
+                timeoutInterval: 20000,
+                failSpecWithNoExpectations: true,
+                verboseDeprecations: true,
+            },
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative|test/))',
+            clearContext: false,
         },
         plugins: [
             'karma-jasmine',
+            'karma-jasmine-matchers',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
-            'karma-phantomjs-launcher',
             'karma-requirejs',
             'karma-coverage',
             'karma-mocha-reporter',
-            'karma-es6-shim'
+            'karma-es6-shim',
+            'karma-json-result-reporter',
+            'karma-brief-reporter',
+            'karma-jasmine-html-reporter',
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage']
+            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
+                ['coverage'],
+            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
+            'kbase-extension/static/kbase/js/api/StagingServiceClient.js': ['coverage'],
+            'nbextensions/appCell2/**/*.js': ['coverage'],
+            'nbextensions/bulkImportCell/**/*.js': ['coverage'],
+            'nbextensions/codeCell/**/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/*.js': ['coverage'],
         },
+        // karma defaults:
+        // included: true; nocache: false; served: true; watched: true;
         files: [
-            'kbase-extension/static/narrative_paths.js',
-            {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
-            {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
-            {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},
-            {pattern: 'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml', included: false, served: true},
-            {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
-            {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
-            {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
-            {pattern: 'kbase-extension/static/kbase/config/**/*.yaml', included: false, served: true},
-            {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
-            {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
-            {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
-            {pattern: 'test/*.tok', included: false, served: true, nocache: true},
-            {pattern: 'test/data/**/*', included: false, served: true},
-            'test/unit/testUtil.js',
-            'test/unit/test-main.js'
+            'node_modules/jasmine-ajax/lib/mock-ajax.js',
+            // tests and test resources
+            { pattern: 'test/unit/testUtil.js', nocache: true },
+            { pattern: 'test/unit/mocks.js', nocache: true },
+            { pattern: 'test/unit/test-main.js', nocache: true },
+            { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
+            { pattern: 'test/unit/spec/**/*.json', included: false, nocache: true },
+            { pattern: 'test/testConfig.json', included: false, nocache: true },
+            { pattern: 'test/*.tok', included: false, nocache: true },
+            { pattern: 'test/data/**/*', included: false, nocache: true },
+            { pattern: 'src/biokbase/narrative/tests/data/*.json', included: false, nocache: true },
+            // JS files
+            { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
+            { pattern: 'kbase-extension/static/**/*.js', included: false },
+            { pattern: 'nbextensions/**/*.js', included: false },
+            // static resources
+            { pattern: 'kbase-extension/kbase_templates/*.html', included: false, nocache: true },
+            { pattern: 'kbase-extension/static/**/*.css', nocache: true },
+            { pattern: 'kbase-extension/static/**/*.gif', included: false },
+            {
+                pattern: 'kbase-extension/static/kbase/templates/**/*.html',
+                included: false,
+            },
+            { pattern: 'kbase-extension/static/**/*.woff2', included: false },
+            { pattern: 'kbase-extension/static/**/*.ttf', included: false },
+            { pattern: 'kbase-extension/static/**/*.woff', included: false },
+            {
+                pattern: 'kbase-extension/static/kbase/config/**/*.json',
+                included: false,
+            },
+            {
+                pattern: 'kbase-extension/static/kbase/config/**/*.yaml',
+                included: false,
+            },
+            {
+                pattern:
+                    'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/iframe_root/modules/data/categories.yml',
+                included: false,
+            },
         ],
-        exclude: [
-            'kbase-extension/static/buildTools/*.js',
-            'kbase-extension/static/ext_components/**/test/**/*.js',
-            'kbase-extension/static/kbase/js/patched-components/**/*'
-        ],
+        isolatedTests,
+        alwaysExclude,
+        exclude: [...alwaysExclude, ...isolatedTests],
         // test results reporter to use
-        // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'coverage'],
+        reporters: ['mocha', 'coverage', 'json-result'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',
-            reporters: [{
-                type: 'html',
-                subdir: 'html'
-            }, {
-                type: 'lcov',
-                subdir: 'lcov'
-            }],
-            includeAllSources: true
+            reporters: [
+                {
+                    type: 'html',
+                    subdir: 'html',
+                },
+                {
+                    type: 'lcovonly',
+                    subdir: 'lcov',
+                },
+            ],
+            includeAllSources: true,
+        },
+        mochaReporter: {
+            ignoreSkipped: true,
+        },
+        jsonResultReporter: {
+            outputFile: 'karma-result.json',
         },
         // web server port
         port: 9876,
@@ -79,39 +134,24 @@ module.exports = function (config) {
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['ChromeHeadless'],
-        // customLaunchers: {
-        //     HeadlessChrome: {
-        //         base: 'ChromeHeadless',
-        //         flags: ['--no-sandbox']
-        //     }
-        // },
-
-        // Continuous Integration mode
-        // if true, Karma captures browsers, runs the tests and exits
-        // phantomjsLauncher: {
-        //     options: {
-        //         settings: {
-        //             webSecurityEnabled: false
-        //         }
-        //     }
-        // },
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
+            '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
+            '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
-            '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
-            '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
-            '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
-            '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
-            '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
+            '/narrative/static/base': `${narrativeServer}/narrative/static/base`,
+            '/narrative/static/notebook': `${narrativeServer}/narrative/static/notebook`,
+            '/narrative/static/components': `${narrativeServer}/narrative/static/components`,
+            '/narrative/static/services': `${narrativeServer}/narrative/static/services`,
+            '/narrative/static/bidi': `${narrativeServer}/narrative/static/bidi`,
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
-            '/test/': '/base/test/'
+            '/test/': '/base/test/',
+            '/src/biokbase/narrative/tests/data/': '/base/src/biokbase/narrative/tests/data/',
+            // This ensures that the msw api (msw.js) can find mockServerWorker.js service
+            // worker library at the canonical location.
+            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',
         },
-        client: {
-          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
-          clearContext: false
-        },
-        concurrency: Infinity
-
+        concurrency: Infinity,
     });
 };

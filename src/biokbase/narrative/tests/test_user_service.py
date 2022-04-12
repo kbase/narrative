@@ -6,10 +6,10 @@ phase of the project.
 """
 import unittest
 from biokbase.narrative.services.user import UserService
-from .util import TestConfig
+from .util import ConfigTests
 
 
 class UserServiceTestCase(unittest.TestCase):
     def test_user_trust(self):
         us = UserService()
-        self.assertTrue(us.is_trusted_user('anybody'))
+        self.assertTrue(us.is_trusted_user("anybody"))

@@ -1,42 +1,36 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
-    '../validators/text',
+    '../validation',
     'common/events',
     'common/ui',
     'common/props',
     'common/runtime',
     '../inputUtils',
-
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils
-) {
+], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils, Constants) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
-        input = t('input');
+        input = t('input'),
+        model = Props.make({
+            data: {
+                value: null,
+            },
+            onUpdate: function () {
+                //syncModelToControl();
+                //autoValidate();
+            },
+        });
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
-            channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            ui,
-            model;
+            channel = busConnection.channel(config.channelName);
+        let parent, container, ui;
 
         // CONTROL
 
@@ -69,33 +63,29 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
+            return Promise.try(() => {
+                return Validation.importTextString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
+            return Promise.try(() => {
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
-
 
         // DOM & RENDERING
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -105,48 +95,50 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
+            const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        if (e.target) {
+                            e.target.dispatchEvent(new Event('change'));
+                        }
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
                                 }
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 // nothing??
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -154,33 +146,34 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: err.message
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
         function makeInputControl(events) {
             return input({
                 id: events.addEvents({
-                    events: [handleTouched(), handleChanged()]
+                    events: [handleTouched(), handleChanged()],
                 }),
                 class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeInputControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeInputControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -189,38 +182,36 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-
-                var events = Events.make();
+                const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
                 // model.setItem('value', config.initialValue);
                 syncModelToControl();
                 autoValidate();
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
                     autoValidate();
                 });
-                channel.on('focus', function() {
+                channel.on('focus', () => {
                     doFocus();
                 });
                 // channel.emit('sync');
@@ -228,7 +219,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -238,27 +229,17 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: {
-                value: null
-            },
-            onUpdate: function() {
-                //syncModelToControl();
-                //autoValidate();
-            }
-        });
-
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

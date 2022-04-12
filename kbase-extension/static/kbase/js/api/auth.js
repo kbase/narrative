@@ -1,33 +1,26 @@
-define([
-    'bluebird',
-    'jquery',
-    'narrativeConfig'
-], function (
-    Promise,
-    $,
-    Config
-) {
+define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
     'use strict';
 
     function factory(config) {
         const url = config.url;
-        const secureCookies = typeof config.secureCookies === 'undefined' ? true : config.secureCookies;
+        const secureCookies =
+            typeof config.secureCookies === 'undefined' ? true : config.secureCookies;
 
         /*
             Each cookie is defined
         */
         const cookieConfig = {
             auth: {
-                name: 'kbase_session'
+                name: 'kbase_session',
             },
             backup: {
                 name: 'kbase_session_backup',
                 domain: 'kbase.us',
-                enableIn: ['prod']
+                enableIn: ['prod'],
             },
             narrativeSession: {
-                name: 'narrative_session'
-            }
+                name: 'narrative_session',
+            },
         };
 
         const TOKEN_AGE = 14; // days
@@ -45,7 +38,9 @@ define([
          *  - expires = TOKEN_AGE (default 14) days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
-         *  - adds secure=true, samesite=none for KBase use.
+         *  - adds secure=true, samesite=Lax for KBase use.
+         *  - When used in a localhost dev environment samesite=Lax and secure=false
+         *    should be sufficient for browsers.
          */
         function setCookie(cookie) {
             if (!cookie.name) {
@@ -54,9 +49,9 @@ define([
             const name = encodeURIComponent(cookie.name);
             const value = encodeURIComponent(cookie.value || '');
             const props = {
-                expires: TOKEN_AGE,        // gets translated to GMT string
+                expires: TOKEN_AGE, // gets translated to GMT string
                 path: '/',
-                samesite: 'none'
+                samesite: 'Lax',
             };
             if (Number.isInteger(cookie.expires)) {
                 props.expires = cookie.expires;
@@ -74,7 +69,9 @@ define([
             if (props.expires === 0) {
                 props.expires = new Date(0).toUTCString();
             } else {
-                props.expires = new Date(new Date().getTime() + (86400000*props.expires)).toUTCString();
+                props.expires = new Date(
+                    new Date().getTime() + 86400000 * props.expires
+                ).toUTCString();
             }
 
             const fields = Object.keys(props).map((key) => {
@@ -88,7 +85,7 @@ define([
             const propStr = fields.join(';');
 
             const newCookie = `${name}=${value}; ${propStr}`;
-            document.cookie=newCookie;
+            document.cookie = newCookie;
         }
 
         /**
@@ -116,7 +113,7 @@ define([
                 name,
                 value: '',
                 path,
-                expires: 0
+                expires: 0,
             };
             if (domain) {
                 cookieToRemove.domain = domain;
@@ -147,7 +144,7 @@ define([
             }
             return makeAuthCall(token, {
                 operation: '/me',
-                method: 'GET'
+                method: 'GET',
             });
         }
 
@@ -178,7 +175,7 @@ define([
                 }
                 const cookieField = {
                     name: config.name,
-                    value: token
+                    value: token,
                 };
                 if (config.domain) {
                     cookieField.domain = config.domain;
@@ -213,7 +210,7 @@ define([
             const operation = '/tokens/revoke/' + id;
             return makeAuthCall(token, {
                 operation: operation,
-                method: 'DELETE'
+                method: 'DELETE',
             });
         }
 
@@ -227,7 +224,7 @@ define([
             const operation = '/users/?list=' + encodedUsers.join(',');
             return makeAuthCall(token, {
                 operation: operation,
-                method: 'GET'
+                method: 'GET',
             });
         }
 
@@ -241,7 +238,7 @@ define([
             }
             return makeAuthCall(token, {
                 operation: operation,
-                method: 'GET'
+                method: 'GET',
             });
         }
 
@@ -258,7 +255,7 @@ define([
         function getTokenInfo(token) {
             return makeAuthCall(token ? token : getAuthToken(), {
                 operation: '/token',
-                method: 'GET'
+                method: 'GET',
             });
         }
 
@@ -271,23 +268,20 @@ define([
          */
         function makeAuthCall(token, callParams) {
             const version = callParams.version || 'V2';
-            const callString = [
-                url,
-                '/api/',
-                version,
-                callParams.operation
-            ].join('');
+            const callString = [url, '/api/', version, callParams.operation].join('');
 
-            return Promise.resolve($.ajax({
-                url: callString,
-                method: callParams.method,
-                dataType: 'json',
-                crossDomain: true,
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
-                }
-            }));
+            return Promise.resolve(
+                $.ajax({
+                    url: callString,
+                    method: callParams.method,
+                    dataType: 'json',
+                    crossDomain: true,
+                    headers: {
+                        Authorization: token,
+                        'Content-Type': 'application/json',
+                    },
+                })
+            );
         }
 
         /**
@@ -307,17 +301,16 @@ define([
                 retries = 3;
             }
             return getTokenInfo(token)
-                .then(function (info) {
+                .then((info) => {
                     if (info.expires && info.expires > new Date().getTime()) {
                         return true;
                     }
                     return false;
                 })
-                .catch(function (error) {
+                .catch((error) => {
                     if (error.status === 401 || error.status === 403 || retries < 0) {
                         return false;
-                    }
-                    else {
+                    } else {
                         throw error;
                     }
                 });
@@ -336,11 +329,11 @@ define([
             searchUserNames,
             validateToken,
             setCookie,
-            getCookie
+            getCookie,
         };
     }
 
     return {
-        make: factory
+        make: factory,
     };
 });

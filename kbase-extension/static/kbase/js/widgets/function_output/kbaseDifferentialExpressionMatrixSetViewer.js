@@ -1,97 +1,160 @@
+define([
+    'kbwidget',
+    'kbaseAuthenticatedWidget',
+    'kbaseExpressionVolcanoPlot',
+    'kb_common/jsonRpc/genericClient',
+    'narrativeConfig',
+    'common/runtime',
+    'widgets/common/LoadingMessage',
+    'widgets/common/ErrorMessage',
+    'widgets/common/AlertMessage',
+    'widgets/common/jQueryUtils',
+    'css!widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer.css',
 
-
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbaseAuthenticatedWidget',
-		'kbaseTabs',
-		'kbaseHistogram',
-		'kbase-client-api',
-		'kbaseTable',
-		'bluebird',
-		'kbaseExpressionVolcanoPlot',
-		'kbaseTabs',
-		'kb_service/client/workspace',
-		'narrativeConfig',
-		'common/runtime'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		kbaseAuthenticatedWidget,
-		kbaseTabs,
-		kbaseHistogram,
-		kbase_client_api,
-		kbaseTable,
-		Promise,
-		KBaseExpressionVolcanoPlot,
-		KBaseTabs,
-		Workspace,
-		Config,
-		Runtime
-	) {
-
+    // For effect
+    'bootstrap'
+], (
+    KBWidget,
+    kbaseAuthenticatedWidget,
+    KBaseExpressionVolcanoPlot,
+    ServiceClient,
+    Config,
+    Runtime,
+    $LoadingMessage,
+    $ErrorMessage,
+    $AlertMessage,
+    jQueryUtils
+) => {
     'use strict';
 
+    const { $el, $row, $col } = jQueryUtils;
+
     return KBWidget({
+        name: 'kbaseDifferentialExpressionMatrixSetViewer',
+        parent: kbaseAuthenticatedWidget,
 
-	    name: "kbaseDifferentialExpressionMatrixSetViewer",
-	    parent : kbaseAuthenticatedWidget,
+        version: '1.0.0',
 
-        version: "1.0.0",
+        init: function (options) {
+            this._super(options);
+            this.objectRef = this.options.upas.obj_ref;
 
-        init : function init(options) {
-          this._super(options);
+            this.$elem.addClass('KBaseDifferentialExpressionMatrixSetViewer');
 
-          var $self = this;
-          $self.obj_ref = this.options.upas.obj_ref;
+            this.render();
 
-          var $volcanoDiv = $.jqElem('div');
-          var $volcano = new KBaseExpressionVolcanoPlot($volcanoDiv, {
-            diffExprMatrixSet_ref : this.obj_ref
-          });
-          //this.$elem.append($volcanoDiv);
-
-          var $tableDiv = $.jqElem('div')
-            .append($.jqElem('i').addClass('fa fa-spinner fa-spin fa-2x'))
-            .append('<br>Loading data... please wait...<br>Data processing may take upwards of 30 seconds, during which time this page may be unresponsive.<br><br>');
-
-          this.renderTable($tableDiv);
-
-          var $tabsDiv = $.jqElem('div');
-          var $tabs = new KBaseTabs($tabsDiv,
-            {
-              tabs : [
-                {
-                  tab: 'Volcano Plot',
-                  content: $volcanoDiv
-                },
-                {
-                  tab: 'Meta',
-                  content: $tableDiv
-                },
-              ]
-            }
-          );
-
-
-          this.$elem.append($tabsDiv);
+            return this;
         },
 
-      renderTable : function renderTable($tableDiv) {
-        var kbws = new Workspace(
-          Config.url('workspace'),
-          { token: Runtime.make().authToken() }
-        );
+        render: async function () {
+            this.renderLoading();
+            try {
+                const { data: set, info } = await this.fetchSetObject();
+                this.objectName = info[1];
+                this.renderLayout();
+                this.$elem.find('[data-id="set-description"]').text(set.description);
+                const $options = set.items.map(({ label, ref }) => {
+                    return $el('option')
+                        .text(label)
+                        .val(ref);
+                });
+                this.$elem.find('[data-id="set-elements"]').html($options);
 
-        kbws.get_objects([{ref: this.obj_ref}], function (results) {
-          $tableDiv.empty();
-          $tableDiv.append("Label : " + results[0].data.items[0].label);
-        });
-      }
+                if (set.items.length === 0) {
+                    return this.$elem.html($AlertMessage('This set has no elements', { type: 'warning' }));
+                }
 
+                this.renderVolcanoPlot(set.items[0].ref);
+            } catch (ex) {
+                this.renderError(ex);
+            }
+        },
+
+        renderLoading: function () {
+            this.$elem.html($LoadingMessage('Loading Set...'));
+        },
+
+        renderError: function (error) {
+            this.$elem.html($ErrorMessage(error));
+        },
+
+        renderLayout: function () {
+            this.$elem
+                .empty()
+                .append(
+                    $el('div')
+                        .addClass('KBaseDifferentialExpressionMatrixSetViewer-header')
+                        .append(
+                            this.$renderHeader()
+                        ))
+                .append(
+                    $el('div').append(
+                        this.readerElement(),
+                    ));
+        },
+
+        $renderHeader: function () {
+            return $el('div').addClass('header-table')
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Description')
+                        )
+                        .append(
+                            $col().attr('data-id', 'set-description')
+                        )
+                )
+                .append(
+                    $row()
+                        .append(
+                            $col().text('Condition Pair')
+                        )
+                        .append(
+                            $col().append(
+                                $el('div').addClass('form-inline').append(
+                                    $el('select')
+                                        .addClass('form-control')
+                                        .attr('data-id', 'set-elements')
+                                        .on('change', this.changeSelectElement.bind(this))
+                                )
+                            )
+                        )
+                );
+        },
+
+        changeSelectElement: function (ev) {
+            this.renderVolcanoPlot(ev.target.value);
+        },
+
+        renderVolcanoPlot: function (ref) {
+            const $elementViewer = this.$elem.find('[data-id="element-viewer"]');
+            const $node = $el('div');
+            $elementViewer.html($node);
+            new KBaseExpressionVolcanoPlot($node, {
+                ref,
+                setRef: this.objectRef,
+                setObjectName: this.objectName
+            });
+        },
+
+        readerElement: function () {
+            return $el('div').attr('data-id', 'element-viewer');
+        },
+
+        fetchSetObject: async function () {
+            const workspace = new ServiceClient({
+                module: 'Workspace',
+                url: Config.url('workspace'),
+                token: Runtime.make().authToken()
+            });
+
+            const [result] = await workspace.callFunc('get_objects2', [{
+                objects: [{
+                    ref: this.objectRef
+                }]
+            }]);
+
+            return result.data[0];
+        }
     });
-
-} );
+});

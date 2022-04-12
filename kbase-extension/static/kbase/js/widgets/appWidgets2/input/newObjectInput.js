@@ -1,37 +1,35 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+], (Promise, html, Validation, Events, Runtime, UI, Constants) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var options = {},
+        const options = {},
             spec = config.parameterSpec,
             workspaceId = config.workspaceId,
-            parent,
-            container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
-            dom,
             runtime = Runtime.make(),
-            otherOutputParams = config.closeParameters.filter((value) => {
-                return value !== spec.id;
-            });
+            otherOutputParams = config.closeParameters
+                ? config.closeParameters.filter((value) => {
+                      return value !== spec.id;
+                  })
+                : [];
+        let parent, container, ui;
 
         // Validate configuration.
         // Nothing to do...
@@ -48,33 +46,27 @@ define([
          */
 
         function getInputValue() {
-            let val = dom.getElement('input-container.input').value;
-            // if (!val) {
-            //     return null;  // empty strings should -> null, otherwise it throws off validation.
-            // }
-            return val;
+            return ui.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (model.value !== value) {
                     model.value = value;
                     return true;
                 }
                 return false;
-            })
-                .then(function(changed) {
-                    render();
-                });
+            }).then(() => {
+                render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 model.value = undefined;
-            })
-                .then(function(changed) {
-                    render();
-                });
+            }).then(() => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -98,54 +90,59 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 });
             }
-            else {
-                var rawValue = getInputValue();
-                return validateUniqueOutput(rawValue)
-                    .then((isUnique) => {
-                        if (!isUnique) {
-                            return {
-                                isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: 'Every output object from a single app run must have a unique name.'
-                            };
-                        }
-                        else {
-                            let validationOptions = {
-                                required: spec.data.constraints.required,
-                                shouldNotExist: true,
-                                workspaceId: workspaceId,
-                                types: spec.data.constraints.types,
-                                authToken: runtime.authToken(),
-                                workspaceServiceUrl: runtime.config('services.workspace.url')
-                            };
-                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                        }
-                    })
-                    .then(function(validationResult) {
-                        return validationResult;
-                    });
-            }
+            const rawValue = getInputValue();
+            return validateUniqueOutput(rawValue)
+                .then((isUnique) => {
+                    if (!isUnique) {
+                        return {
+                            isValid: false,
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
+                            errorMessage:
+                                'Every output object from a single app run must have a unique name.',
+                        };
+                    } else {
+                        const validationOptions = {
+                            required: spec.data.constraints.required,
+                            shouldNotExist: true,
+                            workspaceId: workspaceId,
+                            types: spec.data.constraints.types,
+                            authToken: runtime.authToken(),
+                            workspaceServiceUrl: runtime.config('services.workspace.url'),
+                        };
+                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                    }
+                })
+                .then((validationResult) => {
+                    return validationResult;
+                });
         }
 
         /* Validate that this is a unique value among all output parameters */
         function validateUniqueOutput(rawValue) {
-            return bus.request({
-                parameterNames: otherOutputParams
-            }, {
-                key: {
-                    type: 'get-parameters'
-                }
-            }).then((paramValues) => {
-                let duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
-                return !Boolean(duplicates.length);
-            });
+            return bus
+                .request(
+                    {
+                        parameterNames: otherOutputParams,
+                    },
+                    {
+                        key: {
+                            type: 'get-parameters',
+                        },
+                    }
+                )
+                .then((paramValues) => {
+                    const duplicates = Object.values(paramValues).filter(
+                        (value) => rawValue === value && !!value
+                    );
+                    return !duplicates.length;
+                });
         }
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -155,45 +152,48 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 500;
+            const editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     validate()
-                        .then(function(result) {
-                            if (result.isValid || result.diagnosis === 'required-missing') {
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
-                            } else if (result.diagnosis === 'invalid') {
+                        .then((result) => {
+                            if (
+                                result.isValid ||
+                                result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING
+                            ) {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue,
-                                    isError: true
+                                });
+                            } else if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
+                                bus.emit('changed', {
+                                    newValue: result.parsedValue,
+                                    isError: true,
                                 });
                             }
                             bus.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             bus.emit('validation', {
                                 errorMessage: err.message,
-                                diagnosis: 'error'
+                                diagnosis: Constants.DIAGNOSIS.ERROR,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -202,54 +202,52 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function makeInputControl(currentValue, events, bus) {
+        function makeInputControl(currentValue, events) {
             // CONTROL
             return input({
                 id: events.addEvents({
-                    events: [
-                        handleChanged(), handleTouched()
-                    ]
+                    events: [handleChanged(), handleTouched()],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
         function render() {
-            Promise.try(function() {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+            Promise.try(() => {
+                const events = Events.make(),
+                    inputControl = makeInputControl(model.value, events);
 
-                dom.setContent('input-container', inputControl);
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(function() {
-                    return autoValidate();
-                });
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     bus.emit('validation', result);
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     bus.emit('validation', {
                         errorMessage: err.message,
-                        diagnosis: 'error'
+                        diagnosis: Constants.DIAGNOSIS.ERROR,
                     });
                 });
         }
@@ -257,41 +255,43 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = UI.make({ node: container });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
-                        setModelValue(message.value);
+                    bus.on('update', (_message) => {
+                        setModelValue(_message.value);
                     });
-                    bus.on('refresh', function() {
-
-                    });
+                    bus.on('refresh', () => {});
                     bus.emit('sync');
                 });
             });
         }
 
+        function stop() {
+            return Promise.resolve();
+        }
+
         return {
-            start: start
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

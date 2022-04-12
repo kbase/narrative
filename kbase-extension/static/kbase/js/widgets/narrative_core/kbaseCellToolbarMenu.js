@@ -1,53 +1,26 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'base/js/namespace',
-    'common/utils',
-    'util/bootstrapDialog',
-    'kbase/js/widgets/appInfoPanel',
+    'common/cellUtils',
     'narrativeConfig',
-    'custom/custom'
-], function(
-    $,
-    html,
-    Events,
-    Jupyter,
-    utils,
-    BootstrapDialog,
-    AppInfoPanel,
-    Config
-) {
+    'common/jobs',
+    'custom/custom',
+], ($, html, Events, Jupyter, utils, Config, Jobs) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
-        a = t('a'),
         button = t('button'),
-        p = t('p'),
         span = t('span'),
         ul = t('ul'),
-        li = t('li');
+        li = t('li'),
+        cssBaseClass = 'kb-cell-toolbar';
 
-    function getMeta(cell, group, name) {
-        if (!cell.metadata.kbase) {
-            return;
-        }
-        if (name === undefined) {
-            return cell.metadata.kbase[group];
-        }
-        if (!cell.metadata.kbase[group]) {
-            return;
-        }
-        return cell.metadata.kbase[group][name];
-    }
-
-    function factory(config) {
-        var container,
-            cell,
-            readOnly = Jupyter.narrative.readonly;
+    function factory() {
+        const readOnly = Jupyter.narrative.readonly;
+        let container, cell;
 
         function doMoveCellUp() {
             Jupyter.notebook.move_cell_up();
@@ -61,247 +34,123 @@ define([
             $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
 
-        function getCellTitle(cell) {
-            var title = getMeta(cell, 'attributes', 'title'),
-                showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true);
+        function getCellTitle(_cell) {
+            const title = utils.getMeta(_cell, 'attributes', 'title'),
+                showTitle = utils.getCellMeta(_cell, 'kbase.cellState.showTitle', true);
 
-            if (showTitle) {
-                return title;
-            }
-            return '';
+            return showTitle ? title : '';
         }
 
-        function getCellSubtitle(cell) {
-            var subTitle = getMeta(cell, 'attributes', 'subtitle'),
-                showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true),
-                showSubtitle = utils.getCellMeta(cell, 'kbase.cellState.showSubtitle', true);
+        function getCellSubtitle(_cell) {
+            const subTitle = utils.getMeta(_cell, 'attributes', 'subtitle'),
+                showTitle = utils.getCellMeta(_cell, 'kbase.cellState.showTitle', true);
 
-            if (showTitle) {
-                return subTitle;
-            }
-            return '';
-        }
-
-        function getCellInfoLink(cell, events) {
-            var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
-                label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
-
-            if (url) {
-                return a({
-                    href: url,
-                    target: '_blank',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doShowInfoModal
-                    })
-                },
-                label || 'ref');
-            }
-            return '';
+            return showTitle ? subTitle : '';
         }
 
         function doToggleMinMaxCell(e) {
             if (e.getModifierState) {
-                var modifier = e.getModifierState('Alt');
+                const modifier = e.getModifierState('Alt');
                 if (modifier) {
-                    console.log('I want to toggle all cells!');
+                    // TODO: implement global cell toggling
                 }
             }
             cell.toggleMinMax();
-            // cell.element.trigger('toggleMinMax.cell');
         }
 
         function doToggleCodeView() {
             cell.element.trigger('toggleCodeArea.cell');
         }
 
-        function isCodeShowing(cell) {
-            if (cell.isCodeShowing) {
-                return cell.isCodeShowing();
-            }
-            return null;
-        }
-
-        function doShowInfoModal(e) {
-            e.preventDefault();
-            var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
-                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
-                title = getMeta(cell, 'attributes', 'title') + ' v' + version,
-                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
-                tag = utils.getCellMeta(cell, 'kbase.appCell.app.tag'),
-                module = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.module_name');
-            var dialog = new BootstrapDialog({
-                title: title,
-                body: $('<div class="container"></div>'),
-                buttons: [
-                    $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(function() {
-                        dialog.hide();
-                    })
-                ],
-                enterToTrigger: true,
-                closeButton: true
-            });
-
-            var infoPanel = AppInfoPanel.make({
-                appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
-                appVersion: version,
-                appAuthors: authors,
-                appModule: module,
-                tag: tag
-            });
-            infoPanel.start({ node: dialog.getBody() });
-
-            dialog.getElement().on('hidden.bs.modal', function() {
-                dialog.destroy();
-            });
-            dialog.show();
-        }
-
-        function doToggleCellSettings() {
-            cell.element.trigger('toggleCellSettings.cell');
-        }
-
-        function renderToggleCellSettings(events) {
-            // Only kbase cells have cell settings.
-            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
-                return;
-            }
-
-            return button({
-                type: 'button',
-                class: 'btn btn-default btn-xs',
-                dataToggle: 'tooltip',
-                dataPlacement: 'left',
-                title: true,
-                dataOriginalTitle: 'Cell Settings',
-                id: events.addEvent({ type: 'click', handler: doToggleCellSettings })
-            }, [
-                span({ class: 'fa fa-cog', style: 'font-size: 14pt' })
-            ]);
+        function isCodeShowing(_cell) {
+            return _cell.isCodeShowing ? _cell.isCodeShowing() : null;
         }
 
         function renderIcon(icon) {
             return span({
-                class: 'fa fa-' + icon.type + ' fa-sm',
-                style: { color: icon.color || '#000' }
+                class: `${cssBaseClass}__icon--${icon.type} fa fa-${icon.type} fa-sm`,
             });
         }
 
-        function isKBaseCell(cell) {
-            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
-                return false;
+        function buildIcon(_cell) {
+            if (_cell && _cell.getIcon) {
+                return _cell.getIcon();
             }
-            return true;
+            return span({
+                class: `${cssBaseClass}__icon--build_icon fa fa-thumbs-down fa-2x`,
+            });
         }
 
-        function doHelp() {
-            alert('help here...');
-        }
+        const buttonClasses = 'btn btn-default btn-xs';
+        const buttonBase = {
+            type: 'button',
+            class: `${buttonClasses} ${cssBaseClass}__button`,
+            dataToggle: 'tooltip',
+            dataPlacement: 'left',
+            title: true,
+        };
 
-        function renderOptions(cell, events) {
-            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                dropdownId = html.genId(),
-                menuItems = [
-                    // we can always dream.
-                    //                    {
-                    //                        name: 'help',
-                    //                        label: 'Help',
-                    //                        icon: {
-                    //                            type: 'question',
-                    //                            color: 'black'
-                    //                        },
-                    //                        id: events.addEvent({type: 'click', handler: doHelp})
-                    //                    },
-                    // {
-                    //     name: 'toggle-collapse',
-                    //     label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
-                    //     icon: {
-                    //         type: toggleIcon + '-square-o',
-                    //         color: 'orange'
-                    //     },
-                    //     id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                    // }
-                ];
+        function renderOptions(_cell, events) {
+            const dropdownId = html.genId(),
+                menuItems = [];
 
-            // we can always dream
-            //            if (isKBaseCell(cell)) {
-            //                menuItems.push({
-            //                    name: 'settings',
-            //                    label: 'Settings',
-            //                    icon: {
-            //                        type: 'gear',
-            //                        color: 'black'
-            //                    }
-            //                });
-            //            }
-
-            if (cell.cell_type === 'code') {
+            if (_cell.cell_type === 'code') {
                 menuItems.push({
                     name: 'code-view',
-                    label: isCodeShowing(cell) ? 'Hide code' : 'Show code',
+                    label: isCodeShowing(_cell) ? 'Hide code' : 'Show code',
                     icon: {
                         type: 'terminal',
-                        color: 'black'
                     },
-                    id: events.addEvent({ type: 'click', handler: doToggleCodeView })
+                    id: events.addEvent({ type: 'click', handler: doToggleCodeView }),
                 });
             }
 
-            if (cell.showInfo) {
+            if (_cell.showInfo) {
                 menuItems.push({
                     name: 'info',
                     label: 'Info',
                     icon: {
                         type: 'info',
-                        color: 'orange'
-                    },
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function() {
-                            cell.showInfo();
-                        }
-                    })
-                });
-            }
-
-            if (cell.toggleBatch && Config.get('features').batchAppMode) {
-                menuItems.push({
-                    name: 'batch',
-                    label: 'Toggle Batch',
-                    icon: {
-                        type: 'table',
-                        color: 'black'
                     },
                     id: events.addEvent({
                         type: 'click',
                         handler: () => {
-                            cell.toggleBatch();
-                            // var currentBatch = cell.metadata.kbase.appCell['user-settings'].batchMode;
-                            // if (currentBatch === undefined || currentBatch === null) {
-                            //     currentBatch = false;
-                            // }
-                            // cell.metadata.kbase.appCell['user-settings'].batchMode = !currentBatch;
-                        }
-                    })
+                            _cell.showInfo();
+                        },
+                    }),
                 });
             }
 
             if (!readOnly) {
-                if (menuItems.length > 0) {
+                if (_cell.toggleBatch && Config.get('features').batchAppMode) {
                     menuItems.push({
-                        type: 'separator'
+                        name: 'batch',
+                        label: 'Toggle Batch',
+                        icon: {
+                            type: 'table',
+                        },
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: () => {
+                                _cell.toggleBatch();
+                            },
+                        }),
                     });
                 }
+
+                if (menuItems.length > 0) {
+                    menuItems.push({
+                        type: 'separator',
+                    });
+                }
+
                 menuItems.push({
                     name: 'delete-cell',
                     label: 'Delete cell',
                     icon: {
                         type: 'times',
-                        color: 'red'
                     },
-                    id: events.addEvent({ type: 'click', handler: doDeleteCell })
+                    id: events.addEvent({ type: 'click', handler: doDeleteCell }),
                 });
             }
 
@@ -310,238 +159,248 @@ define([
             }
 
             return span({ class: 'dropdown' }, [
-                button({
-                    class: 'btn btn-xs btn-default dropdown-toggle',
-                    type: 'button',
-                    id: dropdownId,
-                    dataToggle: 'dropdown',
-                    ariaHaspopup: 'true',
-                    ariaExpanded: 'true'
-                }, [span({ class: 'fa fa-ellipsis-h fa-lg' })]),
-                ul({
-                    class: 'dropdown-menu dropdown-menu-right',
-                    ariaLabelledby: dropdownId
-                }, [
-                    menuItems.map(function(item) {
-                        switch (item.type) {
-                            case 'separator':
-                                return li({
-                                    role: 'separator',
-                                    class: 'divider'
-                                });
-                            default:
-                                return li(button({
-                                    class: 'btn btn-default',
-                                    type: 'button',
-                                    style: {
-                                        width: '100%',
-                                        textAlign: 'left'
-                                    },
-                                    id: item.id
-                                }, [
-                                    span({
-                                        style: {
-                                            display: 'inline-block',
-                                            width: '25px',
-                                            marginRight: '4px'
-                                        }
-                                    }, renderIcon(item.icon)),
-                                    span(item.label)
-                                ]));
-                        }
-                    }).join('')
-                ])
+                button(
+                    {
+                        class: `${buttonClasses} ${cssBaseClass}__button dropdown-toggle`,
+                        type: 'button',
+                        id: dropdownId,
+                        dataToggle: 'dropdown',
+                        ariaHaspopup: 'true',
+                        ariaExpanded: 'true',
+                        ariaLabel: 'cell options',
+                        dataElement: 'cell-dropdown',
+                    },
+                    [span({ class: 'fa fa-ellipsis-h fa-lg' })]
+                ),
+                ul(
+                    {
+                        class: 'dropdown-menu dropdown-menu-right',
+                        ariaLabelledby: dropdownId,
+                    },
+                    [
+                        menuItems
+                            .map((item) => {
+                                if (item.type === 'separator') {
+                                    return li({
+                                        role: 'separator',
+                                        class: 'divider',
+                                    });
+                                }
+                                return li(
+                                    button(
+                                        {
+                                            class: `${cssBaseClass}__dropdown_item btn btn-default`,
+                                            type: 'button',
+                                            id: item.id,
+                                            title: item.label,
+                                            dataElement: item.name,
+                                        },
+                                        [
+                                            span(
+                                                {
+                                                    class: `${cssBaseClass}__dropdown_item_icon`,
+                                                },
+                                                renderIcon(item.icon)
+                                            ),
+                                            span(item.label),
+                                        ]
+                                    )
+                                );
+                            })
+                            .join(''),
+                    ]
+                ),
             ]);
         }
 
-        function buildIcon(cell) {
-            if (cell && cell.getIcon) {
-                return cell.getIcon();
-            }
-            return span({
-                class: 'fa fa-thumbs-down fa-2x',
-                style: {
-                    verticalAlign: 'top',
+        function render(_cell) {
+            // The cell metadata 'kbase.cellState.toggleMinMax' is the
+            // canonical indicator of whether a cell is collapsed or not.
+            const cellCollapsed =
+                utils.getCellMeta(_cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
+                'maximized';
+            let collapsedCellJobStatus = '';
+
+            if (cellCollapsed) {
+                if (utils.getCellMeta(_cell, 'kbase.appCell.fsm')) {
+                    const fsmMode = utils.getCellMeta(
+                            _cell,
+                            'kbase.appCell.fsm.currentState.mode',
+                            ''
+                        ),
+                        fsmStage = utils.getCellMeta(
+                            _cell,
+                            'kbase.appCell.fsm.currentState.stage',
+                            ''
+                        );
+                    collapsedCellJobStatus = Jobs.createJobStatusFromFsm(fsmMode, fsmStage);
+                } else if (utils.getCellMeta(_cell, 'kbase.bulkImportCell.exec.jobs')) {
+                    const currentJobs = utils.getCellMeta(
+                        _cell,
+                        'kbase.bulkImportCell.exec.jobs.byId'
+                    );
+                    collapsedCellJobStatus = Jobs.createCombinedJobStateSummary(currentJobs);
                 }
-            });
-        }
+            }
 
-        function render(cell) {
-            /*
-            The cell metadata 'kbase.cellState.toggleMinMax' is the
-            canonical indicator of whether a cell is collapsed or not.
-            */
-            const cellCollapsed = utils.getCellMeta(
-                cell, 'kbase.cellState.toggleMinMax', 'maximized'
-            ) !== 'maximized';
-            const execMessage = cell.element[0].querySelectorAll(
-                '[data-element="execMessage"]'
-            )[0];
-            const collapsedCellStatus = cellCollapsed ? (
-                execMessage && execMessage.innerHTML
-            ) : '';
-
-            var events = Events.make({ node: container }),
+            const events = Events.make({ node: container }),
+                title = getCellTitle(_cell),
+                subtitle = getCellSubtitle(_cell),
                 buttons = [
-                    div({ class: 'buttons pull-right' }, [
-                        span({ class: 'kb-func-timestamp' }),
-                        span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
-                        span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-                        // getOutdatedWarning(cell),
-                        (readOnly ? null : button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Up',
-                            id: events.addEvent({ type: 'click', handler: doMoveCellUp })
-                        }, [
-                            span({ class: 'fa fa-arrow-up fa-lg' })
-                        ])),
-                        (readOnly ? null : button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Down',
-                            id: events.addEvent({ type: 'click', handler: doMoveCellDown })
-                        }, [
-                            span({ class: 'fa fa-arrow-down fa-lg' })
-                        ])),
-                        renderOptions(cell, events),
-                        (function() {
-                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
-                            return button({
-                                type: 'button',
-                                class: 'btn btn-default btn-xs',
-                                dataToggle: 'tooltip',
-                                dataPlacement: 'left',
-                                title: true,
-                                dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                                id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                            }, [
-                                span({
-                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
-                                    style: {
-                                        color: color
-                                    }
-                                })
-                            ]);
-                        }())
-                    ])
+                    div(
+                        {
+                            class: `${cssBaseClass}__buttons-container`,
+                        },
+                        [
+                            // indicates the job status when the cell is collapsed
+                            span(
+                                {
+                                    dataElement: 'job-status',
+                                },
+                                collapsedCellJobStatus
+                            ),
+                            // options dropdown
+                            renderOptions(_cell, events),
+                            readOnly
+                                ? null
+                                : button(
+                                      Object.assign({}, buttonBase, {
+                                          dataOriginalTitle: 'Move Cell Up',
+                                          dataElement: 'cell-move-up',
+                                          ariaLabel: 'Move cell up',
+                                          id: events.addEvent({
+                                              type: 'click',
+                                              handler: doMoveCellUp,
+                                          }),
+                                      }),
+                                      [span({ class: 'fa fa-arrow-up fa-lg' })]
+                                  ),
+                            readOnly
+                                ? null
+                                : button(
+                                      Object.assign({}, buttonBase, {
+                                          dataOriginalTitle: 'Move Cell Down',
+                                          dataElement: 'cell-move-down',
+                                          ariaLabel: 'Move cell down',
+                                          id: events.addEvent({
+                                              type: 'click',
+                                              handler: doMoveCellDown,
+                                          }),
+                                      }),
+                                      [span({ class: 'fa fa-arrow-down fa-lg' })]
+                                  ),
+                            (function () {
+                                const toggleMinMax = utils.getCellMeta(
+                                        _cell,
+                                        'kbase.cellState.toggleMinMax',
+                                        'maximized'
+                                    ),
+                                    toggleIcon = toggleMinMax === 'maximized' ? 'minus' : 'plus';
+
+                                return button(
+                                    Object.assign({}, buttonBase, {
+                                        dataElement: 'cell-toggle-expansion',
+                                        ariaLabel: 'Expand or Collapse Cell',
+                                        dataOriginalTitle:
+                                            toggleMinMax === 'maximized'
+                                                ? 'Collapse Cell'
+                                                : 'Expand Cell',
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: doToggleMinMaxCell,
+                                        }),
+                                    }),
+                                    [
+                                        span({
+                                            class: `${cssBaseClass}__icon--${toggleIcon} fa fa-${toggleIcon}-square-o fa-lg`,
+                                        }),
+                                    ]
+                                );
+                            })(),
+                        ]
+                    ),
                 ],
-                message = div({
-                    class: 'pull-right messsage',
-                    style: {
-                        fontStyle: 'italic'
-                    }
-                }, [
-                    div([
-                        utils.getCellMeta(cell, 'kbase.cellState.message')
-                    ])
-                ]),
-                content = div({ class: 'kb-cell-toolbar container-fluid' }, [
-                    div({ class: 'row', style: { height: '56px' } }, [
-                        div({ class: 'col-sm-9 title-container' }, [
-                            div({ class: 'title', style: { display: 'flex', height: '56px' } }, [
-                                div({
-                                    dataElement: 'icon',
-                                    class: 'icon',
-                                    style: {
-                                        flexShrink: '0',
-                                        width: '56px',
-                                        height: '56px',
-                                        lineHeight: '56px'
-                                    }
-                                }, [
-                                    buildIcon(cell)
-                                ]),
-                                div({ style: { flexGrow: '1' } }, [
-                                    div({
-                                        dataElement: 'title',
-                                        class: 'title',
-                                        style: {
-                                            lineHeight: '20px',
-                                            height: '20px',
-                                            marginTop: '8px',
-                                            overflow: 'hidden'
-                                        }
-                                    }, [
-                                        getOutdatedWarning(cell),
-                                        getCellTitle(cell),
-                                        // getOutdatedWarning(cell)
-                                    ]),
-                                    div({
-                                        dataElement: 'subtitle',
-                                        class: 'subtitle',
-                                        style: {
-                                            lineHeight: '20px',
-                                            height: '20px',
-                                            overflow: 'hidden'
-                                        }
-                                    }, [getCellSubtitle(cell)])
-                                ]),
+                content = div(
+                    {
+                        class: `${cssBaseClass}__container`,
+                    },
+                    [
+                        div(
+                            {
+                                dataElement: 'icon',
+                                class: `${cssBaseClass}__app_icon`,
+                            },
+                            [buildIcon(_cell)]
+                        ),
+                        div(
+                            {
+                                class: `${cssBaseClass}__title-container`,
+                            },
+                            [
                                 div(
-                                    { style: { margin: '0px 0px 0px auto' } },
-                                    [collapsedCellStatus]
-                                )
-                            ])
-                        ]),
-                        div({ class: 'col-sm-3 buttons-container' }, [
-                            buttons,
-                            message
-                        ])
-                    ])
-                ]);
+                                    {
+                                        dataElement: 'title',
+                                        class: `${cssBaseClass}__title`,
+                                        title: title,
+                                    },
+                                    [getOutdatedWarning(_cell), title]
+                                ),
+                                div(
+                                    {
+                                        dataElement: 'subtitle',
+                                        class: `${cssBaseClass}__subtitle`,
+                                        title: subtitle,
+                                    },
+                                    subtitle
+                                ),
+                            ]
+                        ),
+                        buttons,
+                    ]
+                );
             return {
-                events: events,
-                content: content
+                events,
+                content,
             };
         }
 
-        function getOutdatedWarning(cell) {
-            if (utils.getCellMeta(cell, 'kbase.appCell.outdated', false)) {
-                return a({
-                    tabindex: '0',
-                    type: 'button',
-                    class: 'btn btn-default btn-xs',
-                    dataContainer: 'body',
-                    container: 'body',
-                    dataToggle: 'popover',
-                    dataPlacement: 'bottom',
-                    dataTrigger: 'focus',
-                    role: 'button',
-                    title: 'New version available',
-                    dataContent: 'This app has a newer version available! ' +
-                                 'There\'s probably nothing wrong with this version, ' +
-                                 'but the new one may include new features. Add a new "' +
-                                 utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
-                                 '" app cell for the update.',
-                    style: { color: '#f79b22' }
-                }, [
-                    span({ class: 'fa fa-exclamation-triangle fa-lg' })
-                ]);
-            } else {
-                return '';
+        function getOutdatedWarning(_cell) {
+            if (utils.getCellMeta(_cell, 'kbase.appCell.outdated', false)) {
+                return span(
+                    {
+                        tabindex: '0',
+                        class: `${cssBaseClass}__icon--outdated`,
+                        dataContainer: 'body',
+                        container: 'body',
+                        dataToggle: 'popover',
+                        dataPlacement: 'bottom',
+                        dataTrigger: 'focus',
+                        role: 'button',
+                        title: 'New version available',
+                        dataContent:
+                            'This app has a newer version available! ' +
+                            "There's probably nothing wrong with this version, " +
+                            'but the new one may include new features. Add a new "' +
+                            utils.getCellMeta(_cell, 'kbase.appCell.newAppName') +
+                            '" app cell for the update.',
+                    },
+                    [span({ class: 'fa fa-exclamation-triangle' })]
+                );
             }
+            return '';
         }
 
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
                 cell = parentCell;
-                var rendered = render(parentCell);
+                const rendered = render(parentCell);
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
                 $(container).find('[data-toggle="popover"]').popover();
                 rendered.events.attachEvents();
 
-                // try this...
-                container.addEventListener('dblclick', function(e) {
+                container.addEventListener('dblclick', (e) => {
                     doToggleMinMaxCell(e);
                 });
             } catch (ex) {
@@ -550,13 +409,13 @@ define([
         }
 
         return {
-            register_callback: callback
+            register_callback: callback,
         };
     }
 
     return {
-        make: function(config) {
-            return factory(config);
-        }
+        make: function () {
+            return factory();
+        },
     };
 });

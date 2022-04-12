@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'MetagenomeView'
-], function(Widget) {
-    describe('Test the MetagenomeView widget', function() {
-        it('Should do things', function() {
-
+define(['MetagenomeView'], (Widget) => {
+    'use strict';
+    describe('The MetagenomeView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

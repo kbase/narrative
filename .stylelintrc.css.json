@@ -1,0 +1,40 @@
+{
+    "extends": "stylelint-config-standard",
+    "plugins": [
+      "stylelint-no-indistinguishable-colors",
+      "stylelint-color-format"
+    ],
+    "rules": {
+      "color-named": "never",
+      "color-no-hex": true,
+      "color-format/format": {
+        "format": "rgb"
+      },
+      "color-function-notation": "modern",
+      "declaration-block-no-redundant-longhand-properties": true,
+      "font-family-name-quotes": "always-where-recommended",
+      "font-family-no-missing-generic-family-keyword": [
+        true,
+        {
+          "ignoreFontFamilies": ["FontAwesome", "Glyphicons Halflings", "kbase-icons"]
+        }
+      ],
+      "length-zero-no-unit": true,
+      "no-descending-specificity": null,
+      "plugin/stylelint-no-indistinguishable-colors": false,
+      "selector-max-compound-selectors": 5,
+      "selector-max-class": 5,
+      "selector-no-qualifying-type": [
+        true,
+        {
+          "ignore": ["attribute", "class"]
+        }
+      ],
+      "shorthand-property-no-redundant-values": true
+    },
+    "ignoreFiles": [
+      "kbase-extension/static/ext_components/**/*.css",
+      "kbase-extension/static/ext_packages/**/*.css",
+      "docs/**/*.css"
+    ]
+}

@@ -1,14 +1,10 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseNarrativeDataPanel'
-], function(Widget) {
-    describe('Test the kbaseNarrativeDataPanel widget', function() {
-        it('Should do things', function() {
+define(['kbaseNarrativeDataPanel', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
 
+    describe('The kbaseNarrativeDataPanel widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

@@ -1,14 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseFigureObjectHeatmap'
-], function(Widget) {
-    describe('Test the kbaseFigureObjectHeatmap widget', function() {
-        it('Should do things', function() {
+define(['kbaseFigureObjectHeatmap', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
 
+    describe('The kbaseFigureObjectHeatmap widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

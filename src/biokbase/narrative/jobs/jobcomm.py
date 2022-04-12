@@ -1,11 +1,30 @@
+import copy
 import threading
+from typing import List, Union
 from ipykernel.comm import Comm
-import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.jobs.util import load_job_constants
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.exception_util import NarrativeException, JobRequestException
 from biokbase.narrative.common import kblogging
 
 
-class JobRequest:
+(PARAM, MESSAGE_TYPE) = load_job_constants()
+
+UNKNOWN_REASON = "Unknown reason"
+
+JOB_NOT_PROVIDED_ERR = "job_id not provided"
+JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
+CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
+BATCH_NOT_PROVIDED_ERR = "batch_id not provided"
+ONE_INPUT_TYPE_ONLY_ERR = "Please provide one of job_id, job_id_list, or batch_id"
+
+INVALID_REQUEST_ERR = "Improperly formatted job channel message!"
+MISSING_REQUEST_TYPE_ERR = "Missing request type in job channel message!"
+
+LOOKUP_TIMER_INTERVAL = 5
+
+
+class JobRequest(object):
     """
     A small wrapper for job comm channel request data.
     This generally comes in the form of a packet from the kernel Comm object.
@@ -15,6 +34,8 @@ class JobRequest:
             'comm_id': <some string>,
             'data': {
                 'request_type': effectively, the function requested.
+                'job_id': optional
+                'job_id_list': optional
             }
         }
     }
@@ -24,25 +45,74 @@ class JobRequest:
     2. If there's a job_id field, it makes sure that it's real (by asking the
        JobManager - avoids a bunch of duplicate validation code)
 
-    Provides 4 attributes:
-    msg_id: str - a unique string (within reason) for a message id.
-    request: str - a string for the request sent from the front end. This isn't
+    Each JobRequest has at most one of a job_id or job_id_list. If the job comm
+    channel request data is received with a job_id_list, it may be split up
+    into multiple JobRequests. Likewise, if the job comm channel request data
+    is received with a job_id, a JobRequest may be created with a job_id_list
+    containing that job_id
+
+    Provides the following attributes:
+    raw_request     dict    the unedited request received by the job comm
+    msg_id          str     unique message id
+    request_type    str     the function to perform. This isn't
         strictly controlled here, but by JobComm._handle_comm_message.
-    job_id: str - (optional) - a string for the job id, as set by EE2.
-    rq_data: dict - the actual data of the request. Containers the request type,
-        job_id (sometimes), and other information that can be specific for
-        each request.
+    rq_data         dict    the actual data of the request. Contains the request
+        type and other parameters specific to the function to be performed
+
+    Optional:
+    job_id          str
+    job_id_list     list(str)
+    batch_id        str
+
+    The IDs of the job(s) to perform the function on.
+
     """
+
     def __init__(self, rq: dict):
+        self.raw_request = copy.deepcopy(rq)
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
         if self.rq_data is None:
-            raise ValueError("Improperly formatted job channel message!")
-        self.request = self.rq_data.get("request_type")
-        if self.request is None:
-            raise ValueError("Missing request type in job channel message!")
-        self.job_id = self.rq_data.get("job_id")
+            raise JobRequestException(INVALID_REQUEST_ERR)
+        self.request_type = self.rq_data.get("request_type")
+        if self.request_type is None:
+            raise JobRequestException(MISSING_REQUEST_TYPE_ERR)
 
+        input_type_count = 0
+        for input_type in [PARAM["JOB_ID"], PARAM["JOB_ID_LIST"], PARAM["BATCH_ID"]]:
+            if input_type in self.rq_data:
+                input_type_count += 1
+        if input_type_count > 1:
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
+
+    @property
+    def job_id(self):
+        if PARAM["JOB_ID"] in self.rq_data:
+            return self.rq_data[PARAM["JOB_ID"]]
+        raise JobRequestException(JOB_NOT_PROVIDED_ERR)
+
+    @property
+    def job_id_list(self):
+        if PARAM["JOB_ID_LIST"] in self.rq_data:
+            return self.rq_data[PARAM["JOB_ID_LIST"]]
+        if PARAM["JOB_ID"] in self.rq_data:
+            return [self.rq_data[PARAM["JOB_ID"]]]
+        raise JobRequestException(JOBS_NOT_PROVIDED_ERR)
+
+    @property
+    def batch_id(self):
+        if PARAM["BATCH_ID"] in self.rq_data:
+            return self.rq_data[PARAM["BATCH_ID"]]
+        raise JobRequestException(BATCH_NOT_PROVIDED_ERR)
+
+    def has_batch_id(self):
+        return PARAM["BATCH_ID"] in self.rq_data
+
+    @property
+    def cell_id_list(self):
+        if PARAM["CELL_ID_LIST"] in self.rq_data:
+            return self.rq_data[PARAM["CELL_ID_LIST"]]
+        raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
 
 class JobComm:
@@ -62,17 +132,14 @@ class JobComm:
     look up, this cancels itself.
 
     Allowed messages:
-    * all_status - return job state for all jobs in this Narrative.
     * job_status - return the job state for a single job (requires a job_id)
+    * job_status_all - return job state for all jobs in this Narrative.
     * job_info - return basic job info for a single job (requires a job_id)
-    * start_update_loop - starts a looping thread that runs returns all job info
-        for running jobs
-    * stop_update_loop - stops the automatic update loop
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
-    * job_logs - sends job logs back over the comm channel (requires a job id and first line)
-    * job_logs_latest - sends the most recent job logs over the comm channel (requires a job_id)
+    * retry_job - retries a job (requires a job_id)
+    * job_logs - sends job logs back over the comm channel (requires a job id)
     """
 
     # An instance of this class. It's meant to be a singleton, so this just gets created and
@@ -100,49 +167,57 @@ class JobComm:
             self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
         if self._jm is None:
-            self._jm = jobmanager.JobManager()
+            self._jm = JobManager()
         if self._msg_map is None:
             self._msg_map = {
-               "all_status": self._lookup_all_job_states,
-               "job_status": self._lookup_job_state,
-               "job_info": self._lookup_job_info,
-               "start_update_loop": self.start_job_status_loop,
-               "stop_update_loop": self.stop_job_status_loop,
-               "start_job_update": self._modify_job_update,
-               "stop_job_update": self._modify_job_update,
-               "cancel_job": self._cancel_job,
-               "job_logs": self._get_job_logs,
-               "job_logs_latest": self._get_job_logs
+                MESSAGE_TYPE["CANCEL"]: self._cancel_jobs,
+                MESSAGE_TYPE["CELL_JOB_STATUS"]: self._get_job_states_by_cell_id,
+                MESSAGE_TYPE["INFO"]: self._get_job_info,
+                MESSAGE_TYPE["LOGS"]: self._get_job_logs,
+                MESSAGE_TYPE["RETRY"]: self._retry_jobs,
+                MESSAGE_TYPE["START_UPDATE"]: self._modify_job_updates,
+                MESSAGE_TYPE["STATUS"]: self._get_job_states,
+                MESSAGE_TYPE["STATUS_ALL"]: self._get_all_job_states,
+                MESSAGE_TYPE["STOP_UPDATE"]: self._modify_job_updates,
             }
 
-    def _verify_job_id(self, req: JobRequest) -> None:
-        if req.job_id is None:
-            self.send_error_message("job_does_not_exist", req)
-            raise ValueError(f"Job id required to process {req.request} request")
+    def _get_job_ids(self, req: JobRequest = None):
+        if req.has_batch_id():
+            return self._jm.update_batch_job(req.batch_id)
 
-    def start_job_status_loop(self, *args, **kwargs) -> None:
+        try:
+            return req.job_id_list
+        except Exception as ex:
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
+
+    def start_job_status_loop(
+        self,
+        init_jobs: bool = False,
+        cell_list: List[str] = None,
+    ) -> None:
         """
-        Starts the job status lookup loop. This runs every 10 seconds.
-        This has the bare *args and **kwargs to handle the case where this comes in as a job
-        channel request (gets a JobRequest arg), or has the "init_jobs" kwarg.
+        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL seconds.
 
-        If init_jobs=True, this attempts to reinitialize the JobManager's list of known jobs
-        from the workspace.
+        :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
+            the JobManager's list of known jobs from the workspace.
+        :param cell_list: from FE, the list of extant cell IDs
         """
         self._running_lookup_loop = True
-        if kwargs.get("init_jobs", False):
+        if init_jobs:
             try:
-                self._jm.initialize_jobs()
+                self._jm.initialize_jobs(cell_list)
             except Exception as e:
                 error = {
                     "error": "Unable to get initial jobs list",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
-                    "service": "execution_engine2"
                 }
-                self.send_comm_message("job_init_err", error)
+                self.send_comm_message(MESSAGE_TYPE["ERROR"], error)
+                # if job init failed, set the lookup loop var back to False and return
+                self._running_lookup_loop = False
+                return
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
@@ -158,79 +233,95 @@ class JobComm:
 
     def _lookup_job_status_loop(self) -> None:
         """
-        Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
-        second loop to run itself again.
+        Run a loop that will look up job info. After running, this spawns a Timer thread on
+        a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
-        job_statuses = self._lookup_all_job_states(None)
-        if len(job_statuses) == 0 or not self._running_lookup_loop:
+        all_job_states = self._get_all_job_states()
+        if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
-            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+            self._lookup_timer = threading.Timer(
+                LOOKUP_TIMER_INTERVAL, self._lookup_job_status_loop
+            )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(self, req: JobRequest) -> dict:
+    def _get_all_job_states(
+        self, req: JobRequest = None, ignore_refresh_flag: bool = False
+    ) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        job_statuses = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.send_comm_message("job_status_all", job_statuses)
-        return job_statuses
+        all_job_states = self._jm.get_all_job_states(
+            ignore_refresh_flag=ignore_refresh_flag
+        )
+        self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
+        return all_job_states
 
-    def _lookup_job_info(self, req: JobRequest) -> dict:
+    def _get_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
         """
-        Looks up job info. This is just some high-level generic information about the running
+        Fetches status of all jobs associated with the given cell ID(s)
+        :param req: a JobRequest with the cell_id_list of interest
+        :returns: dict in the form
+        {
+            "jobs": {
+                # dict with job IDs as keys and job states as values
+                "job_one": { ... },
+                "job_two": { ... },
+            },
+            "mapping": {
+                # dict with cell IDs as keys and values being the set of job IDs associated
+                # with that cell
+                "cell_one": [ "job_one", "job_two", ... ],
+                "cell_two": [ ... ],
+            }
+        }
+        """
+        cell_job_states = self._jm.get_job_states_by_cell_id(
+            cell_id_list=req.cell_id_list
+        )
+        self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
+        return cell_job_states
+
+    def _get_job_info(self, req: JobRequest) -> dict:
+        """
+        Look up job info. This is just some high-level generic information about the running
         job, including the app id, name, and job parameters.
-        :param req: a JobRequest with the job_id of interest
-        :returns: a dict with the following keys:
+        :param req: a JobRequest with the job_id_list of interest
+        :returns: a dict keyed with job IDs and with values of dicts with the following keys:
             - app_id - str - module/name,
             - app_name - str - name of the app as it shows up in the Narrative interface
+            - batch_id - str - the batch parent ID (if appropriate)
             - job_id - str - just re-reporting the id string
             - job_params - dict - the params that were passed to that particular job
         """
-        self._verify_job_id(req)
-        try:
-            job_info = self._jm.lookup_job_info(req.job_id)
-            self.send_comm_message("job_info", job_info)
-            return job_info
-        except ValueError as e:
-            self.send_error_message("job_does_not_exist", req)
-            raise
+        job_id_list = self._get_job_ids(req)
+        job_info = self._jm.get_job_info(job_id_list)
+        self.send_comm_message(MESSAGE_TYPE["INFO"], job_info)
+        return job_info
 
-    def lookup_job_state(self, job_id: str) -> dict:
+    def __get_job_states(self, job_id_list) -> dict:
         """
-        This differs from the _lookup_job_state (underscored version) in that
-        it just takes a job_id string, not a JobRequest. It, however, functions the
-        same, by creating a JobRequest and forwarding it to the request version.
+        Look up job states.
 
-        Therefore, it sends the job message to the browser over the right channel,
-        and also returns the job state (or raises a ValueError if not found).
+        Returns a dictionary of job state information indexed by job ID.
         """
-        req = JobRequest({
-            "content": {
-                "data": {
-                    "request_type": "job_status",
-                    "job_id": job_id
-                }
-            }
-        })
-        return self._lookup_job_state(req)
+        output_states = self._jm.get_job_states(job_id_list)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
+        return output_states
 
-    def _lookup_job_state(self, req: JobRequest) -> dict:
+    def get_job_state(self, job_id: str) -> dict:
         """
-        Look up job state.
+        This differs from the _get_job_state (underscored version) in that
+        it just takes a job_id string, not a JobRequest.
         """
-        self._verify_job_id(req)
-        try:
-            job_state = self._jm.get_job_state(req.job_id)
-            self.send_comm_message("job_status", job_state)
-            return job_state
-        except ValueError as e:
-            # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
-            self.send_error_message("job_does_not_exist", req)
-            raise
+        return self.__get_job_states([job_id])
 
-    def _modify_job_update(self, req: JobRequest) -> None:
+    def _get_job_states(self, req: JobRequest) -> dict:
+        job_id_list = self._get_job_ids(req)
+        return self.__get_job_states(job_id_list)
+
+    def _modify_job_updates(self, req: JobRequest) -> dict:
         """
         Modifies how many things want to listen to a job update.
         If this is a request to start a job update, then this starts the update loop that
@@ -240,117 +331,181 @@ class JobComm:
         no longer anything requesting job status.
 
         If the given job_id in the request doesn't exist in the current Narrative, or is None,
-        this raises a ValueError.
+        this raises a JobRequestException.
         """
-        self._verify_job_id(req)
-        update_adjust = 1 if req.request == "start_job_update" else -1
-        self._jm.modify_job_refresh(req.job_id, update_adjust)
-        if update_adjust == 1:
+        job_id_list = self._get_job_ids(req)
+        update_type = req.request_type
+        if update_type == MESSAGE_TYPE["START_UPDATE"]:
+            update_refresh = True
+        elif update_type == MESSAGE_TYPE["STOP_UPDATE"]:
+            update_refresh = False
+        else:
+            # this should be impossible
+            raise JobRequestException("Unknown request")
+
+        self._jm.modify_job_refresh(job_id_list, update_refresh)
+
+        if update_refresh:
             self.start_job_status_loop()
 
-    def _cancel_job(self, req: JobRequest) -> None:
+        output_states = self._jm.get_job_states(job_id_list)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
+        return output_states
+
+    def _cancel_jobs(self, req: JobRequest) -> dict:
         """
-        This cancels a running job. If the job has already been canceled, then nothing is
-        done.
-        If the job doesn't exist (or the job id in the request is None), this raises a ValueError.
+        This cancels a running job.
+        If there are no valid jobs, this raises a JobRequestException.
         If there's an error while attempting to cancel, this raises a NarrativeError.
         In the end, after a successful cancel, this finishes up by fetching and returning the
         job state with the new status.
         """
-        self._verify_job_id(req)
-        try:
-            self._jm.cancel_job(req.job_id)
-        except ValueError as e:
-            self.send_error_message("job_does_not_exist", req)
-            raise
-        except NarrativeException as e:
-            self.send_error_message("job_comm_error", req, {
-                "error": "Unable to cancel job",
-                "message": getattr(e, "message", "Unknown reason"),
-                "code": getattr(e, "code", -1),
-                "name": getattr(e, "name", type(e).__name__)
-            })
-            raise
-        self._lookup_job_state(req)
+        job_id_list = self._get_job_ids(req)
+        cancel_results = self._jm.cancel_jobs(job_id_list)
+        self.send_comm_message(MESSAGE_TYPE["STATUS"], cancel_results)
+        return cancel_results
 
-    def _get_job_logs(self, req: JobRequest) -> None:
+    def _retry_jobs(self, req: JobRequest) -> dict:
+        job_id_list = self._get_job_ids(req)
+        retry_results = self._jm.retry_jobs(job_id_list)
+        self.send_comm_message(MESSAGE_TYPE["RETRY"], retry_results)
+        return retry_results
+
+    def _get_job_logs(self, req: JobRequest) -> dict:
         """
         This returns a set of job logs based on the info in the request.
         """
-        self._verify_job_id(req)
-        first_line = req.rq_data.get("first_line", 0)
-        num_lines = req.rq_data.get("num_lines", None)
-        latest_only = req.request == "job_logs_latest"
-        try:
-            (first_line, max_lines, logs) = self._jm.get_job_logs(
-                req.job_id, num_lines=num_lines, first_line=first_line, latest_only=latest_only)
-            self.send_comm_message("job_logs", {
-                "job_id": req.job_id,
-                "first": first_line,
-                "max_lines": max_lines,
-                "lines": logs,
-                "latest": latest_only
-            })
-        except ValueError as e:
-            self.send_error_message("job_does_not_exist", req)
-            raise
-        except NarrativeException as e:
-            self.send_error_message("job_comm_error", req, {
-                "error": "Unable to retrieve job logs",
-                "message": getattr(e, "message", "Unknown reason"),
-                "code": getattr(e, "code", -1),
-                "name": getattr(e, "name", type(e).__name__)
-            })
-            raise
+        job_id_list = self._get_job_ids(req)
+        log_output = self._jm.get_job_logs_for_list(
+            job_id_list,
+            num_lines=req.rq_data.get("num_lines", None),
+            first_line=req.rq_data.get("first_line", 0),
+            latest=req.rq_data.get("latest", False),
+        )
+        self.send_comm_message(MESSAGE_TYPE["LOGS"], log_output)
+        return log_output
 
-    def _handle_comm_message(self, msg: dict) -> None:
+    def _handle_comm_message(self, msg: dict) -> dict:
         """
         Handles comm messages that come in from the other end of the KBaseJobs channel.
-        Messages get translated into a JobRequest object, which is then passed to the
-        right handler, based on the request.
+        Messages get translated into one or more JobRequest objects, which are then
+        passed to the right handler, based on the request.
 
         A handler dictionary is created on JobComm creation.
 
-        Any unknown request is returned over the channel as a job_comm_error, and a
-        ValueError is raised.
+        Any unknown request is returned over the channel with message type 'job_error', and a
+        JobRequestException is raised.
         """
-        request = JobRequest(msg)
-        kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
-        if request.request in self._msg_map:
-            self._msg_map[request.request](request)
-        else:
-            self.send_comm_message("job_comm_error", {"message": "Unknown message", "request_type": request.request})
-            raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
+        with exc_to_msg(msg):
+            request = JobRequest(msg)
+
+            kblogging.log_event(
+                self._log, "handle_comm_message", {"msg": request.request_type}
+            )
+            if request.request_type not in self._msg_map:
+                raise JobRequestException(
+                    f"Unknown KBaseJobs message '{request.request_type}'"
+                )
+
+            return self._msg_map[request.request_type](request)
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
-        msg = {
-            "msg_type": msg_type,
-            "content": content
-        }
+        msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 
-    def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
+    def send_error_message(
+        self, req: Union[JobRequest, dict, str], content: dict = None
+    ) -> None:
         """
-        Sends a comm message over the KBaseJobs channel as an error. This will have msg_type as
-        whatever the error type is, and include the original request in the message content as
+        Sends a comm message over the KBaseJobs channel as an error. This will have msg_type set to
+        ERROR ('job_error'), and include the original request in the message content as
         "source".
+
+        req can be the original request message or its JobRequest form.
+        Since the latter is made from the former, they have the same information.
+        It can also be a string or None if this context manager is invoked outside of a JC request
 
         This sends a packet that looks like:
         {
-            job_id: (string, if relevant),
-            source: the original message that spawned the error,
+            request: the original JobRequest data object, function params, or function name
+            source: the function request that spawned the error
             other fields about the error, dependent on the content.
         }
         """
-        error_content = {
-            "job_id": req.job_id,
-            "source": req.request
-        }
+        error_content = {}
+        if isinstance(req, JobRequest):
+            error_content["request"] = req.rq_data
+            error_content["source"] = req.request_type
+        elif isinstance(req, dict):
+            data = req.get("content", {}).get("data", {})
+            error_content["request"] = data
+            error_content["source"] = data.get("request_type")
+        elif isinstance(req, str) or req is None:
+            error_content["request"] = req
+            error_content["source"] = req
+
         if content is not None:
             error_content.update(content)
-        self.send_comm_message(err_type, error_content)
 
+        self.send_comm_message(MESSAGE_TYPE["ERROR"], error_content)
+
+
+class exc_to_msg:
+    """
+    This is a context manager to wrap around JC code
+    """
+
+    jc = JobComm()
+
+    def __init__(self, req: Union[JobRequest, dict, str] = None):
+        """
+        req can be several different things because this context manager
+        supports being used in several different places. Generally it is
+        a request dict or request object, but when used outside of a request,
+        e.g., from appmanager, req can inform of the source of the JobComm
+        call
+        """
+        self.req = req
+
+    def __enter__(self):
+        pass  # nothing to do here
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        """
+        If exception is caught, will send job comm message in this format
+        {
+            "msg_type": ERROR,
+            "content": {
+                "source": "request_type",
+                "job_id": "0123456789abcdef",  # or job_id_list. optional and mutually exclusive
+                "name": "ValueError",
+                "message": "Something happened",
+                #---------- Below, NarrativeException only -----------
+                "code": -1,
+                "error": "Unable to complete this request"
+            }
+        }
+        Will then re-raise exception
+        """
+        if exc_type == NarrativeException:
+            self.jc.send_error_message(
+                self.req,
+                {
+                    "name": exc_value.name,
+                    "message": exc_value.message,
+                    "error": exc_value.error,
+                    "code": exc_value.code,
+                },
+            )
+        elif exc_type:
+            self.jc.send_error_message(
+                self.req,
+                {
+                    "name": exc_type.__name__,
+                    "message": str(exc_value),
+                },
+            )

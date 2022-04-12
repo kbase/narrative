@@ -1,14 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'AbundanceDataBoxplot'
-], function(Widget) {
-    describe('Test the AbundanceDataBoxplot widget', function() {
-        it('Should do things', function() {
+define(['AbundanceDataBoxplot', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
 
+    describe('The AbundanceDataBoxplot widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

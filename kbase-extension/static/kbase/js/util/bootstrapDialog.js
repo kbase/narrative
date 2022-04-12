@@ -1,12 +1,4 @@
-/*global define*/
-/*jslint white: true*/
-define ([
-    'bootstrap',
-    'jquery'
-], function (
-    bootstrap,
-    $
-) {
+define(['jquery', 'bootstrap'], ($) => {
     'use strict';
 
     /**
@@ -21,7 +13,7 @@ define ([
      *     alertOnly: create as an "alert" with a single "Close" button in the footer
      * }
      */
-    var BootstrapDialog = function (options) {
+    const BootstrapDialog = function (options) {
         this.$modal = $('<div class="modal fade" role="dialog">');
         this.$dialog = $('<div class="modal-dialog">');
         this.$dialogContent = $('<div class="modal-content">');
@@ -40,8 +32,9 @@ define ([
         if (options.alertOnly) {
             options.closeButton = true;
             options.buttons = [
-                $('<button type="button" class="btn btn-primary" data-dismiss="modal">')
-                    .text('Close')
+                $('<button type="button" class="btn btn-primary" data-dismiss="modal">').text(
+                    'Close'
+                ),
             ];
             options.enterToTrigger = true;
         }
@@ -54,9 +47,9 @@ define ([
             return;
         }
         if (options.closeButton === true) {
-            var $closeButton = $('<button type="button" class="close" data-dismiss="modal" aria-label="Close">')
-                              .append($('<span aria-hidden="true">')
-                                      .append('&times;'));
+            const $closeButton = $(
+                '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'
+            ).append($('<span aria-hidden="true">').append('&times;'));
             this.$header.append($closeButton);
         }
         if (options.title) {
@@ -71,9 +64,12 @@ define ([
         this.setButtons(options.buttons);
         this.$modal.append(
             this.$dialog.append(
-                this.$dialogContent.append(this.$header.append(this.$headerTitle))
-                                   .append(this.$dialogBody)
-                                   .append(this.$footer)));
+                this.$dialogContent
+                    .append(this.$header.append(this.$headerTitle))
+                    .append(this.$dialogBody)
+                    .append(this.$footer)
+            )
+        );
     };
 
     BootstrapDialog.prototype.setBody = function ($body) {
@@ -87,26 +83,23 @@ define ([
     BootstrapDialog.prototype.setButtons = function (buttonList) {
         this.$footer.empty();
         if (!buttonList || buttonList.length === 0) {
-            this.$footer.css({'border-top': 0});
+            this.$footer.css({ 'border-top': 0 });
             return;
+        } else {
+            this.$footer.css({ 'border-top': '' });
         }
-        else {
-            this.$footer.css({'border-top': ''});
-        }
-        for (var i=0; i<buttonList.length; i++) {
-            var $btn = buttonList[i];
+        for (let i = 0; i < buttonList.length; i++) {
+            const $btn = buttonList[i];
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {
-            this.$modal
-                .off('keypress')
-                .on('keypress', (function(e) {
-                    if (e.keyCode === 13) {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        this.$footer.find('button:last').trigger('click');
-                    }
-                }.bind(this)));
+            this.$modal.off('keypress').on('keypress', (e) => {
+                if (e.keyCode === 13) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.$footer.find('button:last').trigger('click');
+                }
+            });
         }
     };
 
@@ -126,19 +119,38 @@ define ([
         this.$modal.modal('show');
     };
 
-    BootstrapDialog.prototype.hide = function() {
+    BootstrapDialog.prototype.hide = function () {
         this.$modal.modal('hide');
     };
 
-    BootstrapDialog.prototype.getElement = function() {
+    BootstrapDialog.prototype.onHidden = function (handler) {
+        this.$modal.on('hidden.bs.modal', handler);
+    };
+
+    BootstrapDialog.prototype.onHide = function (handler) {
+        this.$modal.on('hide.bs.modal', handler);
+    };
+
+    BootstrapDialog.prototype.getElement = function () {
         return this.$modal;
     };
 
     /**
      * Removes this modal from the DOM and removes any associated content.
      */
-    BootstrapDialog.prototype.destroy = function() {
-        this.$modal.remove();
+    BootstrapDialog.prototype.destroy = function () {
+        try {
+            this.$modal.remove();
+        } catch (e) {
+            // eslint-disable-next-line no-empty
+        }
+
+        // clean up any backdrop items
+        if (document.querySelector('.modal-backdrop')) {
+            document.querySelector('.modal-backdrop').remove();
+        }
+        document.body.classList.remove('modal-open');
+
         this.$modal = null;
         return null;
     };

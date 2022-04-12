@@ -1,13 +1,10 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseTabTable'
-], function(Widget) {
-    describe('Test the kbaseTabTable widget', function() {
-        it('Should do things', function() {
+define(['kbaseTabTable', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
+
+    describe('Test the kbaseTabTable widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('Should do things', () => {
             expect(Widget).toBeDefined();
         });
     });

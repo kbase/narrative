@@ -1,42 +1,49 @@
-/*global define */
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'base/js/namespace',
     'narrativeConfig',
     'common/props',
     'common/clock',
-    './monoBus'
-], function (
-    $,
-    Jupyter,
-    Config,
-    Props,
-    Clock,
-    Bus
-) {
+    './monoBus',
+], ($, Jupyter, Config, Props, Clock, Bus) => {
     'use strict';
-    var narrativeConfig = Props.make({ data: Config.getConfig() });
+    const narrativeConfig = Props.make({ data: Config.getConfig() });
 
-    function factory(config) {
+    function factory(config = {}) {
+        const busArgs = config.bus || {};
+        let clock, theBus;
+
         function createRuntime() {
-            var bus = Bus.make();
+            theBus = Bus.make(busArgs);
 
-            var clock = Clock.make({
-                bus: bus,
-                resolution: 1000
+            clock = Clock.make({
+                bus: theBus,
+                resolution: 1000,
             });
             clock.start();
 
-            $(document).on('dataUpdated.Narrative', function () {
-                bus.emit('workspace-changed');
+            $(document).on('dataUpdated.Narrative', () => {
+                theBus.emit('workspace-changed');
             });
 
             return {
                 created: new Date(),
-                bus: bus,
-                env: Props.make({})
+                bus: theBus,
+                env: Props.make({}),
+                clock,
             };
+        }
+
+        function destroy() {
+            if (clock) {
+                clock.stop();
+            }
+            $(document).off('dataUpdated.Narrative');
+            if (theBus) {
+                theBus.destroy();
+            }
+            theBus = null;
+            window.kbaseRuntime = null;
         }
 
         /*
@@ -51,7 +58,6 @@ define([
         function bus() {
             return window.kbaseRuntime.bus;
         }
-
 
         // These are still module scope
 
@@ -68,19 +74,16 @@ define([
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            var settings = Jupyter.notebook.metadata.kbase.userSettings,
-                setting;
+            const settings = Jupyter.notebook.metadata.kbase.userSettings;
             if (!settings) {
                 return defaultValue;
             }
-            setting = settings[settingKey];
+            const setting = settings[settingKey];
             if (setting === undefined) {
                 return defaultValue;
             }
             return setting;
         }
-
-
 
         function setEnv(key, value) {
             window.kbaseRuntime.env.setItem(key, value);
@@ -104,20 +107,21 @@ define([
         }
 
         return {
-            authToken: authToken,
+            authToken,
             config: getConfig,
-            bus: bus,
-            getUserSetting: getUserSetting,
-            setEnv: setEnv,
-            getEnv: getEnv,
-            workspaceId: workspaceId,
-            userId: userId
+            bus,
+            getUserSetting,
+            setEnv,
+            getEnv,
+            workspaceId,
+            userId,
+            destroy,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

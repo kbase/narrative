@@ -1,21 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'jquery',
-    'kbaseNarrativeJobStatus'
-], function($, JobStatusWidget) {
-    describe('Test the kbaseNarrativeJobStatus widget', function() {
-        var dummyNode;
-        beforeEach(function() {
-            dummyNode = document.createElement('div');
-        });
+define(['kbaseNarrativeJobStatus', 'testUtil'], (JobStatusWidget, TestUtil) => {
+    'use strict';
 
-        it('Should load successfully', function() {
-            // var w = new JobStatusWidget($(dummyNode));
-            // expect(w).not.toBeNull();
+    describe('The kbaseNarrativeJobStatus widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+        it('Should be defined', () => {
+            expect(JobStatusWidget).toBeDefined();
+            expect(JobStatusWidget).toEqual(jasmine.any(Function));
         });
     });
 });

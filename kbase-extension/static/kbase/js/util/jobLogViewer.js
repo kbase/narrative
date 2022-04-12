@@ -1,1043 +1,356 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 /**
+ *
  * Usage:
- * let viewer = JobLogViewer.make();
+ * const viewer = new JobLogViewer({
+ *      showHistory: true,
+ *      logPollInterval: 250,
+ * });
  * viewer.start({
  *     jobId: <some job id>,
  *     node: <a DOM node>
  * })
+ *
+ * viewer.stop()
  */
 define([
     'bluebird',
     'common/runtime',
     'common/props',
     'common/ui',
-    'common/events',
     'common/fsm',
-    'kb_common/html',
-    'css!kbase/css/kbaseJobLog.css'
-], function(
-    Promise,
-    Runtime,
-    Props,
-    UI,
-    Events,
-    Fsm,
-    html
-) {
+    'common/jobs',
+    'common/jobCommMessages',
+    'common/html',
+    'common/runClock',
+    'common/errorDisplay',
+    'util/developerMode',
+], (Promise, Runtime, Props, UI, Fsm, Jobs, jcm, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
-    let t = html.tag,
+    const t = html.tag,
         div = t('div'),
         button = t('button'),
         span = t('span'),
         p = t('p'),
-        smallPanelHeight = '300px',
-        largePanelHeight = '600px',
-        numLines = 100,
-        panelHeight = smallPanelHeight,
-        // all the states possible, to be fed into the FSM.
-        appStates = [{
-            state: {
-                mode: 'new'
-            },
-            meta: {
-                description: 'Widget just created, do not yet know the state of the job'
-            },
-            ui: {
-                buttons: {
-                    enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
-                }
-            },
-            next: [{
-                mode: 'queued',
-                auto: true
-            },
-            {
-                mode: 'active',
-                auto: true
-            },
+        cssBaseClass = 'kb-log',
+        stateCssBaseClass = 'kb-job-state-viewer',
+        logContentStandardClass = `${cssBaseClass}__content`,
+        logContentExpandedClass = `${logContentStandardClass}--expanded`,
+        LOG_CONTAINER = 'log-container',
+        LOG_PANEL = 'log-panel',
+        LOG_LINES = 'log-lines';
 
-            {
-                mode: 'complete'
+    let logContentClass = logContentStandardClass;
+
+    const allButtons = ['expand', 'play', 'stop', 'top', 'bottom'];
+
+    // all the states possible, to be fed into the FSM.
+    const appStates = [
+        {
+            state: {
+                mode: 'new',
             },
-            {
-                mode: 'error'
+            meta: {
+                description: 'Widget just created, do not yet know the state of the job',
             },
-            {
-                mode: 'canceled'
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: allButtons,
+                },
             },
-            {
-                mode: 'job-not-found'
-            }
-            ]
+            next: [
+                {
+                    mode: 'queued',
+                    auto: true,
+                },
+                {
+                    mode: 'running',
+                    auto: true,
+                },
+                {
+                    mode: 'finished',
+                },
+                {
+                    mode: 'job-not-found',
+                },
+            ],
         },
         {
             state: {
                 mode: 'queued',
-                auto: true
+                auto: true,
             },
             meta: {
-                description: 'The job is queued, there are no logs yet.'
+                description: 'The job is queued, there are no logs yet.',
             },
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
-                }
+                    disabled: allButtons,
+                },
             },
-            next: [{
-                mode: 'active',
-                auto: false
-            },
-            {
-                mode: 'active',
-                auto: true
-            },
-            {
-                mode: 'complete'
-            },
-            {
-                mode: 'canceled'
-            },
-            {
-                mode: 'error'
-            }
+            next: [
+                {
+                    mode: 'running',
+                    auto: false,
+                },
+                {
+                    mode: 'running',
+                    auto: true,
+                },
+                {
+                    mode: 'finished',
+                },
             ],
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'on-queued'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-queued',
+                        },
+                    ],
                 },
                 resume: {
-                    messages: [{
-                        emit: 'on-queued'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-queued',
+                        },
+                    ],
                 },
                 exit: {
-                    messages: [{
-                        emit: 'exit-queued'
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'exit-queued',
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'active',
-                auto: true
+                mode: 'running',
+                auto: true,
             },
             meta: {
-                description: 'The Job is currently active, receiving log updates automatically'
+                description: 'The job is currently running, receiving log updates automatically',
             },
             ui: {
                 buttons: {
-                    enabled: ['stop', 'expand'],
-                    disabled: ['play', 'top', 'bottom']
-                }
+                    enabled: ['expand', 'stop', 'top', 'bottom'],
+                    disabled: ['play'],
+                },
             },
-            next: [{
-                mode: 'active',
-                auto: false
-            },
-            {
-                mode: 'active',
-                auto: true
-            },
-            {
-                mode: 'complete'
-            },
-            {
-                mode: 'canceled'
-            },
-            {
-                mode: 'error'
-            }
+            next: [
+                {
+                    mode: 'running',
+                    auto: false,
+                },
+                {
+                    mode: 'running',
+                    auto: true,
+                },
+                {
+                    mode: 'finished',
+                },
             ],
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'on-active'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-running',
+                        },
+                    ],
                 },
                 resume: {
-                    messages: [{
-                        emit: 'on-active'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-running',
+                        },
+                    ],
                 },
                 exit: {
-                    messages: [{
-                        emit: 'exit-active'
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'exit-running',
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'active',
-                auto: false
+                mode: 'running',
+                auto: false,
             },
             meta: {
-                description: 'The job is currently active, no automatic updates'
+                description: 'The job is currently running, no automatic updates',
             },
             ui: {
                 buttons: {
-                    enabled: ['play', 'top', 'bottom', 'expand'],
-                    disabled: ['stop']
-                }
+                    enabled: ['expand', 'play', 'top', 'bottom'],
+                    disabled: ['stop'],
+                },
             },
-            next: [{
-                mode: 'active',
-                auto: true
-            },
-            {
-                mode: 'active',
-                auto: false
-            },
-            {
-                mode: 'complete'
-            },
-            {
-                mode: 'error'
-            }
+            next: [
+                {
+                    mode: 'running',
+                    auto: true,
+                },
+                {
+                    mode: 'running',
+                    auto: false,
+                },
+                {
+                    mode: 'finished',
+                },
             ],
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'on-active-noauto'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-running-noauto',
+                        },
+                    ],
                 },
                 resume: {
-                    messages: [{
-                        emit: 'on-active-noauto'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-running-noauto',
+                        },
+                    ],
                 },
                 exit: {
-                    messages: [{
-                        emit: 'exit-active-noauto'
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'exit-running-noauto',
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'complete'
+                mode: 'finished',
             },
             ui: {
                 buttons: {
                     enabled: ['top', 'bottom', 'expand'],
-                    disabled: ['play', 'stop']
-                }
+                    disabled: ['play', 'stop'],
+                },
             },
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'on-complete'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-finished',
+                        },
+                    ],
                 },
                 resume: {
-                    messages: [{
-                        emit: 'on-complete'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-finished',
+                        },
+                    ],
                 },
-                exit: {
-                    messages: [{
-                        emit: 'exit-complete'
-                    }]
-                }
-            }
+            },
         },
         {
             state: {
-                mode: 'canceled'
-            },
-            ui: {
-                buttons: {
-                    enabled: ['top', 'bottom', 'expand'],
-                    disabled: ['play', 'stop']
-                }
-            },
-            on: {
-                enter: {
-                    messages: [{
-                        emit: 'on-canceled'
-                    }]
-                },
-                resume: {
-                    messages: [{
-                        emit: 'on-canceled'
-                    }]
-                },
-                exit: {
-                    messages: [{
-                        emit: 'exit-canceled'
-                    }]
-                }
-            }
-        },
-        {
-            state: {
-                mode: 'error'
-            },
-            ui: {
-                buttons: {
-                    enabled: ['top', 'bottom', 'expand'],
-                    disabled: ['play', 'stop']
-                }
-            },
-            on: {
-                enter: {
-                    messages: [{
-                        emit: 'on-error'
-                    }]
-                },
-                resume: {
-                    messages: [{
-                        emit: 'on-error'
-                    }]
-                },
-                exit: {
-                    messages: [{
-                        emit: 'exit-error'
-                    }]
-                }
-            }
-        },
-        {
-            state: {
-                mode: 'job-not-found'
+                mode: 'job-not-found',
             },
             meta: {
-                description: 'Job status returns a job not found error'
+                description: 'Job status returns a job not found error',
             },
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
-                }
+                    disabled: allButtons,
+                },
             },
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'on-job-not-found'
-                    }]
+                    messages: [
+                        {
+                            emit: 'on-job-not-found',
+                        },
+                    ],
                 },
                 resume: {
-                    messages: [{
-                        emit: 'on-job-not-found'
-                    }]
-                }
+                    messages: [
+                        {
+                            emit: 'on-job-not-found',
+                        },
+                    ],
+                },
             },
-            next: [{
-                mode: 'job-not-found'
-            }]
-        }
-        ];
+        },
+    ];
 
     /**
      * The entrypoint to this widget. This creates the job log viewer and initializes it.
      * Starting it is left as a lifecycle method for the caller.
      *
+     * config options:
+     *  showHistory   {boolean} - whether job status lines should include history
+     *                            (queue and run times)
+     *  logPollInterval {int}   - time in ms for how frequently to check for new logs
+     *  developerMode {boolean} - whether or not to enable developer mode, which
+     *                            prints out extra debugging information
      */
-    function factory() {
-        let runtime = Runtime.make(),
-            container,
-            jobId,
-            model,
-            ui,
-            linesPerPage = numLines,
-            fsm,
-            loopFrequency = 5000,
-            looping = false,
-            stopped = false,
-            listeningForJob = false,    // if true, this means we're listening for job updates
-            awaitingLog = false,        // if true, there's a log request fired that we're awaiting
-            requestLoop = null,         // the timeout object
-            scrollToEndOnNext = false;
 
-        // VIEW ACTIONS
-
-        function scheduleNextRequest() {
-            if (!looping) {
-                return;
-            }
-            requestLoop = window.setTimeout(() => {
-                requestLatestJobLog();
-            }, loopFrequency);
-        }
-
-        function stopAutoFetch() {
-            looping = false;
-            if (ui) {
-                ui.hideElement('spinner');
-            }
+    class JobLogViewerCore {
+        constructor(config = {}) {
+            this._init(config);
         }
 
         /**
-         * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
+         * Set up the Job Log Viewer class
+         * @param {object} config
          */
-        function startAutoFetch() {
-            if (looping || stopped) {
-                return;
-            }
-            var state = fsm.getCurrentState().state;
-            if (state.mode === 'active' && state.auto) {
-                looping = true;
-                fsm.newState({ mode: 'active', auto: true });
-                // stop the current timer if we have one.
-                if (requestLoop) {
-                    clearTimeout(requestLoop);
-                }
-                requestLatestJobLog();
-                // runtime.bus().emit('request-latest-job-log', {
-                //     jobId: jobId,
-                // });
-            }
-        }
+        _init(config) {
+            /* The data model for this widget contains all lines currently being shown, along with the indices for
+             * the first and last lines known.
+             * It also tracks the total lines currently available for the app, if returned.
+             * Lines is a list of small objects. Each object
+             * lines - list, each is a small object with keys (these are all post-processed after fetching):
+             *      line - string, the line text
+             *      isError - boolean, true if that line denotes an error
+             *      ts - int timestamp
+             *      lineNumber - int, what line this is
+             * firstLine - int, the first line we're tracking (inclusive)
+             * lastLine - int, the last line we're tracking (inclusive)
+             * totalLines - int, the total number of lines available from the server as of the last message.
+             */
 
-        /**
-         * Start automatically fetching logs - triggered by hitting the play button.
-         */
-        function doPlayLogs() {
-            fsm.updateState({
-                auto: true
+            this.model = Props.make({
+                data: {
+                    lines: [],
+                    firstLine: null,
+                    lastLine: null,
+                    totalLines: null,
+                },
             });
-            stopped = false;
-            startAutoFetch();
+            this.bus = config.jobManager ? config.jobManager.bus : Runtime.make().bus();
+            this.showHistory = config.showHistory || false;
+            this.logPollInterval = config.logPollInterval || 5000;
+            this.developerMode = config.devMode || devMode.mode;
+            this._resetVariables();
         }
 
-        /**
-         * Stop automatically fetching logs - triggered by hitting the stop button.
-         */
-        function doStopLogs() {
-            fsm.updateState({
-                auto: false
-            });
-            stopped = true;
-            stopAutoFetch();
-            if (requestLoop) {
-                clearTimeout(requestLoop);
-            }
-        }
-
-        /**
-         * Requests numLines (set in the factory method) log lines starting from the given firstLine.
-         * @param {int} firstLine
-         */
-        function requestJobLog(firstLine) {
-            ui.showElement('spinner');
-            awaitingLog = true;
-            runtime.bus().emit('request-job-log', {
-                jobId: jobId,
-                options: {
-                    first_line: firstLine,
-                    // num_lines: linesPerPage
-                }
-            });
-        }
-
-        function requestLatestJobLog() {
-            // only while job is running
-            // load numLines at a time
-            // otherwise load entire log
-            let autoState = fsm.getCurrentState().state.auto;
-            scrollToEndOnNext = true;
-            awaitingLog = true;
-            ui.showElement('spinner');
-            runtime.bus().emit('request-latest-job-log', {
-                jobId: jobId,
-                options: {
-                    // num_lines: linesPerPage
-                }
-            });
-        }
-
-        /**
-         * Scroll to the top of the job log
-         */
-        function doFetchFirstLogChunk() {
-            doStopLogs();
-            requestJobLog(0);
-            getLogPanel().scrollTo(0, 0);
-        }
-
-        /**
-         * scroll to the bottom of the job log
-         */
-        function doFetchLastLogChunk() {
-            doStopLogs();
-            requestLatestJobLog();
-        }
-
-        function toggleViewerSize() {
-            panelHeight = panelHeight === smallPanelHeight ? largePanelHeight : smallPanelHeight;
-            getLogPanel().style.height = panelHeight;
-        }
-
-        // VIEW
-        /**
-         * builds contents of panel-heading div
-         * @param {??} events
-         */
-        function renderControls(events) {
-            return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'expand',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Toggle log viewer size',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: toggleViewerSize
-                    })
-                }, [
-                    span({ class: 'fa fa-expand' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'play',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Start fetching logs',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doPlayLogs
-                    })
-                }, [
-                    span({ class: 'fa fa-play' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'stop',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Stop fetching logs',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doStopLogs
-                    })
-                }, [
-                    span({ class: 'fa fa-stop' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'top',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Jump to the top',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchFirstLogChunk
-                    })
-                }, [
-                    span({ class: 'fa fa-angle-double-up' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'bottom',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Jump to the end',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchLastLogChunk
-                    })
-
-                }, [
-                    span({ class: 'fa fa-angle-double-down' })
-                ]),
-                div({ dataElement: 'spinner', class: 'pull-right hidden' }, [
-                    span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
-                ])
-            ]);
-        }
-
-        /**
-         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
-         * have to move on, but I'm leaving this in here for now.
-         * There's something minor that I'm missing, I think, about how the scrolling gets
-         * managed.
-         * @param {ScrollEvent} e
-         */
-        function handlePanelScrolling(e) {
-            const panel = getLogPanel();
-            // if scroll is at the bottom, and there are more lines,
-            // get the next chunk.
-            if (panel.scrollTop === (panel.scrollHeight - panel.offsetHeight)) {
-                const curLast = model.getItem('lastLine');
-                if (curLast < model.getItem('totalLines')) {
-                    requestJobLog(curLast);
-                }
-            }
-            // if it's at the top, and we're not at line 0, get
-            // the previous chunk.
-            else if (panel.scrollTop === 0) {
-                const curFirst = model.getItem('firstLine');
-                if (curFirst > 0) {
-                    const reqLine = Math.max(0, curFirst - numLines);
-                    if (reqLine < curFirst) {
-                        requestJobLog(reqLine);
-                    }
-                }
-            }
-        }
-
-        /**
-         * builds contents of panel-body class
-         */
-        function renderLayout() {
-            const events = Events.make(),
-                content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
-                    div({ class: 'kblog-header' }, [
-                        div({ class: 'kblog-num-wrapper' }, [
-                            div({ class: 'kblog-line-num' }, [])
-                        ]),
-                        div({ class: 'kblog-text' }, [
-                            renderControls(events) // header
-                        ])
-                    ]),
-                    div({ dataElement: 'log-panel',
-                        style: {
-                            'overflow-y': 'scroll',
-                            height: panelHeight,
-                            transition: 'height 0.5s'
-                        }
-                    })
-                ]);
-
-            return {
-                content: content,
-                events: events
+        _resetVariables() {
+            this.lastJobState = {};
+            this.listenersByType = {};
+            this.lastMode = null;
+            this.requestLoop = null; // the timeout object
+            this.state = {
+                looping: false, // if true, the log viewer is automatically requesting log updates
+                stopped: false, // if true, we have stopped automatically fetching logs
+                listeningForJob: false, // if true, this means we're listening for job status updates
+                awaitingLog: false, // if true, there's a log request fired that we're awaiting
+                scrollToEndOnNext: false, // if true, the log viewer scrolls to keep up with incoming logs
             };
-        }
-
-        /**
-         * build and return div that displays
-         * individual job log line
-         * <div class="kblog-line">
-         *     <div class="kblog-num-wrapper">
-         *        <span class="kblog-line-num">###</span>
-         *        <span class="kblog-text">foobarbaz</span>
-         *     </div>
-         * </div>
-         * @param {object} line
-         */
-        function buildLine(line) {
-            // kblog-line wrapper div
-            const errorClass = line.isError ? ' kb-error' : '';
-            const kblogLine = document.createElement('div')
-            kblogLine.setAttribute('class', 'kblog-line' + errorClass);
-            // kblog-num-wrapper div
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.setAttribute('class', 'kblog-num-wrapper');
-            // number
-            const numDiv = document.createElement('div');
-            numDiv.setAttribute('class', 'kblog-line-num');
-            const lineNumber = document.createTextNode(line.lineNumber);
-            numDiv.appendChild(lineNumber);
-            // text
-            const textDiv = document.createElement('div');
-            textDiv.setAttribute('class', 'kblog-text');
-            const lineText = document.createTextNode(line.text);
-            textDiv.appendChild(lineText);
-            // append line number and text
-            wrapperDiv.appendChild(numDiv);
-            wrapperDiv.appendChild(textDiv);
-            // append wrapper to line div
-            kblogLine.appendChild(wrapperDiv);
-
-            return kblogLine;
-        }
-
-        function getLogPanel() {
-            return ui.getElement('log-panel');
-        }
-
-        /**
-         * onUpdate callback function (under model)
-         */
-        function render() {
-            const lines = model.getItem('lines');
-
-            if (lines) {
-                if (lines.length === 0) {
-                    ui.setContent('log-panel', 'No log entries to show.');
-                    return;
-                }
-
-                const panel = getLogPanel();
-                panel.innerHTML = '';
-                lines.forEach(line => panel.appendChild(buildLine(line)));
-
-                // if we're autoscrolling, scroll to the bottom
-                if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
-                    panel.scrollTo(0, panel.lastChild.offsetTop);
-                    scrollToEndOnNext = false;
-                }
-            } else {
-                ui.setContent('log-panel', 'No log entries to show.');
-            }
-        }
-
-        function handleJobStatusUpdate(message) {
-            // if the job is finished, we don't want to reflect
-            // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.status,
-                mode = fsm.getCurrentState().state.mode,
-                newState;
-            switch (mode) {
-            case 'new':
-                switch (jobStatus) {
-                case 'created':
-                case 'estimating':
-                case 'queued':
-                    startJobUpdates();
-                    newState = {
-                        mode: 'queued',
-                        auto: true
-                    };
-                    break;
-                case 'running':
-                    startJobUpdates();
-                    startAutoFetch();
-                    newState = {
-                        mode: 'active',
-                        auto: true
-                    };
-                    break;
-                case 'completed':
-                    requestJobLog(0);
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'complete'
-                    };
-                    break;
-                case 'error':
-                    requestJobLog(0);
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'terminated':
-                    requestJobLog(0);
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
-                default:
-                    stopJobUpdates();
-                    console.error('Unknown job status', jobStatus, message);
-                    throw new Error('Unknown job status ' + jobStatus);
-                }
-                break;
-            case 'queued':
-                switch (jobStatus) {
-                case 'created':
-                case 'estimating':
-                case 'queued':
-                    // no change
-                    break;
-                case 'running':
-                    newState = {
-                        mode: 'active',
-                        auto: true
-                    };
-                    break;
-                    // may happen that the job state jumps over in-progress...
-                case 'completed':
-                    newState = {
-                        mode: 'complete'
-                    };
-                    break;
-                case 'error':
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'terminated':
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
-                default:
-                    console.error('Unknown log status', jobStatus, message);
-                    throw new Error('Unknown log status ' + jobStatus);
-                }
-                break;
-            case 'active':
-                switch (jobStatus) {
-                case 'queued':
-                    // this should not occur!
-                    break;
-                case 'running':
-                    startAutoFetch();
-                    break;
-                case 'completed':
-                    newState = {
-                        mode: 'complete'
-                    };
-                    break;
-                case 'error':
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'terminated':
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
-                default:
-                    console.error('Unknown log status', jobStatus, message);
-                    throw new Error('Unknown log status ' + jobStatus);
-                }
-                break;
-            case 'complete':
-                switch (jobStatus) {
-                case 'completed':
-                    return;
-                default:
-                    // technically, an error, what to do?
-                    return;
-                }
-            case 'canceled':
-                switch (jobStatus) {
-                case 'terminated':
-                    return;
-                default:
-                    console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                    throw new Error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                }
-            case 'error':
-                switch (jobStatus) {
-                case 'error':
-                case 'suspend':
-                    // nothing to do;
-                    return;
-                default:
-                    // technically, an error, what to do?
-                    return;
-                }
-            default:
-                throw new Error('Mode ' + mode + ' not yet implemented');
-            }
-            if (newState) {
-                fsm.newState(newState);
-            }
-        }
-
-        function handleJobDoesNotExistUpdate(message) {
-            fsm.newState({ mode: 'job-not-found' });
-        }
-
-        var externalEventListeners = [];
-
-        function startEventListeners() {
-            var ev;
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-logs'
-                },
-                handle: function(message) {
-                    if (!awaitingLog) {
-                        return;
-                    }
-                    ui.hideElement('spinner');
-                    /* message has structure:
-                     * {
-                     *   jobId: string,
-                     *   latest: bool,
-                     *   logs: {
-                     *      first: int (first line of the log batch), 0-indexed
-                     *      job_id: string,
-                     *      latest: bool,
-                     *      max_lines: int (total logs available - if job is done, so is this),
-                     *      lines: [{
-                     *          is_error: 0 or 1,
-                     *          line: string,
-                     *          linepos: int, position in log. helpful!
-                     *          ts: timestamp
-                     *      }]
-                     *   }
-                     * }
-                     */
-                    awaitingLog = false;
-
-                    if (message.logs.lines.length !== 0) {
-                        const viewLines = message.logs.lines.map(function(line, index) {
-                            return {
-                                text: line.line,
-                                isError: (line.is_error === 1 ? true : false),
-                                lineNumber: line.linepos
-                            };
-                        });
-                        model.setItem('lines', viewLines);
-                        model.setItem('firstLine', message.logs.first + 1);
-                        model.setItem('lastLine', message.logs.first + viewLines.length);
-                        model.setItem('totalLines', message.logs.max_lines);
-                        render();
-                    }
-                    if (looping) {
-                        scheduleNextRequest();
-                    }
-                }
-            });
-            externalEventListeners.push(ev);
-
-            // An error may encountered during the job fetch on the back end. It is
-            // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
-            // TODO: we may want to rethink this. It might be beneficial to emit this as the
-            // original error, and let the widget sort it out? Or perhaps on the back end
-            // have the error emitted as a specific message. It is otherwise a little difficult
-            // to trace this.
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-log-deleted'
-                },
-                handle: function() {
-                    stopAutoFetch();
-                    render();
-                }
-            });
-            externalEventListeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: handleJobStatusUpdate
-
-            });
-            externalEventListeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-does-not-exist'
-                },
-                handle: handleJobDoesNotExistUpdate
-            });
-            externalEventListeners.push(ev);
-        }
-
-        function stopEventListeners() {
-            if (externalEventListeners) {
-                externalEventListeners.forEach(function(ev) {
-                    runtime.bus().removeListener(ev);
-                });
-            }
-        }
-
-        // LIFECYCLE API
-        function renderFSM() {
-            var state = fsm.getCurrentState();
-
-            // Button state
-            if (state.ui.buttons) {
-                state.ui.buttons.enabled.forEach(function(button) {
-                    ui.enableButton(button);
-                });
-                state.ui.buttons.disabled.forEach(function(button) {
-                    ui.disableButton(button);
-                });
-            }
-
-            // Element state
-            if (state.ui.elements) {
-                state.ui.elements.show.forEach(function(element) {
-                    ui.showElement(element);
-                });
-                state.ui.elements.hide.forEach(function(element) {
-                    ui.hideElement(element);
-                });
-            }
-        }
-
-        function doOnQueued(message) {
-            const noLogYet = {
-                lineNumber: undefined,
-                text: 'Job is queued, logs will be available when the job is running.'
-            }
-            const line = buildLine(noLogYet);
-            getLogPanel().appendChild(line);
-        }
-
-        function doExitQueued(message) {
-            ui.setContent('kb-log.panel', '');
-        }
-
-        function doJobNotFound(message) {
-            ui.setContent('kb-log.panel', div([
-                p([
-                    'No job found; logs cannot be displayed'
-                ])
-            ]));
-        }
-
-        function initializeFSM() {
-            // events emitted by the fsm.
-            fsm = Fsm.make({
-                states: appStates,
-                initialState: {
-                    mode: 'new'
-                },
-                onNewState: function(fsm) {
-                    renderFSM(fsm);
-                }
-            });
-            fsm.start();
-            fsm.bus.on('on-active', function() {
-                startAutoFetch();
-            });
-            fsm.bus.on('exit-active', function() {
-                stopAutoFetch();
-            });
-            fsm.bus.on('on-canceled', function() {
-                requestLatestJobLog();
-                stopJobUpdates();
-            });
-            fsm.bus.on('exit-canceled', function() {
-                //  nothing to do?
-            });
-            fsm.bus.on('on-queued', function(message) {
-                doOnQueued(message);
-            });
-            fsm.bus.on('exit-queued', function(message) {
-                doExitQueued(message);
-            });
-            fsm.bus.on('on-job-not-found', function(message) {
-                doJobNotFound(message);
-            });
-        }
-
-        function startJobUpdates() {
-            runtime.bus().emit('request-job-update', {
-                jobId: jobId
-            });
-            listeningForJob = true;
-        }
-
-        function stopJobUpdates() {
-            if (listeningForJob) {
-                listeningForJob = false;
-            }
         }
 
         /**
@@ -1048,89 +361,941 @@ define([
          *   - node - a DOM node where it will be hosted.
          *   - jobId - string, a job id for this log
          */
-        function start(arg) {
-            detach();  // if we're alive, remove ourselves before restarting
-            var hostNode = arg.node;
-            if (!hostNode) {
-                throw new Error('Requires a node to start');
-            }
-            jobId = arg.jobId;
-            if (!jobId) {
-                throw new Error('Requires a job id to start');
-            }
+        start(arg) {
+            const self = this;
+            return Promise.try(() => {
+                this.stop(); // if the log viewer had already been instantiated, shut it down
+                this._resetVariables();
 
-            container = hostNode.appendChild(document.createElement('div'));
-            ui = UI.make({ node: container });
+                this.container = arg.node;
+                if (!this.container) {
+                    throw new Error('Requires a node to start');
+                }
+                this.jobId = arg.jobId;
+                if (!this.jobId) {
+                    throw new Error('Requires a job id to start');
+                }
 
-            var layout = renderLayout();
-            container.innerHTML = layout.content;
-            layout.events.attachEvents(container);
+                this.ui = UI.make({ node: this.container });
+                this.container.innerHTML = this.renderLayout();
 
-            initializeFSM();
-            renderFSM();
-            startEventListeners();
+                // add event listeners to log control buttons
+                this.container.querySelectorAll(`.kb-log__controls button`).forEach((el) => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const dataButton = e.currentTarget.getAttribute('data-button');
+                        const actions = {
+                            expand: self.toggleViewerSize,
+                            play: self.doPlayLogs,
+                            stop: self.doStopLogs,
+                            top: self.doScrollToTop,
+                            bottom: self.doScrollToBottom,
+                        };
+                        if (actions[dataButton]) {
+                            actions[dataButton].bind(self)();
+                        }
+                    });
+                });
 
-            runtime.bus().emit('request-job-status', {
-                jobId: jobId
+                this.initializeFSM();
+                this.renderFsmState();
+                this.startEventListeners();
+
+                // if an initial job state object has been supplied, render it
+                if (arg.jobState && Jobs.isValidJobStateObject(arg.jobState)) {
+                    this.lastJobState = arg.jobState;
+                }
+
+                this.renderJobState(this.lastJobState || { job_id: this.jobId });
+
+                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                    [jcm.PARAM.JOB_ID]: this.jobId,
+                });
+                this.state.listeningForJob = true;
+            }).catch((err) => {
+                throw err;
             });
-            listeningForJob = true;
         }
 
-        function stop() {
-            stopEventListeners();
-            stopJobUpdates();
-            stopAutoFetch();
-            if (requestLoop) {
-                clearTimeout(requestLoop);
-            }
-            if (fsm) {
-                fsm.stop();
-            }
-            stopped = false;
-        }
-
-        function detach() {
-            stop();
-            if (container) {
-                container.remove();
-            }
-        }
-
-        // MAIN
-        /* The data model for this widget contains all lines currently being shown, along with the indices for
-         * the first and last lines known.
-         * It also tracks the total lines currently available for the app, if returned.
-         * Lines is a list of small objects. Each object
-         * lines - list, each is a small object with keys (these are all post-processed after fetching):
-         *      line - string, the line text
-         *      isError - boolean, true if that line denotes an error
-         *      ts - int timestamp
-         *      lineNumber - int, what line this is
-         * firstLine - int, the first line we're tracking (inclusive)
-         * lastLine - int, the last line we're tracking (inclusive)
-         * totalLines - int, the total number of lines available from the server as of the last message.
+        /**
+         * stop the widget, cancel any pending requests, and
+         * empty the widget container
          */
-        model = Props.make({
-            data: {
-                lines: [],
-                firstLine: null,
-                lastLine: null,
-                totalLines: null
+        stop() {
+            this.stopEventListeners();
+            this.stopJobStatusUpdates();
+            this.stopLogAutoFetch();
+            if (this.requestLoop) {
+                clearTimeout(this.requestLoop);
             }
-        });
+            if (this.fsm) {
+                this.fsm.stop();
+            }
+            if (this.runClock) {
+                this.runClock.stop();
+            }
+            this.state.stopped = false;
+            if (this.container) {
+                this.container.innerHTML = '';
+            }
+        }
 
-        // API
+        /**
+         * request regular job status updates
+         */
+        startJobStatusUpdates() {
+            this.bus.emit(jcm.MESSAGE_TYPE.START_UPDATE, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
+            });
+            this.state.listeningForJob = true;
+        }
 
-        return Object.freeze({
-            start: start,
-            stop: stop,
-            detach: detach
-        });
+        /**
+         * stop regular job status updates
+         */
+        stopJobStatusUpdates() {
+            this.state.listeningForJob = false;
+
+            if (this.state.awaitingLog) {
+                this.stopEventListeners([jcm.MESSAGE_TYPE.STATUS]);
+            } else {
+                this.stopEventListeners();
+            }
+        }
+
+        /**
+         * Requests log lines starting from the index supplied.
+         * Executed when the job is in states 'completed', 'terminated' or 'error'
+         * or if log auto fetch has been turned off
+         *
+         * @param {int} firstLine
+         */
+        requestJobLog(firstLine) {
+            this.ui.showElement('spinner');
+            this.state.awaitingLog = true;
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
+                first_line: firstLine,
+            });
+        }
+
+        /**
+         * Request all log lines
+         * Executed whilst the job is running
+         */
+        requestLatestJobLog() {
+            this.state.scrollToEndOnNext = true;
+            this.ui.showElement('spinner');
+            this.state.awaitingLog = true;
+            this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
+                [jcm.PARAM.JOB_ID]: this.jobId,
+                latest: true,
+            });
+        }
+
+        /**
+         * Add a job log request to the request loop
+         */
+        scheduleLogRequest() {
+            if (!this.state.looping) {
+                return;
+            }
+            this.requestLoop = window.setTimeout(() => {
+                this.requestLatestJobLog();
+            }, this.logPollInterval);
+        }
+
+        /**
+         * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
+         */
+        startLogAutoFetch() {
+            if (this.state.looping || this.state.stopped) {
+                return;
+            }
+            const { state } = this.fsm.getCurrentState();
+            if (state.mode === 'running' && state.auto) {
+                this.state.looping = true;
+                this.fsm.newState({ mode: 'running', auto: true });
+                // stop the current timer if we have one.
+                if (this.requestLoop) {
+                    clearTimeout(this.requestLoop);
+                }
+                this.requestLatestJobLog();
+            }
+        }
+
+        /**
+         * Stop automatically fetching the log
+         */
+        stopLogAutoFetch() {
+            this.state.looping = false;
+            if (this.ui) {
+                this.ui.hideElement('spinner');
+            }
+        }
+
+        /**
+         * Start automatically fetching logs - triggered by hitting the play button.
+         */
+        doPlayLogs() {
+            this.fsm.updateState({
+                auto: true,
+            });
+            this.state.stopped = false;
+            this.startLogAutoFetch();
+        }
+
+        /**
+         * Stop automatically fetching logs - triggered by hitting the stop button.
+         */
+        doStopLogs() {
+            this.fsm.updateState({
+                auto: false,
+            });
+            this.state.stopped = true;
+            this.stopLogAutoFetch();
+            if (this.requestLoop) {
+                clearTimeout(this.requestLoop);
+            }
+        }
+
+        // UI
+        getLogPanel() {
+            return this.ui.getElement(LOG_PANEL);
+        }
+
+        getLastLogLine() {
+            return this.ui.getElement(LOG_LINES).lastChild;
+        }
+
+        doScrollToTop() {
+            this.getLogPanel().scrollTo(0, 0);
+        }
+
+        doScrollToBottom() {
+            this.getLogPanel().scrollTo(0, this.getLastLogLine().offsetTop);
+        }
+
+        /**
+         * Scroll to the top of the job log
+         */
+        doFetchFirstLogChunk() {
+            // check the FSM state
+            // if the job is still queued or running, stop the current log fetch and get logs.
+            if (!Jobs.isTerminalStatus(this.fsm.getCurrentState().state.mode)) {
+                this.doStopLogs();
+                this.requestJobLog(0);
+            }
+            this.getLogPanel().scrollTo(0, 0);
+        }
+
+        /**
+         * scroll to the bottom of the job log
+         */
+        doFetchLastLogChunk() {
+            // if the FSM is not in a terminal state, stop the log fetch
+            // and get the latest logs
+            if (!Jobs.isTerminalStatus(this.fsm.getCurrentState().state.mode)) {
+                this.doStopLogs();
+                this.requestLatestJobLog();
+            }
+            this.getLogPanel().scrollTo(0, this.getLastLogLine().offsetTop);
+        }
+
+        /**
+         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
+         * have to move on, but I'm leaving this in here for now.
+         * There's something minor that I'm missing, I think, about how the scrolling gets
+         * managed.
+         * @param {ScrollEvent} e
+        handlePanelScrolling(e) {
+            const panel = getLogPanel();
+            // if scroll is at the bottom, and there are more lines,
+            // get the next chunk.
+            if (panel.scrollTop === panel.scrollHeight - panel.offsetHeight) {
+                const curLast = this.model.getItem('lastLine');
+                if (curLast < this.model.getItem('totalLines')) {
+                    requestJobLog(curLast);
+                }
+            }
+            // if it's at the top, and we're not at line 0, get
+            // the previous chunk.
+            else if (panel.scrollTop === 0) {
+                const curFirst = this.model.getItem('firstLine');
+                if (curFirst > 0) {
+                    const reqLine = Math.max(0, curFirst - numLines);
+                    if (reqLine < curFirst) {
+                        requestJobLog(reqLine);
+                    }
+                }
+            }
+        }
+        */
+
+        // UI Rendering
+
+        /**
+         * toggle the viewer class to switch between standard and expanded versions
+         */
+        toggleViewerSize() {
+            const logContentClassList = this.getLogPanel().classList;
+            let inactiveClass;
+            if (logContentClassList.contains(logContentStandardClass)) {
+                logContentClass = logContentExpandedClass;
+                inactiveClass = logContentStandardClass;
+            } else {
+                logContentClass = logContentStandardClass;
+                inactiveClass = logContentExpandedClass;
+            }
+            logContentClassList.add(logContentClass);
+            logContentClassList.remove(inactiveClass);
+        }
+
+        /**
+         * builds contents of panel-heading div with the log controls in it
+         */
+        renderControls() {
+            const buttons = [
+                {
+                    action: 'expand',
+                    title: 'Toggle log viewer size',
+                    icon: 'expand',
+                },
+                {
+                    action: 'play',
+                    title: 'Start fetching logs',
+                    icon: 'play',
+                },
+                {
+                    action: 'stop',
+                    title: 'Stop fetching logs',
+                    icon: 'stop',
+                },
+                {
+                    action: 'top',
+                    title: 'Jump to the top',
+                    icon: 'angle-double-up',
+                },
+                {
+                    action: 'bottom',
+                    title: 'Jump to the end',
+                    icon: 'angle-double-down',
+                },
+            ];
+
+            return div(
+                {
+                    dataElement: 'header',
+                    class: `${cssBaseClass}__controls`,
+                },
+                [
+                    buttons.map((b) => {
+                        return button(
+                            {
+                                class: `btn btn-sm btn-default ${cssBaseClass}__log_button--${b.action}`,
+                                dataToggle: 'tooltip',
+                                dataPlacement: 'top',
+                                title: b.title,
+                                dataButton: b.action,
+                            },
+                            [span({ class: `fa fa-${b.icon}` })]
+                        );
+                    }),
+                    div(
+                        {
+                            dataElement: 'spinner',
+                            class: `pull-right hidden ${cssBaseClass}__spinner`,
+                        },
+                        [span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' }), 'Fetching logs...']
+                    ),
+                ]
+            );
+        }
+
+        /**
+         * builds contents of panel-body class
+         */
+        renderLayout() {
+            const uniqueID = html.genId();
+            let content = div(
+                {
+                    class: `${cssBaseClass}__container`,
+                },
+                [
+                    div(
+                        {
+                            class: `${stateCssBaseClass}__container`,
+                        },
+                        [
+                            div({
+                                class: `${stateCssBaseClass}__status_line`,
+                                dataElement: 'status-line',
+                            }),
+                        ]
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__logs_container`,
+                            dataElement: LOG_CONTAINER,
+                        },
+                        [
+                            div(
+                                {
+                                    class: `${cssBaseClass}__logs_title collapsed`,
+                                    role: 'button',
+                                    dataToggle: 'collapse',
+                                    dataTarget: '#' + uniqueID,
+                                    ariaExpanded: 'false',
+                                    ariaControls: uniqueID,
+                                },
+                                [span({}, ['Logs'])]
+                            ),
+                            div(
+                                {
+                                    class: `${cssBaseClass}__logs_content_panel collapse`,
+                                    id: uniqueID,
+                                },
+                                [
+                                    this.renderControls(),
+                                    div({
+                                        dataElement: LOG_PANEL,
+                                        class: logContentClass,
+                                    }),
+                                ]
+                            ),
+                        ]
+                    ),
+                ]
+            );
+
+            if (this.developerMode) {
+                const devDiv = div(
+                    {
+                        dataElement: 'dev',
+                        class: `${cssBaseClass}__dev_container`,
+                    },
+                    [
+                        div(
+                            {
+                                class: `${cssBaseClass}__dev_container--jobId`,
+                            },
+                            [
+                                'Job ID: ' +
+                                    span(
+                                        {
+                                            dataElement: 'job-id',
+                                        },
+                                        this.jobId
+                                    ),
+                            ]
+                        ),
+                        div(
+                            {
+                                class: `${cssBaseClass}__dev_container--jobState`,
+                            },
+                            [
+                                'Job state: ' +
+                                    span({
+                                        dataElement: 'job-state',
+                                    }),
+                            ]
+                        ),
+                        div(
+                            {
+                                class: `${cssBaseClass}__dev_container--fsmState`,
+                            },
+                            [
+                                'Widget state: ' +
+                                    span({
+                                        dataElement: 'widget-state',
+                                    }),
+                            ]
+                        ),
+                    ]
+                );
+                content = div([devDiv, content]);
+            }
+
+            return content;
+        }
+
+        /**
+         * render the HTML structure that displays
+         * an individual job log line
+         * <ol class="${cssBaseClass}__log_line_container">
+         *    <li class="${cssBaseClass}__line_text">starting job</div>
+         *    <li class="${cssBaseClass}__line_text">initialising variables</div>
+         *    ...
+         * </ol>
+         * @param {object} line
+         */
+        renderLogLine(line) {
+            const errorSuffix = line.isError ? '--error' : '';
+            return t('li')(
+                {
+                    class: `${cssBaseClass}__line_text${errorSuffix}`,
+                },
+                line.text
+            );
+        }
+
+        /**
+         * Render the log
+         *
+         * This replaces the log wholesale with the content of model.getItem('lines')
+         * rather than keeping track of which lines have and haven't been rendered.
+         */
+        renderLog() {
+            const lines = this.model.getItem('lines');
+            if (!lines || lines.length === 0) {
+                this.ui.setContent(LOG_PANEL, 'No log entries to show.');
+                return;
+            }
+
+            const panel = this.getLogPanel();
+            panel.innerHTML = t('ol')(
+                {
+                    class: `${cssBaseClass}__log_line_container`,
+                    dataElement: LOG_LINES,
+                },
+                lines.map((line) => this.renderLogLine(line)).join('\n')
+            );
+
+            // if we're autoscrolling, scroll to the bottom
+            if (this.fsm.getCurrentState().state.auto || this.state.scrollToEndOnNext) {
+                panel.scrollTo(0, this.getLastLogLine().offsetTop);
+                this.state.scrollToEndOnNext = false;
+            }
+        }
+
+        /**
+         * debugging function to display the current widget state
+         */
+        renderWidgetState() {
+            if (this.developerMode) {
+                this.ui.setContent(
+                    'dev.widget-state',
+                    JSON.stringify(
+                        {
+                            fsm: this.fsm.getCurrentState().state,
+                            state: this.state,
+                        },
+                        null,
+                        1
+                    )
+                );
+            }
+        }
+
+        /**
+         * Generate lines describing the job status
+         *
+         * @param {object} jobState
+         * @returns {array[string]} array of HTML strings describing the job state
+         */
+        renderJobStatusLines(jobState) {
+            const lines = Jobs.createJobStatusLines(jobState, this.showHistory);
+
+            return lines.map((line) =>
+                div(
+                    {
+                        class: `${stateCssBaseClass}__job_status_detail`,
+                    },
+                    line
+                )
+            );
+        }
+
+        /**
+         * Render a div containing the current job status and error information
+         *
+         * @param {object} jobState
+         */
+        renderJobState(jobState) {
+            const isError = jobState.status === 'error';
+
+            if (this.runClock) {
+                this.runClock.stop();
+            }
+
+            this.ui.setContent(
+                'status-line',
+                [
+                    div(
+                        {
+                            class: `${stateCssBaseClass}__job_status_detail_container`,
+                        },
+                        this.renderJobStatusLines(jobState)
+                    ),
+                    div({
+                        class: `${stateCssBaseClass}__error_container`,
+                        dataElement: 'error-container',
+                    }),
+                ].join('\n')
+            );
+
+            if (this.developerMode) {
+                this.ui.setContent('dev.job-state', JSON.stringify(jobState, null, 1));
+                this.renderWidgetState();
+            }
+
+            if (jobState.status === 'running') {
+                this.runClock = RunClock.make({
+                    prefix: ', ',
+                    suffix: ' ago',
+                });
+                this.runClock
+                    .start({
+                        node: this.ui.getElement('status-line.clock'),
+                        startTime: jobState.running,
+                    })
+                    .catch((err) => {
+                        console.warn('Clock problem:', err);
+                        this.ui.setContent('status-line.clock', '');
+                    });
+                return;
+            }
+
+            if (isError) {
+                const errorModel = Props.make({
+                    data: {
+                        exec: {
+                            jobState,
+                        },
+                    },
+                });
+                const errorContent = ErrorDisplay.make({
+                    model: errorModel,
+                });
+                errorContent.start({
+                    node: this.ui.getElement('status-line.error-container'),
+                });
+            }
+        }
+
+        /**
+         * Update the log control buttons
+         * Also renders the widget state if debugging mode is on
+         */
+        renderFsmState() {
+            const state = this.fsm.getCurrentState();
+            this.renderWidgetState();
+            // Button state
+            if (state.ui.buttons) {
+                // the log controls section may have been removed
+                // so use try/catch to suppress any errors
+                state.ui.buttons.enabled.forEach((_button) => {
+                    try {
+                        this.ui.enableButton(_button);
+                    } catch (err) {
+                        // eslint-disable-next-line no-empty
+                    }
+                });
+                state.ui.buttons.disabled.forEach((_button) => {
+                    try {
+                        this.ui.disableButton(_button);
+                    } catch (err) {
+                        // eslint-disable-next-line no-empty
+                    }
+                });
+            }
+        }
+
+        initializeFSM() {
+            const self = this;
+            this.fsm = Fsm.make({
+                states: appStates,
+                initialState: {
+                    mode: 'new',
+                },
+                onNewState: () => {
+                    self.renderFsmState();
+                },
+            });
+            this.fsm.start();
+            // events emitted by the fsm.
+            this.fsm.bus.on('on-queued', () => {
+                self.startJobStatusUpdates();
+            });
+            this.fsm.bus.on('on-running', () => {
+                self.startLogAutoFetch();
+            });
+            this.fsm.bus.on('on-finished', () => {
+                self.stopLogAutoFetch();
+                self.stopJobStatusUpdates();
+            });
+            this.fsm.bus.on('on-job-not-found', () => {
+                self.doJobNotFound();
+            });
+        }
+
+        // FSM events
+
+        doOnQueued() {
+            this.ui.setContent(
+                LOG_PANEL,
+                p(['Job is queued; logs will be available when the job is running.'])
+            );
+        }
+
+        doExitQueued() {
+            // clear the content of the job panel to make way for logs
+            this.ui.setContent(LOG_PANEL, '');
+        }
+
+        doJobNotFound() {
+            // clear the log container
+            this.ui.setContent(LOG_CONTAINER, '');
+            this.state.awaitingLog = false;
+            // slightly hacky way to get the appropriate job status lines
+            this.renderJobState({
+                job_id: '',
+                status: 'does_not_exist',
+            });
+            this.stopJobStatusUpdates();
+        }
     }
 
+    const LogHandlerMixin = (Base) =>
+        class extends Base {
+            handleJobStatusUpdate(message) {
+                // do nothing if the jobState object is not valid
+                if (!Jobs.isValidJobStateObject(message.jobState)) {
+                    return;
+                }
+
+                const jobStatus =
+                        message.jobState && message.jobState.status
+                            ? message.jobState.status
+                            : null,
+                    { mode } = this.fsm.getCurrentState().state;
+
+                if (jobStatus === 'does_not_exist') {
+                    this.fsm.newState({ mode: 'job-not-found' });
+                    return;
+                }
+
+                // nothing has changed since last time.
+                if (jobStatus === this.lastJobState.status && mode === this.lastMode) {
+                    return;
+                }
+
+                this.lastJobState = message.jobState;
+                this.lastMode = mode;
+                const statusToMode = {
+                    created: 'queued',
+                    estimating: 'queued',
+                    queued: 'queued',
+                    running: 'running',
+                    completed: 'finished',
+                    error: 'finished',
+                    terminated: 'finished',
+                };
+                const newMode = statusToMode[jobStatus] ? statusToMode[jobStatus] : null;
+                let newState;
+
+                switch (mode) {
+                    case 'new':
+                        switch (newMode) {
+                            case 'queued':
+                                this.startJobStatusUpdates();
+                                this.doOnQueued();
+                                newState = {
+                                    mode: 'queued',
+                                    auto: true,
+                                };
+                                break;
+                            case 'running':
+                                this.startJobStatusUpdates();
+                                this.startLogAutoFetch();
+                                newState = {
+                                    mode: jobStatus,
+                                    auto: true,
+                                };
+                                break;
+                            case 'finished':
+                                this.requestJobLog(0);
+                                this.stopJobStatusUpdates();
+                                newState = {
+                                    mode: 'finished',
+                                };
+                                break;
+                            default:
+                                this.stopJobStatusUpdates();
+                                console.error('Unknown job status', jobStatus, message);
+                                throw new Error(`Unknown job status ${jobStatus}`);
+                        }
+                        break;
+                    case 'queued':
+                        switch (newMode) {
+                            case 'queued':
+                                // no change
+                                break;
+                            case 'running':
+                                this.doExitQueued();
+                                newState = {
+                                    mode: jobStatus,
+                                    auto: true,
+                                };
+                                break;
+                            case 'finished':
+                                this.requestJobLog(0);
+                                this.stopJobStatusUpdates();
+                                newState = {
+                                    mode: 'finished',
+                                };
+                                break;
+                            default:
+                                this.stopJobStatusUpdates();
+                                console.error('Unknown job status', jobStatus, message);
+                                throw new Error(`Unknown job status ${jobStatus}`);
+                        }
+                        break;
+                    case 'running':
+                        switch (newMode) {
+                            case 'queued':
+                                // this should not occur!
+                                break;
+                            case 'running':
+                                this.startLogAutoFetch();
+                                break;
+                            case 'finished':
+                                this.requestJobLog(0);
+                                // the FSM turns off log fetch and status updates
+                                newState = {
+                                    mode: 'finished',
+                                };
+                                break;
+                            default:
+                                console.error('Unknown job status', jobStatus, message);
+                                throw new Error(`Unknown job status ${jobStatus}`);
+                        }
+                        break;
+                    case 'finished':
+                        this.stopJobStatusUpdates();
+                        // mode should be 'finished' for all statuses
+                        // if not, some sort of error has occurred
+                        return;
+                    default:
+                        console.error('Unknown job status', jobStatus, message);
+                        throw new Error(`Unknown job status ${jobStatus}`);
+                }
+                if (newState) {
+                    this.renderJobState(this.lastJobState);
+                    this.fsm.newState(newState);
+                }
+            }
+
+            handleJobLogs(message) {
+                if (!this.state.awaitingLog) {
+                    return;
+                }
+
+                this.ui.hideElement('spinner');
+                /* message has structure:
+                 * {
+                 *      first: int (first line of the log batch), 0-indexed
+                 *      job_id: string,
+                 *      latest: bool,
+                 *      max_lines: int (total logs available - if job is done, so is this),
+                 *      lines: [{
+                 *          is_error: 0 or 1,
+                 *          line: string,
+                 *          linepos: int, position in log. helpful!
+                 *          ts: timestamp
+                 *      }]
+                 * }
+                 */
+                this.state.awaitingLog = false;
+
+                if (message.error) {
+                    return this.handleLogDeleted(message);
+                }
+                if (message.lines.length !== 0) {
+                    const viewLines = message.lines.map((line) => {
+                        return {
+                            text: line.line,
+                            isError: line.is_error === 1 ? true : false,
+                            lineNumber: line.linepos,
+                        };
+                    });
+                    this.model.setItem('lines', viewLines);
+                    this.model.setItem('firstLine', message.first + 1);
+                    this.model.setItem('lastLine', message.first + viewLines.length);
+                    this.model.setItem('totalLines', message.max_lines);
+                    this.renderLog();
+                }
+                if (this.state.looping) {
+                    this.scheduleLogRequest();
+                }
+                // no longer listening for job => remove any existing event listeners
+                if (!this.state.listeningForJob) {
+                    this.stopEventListeners();
+                }
+            }
+
+            handleLogDeleted(message) {
+                this.stopLogAutoFetch();
+                this.renderLog();
+                this.state.awaitingLog = false;
+                console.error(
+                    `Error retrieving log for ${this.jobId}: ${JSON.stringify(
+                        message.error,
+                        null,
+                        1
+                    )}`
+                );
+            }
+        };
+
+    const EventListenerMixin = (Base) =>
+        class extends Base {
+            /**
+             * set up the listeners for the log viewer
+             */
+            startEventListeners() {
+                const handlers = {
+                    LOGS: this.handleJobLogs,
+                    STATUS: this.handleJobStatusUpdate,
+                };
+
+                Object.keys(handlers).forEach((type) => {
+                    // ensure that the correct `this` context is bound
+                    const handle = handlers[type].bind(this);
+                    // listen for job-related bus messages
+                    this.listenersByType[jcm.MESSAGE_TYPE[type]] = this.bus.listen({
+                        channel: { [jcm.CHANNEL.JOB]: this.jobId },
+                        key: { type: jcm.MESSAGE_TYPE[type] },
+                        handle: (message) => {
+                            if (this.jobId in message) {
+                                handle(message[this.jobId]);
+                            }
+                        },
+                    });
+                }, this);
+            }
+
+            /**
+             * Stop the specified listener(s) or all listeners. Listeners are specified as an array
+             * of strings, which should be keys in the `listenersByType` object.
+             *
+             * If no arguments are supplied, all listeners will be removed.
+             *
+             * @param {array{string}} listeners
+             */
+            stopEventListeners(listeners = []) {
+                if (!listeners.length) {
+                    listeners = Object.keys(this.listenersByType);
+                }
+                this.bus.removeListeners(listeners.map((l) => this.listenersByType[l]));
+            }
+        };
+
+    class JobLogViewer extends EventListenerMixin(LogHandlerMixin(JobLogViewerCore)) {}
+
     return {
-        make: function(config) {
-            return factory();
-        }
+        JobLogViewer,
+        cssBaseClass,
+        stateCssBaseClass,
     };
 });

@@ -1,49 +1,49 @@
-define([
-    'require',
-    'bluebird'
-], function(
-    require,
-    Promise) {
+define(['require', 'bluebird', '../validation'], (require, Promise, Validator) => {
     'use strict';
 
-    var typeToValidatorModule = {
-        string: 'text',
-        int: 'int',
-        float: 'float',
+    const typeToValidator = {
+        string: Validator.validateTextString,
+        int: Validator.validateIntString,
+        float: Validator.validateFloatString,
+    };
+
+    const typeToValidatorModule = {
         sequence: 'sequence',
         struct: 'struct',
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
         subdata: 'subdata',
-        customSubdata: 'customSubdata',
+        customSubdata: 'subdata',
         custom: 'custom',
-        dynamicDropdown: 'dynamicDropdown'
+        dynamicDropdown: 'dynamicDropdown',
     };
 
-    function getValidatorModule(fieldSpec) {
-        var moduleName = typeToValidatorModule[fieldSpec.data.type];
-        if (!moduleName) {
-            throw new Error('No validator for type: ' + fieldSpec.data.type);
-        }
-        return moduleName;
-    }
-
-    function validate(fieldValue, fieldSpec) {
-        return new Promise(function(resolve, reject) {
-            try {
-                var validatorModule = getValidatorModule(fieldSpec);
-            } catch (ex) {
-                reject(ex);
+    function validate(fieldValue, fieldSpec, options) {
+        return new Promise((resolve, reject) => {
+            const fieldType = fieldSpec.data.type;
+            if (!(fieldType in typeToValidatorModule) && !(fieldType in typeToValidator)) {
+                reject(new Error(`No validator for type: ${fieldType}`));
+            } else if (fieldType in typeToValidator) {
+                resolve(
+                    typeToValidator[fieldType](
+                        fieldValue,
+                        fieldSpec.data.constraints || {},
+                        options || {}
+                    )
+                );
+            } else {
+                require(['./' + typeToValidatorModule[fieldType]], (validator) => {
+                    resolve(validator.validate(fieldValue, fieldSpec, options));
+                }, (err) => {
+                    console.error('error while loading');
+                    console.error(JSON.stringify(err));
+                    reject(err);
+                });
             }
-            require(['./' + validatorModule], function(validator) {
-                resolve(validator.validate(fieldValue, fieldSpec));
-            }, function(err) {
-                reject(err);
-            });
         });
     }
 
     return {
-        validate: validate
-    }
+        validate,
+    };
 });

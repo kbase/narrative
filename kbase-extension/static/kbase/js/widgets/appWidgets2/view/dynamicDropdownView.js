@@ -1,39 +1,26 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validators/text',
-    'common/events',
-    'common/ui',
-    'common/props',
-    '../inputUtils',
-
-    'bootstrap',
-    'css!font-awesome'
-], function(
+define(['bluebird', 'common/html', 'common/ui', 'common/props', 'bootstrap'], (
     Promise,
     html,
-    Validation,
-    Events,
     UI,
-    Props,
-    inputUtils
-) {
+    Props
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: () => {},
+            });
+        let parent, container, ui;
 
         // CONTROL
 
@@ -51,10 +38,12 @@ define([
                 return;
             }
             model.setItem('value', value);
+            syncModelToControl();
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
+            syncModelToControl();
         }
 
         // sync the dom to the model.
@@ -64,90 +53,65 @@ define([
 
         // DOM & RENDERING
 
-        function makeViewControl(events) {
-            return select({
-                class: 'form-control',
-                readonly: true,
-                dataElement: 'input',
-                disabled: true
-            }, [
-                option({})
-            ]);
+        function makeViewControl() {
+            return select(
+                {
+                    class: 'form-control',
+                    readonly: true,
+                    dataElement: 'input',
+                    disabled: true,
+                },
+                [option({})]
+            );
         }
 
-        function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
-        }
-
-        // EVENT HANDLERS
-
-        /*
-            Focus the input control.
-        */
-        function doFocus() {
-            var node = ui.getElement('input-container.input');
-            if (node) {
-                node.focus();
-            }
+        function render() {
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl()]
+            );
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-
-                var events = Events.make();
-                container.innerHTML = render(events);
-                events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
+                container.innerHTML = render();
+                setModelValue(config.initialValue);
                 syncModelToControl();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('focus', function() {
-                    doFocus();
+                bus.on('update', (message) => {
+                    setModelValue(message.value);
                 });
-                // bus.emit('sync');
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
             });
         }
 
-        // INIT
-
-        model = Props.make({
-            data: {
-                value: null
-            },
-            onUpdate: function() {}
-        });
-
-        setModelValue(config.initialValue);
-
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

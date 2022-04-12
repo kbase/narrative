@@ -6,10 +6,7 @@
 {% block stylesheet %}
 {{super()}}
 <style type="text/css">
-/* disable initial hide */
-div#header, div#site {
-    display: block;
-}
+  #header, #site { display: block }
 </style>
 {% endblock %}
 
@@ -22,15 +19,15 @@ div#header, div#site {
 
 {% block site %}
 
-<div class="error" data-code={{status_code}}>
+<div id="error_container" class="generic-error__container" data-code={{status_code}}>
     {% block h1_error %}
-    <p style="font-weight: bold">
+    <p class="generic-error__heading">
         An error occurred while loading this Narrative
     </p>
     {% endblock h1_error %}
     {% block error_detail %}
         {% if message %}
-            <p>{{message}}</p>
+            <p class="generic-error__text">{{message}}</p>
         {% endif %}
     {% endblock %}
 </div>

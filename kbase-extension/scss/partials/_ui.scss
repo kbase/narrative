@@ -1,0 +1,13 @@
+// styles extracted from elements genenrated by common/ui.js
+
+.kb-ui {
+  &__icon,
+  &__button_label {
+    vertical-align: middle;
+  }
+
+  &__text--na {
+    color: use-color('orange');
+    font-style: italic;
+  }
+}

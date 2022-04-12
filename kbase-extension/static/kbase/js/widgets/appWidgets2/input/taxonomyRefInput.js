@@ -1,97 +1,54 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
-    'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'common/validation',
+    'common/html',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
-    'util/timeFormat',
     'kb_sdk_clients/genericClient',
+    '../validators/constants',
 
     'select2',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Data,
-    TimeFormat,
-    GenericClient) {
+], (Promise, $, html, Events, Runtime, UI, GenericClient, Constants) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        cssBaseClass = 'kb-select2-taxonomy-ref';
 
     function factory(config) {
-        var spec = config.parameterSpec,
-            parent,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             model = {
-                value: undefined
-            },
-            eventListeners = [];
+                value: undefined,
+            };
+        let parent, container, ui;
 
         function makeInputControl() {
-            var selectOptions;
-            var selectElem = select({
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
-
-            return selectElem;
+            return select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')]
+            );
         }
 
         // CONTROL
 
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-            // if (selected.length === 0) {
-            //     return;
-            // }
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            // return selected.item(0).value;
+            const control = ui.getElement('input-container.input');
             return $(control).val();
         }
 
         function setControlValue(value) {
-            // console.log('setting control value', value);
-            var stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = value;
-            }
-
-            var control = ui.getElement('input-container.input');
-
-            // NB id used as String since we are comparing it below to the actual dom
-            // element id
-            // var currentSelectionId = String(model.availableValuesMap[stringValue]);
-
+            const control = ui.getElement('input-container.input');
             $(control).val(value).trigger('change.select2');
         }
 
@@ -117,78 +74,67 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var value = getControlValue();
-
-                // console.log('value', value);
-
+            return Promise.try(() => {
+                const value = getControlValue();
                 return {
                     isValid: true,
                     validated: true,
-                    diagnosis: 'valid',
+                    diagnosis: Constants.DIAGNOSIS.VALID,
                     errorMessage: null,
                     value: value,
-                    parsedValue: value
+                    parsedValue: value,
                 };
             });
         }
 
         function doChange() {
-            validate()
-                .then(function(result) {
-                    // console.log('validated??', result);
-                    if (result.isValid) {
-                        model.value = result.parsedValue;
-                        channel.emit('changed', {
-                            newValue: result.parsedValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then((result) => {
+                if (result.isValid) {
+                    model.value = result.parsedValue;
+                    channel.emit('changed', {
+                        newValue: result.parsedValue,
                     });
+                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
+                    model.value = spec.data.nullValue;
+                    channel.emit('changed', {
+                        newValue: spec.data.nullValue,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function doTemplateResult(item) {
-            // console.log('template', item);
-            if (!item.id) {
-                return $(div({
-                    style: {
-                        display: 'block',
-                        height: '20px'
-                    }
-                }, item.label || ''));
-            }
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        class: `${cssBaseClass}__item`,
+                    },
+                    item.label || ''
+                )
+            );
         }
 
         function doTemplateSelection(item) {
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        class: `${cssBaseClass}__item`,
+                    },
+                    item.label
+                )
+            );
         }
 
-        var totalItems;
-        var currentPage;
-        var currentStartItem;
-        var pageSize = 10;
+        const pageSize = 10;
 
         function doTaxonomySearch(data) {
-            var term = data.q;
-            var page = data.page;
-            var startItem;
+            const term = data.q;
+            const page = data.page;
+            let startItem;
             if (page) {
                 startItem = pageSize * (page - 1);
             } else {
@@ -196,135 +142,132 @@ define([
             }
 
             // globals
-            currentPage = page;
-            currentStartItem = startItem;
-            var start = new Date().getTime();
-
-            var taxonClient = new GenericClient({
+            const startTime = new Date().getTime();
+            const taxonClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
-                // version: 'dev',
-                token: Runtime.make().authToken()
+                token: Runtime.make().authToken(),
             });
-            return taxonClient.callFunc('search_taxonomy', [{
-                    private: 0,
-                    public: 1,
-                    search: term,
-                    limit: pageSize,
-                    start: startItem
-                }])
-                .then(function(result) {
-                    var elapsed = new Date().getTime() - start;
-                    console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
-                    totalItems = result[0].num_of_hits;
+            return taxonClient
+                .callFunc('search_taxonomy', [
+                    {
+                        private: 0,
+                        public: 1,
+                        search: term,
+                        limit: pageSize,
+                        start: startItem,
+                    },
+                ])
+                .then((result) => {
+                    const elapsedTime = new Date().getTime() - startTime;
+                    // eslint-disable-next-line no-console
+                    console.log(
+                        'Loaded data ' +
+                            result[0].hits.length +
+                            ' items of ' +
+                            result[0].num_of_hits +
+                            ' in ' +
+                            elapsedTime +
+                            'ms'
+                    );
                     return result[0];
-                })
+                });
         }
 
         function getTaxonomyItem(taxonObject) {
-            // console.log('get taxonomy', taxonObject);
-            var ref = taxonObject,
+            const ref = taxonObject,
                 taxonClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
-                    // version: 'dev',
-                    token: Runtime.make().authToken()
+                    token: Runtime.make().authToken(),
                 });
-            return taxonClient.callFunc('get_scientific_name', [ref])
-                .then(function(result) {
-                    if (result.length === 0) {
-                        throw new Error('Cannot find taxon: ' + ref);
-                    }
-                    if (result.length > 1) {
-                        throw new Error('Too many taxa found for ' + ref);
-                    }
-                    // simulate the result from the taxonomy service
-                    return [{
+            return taxonClient.callFunc('get_scientific_name', [ref]).then((result) => {
+                if (result.length === 0) {
+                    throw new Error('Cannot find taxon: ' + ref);
+                }
+                if (result.length > 1) {
+                    throw new Error('Too many taxa found for ' + ref);
+                }
+                // simulate the result from the taxonomy service
+                return [
+                    {
                         id: taxonObject,
-                        label: result[0]
-                    }];
-                })
+                        label: result[0],
+                    },
+                ];
+            });
         }
 
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
-                    inputControl = makeInputControl(events),
+            return Promise.try(() => {
+                const events = Events.make(),
+                    inputControl = makeInputControl(),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
-                    templateResult: doTemplateResult,
-                    templateSelection: doTemplateSelection,
-                    minimumInputLength: 2,
-                    escapeMarkup: function(markup) {
-                        return markup;
-                    },
-                    initSelection: function(element, callback) {
-                        var currentValue = model.value;
-                        if (!currentValue) {
-                            return;
-                        }
-                        getTaxonomyItem(currentValue)
-                            .then(function(taxon) {
-                                // console.log('TAXON', taxon);
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        templateResult: doTemplateResult,
+                        templateSelection: doTemplateSelection,
+                        minimumInputLength: 2,
+                        escapeMarkup: function (markup) {
+                            return markup;
+                        },
+                        initSelection: function (element, callback) {
+                            const currentValue = model.value;
+                            if (!currentValue) {
+                                return;
+                            }
+                            getTaxonomyItem(currentValue).then((taxon) => {
                                 callback(taxon);
                             });
-                    },
-                    formatMoreResults: function(page) {
-                        return "more???";
-                    },
-                    language: {
-                        loadingMore: function(arg) {
-                            // console.log('ARG', arg);
-                            return html.loading('Loading more scientific names');
-                        }
-                    },
-                    ajax: {
-                        service: 'myservice',
-                        dataType: 'json',
-                        delay: 500,
-                        data: function(params) {
-                            return {
-                                q: params.term,
-                                page: params.page
-                            };
                         },
-                        processResults: function(data, params) {
-                            // console.log('processing', data, params);
-                            params.page = params.page || 1;
-                            return {
-                                results: data.hits,
-                                pagination: {
-                                    more: (params.page * pageSize) < data.num_of_hits
-                                }
-                            }
+                        language: {
+                            loadingMore: function () {
+                                return html.loading('Loading more scientific names');
+                            },
                         },
-                        transport: function(options, success, failure) {
+                        ajax: {
+                            service: 'myservice',
+                            dataType: 'json',
+                            delay: 500,
+                            data: function (params) {
+                                return {
+                                    q: params.term,
+                                    page: params.page,
+                                };
+                            },
+                            processResults: function (data, params) {
+                                params.page = params.page || 1;
+                                return {
+                                    results: data.hits,
+                                    pagination: {
+                                        more: params.page * pageSize < data.num_of_hits,
+                                    },
+                                };
+                            },
+                            transport: function (options, success, failure) {
+                                let status = null;
 
-                            var status = null;
-
-                            doTaxonomySearch(options.data)
-                                .then(function(results) {
-                                    success(results);
-                                })
-                                .catch(function(err) {
-                                    status = 'error';
-                                    failure();
-                                });
-                            // console.log('transport got ', options);
-
-                            return {
-                                status: status
-                            };
-                        }
-                    }
-                }).on('change', function() {
-                    doChange();
-                });
+                                doTaxonomySearch(options.data)
+                                    .then((results) => {
+                                        success(results);
+                                    })
+                                    .catch(() => {
+                                        status = 'error';
+                                        failure();
+                                    });
+                                return {
+                                    status: status,
+                                };
+                            },
+                        },
+                    })
+                    .on('change', () => {
+                        doChange();
+                    });
                 events.attachEvents(container);
-
             });
         }
 
@@ -334,42 +277,35 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
-        // function syncModelToControl() {
-        //     if (!model.value) {
-        //         // set empty control...
-        //     }
-
-        // }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -379,50 +315,41 @@ define([
                     model.value = config.initialValue;
                 }
 
-                render()
-                    .then(function() {
-
-                        channel.on('reset-to-defaults', function() {
-                            resetModelValue();
-                        });
-                        channel.on('update', function(message) {
-                            setModelValue(message.value);
-                        });
-                        // bus.channel().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        // bus.emit('sync');
-
-                        setControlValue(getModelValue());
-                        autoValidate();
+                render().then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
-                    parent.removeChild(container);
+                    $(ui.getElement('input-container.input')).off('change');
+                    $(ui.getElement('input-container.input')).select2('destroy');
+                    container.remove();
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
-                    runtime.bus().removeListener(id);
-                });
             });
         }
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

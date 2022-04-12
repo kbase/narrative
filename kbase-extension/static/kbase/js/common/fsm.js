@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 /*
  * fsm.js
  *
@@ -8,39 +5,21 @@
  *
  */
 
-define([
-    './unodep',
-    'common/runtime'
-], function(
-    utils,
-    Runtime
-) {
+define(['underscore', 'common/runtime'], (_, Runtime) => {
     'use strict';
 
-
     function factory(config) {
-        var allStates = config.states,
+        const allStates = config.states,
             initialState = config.initialState,
-            fallbackState = config.fallbackState,
-            currentState,
-            api,
-            timer, newStateHandler = config.onNewState;
+            newStateHandler = config.onNewState;
+        let currentState, timer;
 
-        var runtime = Runtime.make();
+        const runtime = Runtime.make();
 
         // We get our own bus for emitting state-change events
         // on. This lets us cleanly disengage when we are done.
-        var busConnection = runtime.bus().connect(),
+        const busConnection = runtime.bus().connect(),
             bus = busConnection.channel(null);
-
-        /*
-         * Validate the state machine configuration 'states'.
-         */
-        function validate() {
-            // find initial state
-
-            // ...
-        }
 
         function run() {
             if (!newStateHandler) {
@@ -49,19 +28,19 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(() => {
                 try {
                     timer = null;
                     newStateHandler(api);
                 } catch (ex) {
-                    console.error('ERROR in fms newStateHandler', ex);
+                    console.error('ERROR in FSM newStateHandler', ex);
                 }
             }, 0);
         }
 
         function findState(stateToFind) {
-            var foundStates = allStates.filter(function(stateDef) {
-                return utils.isEqual(stateToFind, stateDef.state);
+            const foundStates = allStates.filter((stateDef) => {
+                return _.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
                 return foundStates[0];
@@ -70,21 +49,18 @@ define([
                 console.error('state error: multiple states found:', stateToFind, foundStates);
                 throw new Error('state error: multiple states found');
             }
-
         }
 
         function doMessages(changeType) {
-            var state = currentState;
-            if (state.on && state.on[changeType]) {
-                if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach(function(msg) {
-                        if (msg.emit) {
-                            bus.emit(msg.emit, msg.message);
-                        } else if (msg.send) {
-                            bus.send(msg.send.message, msg.send.address);
-                        }
-                    });
-                }
+            const state = currentState;
+            if (state.on && state.on[changeType] && state.on[changeType].messages) {
+                state.on[changeType].messages.forEach((msg) => {
+                    if (msg.emit) {
+                        bus.emit(msg.emit, msg.message);
+                    } else if (msg.send) {
+                        bus.send(msg.send.message, msg.send.address);
+                    }
+                });
             }
         }
 
@@ -92,17 +68,9 @@ define([
             doMessages('resume');
         }
 
-        function doEnterState() {
-            doMessages('enter');
-        }
-
-        function doLeaveState() {
-            doMessages('leave');
-        }
-
         function findNextState(stateList, stateToFind) {
-            var foundStates = stateList.filter(function(state) {
-                if (utils.isEqual(state, stateToFind)) {
+            const foundStates = stateList.filter((state) => {
+                if (_.isEqual(state, stateToFind)) {
                     return true;
                 }
             });
@@ -120,35 +88,34 @@ define([
                 // to transition. Or someone is missing something.
                 return;
             }
-            var state = findNextState(currentState.next, nextState);
+            const state = findNextState(currentState.next, nextState);
             if (!state) {
                 console.error('Cannot not find new state', nextState, currentState);
                 throw new Error('Cannot find the new state');
             }
 
-            var newState = findState(state);
-            if (!newState) {
+            const _newState = findState(state);
+            if (!_newState) {
                 throw new Error('Next state found, but that state does not exist');
             }
 
-            if (utils.isEqual(newState.state, currentState.state)) {
+            if (_.isEqual(_newState.state, currentState.state)) {
                 return;
             }
 
             doMessages('exit');
 
             // make it the current state
-            currentState = newState;
+            currentState = _newState;
 
             doMessages('enter');
-
 
             run();
         }
 
         function updateState(nextState) {
-            var updatedState = JSON.parse(JSON.stringify(currentState.state));
-            Object.keys(nextState).forEach(function(key) {
+            const updatedState = JSON.parse(JSON.stringify(currentState.state));
+            Object.keys(nextState).forEach((key) => {
                 updatedState[key] = nextState[key];
             });
             newState(updatedState);
@@ -165,7 +132,7 @@ define([
             if (!startingState) {
                 startingState = initialState;
             }
-            var state = findState(startingState);
+            const state = findState(startingState);
             if (!state) {
                 console.error('FSM: initial state could not be found', startingState);
                 throw new Error('Cannot find initial state');
@@ -177,29 +144,26 @@ define([
             doResumeState();
         }
 
-        function stop() {
-
-        }
+        function stop() {}
 
         // API
 
-        api = Object.freeze({
-            start: start,
-            stop: stop,
-            newState: newState,
-            updateState: updateState,
-            getCurrentState: getCurrentState,
-            findState: findState,
-            bus: bus
+        const api = Object.freeze({
+            start,
+            stop,
+            newState,
+            updateState,
+            getCurrentState,
+            findState,
+            bus,
         });
 
         return api;
     }
 
-
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,53 +1,33 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
-    'base/js/namespace',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     'common/props',
-    'kb_service/client/userAndJobState',
-    'kb_service/client/shock',
-    '../validators/text',
-
+    '../validation',
 
     'bootstrap',
-    'css!font-awesome'
-], function (
-    Promise,
-    $,
-    Jupyter,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Props,
-    UJS,
-    Shock,
-    Validation
-) {
+], (Promise, html, Events, UI, Runtime, Props, Validation) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
-        input = t('input'),
-        table = t('table'),
-        tr = t('tr'),
-        td = t('td');
+        input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
-            hostNode,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
+        let hostNode, container, ui;
 
         // MODEL
 
@@ -70,26 +50,24 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-        // CONTROL 
+        // CONTROL
 
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
         }
 
-
         // VALIDATION
 
         function validate(value) {
-            return Promise.try(function () {
-                return Validation.validate(value, spec);
+            return Promise.try(() => {
+                return Validation.validateTextString(value, spec.data.constraints);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function (result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         function makeViewControl(currentValue) {
@@ -97,44 +75,44 @@ define([
                 class: 'form-control',
                 readonly: true,
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
         function render() {
-            Promise.try(function () {
-                var events = Events.make(),
+            Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeViewControl(model.value, events);
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-            .then(function () {
+            }).then(() => {
                 return autoValidate();
             });
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({ node: arg.node });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -146,19 +124,17 @@ define([
                 autoValidate();
                 syncModelToControl();
 
-
-                channel.on('reset-to-defaults', function (message) {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function (message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
-                // channel.emit('sync');
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (container) {
                     hostNode.removeChild(container);
                 }
@@ -166,25 +142,15 @@ define([
             });
         }
 
-        model = Props.make({
-            data: {
-                value: null
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            }
-        });
-
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

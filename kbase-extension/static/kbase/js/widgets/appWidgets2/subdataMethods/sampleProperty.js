@@ -1,22 +1,18 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-], function () {
+define([], () => {
     'use strict';
 
     function factory(config) {
         // PRIVATE
-        
-        function getSampleProperties (columnsMetadata) {
-            var samplePropertiesHash = {};
+
+        function getSampleProperties(columnsMetadata) {
+            const samplePropertiesHash = {};
             console.log('column metadata', columnsMetadata);
-            Object.keys(columnsMetadata).forEach(function (columnId) {                
-                var columnMetadata = columnsMetadata[columnId],
+            Object.keys(columnsMetadata).forEach((columnId) => {
+                let columnMetadata = columnsMetadata[columnId],
                     seriesID = null,
                     propName = null;
 
-                columnMetadata.forEach(function (pv) {
+                columnMetadata.forEach((pv) => {
                     if (pv.category === 'DataSeries' && pv.property_name === 'SeriesID') {
                         seriesID = pv.property_value;
                     } else if (pv.category === 'Property' && pv.property_name === 'Name') {
@@ -29,21 +25,23 @@ define([
                 }
             });
 
-            return Object.keys(samplePropertiesHash).map(function (seriesId) {
-                return {
-                    id: seriesId,
-                    text: samplePropertiesHash[seriesId]
-                };
-            }).sort(function (a, b) {
-                return a.text > b.text ? 1 : -1;
-            });
+            return Object.keys(samplePropertiesHash)
+                .map((seriesId) => {
+                    return {
+                        id: seriesId,
+                        text: samplePropertiesHash[seriesId],
+                    };
+                })
+                .sort((a, b) => {
+                    return a.text > b.text ? 1 : -1;
+                });
         }
-        
+
         // PUBLIC
-        
+
         function extractItems(result, params) {
-            var columnMetadata = result[0].data.metadata.column_metadata;
-            
+            const columnMetadata = result[0].data.metadata.column_metadata;
+
             return getSampleProperties(columnMetadata);
         }
 
@@ -51,22 +49,21 @@ define([
             return {
                 params: {
                     referenceObject: 'input_sample_property_matrix',
-                    dependencies: ['input_sample_property_matrix']
+                    dependencies: ['input_sample_property_matrix'],
                 },
-                included: ["metadata/column_metadata"],
-                extractItems: extractItems
+                included: ['metadata/column_metadata'],
+                extractItems: extractItems,
             };
         }
 
         return {
-            getMethod: getMethod
+            getMethod: getMethod,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

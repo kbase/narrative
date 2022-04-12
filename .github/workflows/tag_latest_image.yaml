@@ -1,0 +1,55 @@
+---
+name: Tag Latest Image
+on:
+  pull_request:
+    branches:
+    - main
+    - develop
+    types:
+    - closed
+
+jobs:
+  docker_tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out GitHub Repo
+      with:
+        ref: "${{ github.event.pull_request.head.sha }}"
+      uses: actions/checkout@v2
+    -
+      name: Log in to the Container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
+    -
+      name: Set up environment
+      run: |
+        if [ ${{ github.base_ref }} == 'develop' ]; then
+            branch="-""${{ github.base_ref }}"
+        else
+            branch=""
+        fi
+        narrative_version=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
+        echo "APP_IMAGE_TAG=ghcr.io/${{ github.repository }}${branch}:pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+        echo "APP_VERSION_IMAGE_TAG=ghcr.io/${{ github.repository }}${branch}_version:pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+        echo "BRANCH=${branch}" >> $GITHUB_ENV
+        echo "VERSION=${narrative_version}" >> $GITHUB_ENV
+
+    - name: Tag and Push to Packages
+      if: github.event.pull_request.draft == false
+      run: |
+        docker pull ${{ env.APP_IMAGE_TAG }}
+        docker tag ${{ env.APP_IMAGE_TAG }} ghcr.io/${{ github.repository }}${{ env.BRANCH }}:latest
+        docker tag ${{ env.APP_IMAGE_TAG }} ghcr.io/${{ github.repository }}${{ env.BRANCH }}:${{ env.VERSION }}
+        docker push ghcr.io/${{ github.repository }}${{ env.BRANCH }}:latest
+        docker push ghcr.io/${{ github.repository }}${{ env.BRANCH }}:${{ env.VERSION }}
+
+        docker pull ${{ env.APP_VERSION_IMAGE_TAG }}
+        docker tag ${{ env.APP_VERSION_IMAGE_TAG }} ghcr.io/${{ github.repository }}${{ env.BRANCH }}_version:latest
+        docker tag ${{ env.APP_VERSION_IMAGE_TAG }} ghcr.io/${{ github.repository }}${{ env.BRANCH }}_version:${{ env.VERSION }}
+        docker push ghcr.io/${{ github.repository }}${{ env.BRANCH }}_version:latest
+        docker push ghcr.io/${{ github.repository }}${{ env.BRANCH }}_version:${{ env.VERSION }}
+        docker images

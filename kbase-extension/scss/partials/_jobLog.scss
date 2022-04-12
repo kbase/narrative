@@ -1,0 +1,142 @@
+$counter-name: code-list-counter;
+
+%line_container {
+  @include fixed-width;
+
+  counter-reset: $counter-name;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+%line_text {
+  @include fixed-width;
+
+  counter-increment: $counter-name;
+  padding-left: 5rem;
+  position: relative;
+  white-space: normal;
+}
+
+.kb-log {
+  // .kb-log__container
+  &__container {
+    @include body-text;
+  }
+  // .kb-log__dev_container
+  &__dev_container {
+    @include body-text;
+
+    padding-bottom: 2rem;
+  }
+  // .kb-log__controls
+  &__controls {
+    margin: 2rem 0;
+  }
+  // .kb-log__content,
+  // .kb-log__content--expanded
+  &__content,
+  &__content--expanded {
+    @include zero-box;
+
+    background-color: use-color('base-lightest');
+    overflow: scroll;
+    transition: height 0.5s;
+  }
+  // .kb-log__content
+  &__content {
+    max-height: $line-height-spacious*12;
+    // .kb-log__content--expanded
+    &--expanded {
+      max-height: $line-height-spacious*30;
+    }
+    p {
+      margin: 1rem;
+    }
+  }
+  // .kb-log__log_line_container
+  &__log_line_container {
+    @extend %line_container;
+    // .kb-log__log_line_container--error
+    &--error {
+      @extend %line_container;
+
+      background-color: use-color('error-lightest');
+    }
+  }
+  // .kb-log__line_text
+  // .kb-log__line_text--error
+  &__line_text,
+  &__line_text--error {
+    @extend %line_text;
+
+    &::before {
+      content: counter($counter-name);
+      left: 1rem;
+      position: absolute;
+    }
+  }
+  // .kb-log__line_text
+  &__line_text {
+    background-color: use-color('base-lightest');
+    color: use-color('ink');
+    // .kb-log__line_text--error
+    &--error {
+      background-color: use-color('error-lightest');
+      color: use-color('error-darker');
+    }
+  }
+  // .kb-log__logs_title
+  &__logs_title {
+    @include font-h4;
+
+    margin-top: 1rem;
+  }
+  // .kb-log__spinner
+  &__spinner {
+    @include base-text;
+    @include zero-box;
+
+    padding: 0.5rem 1rem;
+  }
+}
+
+.kb-job-params {
+  &__params {
+    // .kb-job-params__params_container
+    &_container {
+      @include body-text;
+    }
+    // .kb-job-params__params_title
+    &_title {
+      @include font-h4;
+
+      margin-top: 1rem;
+    }
+  }
+  // .kb-job-params__param_list
+  &__param_list {
+    @include body-text;
+
+    list-style-type: none;
+    margin: 1rem 0;
+    padding: 0;
+  }
+}
+
+.kb-job-state-viewer {
+  // .kb-job-state-viewer__container
+  &__container {
+    @include body-text;
+  }
+  // .kb-job-state-viewer__job_status_detail_container
+  &__job_status_detail_container {
+    div:first-of-type {
+      font-weight: 700;
+    }
+  }
+  // .kb-job-state-viewer__error_container
+  &__error_container.kb-error-display__container {
+    padding: 0;
+  }
+}

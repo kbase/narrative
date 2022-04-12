@@ -1,0 +1,88 @@
+// modules/fonts
+
+@font-face {
+  font-family: 'Glyphicons Halflings';
+  src: url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot);
+  src:
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix) format('embedded-opentype'),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2) format('woff2'),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff) format('woff'),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf) format('truetype'),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular) format('svg');
+}
+
+@font-face {
+  font-family: kbase-icons;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/kbase-icons.eot);
+  src:
+    url(../fonts/kbase-icons.eot?#iefix) format('embedded-opentype'),
+    url(../fonts/kbase-icons.woff) format('woff'),
+    url(../fonts/kbase-icons.ttf) format('truetype'),
+    url(../fonts/kbase-icons.svg#kbase-icons) format('svg');
+}
+
+@font-face {
+  font-family: Oxygen;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/Oxygen-webfont.eot);
+  src: url(../fonts/Oxygen-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-webfont.woff) format('woff'), url(../fonts/Oxygen-webfont.ttf) format('truetype'), url(../fonts/Oxygen-webfont.svg#OxygenRegular) format('svg');
+}
+
+@font-face {
+  font-family: Oxygen;
+  font-style: normal;
+  font-weight: 700;
+  src: url(../fonts/Oxygen-Bold-webfont.eot);
+  src: url(../fonts/Oxygen-Bold-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-Bold-webfont.woff) format('woff'), url(../fonts/Oxygen-Bold-webfont.ttf) format('truetype'), url(../fonts/Oxygen-Bold-webfont.svg#OxygenBold) format('svg');
+}
+
+@font-face {
+  font-family: Oxygen;
+  font-style: italic;
+  font-weight: 400;
+  src: url(../fonts/Oxygen-Italic-webfont.eot);
+  src: url(../fonts/Oxygen-Italic-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-Italic-webfont.woff) format('woff'), url(../fonts/Oxygen-Italic-webfont.ttf) format('truetype'), url(../fonts/Oxygen-Italic-webfont.svg#OxygenItalic) format('svg');
+}
+
+@font-face {
+  font-family: Oxygen;
+  font-style: italic;
+  font-weight: 700;
+  src: url(../fonts/Oxygen-BoldItalic-webfont.eot);
+  src: url(../fonts/Oxygen-BoldItalic-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-BoldItalic-webfont.woff) format('woff'), url(../fonts/Oxygen-BoldItalic-webfont.ttf) format('truetype'), url(../fonts/Oxygen-BoldItalic-webfont.svg#OxygenBoldItalic) format('svg');
+}
+
+@font-face {
+  font-family: OxygenMono;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/OxygenMono-Regular-webfont.eot);
+  src: url(../fonts/OxygenMono-Regular-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/OxygenMono-Regular-webfont.woff) format('woff'), url(../fonts/OxygenMono-Regular-webfont.ttf) format('truetype'), url(../fonts/OxygenMono-Regular-webfont.svg#OxygenMonoRegular) format('svg');
+}
+
+@font-face {
+  font-family: OxygenRegular;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/Oxygen-webfont.eot);
+  src: url(../fonts/Oxygen-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-webfont.woff) format('woff'), url(../fonts/Oxygen-webfont.ttf) format('truetype'), url(../fonts/Oxygen-webfont.svg#OxygenRegular) format('svg');
+}
+
+@font-face {
+  font-family: OxygenBold;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/Oxygen-Bold-webfont.eot);
+  src: url(../fonts/Oxygen-Bold-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Oxygen-Bold-webfont.woff) format('woff'), url(../fonts/Oxygen-Bold-webfont.ttf) format('truetype'), url(../fonts/Oxygen-Bold-webfont.svg#OxygenBold) format('svg');
+}
+
+@font-face {
+  font-family: RobotoBlack;
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/Roboto-Black-webfont.eot);
+  src: url(../fonts/Roboto-Black-webfont.eot?#iefix) format('embedded-opentype'), url(../fonts/Roboto-Black-webfont.woff) format('woff'), url(../fonts/Roboto-Black-webfont.ttf) format('truetype'), url(../fonts/Roboto-Black-webfont.svg#RobotoBlack) format('svg');
+}

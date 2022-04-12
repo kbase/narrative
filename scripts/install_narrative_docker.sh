@@ -20,14 +20,22 @@ function console () {
     echo "$now [install_narrative] $1"
 }
 
-# Install Narrative code
-# ----------------------
 source activate base
-console "installing sklearn & clustergrammer_widget'"
+
+# Install Narrative requirements
+# ------------------------------
+console "Installing biokbase requirements from src/requirements.txt"
 pip install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
-pip install --no-dependencies semantic_version sklearn clustergrammer_widget
+
+# Install sklearn and clustergrammer
+# ------------------------------
 # We install clustergrammer_widget and sklearn specially here so that it does not
 # clobber dependencies in the base conda image
+console "installing sklearn & clustergrammer_widget'"
+pip install --no-dependencies semantic_version sklearn clustergrammer_widget
+
+# Install Narrative code
+# ----------------------
 console "Installing biokbase modules"
 cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"
@@ -81,29 +89,5 @@ HOME=/tmp
 console "Installing nbextensions"
 cp -r nbextensions kbase-extension/static
 cd kbase-extension/static/nbextensions
-
-jupyter nbextension install $(pwd)/viewCell --symlink --sys-prefix
-jupyter nbextension enable viewCell/main --sys-prefix
-
-jupyter nbextension install $(pwd)/outputCell --symlink --sys-prefix
-jupyter nbextension enable outputCell/main --sys-prefix
-
-jupyter nbextension install $(pwd)/dataCell --symlink --sys-prefix
-jupyter nbextension enable dataCell/main --sys-prefix
-
-jupyter nbextension install $(pwd)/editorCell --symlink --sys-prefix
-jupyter nbextension enable editorCell/main --sys-prefix
-
-jupyter nbextension install $(pwd)/appCell2 --symlink --sys-prefix
-jupyter nbextension enable appCell2/main --sys-prefix
-
-jupyter nbextension install $(pwd)/advancedViewCell --symlink --sys-prefix
-jupyter nbextension enable advancedViewCell/main --sys-prefix
-
-jupyter nbextension install $(pwd)/codeCell --symlink --sys-prefix
-jupyter nbextension enable codeCell/main --sys-prefix
-
-jupyter nbextension enable --py --sys-prefix widgetsnbextension
-jupyter nbextension enable --py --sys-prefix clustergrammer_widget
-
-console "Done installing nbextension"
+sh install.sh
+console "Done installing nbextensions"

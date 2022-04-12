@@ -1,31 +1,29 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
+    '../validators/constants',
     'bootstrap',
-    'css!font-awesome'
-], function (Promise, html, Validation, Events, Dom) {
+], (Promise, html, Validation, Events, Ui, Constants) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
-        div = t('div'), select = t('select'), option = t('option');
+    const t = html.tag,
+        div = t('div'),
+        select = t('select'),
+        option = t('option');
 
     function factory(config) {
-        var options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            dom,
-            container,
             bus = config.bus,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
+        let parent, ui, container;
 
         // Validate configuration.
         // Nothing to do...
@@ -33,7 +31,6 @@ define([
         options.enabled = true;
 
         model.availableValues = spec.spec.dropdown_options.options;
-
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -45,14 +42,14 @@ define([
          */
 
         function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
-            
+
             if (selected.length === 0) {
                 return;
             }
-            
-            // we are modeling a single string value, so we always just get the 
+
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -61,121 +58,126 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: Constants.DIAGNOSIS.DISABLED,
                     };
                 }
 
-                var rawValue = getInputValue(),
+                const rawValue = getInputValue(),
                     validationResult = Validation.validateTextString(rawValue, {
-                        required: options.required
+                        required: options.required,
                     });
-                    
+
                 return validationResult;
             });
         }
 
         function makeInputControl(events) {
-            var selected,
-                selectOptions = model.availableValues.map(function (item) {
-                    selected = false;
-                    if (item.value === model.value) {
-                        selected = true;
-                    }
+            let selected;
+            const selectOptions = model.availableValues.map((item) => {
+                selected = false;
+                if (item.value === model.value) {
+                    selected = true;
+                }
 
-                    return option({
+                return option(
+                    {
                         value: item.value,
-                        selected: selected
-                    }, item.display);
-                });
+                        selected: selected,
+                    },
+                    item.display
+                );
+            });
 
             // CONTROL
-            return select({
-                id: events.addEvent({type: 'change', handler: function () {
-                        validate()
-                            .then(function (result) {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function () {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.emit('validation', {
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }}),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({value: ''}, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
-        function render(input) {
-            Promise.try(function () {
-                var events = Events.make(),
+        function render() {
+            Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events);
-                    
-                dom.setContent('input-container', inputControl);
+
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(function () {
-                    autoValidate();
-                });
+            }).then(() => {
+                autoValidate();
+            });
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({dataElement: 'input-container'})
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function setModelValue(value) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (model.value !== value) {
                     model.value = value;
                     return true;
                 }
                 return false;
-            })
-                .then(function (changed) {
-                    render();
-                });
+            }).then(() => {
+                render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 model.value = undefined;
-            })
-                .then(function (changed) {
-                    render();
-                });
+            }).then(() => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -186,26 +188,25 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    ui = Ui.make({ node: container });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function () {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', function (message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
                     bus.emit('sync');
@@ -213,23 +214,14 @@ define([
             });
         }
 
-//        function run(input) {
-//            return Promise.try(function () {
-//                return render(input);
-//            })
-//            .then(function () {
-//                return autoValidate();
-//            });
-//        }
-
         return {
-            start: start
+            start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,39 +1,34 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseNarrativeDownloadPanel',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    kbaseNarrativeDownloadPanel,
-    TestUtil,
-    Runtime,
-    Jupyter,
-    Narrative
-) => {
-    describe('Test the kbaseNarrativeDownloadPanel widget', () => {
+    'narrativeMocks',
+    'testUtil',
+], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil) => {
+    'use strict';
+
+    describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
+            };
             $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should properly load with a valid upa', () => {
-            let ws = 1111,
+            const ws = 1111,
                 oid = 2222,
                 ver = 3333,
                 name = 'fake_test_object',
@@ -53,70 +48,71 @@ define([
                 responseHeaders: '',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [{
-                        infos: [[
-                            oid,
-                            name,
-                            objType,
-                            saveDate,
-                            ver,
-                            userId,
-                            ws,
-                            wsName,
-                            checksum,
-                            size,
-                            meta
-                        ]],
-                        paths: [[upa]]
-                    }]
-                })
+                    result: [
+                        {
+                            infos: [
+                                [
+                                    oid,
+                                    name,
+                                    objType,
+                                    saveDate,
+                                    ver,
+                                    userId,
+                                    ws,
+                                    wsName,
+                                    checksum,
+                                    size,
+                                    meta,
+                                ],
+                            ],
+                            paths: [[upa]],
+                        },
+                    ],
+                }),
             });
 
-            let w = new kbaseNarrativeDownloadPanel($div, {
-                    token: null,
-                    type: objType,
-                    objId: oid,
-                    ref: upa,
-                    objName: name,
-                    downloadSpecCache: {'lastUpdateTime': 100, 'types': {
-                        [objType]: {'export_functions': {"FAKE": "fake_method"}}}
-                    }
+            new kbaseNarrativeDownloadPanel($div, {
+                token: null,
+                type: objType,
+                objId: oid,
+                ref: upa,
+                objName: name,
+                downloadSpecCache: {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: { export_functions: { FAKE: 'fake_method' } },
+                    },
+                },
             });
-            expect($div.html()).toContain("JSON");
-            expect($div.html()).toContain("FAKE");
+            expect($div.html()).toContain('JSON');
+            expect($div.html()).toContain('FAKE');
         });
 
         it('Should load and register a Staging app button', () => {
-            let ws = 1111,
+            const ws = 1111,
                 oid = 2222,
                 ver = 3333,
                 name = 'fake_test_object',
                 objType = 'KBaseGenomes.Genome',
-                saveDate = '2018-08-03T00:17:04+0000',
-                userId = 'fakeUser',
-                wsName = 'fakeWs',
-                checksum = '12345',
-                meta = {},
-                size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            let w = new kbaseNarrativeDownloadPanel($div, {
+            new kbaseNarrativeDownloadPanel($div, {
                 token: null,
                 type: objType,
                 objName: name,
                 objId: oid,
                 ref: upa,
                 downloadSpecCache: {
-                    'lastUpdateTime': 100,
-                    'types': {
+                    lastUpdateTime: 100,
+                    types: {
                         [objType]: {
-                            'export_functions': {
-                                "FAKE": "fake_method",
-                                "STAGING": "staging_method"
-                            }
-                        }
-                    }
-                }
+                            export_functions: {
+                                FAKE: 'fake_method',
+                                STAGING: 'staging_method',
+                            },
+                        },
+                    },
+                },
             });
 
             expect($div.html()).toContain('STAGING');

@@ -45,90 +45,79 @@
   some sort of middleware in there.
 */
 
-define([
-  'jquery'
-], function(
-  $
-) {
-  'use strict';
+define(['jquery'], ($) => {
+    'use strict';
 
-  return function constructor(args) {
+    return function constructor(args) {
+        this.root = args.root;
+        this.routes = args.routes;
+        this.token = args.token;
 
-    this.root   = args.root;
-    this.routes = args.routes;
-    this.token  = args.token;
+        const routeKeys = Object.keys(args.routes || {});
 
-    var routeKeys = Object.keys(args.routes || {});
+        // gawd. What i wouldn't give for some ES6 syntax here.
+        routeKeys.forEach((routeName) => {
+            const route = args.routes[routeName];
 
-    // gawd. What i wouldn't give for some ES6 syntax here.
-    routeKeys.forEach( function(routeName) {
-      var route = args.routes[routeName];
+            const routeArgs = route.path.match(/\${\w+}/g) || [];
 
-      var routeArgs = route.path.match(/\${\w+}/g) || [];
+            if (routeArgs) {
+                for (let j = 0; j < routeArgs.length; j++) {
+                    const remapped = routeArgs[j].match(/\w+/g)[0];
+                    routeArgs[j] = remapped;
+                }
+            }
 
-      if (routeArgs) {
-        for (var j = 0; j < routeArgs.length; j++) {
-          var remapped = routeArgs[j].match(/\w+/g)[0];
-          routeArgs[j] = remapped;
-        }
-      }
+            this[routeName] = function (fArgs) {
+                if (fArgs === undefined) {
+                    fArgs = {};
+                }
 
-      this[routeName] = function(fArgs) {
+                let path = route.path;
 
-        if (fArgs === undefined) {
-          fArgs = {};
-        }
+                for (let i = 0; i < routeArgs.length; i++) {
+                    const replacement =
+                        fArgs[routeArgs[i]] !== undefined ? fArgs[routeArgs[i]] : '';
+                    path = path.replace('${' + routeArgs[i] + '}', replacement);
+                }
+                const restURL = [this.root, path].join('/');
 
-        var path = route.path;
-
-        for (var i = 0; i < routeArgs.length; i++) {
-          var replacement = fArgs[routeArgs[i]] !== undefined
-            ? fArgs[routeArgs[i]]
-            : '';
-          path = path.replace('${' + routeArgs[i] + '}', replacement);
-        }
-       var restURL = [this.root, path].join('/');
-
-       return this.ajax(
-        {
-          route : route,
-          url   : restURL,
-          token : this.token,
-          data  : fArgs.data,
+                return this.ajax({
+                    route: route,
+                    url: restURL,
+                    token: this.token,
+                    data: fArgs.data,
+                });
+            };
         });
 
-      }
-    }.bind(this));
+        this.ajax = function ajax(args) {
+            const deferred = $.Deferred();
 
-    this.ajax = function ajax(args) {
-      var deferred = $.Deferred();
+            const beforeSend = function (xhr) {
+                xhr.setRequestHeader('Authorization', args.token);
+            };
 
-      var beforeSend = function (xhr) {
-          xhr.setRequestHeader("Authorization", args.token);
-      }
+            const xhr = $.ajax({
+                url: args.url,
+                dataType: 'text',
+                type: args.route.method,
+                processData: false,
+                data: JSON.stringify(args.data),
+                beforeSend: beforeSend,
+                success: function (data, status, xhr) {
+                    deferred.resolve(data, status, xhr);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    deferred.reject(xhr, textStatus, errorThrown);
+                },
+            });
 
-      var xhr = $.ajax({
-          url: args.url,
-          dataType: "text",
-          type: args.route.method,
-          processData: false,
-          data: JSON.stringify(args.data),
-          beforeSend: beforeSend,
-          success: function (data, status, xhr) {
-              deferred.resolve(data, status, xhr);
-          },
-          error: function (xhr, textStatus, errorThrown) {
-            deferred.reject( xhr, textStatus, errorThrown )
-          }
-      });
+            const promise = deferred.promise();
+            promise.xhr = xhr;
+            return promise;
+        };
 
-      var promise = deferred.promise();
-      promise.xhr = xhr;
-      return promise;
-    }
-
-
-    return this;
-  }
-
-})
+        return this;
+    };
+});

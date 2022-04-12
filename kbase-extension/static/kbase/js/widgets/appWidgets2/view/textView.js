@@ -1,38 +1,26 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validators/text',
-    'common/events',
-    'common/ui',
-    'common/props',
-    '../inputUtils',
-
-    'bootstrap',
-    'css!font-awesome'
-], function(
+define(['bluebird', 'common/html', 'common/events', 'common/ui', 'common/props', 'bootstrap'], (
     Promise,
     html,
-    Validation,
     Events,
     UI,
-    Props,
-    inputUtils
-) {
+    Props
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: function () {},
+            });
+        let parent, container, ui;
 
         // CONTROL
 
@@ -63,20 +51,21 @@ define([
 
         // DOM & RENDERING
 
-        function makeViewControl(events) {
+        function makeViewControl() {
             return input({
                 class: 'form-control',
                 readonly: true,
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -85,7 +74,7 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
@@ -94,30 +83,27 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-
-                var events = Events.make();
+                const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
                 syncModelToControl();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('focus', function() {
+                bus.on('focus', () => {
                     doFocus();
                 });
-                // bus.emit('sync');
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -126,24 +112,17 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: {
-                value: null
-            },
-            onUpdate: function() {}
-        });
-
         setModelValue(config.initialValue);
 
         return {
-            start: start,
-            stop: stop
+            start,
+            stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

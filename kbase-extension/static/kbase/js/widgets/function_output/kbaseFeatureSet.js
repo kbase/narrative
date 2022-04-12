@@ -1,29 +1,36 @@
 /**
  * @public
  */
-'use strict';
+define([
+    'kbwidget',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'jsonrpc/1.1/DynamicServiceClient',
+    'jsonrpc/1.1/ServiceClient',
+    'widgets/common/ErrorMessage',
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'jquery-dataTables',
-		'knhx',
-		'widgetMaxWidthCorrection',
-        'GenomeSearchUtil-client-api'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseAuthenticatedWidget
-	) {
+    // for effect
+    'jquery-dataTables',
+    'knhx',
+    'widgetMaxWidthCorrection',
+    'bootstrap',
+], (
+    KBWidget,
+    $,
+    Config,
+    kbaseAuthenticatedWidget,
+    DynamicServiceClient,
+    ServiceClient,
+    $ErrorMessage
+) => {
+    'use strict';
+
+    const TIMEOUT = 60000;
+
     return KBWidget({
         name: 'kbaseFeatureSet',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             featureset_name: null,
@@ -32,243 +39,319 @@ define (
             loadingImage: Config.get('loading_gif'),
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
-            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
+            this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
 
             if (options.workspaceids && options.workspaceids.length > 0) {
-                var id = options.workspaceids[0].split('/');
+                const id = options.workspaceids[0].split('/');
                 this.options.treeID = id[1];
                 this.options.workspaceID = id[0];
             }
 
-            this.$mainPanel = $("<div>").addClass("").hide();
+            this.$mainPanel = $('<div>').attr('data-testid', 'main-panel').hide();
             this.$elem.append(this.$mainPanel);
 
+            this.token = this.authToken();
+
             if (!this.options.featureset_name) {
-                this.renderError("No FeatureSet to render!");
+                this.renderError('No FeatureSet to render!');
             } else if (!this.options.workspaceName) {
-                this.renderError("No workspace given!");
+                this.renderError('No workspace given!');
             } else if (!this.options.kbCache && !this.authToken()) {
-                this.renderError("No cache given, and not logged in!");
-            } else {
-                this.token = this.authToken();
-                this.render();
+                this.renderError('No cache given, and not logged in!');
             }
 
             return this;
         },
 
-        render: function() {
-            this.ws = new Workspace(this.options.wsURL, {token: this.token});
-            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {token: this.token});
-            this.loading(false);
-            this.$mainPanel.hide();
-            this.$mainPanel.empty();
+        render: function () {
+            this.genomeSearchAPI = new DynamicServiceClient({
+                module: 'GenomeSearchUtil',
+                url: Config.url('service_wizard'),
+                token: this.token,
+                timeout: TIMEOUT,
+            });
+            this.workspace = new ServiceClient({
+                module: 'Workspace',
+                url: Config.url('workspace'),
+                token: this.token,
+                timeout: TIMEOUT,
+            });
             this.loadFeatureSet();
         },
 
+        features: null,
 
-        features: null, // genomeId : [{fid: x, data: x}]
-
-        loadFeatureSet: function() {
-            var self = this;
-            self.features = {};
-            self.ws.get_objects([{ref:self.options.workspaceName+"/"+self.options.featureset_name}],
-                function(data) {
-                    var fs = data[0].data;
-                    if(fs.description) {
-                        self.$mainPanel.append($('<div>')
-                            .append("<i>Description</i> - ")
-                            .append(fs.description));
+        loadFeatureSet: function () {
+            this.$mainPanel.hide();
+            this.$mainPanel.empty();
+            this.loading(true);
+            this.features = {};
+            this.workspace
+                .callFunc('get_objects', [
+                    {
+                        ref: `${this.options.workspaceName}/${this.options.featureset_name}`,
+                    },
+                ])
+                .then((data) => {
+                    const featureSet = data[0].data;
+                    if (featureSet.description) {
+                        this.$mainPanel.append(
+                            $('<div>')
+                                .attr('data-testid', 'description')
+                                .append($('<i>').attr('data-testid', 'label').text('Description: '))
+                                .append(
+                                    $('<span>')
+                                        .attr('data-testid', 'value')
+                                        .text(featureSet.description)
+                                )
+                        );
                     }
 
-                    for (var fid in fs.elements) {
-                        if (fs.elements.hasOwnProperty(fid)) {
-
-                            for (var k=0; k<fs.elements[fid].length; k++) {
-                                var gid = fs.elements[fid][k];
-                                if(self.features.hasOwnProperty(gid)) {
-                                    self.features[gid].push(fid);
+                    for (const fid in featureSet.elements) {
+                        if (fid in featureSet.elements) {
+                            for (let k = 0; k < featureSet.elements[fid].length; k++) {
+                                const gid = featureSet.elements[fid][k];
+                                if (gid in this.features) {
+                                    this.features[gid].push(fid);
                                 } else {
-                                    self.features[gid] = [fid];
+                                    this.features[gid] = [fid];
                                 }
                             }
                         }
                     }
-                    self.getGenomeData();
-                    self.$mainPanel.show();
-                },
-                function(error) {
-                    self.loading(true);
-                    self.renderError(error);
-
+                    this.$mainPanel.show();
+                    return this.getGenomeData();
+                })
+                .catch((error) => {
+                    console.error('error!', error);
+                    this.loading(false);
+                    this.renderError(error);
                 });
         },
 
-        search: function(genome_ref, query, limit) {
-            return this.genomeSearchAPI.search({
+        search: function (genome_ref, query, limit) {
+            return this.genomeSearchAPI
+                .callFunc('search', {
                     ref: genome_ref,
                     structured_query: query,
-                    sort_by: [['contig_id',1]],
+                    sort_by: [['contig_id', 1]],
                     start: 0,
-                    limit: limit
+                    limit: limit,
                 })
+                .then((result) => {
+                    return result;
+                });
         },
 
+        genomeLookupTable: null,
+        genomeObjectInfo: null,
+        featureTableData: null,
 
-        genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
-        genomeObjectInfo: null, //{},
-        featureTableData: null, // list for datatables
+        getGenomeData: function () {
+            if (Object.keys(this.features).length === 0) {
+                this.loading(false);
+                this.showMessage('This feature set is empty.');
+                return Promise.resolve();
+            }
 
-        getGenomeData: function() {
-            var self = this;
-            self.genomeLookupTable = {};
-            self.genomeObjectInfo = {};
-            self.featureTableData = [];
-            for(var gid in self.features) {
-                var query = {"feature_id": self.features[gid]}
-                self.search(gid, {"feature_id": self.features[gid]}, self.features[gid].length)
-                    .then(function(results) {
-                        for (var f in results.features) {
-                            var feature = results.features[f];
-                            self.featureTableData.push(
-                                {
-                                    fid: '<a href="/#dataview/'+gid+
-                                                '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                feature.feature_id+'</a>',
-                                    gid: '<a href="/#dataview/'+gid+
-                                            '" target="_blank">'+gid+"</a>",
-                                    ali: Object.keys(feature.aliases).join(", "),
+            this.genomeLookupTable = {};
+            this.genomeObjectInfo = {};
+            this.featureTableData = [];
+            // We fetch the data with nested promises, to preserve order and parallelize the requests.
+            // Then the results are dissected and used to update structures in this object, and finally
+            // invoking a render.
+            //
+            // "this.features" is an object whose keys are genome object references (gid), and
+            // whose values are lists of feature ids (fid).
+            //
+            // For each pair of gid and fid we need to fetch the genome object information from the workspace
+            // and the feature info from the genome search api.
+            //
+            // To keep this all sorted out, and in the original order, we do this as an array of promises for
+            // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
+
+            // get the object info for all feature-containing objects.
+            const objectRefs = Object.keys(this.features);
+            return this.workspace
+                .callFunc('get_object_info3', {
+                    objects: objectRefs.map((ref) => {
+                        return {
+                            ref,
+                        };
+                    }),
+                })
+                .then((result) => {
+                    return Promise.all(
+                        result.infos.map((info) => {
+                            const [, typeName, ,] = info[2].split(/[.-]/);
+
+                            const objectRef = [info[6], info[0], info[4]].join('/');
+                            const featuresToFind = this.features[objectRef];
+
+                            return Promise.all([
+                                (() => {
+                                    switch (typeName) {
+                                        case 'Genome':
+                                            return this.search(
+                                                objectRef,
+                                                { feature_id: featuresToFind },
+                                                featuresToFind.length
+                                            ).then(({ features }) => {
+                                                return features;
+                                            });
+                                        case 'AnnotatedMetagenomeAssembly':
+                                            return Promise.resolve(
+                                                featuresToFind.map((feature_id) => {
+                                                    return {
+                                                        feature_id,
+                                                        aliases: { na: 'na' },
+                                                        feature_type: 'na',
+                                                        function: 'na',
+                                                    };
+                                                })
+                                            );
+                                    }
+                                })(),
+                                objectRef,
+                                typeName,
+                                info,
+                            ]);
+                        })
+                    );
+                })
+                .then((result) => {
+                    const unsupportedTypeAttributes =
+                        'title="Features not yet fully supported for AnnotatedMetagenomeAssembly" style="font-style: italic; color: gray; cursor: help;"';
+                    for (const [features, objectRef, objectType, objectInfo] of result) {
+                        const objectName = objectInfo[1];
+                        for (const feature of features) {
+                            if (objectType === 'AnnotatedMetagenomeAssembly') {
+                                // This is a special case because AMAs are not fully supported yet.
+                                this.featureTableData.push({
+                                    fid: `<a href='/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}' target='_blank'>${feature.feature_id}</a>`,
+                                    objectType,
+                                    gid: `<a href='/#dataview/${objectRef}' target='_blank'>${objectName}</a>`,
+                                    aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(
+                                        feature.aliases
+                                    ).join(', ')}</a>`,
+                                    type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
+                                    func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`,
+                                });
+                            } else {
+                                this.featureTableData.push({
+                                    fid: `<a href='/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}' target='_blank'>${feature.feature_id}</a>`,
+                                    objectType,
+                                    gid: `<a href='/#dataview/${objectRef}' target='_blank'>${objectName}</a>`,
+                                    aliases: Object.keys(feature.aliases).join(', '),
                                     type: feature.feature_type,
-                                    func: feature.function
-                                }
-                            );
-
+                                    func: feature.function,
+                                });
+                            }
                         }
-                        self.renderFeatureTable(); // just rerender each time
-                        self.loading(true);
-                    })
-                    .fail(function(e) {
-                        console.error(e);
-                    });
-            }
-            if (Object.keys(self.features).length === 0){
-                self.loading(true);
-                self.showMessage("This feature set is empty.")
-            }
+                    }
+                })
+                .then(() => {
+                    this.loading(false);
+                    this.renderFeatureTable(); // just rerender each time
+                });
         },
 
-        $featureTableDiv : null,
-        renderFeatureTable: function() {
-            var self = this;
-
-            if(!self.$featureTableDiv) {
-                self.$featureTableDiv = $('<div>').css({'margin':'5px'});
-                self.$mainPanel.append(self.$featureTableDiv);
+        $featureTableDiv: null,
+        renderFeatureTable: function () {
+            if (!this.$featureTableDiv) {
+                this.$featureTableDiv = $('<div>').css({ margin: '5px' });
+                this.$mainPanel.append(this.$featureTableDiv);
             }
 
-            self.$featureTableDiv.empty();
+            this.$featureTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
-                            .addClass("table table-bordered table-striped");
-            self.$featureTableDiv.append($tbl);
+            const $tbl = $(
+                '<table style="width: 100%;">'
+            ).addClass('table table-bordered table-striped');
+            this.$featureTableDiv.append($tbl);
 
-            var sDom = "ft<ip>";
-            if(self.featureTableData.length<=10) sDom = "ft<i>";
+            const sDom = `ft<${this.featureTableData.length <= 10 ? 'i' : 'ip'}>`;
 
-            var tblSettings = {
-                "sPaginationType": "full_numbers",
-                "iDisplayLength": 10,
-                "sDom": sDom,
-                "aaSorting": [[ 2, "asc" ], [0, "asc"]],
-                "aoColumns": [
-                                      {sTitle: "Feature ID", mData: "fid"},
-                                      {sTitle: "Aliases", mData: "ali"},
-                                      {sTitle: "Genome", mData: "gid"},
-                                      {sTitle: "Type", mData: "type"},
-                                      {sTitle: "Function", mData: "func"},
-                                      ],
-                                      "aaData": [],
-                                      "oLanguage": {
-                                          "sSearch": "Search features:",
-                                          "sEmptyTable": "This FeatureSet is empty"
-                                      }
-                };
-            var featuresTable = $tbl.dataTable(tblSettings);
-            featuresTable.fnAddData(self.featureTableData);
+            const tblSettings = {
+                sPaginationType: 'full_numbers',
+                iDisplayLength: 10,
+                sDom: sDom,
+                aaSorting: [
+                    [2, 'asc'],
+                    [0, 'asc'],
+                ],
+                aoColumns: [
+                    { sTitle: 'Feature ID', mData: 'fid' },
+                    { sTitle: 'Type', mData: 'type' },
+                    { sTitle: 'Aliases', mData: 'aliases' },
+                    { sTitle: 'Function', mData: 'func' },
+                    { sTitle: 'Container Object', mData: 'gid' },
+                    { sTitle: 'Type', mData: 'objectType' },
+                ],
+                aaData: [],
+                oLanguage: {
+                    sSearch: 'Search features:',
+                    sEmptyTable: 'This FeatureSet is empty',
+                },
+            };
+            const featuresTable = $tbl.dataTable(tblSettings);
+            featuresTable.fnAddData(this.featureTableData);
         },
 
-        renderError: function(error) {
-            var errString = "Sorry, an unknown error occurred";
-            if (typeof error === "string")
-                errString = error;
-            else if (error.error && error.error.message)
-                errString = error.error.message;
-
-            var $errorDiv = $("<div>")
-                            .addClass("alert alert-danger")
-                            .append("<b>Error:</b>")
-                            .append("<br>" + errString);
+        renderError: function (error) {
             this.$elem.empty();
-            this.$elem.append($errorDiv);
+            this.$elem.append($ErrorMessage(error));
         },
 
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
+                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
+                else obj['workspace'] = workspaceID;
 
                 // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
+                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
+                else obj['name'] = objectID;
 
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                if (objectVer) obj['ver'] = objectVer;
             }
             return obj;
         },
 
-        loading: function(doneLoading) {
-            if (doneLoading)
+        loading: function (loading) {
+            if (loading) {
+                this.showMessage(`<img src='${this.options.loadingImage}' alt='Loading'/>`);
+            } else {
                 this.hideMessage();
-            else
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+            }
         },
 
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
+        showMessage: function (message) {
+            const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
 
-        loggedInCallback: function(event, auth) {
-            if (this.token == null) {
-                this.token = auth.token;
-                this.render();
-            }
+        loggedInCallback: function (event, auth) {
+            this.token = auth.token;
+            this.render();
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function () {
             this.render();
             return this;
-        }
-
+        },
     });
 });

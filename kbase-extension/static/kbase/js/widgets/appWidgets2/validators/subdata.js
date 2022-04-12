@@ -1,6 +1,4 @@
-define([
-    'bluebird'
-], function(Promise) {
+define(['bluebird', './constants'], (Promise, Constants) => {
     'use strict';
 
     function importString(stringValue) {
@@ -8,17 +6,15 @@ define([
     }
 
     function validate() {
-        return Promise.try(function() {
-            return {
-                isValid: true,
-                errorMessage: null,
-                diagnosis: 'valid'
-            };
+        return Promise.resolve({
+            isValid: true,
+            errorMessage: null,
+            diagnosis: Constants.DIAGNOSIS.VALID,
         });
     }
 
     return {
-        importString: importString,
-        validate: validate
+        importString,
+        validate,
     };
 });

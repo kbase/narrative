@@ -1,14 +1,11 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseRNASeqSample'
-], function(Widget) {
-    describe('Test the kbaseRNASeqSample widget', function() {
-        it('Should do things', function() {
+define(['kbaseRNASeqSample', 'testUtil'], (Widget, TestUtil) => {
+    'use strict';
 
+    describe('The kbaseRNASeqSample widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

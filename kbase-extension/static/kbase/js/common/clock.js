@@ -1,43 +1,37 @@
-/*global define*/
-/*jslint white:true,browser:true*/
+define([], () => {
+    'use strict';
+    function factory(config) {
+        let timer, ticks;
+        const { resolution } = config,
+            { bus } = config;
 
-define([
-    
-], function () {
-   
-   function factory(config) {
-       var timer,
-           ticks,
-           resolution = config.resolution,
-           bus = config.bus;
-       
-       function start() {
-           ticks = 0;
-           timer = window.setInterval(function () {
-               ticks += 1;
-               bus.emit('clock-tick', {
-                   resolution: resolution,
-                   count: ticks
-               });
-           }, resolution);
-       }
-       
-       function stop() {
-           if (timer) {
-               window.clearInterval(timer);
-               timer = null;
-           }
-       }
-       
-       return {
-           start: start,
-           stop: stop
-       };
-   }
-   
-   return {
-       make: function (config) {
-           return factory(config);
-       }
-   };
+        function start() {
+            ticks = 0;
+            timer = window.setInterval(() => {
+                ticks += 1;
+                bus.emit('clock-tick', {
+                    resolution: resolution,
+                    count: ticks,
+                });
+            }, resolution);
+        }
+
+        function stop() {
+            if (timer) {
+                window.clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        return {
+            start,
+            stop,
+        };
+    }
+
+    return {
+        make: function (config) {
+            return factory(config);
+        },
+    };
 });

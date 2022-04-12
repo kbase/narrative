@@ -67,13 +67,11 @@ define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
 
         function stop() {
             return Promise.try(() => {
-                if (widgets) {
-                    return Promise.all(
-                        Object.keys(widgets).map((key) => {
-                            return widgets[key].stop();
-                        })
-                    );
-                }
+                return Promise.all(
+                    Object.keys(widgets).map((key) => {
+                        return widgets[key].stop();
+                    })
+                );
             });
         }
 

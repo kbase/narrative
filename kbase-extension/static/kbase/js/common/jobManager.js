@@ -531,7 +531,7 @@ define([
                     const toAdd = {};
                     toAdd[`__default_${jcm.MESSAGE_TYPE[event]}`] = defaultHandlers[event];
                     this.addEventHandler(jcm.MESSAGE_TYPE[event], toAdd);
-                }, this);
+                });
             }
 
             /**

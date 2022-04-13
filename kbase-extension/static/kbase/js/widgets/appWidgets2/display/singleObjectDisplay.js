@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
     'common/runtime',
@@ -14,16 +14,17 @@ define([
         div = t('div');
 
     function factory(config) {
-        let options = {},
-            spec = config.parameterSpec,
-            workspaceInfo = config.workspaceInfo,
-            workspaceId = config.workspaceId,
+        const workspaceId = config.workspaceId,
             objectRefType = config.referenceType || 'name',
             runtime = Runtime.make(),
-            container,
             bus = config.bus,
-            model;
+            model = Props.make({
+                onUpdate: function () {
+                    render();
+                },
+            });
 
+        let container;
         // DATA
 
         function getObjectRef() {
@@ -33,18 +34,16 @@ define([
                         wsid: workspaceId,
                         name: model.getItem('value'),
                     };
-                    break;
                 case 'ref':
                     return {
                         ref: model.getItem('value'),
                     };
-                    break;
                 default:
                     throw new Error('Unsupported object reference type ' + objectRefType);
             }
         }
 
-        function getObject(value) {
+        function getObject() {
             const workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken(),
             });
@@ -112,19 +111,13 @@ define([
             return Promise.try(() => {
                 bus.on('run', (message) => {
                     container = message.node;
-                    bus.on('update', (message) => {
-                        model.setItem('value', message.value);
+                    bus.on('update', (msg) => {
+                        model.setItem('value', msg.value);
                     });
                     bus.emit('sync');
                 });
             });
         }
-
-        model = Props.make({
-            onUpdate: function (props) {
-                render();
-            },
-        });
 
         return {
             start: start,

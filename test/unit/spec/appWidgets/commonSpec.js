@@ -1,4 +1,4 @@
-define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common', 'testUtil'], (
+define(['common/events', 'common/ui', 'common/html', 'widgets/appWidgets2/common', 'testUtil'], (
     Events,
     UI,
     html,

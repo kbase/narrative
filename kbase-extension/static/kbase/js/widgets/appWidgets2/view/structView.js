@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validators/resolver',
     '../validators/constants',
     'common/events',

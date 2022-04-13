@@ -1,13 +1,13 @@
 /* This is a special widget, because it is a factory factory! */
 
-define(['kb_common/html', 'bootstrap'], (html) => {
+define(['common/html', 'bootstrap'], (html) => {
     'use strict';
     const t = html.tag,
         div = t('div'),
         span = t('span');
 
     function factoryFactory(factoryConfig) {
-        function factory(config) {
+        function factory() {
             function attach(node) {
                 node.innerHTML = div(
                     {
@@ -23,8 +23,8 @@ define(['kb_common/html', 'bootstrap'], (html) => {
             };
         }
         return {
-            make: function (config) {
-                return factory(config);
+            make: function () {
+                return factory();
             },
         };
     }

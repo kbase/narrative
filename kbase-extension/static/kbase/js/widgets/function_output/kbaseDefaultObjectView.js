@@ -5,7 +5,7 @@ define([
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'kb_service/utils',
-    'kb_common/html',
+    'common/html',
     'kbaseTabs',
     'common/runtime',
     'kbase-client-api',
@@ -21,6 +21,18 @@ define([
     Runtime
 ) => {
     'use strict';
+
+    const t = html.tag,
+        table = t('table'),
+        tr = t('tr'),
+        td = t('td'),
+        th = t('th'),
+        div = t('div'),
+        b = t('b'),
+        i = t('i'),
+        a = t('a'),
+        span = t('span');
+
     return KBWidget({
         name: 'kbaseDefaultObjectView',
         parent: kbaseAuthenticatedWidget,
@@ -77,7 +89,7 @@ define([
                             });
                         return $tabDiv;
                     })
-                    .catch((error) => {
+                    .catch(() => {
                         return this.renderMessage(
                             'Unable to retrieve object information for ' + JSON.stringify(upas),
                             true
@@ -93,13 +105,7 @@ define([
             if (!meta || Object.keys(meta).length === 0) {
                 return 'No metadata found for this object.';
             }
-            const t = html.tag,
-                div = t('div'),
-                table = t('table'),
-                tr = t('tr'),
-                td = t('td'),
-                th = t('th'),
-                metaTableRows = Object.keys(meta).map((key) => {
+            const metaTableRows = Object.keys(meta).map((key) => {
                     return tr([td(key), td(meta[key])]);
                 }),
                 metaTable = table(
@@ -118,12 +124,10 @@ define([
         renderMessage: function (msg, isError) {
             return Promise.try(() => {
                 let divAtts = {
-                        style: {
-                            padding: '5px',
-                        },
+                    style: {
+                        padding: '5px',
                     },
-                    t = html.tag,
-                    div = t('div');
+                };
                 if (isError) {
                     divAtts = {
                         class: 'alert alert-danger',
@@ -149,10 +153,7 @@ define([
             );
         },
 
-        renderWarningAlert: function (objType) {
-            const t = html.tag,
-                div = t('div'),
-                b = t('b');
+        renderWarningAlert: function () {
             return div(
                 {
                     style: {
@@ -169,13 +170,7 @@ define([
          * Takes in the result of a successful get_object_info3 call and renders the thing.
          */
         renderObjectInfo: function (objInfo) {
-            const t = html.tag,
-                div = t('div'),
-                span = t('span'),
-                b = t('b'),
-                i = t('i'),
-                a = t('a'),
-                message = this.renderWarningAlert(),
+            const message = this.renderWarningAlert(),
                 infoDiv = div(
                     {
                         style: {

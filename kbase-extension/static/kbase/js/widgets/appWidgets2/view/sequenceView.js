@@ -1,7 +1,7 @@
 define([
     'require',
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',

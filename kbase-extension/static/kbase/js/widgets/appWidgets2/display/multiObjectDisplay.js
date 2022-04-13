@@ -1,6 +1,6 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
     'common/runtime',
@@ -14,14 +14,16 @@ define([
         div = t('div');
 
     function factory(config) {
-        let options = {},
-            spec = config.parameterSpec,
-            workspaceInfo = config.workspaceInfo,
-            workspaceId = config.workspaceId,
+        let container;
+
+        const workspaceId = config.workspaceId,
             runtime = Runtime.make(),
-            container,
             bus = config.bus,
-            model;
+            model = Props.make({
+                onUpdate: function () {
+                    render();
+                },
+            });
 
         // DATA
 
@@ -87,7 +89,7 @@ define([
                             .join('\n');
                     })
                     .catch((err) => {
-                        console.log(err);
+                        console.warn(err);
                         container.innerHTML = 'ERROR ';
                     });
             }
@@ -98,19 +100,13 @@ define([
             return Promise.try(() => {
                 bus.on('run', (message) => {
                     container = message.node;
-                    bus.on('update', (message) => {
-                        model.setItem('value', message.value);
+                    bus.on('update', (msg) => {
+                        model.setItem('value', msg.value);
                     });
                     bus.emit('sync');
                 });
             });
         }
-
-        model = Props.make({
-            onUpdate: function (props) {
-                render();
-            },
-        });
 
         return {
             start: start,

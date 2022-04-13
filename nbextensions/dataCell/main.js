@@ -10,7 +10,7 @@ define(
         'common/pythonInterop',
         'common/ui',
         'common/jupyter',
-        'kb_common/html',
+        'common/html',
         './widgets/dataCell',
         'custom/custom',
     ],
@@ -80,6 +80,7 @@ define(
                         true
                     );
                     // NB purely for side effect - toolbar refresh
+                    // eslint-disable-next-line no-self-assign
                     cell.metadata = cell.metadata;
                 }
             };
@@ -110,11 +111,10 @@ define(
             utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
             // Create our own input area for interaction with the user.
-            let cellInputNode = cell.input[0],
-                kbaseNode,
+            const cellInputNode = cell.input[0],
                 ui = UI.make({ node: cellInputNode });
 
-            kbaseNode = ui.createNode(
+            const kbaseNode = ui.createNode(
                 div({
                     dataSubareaType: 'data-cell-input',
                 })
@@ -174,7 +174,7 @@ define(
                 if (!ref) {
                     ref = wsId + '/' + objInfo.id + '/' + objInfo.version;
                 }
-                const title = objInfo && objInfo.name ? objInfo.name : 'Data Viewer';
+                const title = objInfo.name ? objInfo.name : 'Data Viewer';
                 const cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
 
                 cell.set_text(cellText);
@@ -193,7 +193,7 @@ define(
         }
 
         function initializeExtension() {
-            $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            $([Jupyter.events]).on('insertedAtIndex.Cell', (_event, payload) => {
                 const cell = payload.cell;
                 const setupData = payload.data;
                 const jupyterCellType = payload.type;

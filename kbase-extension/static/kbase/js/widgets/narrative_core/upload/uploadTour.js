@@ -71,7 +71,7 @@ define([
                 placement: 'top',
                 element: that.$elem.find('.kb-staging-table-header__file'),
                 content:
-                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click the folder show the files inside.',
+                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click the folder to show the files inside.',
             },
             {
                 title: 'Import As...',

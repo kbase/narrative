@@ -6,17 +6,7 @@ define([
     'd3',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'jquery-dataTables',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    StringUtil,
-    d3,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    jquery_dataTables
-) => {
+], (KBWidget, bootstrap, $, StringUtil, d3, kbaseAuthenticatedWidget, kbaseTabs) => {
     return KBWidget({
         name: 'kbaseBlastOutput',
         parent: kbaseAuthenticatedWidget,
@@ -271,12 +261,6 @@ define([
                     width = 540 - margin.left - margin.right,
                     height = 500 - margin.top - margin.bottom;
 
-                const padding = margin.left + margin.right;
-
-                const scaley = margin.top + 20;
-                const rect1 = margin.top + 10;
-                const fullscalelength = 10 - (Number(querylength) % 10) + Number(querylength);
-
                 const x = d3.scale
                     .linear()
                     .domain([0, querylength])
@@ -368,12 +352,10 @@ define([
                         const hseq = hsp['Hsp_hseq'];
                         const identity = hsp['Hsp_identity'];
                         const midline = hsp['Hsp_midline'];
-                        const num = hsp['Hsp_num'];
                         const positive = hsp['Hsp_positive'];
                         const qseq = hsp['Hsp_qseq'];
                         const query_frame = hsp['Hsp_query-frame'];
                         const query_from = hsp['Hsp_query-from'];
-                        const query_to = hsp['Hsp_query-to'];
                         const score = hsp['Hsp_score'];
 
                         if (gaps == null) {
@@ -438,8 +420,8 @@ define([
 
                         let i = 0;
                         while (i < hseq.length) {
-                            start = i;
-                            end = i + 60;
+                            const start = i;
+                            const end = i + 60;
                             const p1 = hseq.substring(start, end);
                             const p2 = midline.substring(start, end);
                             const p3 = qseq.substring(start, end);
@@ -496,13 +478,13 @@ define([
             return this;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             this.token = auth.token;
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;

@@ -1,10 +1,10 @@
 /**
  * KBase widget to display kegg map.
- data = mg_data = [ 
+ data = mg_data = [
     { ko_id: int, ko_id: int, ko_id: int, ... },
     { ko_id: int, ko_id: int, ko_id: int, ... }
  ]
- 
+
  */
 (function ($, undefined) {
     return KBWidget({
@@ -93,8 +93,8 @@
 
         drawImage: function (svg, mg_data) {
             const renderer = this;
-            for (k = 0; k < 2; k++) {
-                for (i in mg_data[k]) {
+            for (let k = 0; k < 2; k++) {
+                for (const i in mg_data[k]) {
                     if (mg_data[k].hasOwnProperty(i)) {
                         if (renderer.keggpolydata.hasOwnProperty(i)) {
                             const alist = renderer.keggpolydata[i];
@@ -112,14 +112,14 @@
                                     abu = 'abundance: ' + mg_data[0][i] + ' - ' + mg_data[1][i];
                                 }
                             }
-                            for (j = 0; j < alist.length; j++) {
+                            for (let j = 0; j < alist.length; j++) {
                                 const a = alist[j];
                                 const path = svg.createPath();
                                 path.move(
                                     parseInt(a[0] * renderer.options.factor),
                                     parseInt(a[1] * renderer.options.factor)
                                 );
-                                for (h = 2; h < a.length; h += 2) {
+                                for (let h = 2; h < a.length; h += 2) {
                                     path.line(
                                         parseInt(a[h] * renderer.options.factor),
                                         parseInt(a[h + 1] * renderer.options.factor)

@@ -11,8 +11,7 @@ define([
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'jquery-dataTables',
-], (KBWidget, bootstrap, $, Config, kbaseAuthenticatedWidget, kbaseTabs, jquery_dataTables) => {
+], (KBWidget, bootstrap, $, Config, kbaseAuthenticatedWidget, kbaseTabs) => {
     return KBWidget({
         name: 'kbaseDomainAnnotation',
         parent: kbaseAuthenticatedWidget,
@@ -52,7 +51,7 @@ define([
             return this;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             // error if not properly initialized
             if (this.options.domainAnnotationID == null) {
                 this.showMessage("[Error] Couldn't retrieve domain annotation data.");
@@ -68,7 +67,7 @@ define([
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.ws = null;
             this.isLoggedIn = false;
             return this;
@@ -233,13 +232,13 @@ define([
 
                         const domainsTableData = [];
                         const domains = self.domains;
-                        for (var domainID in domains) {
+                        for (const domainID in domains) {
                             const domain = domains[domainID];
 
                             // try to map each domain to a prefix,
                             // for external crossrefs and to show only
                             // the most relevant match per set
-                            var domainRef = domainID;
+                            let domainRef = domainID;
                             $.each(self.prefixToURL, (prefix, url) => {
                                 if (domainID.match('^' + prefix)) {
                                     self.accessionToPrefix[domainID] = prefix;
@@ -255,7 +254,7 @@ define([
                             // Build concatenated list of gene references
                             let geneRefs = '';
                             for (let i = 0; i < domain.genes.length; i++) {
-                                gene = domain.genes[i];
+                                const gene = domain.genes[i];
                                 if (i > 0) {
                                     geneRefs += '<br />';
                                 }
@@ -355,19 +354,19 @@ define([
                                 let geneLength = (geneEnd - geneStart + 1) / 3;
 
                                 // hack to correct display bug in genes with incorrect stated lengths
-                                for (var domainID in domainsInfo) {
-                                    var domainsArray = domainsInfo[domainID];
-                                    for (var i = 0; i < domainsArray.length; i++) {
-                                        var domainEnd = domainsArray[i][1];
+                                for (const domainID in domainsInfo) {
+                                    const domainsArray = domainsInfo[domainID];
+                                    for (let i = 0; i < domainsArray.length; i++) {
+                                        const domainEnd = domainsArray[i][1];
                                         if (domainEnd > geneLength) geneLength = domainEnd;
                                     }
                                 }
 
-                                for (var domainID in domainsInfo) {
-                                    var domainsArray = domainsInfo[domainID];
-                                    for (var i = 0; i < domainsArray.length; i++) {
+                                for (const domainID in domainsInfo) {
+                                    const domainsArray = domainsInfo[domainID];
+                                    for (let i = 0; i < domainsArray.length; i++) {
                                         const domainStart = domainsArray[i][0];
-                                        var domainEnd = domainsArray[i][1];
+                                        const domainEnd = domainsArray[i][1];
                                         const eValue = domainsArray[i][2];
 
                                         const domainImgWidth =
@@ -470,8 +469,6 @@ define([
                 const genesArray = dad.data[contigID];
                 for (let i = 0; i < genesArray.length; i++) {
                     const geneID = genesArray[i][0];
-                    //                    var geneStart = genesArray[i][1];
-                    //                    var geneEnd = genesArray[i][2];
                     const domainsInfo = genesArray[i][4];
                     if ($.isEmptyObject(domainsInfo)) continue;
 

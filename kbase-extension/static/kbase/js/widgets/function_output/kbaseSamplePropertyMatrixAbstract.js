@@ -1,22 +1,5 @@
-define([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-    'plotly',
-    'kbaseMatrix2DAbstract',
-    'kbaseAuthenticatedWidget',
-    'kbaseTabs',
-    'jquery-dataTables',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    Plotly,
-    kbaseMatrix2DAbstract,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    jquery_dataTables
-) => {
+define(['kbwidget', 'kbaseMatrix2DAbstract'], (KBWidget, kbaseMatrix2DAbstract) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseSamplePropertyMatrixAbstract',
         parent: kbaseMatrix2DAbstract,
@@ -76,14 +59,14 @@ define([
         buildSeriesSamplePorperties: function (seriesColumns, columnMetadata, sorted) {
             const sampleProperties = [];
 
-            for (var i in seriesColumns) {
+            for (const i in seriesColumns) {
                 const seriesId = seriesColumns[i].seriesId;
                 const columns = seriesColumns[i].columns;
 
                 // Build property name
                 const samplePropertyNames = {};
-                for (var i in columns) {
-                    var val = this.getPropertyValue(
+                for (const i in columns) {
+                    const val = this.getPropertyValue(
                         columns[i].properties,
                         this.TERM_PROPERTY,
                         this.TERM_NAME
@@ -93,7 +76,7 @@ define([
                     }
                 }
                 let samplePropertyName = '';
-                for (var val in samplePropertyNames) {
+                for (const val in samplePropertyNames) {
                     if (samplePropertyName != '') {
                         samplePropertyName += '; ';
                     }
@@ -102,7 +85,7 @@ define([
 
                 // Build property units
                 const samplePropertyUnits = {};
-                for (var i in columns) {
+                for (const i in columns) {
                     const pv = this.getProperty(
                         columns[i].properties,
                         this.TERM_PROPERTY,
@@ -113,12 +96,12 @@ define([
                     }
                 }
                 let samplePropertyUnit = '';
-                for (var val in samplePropertyUnits) {
-                    if (val == null || val == '') continue;
+                for (const _val in samplePropertyUnits) {
+                    if (_val == '') continue;
                     if (samplePropertyUnit != '') {
                         samplePropertyUnit += '; ';
                     }
-                    samplePropertyUnit += val;
+                    samplePropertyUnit += _val;
                 }
 
                 // Build sampleProperty
@@ -196,7 +179,6 @@ define([
                 const n = samples.length;
                 let s1 = 0;
                 let s2 = 0;
-                var se = 0;
                 let count = 0;
                 for (const j in samples) {
                     const sample = samples[j];
@@ -216,7 +198,7 @@ define([
 
                 const avg = s1 / n;
                 const std = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n) : 0;
-                var se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
+                const se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
 
                 samplePropertyStat.push({
                     name: sampleProperty.name,

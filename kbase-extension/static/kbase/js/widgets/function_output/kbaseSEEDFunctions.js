@@ -63,10 +63,10 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
 
         /*
           I need to load the SEED subsystem ontology. I am going to use
-          the "subsys.txt" file I found at: 
+          the "subsys.txt" file I found at:
                 ftp.theseed.org/subsystems/subsys.txt
-          
-          Note that this file is updated weekly, but not versioned. It's 
+
+          Note that this file is updated weekly, but not versioned. It's
           possible that errors will arise because the subsystems assigned
           in the genome object are out of date relative to the current
           subsys.txt file.
@@ -101,7 +101,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                 const data = d3.tsv.parseRows(text);
                 let totalGenesWithFunctionalRoles = 0;
 
-                for (i = 0; i < data.length; i++) {
+                for (let i = 0; i < data.length; i++) {
                     let geneCount = 0;
                     let nodeHierarchy = '';
                     let parentHierarchy = 'Functional Categories';
@@ -115,7 +115,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                         totalGenesWithFunctionalRoles += subsysToGeneMap[data[i][3]].length;
                     }
 
-                    for (j = 0; j < ontologyDepth; j++) {
+                    for (let j = 0; j < ontologyDepth; j++) {
                         // some node names are an empty string "". I'm going to set these to
                         // a modified version of their parent node name
                         data[i][j] =
@@ -125,7 +125,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                         // create new node for top level of hierarchy if it's not already defined.
                         if (j === 0) {
                             if (nodeMap[nodeHierarchy] === undefined) {
-                                var node = { name: data[i][j], size: 0, children: [] };
+                                const node = { name: data[i][j], size: 0, children: [] };
                                 SEEDTree.children.push(node);
                                 nodeMap[nodeHierarchy] = node;
                                 Level1[data[i][j]] = 0;
@@ -133,7 +133,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                             Level1[data[i][j]] += geneCount;
                         } else {
                             if (nodeMap[nodeHierarchy] === undefined) {
-                                var node = { name: data[i][j], size: 0, children: [] };
+                                const node = { name: data[i][j], size: 0, children: [] };
                                 nodeMap[parentHierarchy].children.push(node);
                                 nodeMap[nodeHierarchy] = node;
 
@@ -162,7 +162,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                         );
                 } else {
                     // Set maxCount to scale bars
-                    for (k in Level1) {
+                    for (const k in Level1) {
                         self.maxCount = self.maxCount > Level1[k] ? self.maxCount : Level1[k];
                     }
 
@@ -185,7 +185,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                 500,
                 nodes.length * self.barHeight + self.margin.top + self.margin.bottom
             );
-            const i = self.i;
 
             d3.selectAll('#mainview')
                 .select('svg')
@@ -212,18 +211,18 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                 .enter()
                 .append('g')
                 .attr('class', 'KBSnode')
-                .attr('transform', (d) => {
+                .attr('transform', () => {
                     return 'translate(' + source.y0 + ',' + source.x0 + ')';
                 })
                 .style('opacity', 1e-6)
-                .on('mouseover', function (d) {
+                .on('mouseover', function () {
                     d3.select(this)
                         .selectAll('text, rect')
                         .style('font-weight', 'bold')
                         .style('font-size', '90%')
                         .style('stroke-width', '3px');
                 })
-                .on('mouseout', function (d) {
+                .on('mouseout', function () {
                     d3.select(this)
                         .selectAll('text, rect')
                         .style('font-weight', 'normal')
@@ -302,7 +301,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
             node.exit()
                 .transition()
                 .duration(self.duration)
-                .attr('transform', (d) => {
+                .attr('transform', () => {
                     return 'translate(' + source.y + ',' + source.x + ')';
                 })
                 .style('opacity', 1e-6)
@@ -392,7 +391,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
             } else {
                 prom = this.wsClient.get_objects([obj]);
             }
-            //var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
+            //let prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
 
             $.when(prom).fail(
                 $.proxy((error) => {
@@ -406,9 +405,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
                     const genomeObj = genome[0].data;
 
                     /*
-                    First I am going to iterate over the Genome Typed Object and 
+                    First I am going to iterate over the Genome Typed Object and
                     create a mapping of the assigned functional roles (by SEED) to
-                    an array of genes with those roles. 
+                    an array of genes with those roles.
 
                     subsysToGeneMap [ SEED Role ] = Array of Gene Ids
                 */
@@ -430,14 +429,14 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'd3'], (
             );
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             this.authToken = auth;
             this.wsClient = new Workspace(this.wsUrl, this.authToken);
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.authToken = null;
             this.wsClient = null;
             return this;

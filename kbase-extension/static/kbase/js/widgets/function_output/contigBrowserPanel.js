@@ -136,13 +136,10 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 that.numRegions = 0;
 
                 that.addRegion = function (feature_location) {
-                    for (let i = 0; i < feature_location.length; i++) {
-                        let start = Number(feature_location[i][1]);
-                        const length = Number(feature_location[i][3]);
-                        let end =
-                            feature_location[i][2] === '+'
-                                ? start + length - 1
-                                : start - length + 1;
+                    for (const element of feature_location) {
+                        let start = Number(element[1]);
+                        const length = Number(element[3]);
+                        let end = element[2] === '+' ? start + length - 1 : start - length + 1;
                         if (start > end) {
                             const x = end;
                             end = start;
@@ -157,13 +154,10 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 };
 
                 that.hasOverlap = function (feature_location) {
-                    for (let i = 0; i < feature_location.length; i++) {
-                        let start = Number(feature_location[i][1]);
-                        const length = Number(feature_location[i][3]);
-                        let end =
-                            feature_location[i][2] === '+'
-                                ? start + length - 1
-                                : start - length + 1;
+                    for (const element of feature_location) {
+                        let start = Number(element[1]);
+                        const length = Number(element[3]);
+                        let end = element[2] === '+' ? start + length - 1 : start - length + 1;
 
                         // double check the orientation
                         if (start > end) {
@@ -179,8 +173,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                          * less simple:
                          *  look over all regions
                          */
-                        for (let ii = 0; ii < this.regions.length; ii++) {
-                            const region = this.regions[ii];
+                        for (const region of this.regions) {
                             // region = [start,end] pair
                             if (
                                 !(
@@ -189,12 +182,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                                 )
                             )
                                 return true;
-
-                            // if ((start >= region[0] && start <= region[1]) ||
-                            //     (end >= region[0] && end <= region[1]) ||
-                            //     (start <= region[0] && end >= region[1])) {
-                            //     return true;
-                            // }
                         }
                     }
                     return false;
@@ -224,20 +211,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 // if we're getting a new center feature, make sure to update the operon features, too.
                 if (centerFeature) this.options.centerFeature = centerFeature;
                 this.update();
-
-                /* var self = this;
-                this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
-                    // on success
-                    function(operonGenes) {
-                        self.operonFeatures = operonGenes[self.options.centerFeature];
-                        self.update();
-                    },
-                    // on error
-                    function(error) {
-                        console.error(error);
-                        self.throwError(error);
-                    }
-                );*/
             },
 
             setRange: function (start, length) {
@@ -259,7 +232,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 // to [<feature object>, <feature object> ... ]
 
                 const feature_arr = [];
-                for (fid in features) {
+                for (const fid in features) {
                     feature_arr.push(features[fid]);
                 }
 
@@ -271,13 +244,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 });
 
                 // Foreach feature...
-                for (let j = 0; j < features.length; j++) {
-                    const feature = features[j];
+                for (const element of features) {
+                    const feature = element;
 
                     // Look for an open spot in each track, fill it in the first one we get to, and label that feature with the track.
-                    // var start = Number(feature.feature_location[0][1]);
-                    // var length = Number(feature.feature_location[0][3]);
-                    // var end;
+                    // let start = Number(feature.feature_location[0][1]);
+                    // let length = Number(feature.feature_location[0][3]);
+                    // let end;
 
                     for (let i = 0; i < tracks.length; i++) {
                         if (!tracks[i].hasOverlap(feature.feature_location)) {
@@ -343,7 +316,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                     self.renderFromRange(features);
                 };
 
-                var getFeatureData = getOperonData;
+                const getFeatureData = getOperonData;
 
                 if (self.options.centerFeature && useCenter)
                     self.cdmiClient.fids_to_feature_data(
@@ -475,7 +448,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 const coords = [];
 
                 // draw an arrow for each location.
-                for (var i = 0; i < feature.feature_location.length; i++) {
+                for (let i = 0; i < feature.feature_location.length; i++) {
                     const location = feature.feature_location[i];
 
                     const left = this.calcXCoord(location);
@@ -501,7 +474,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                         this.calcYCoord(feature.feature_location[0], feature.track) +
                         this.calcHeight(feature.feature_location[0]) / 2;
 
-                    for (var i = 0; i < coords.length - 1; i++) {
+                    for (let i = 0; i < coords.length - 1; i++) {
                         path +=
                             'M' +
                             coords[i][1] +
@@ -613,7 +586,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 return ((x - this.options.start) / this.options.length) * this.options.svgWidth; // + this.options.leftMargin;
             },
 
-            calcYCoord: function (location, track) {
+            calcYCoord: function (_location, track) {
                 return (
                     this.options.topMargin +
                     this.options.trackMargin +
@@ -628,7 +601,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 );
             },
 
-            calcHeight: function (location) {
+            calcHeight: function () {
                 return this.options.trackThickness;
             },
 
@@ -647,7 +620,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 // should return color based on feature type e.g. CDS vs. PEG vs. RNA vs. ...
             },
 
-            highlight: function (element, feature) {
+            highlight: function (_element, feature) {
                 // unhighlight others - only highlight one at a time.
                 // if ours is highlighted, recenter on it.
 
@@ -731,7 +704,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'd3', 'kbaseContigBrowserButtons'], (
                 this.update();
             },
 
-            loading: function (doneLoading) {
+            loading: function () {
                 /*if (doneLoading)
                     this.hideMessage();
                 else

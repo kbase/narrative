@@ -58,7 +58,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
             /////////// Functions
 
             const make_status_table = function (job_id, desc, status) {
-                const status_box = $(
+                return $(
                     '<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">'
                 )
                     .append(
@@ -73,7 +73,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                             status +
                             '</td></tbody>'
                     );
-                return status_box;
             };
 
             const check_status = function (j_id) {
@@ -92,13 +91,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                 return prom;
             };
 
-            const get_job_report_log = function (job_id) {
-                const prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/log');
-                return prom;
-            };
-
             const get_assemblies = function (job_id) {
-                const prom = $.get(
+                return $.get(
                     self.arURL +
                         '/user/' +
                         user +
@@ -106,23 +100,19 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                         job_id +
                         '/results?type=contigs,scaffolds'
                 );
-                return prom;
             };
 
             const get_best_assembly = function (job_id) {
-                const prom = $.get(
-                    self.arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto'
-                );
-                return prom;
+                return $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto');
             };
 
             const get_assemblers = function () {
                 const deferred = $.Deferred();
                 $.get(self.arURL + '/module/avail').done((mod_avail) => {
-                    asms = [];
-                    all = JSON.parse(mod_avail);
+                    const asms = [];
+                    const all = JSON.parse(mod_avail);
                     console.log(all);
-                    for (i = 0; i < all.length; i++) {
+                    for (let i = 0; i < all.length; i++) {
                         if (all[i].stages.search('assembler') != -1) {
                             asms.push(all[i]);
                         }
@@ -135,30 +125,28 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
             const get_modules = function () {
                 const deferred = $.Deferred();
                 $.get(self.arURL + '/module/avail').done((mod_avail) => {
-                    pre = [];
-                    asms = [];
-                    post = [];
-                    all = JSON.parse(mod_avail);
-                    for (i = 0; i < all.length; i++) {
-                        if (all[i].stages.search('pre') != -1) {
-                            pre.push(all[i]);
-                        }
-                    }
-                    for (i = 0; i < all.length; i++) {
-                        if (all[i].stages.search('assembler') != -1) {
-                            asms.push(all[i]);
-                        }
-                    }
-                    for (i = 0; i < all.length; i++) {
-                        if (all[i].stages.search('post') != -1) {
-                            post.push(all[i]);
-                        }
-                    }
-                    console.log('all');
-                    console.log(all);
-
-                    //// FIX: modules are tagged, rather than categorized
-                    //          deferred.resolve([pre, asms, post]);
+                    const all = JSON.parse(mod_avail);
+                    // const pre = [],
+                    //     asms = [],
+                    //     post = [],
+                    //
+                    // for (let i = 0; i < all.length; i++) {
+                    //     if (all[i].stages.search('pre') != -1) {
+                    //         pre.push(all[i]);
+                    //     }
+                    // }
+                    // for (let i = 0; i < all.length; i++) {
+                    //     if (all[i].stages.search('assembler') != -1) {
+                    //         asms.push(all[i]);
+                    //     }
+                    // }
+                    // for (let i = 0; i < all.length; i++) {
+                    //     if (all[i].stages.search('post') != -1) {
+                    //         post.push(all[i]);
+                    //     }
+                    // }
+                    // console.log('all');
+                    // console.log(all);
                     deferred.resolve([all]);
                 });
                 return deferred.promise();
@@ -184,16 +172,16 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
             const make_data_table = function (info) {
                 const tables = $('<div>');
                 if (info.paired_end_libs != undefined) {
-                    for (var i = 0; i < info.paired_end_libs.length; i++) {
-                        var tbl = $(
+                    for (let i = 0; i < info.paired_end_libs.length; i++) {
+                        const tbl = $(
                             '<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">'
                         );
                         tbl.append('<thead><tr><th>Paired-End Files</th></tr></thead>');
                         for (let j = 0; j < 2; j++) {
-                            var file_row = '';
-                            handle = 'handle_' + String(j + 1);
+                            let file_row = '';
+                            const handle = 'handle_' + String(j + 1);
                             if (info.paired_end_libs[i][handle] != undefined) {
-                                var fname = info.paired_end_libs[i][handle].file_name;
+                                const fname = info.paired_end_libs[i][handle].file_name;
                                 file_row += '<tr><td>' + fname + '</td>';
                                 file_row += '</tr>';
                                 tbl.append(file_row);
@@ -203,13 +191,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                     }
                 }
                 if (info.single_end_libs != undefined) {
-                    for (var i = 0; i < info.single_end_libs.length; i++) {
-                        var tbl = $(
+                    for (let i = 0; i < info.single_end_libs.length; i++) {
+                        const tbl = $(
                             '<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">'
                         );
                         tbl.append('<thead><tr><th>Single-End File</th></tr></thead>');
-                        var file_row = '';
-                        var fname = info.single_end_libs[i]['handle'].file_name;
+                        let file_row = '';
+                        const fname = info.single_end_libs[i]['handle'].file_name;
                         file_row += '<tr><td>' + fname + '</td>';
                         file_row += '</tr>';
                         tbl.append(file_row);
@@ -217,13 +205,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                     }
                 }
                 if (info.references != undefined) {
-                    for (var i = 0; i < info.references.length; i++) {
-                        var tbl = $(
+                    for (let i = 0; i < info.references.length; i++) {
+                        const tbl = $(
                             '<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">'
                         );
                         tbl.append('<thead><tr><th>Reference File</th></tr></thead>');
-                        var file_row = '';
-                        var fname = info.references[i]['handle'].file_name;
+                        let file_row = '';
+                        const fname = info.references[i]['handle'].file_name;
                         file_row += '<tr><td>' + fname + '</td>';
                         file_row += '</tr>';
                         tbl.append(file_row);
@@ -290,9 +278,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                 '<button class="btn btn-default col-md-2 btn-primary pull-right asm-form"><span class="glyphicon glyphicon-play-circle"  style="color:white;"></span> Assemble</button>'
             );
 
-            var update_asm_pool = function (assembler_pool, pool) {
+            const update_asm_pool = function (ass_pool, pool) {
                 const body = $('<div>');
-                for (i = 0; i < pool.length; i++) {
+                for (let i = 0; i < pool.length; i++) {
                     (function (i) {
                         body.append(
                             $(
@@ -304,17 +292,17 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                                 $('#asm-' + pool[i]).show();
                                 const asm_idx = pool.indexOf(pool[i]);
                                 pool.splice(asm_idx, 1);
-                                update_asm_pool(assembler_pool, pool);
+                                update_asm_pool(ass_pool, pool);
                             })
                         );
                     })(i);
                 }
                 console.log(body);
-                assembler_pool.html(body);
+                ass_pool.html(body);
             };
 
             get_assemblers().done((asms) => {
-                for (i = 0; i < asms.length; i++) {
+                for (let i = 0; i < asms.length; i++) {
                     (function (i) {
                         const asm_id = 'asm-' + asms[i].name;
                         const asm = $(
@@ -371,9 +359,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                 '<button class="btn btn-large col-md-2 asm-form btn-primary pull-right"><span class="glyphicon glyphicon-play-circle"  style="color:white;"></span> Assemble</button>'
             );
 
-            var update_pipe_pool = function (pool) {
+            const update_pipe_pool = function (pool) {
                 const body = $('<div>');
-                for (i = 0; i < pool.length; i++) {
+                for (let i = 0; i < pool.length; i++) {
                     (function (i) {
                         body.append(
                             $(
@@ -397,10 +385,10 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
             };
 
             get_modules().done((lists) => {
-                for (i = 0; i < lists.length; i++) {
+                for (let i = 0; i < lists.length; i++) {
                     (function (i) {
                         const asms = lists[i];
-                        for (j = 0; j < asms.length; j++) {
+                        for (let j = 0; j < asms.length; j++) {
                             (function (j) {
                                 const asm_id = 'pipe-' + asms[j].name;
                                 const asm2 = $(
@@ -449,7 +437,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                     datatype: 'json',
                     success: function (data) {
                         console.log(data);
-                        job_id = data;
+                        const job_id = data;
                         self.state['job_id'] = data;
                         const status = 'Submitted';
                         const status_box = make_status_table(job_id, arRequest.message, status);
@@ -480,7 +468,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                                     clearInterval(status_updater);
                                     kill_div.html('');
                                     if (stat.search('Complete') != -1) {
-                                        const report_txt = null;
                                         const defer_asm = $.Deferred();
                                         const defer_auto = $.Deferred();
                                         const defer_route = $.Deferred();
@@ -493,9 +480,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
 
                                         //// Get auto assembly
                                         get_best_assembly(job_id).done((asm) => {
-                                            best = JSON.parse(asm)[0];
-                                            best_id = best.shock_id;
-                                            best_url = best.shock_url;
+                                            const best = JSON.parse(asm)[0];
                                             defer_auto.resolve({
                                                 shock_url: best.shock_url,
                                                 shock_id: best.shock_id,
@@ -543,7 +528,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                                 }
                             });
                         };
-                        var status_updater = null;
+                        let status_updater = null;
                         status_updater = setInterval(update_status, 10000);
                     },
                     error: function (data) {
@@ -560,7 +545,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                 self.state['description'] = desc;
                 arRequest.recipe = recipe;
                 arRequest.message = desc;
-                run_asm(arRequest, desc);
+                run_asm(arRequest);
             });
 
             asm_btn2.one('click', () => {
@@ -591,22 +576,22 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
         },
 
         import_contigs_to_ws: function (
-            token,
-            fba_url,
-            ws_url,
+            _token,
+            _fba_url,
+            _ws_url,
             ws_name,
             shock_id,
             shock_url,
             contig_name
         ) {
-            var contig_name = $(
+            const $contig_name = $(
                 '<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="' +
                     contig_name +
                     '"> </div>'
             );
             const $importModal = new kbasePrompt($('<div></div>'), {
                 title: 'Import Contigs',
-                body: contig_name,
+                body: $contig_name,
                 modalClass: 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
                 controls: [
                     'cancelButton',
@@ -615,12 +600,12 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
                         type: 'primary',
                         callback: function (e, $prompt) {
                             $prompt.closePrompt();
-                            cname = contig_name.find('input').val();
-                            console.log(contig_name.find('input'));
+                            const cname = $contig_name.find('input').val();
+                            console.log($contig_name.find('input'));
 
                             console.log(cname);
 
-                            //var fba = new fbaModelServices(fba_url, {'token': token});
+                            //let fba = new fbaModelServices(fba_url, {'token': token});
                             kb.fba
                                 .fasta_to_ContigSet({
                                     fasta: shock_id,
@@ -668,9 +653,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
 
                 // //// Restore assemblers
                 if (self.state.asm_pool) {
-                    var pool = self.state.asm_pool;
-                    var body = $('<div>');
-                    for (i = 0; i < pool.length; i++) {
+                    const pool = self.state.asm_pool;
+                    const body = $('<div>');
+                    for (let i = 0; i < pool.length; i++) {
                         (function (i) {
                             body.append(
                                 $(
@@ -686,9 +671,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
 
                 // //// Restore pipeline
                 if (self.state.pipe_pool) {
-                    var pool = self.state.pipe_pool;
-                    var body = $('<div>');
-                    for (i = 0; i < pool.length; i++) {
+                    const pool = self.state.pipe_pool;
+                    const body = $('<div>');
+                    for (let i = 0; i < pool.length; i++) {
                         (function (i) {
                             console.log(pool[i]);
                             body.append(
@@ -736,13 +721,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], (
 
                 import_btn_sel.append(contig_import_auto);
                 import_btn_sel.append('<li class="divider"></li>');
-                for (i = 0; i < assemblies.length; i++) {
+                for (let i = 0; i < assemblies.length; i++) {
                     (function (i) {
                         const contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
                         contig_import.on('click', () => {
-                            shock_url = assemblies[i].file_infos[0].shock_url;
-                            shock_id = assemblies[i].file_infos[0].shock_id;
-                            ws_contig_name = job_id + '_' + assemblies[i].name;
+                            const shock_url = assemblies[i].file_infos[0].shock_url,
+                                shock_id = assemblies[i].file_infos[0].shock_id,
+                                ws_contig_name = job_id + '_' + assemblies[i].name;
                             self.import_contigs_to_ws(
                                 token,
                                 self.fba_url,

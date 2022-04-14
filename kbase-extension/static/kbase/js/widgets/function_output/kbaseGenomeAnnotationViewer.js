@@ -6,28 +6,20 @@
 
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
-    'bluebird',
     'narrativeConfig',
     'ContigBrowserPanel',
-    'util/string',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'jquery-dataTables',
     'GenomeAnnotationAPI-client-api',
     'kbaseTable',
 ], (
     KBWidget,
-    bootstrap,
     $,
-    Promise,
     Config,
     ContigBrowserPanel,
-    StringUtil,
     kbaseAuthenticatedWidget,
     kbaseTabs,
-    jquery_dataTables,
     gaa,
     kbaseTable
 ) => {
@@ -99,12 +91,6 @@ define([
         },
 
         numberWithCommas: function (x) {
-            //x = x.toString();
-            //var pattern = /(-?\d+)(\d{3})/;
-            //while (pattern.test(x))
-            //    x = x.replace(pattern, "$1,$2");
-            //return x;
-            // speedup over above code, which can help on very long lists
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
 
@@ -247,18 +233,12 @@ define([
         },
 
         settingsForType: function (type) {
-            const $self = this;
-
             if (type == 'contigs') {
                 const columns = [
                     { title: 'Contig Id', data: 'name' },
                     { title: 'Length', data: 'length' },
                     { title: 'Genes', data: 'genecount' },
                 ];
-
-                //for (type of Object.keys(this.summary.annotation.feature_type_counts).sort(this.sortCaseInsensitively)) {
-                //  columns.push( { title: type + 's', data : type + 'count'} );
-                //}
 
                 return {
                     pagingType: 'full_numbers',
@@ -267,10 +247,7 @@ define([
                     columns: columns,
                     data: [],
                     language: {
-                        search: 'Search contig:',
                         emptyTable: 'No contigs found.',
-                    },
-                    language: {
                         lengthMenu: '_MENU_ Contigs per page',
                         zeroRecords: 'No Matching Contigs Found',
                         info: 'Showing _START_ to _END_ of _TOTAL_ Contigs',
@@ -278,21 +255,6 @@ define([
                         infoFiltered: '(filtered from _MAX_)',
                         search: 'Search Contigs',
                     },
-                    //"createdRow" : function (row, data, index) {
-
-                    /* creates a contig browser tab -- not working yet, so commented out */
-                    /*var $linkCell = $('td', row).eq(0);
-                        $linkCell.empty();
-
-                        $linkCell.append(
-                         $.jqElem('a')
-                          .on('click', function(e) {
-                            $self.showContig(data.name);
-                          })
-                          .append(data.name)
-                        );*/
-
-                    //},
                 };
             } else {
                 return {
@@ -321,36 +283,6 @@ define([
                         infoFiltered: '(filtered from _MAX_)',
                         search: 'Search Features',
                     },
-
-                    // Gene view and simple contig browser not working, so comment out */
-                    /*"createdRow" : function (row, data, index) {
-
-                if (data.type == 'gene') {
-                  var $featureCell = $('td', row).eq(0);
-                  $featureCell.empty();
-
-                  $featureCell.append(
-                   $.jqElem('a')
-                    .on('click', function(e) {
-                      $self.showGene(data.id);
-                    })
-                    .append(data.id)
-                  );
-                }
-
-                var $contigCell = $('td', row).eq(2);
-                $contigCell.empty();
-
-                $contigCell.append(
-                 $.jqElem('a')
-                  .on('click', function(e) {
-                    $self.showContig(data.contig);
-                  })
-                  .append(data.contig)
-                );
-
-              },*/
-                    //"fnDrawCallback": function() { geneEvents(); contigEvents(); }
                 };
             }
         },
@@ -364,10 +296,10 @@ define([
 
             const $target = $.jqElem('div').append($self.loaderElem());
 
-            var $selector = $.jqElem('select').on('change', () => {
+            const $selector = $.jqElem('select').on('change', () => {
                 $self.showContent($selector.val(), $target);
             });
-            for (type in Object.keys(this.summary.annotation.feature_type_counts).sort(
+            for (const type in Object.keys(this.summary.annotation.feature_type_counts).sort(
                 this.sortCaseInsensitively
             )) {
                 $selector
@@ -417,13 +349,7 @@ define([
                     .then((features) => {
                         const contigMap = $self.contigMap;
 
-                        const cdsData = []; //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
-                        const mrnaData = []; //XXX plants baloney. We throw away mrnaData. See below on line 372 or so.
-
                         $self.content['contigs'] = $self.setDataTableStyles($.jqElem('table'));
-
-                        const genomeType = 'genome'; //self.genomeType(gnm); XXX THIS NEEDS TO BE FIXED TO IDENTIFY TRANSCRIPTOMES AGAIN!
-                        const featurelist = {};
 
                         $.each(features, (feature_id, feature) => {
                             $self.content[feature.feature_type] = $self.setDataTableStyles(
@@ -454,14 +380,14 @@ define([
                                         };
                                         $.each(
                                             $self.summary.annotation.feature_type_counts,
-                                            (type, v) => {
-                                                contigMap[contig.contig_id].features[type] = [];
+                                            (type_) => {
+                                                contigMap[contig.contig_id].features[type_] = [];
                                             }
                                         );
                                     }
                                 });
 
-                                contigName = feature.feature_locations[0].contig_id;
+                                const contigName = feature.feature_locations[0].contig_id;
 
                                 let dataArray = $self.genomeAnnotationData[feature.feature_type];
                                 if (dataArray == undefined) {
@@ -470,7 +396,6 @@ define([
                                 }
 
                                 dataArray.push({
-                                    // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
                                     id: feature_id,
                                     contig: feature.feature_locations
                                         .map((v) => {
@@ -484,7 +409,6 @@ define([
                                             })
                                             .join('<br>')
                                     ),
-                                    //dir: location.strand,
                                     dir: $self.numberWithCommas(
                                         feature.feature_locations
                                             .map((v) => {
@@ -492,7 +416,6 @@ define([
                                             })
                                             .join('<br>')
                                     ),
-                                    //len: $self.numberWithCommas(location.length),
                                     len: $self.numberWithCommas(
                                         feature.feature_locations
                                             .map((v) => {
@@ -504,13 +427,6 @@ define([
                                     func: feature.feature_function || '',
                                     aliases: aliases.join(', '),
                                 });
-
-                                /*$.each(
-                      feature.feature_locations,
-                      function (i, location) {
-
-                      }
-                    );*/
 
                                 $self.geneMap[feature_id] = feature;
 
@@ -542,7 +458,7 @@ define([
                                 length: $self.numberWithCommas(contig.length),
                             };
 
-                            for (f in contig.features) {
+                            for (const f in contig.features) {
                                 contigRow[f + 'count'] = $self.numberWithCommas(
                                     contig.features[f].length
                                 );
@@ -595,10 +511,8 @@ define([
 
             const $tabObj = $self.data('tabObj');
 
-            var $content = Date.now();
-
             if (!$tabObj.hasTab(geneId)) {
-                var $content = $.jqElem('div');
+                const $content = $.jqElem('div');
 
                 const gene = $self.geneMap[geneId];
                 console.log('SHOWS GENE', geneId, gene);
@@ -636,7 +550,7 @@ define([
                         geneId +
                         '</a>',
                     $.jqElem('a')
-                        .on('click', (e) => {
+                        .on('click', () => {
                             $self.showContig(contigName);
                         })
                         .append(contigName),
@@ -679,6 +593,7 @@ define([
                     }
                 }
 
+                // what the f??
                 if (f.protein_translation) {
                     elemTable.append(
                         '<tr><td>Protein Translation</td><td><div class="kb-ga-seq">' +
@@ -705,10 +620,8 @@ define([
 
             const $tabObj = $self.data('tabObj');
 
-            var $content = Date.now();
-
             if (!$tabObj.hasTab(contigId)) {
-                var $content = $.jqElem('div');
+                const $content = $.jqElem('div');
                 const contig = $self.contigMap[contigName];
                 const elemTable = $(
                     '<table class="table table-striped table-bordered" \

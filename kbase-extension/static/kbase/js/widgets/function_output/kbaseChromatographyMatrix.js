@@ -1,11 +1,10 @@
-define([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-    'kbaseMatrix2DAbstract',
-    'kbaseTabs',
-    'jquery-dataTables',
-], (KBWidget, bootstrap, $, kbaseMatrix2DAbstract, kbaseTabs, jquery_dataTables) => {
+define(['kbwidget', 'jquery', 'kbaseMatrix2DAbstract', 'kbaseTabs'], (
+    KBWidget,
+    $,
+    kbaseMatrix2DAbstract,
+    kbaseTabs
+) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseChromatographyMatrix',
         parent: kbaseMatrix2DAbstract,
@@ -22,7 +21,6 @@ define([
                 this.matrix.metadata.row_metadata,
                 'TimeSeries'
             );
-            //            var substancesSummary = this.getSubstancesSummary(substances);
 
             this.loading(false);
             const $container = $('<div/>');
@@ -160,7 +158,7 @@ define([
                     }
                 }
 
-                substance = {
+                const substance = {
                     substanceId: columnId,
                     label: substanceName,
                     maxValue: maxValue,

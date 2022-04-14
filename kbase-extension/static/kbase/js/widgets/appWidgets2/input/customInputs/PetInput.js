@@ -1,4 +1,5 @@
-define(['bluebird', 'kb_common/html', 'common/monoBus'], (Promise, html) => {
+define(['bluebird', 'common/html', 'common/monoBus'], (Promise, html) => {
+    'use strict';
     // This is a functional html composition and generation library.
     const t = html.tag,
         div = t('div'),

@@ -1,12 +1,10 @@
-define([
-    'bluebird',
-    'base/js/namespace',
-    'kb_common/html',
-    '../validation',
-    'common/events',
-    'common/ui',
-    'bootstrap',
-], (Promise, Jupyter, html, Validation, Events, UI) => {
+define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui', 'bootstrap'], (
+    Promise,
+    html,
+    Validation,
+    Events,
+    UI
+) => {
     'use strict';
 
     // Constants
@@ -16,16 +14,13 @@ define([
         label = t('label');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
             model = {
                 updates: 0,
                 value: undefined,
             };
-
+        let parent, container, ui;
         // MODEL
 
         function setModelValue(value) {
@@ -102,12 +97,12 @@ define([
             ]);
         }
 
-        function render(events) {
+        function render() {
             return div(
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeViewControl(events, bus))]
+                [div({ dataElement: 'input-container' }, makeViewControl())]
             );
         }
 
@@ -127,7 +122,7 @@ define([
                 });
 
                 setModelValue(config.initialValue);
-                container.innerHTML = render(events);
+                container.innerHTML = render();
                 events.attachEvents();
 
                 autoValidate();

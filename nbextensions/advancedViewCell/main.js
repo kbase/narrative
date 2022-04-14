@@ -19,7 +19,7 @@ define(
         'jquery',
         'bluebird',
         'uuid',
-        'kb_common/html',
+        'common/html',
         'base/js/namespace',
         './widgets/advancedViewCellWidget',
         'common/runtime',
@@ -50,10 +50,10 @@ define(
         Workspace
     ) => {
         'use strict';
-        let t = html.tag,
+        const t = html.tag,
             div = t('div'),
-            workspaceInfo,
             runtime = Runtime.make();
+        let workspaceInfo;
 
         /*
          * Should only be called when a cell is first inserted into a narrative.
@@ -297,7 +297,7 @@ define(
                     // type - jupyter cell type ('code', 'markdown')
                     // index - index at which cell was inserted
                     // data - kbase cell setup data.
-                    jupyter.onEvent('insertedAtIndex.Cell', (event, payload) => {
+                    jupyter.onEvent('insertedAtIndex.Cell', (_event, payload) => {
                         const cell = payload.cell;
                         const setupData = payload.data;
                         const jupyterCellType = payload.type;

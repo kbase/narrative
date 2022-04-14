@@ -2,7 +2,7 @@ define([
     'bluebird',
     'jquery',
     'base/js/namespace',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
     'common/ui',

@@ -1309,6 +1309,9 @@ define([
 
                             return objectReportsForOutput;
                         });
+                })
+                .catch((error) => {
+                    console.error(error);
                 });
         },
 

@@ -829,7 +829,7 @@ define([
                                 );
                                 history.reverse();
                                 const $tbl = $('<table>').css({ width: '100%' });
-                                for (const [historyItem, historyIndex] of history.items()) {
+                                history.forEach((historyItem, historyIndex) => {
                                     const $revertBtn = $('<button>')
                                         .append('v' + historyItem[4])
                                         .addClass('kb-data-list-btn');
@@ -914,7 +914,7 @@ define([
                                                     })
                                             )
                                     );
-                                }
+                                });
                                 $alertContainer.append($tbl);
                             },
                             (error) => {

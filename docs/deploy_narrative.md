@@ -79,7 +79,7 @@ The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [produ
 
 ### Deploying Narrative-Refactor
 
-The [narrative-refactor](https://narrative-refactor.kbase.us) image is automatically built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge. The images can be found here: https://github.com/orgs/kbase/packages
+The [narrative-refactor](https://narrative-refactor.kbase.us) image is automatically built against the "develop" branch of the repo and is called narrative-develop:pr### when still in a PR state or narrative-develop:latest after merge. The images can be found here: https://github.com/orgs/kbase/packages
 
 ### Deploying Narrative-Dev
 The [narrative-dev](https://narrative-dev.kbase.us) environment is meant for pre-release and iterative testing of new UI features and changes. As such, this isn't always tied to any particular branch, although it is most often set to deploy the production image. Contact a DevOps team member if there are any questions.
@@ -117,7 +117,7 @@ Once a pull request is merged from `develop` to `main` a new _production_ image 
 | Environment | Image URL                                                      |
 | ----------- | -------------------------------------------------------------- |
 | CI          | ghcr.io/kbase/narrative-develop:latest |
-| Narrative-refactor| ghcr.io/kbase/narrative-truss:latest |
+| Narrative-refactor| ghcr.io/kbase/narrative-develop:latest |
 | Appdev      | ghcr.io/kbase/narrative:appdev         |
 | Next        | ghcr.io/kbase/narrative:next           |
 | Production  | ghcr.io/kbase/narrative:prod           |

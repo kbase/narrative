@@ -15,7 +15,7 @@ define(['common/props'], (Props) => {
         if (typeof value !== 'string') {
             return false;
         }
-        switch (value.toLowerCase(value)) {
+        switch (value.toLowerCase()) {
             case 'true':
             case 't':
             case 'yes':
@@ -154,14 +154,7 @@ define(['common/props'], (Props) => {
             case 'textsubdata':
                 return 'subdata';
             case 'custom_textsubdata':
-                //if (spec.allow_multiple) {
-                //    return '[]string';
-                //}
                 return 'string';
-            //var custom = customTextSubdata();
-            //if (custom) {
-            //    return custom;
-            //}
             case 'custom_button':
                 switch (spec.id) {
                     case 'input_check_other_params':
@@ -176,8 +169,6 @@ define(['common/props'], (Props) => {
                 break;
             case 'group':
                 return 'struct';
-            // case 'reads_group_editor':
-            //     return 'reads_group_editor';
         }
 
         /*
@@ -185,18 +176,12 @@ define(['common/props'], (Props) => {
          */
         if (!spec.text_options) {
             // consider it plain, unconstrained text.
-            //if (spec.allow_multiple) {
-            //    return '[]string';
-            //}
             return 'string';
         } else {
             const validateAs = spec.text_options.validate_as;
             if (validateAs) {
                 // For int and float, "validateAs" overrides the type.
                 if (validateAs === 'int' || validateAs === 'float') {
-                    //if (spec.allow_multiple) {
-                    //    return '[]' + validateAs;
-                    //}
                     return validateAs;
                 }
             }
@@ -204,11 +189,7 @@ define(['common/props'], (Props) => {
             // Some parameter specs have valid_ws_types as an empty set, which
             // does not mean what it could, it means that it is not an option.
             if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-                //if (spec.allow_multiple) {
-                //    return '[]workspaceObjectName';
-                //} else {
                 return 'workspaceObjectName';
-                //}
             }
         }
 
@@ -218,9 +199,6 @@ define(['common/props'], (Props) => {
 
         switch (spec.field_type) {
             case 'text':
-                //if (spec.allow_multiple) {
-                //    return '[]string';
-                //} else {
                 return 'string';
             //}
         }
@@ -342,7 +320,7 @@ define(['common/props'], (Props) => {
                 }
                 break;
             case 'subdata':
-                console.log('SUBDTA', spec);
+                // console.log('SUBDTA', spec);
                 constraints = {
                     multiple: false,
                     // The parameter containing the object name we derive data from
@@ -364,75 +342,6 @@ define(['common/props'], (Props) => {
                         spec.textsubdata_options.subdata_selection.description_template,
                 };
                 break;
-            //                case 'xxinput_property_x':
-            //                    return {
-            //                        defaultValue: defaultValue(),
-            //                        referredParameter: 'input_sample_property_matrix',
-            //                        subdataIncluded: 'metadata/column_metadata',
-            //                        path: 'metadata/column_metadata',
-            //                        // custom function to collect
-            //                        mapper: {
-            //                            before: function () {
-            //                                return {
-            //                                    collected: {}
-            //                                };
-            //                            },
-            //                            during: function (values, state) {
-            //                                values.forEach(function (value) {
-            //                                    if (value.entity === 'Condition') {
-            //                                        state.collected[value.property_name] = true;
-            //                                    }
-            //                                });
-            //                            },
-            //                            after: function (state) {
-            //                                return Object.keys(state.collected).map(function (key) {
-            //                                    return {
-            //                                        id: key,
-            //                                        desc: key
-            //                                    };
-            //                                });
-            //                            }
-            //                        }
-            //                    };
-            //                case 'sample_property':
-            //                    return {
-            //                        required: required(),
-            //                        defaultValue: defaultValue(),
-            //                        referredParameter: 'input_sample_property_matrix',
-            //                        subdataIncluded: 'metadata/column_metadata',
-            //                        subdataPath: 'metadata.column_metadata',
-            //                        // custom function to collect
-            //                        map: function (subdata) {
-            //                            var collected = {};
-            //                            Object.keys(subdata).forEach(function (key) {
-            //                                    var id, name, column = subdata[key];
-            //                                    column.forEach(function (value) {
-            //                                        if (value.category === 'DataSeries' && value.property_name === 'SeriesID') {
-            //                                            id = value.property_value;
-            //                                        } else if (value.category === 'Property' && value.property_name === 'Name') {
-            //                                            name = value.property_value;
-            //                                        }
-            //                                        if (id && name) {
-            //                                            collected[id] = name;
-            //                                        }
-            //                                    });
-            //                                });
-            //                                return Object.keys(collected).map(function (key) {
-            //                                    return {
-            //                                        id: key,
-            //                                        desc: collected[key]
-            //                                    };
-            //                                })
-            //                                    .sort(function (a, b) {
-            //                                        if (a.desc < b.desc) {
-            //                                            return -1;
-            //                                        } else if (a.desc > b.desc) {
-            //                                            return 1;
-            //                                        }
-            //                                        return 0;
-            //                                    });
-            //                        }
-            //                    };
             case 'struct':
                 break;
             case 'unspecified':
@@ -521,46 +430,6 @@ define(['common/props'], (Props) => {
         };
     }
 
-    function convertGroupList(group, params) {
-        const defaultValue = [];
-        const nullValue = [];
-        const structSpec = {
-            id: group.id,
-            multipleItems: true,
-            ui: {
-                label: group.ui_name,
-                description: group.description,
-                hint: group.short_hint,
-                class: group.ui_class || 'parameter',
-                control: '',
-                layout: group.parameter_ids,
-            },
-            data: {
-                type: '[]struct',
-                constraints: {
-                    required: function () {
-                        if (group.optional === 1) {
-                            return false;
-                        }
-                        return true;
-                    },
-                },
-                defaultValue: defaultValue,
-                nullValue: nullValue,
-            },
-            // may not need this, but it is consistent with struct.
-            parameters: {
-                layout: ['item'],
-                specs: {
-                    item: convertGroupToStruct(group, params),
-                },
-            },
-        };
-        params[group.id] = structSpec;
-
-        return structSpec;
-    }
-
     function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
         const groupParams = {};
@@ -609,13 +478,11 @@ define(['common/props'], (Props) => {
         return structSpec;
     }
 
-    function makeListSpec(spec, params) {}
-
     function convertGroup(group, params) {
         const structSpec = convertGroupToStruct(group, params);
         if (group.allow_multiple === 1) {
             // wrap in a list
-            console.log('GROUP', group);
+            // console.log('GROUP', group);
             const listSpec = {
                 spec: {
                     ui: {
@@ -648,8 +515,7 @@ define(['common/props'], (Props) => {
 
         /// console.log('SDK APP SPEC', sdkAppSpec);
 
-        let parameterSpecs = {},
-            parameterLayout;
+        const parameterSpecs = {};
 
         // First convert all parameters
         sdkAppSpec.parameters.forEach((parameter) => {
@@ -668,7 +534,7 @@ define(['common/props'], (Props) => {
 
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
-        parameterLayout = sdkAppSpec.parameters
+        const parameterLayout = sdkAppSpec.parameters
             .filter((parameter) => {
                 if (parameterSpecs[parameter.id]) {
                     return true;
@@ -695,30 +561,6 @@ define(['common/props'], (Props) => {
                 },
             },
         };
-
-        // wrap the rest of the app?
-
-        //        return  {
-        //            id: 'name',
-        //
-        //            multipleItems: false,
-        //
-        //            ui: {
-        //                label: 'Reads Set Name',
-        //                description: 'Name of the reads set',
-        //                hint: 'The name of the set of sequence reads',
-        //                class: 'parameter',
-        //                control: null
-        //            },
-        //            data: {
-        //                type: 'string',
-        //                constraints: {
-        //                    required: true,
-        //                    rule: 'WorkspaceObjectName' // ws data_type
-        //                },
-        //                defaultValue: ''
-        //            }
-        //        };
     }
 
     return {

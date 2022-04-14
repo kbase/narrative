@@ -7,8 +7,8 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
 
         let lastId = 0; //: number;
         const partners = {}; // Object<String, any>;
-        const listeners = {}; //Object<String, Array<any>>;
-        const awaitingResponse = {}; //: Object<String, any>;
+        const listeners = {}; // Object<String, Array<any>>;
+        const awaitingResponse = {}; // Object<String, any>;
 
         function genId() {
             lastId += 1;
@@ -30,7 +30,7 @@ define(['bluebird', 'uuid'], (Promise, Uuid) => {
             const message = event.data;
             let response;
 
-            if (!message.address && !message.address.to) {
+            if (!message.address || !message.address.to) {
                 console.warn('Message without address.to - ignored (iframe)', message);
                 return;
             }

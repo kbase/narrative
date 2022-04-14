@@ -1427,7 +1427,7 @@ define(
                     newJobState = message[existingJobId].jobState,
                     { outputWidgetInfo } = message[existingJobId],
                     forceRender =
-                        !Jobs.isValidJobStateObject(existingState) &&
+                        (!existingState || !Jobs.isValidJobStateObject(existingState)) &&
                         Jobs.isValidJobStateObject(newJobState);
                 if (!existingState || !_.isEqual(existingState, newJobState)) {
                     model.setItem('exec.jobState', newJobState);

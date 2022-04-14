@@ -2,7 +2,7 @@ define([
     'bluebird',
     'jquery',
     'underscore',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
     '../validation',

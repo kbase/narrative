@@ -1,7 +1,7 @@
 define([
     'bluebird',
     // CDN
-    'kb_common/html',
+    'common/html',
     // LOCAL
     'common/ui',
     'common/events',
@@ -31,23 +31,22 @@ define([
     const t = html.tag,
         form = t('form'),
         div = t('div');
-    // bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             appId = config.appId,
             appTag = config.appTag,
-            hostNode,
-            container,
-            ui,
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(busConnection.genName()),
             model = Props.make(),
+            paramResolver = ParamResolver.make();
+
+        let hostNode,
+            container,
+            ui,
             fieldWidgets = [],
-            paramResolver = ParamResolver.make(),
-            widgets = [],
             readsSetModel;
 
         // RENDERING
@@ -108,16 +107,12 @@ define([
                                 key: 'get-parameter-value',
                             }
                         )
-                        .then((message) => {
+                        .then((msg) => {
                             channel.emit('parameter-value', {
-                                parameter: message.parameter,
+                                parameter: msg.parameter,
                             });
                         });
                 });
-
-                //bus.on('parameter-value', function (message) {
-                //    bus.emit('parameter-value', message);
-                //});
 
                 fieldWidget.bus.respond({
                     key: {
@@ -160,7 +155,7 @@ define([
             });
         }
 
-        function buildLayout(events) {
+        function buildLayout() {
             return form({ dataElement: 'input-widget-form' }, [
                 div({ dataElement: 'field-area' }, [div({ dataElement: 'fields' })]),
             ]);
@@ -176,35 +171,9 @@ define([
                     fieldWidget.bus.emit('reset-to-defaults');
                 });
             });
-            //runtime.bus().on('workspace-changed', function() {
-            // tell each input widget about this amazing event!
-            //widgets.forEach(function(widget) {
-            //    widget.bus.emit('workspace-changed');
-            //});
-            // });
-        }
-
-        // Maybe
-        function validateParameterSpec(spec) {
-            // ensure that inputs are consistent with inputs
-
-            // and outputs with output
-
-            // and params with param
-
-            // validate type
-
-            return spec;
-        }
-
-        function validateParameterSpecs(params) {
-            return params.map((spec) => {
-                return validateParameterSpec(spec);
-            });
         }
 
         // LIFECYCLE API
-
         // Just a simple row layout.
         function renderEditorLayout() {
             const view = {};
@@ -245,8 +214,6 @@ define([
                             spec,
                             model.getItem(['params', spec.id])
                         ).then((result) => {
-                            widgets.push(result);
-
                             return result.widget.start({
                                 node: document.getElementById(layout.view[parameterId].id),
                             });
@@ -273,7 +240,7 @@ define([
             const events = Events.make({
                 node: container,
             });
-            container.innerHTML = buildLayout(events);
+            container.innerHTML = buildLayout();
             events.attachEvents(container);
         }
 
@@ -314,7 +281,6 @@ define([
                                 parameter: message.parameter,
                             },
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
             });

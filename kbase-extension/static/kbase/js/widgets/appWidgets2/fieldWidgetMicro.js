@@ -10,14 +10,13 @@
 define([
     'bluebird',
     'google-code-prettify/prettify',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
-    'common/props',
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify',
-], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
+], (Promise, PR, html, Events, UI, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -39,20 +38,15 @@ define([
         };
 
     function factory(config) {
-        let ui,
-            runtime = Runtime.make(),
+        let ui, places, parent, container, inputControl, enabled;
+        const runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
                 description: 'Field bus',
             }),
-            places,
-            parent,
-            container,
             inputControlFactory = config.inputControlFactory,
-            inputControl,
             options = {},
             fieldId = html.genId(),
-            spec = config.parameterSpec,
-            enabled;
+            spec = config.parameterSpec;
 
         try {
             inputControl = inputControlFactory.make({
@@ -170,12 +164,6 @@ define([
             places.messagePanel.classList.add('hidden');
         }
 
-        function hideError() {
-            places.field.classList.remove('-error');
-            places.messagePanel.classList.add('hidden');
-            places.feedbackIndicator.className = '';
-        }
-
         function feedbackNone() {
             places.feedbackIndicator.className = '';
             places.feedbackIndicator.classList.add('hidden');
@@ -196,21 +184,21 @@ define([
             places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
-        function rawSpec(spec) {
-            const specText = JSON.stringify(spec, false, 3),
+        function rawSpec() {
+            const specText = JSON.stringify(spec, null, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
-        function parameterInfoContent(spec) {
-            return div({ style: { padding: '0px' } }, [
+        function parameterInfoContent() {
+            return div({ style: { padding: 0 } }, [
                 div({ style: { fontWeight: 'bold' } }, spec.ui.label),
                 div({ style: { fontStyle: 'italic' } }, spec.id),
                 div({ style: { fontSize: '80%' } }, spec.ui.description),
             ]);
         }
 
-        function parameterInfoTypeRules(spec) {
+        function parameterInfoTypeRules() {
             switch (spec.data.type) {
                 case 'float':
                 case 'int':
@@ -221,7 +209,7 @@ define([
             }
         }
 
-        function parameterInfoRules(spec) {
+        function parameterInfoRules() {
             return table(
                 { class: 'table table-striped' },
                 [
@@ -239,7 +227,7 @@ define([
                             ]);
                         }
                     })(),
-                ].concat(parameterInfoTypeRules(spec))
+                ].concat(parameterInfoTypeRules())
             );
         }
 
@@ -267,17 +255,17 @@ define([
                             {
                                 label: 'About',
                                 name: 'about',
-                                content: parameterInfoContent(spec),
+                                content: parameterInfoContent(),
                             },
                             {
                                 label: 'Rules',
                                 name: 'rules',
-                                content: parameterInfoRules(spec),
+                                content: parameterInfoRules(),
                             },
                             {
                                 label: 'Spec',
                                 name: 'spec',
-                                content: rawSpec(spec),
+                                content: rawSpec(),
                             },
                         ],
                     })
@@ -406,30 +394,6 @@ define([
                                             }),
                                         ]
                                     ),
-                                    /* (function () {
-                            if (config.showInfo === false) {
-                                return '';
-                            }
-                            return div({
-                                class: 'input-group-addon kb-input-group-addon',
-                                style: {
-                                    width: '30px',
-                                    padding: '0'
-                                }
-                            }, [
-                                div({ dataElement: 'info' }, button({
-                                    class: 'btn btn-link btn-xs',
-                                    type: 'button',
-                                    tabindex: '-1',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                        }
-                                    })
-                                }, span({ class: 'fa fa-info-circle' })))
-                            ]);
-                        }()) */
                                 ]
                             ),
                         ]
@@ -542,16 +506,10 @@ define([
                             break;
                     }
                 });
-                // bus.on('touched', function (message) {
-                //     places.feedback.style.backgroundColor = 'yellow';
-                // });
-                // bus.on('changed', function () {
-                //     places.feedback.style.backgroundColor = '';
-                // });
-                bus.on('enable', (message) => {
+                bus.on('enable', () => {
                     doEnable();
                 });
-                bus.on('disable', (message) => {
+                bus.on('disable', () => {
                     doDisable();
                 });
 

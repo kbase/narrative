@@ -1,7 +1,7 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/runtime',
     'common/ui',

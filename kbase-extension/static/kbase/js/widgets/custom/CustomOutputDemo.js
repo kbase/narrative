@@ -1,4 +1,5 @@
-define(['bluebird', 'kb_common/html'], (Promise, html) => {
+define(['bluebird', 'common/html'], (Promise, html) => {
+    'use strict';
     const t = html.tag,
         div = t('div'),
         input = t('input');
@@ -57,7 +58,7 @@ define(['bluebird', 'kb_common/html'], (Promise, html) => {
             config.api.emit('metadata-changed', null);
         }
 
-        function render(stuff) {
+        function render() {
             places.main.node.innerHTML = div({}, [
                 div({}, ['Param1: ' + config.data.param1]),
                 div({}, [
@@ -75,17 +76,16 @@ define(['bluebird', 'kb_common/html'], (Promise, html) => {
                 ]),
             ]);
             places.input.node = document.getElementById(places.input.id);
-            places.input.node.addEventListener('change', (e) => {
+            places.input.node.addEventListener('change', () => {
                 doChange();
             });
         }
 
         // LIFECYCLE API
 
-        function start(params) {
+        function start() {
             return Promise.try(() => {
                 render();
-                // var state = config.api.getState();
                 let state = config.state;
                 if (state && typeof state === 'object') {
                     places.input.node.value = state.input;

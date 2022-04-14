@@ -15,7 +15,7 @@ define(['common/props'], (Props) => {
         if (typeof value !== 'string') {
             return false;
         }
-        switch (value.toLowerCase(value)) {
+        switch (value.toLowerCase()) {
             case 'true':
             case 't':
             case 'yes':
@@ -39,7 +39,7 @@ define(['common/props'], (Props) => {
         if (converted.multipleItems) {
             return [];
         }
-        const nullValue = (function () {
+        return (function () {
             switch (converted.data.type) {
                 case 'string':
                     return '';
@@ -59,7 +59,6 @@ define(['common/props'], (Props) => {
                     return null;
             }
         })();
-        return nullValue;
     }
 
     function updateNullValue(converted) {
@@ -578,7 +577,7 @@ define(['common/props'], (Props) => {
         if (spec.allow_multiple) {
             // except, ahem, for the custom_subdata, at least for now...
             if (spec.field_type === 'custom_textsubdata') {
-                spec.allow_multiple === 0;
+                spec.allow_multiple = 0;
                 spec.textsubdata_options = {
                     multiselection: 1,
                 };
@@ -633,17 +632,14 @@ define(['common/props'], (Props) => {
         });
         const required = group.optional ? false : true;
 
-        let defaultValue;
-        let nullValue;
-
-        nullValue = null;
-        defaultValue = {};
+        const nullValue = null;
+        const defaultValue = {};
         Object.keys(groupParams).forEach((id) => {
             defaultValue[id] = groupParams[id].data.defaultValue;
         });
         const zeroValue = defaultValue;
 
-        const structSpec = {
+        return {
             id: group.id,
             multipleItems: false,
             ui: {
@@ -669,7 +665,6 @@ define(['common/props'], (Props) => {
                 specs: groupParams,
             },
         };
-        return structSpec;
     }
 
     // just differs from the makeParameterSequence in that the
@@ -770,10 +765,7 @@ define(['common/props'], (Props) => {
         // and then add the groups in.
         const parameterLayout = sdkAppSpec.parameters
             .filter((parameter) => {
-                if (parameterSpecs[parameter.id]) {
-                    return true;
-                }
-                return false;
+                return !!parameterSpecs[parameter.id];
             })
             .map((parameter) => {
                 return {
@@ -786,10 +778,7 @@ define(['common/props'], (Props) => {
                     // first filter out any groups which were not added to the parameters.
                     // This includes ones with no parameters specified
                     .filter((group) => {
-                        if (parameterSpecs[group.id]) {
-                            return true;
-                        }
-                        return false;
+                        return !!parameterSpecs[group.id];
                     })
                     .map((group) => {
                         return {

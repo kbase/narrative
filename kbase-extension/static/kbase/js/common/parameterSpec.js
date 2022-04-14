@@ -43,10 +43,7 @@ define([], () => {
         }
 
         function isAdvanced() {
-            if (spec.advanced === 1) {
-                return true;
-            }
-            return false;
+            return spec.advanced === 1;
         }
 
         function dataType() {
@@ -150,7 +147,7 @@ define([], () => {
                 case 'float':
                     return parseFloat(_defaultValue);
                 case 'boolean':
-                    return coerceToBoolean(_defaultValue);
+                    return !!_defaultValue;
                 case 'string':
                 case 'workspaceObjectName':
                 default:
@@ -177,7 +174,7 @@ define([], () => {
             if (typeof value !== 'string') {
                 return 0;
             }
-            switch (value.toLowerCase(value)) {
+            switch (value.toLowerCase()) {
                 case 'true':
                 case 't':
                 case 'yes':
@@ -237,13 +234,10 @@ define([], () => {
             if (value === undefined || value === null) {
                 return true;
             }
-            if (
+            return !!(
                 (dataType() === 'string' || dataType() === 'workspaceObjectName') &&
                 value.length === 0
-            ) {
-                return true;
-            }
-            return false;
+            );
         }
 
         function uiClass() {

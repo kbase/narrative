@@ -2,14 +2,11 @@ define([
     'bluebird',
     'jquery',
     'common/html',
-    'kb_common/utils',
     'StagingServiceClient',
-    'kb_service/utils',
     '../validation',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
     '../validators/constants',
     'util/timeFormat',
     'util/string',
@@ -21,14 +18,11 @@ define([
     Promise,
     $,
     html,
-    utils,
     StagingServiceClient,
-    serviceUtils,
     Validation,
     Events,
     Runtime,
     UI,
-    Data,
     Constants,
     TimeFormat,
     StringUtil,
@@ -43,27 +37,24 @@ define([
         span = t('span'),
         b = t('b'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        baseCssClass = 'kb-appInput__dynDropdown';
 
     function factory(config) {
         const spec = config.parameterSpec,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            dd_options = spec.original.dynamic_dropdown_options || {},
-            dataSource = dd_options.data_source || 'ftp_staging',
+            ddOptions = spec.original.dynamic_dropdown_options || {},
+            dataSource = ddOptions.data_source || 'ftp_staging',
             model = {
                 value: undefined,
             },
-            stagingService = new StagingServiceClient({
-                root: runtime.config('services.staging_api_url.url'),
-                token: runtime.authToken(),
-            }),
             userId = runtime.userId();
         let parent, container, ui;
 
-        if (typeof dd_options.query_on_empty_input === 'undefined') {
-            dd_options.query_on_empty_input = 1;
+        if (typeof ddOptions.query_on_empty_input === 'undefined') {
+            ddOptions.query_on_empty_input = 1;
         }
 
         /**
@@ -112,7 +103,7 @@ define([
                 selected = $(control).select2('data')[0];
 
             const selection_val = selected
-                ? selected[dd_options.selection_id] || selected.subpath
+                ? selected[ddOptions.selection_id] || selected.subpath
                 : '';
             if (!selected || !selection_val) {
                 // might have just started up, and we don't have a selection value, but
@@ -187,46 +178,44 @@ define([
                     token: runtime.authToken(),
                 });
             return genericClient.sync_call(
-                dd_options.service_function,
+                ddOptions.service_function,
                 callParams,
                 null,
                 null,
-                dd_options.service_version || 'release'
+                ddOptions.service_version || 'release'
             );
         }
 
         async function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
 
-            if (!searchTerm && !dd_options.query_on_empty_input) {
+            if (!searchTerm && !ddOptions.query_on_empty_input) {
                 return Promise.resolve([]);
             }
             if (dataSource === 'ftp_staging') {
-                return Promise.resolve(stagingService.search({ query: searchTerm })).then(
-                    (results) => {
-                        results = JSON.parse(results).filter((file) => {
-                            return !file.isFolder;
-                        });
-                        results.forEach((file) => {
-                            file.text = file.path;
-                            file.subdir = file.path.substring(
-                                0,
-                                file.path.length - file.name.length
-                            );
-                            file.subpath = file.path.substring(userId.length + 1);
-                            file.id = file.subpath;
-                        });
-                        return results;
-                    }
-                );
+                const stagingService = new StagingServiceClient({
+                    root: runtime.config('services.staging_api_url.url'),
+                    token: runtime.authToken(),
+                });
+                let results = await Promise.resolve(stagingService.search({ query: searchTerm }));
+                results = JSON.parse(results).filter((file) => {
+                    return !file.isFolder;
+                });
+                results.forEach((file) => {
+                    file.text = file.path;
+                    file.subdir = file.path.substring(0, file.path.length - file.name.length);
+                    file.subpath = file.path.substring(userId.length + 1);
+                    file.id = file.subpath;
+                });
+                return results;
             } else {
-                let callParams = JSON.stringify(dd_options.service_params).replace(
+                let callParams = JSON.stringify(ddOptions.service_params).replace(
                     '{{dynamic_dropdown_input}}',
                     searchTerm
                 );
                 callParams = JSON.parse(callParams);
 
-                // TODO: wrap lines 228-252 in a check for dd_options.include_user_params and implement that in NMS
+                // TODO: wrap lines 228-252 in a check for ddOptions.include_user_params and implement that in NMS
                 const params = await channel.request({}, { key: { type: 'get-parameters' } });
 
                 // text replacement for any dynamic parameter values
@@ -234,18 +223,18 @@ define([
                     return Object.entries(callParam).reduce((acc, [k, v]) => {
                         if (typeof v === 'string') {
                             // match dynamic user params that are {{in brackets}}
-                            const d_param = v.match(/[^{{]+(?=}\})/);
-                            if (d_param !== null) {
-                                if (!(d_param[0] in params)) {
+                            const dParam = v.match(/[^{{]+(?=}\})/);
+                            if (dParam !== null) {
+                                if (!(dParam[0] in params)) {
                                     console.error(
-                                        `Parameter "{{${d_param[0]}}}" does not exist as a parameter for this method. ` +
-                                            `this dynamic parameter will be omitted in the call to ${dd_options.service_function}.`
+                                        `Parameter "{{${dParam[0]}}}" does not exist as a parameter for this method. ` +
+                                            `this dynamic parameter will be omitted in the call to ${ddOptions.service_function}.`
                                     );
                                     // dont include bad parameters that don't exist
                                     return acc;
                                 }
                                 // replace dynamic values with actual param values
-                                acc[k] = params[d_param[0]];
+                                acc[k] = params[dParam[0]];
                                 return acc;
                             }
                         }
@@ -255,46 +244,42 @@ define([
                     }, {});
                 });
 
-                return Promise.resolve(genericClientCall(callParams)).then((results) => {
-                    let index = dd_options.result_array_index;
-                    if (!index) {
-                        index = 0;
-                    }
-                    if (index >= results.length) {
-                        console.error(
-                            `Result array from ${dd_options.service_function} ` +
-                                `has length ${results.length} but index ${index} ` +
-                                'was requested'
-                        );
-                        return [];
-                    }
-                    results = results[index];
-                    let path = dd_options.path_to_selection_items;
-                    if (!path) {
-                        path = [];
-                    }
-                    results = Props.getDataItem(results, path);
-                    if (!Array.isArray(results)) {
-                        console.error(
-                            'Selection items returned from ' +
-                                `${dd_options.service_function} at path /${path.join('/')} ` +
-                                `in postion ${index} of the returned list are not an array`
-                        );
-                        return [];
-                    } else {
-                        results.forEach((obj, _index) => {
-                            // could check here that each item is a map? YAGNI
-                            obj = flattenObject(obj);
-                            if (!('id' in obj)) {
-                                obj.id = _index; // what the fuck
-                            }
-                            //this blows away any 'text' field
-                            obj.text = obj[dd_options.selection_id];
-                            results[_index] = obj;
-                        });
-                        return results;
-                    }
-                });
+                let results = await Promise.resolve(genericClientCall(callParams));
+                const index = ddOptions.result_array_index || 0;
+                if (index >= results.length) {
+                    console.error(
+                        `Result array from ${ddOptions.service_function} ` +
+                            `has length ${results.length} but index ${index} ` +
+                            'was requested'
+                    );
+                    return [];
+                }
+                results = results[index];
+                let path = ddOptions.path_to_selection_items;
+                if (!path) {
+                    path = [];
+                }
+                results = Props.getDataItem(results, path);
+                if (!Array.isArray(results)) {
+                    console.error(
+                        'Selection items returned from ' +
+                            `${ddOptions.service_function} at path /${path.join('/')} ` +
+                            `in postion ${index} of the returned list are not an array`
+                    );
+                    return [];
+                } else {
+                    results.forEach((obj, _index) => {
+                        // could check here that each item is a map? YAGNI
+                        obj = flattenObject(obj);
+                        if (!('id' in obj)) {
+                            obj.id = _index; // what the fuck
+                        }
+                        // this blows away any 'text' field
+                        obj.text = obj[ddOptions.selection_id];
+                        results[_index] = obj;
+                    });
+                    return results;
+                }
             }
         }
 
@@ -332,53 +317,77 @@ define([
 
         /**
          * Formats the display of an object in the dropdown.
-         id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
-         isFolder: false
-         mtime: 1508441424000
-         name: "i_am_a_file.txt"
-         path: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
-         size: 0
-         text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         * id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         * isFolder: false
+         * mtime: 1508441424000
+         * name: "i_am_a_file.txt"
+         * path: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         * size: 0
+         * text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
          */
-        function formatObjectDisplay(ret_obj) {
-            if (!ret_obj.id) {
-                return '';
+        function formatObjectDisplay(retObj) {
+            if (!retObj.id) {
+                return retObj.text || '';
             } else if (dataSource === 'ftp_staging') {
-                if (!ret_obj.id) {
-                    return $('<div style="display:block; height:20px">').append(ret_obj.text);
+                if (!retObj.id) {
+                    return $(
+                        div(
+                            {
+                                class: `${baseCssClass}_display`,
+                            },
+                            StringUtil.escape(retObj.text)
+                        )
+                    );
                 }
                 return $(
                     div([
-                        span({ style: 'word-wrap: break-word' }, [ret_obj.subdir, b(ret_obj.name)]),
-                        div({ style: 'margin-left: 7px' }, [
-                            'Size: ' + StringUtil.readableBytes(ret_obj.size) + '<br>',
-                            'Uploaded ' + TimeFormat.getTimeStampStr(ret_obj.mtime, true),
-                        ]),
+                        span(
+                            {
+                                class: `${baseCssClass}_display__filepath`,
+                            },
+                            [StringUtil.escape(retObj.subdir), b(StringUtil.escape(retObj.name))]
+                        ),
+                        div(
+                            {
+                                class: `${baseCssClass}_display__indent`,
+                            },
+                            [
+                                'Size: ' + StringUtil.readableBytes(retObj.size) + '<br>',
+                                'Uploaded ' + TimeFormat.getTimeStampStr(retObj.mtime, true),
+                            ]
+                        ),
                     ])
                 );
             } else {
-                const replacer = function (match, p1) {
-                    return ret_obj[p1];
+                const replacer = function (_match, p1) {
+                    return retObj[p1];
                 };
-                let formatted_string;
-                if (dd_options.description_template) {
+                let formattedString;
+                if (ddOptions.description_template) {
                     // use slice to avoid modifying global description_template
-                    formatted_string = dd_options.description_template
+                    formattedString = ddOptions.description_template
                         .slice()
                         .replace(/{{(.+?)}}/g, replacer);
                 } else {
-                    formatted_string = JSON.stringify(ret_obj);
+                    formattedString = JSON.stringify(retObj);
                 }
-                return $('<div style="display:block; height:20px">').append(formatted_string);
+                return $(
+                    div(
+                        {
+                            class: `${baseCssClass}_display`,
+                        },
+                        StringUtil.escape(formattedString)
+                    )
+                );
             }
         }
 
         function selectionTemplate(object) {
-            if (dd_options.description_template) {
+            if (ddOptions.description_template) {
                 return formatObjectDisplay(object);
             }
-            if (dd_options.selection_id) {
-                return object[dd_options.selection_id];
+            if (ddOptions.selection_id) {
+                return object[ddOptions.selection_id];
             }
             if (!object.id) {
                 return object.text;
@@ -436,17 +445,13 @@ define([
          * rows may be inserted.
          * For the objectInput, there is only ever one control.
          */
-        function layout(events) {
-            const content = div(
+        function layout() {
+            return div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content: content,
-                events: events,
-            };
         }
 
         function autoValidate() {
@@ -460,32 +465,29 @@ define([
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(() => {
-                parent = arg.node;
-                container = parent.appendChild(document.createElement('div'));
-                ui = UI.make({ node: container });
+            parent = arg.node;
+            container = parent.appendChild(document.createElement('div'));
+            ui = UI.make({ node: container });
 
-                const events = Events.make(),
-                    theLayout = layout(events);
+            const events = Events.make();
 
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
+            container.innerHTML = layout();
+            events.attachEvents(container);
 
-                if (config.initialValue !== undefined) {
-                    // note this might come from a different workspace...
-                    model.value = config.initialValue;
-                }
+            if (config.initialValue !== undefined) {
+                // note this might come from a different workspace...
+                model.value = config.initialValue;
+            }
 
-                return render().then(() => {
-                    channel.on('reset-to-defaults', () => {
-                        resetModelValue();
-                    });
-                    channel.on('update', (message) => {
-                        setModelValue(message.value);
-                    });
-                    setControlValue(getModelValue());
-                    autoValidate();
+            return render().then(() => {
+                channel.on('reset-to-defaults', () => {
+                    resetModelValue();
                 });
+                channel.on('update', (message) => {
+                    setModelValue(message.value);
+                });
+                setControlValue(getModelValue());
+                return autoValidate();
             });
         }
 
@@ -501,8 +503,8 @@ define([
         // INIT
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

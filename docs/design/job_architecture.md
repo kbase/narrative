@@ -2,21 +2,58 @@
 
 The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative (also known as the narrative backend), and the KBase Execution Engine (EE2) behind that. Some frontend components access external resources directly, but job-related data flows between those three stops across a single channel from frontend and backend, and backend and EE2.
 
-# Comm channels
+- [Job Management Architecture](#job-management-architecture)
+  - [Comm channels](#comm-channels)
+    - [Frontend Comm Channel](#frontend-comm-channel)
+    - [Backend JobComm module](#backend-jobcomm-module)
+  - [Messages](#messages)
+    - [Job communication vocabulary](#job-communication-vocabulary)
+  - [Messages from frontend to backend](#messages-from-frontend-to-backend)
+    - [`CANCEL`](#cancel)
+    - [`INFO`](#info)
+    - [`LOGS`](#logs)
+    - [`RETRY`](#retry)
+    - [`STATUS`](#status)
+    - [To be deprecated -- do not use](#to-be-deprecated----do-not-use)
+      - [`START_UPDATE`](#start_update)
+      - [`STOP_UPDATE`](#stop_update)
+  - [Messages from backend to frontend](#messages-from-backend-to-frontend)
+    - [`ERROR`](#error)
+    - [`INFO` (response)](#info-response)
+    - [`LOGS` (response)](#logs-response)
+    - [`RETRY` (response)](#retry-response)
+    - [`RUN_STATUS`](#run_status)
+    - [`STATUS` (response)](#status-response)
+    - [`STATUS_ALL`](#status_all)
+  - [Usage Examples](#usage-examples)
+  - [Job Management flow](#job-management-flow)
+    - [JobManager initialization and startup.](#jobmanager-initialization-and-startup)
+    - [Running an app](#running-an-app)
+    - [App initialisation on reload](#app-initialisation-on-reload)
+      - [JobComm status lookup loop -- TO BE DEPRECATED](#jobcomm-status-lookup-loop----to-be-deprecated)
+  - [Data Structures](#data-structures)
+    - [Job state](#job-state)
+      - [EE2 State](#ee2-state)
+      - [Job output state](#job-output-state)
+
+
+## Comm channels
 
 Jupyter provides a "Comm" object that allows for custom messaging between the frontend and the kernel ([details and documentation here](https://jupyter-notebook.readthedocs.io/en/stable/comms.html)) using WebSockets. This provides an interface for the frontend to directly request information from the kernel, and to listen to asynchronous responses. On the kernel (narrative backend) side, it allows one or more modules to register message handlers to process those requests out of the band of the usual kernel invocation. These are used to implement the Jupyter Notebook's ipywidgets, for example.
 
 The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel.
 
-## Frontend Comm Channel
+### Frontend Comm Channel
 
 On the frontend, there's a `jobCommChannel.js` module that uses the frontend's monobus system to communicate. Frontend modules use the monobus to send messages bound for the backend over the main channel; the `jobCommChannel` module passes them to the backend over the websocket established on narrative start up.
 
-## Backend JobComm module
+### Backend JobComm module
 
 The narrative backend uses the JobComm module (`jobcomm.py`) to send and receive messages from the frontend. Its main job is translating incoming messages into requests to be fulfilled by the backend JobManager module, which in turn may contact external services such as the workspace or EE2 to fetch relevant data. The JobComm converts the results of the JobManager's actions into messages to be sent back over to the frontend.
 
-## Job communication vocabulary
+## Messages
+
+### Job communication vocabulary
 
 The front- and backend have a shared vocabulary of message types and parameters, loaded from the file `kbase-extension/static/kbase/config/job_config.json`. In the frontend, the message param and type names are stored in the JobCommMessages object exported by `jobCommChannel.js`:
 
@@ -27,8 +64,6 @@ define(['common/jobCommMessages'], (jcm) => {
   console.log("job status message type: " + jcm.MESSAGE_TYPE.STATUS)
   console.log("job ID parameter: " + jcm.PARAM.JOB_ID)
 ```
-
-# Messages Types
 
 ## Messages from frontend to backend
 
@@ -102,12 +137,20 @@ Get the status for a job or an array of jobs.
 
 ### To be deprecated -- do not use
 
-`START_UPDATE` - request the status for a job or jobs, but start an update cycle so that it's continually requested.
+#### `START_UPDATE`
+
+Request the status for a job or jobs, but start an update cycle so that it's continually requested.
+
+**Arguments**
   * `JOB_ID` - a string, the job id OR
   * `JOB_ID_LIST` - an array of job IDs OR
   * `BATCH_ID` - a batch parent (make the request for all jobs in the batch)
 
-`STOP_UPDATE` - signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+#### `STOP_UPDATE`
+
+Signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+
+**Arguments**
   * `JOB_ID` - a string, the job id OR
   * `JOB_ID_LIST` - an array of job IDs OR
   * `BATCH_ID` - a batch parent (make the request for all jobs in the batch)
@@ -304,7 +347,7 @@ The set of all job states for all running jobs, or at least the set that should 
 As [`STATUS`](#status-response)
 
 
-### Usage Examples
+## Usage Examples
 
 The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
 
@@ -443,6 +486,7 @@ These steps are taken when an app with a running (or previously-run) job starts 
 
 
 #### JobComm status lookup loop -- TO BE DEPRECATED
+
 1. Calls `JobComm._lookup_job_status_loop`, which in turn calls `JobComm.lookup_all_job_states`. This gets forwarded to `JobManager.lookup_all_job_states`, and the results pushed to the browser as a comm channel message.
 2. Internal to `JobManager.lookup_all_job_states`, the following steps happen:
   * Build a list of job ids to lookup - those that are flagged for lookup.

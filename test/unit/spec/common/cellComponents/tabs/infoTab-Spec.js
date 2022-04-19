@@ -74,9 +74,11 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                                 ],
                             },
                             ui_name: `RNA sequence object <font color=red>${FONT_TAG_CONTENTS}</font>`,
+                            id: 'rna_seq_name',
                         },
                         {
                             ui_name: 'Adapters',
+                            id: 'adapters',
                         },
                     ],
                 },
@@ -266,9 +268,13 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                     const paramTwo = container.querySelectorAll(
                         `.${cssBaseClass}__list_item--params`
                     )[1];
-                    expect(paramTwo.innerText).toBe(
-                        appData[APP.ONE.ID].app.spec.parameters[1].ui_name
+
+                    expect(paramTwo.querySelector(`.${cssBaseClass}__param--id`).textContent).toBe(
+                        appData[APP.ONE.ID].app.spec.parameters[1].id
                     );
+                    expect(
+                        paramTwo.querySelector(`.${cssBaseClass}__param--ui-name`).textContent
+                    ).toBe(appData[APP.ONE.ID].app.spec.parameters[1].ui_name);
                 });
 
                 it('renders run stats correctly', () => {

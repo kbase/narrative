@@ -39,7 +39,7 @@ CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 DOES_NOT_EXIST = "does_not_exist"
 
 
-class JobManager(object):
+class JobManager:
     """
     The KBase Job Manager class. This handles all jobs and makes their status available.
     It sends the results to the KBaseJobs channel that the front end
@@ -68,11 +68,9 @@ class JobManager(object):
                 ordering.append(job_id)
             else:
                 ordering.insert(0, job_id)
-        states = {job_id: states[job_id] for job_id in ordering}
+        return {job_id: states[job_id] for job_id in ordering}
 
-        return states
-
-    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+    def _check_job_list(self, input_ids: List[str] = None) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order.
         Any jobs not present in self._running_jobs are added to an error list
@@ -88,6 +86,9 @@ class JobManager(object):
             error_ids - jobs that the narrative backend does not know about
         :rtype: Tuple[List[str], List[str]]
         """
+        if input_ids is None:
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
+
         if not isinstance(input_ids, list):
             raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
 
@@ -152,7 +153,7 @@ class JobManager(object):
             job_states = clients.get("execution_engine2").check_workspace_jobs(
                 {
                     "workspace_id": ws_id,
-                    "return_list": 0,  # do not remove
+                    "return_list": 0,
                     "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
                 }
             )
@@ -194,7 +195,7 @@ class JobManager(object):
         :rtype: dict
         """
         job_ids = [job_id for job_id in job_ids if job_id not in self._running_jobs]
-        if not len(job_ids):
+        if not job_ids:
             return {}
 
         job_states = clients.get("execution_engine2").check_jobs(
@@ -265,7 +266,7 @@ class JobManager(object):
         if not isinstance(job_ids, list):
             raise JobRequestException("job_ids must be a list")
 
-        if not len(job_ids):
+        if not job_ids:
             return {}
 
         output_states = {}
@@ -285,7 +286,7 @@ class JobManager(object):
 
         fetched_states = {}
         # Get the rest of states direct from EE2.
-        if len(jobs_to_lookup):
+        if jobs_to_lookup:
             try:
                 fetched_states = clients.get("execution_engine2").check_jobs(
                     {
@@ -382,8 +383,8 @@ class JobManager(object):
             raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
-            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
-            for id in cell_id_list
+            cell_id: self._jobs_by_cell_id[cell_id] if cell_id in self._jobs_by_cell_id else set()
+            for cell_id in cell_id_list
         }
         # union of all the job_ids in the cell_to_job_mapping
         job_id_list = set().union(*cell_to_job_mapping.values())
@@ -487,7 +488,7 @@ class JobManager(object):
             if < 0, will be reset to 0.
             if None, then will not be considered, and just return all the lines.
         :type num_lines: int, defaults to None.
-        :param latest: if True, will only return the most recent max_lines
+        :param latest: if True, will only return the most recent num_lines
             of logs. If set to True, overrides the first_line parameter; e.g. for the call
 
             get_job_logs(id, first_line=0, num_lines=5, latest=True)
@@ -520,7 +521,7 @@ class JobManager(object):
                 "job_id": job.job_id,
                 "batch_id": job.batch_id,
                 "first": first_line,
-                "latest": True if latest else False,
+                "latest": latest,
                 "max_lines": max_lines,
                 "lines": logs,
             }
@@ -531,8 +532,6 @@ class JobManager(object):
                 "error": e.message,
             }
 
-        """
-        """
     def get_job_logs_for_list(
         self,
         job_id_list: List[str],
@@ -626,6 +625,7 @@ class JobManager(object):
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
             error = transform_job_exception(e, "Unable to cancel job")
+
         self._running_jobs[job_id]["refresh"] = is_refreshing
         del self._running_jobs[job_id]["canceling"]
         return error
@@ -773,7 +773,7 @@ class JobManager(object):
             all_states = self.get_all_job_states(ignore_refresh_flag=True)
             state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
 
-            if not len(state_list):
+            if not state_list:
                 return "No running jobs!"
 
             state_list = sorted(state_list, key=lambda s: s.get("created", 0))

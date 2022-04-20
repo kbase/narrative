@@ -89,7 +89,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
     return wrapper
 
 
-class AppManager(object):
+class AppManager:
     """
     The main class for managing how KBase apps get run. This contains functions
     for showing app descriptions, their usage (how to invoke various
@@ -402,9 +402,7 @@ class AppManager(object):
             },
         )
         JobManager().register_new_job(new_job, refresh=False)
-        if cell_id is not None:
-            return
-        else:
+        if cell_id is None:
             return new_job
 
     @_app_error_wrapper

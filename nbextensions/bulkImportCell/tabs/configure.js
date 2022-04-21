@@ -1,14 +1,34 @@
 define([
     'bluebird',
+    'common/events',
     'common/runtime',
     'common/html',
     'common/ui',
     './fileTypePanel',
+    './xsvGenerator',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
     'util/appCellUtil',
-], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
+], (
+    Promise,
+    Events,
+    Runtime,
+    html,
+    UI,
+    FileTypePanel,
+    XsvGenerator,
+    ParamsWidget,
+    FilePathWidget,
+    Util
+) => {
     'use strict';
+
+    const div = html.tag('div'),
+        span = html.tag('span'),
+        iTag = html.tag('i'),
+        strong = html.tag('strong'),
+        aTag = html.tag('a'),
+        button = html.tag('button');
 
     /**
      * This widget is responsible for providing an interactive interface for setting the
@@ -41,6 +61,7 @@ define([
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params',
+            xsvGen = new XsvGenerator({ model, typesToFiles }),
             cssBaseClass = 'kb-bulk-import-configure';
         let container = null,
             filePathWidget,
@@ -58,6 +79,8 @@ define([
          */
         function start(args) {
             const allFiles = new Set();
+            const events = Events.make();
+
             Object.values(typesToFiles).forEach((entry) => {
                 for (const file of entry.files) {
                     allFiles.add(file);
@@ -79,8 +102,9 @@ define([
                     container = args.node;
                     ui = UI.make({ node: container });
 
-                    const layout = renderLayout();
+                    const layout = renderLayout(events);
                     container.innerHTML = layout;
+                    events.attachEvents(container);
 
                     const fileTypeNode = ui.getElement('filetype-panel');
                     const initPromises = [
@@ -186,11 +210,6 @@ define([
          *   message - string
          */
         function renderConfigMessage(msg) {
-            const div = html.tag('div'),
-                span = html.tag('span'),
-                iTag = html.tag('i'),
-                strong = html.tag('strong'),
-                aTag = html.tag('a');
             const icon = 'fa fa-exclamation-circle';
             let msgType = msg.type;
             if (msgType !== 'warning' && msgType !== 'error') {
@@ -219,8 +238,7 @@ define([
             );
         }
 
-        function renderLayout() {
-            const div = html.tag('div');
+        function renderLayout(events) {
             return div(
                 {
                     class: `${cssBaseClass}__container`,
@@ -240,6 +258,7 @@ define([
                                 class: `${cssBaseClass}__message_container`,
                                 dataElement: 'config-message',
                             }),
+                            buildXsvGeneratorButton(events),
                             div({
                                 class: `${cssBaseClass}__file_paths`,
                                 dataElement: 'file-paths',
@@ -250,6 +269,30 @@ define([
                             }),
                         ]
                     ),
+                ]
+            );
+        }
+
+        /**
+         * Creates the XSV Generator button, which conjures the XSV generator widget from the void.
+         */
+        function buildXsvGeneratorButton(events) {
+            return button(
+                {
+                    class: `${cssBaseClass}__button--generate-template`,
+                    type: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            xsvGen.run();
+                        },
+                    }),
+                },
+                [
+                    span({
+                        class: `${cssBaseClass}__button_icon--add_row fa fa-download`,
+                    }),
+                    'Generate CSV Template',
                 ]
             );
         }

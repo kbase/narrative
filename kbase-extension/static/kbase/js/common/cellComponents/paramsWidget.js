@@ -305,7 +305,7 @@ define([
                             class: `${cssBaseClass}__toggle--advanced-message`,
                         }),
                         showAdvancedButton,
-                    ].join()
+                    ].join('')
                 );
                 showHideAdvanced();
             }

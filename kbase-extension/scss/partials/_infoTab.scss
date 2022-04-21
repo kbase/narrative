@@ -30,13 +30,25 @@
   &__link--docs {
     @include base-text-with-margins;
   }
+  // .kb-info-tab__list--params
+  &__list--params {
+    padding-left: 2rem;
+  }
   // .kb-info-tab__list_title--params
   &__list_title--params {
     @include font-h5;
     margin: 1rem 0;
   }
-}
+  // .kb-info-tab__param--id
+  &__param--id {
+    @include fixed-width;
+    padding: .25rem 0.5rem;
+    white-space: nowrap;
+    border-radius: .25rem;
+    background-color: use-color("info-light");
 
-ul.kb-info-tab__list--params {
-  padding-left: 2rem;
+    + .kb-info-tab__param--ui-name {
+      margin-left: 0.5rem;
+    }
+  }
 }

@@ -86,7 +86,7 @@ class JobManager:
             error_ids - jobs that the narrative backend does not know about
         :rtype: Tuple[List[str], List[str]]
         """
-        if input_ids is None:
+        if not input_ids:
             raise JobRequestException(JOBS_MISSING_ERR, input_ids)
 
         if not isinstance(input_ids, list):

@@ -18,6 +18,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
      *
      * @param {object} options has keys:
      *     model: cell metadata
+     *     typesToFiles: mapping of data types to app IDs
      * @returns
      */
     class XSVGenerator {
@@ -25,6 +26,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          *
          * @param {object} options configuration options, including
          *      model           object  cell metadata in one handy Props object
+         *      typesToFiles    object  mapping of the data types to app IDs
          */
         constructor(options) {
             this._init(options);
@@ -54,10 +56,32 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             }
 
             // TODO:
-            // validate the form
+            // validate the form params
+            const formValues = {
+                output_directory: 'some_string',
+                output_file_type: 'CSV',
+                types: ['sra_reads'],
+            };
             // generate the request params to send to the staging service
             // send the request
-            // display the results
+            this.sendRequest(this.generateRequest(formValues)).then(
+                // promise resolved
+                (data) => {
+                    // display the results
+                    this.displayResult(data);
+                },
+                // promise rejected
+                (jqXHR, _textStatus, errorThrown) => {
+                    console.error(errorThrown);
+                    let error;
+                    if (jqXHR.responseJSON) {
+                        error = jqXHR.responseJSON;
+                    } else {
+                        error = `${errorThrown} - ${jqXHR.responseText}`;
+                    }
+                    this.displayResult({ error });
+                }
+            );
         }
 
         /**
@@ -105,7 +129,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          * @param {object} formParams validated parameters from the form with keys
          *      output_file_type: format to output the file in
          *      output_directory: where to save the file
-         *      types: array of input types to include in the request
+         *      types: validated array of input types to include in the request
          * @returns {object} output, suitable for sending to the staging service endpoint
          */
         generateRequest(formParams) {
@@ -141,19 +165,20 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          * Send the request to the staging service client
          * @param {object} requestParams the body for the request
          * @returns jQuery.ajax
+         */
         sendRequest(requestParams) {
-            if (!this.stagingClient) {
-                this.stagingClient = new StagingServiceClient({
+            if (!this.stagingServiceClient) {
+                this.stagingServiceClient = new StagingServiceClient({
                     root: this.runtime.config('services.staging_api_url.url'),
                     token: this.runtime.authToken(),
                 });
             }
-            return this.stagingClient.write_bulk_specification({
+            return this.stagingServiceClient.write_bulk_specification({
                 data: requestParams,
-                headers: [['Content-Type', 'application/json']],
+                dataType: 'json',
+                headers: { 'Content-Type': 'application/json' },
             });
         }
-         */
 
         /**
          *  Display the results of the query to generate the template
@@ -161,7 +186,11 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          * @param {object} resp response from the staging service endpoint
          */
         displayResult(resp) {
-            if (resp.error) {
+            if (resp.error || !resp.files_created || !Object.keys(resp.files_created).length) {
+                const errorString = resp.error
+                    ? String.escape(resp.error)
+                    : 'No files were created.';
+
                 return UI.showInfoDialog({
                     title: 'Template Generation Error',
                     body: div(
@@ -170,7 +199,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                         },
                         [
                             p('Template generation failed with the following error:'),
-                            p(String.escape(resp.error)),
+                            p(errorString),
                             p('Oh shit!'),
                         ]
                     ),

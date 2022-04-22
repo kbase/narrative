@@ -45,8 +45,11 @@ define(['jquery', 'RestAPIClient'], ($, RestAPIClient) => {
                 });
             });
         });
+
         describe('running a request', () => {
             it('sets defaults', () => {
+                // just check the arguments to jQuery.ajax are as expected;
+                // don't execute the query
                 spyOn($, 'ajax');
                 client.post_route();
                 const allArgs = $.ajax.calls.allArgs();
@@ -56,16 +59,19 @@ define(['jquery', 'RestAPIClient'], ($, RestAPIClient) => {
                 expect(ajaxArgs.data).toEqual(undefined);
                 expect(ajaxArgs.type).toEqual('post');
                 expect(ajaxArgs.dataType).toEqual('text');
+                expect(ajaxArgs.headers).toEqual({ Authorization: token });
             });
 
             it('can override defaults', async () => {
                 const data = { this: 'that', 'the other': [1, 2, 3] };
-                spyOn($, 'ajax').and.callThrough();
+                // the RestAPIClient's ajax function
                 spyOn(client, 'ajax').and.callThrough();
+                // the jQuery ajax function that gets executed by the RestAPIClient's ajax function
+                spyOn($, 'ajax').and.callThrough();
                 await client.post_route({
                     data,
                     dataType: 'html',
-                    headers: [['Content-Type', 'application/json']],
+                    headers: { 'Content-Type': 'application/json' },
                 });
                 const req = jasmine.Ajax.requests.mostRecent();
                 expect(req.method.toLowerCase()).toBe(routes.post_route.method);
@@ -74,6 +80,47 @@ define(['jquery', 'RestAPIClient'], ($, RestAPIClient) => {
                 expect(req.requestHeaders['Content-Type']).toEqual('application/json');
                 expect(req.requestHeaders.Accept).toContain('text/html');
                 expect(req.data()).toEqual(data);
+            });
+        });
+
+        describe('more complex paths', () => {
+            beforeEach(function () {
+                this.complexRoutes = {
+                    interpolate_multiple: {
+                        method: 'get',
+                        path: 'multiple/${path}?${type}=${value}',
+                    },
+                    interpolate_single: { method: 'get', path: 'single/?${interpolate_me}' },
+                };
+                this.complexClient = new RestAPIClient({
+                    root,
+                    token,
+                    routes: this.complexRoutes,
+                });
+            });
+
+            it('can interpolate a value into the route', async function () {
+                await this.complexClient.interpolate_single({
+                    interpolate_me: 'some_boring_path',
+                });
+                const req = jasmine.Ajax.requests.mostRecent();
+                expect(req.url).toContain(`${root}/single/?some_boring_path`);
+            });
+
+            it('adds nothing if no value is supplied', async function () {
+                await this.complexClient.interpolate_single();
+                const req = jasmine.Ajax.requests.mostRecent();
+                expect(req.url).toContain(`${root}/single/?`);
+            });
+
+            it('can interpolate several values into a path', async function () {
+                await this.complexClient.interpolate_multiple({
+                    path: 'i_miss.cgi',
+                    type: 'really',
+                    value: 'yes',
+                });
+                const req = jasmine.Ajax.requests.mostRecent();
+                expect(req.url).toContain(`${root}/multiple/i_miss.cgi?really=yes`);
             });
         });
     });

@@ -84,12 +84,28 @@ define(['jquery'], ($) => {
                     const replacement = fArgs[element] !== undefined ? fArgs[element] : '';
                     path = path.replace('${' + element + '}', replacement);
                 }
-                ajaxArgs.url = [this.root, path].join('/');
 
+                // add in the Auth header
+                if (!ajaxArgs.headers) {
+                    ajaxArgs.headers = {};
+                }
+                ajaxArgs.headers.Authorization = this.token;
+
+                ajaxArgs.url = [this.root, path].join('/');
                 return this.ajax(ajaxArgs);
             };
         });
 
+        /**
+         * AJAX query executed by each route created above
+         *
+         * @param {object} ajaxArgs arguments to pass to $.ajax, including:
+         *    dataType  {string}    sets the 'Accept' header
+         *    data      {any}
+         *    headers   {object}    object containing header names and values
+         *                          e.g. {'Content-Type': 'application/json', ...}
+         * @returns jQuery promise
+         */
         this.ajax = function ajax(ajaxArgs) {
             const deferred = $.Deferred();
             const promise = deferred.promise();
@@ -100,14 +116,7 @@ define(['jquery'], ($) => {
                 type: ajaxArgs.route.method,
                 processData: false,
                 data: JSON.stringify(ajaxArgs.data),
-                beforeSend: (xhr) => {
-                    xhr.setRequestHeader('Authorization', ajaxArgs.token);
-                    if (ajaxArgs.headers) {
-                        ajaxArgs.headers.forEach((header) => {
-                            xhr.setRequestHeader(header[0], header[1]);
-                        });
-                    }
-                },
+                headers: ajaxArgs.headers,
                 success: (data, status, xhr) => {
                     deferred.resolve(data, status, xhr);
                 },

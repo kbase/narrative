@@ -1,8 +1,9 @@
-define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/props', 'common/ui'], (
-    XSVGenerator,
-    Props,
-    UI
-) => {
+define([
+    'jquery',
+    '/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator',
+    'common/props',
+    'common/ui',
+], ($, XSVGenerator, Props, UI) => {
     'use strict';
 
     const miniSpec = {
@@ -101,6 +102,59 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
         },
     };
 
+    const expectedOutput = {
+        fastq_reads_interleaved: {
+            order_and_display: [
+                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
+                ['name', 'Reads object name'],
+            ],
+            data: [
+                {
+                    fastq_fwd_staging_file_name: 'go.fastq',
+                    name: 'go.fastq_reads',
+                },
+            ],
+        },
+        fastq_reads_noninterleaved: {
+            order_and_display: [
+                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
+                ['fastq_rev_staging_file_name', 'Reverse/right FASTQ file path'],
+                ['name', 'Reads object name'],
+                ['read_orientation_outward', 'Reads orientation outward'],
+            ],
+            data: [
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                    read_orientation_outward: 0,
+                },
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                    read_orientation_outward: 0,
+                },
+            ],
+        },
+        sra_reads: {
+            order_and_display: [
+                ['sra_staging_file_name', 'SRA file path'],
+                ['sequencing_tech', 'Sequencing technology'],
+                ['name', 'Reads object name'],
+                ['read_orientation_outward', 'Reads orientation outward'],
+            ],
+            data: [
+                {
+                    name: 'sample_sra_reads',
+                    sra_staging_file_name: 'sample_sra',
+                    read_orientation_outward: 0,
+                    sequencing_tech: 'Illumina',
+                },
+            ],
+        },
+    };
+
     const state = {
         params: {
             fastq_reads_interleaved: 'complete',
@@ -157,7 +211,7 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
                 );
             });
 
-            describe('run errors', () => {
+            describe('run', () => {
                 async function checkStartUpDialog(modelData, hasError) {
                     const model = Props.make({
                         data: modelData,
@@ -176,7 +230,7 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
                         expect(calls[0].body).not.toContain(errorString);
                     }
                 }
-                it('is happy if there are no input validation errors', async () => {
+                it('does not show a warning with no errors', async () => {
                     await checkStartUpDialog(
                         {
                             state: {
@@ -215,58 +269,6 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
                 });
                 const output_file_type = 'CSV',
                     output_directory = 'new_folder';
-                const expectedOutput = {
-                    fastq_reads_interleaved: {
-                        order_and_display: [
-                            ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
-                            ['name', 'Reads object name'],
-                        ],
-                        data: [
-                            {
-                                fastq_fwd_staging_file_name: 'go.fastq',
-                                name: 'go.fastq_reads',
-                            },
-                        ],
-                    },
-                    fastq_reads_noninterleaved: {
-                        order_and_display: [
-                            ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
-                            ['fastq_rev_staging_file_name', 'Reverse/right FASTQ file path'],
-                            ['name', 'Reads object name'],
-                            ['read_orientation_outward', 'Reads orientation outward'],
-                        ],
-                        data: [
-                            {
-                                fastq_fwd_staging_file_name: null,
-                                fastq_rev_staging_file_name: null,
-                                name: null,
-                                read_orientation_outward: 0,
-                            },
-                            {
-                                fastq_fwd_staging_file_name: null,
-                                fastq_rev_staging_file_name: null,
-                                name: null,
-                                read_orientation_outward: 0,
-                            },
-                        ],
-                    },
-                    sra_reads: {
-                        order_and_display: [
-                            ['sra_staging_file_name', 'SRA file path'],
-                            ['sequencing_tech', 'Sequencing technology'],
-                            ['name', 'Reads object name'],
-                            ['read_orientation_outward', 'Reads orientation outward'],
-                        ],
-                        data: [
-                            {
-                                name: 'sample_sra_reads',
-                                sra_staging_file_name: 'sample_sra',
-                                read_orientation_outward: 0,
-                                sequencing_tech: 'Illumina',
-                            },
-                        ],
-                    },
-                };
 
                 it('generates params with a single input', function () {
                     const output = this.xsvGen.generateRequest({
@@ -293,6 +295,67 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
                         types: expectedOutput,
                         output_directory,
                         output_file_type,
+                    });
+                });
+            });
+
+            describe('sendRequest', () => {
+                beforeEach(function () {
+                    this.xsvGen = new XSVGenerator({ model: {}, typesToFiles });
+                    this.xsvGen.runtime = {
+                        config: () => {
+                            return 'http://example.com';
+                        },
+                        authToken: () => {
+                            return 'TOKEN';
+                        },
+                    };
+                    spyOn(UI, 'showInfoDialog').and.callFake((args) => {
+                        this.title = args.title;
+                        this.container = document.createElement('div');
+                        this.container.innerHTML = args.body;
+                    });
+                });
+
+                it('creates a staging service client and executes the request', function () {
+                    spyOn($, 'ajax');
+                    this.xsvGen.sendRequest(expectedOutput);
+                    expect(this.xsvGen.stagingServiceClient).toEqual(jasmine.any(Object));
+                    expect(this.xsvGen.stagingServiceClient.write_bulk_specification).toEqual(
+                        jasmine.any(Function)
+                    );
+                    // expect one call to have been made with a single argument
+                    expect($.ajax).toHaveBeenCalledTimes(1);
+                    expect($.ajax.calls.allArgs()[0].length).toEqual(1);
+                    const ajaxCalls = $.ajax.calls.allArgs()[0][0];
+                    expect(ajaxCalls).toEqual(
+                        jasmine.objectContaining({
+                            dataType: 'json',
+                            data: JSON.stringify(expectedOutput),
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: 'TOKEN',
+                            },
+                        })
+                    );
+                    expect(ajaxCalls.url).toMatch(/http:\/\/example.com/);
+                });
+
+                it('reuses an existing staging service client', function () {
+                    return new Promise((resolve) => {
+                        // set up a fake staging service client on the xsvGen object
+                        this.xsvGen.stagingServiceClient = {
+                            write_bulk_specification: (args) => {
+                                expect(args).toEqual({
+                                    data: expectedOutput,
+                                    dataType: 'json',
+                                    headers: { 'Content-Type': 'application/json' },
+                                });
+                                resolve();
+                            },
+                        };
+                        // expectedOutput is a valid set of request params
+                        this.xsvGen.sendRequest(expectedOutput);
                     });
                 });
             });
@@ -353,6 +416,18 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator', 'common/prop
                             return liElement.textContent;
                         })
                     ).toEqual(jasmine.arrayWithExactContents(Object.values(result.files_created)));
+                });
+
+                it('displays an error message, query successful but no files created', function () {
+                    const result = {
+                        output_file_type: 'CSV',
+                        files_created: {},
+                    };
+                    this.xsvGen.displayResult(result);
+                    expect(this.container.textContent).toContain(
+                        'Template generation failed with the following error:'
+                    );
+                    expect(this.container.textContent).toContain('No files were created.');
                 });
 
                 it('displays an error message when things go wrong', function () {

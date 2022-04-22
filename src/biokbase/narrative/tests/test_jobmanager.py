@@ -13,7 +13,6 @@ from biokbase.narrative.jobs.jobmanager import (
     JobManager,
     JOB_NOT_REG_ERR,
     JOB_NOT_BATCH_ERR,
-    JOBS_TYPE_ERR,
     JOBS_MISSING_ERR,
     CELLS_NOT_PROVIDED_ERR,
 )
@@ -155,7 +154,7 @@ class JobManagerTest(unittest.TestCase):
                     )
 
     def test__check_job_list_fail__wrong_type(self):
-        with self.assertRaisesRegex(JobRequestException, f"{JOBS_TYPE_ERR}: {{}}"):
+        with self.assertRaisesRegex(JobRequestException, f"{JOBS_MISSING_ERR}: {{}}"):
             self.jm._check_job_list({})
 
     def test__check_job_list_fail__none(self):
@@ -414,7 +413,9 @@ class JobManagerTest(unittest.TestCase):
         ]
 
         expected = {
-            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id] for job_id in jobs if job_id
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]
+            for job_id in jobs
+            if job_id
         }
         self.jm._running_jobs[JOB_RUNNING]["refresh"] = 1
         self.jm._running_jobs[JOB_CREATED]["refresh"] = 1
@@ -481,35 +482,50 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__success(self):
         job_ids = [BATCH_TERMINATED_RETRIED]
-        expected = {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+        }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__multi_success(self):
         job_ids = [BATCH_TERMINATED_RETRIED, BATCH_ERROR_RETRIED]
-        expected = {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+        }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__success_error_dne(self):
         job_ids = [JOB_NOT_FOUND, BATCH_TERMINATED_RETRIED, JOB_COMPLETED]
-        expected = {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+        }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__all_error(self):
         job_ids = [JOB_COMPLETED, JOB_CREATED, JOB_RUNNING]
-        expected = {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+        }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__retry_already_terminal(self):
         job_ids = [JOB_COMPLETED]
-        expected = {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+        }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
 
@@ -517,7 +533,9 @@ class JobManagerTest(unittest.TestCase):
     def test_retry_jobs__none_exist(self):
         job_ids = ["", "", None, BAD_JOB_ID]
         expected = {
-            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id] for job_id in job_ids if job_id
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["RETRY"]][job_id]
+            for job_id in job_ids
+            if job_id
         }
         retry_results = self.jm.retry_jobs(job_ids)
         self._check_retry_jobs(expected, retry_results)
@@ -551,7 +569,10 @@ class JobManagerTest(unittest.TestCase):
         states = self.jm.get_all_job_states(ignore_refresh_flag=True)
         self.assertEqual(set(ALL_JOBS), set(states.keys()))
         self.assertEqual(
-            {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id] for job_id in ALL_JOBS},
+            {
+                job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]
+                for job_id in ALL_JOBS
+            },
             states,
         )
 
@@ -648,7 +669,9 @@ class JobManagerTest(unittest.TestCase):
         ]
 
         exp = {
-            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id] for job_id in job_ids if job_id
+            job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]
+            for job_id in job_ids
+            if job_id
         }
 
         res = self.jm.get_job_states(job_ids)
@@ -757,7 +780,11 @@ class JobManagerTest(unittest.TestCase):
         infos = self.jm.get_job_info(ALL_JOBS)
         self.assertCountEqual(ALL_JOBS, infos.keys())
         self.assertEqual(
-            infos, {job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["INFO"]][job_id] for job_id in ALL_JOBS}
+            infos,
+            {
+                job_id: ALL_RESPONSE_DATA[MESSAGE_TYPE["INFO"]][job_id]
+                for job_id in ALL_JOBS
+            },
         )
 
 

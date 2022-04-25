@@ -5,6 +5,9 @@ define(
         'bluebird',
         'uuid',
         'base/js/namespace',
+        'kb_service/client/catalog',
+        'kb_service/client/narrativeMethodStore',
+        'narrativeConfig',
         'common/runtime',
         'common/dialogMessages',
         'common/events',
@@ -12,8 +15,6 @@ define(
         'common/jupyter',
         'common/html',
         'common/props',
-        'kb_service/client/catalog',
-        'kb_service/client/narrativeMethodStore',
         'common/pythonInterop',
         'common/ui',
         'common/fsm',
@@ -24,7 +25,6 @@ define(
         'common/jobs',
         'common/jobCommMessages',
         'common/cellComponents/actionButtons',
-        'narrativeConfig',
         'google-code-prettify/prettify',
         './appCellWidget-fsm',
         './tabs/resultsTab',
@@ -43,6 +43,9 @@ define(
         Promise,
         Uuid,
         Jupyter,
+        Catalog,
+        NarrativeMethodStore,
+        Config,
         Runtime,
         DialogMessages,
         Events,
@@ -50,8 +53,6 @@ define(
         Narrative,
         html,
         Props,
-        Catalog,
-        NarrativeMethodStore,
         PythonInterop,
         UI,
         Fsm,
@@ -62,7 +63,6 @@ define(
         Jobs,
         jcm,
         ActionButtons,
-        Config,
         PR,
         AppStates,
         resultsTabWidget,
@@ -80,7 +80,6 @@ define(
             div = t('div'),
             span = t('span'),
             a = t('a'),
-            p = t('p'),
             cssCellType = 'kb-app-cell',
             fsmState = AppStates.STATE;
 
@@ -728,7 +727,7 @@ define(
                         doRerun();
                         break;
                     case 'resetApp':
-                        doResetApp();
+                        doReset();
                         break;
                     case 'cancel':
                         doCancel();
@@ -977,6 +976,7 @@ define(
                 fsm.bus.on('exit-execute-requested', () => {
                     ui.setContent('run-control-panel.execMessage', '');
                 });
+
                 fsm.bus.on('on-launched', () => {
                     ui.setContent('run-control-panel.execMessage', 'Launching...');
                 });
@@ -987,25 +987,16 @@ define(
                 fsm.bus.on('start-queueing', () => {
                     doStartQueueing();
                 });
-                fsm.bus.on('stop-queueing', () => {
-                    doStopQueueing();
-                });
-
                 fsm.bus.on('start-running', () => {
                     doStartRunning();
-                });
-                fsm.bus.on('stop-running', () => {
-                    doStopRunning();
                 });
 
                 fsm.bus.on('on-completed', () => {
                     doOnSuccess();
                 });
-
                 fsm.bus.on('resume-completed', () => {
                     doResumeSuccess();
                 });
-
                 fsm.bus.on('exit-completed', () => {
                     doExitSuccess();
                 });
@@ -1013,21 +1004,20 @@ define(
                 fsm.bus.on('on-error', () => {
                     doOnError();
                 });
-
                 fsm.bus.on('exit-error', () => {
                     doExitError();
                 });
+
                 fsm.bus.on('on-cancelling', () => {
                     doOnCancelling();
                 });
-
                 fsm.bus.on('exit-cancelling', () => {
                     doExitCancelling();
                 });
+
                 fsm.bus.on('on-cancelled', () => {
                     doOnCancelled();
                 });
-
                 fsm.bus.on('exit-cancelled', () => {
                     doExitCancelled();
                 });
@@ -1212,42 +1202,29 @@ define(
                 });
             }
 
-            function requestJobStatus(jobId) {
-                if (!jobId) {
-                    return;
-                }
-                runtime.bus().emit(jcm.MESSAGE_TYPE.STATUS, {
-                    [jcm.PARAM.JOB_ID]: jobId,
-                });
-            }
-
-            // Reset the app to edit mode; if a new state is not supplied, it is assumed that the
-            // existing app params are complete and validated.
-            function resetToEditMode(newState) {
+            // Reset the app to edit mode
+            function resetToEditMode() {
                 // only do this if we are not editing.
                 model.deleteItem('exec');
-                if (!newState) {
-                    // TODO: evaluate the params again before we do this.
-                    newState = fsmState.EDITING_COMPLETE;
-                }
-                fsm.newState(newState);
-                ui.setContent('run-control-panel.execMessage', '');
                 clearOutput();
-                renderUI();
+                ui.setContent('run-control-panel.execMessage', '');
+
+                // renderUI is called as part of this function
+                evaluateAppState();
             }
 
             function doRerun() {
-                DialogMessages.showDialog({ action: 'appRerun' }).then((confirmed) => {
+                DialogMessages.showDialog({ action: 'appReset' }).then((confirmed) => {
                     if (confirmed) {
                         resetToEditMode();
                     }
                 });
             }
 
-            function doResetApp() {
+            function doReset() {
                 DialogMessages.showDialog({ action: 'appReset' }).then((confirmed) => {
                     if (confirmed) {
-                        resetToEditMode(fsmState.EDITING_INCOMPLETE);
+                        resetToEditMode();
                     }
                 });
             }
@@ -1262,20 +1239,13 @@ define(
                         return;
                     }
 
-                    const jobState = model.getItem('exec.jobState');
-                    if (jobState) {
-                        // the job status listener will continue to listen for updates
-                        // so the job status is tracked that way
-                        cancelJob(jobState.job_id);
-                        fsm.newState(fsmState.CANCELING);
-                    } else {
-                        // Hmm this is a rather odd case, but it has been seen in the wild.
-                        // E.g. it could (logically) occur during launch phase (although the cancel button should not be available.)
-                        // In erroneous conditions it could occur if a job failed or was
-                        // cancelled but the state machine got confused.
-                        model.deleteItem('exec');
-                        fsm.newState(fsmState.EDITING_COMPLETE);
+                    if (!model.getItem('exec.jobState.job_id')) {
+                        resetToEditMode();
+                        return;
                     }
+
+                    cancelJob(model.getItem('exec.jobState.job_id'));
+                    fsm.newState(fsmState.CANCELING);
                     renderUI();
                 });
             }
@@ -1290,7 +1260,11 @@ define(
                     switch (message.event) {
                         case 'launched_job':
                             // start listening for jobs.
-                            model.setItem('exec.jobState', { job_id: message.job_id });
+                            model.setItem('exec.jobState', {
+                                job_id: message.job_id,
+                                status: 'created',
+                                created: 0,
+                            });
                             startListeningForJobMessages(message.job_id);
                             return fsmState.PROCESSING_LAUNCHED;
                         case 'error':
@@ -1346,56 +1320,6 @@ define(
                 userSelectedTab = false;
 
                 cell.execute();
-            }
-
-            // LIFECYCLE API
-
-            function init() {
-                return Promise.try(() => {
-                    initializeFSM();
-                    initCodeInputArea();
-
-                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
-                        setReadOnly();
-                    }
-
-                    return null;
-                });
-            }
-
-            function attach(node) {
-                return Promise.try(() => {
-                    hostNode = node;
-                    container = hostNode.appendChild(document.createElement('div'));
-                    ui = UI.make({
-                        node: container,
-                        bus,
-                    });
-
-                    actionButtonWidget = ActionButtons.make({
-                        ui,
-                        actionButtons,
-                        bus,
-                        runAction: doActionButton,
-                        cssCellType: null,
-                    });
-
-                    const layout = renderLayout();
-                    container.innerHTML = layout.content;
-                    layout.events.attachEvents(container);
-                    $(container).find('[data-toggle="popover"]').popover();
-                    return null;
-                }).catch((error) => {
-                    throw new Error('Unable to attach app cell widget: ' + error);
-                });
-            }
-
-            function detach() {
-                return Promise.try(() => {
-                    if (hostNode && container) {
-                        hostNode.removeChild(container);
-                    }
-                });
             }
 
             function startListeningForJobMessages(jobId) {
@@ -1490,26 +1414,11 @@ define(
                 updateJobState();
             }
 
-            function doStopRunning() {
-                if (widgets.runClock) {
-                    widgets.runClock.stop();
-                }
-            }
-
             function doStartQueueing() {
                 updateJobState();
             }
 
-            function doStopQueueing() {
-                if (widgets.runClock) {
-                    widgets.runClock.stop();
-                }
-            }
-
             function doExitSuccess() {
-                if (widgets.runClock) {
-                    widgets.runClock.stop();
-                }
                 ui.setContent('run-control-panel.execMessage', '');
             }
 
@@ -1539,9 +1448,9 @@ define(
                 }
 
                 /*
-             If the job output specifies that no output is to be shown to the user,
-             skip the output cell creation.
-             */
+                If the job output specifies that no output is to be shown to the user,
+                skip the output cell creation.
+                */
                 // widgets named 'no-display' are a trigger to skip the output cell process.
                 const skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
                 let cellInfo;
@@ -1581,9 +1490,6 @@ define(
             }
 
             function doExitError() {
-                if (widgets.runClock) {
-                    widgets.runClock.stop();
-                }
                 ui.setContent('run-control-panel.execMessage', '');
             }
 
@@ -1600,21 +1506,7 @@ define(
             }
 
             function doExitCancelled() {
-                if (widgets.runClock) {
-                    widgets.runClock.stop();
-                }
                 ui.setContent('run-control-panel.execMessage', '');
-            }
-
-            function doRemove() {
-                const confirmationMessage = div([p('Continue to remove this app cell?')]);
-                ui.showConfirmDialog({ title: 'Remove Cell?', body: confirmationMessage }).then(
-                    (confirmed) => {
-                        if (!confirmed) {
-                            return;
-                        }
-                    }
-                );
             }
 
             function doDeleteCell() {
@@ -1650,160 +1542,105 @@ define(
                 });
             }
 
-            function start() {
-                return Promise.try(() => {
-                    // Initial ui tweaks
+            function addBusEvents() {
+                // APP CELL EVENTS
 
-                    // Honor the code input area show/hide.
-                    // TODO: this fixup is far too late in the cell lifecycle, leaving the code
-                    // area showing if it marked as hidden. We need to at least hide the input area
-                    // by default.
-                    showCodeInputArea();
-
-                    if (readOnly) {
-                        ui.hideElement('outdated');
-                    }
-                })
-                    .then(() => {
-                        return Semaphore.make().when(
-                            'comm',
-                            'ready',
-                            Config.get('comm_wait_timeout')
-                        );
+                busEventManager.add(
+                    bus.on('toggle-code-view', () => {
+                        const showing = toggleCodeInputArea(),
+                            label = showing ? 'Hide Code' : 'Show Code';
+                        ui.setButtonLabel('toggle-code-view', label);
                     })
-                    .then(() => {
-                        /*
-                         * listeners for the local input cell message bus
-                         */
+                );
+                busEventManager.add(
+                    bus.on('edit-cell-metadata', () => {
+                        doEditCellMetadata();
+                    })
+                );
+                busEventManager.add(
+                    bus.on('edit-notebook-metadata', () => {
+                        doEditNotebookMetadata();
+                    })
+                );
 
-                        // DOM EVENTS
-                        cell.element.on('toggleCodeArea.cell', () => {
-                            toggleCodeInputArea();
+                // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
+                // and events can be abstracted or should be
+
+                // are these used anywhere?!
+                busEventManager.add(
+                    bus.on('run-app', () => {
+                        doRun();
+                    })
+                );
+                busEventManager.add(
+                    bus.on('re-run-app', () => {
+                        doReset();
+                    })
+                );
+                busEventManager.add(
+                    bus.on('cancel', () => {
+                        doCancel();
+                    })
+                );
+
+                busEventManager.add(
+                    parentBus.on('reset-to-defaults', () => {
+                        bus.emit('reset-to-defaults');
+                    })
+                );
+
+                busEventManager.add(
+                    parentBus.on('toggle-batch-mode', () => {
+                        toggleBatchMode();
+                    })
+                );
+
+                // TODO: only turn this on when we need it!
+                busEventManager.add(
+                    cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, (message) => {
+                        updateFromLaunchEvent(message);
+
+                        model.setItem('exec.launchState', message);
+
+                        saveNarrative();
+
+                        cellBus.emit('launch-status', {
+                            launchState: message,
                         });
-
-                        // APP CELL EVENTS
-
-                        busEventManager.add(
-                            bus.on('toggle-code-view', () => {
-                                const showing = toggleCodeInputArea(),
-                                    label = showing ? 'Hide Code' : 'Show Code';
-                                ui.setButtonLabel('toggle-code-view', label);
-                            })
-                        );
-                        busEventManager.add(
-                            bus.on('edit-cell-metadata', () => {
-                                doEditCellMetadata();
-                            })
-                        );
-                        busEventManager.add(
-                            bus.on('edit-notebook-metadata', () => {
-                                doEditNotebookMetadata();
-                            })
-                        );
-
-                        // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
-                        // and events can be abstracted or should be
-                        busEventManager.add(
-                            bus.on('run-app', () => {
-                                doRun();
-                            })
-                        );
-                        busEventManager.add(
-                            bus.on('re-run-app', () => {
-                                doRerun();
-                            })
-                        );
-                        busEventManager.add(
-                            bus.on('cancel', () => {
-                                doCancel();
-                            })
-                        );
-                        busEventManager.add(
-                            bus.on('remove', () => {
-                                doRemove();
-                            })
-                        );
-
-                        busEventManager.add(
-                            parentBus.on('reset-to-defaults', () => {
-                                bus.emit('reset-to-defaults');
-                            })
-                        );
-
-                        busEventManager.add(
-                            parentBus.on('toggle-batch-mode', () => {
-                                toggleBatchMode();
-                            })
-                        );
-
-                        // TODO: only turn this on when we need it!
-                        busEventManager.add(
-                            cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, (message) => {
-                                updateFromLaunchEvent(message);
-
-                                model.setItem('exec.launchState', message);
-
-                                saveNarrative();
-
-                                cellBus.emit('launch-status', {
-                                    launchState: message,
-                                });
-                            })
-                        );
-
-                        busEventManager.add(
-                            cellBus.on('delete-cell', () => {
-                                doDeleteCell();
-                            })
-                        );
-
-                        busEventManager.add(
-                            cellBus.on('output-cell-removed', (message) => {
-                                const output = model.getItem('output');
-
-                                if (!output.byJob[message.jobId]) {
-                                    return;
-                                }
-
-                                delete output.byJob[message.jobId];
-                                model.setItem('output', output);
-                            })
-                        );
-
-                        busEventManager.add(
-                            runtime.bus().on('read-only-changed', (msg) => {
-                                toggleViewOnlyMode(msg.readOnly);
-                                renderUI();
-                            })
-                        );
-
-                        busEventManager.add(
-                            runtime.bus().on('kernel-state-changed', () => {
-                                renderUI();
-                            })
-                        );
-
-                        // Initialize display
-
-                        return null;
                     })
-                    .catch((err) => {
-                        if (err.message.indexOf('semaphore') !== -1) {
-                            throw new Error(
-                                'A network timeout occurred while trying to build a communication ' +
-                                    'channel to retrieve job information. Please refresh the page to try ' +
-                                    'again.<br><br>Details: ' +
-                                    err.message
-                            );
-                        }
-                        throw err;
-                    });
-            }
+                );
 
-            function stop() {
-                return Promise.try(() => {
-                    busEventManager.removeAll();
-                });
+                busEventManager.add(
+                    cellBus.on('delete-cell', () => {
+                        doDeleteCell();
+                    })
+                );
+
+                busEventManager.add(
+                    cellBus.on('output-cell-removed', (message) => {
+                        const output = model.getItem('output');
+
+                        if (!output.byJob[message.jobId]) {
+                            return;
+                        }
+
+                        delete output.byJob[message.jobId];
+                        model.setItem('output', output);
+                    })
+                );
+
+                busEventManager.add(
+                    runtime.bus().on('read-only-changed', (msg) => {
+                        toggleViewOnlyMode(msg.readOnly);
+                        renderUI();
+                    })
+                );
+
+                busEventManager.add(
+                    runtime.bus().on('kernel-state-changed', () => {
+                        renderUI();
+                    })
+                );
             }
 
             function exportParams() {
@@ -1963,6 +1800,91 @@ define(
                 return null;
             }
 
+            // LIFECYCLE API
+
+            function init() {
+                return Promise.try(() => {
+                    initializeFSM();
+                    initCodeInputArea();
+
+                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                        setReadOnly();
+                    }
+
+                    return null;
+                });
+            }
+
+            function attach(node) {
+                return Promise.try(() => {
+                    hostNode = node;
+                    container = hostNode.appendChild(document.createElement('div'));
+                    ui = UI.make({
+                        node: container,
+                        bus,
+                    });
+
+                    actionButtonWidget = ActionButtons.make({
+                        ui,
+                        actionButtons,
+                        bus,
+                        runAction: doActionButton,
+                        cssCellType: null,
+                    });
+
+                    const layout = renderLayout();
+                    container.innerHTML = layout.content;
+                    layout.events.attachEvents(container);
+                    $(container).find('[data-toggle="popover"]').popover();
+                    return null;
+                }).catch((error) => {
+                    throw new Error('Unable to attach app cell widget: ' + error);
+                });
+            }
+
+            function start() {
+                return Promise.try(() => {
+                    // Initial ui tweaks
+
+                    // Honor the code input area show/hide.
+                    // TODO: this fixup is far too late in the cell lifecycle, leaving the code
+                    // area showing if it marked as hidden. We need to at least hide the input area
+                    // by default.
+                    showCodeInputArea();
+
+                    if (readOnly) {
+                        ui.hideElement('outdated');
+                    }
+                })
+                    .then(() => {
+                        return Semaphore.make().when(
+                            'comm',
+                            'ready',
+                            Config.get('comm_wait_timeout')
+                        );
+                    })
+                    .then(() => {
+                        cell.element.on('toggleCodeArea.cell', () => {
+                            toggleCodeInputArea();
+                        });
+
+                        addBusEvents();
+
+                        return null;
+                    })
+                    .catch((err) => {
+                        if (err.message.indexOf('semaphore') !== -1) {
+                            throw new Error(
+                                'A network timeout occurred while trying to build a communication ' +
+                                    'channel to retrieve job information. Please refresh the page to try ' +
+                                    'again.<br><br>Details: ' +
+                                    err.message
+                            );
+                        }
+                        throw err;
+                    });
+            }
+
             function run() {
                 // First get the app specs, which is stashed in the model,
                 // with the parameters returned.
@@ -2007,33 +1929,30 @@ define(
                         // this will not change, so we can just render it here.
                         PR.prettyPrint(null, container);
 
-                        // if we start out in 'new' state, then we need to promote to
-                        // editing...
+                        // if we start out in 'new' state, we need to promote it to
+                        // one of the 'editing' states
                         if (fsm.getCurrentState().state.mode === 'new') {
-                            fsm.newState(fsmState.EDITING_INCOMPLETE);
                             evaluateAppState();
+                            return;
                         }
 
-                        /* Here, check the job state. If it looks outdated, then request an update and a new job state.
-                         * Should also pause rendering until we get it?
-                         * Or render some intermediate state?
+                        /*
+                         * Check the job state and request an update if it looks outdated.
                          */
                         const jobState = model.getItem('exec.jobState');
                         if (jobState && !Jobs.isValidJobStateObject(jobState)) {
                             startListeningForJobMessages(jobState.job_id);
-                            requestJobStatus(jobState.job_id);
                         } else if (!jobState && model.getItem('exec.launchState.job_id')) {
                             startListeningForJobMessages(model.getItem('exec.launchState.job_id'));
-                        } else {
-                            renderUI();
                         }
+
+                        renderUI();
 
                         // Initial job state listening.
                         const jobListeningModes = ['canceling', 'processing', 'error'];
                         const currentMode = fsm.getCurrentState().state.mode;
                         if (jobListeningModes.includes(currentMode)) {
                             startListeningForJobMessages(jobState.job_id);
-                            requestJobStatus(jobState.job_id);
                         }
                     })
                     .catch((err) => {
@@ -2051,6 +1970,20 @@ define(
                         fsm.newState(fsmState.INTERNAL_ERROR);
                         renderUI();
                     });
+            }
+
+            function stop() {
+                return Promise.try(() => {
+                    busEventManager.removeAll();
+                });
+            }
+
+            function detach() {
+                return Promise.try(() => {
+                    if (hostNode && container) {
+                        hostNode.removeChild(container);
+                    }
+                });
             }
 
             function __fsm() {

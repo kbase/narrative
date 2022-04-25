@@ -2,11 +2,13 @@ define([
     'bluebird',
     '/narrative/nbextensions/appCell2/widgets/appCellWidget',
     '/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm',
+    'common/dialogMessages',
     'common/jobCommMessages',
     'common/jobs',
     'common/jupyter',
     'common/runtime',
     'common/semaphore',
+    'common/ui',
     'testUtil',
     'narrativeMocks',
     '/test/data/jobsData',
@@ -16,11 +18,13 @@ define([
     Promise,
     AppCellWidget,
     AppStates,
+    DialogMessages,
     jcm,
     Jobs,
     Narrative,
     Runtime,
     Semaphore,
+    UI,
     TestUtil,
     Mocks,
     JobsData,
@@ -30,6 +34,8 @@ define([
     'use strict';
 
     const fsmState = AppStates.STATE;
+
+    const TEST_JOB = 'test_job_id';
 
     const appSpec = {
         id: 'NarrativeTest/app_succeed',
@@ -194,6 +200,14 @@ define([
         return ctx.appCellWidgetInstance;
     }
 
+    async function startRunningCell(ctx) {
+        cellStartUp(ctx);
+        await ctx.appCellWidgetInstance.init();
+        await ctx.appCellWidgetInstance.attach(ctx.kbaseNode);
+        await ctx.appCellWidgetInstance.start();
+        await ctx.appCellWidgetInstance.run();
+    }
+
     describe('The AppCellWidget module', () => {
         it('Should load and return a make function', () => {
             expect(AppCellWidget).toEqual(jasmine.any(Object));
@@ -223,7 +237,9 @@ define([
                 setOption: function (p, v) {
                     this.options[p] = v;
                 },
-                refresh: () => {},
+                refresh: () => {
+                    /* no op */
+                },
             };
         });
 
@@ -340,6 +356,7 @@ define([
                     `.kb-rcp__action-button.hidden`
                 );
                 expect(hiddenButtons.length).toEqual(0);
+                // run, cancel, reset, rerun, offline
                 expect(actionButtons.length).toBeGreaterThan(4);
             });
 
@@ -382,11 +399,7 @@ define([
 
         describe('cell stop', () => {
             beforeEach(async function () {
-                cellStartUp(this);
-                await this.appCellWidgetInstance.init();
-                await this.appCellWidgetInstance.attach(this.kbaseNode);
-                await this.appCellWidgetInstance.start();
-                await this.appCellWidgetInstance.run();
+                await startRunningCell(this);
             });
 
             it('stops, removing event listeners', async function () {
@@ -430,8 +443,6 @@ define([
                     });
                 });
 
-                const TEST_JOB = 'test_job_id';
-
                 it('responds to the run button being clicked', function () {
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EXECUTE_REQUESTED
@@ -464,7 +475,11 @@ define([
                         );
                         const exec = this.appCellWidgetInstance.model.getItem('exec');
 
-                        expect(exec.jobState).toEqual({ job_id: TEST_JOB });
+                        expect(exec.jobState).toEqual({
+                            job_id: TEST_JOB,
+                            status: 'created',
+                            created: 0,
+                        });
                         expect(exec.launchState).toEqual({
                             ...runStatusArgs,
                             event_at: 1234567890,
@@ -515,7 +530,7 @@ define([
                             ...runStatusArgs,
                             event_at: 1234567890,
                         });
-                        // action button should be reRunApp
+                        // action button should be rerunApp
                         expect(
                             this.kbaseNode.querySelector(`.kb-rcp__action-button.-rerun`)
                         ).not.toHaveClass('hidden');
@@ -540,77 +555,247 @@ define([
                     );
                 });
             });
+        });
 
-            describe('job status updates', () => {
-                // ensure that the app cell goes from { mode: 'processing', stage: 'launched', }
-                // to the appropriate state on receiving a job status message
-                Object.keys(JobsData.jobsById).forEach((jobId) => {
-                    if (!JobsData.jobsById[jobId].batch_job) {
-                        it(`processes a ${jobId} update`, async function () {
-                            const jobState = JobsData.jobsById[jobId];
-                            const currentState = fsmState.PROCESSING_LAUNCHED;
-                            cellStartUp(this);
-                            // start up cell as if it just received the job launched message
-                            this.cell.metadata.kbase.appCell.fsm = { currentState };
-                            this.cell.metadata.kbase.appCell.exec = {
-                                jobState: { job_id: jobId },
-                                launchState: { event: 'launched_job', job_id: jobId },
-                            };
+        describe('cancel and reset', () => {
+            const startState = { job_id: TEST_JOB, status: 'running', created: 12345678 };
 
-                            spyOn(this.bus, 'emit').and.callFake((...args) => {
-                                const [msgType] = args;
-                                if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
-                                    // send a status update
-                                    TestUtil.send_STATUS({
-                                        bus: this.bus,
-                                        jobId,
-                                        jobState,
-                                    });
-                                }
-                            });
+            it('cancels a running job', async function () {
+                // beforeEach(async function () {
+                cellStartUp(this);
+                this.cell.metadata.kbase.appCell.exec = {
+                    launchState: { event: 'launched_job', job_id: TEST_JOB },
+                    jobState: { job_id: TEST_JOB, status: 'running', created: 12345678 },
+                };
+                this.cell.metadata.kbase.appCell.fsm = {
+                    currentState: { mode: 'processing', stage: 'running' },
+                };
+                await this.appCellWidgetInstance.init();
+                await this.appCellWidgetInstance.attach(this.kbaseNode);
+                await this.appCellWidgetInstance.start();
+                await this.appCellWidgetInstance.run();
+                expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
+                    startState
+                );
 
-                            await this.appCellWidgetInstance.init();
-                            await this.appCellWidgetInstance.attach(this.kbaseNode);
-                            await this.appCellWidgetInstance.start();
-                            await this.appCellWidgetInstance.run();
+                // confirm the cancel/reset action
+                spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
+                spyOn(this.bus, 'emit');
+                const cancelButton = this.kbaseNode.querySelector('.kb-rcp__action-button.-cancel');
+                await TestUtil.waitForElementChange(
+                    this.kbaseNode.querySelector('[data-element="execMessage"]'),
+                    () => {
+                        cancelButton.click();
+                    }
+                );
 
-                            // ensure that the app cell is in the correct state
-                            expect(
-                                this.appCellWidgetInstance.__fsm().getCurrentState().state
-                            ).toEqual(currentState);
-                            // send a job status update; this will trigger an FSM mode change,
-                            // which will enable the jobStatus tab
-                            await TestUtil.waitForElementChange(
-                                this.kbaseNode.querySelector('[data-button="jobStatus"]')
-                            );
+                expect(this.bus.emit.calls.allArgs()).toEqual([
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: TEST_JOB }],
+                ]);
+                // app state should have changed to 'CANCELING'
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                    fsmState.CANCELING
+                );
+                expect(
+                    this.kbaseNode.querySelector('[data-element="execMessage"]').textContent
+                ).toContain('Cancelling...');
+            });
 
-                            // after processing
-                            expect(
-                                this.appCellWidgetInstance.__fsm().getCurrentState().state
-                            ).toEqual(jobState.meta.appCellFsm);
-                            expect(
-                                this.appCellWidgetInstance.model.getItem('exec.jobState')
-                            ).toEqual(jobState);
+            // reset states
+            // can also reset from fsmState.TERMINATED
+            // and fsmState.LAUNCH_ERROR but the mechanism is
+            // basically the same
+            [
+                {
+                    fsm: { currentState: fsmState.RUNTIME_ERROR },
+                    exec: {
+                        jobState: {
+                            batch_id: null,
+                            batch_job: false,
+                            child_jobs: [],
+                            created: 1650382769000,
+                            error: {
+                                code: -32000,
+                                error: 'Traceback (most recent call last):\n  File "/kb/module/bin/../lib/NarrativeTest/NarrativeTestServer.py", line 101, in _call_method\n    result = method(ctx, *params)\n  File "/kb/module/lib/NarrativeTest/NarrativeTestImpl.py", line 345, in app_sleep\n    raise RuntimeError(\'App woke up from its nap very cranky!\')\nRuntimeError: App woke up from its nap very cranky!\n',
+                                message: "'App woke up from its nap very cranky!'",
+                                name: 'Server error',
+                            },
+                            error_code: 1,
+                            errormsg: 'Job output contains an error',
+                            finished: 1650382783129,
+                            job_id: '625ed7b128c29d4fd84dcf3a',
+                            job_output: {},
+                            queued: 1650382769657,
+                            retry_count: 0,
+                            retry_ids: [],
+                            running: 1650382777753,
+                            status: 'error',
+                            updated: 1650382783214,
+                        },
+                        jobStateUpdated: 1650670508992,
+                        launchState: {
+                            cell_id: '2aff3fd9-a61c-41d9-b28e-e03ed7f0f854',
+                            event: 'launched_job',
+                            event_at: '2022-04-19T15:39:29.835265Z',
+                            job_id: '625ed7b128c29d4fd84dcf3a',
+                            run_id: '5737126c-b533-4295-aed7-075c527b84b8',
+                        },
+                    },
+                },
+                {
+                    fsm: { currentState: fsmState.COMPLETED },
+                    exec: {
+                        jobState: {
+                            batch_id: null,
+                            batch_job: false,
+                            child_jobs: [],
+                            created: 1650894376000,
+                            finished: 1650894391740,
+                            job_id: '6266a62883eff4a9b770db1e',
+                            job_output: {
+                                id: '6266a62883eff4a9b770db1e',
+                                result: [5],
+                                version: '1.1',
+                            },
+                            queued: 1650894377047,
+                            retry_count: 0,
+                            retry_ids: [],
+                            running: 1650894383195,
+                            status: 'completed',
+                            updated: 1650894392018,
+                        },
+                        jobStateUpdated: 1650894393361,
+                        launchState: {
+                            cell_id: '2245aad3-2ed0-4f50-bea2-06f17cb38fdd',
+                            event: 'launched_job',
+                            event_at: '2022-04-25T13:46:17.373294Z',
+                            job_id: '6266a62883eff4a9b770db1e',
+                            run_id: '8db0ac8a-0fad-41d8-9942-d17f0d6750c4',
+                        },
+                        outputWidgetInfo: {
+                            name: 'no-display',
+                            params: {},
+                            tag: 'dev',
+                        },
+                    },
+                },
+                {
+                    fsm: { currentState: fsmState.INTERNAL_ERROR },
+                    button: '-reset',
+                },
+            ].forEach((state) => {
+                it('resets the cell', async function () {
+                    cellStartUp(this);
+                    this.cell.metadata.kbase.appCell.exec = state.exec;
+                    this.cell.metadata.kbase.appCell.fsm = state.fsm;
+                    // set a valid param so the cell resets to EDITING_COMPLETE
+                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
 
-                            const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
-                                return call[0] !== 'clock-tick';
-                            });
-                            // the cell will emit at least one request for status updates when
-                            // the cell starts up
-                            expect(busEmissions).toContain([
-                                jcm.MESSAGE_TYPE.START_UPDATE,
-                                { [jcm.PARAM.JOB_ID]: jobId },
-                            ]);
-                            // if the job state is terminal, expect there to be a request to stop updates
-                            if (Jobs.isTerminalStatus(jobState.status)) {
-                                expect(busEmissions).toContain([
-                                    jcm.MESSAGE_TYPE.STOP_UPDATE,
-                                    { [jcm.PARAM.JOB_ID]: jobId },
-                                ]);
+                    await this.appCellWidgetInstance.init();
+                    await this.appCellWidgetInstance.attach(this.kbaseNode);
+                    await this.appCellWidgetInstance.start();
+                    await this.appCellWidgetInstance.run();
+
+                    const selector = state.button || '-rerun';
+                    const resetButton = this.kbaseNode.querySelector(
+                        `.kb-rcp__action-button.${selector}`
+                    );
+                    const runButton = this.kbaseNode.querySelector('.kb-rcp__action-button.-run');
+                    // confirm the cancel/reset action
+                    spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
+                    spyOn(this.bus, 'emit');
+
+                    await TestUtil.waitForElementState(
+                        runButton,
+                        () => {
+                            return !runButton.classList.contains('hidden');
+                        },
+                        () => {
+                            // click reset and wait for the run button to appear
+                            resetButton.click();
+                        }
+                    );
+
+                    expect(
+                        this.kbaseNode.querySelector('[data-element="execMessage"]').textContent
+                    ).toEqual('');
+                    expect(this.appCellWidgetInstance.model.getItem('exec')).toBeUndefined();
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.EDITING_COMPLETE
+                    );
+                });
+            });
+        });
+
+        describe('job status updates', () => {
+            // ensure that the app cell goes from { mode: 'processing', stage: 'launched', }
+            // to the appropriate state on receiving a job status message
+            Object.keys(JobsData.jobsById).forEach((jobId) => {
+                if (!JobsData.jobsById[jobId].batch_job) {
+                    it(`processes a ${jobId} update`, async function () {
+                        const jobState = JobsData.jobsById[jobId];
+                        const currentState = fsmState.PROCESSING_LAUNCHED;
+                        cellStartUp(this);
+                        // start up cell as if it just received the job launched message
+                        this.cell.metadata.kbase.appCell.fsm = { currentState };
+                        this.cell.metadata.kbase.appCell.exec = {
+                            jobState: { job_id: jobId },
+                            launchState: { event: 'launched_job', job_id: jobId },
+                        };
+
+                        spyOn(this.bus, 'emit').and.callFake((...args) => {
+                            const [msgType] = args;
+                            if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
+                                // send a status update
+                                TestUtil.send_STATUS({
+                                    bus: this.bus,
+                                    jobId,
+                                    jobState,
+                                });
                             }
                         });
-                    }
-                });
+
+                        await this.appCellWidgetInstance.init();
+                        await this.appCellWidgetInstance.attach(this.kbaseNode);
+                        await this.appCellWidgetInstance.start();
+                        await this.appCellWidgetInstance.run();
+
+                        // ensure that the app cell is in the correct state
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            currentState
+                        );
+                        // send a job status update; this will trigger an FSM mode change,
+                        // which will enable the jobStatus tab
+                        await TestUtil.waitForElementChange(
+                            this.kbaseNode.querySelector('[data-button="jobStatus"]')
+                        );
+
+                        // after processing
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            jobState.meta.appCellFsm
+                        );
+                        expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
+                            jobState
+                        );
+
+                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
+                            return call[0] !== 'clock-tick';
+                        });
+                        // the cell will emit at least one request for status updates when
+                        // the cell starts up
+                        expect(busEmissions).toContain([
+                            jcm.MESSAGE_TYPE.START_UPDATE,
+                            { [jcm.PARAM.JOB_ID]: jobId },
+                        ]);
+                        // if the job state is terminal, expect there to be a request to stop updates
+                        if (Jobs.isTerminalStatus(jobState.status)) {
+                            expect(busEmissions).toContain([
+                                jcm.MESSAGE_TYPE.STOP_UPDATE,
+                                { [jcm.PARAM.JOB_ID]: jobId },
+                            ]);
+                        }
+                    });
+                }
             });
         });
     });

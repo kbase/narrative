@@ -42,20 +42,10 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             ]),
         },
         appReset: {
-            // in case of general error
-            title: 'Reset app?',
-            body: div([
-                p(
-                    'This action will clear any parameters, results, and logs, and re-enable the Configure tab for editing.'
-                ),
-                p('Reset the app and resume editing?'),
-            ]),
-        },
-        appRerun: {
             title: 'Reset and resume editing?',
             body: div([
                 p(
-                    'This action will clear the results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'
+                    'This action will clear any errors, results, or logs, and re-enable the Configure tab for editing. You may then change inputs and run the app again.'
                 ),
                 p(
                     'Any output you have already produced will be left intact in the Narrative and Data Panel'

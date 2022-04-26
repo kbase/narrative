@@ -611,7 +611,7 @@ define([], () => {
                     },
                 },
                 actionButton: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                 },
             },
             on: {
@@ -667,7 +667,7 @@ define([], () => {
                     },
                 },
                 actionButton: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                 },
             },
             on: {
@@ -701,7 +701,7 @@ define([], () => {
             ui: {
                 tabs: uiTabs.error,
                 actionButton: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                 },
             },
             next: [STATE.LAUNCH_ERROR, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
@@ -712,7 +712,7 @@ define([], () => {
             ui: {
                 tabs: Object.assign({}, uiTabs.error, { jobStatus: { enabled: true } }),
                 actionButton: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                 },
             },
             on: {

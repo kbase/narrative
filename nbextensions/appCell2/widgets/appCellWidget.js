@@ -119,14 +119,7 @@ define(
                             classes: ['-cancel'],
                             label: 'Cancel',
                         },
-                        reRunApp: {
-                            help: 'Edit and re-run the app',
-                            type: 'default',
-                            classes: ['-rerun'],
-                            label: 'Reset',
-                        },
                         resetApp: {
-                            // only occurs when there is an internal error
                             help: 'Reset the app and return to Edit mode',
                             type: 'default',
                             classes: ['-reset'],
@@ -140,7 +133,7 @@ define(
                         },
                     },
                 },
-                controlBarTabs = {
+                tabSet = {
                     selected: 'configure',
                     selectedTab: null,
                     tabs: {
@@ -197,7 +190,6 @@ define(
                 ui,
                 actionButtonWidget,
                 fsm,
-                selectedJobId,
                 readOnly = false,
                 viewOnly = false;
 
@@ -491,35 +483,31 @@ define(
             }
 
             function startTab(tabId) {
-                const selectedTab = controlBarTabs.tabs[tabId];
+                const selectedTab = tabSet.tabs[tabId];
 
-                controlBarTabs.selectedTab = {
+                tabSet.selectedTab = {
                     id: tabId,
                     widget: selectedTab.widget.make({
                         model,
-                        jobId: selectedJobId,
                     }),
                 };
                 return _startTab(tabId, { model });
             }
 
             function _startTab(tabId, startArgs) {
-                ui.activateButton(controlBarTabs.selectedTab.id);
+                ui.activateButton(tabSet.selectedTab.id);
 
                 const node = document.createElement('div');
                 node.classList.add(`kb-app-cell-tab-pane__container--${tabId}`, 'clearfix');
                 ui.getElement('body.widget.tab-pane.widget').appendChild(node);
                 startArgs.node = node;
                 startArgs.bus = runtime.bus();
-                return controlBarTabs.selectedTab.widget.start(startArgs);
+                return tabSet.selectedTab.widget.start(startArgs);
             }
 
             function stopTab() {
-                ui.deactivateButton(controlBarTabs.selectedTab.id);
-                if (controlBarTabs.selectedTab.widget.getSelectedJobId) {
-                    selectedJobId = controlBarTabs.selectedTab.widget.getSelectedJobId();
-                }
-                return controlBarTabs.selectedTab.widget
+                ui.deactivateButton(tabSet.selectedTab.id);
+                return tabSet.selectedTab.widget
                     .stop()
                     .catch((err) => {
                         console.error('ERROR stopping', err);
@@ -529,13 +517,13 @@ define(
                         if (widgetNode.firstChild) {
                             widgetNode.removeChild(widgetNode.firstChild);
                         }
-                        controlBarTabs.selectedTab = null;
+                        tabSet.selectedTab = null;
                     });
             }
 
             function selectTab(tabId) {
-                if (controlBarTabs.selectedTab) {
-                    if (controlBarTabs.selectedTab.id === tabId) {
+                if (tabSet.selectedTab) {
+                    if (tabSet.selectedTab.id === tabId) {
                         return;
                     }
                     return stopTab().then(() => {
@@ -546,7 +534,7 @@ define(
             }
 
             function unselectTab() {
-                if (controlBarTabs.selectedTab) {
+                if (tabSet.selectedTab) {
                     // close the tab
                     return stopTab();
                 }
@@ -571,8 +559,8 @@ define(
             }
 
             function selectedTabId() {
-                if (controlBarTabs.selectedTab) {
-                    return controlBarTabs.selectedTab.id;
+                if (tabSet.selectedTab) {
+                    return tabSet.selectedTab.id;
                 }
                 return null;
             }
@@ -589,11 +577,14 @@ define(
                 }
                 model.setItem('user-settings.batchMode', newBatchMode);
                 bus.emit('set-batch-mode', newBatchMode);
-                toggleTab('configure').then(() => {
-                    toggleTab('configure');
-                });
                 evaluateAppState();
-                // if the configure widget is selected, stop and start it.
+
+                if (tabSet.selectedTab && tabSet.selectedTab.id === 'configure') {
+                    // if the configure widget is selected, stop and start it.
+                    toggleTab('configure').then(() => {
+                        toggleTab('configure');
+                    });
+                }
             }
 
             /*
@@ -605,8 +596,8 @@ define(
             let userSelectedTab = false;
 
             function toggleTab(tabId) {
-                if (controlBarTabs.selectedTab) {
-                    if (controlBarTabs.selectedTab.id === tabId) {
+                if (tabSet.selectedTab) {
+                    if (tabSet.selectedTab.id === tabId) {
                         return stopTab()
                             .then(() => {
                                 // hide the pane, since we just closed the only open
@@ -719,9 +710,6 @@ define(
                     case 'runApp':
                         doRun();
                         break;
-                    case 'reRunApp':
-                        doRerun();
-                        break;
                     case 'resetApp':
                         doReset();
                         break;
@@ -736,17 +724,17 @@ define(
             // bulkImportCell / cellTabs / buildTabButtons
             function buildRunControlPanelDisplayButtons(events) {
                 const cssBaseClass = 'kb-rcp';
-                const buttons = Object.keys(controlBarTabs.tabs)
+                const buttons = Object.keys(tabSet.tabs)
                     .filter((key) => {
                         // ensure that the tab data is an object with key 'label'
                         return (
-                            controlBarTabs.tabs[key] &&
-                            typeof controlBarTabs.tabs[key] === 'object' &&
-                            controlBarTabs.tabs[key].label
+                            tabSet.tabs[key] &&
+                            typeof tabSet.tabs[key] === 'object' &&
+                            tabSet.tabs[key].label
                         );
                     })
                     .map((key) => {
-                        const tab = controlBarTabs.tabs[key];
+                        const tab = tabSet.tabs[key];
                         let icon;
                         if (tab.icon && typeof tab.icon === 'string') {
                             icon = {
@@ -967,55 +955,56 @@ define(
                 });
 
                 fsm.bus.on('on-execute-requested', () => {
-                    ui.setContent('run-control-panel.execMessage', 'Sending...');
+                    setExecMessage('Sending...');
                 });
                 fsm.bus.on('exit-execute-requested', () => {
-                    ui.setContent('run-control-panel.execMessage', '');
+                    setExecMessage('');
                 });
 
                 fsm.bus.on('on-launched', () => {
-                    ui.setContent('run-control-panel.execMessage', 'Launching...');
+                    setExecMessage('Launching...');
                 });
                 fsm.bus.on('exit-launched', () => {
-                    ui.setContent('run-control-panel.execMessage', '');
+                    setExecMessage('');
                 });
 
                 fsm.bus.on('start-queueing', () => {
-                    doStartQueueing();
+                    updateJobState();
                 });
                 fsm.bus.on('start-running', () => {
-                    doStartRunning();
+                    updateJobState();
                 });
 
                 fsm.bus.on('on-completed', () => {
-                    doOnSuccess();
+                    updateJobState();
+                    generateJobOutput();
                 });
                 fsm.bus.on('resume-completed', () => {
-                    doResumeSuccess();
+                    updateJobState();
                 });
                 fsm.bus.on('exit-completed', () => {
-                    doExitSuccess();
+                    setExecMessage('');
                 });
 
                 fsm.bus.on('on-error', () => {
-                    doOnError();
+                    setExecMessage('');
                 });
                 fsm.bus.on('exit-error', () => {
-                    doExitError();
+                    setExecMessage('');
                 });
 
                 fsm.bus.on('on-cancelling', () => {
-                    doOnCancelling();
+                    setExecMessage('Cancelling...');
                 });
                 fsm.bus.on('exit-cancelling', () => {
-                    doExitCancelling();
+                    setExecMessage('');
                 });
 
                 fsm.bus.on('on-cancelled', () => {
-                    doOnCancelled();
+                    updateJobState();
                 });
                 fsm.bus.on('exit-cancelled', () => {
-                    doExitCancelled();
+                    setExecMessage('');
                 });
 
                 try {
@@ -1034,16 +1023,6 @@ define(
                     });
                     fsm.start(fsmState.INTERNAL_ERROR);
                 }
-            }
-
-            // LIFECYCYLE API
-
-            function doEditNotebookMetadata() {
-                Narrative.editNotebookMetadata();
-            }
-
-            function doEditCellMetadata() {
-                Narrative.editCellMetadata(cell);
             }
 
             function initCodeInputArea() {
@@ -1069,6 +1048,10 @@ define(
                 }
                 showCodeInputArea();
                 return model.getItem('user-settings.showCodeInputArea');
+            }
+
+            function setExecMessage(message) {
+                ui.setContent('run-control-panel.execMessage', message || '');
             }
 
             // WIDGETS
@@ -1202,18 +1185,10 @@ define(
                 // only do this if we are not editing.
                 model.deleteItem('exec');
                 clearOutput();
-                ui.setContent('run-control-panel.execMessage', '');
+                setExecMessage('');
 
                 // renderUI is called as part of this function
                 evaluateAppState();
-            }
-
-            function doRerun() {
-                DialogMessages.showDialog({ action: 'appReset' }).then((confirmed) => {
-                    if (confirmed) {
-                        resetToEditMode();
-                    }
-                });
             }
 
             function doReset() {
@@ -1404,25 +1379,10 @@ define(
 
             function updateJobState() {
                 const jobState = model.getItem('exec.jobState');
-                ui.setContent('run-control-panel.execMessage', Jobs.createJobStatusLines(jobState));
+                setExecMessage(Jobs.createJobStatusLines(jobState));
             }
 
-            // FSM state change events
-            function doStartRunning() {
-                updateJobState();
-            }
-
-            function doStartQueueing() {
-                updateJobState();
-            }
-
-            function doExitSuccess() {
-                ui.setContent('run-control-panel.execMessage', '');
-            }
-
-            function doOnSuccess() {
-                updateJobState();
-
+            function generateJobOutput() {
                 // Output Cell Handling
 
                 // If not in edit mode, we just skip this, and issue a warning to the console.
@@ -1478,35 +1438,6 @@ define(
                 });
             }
 
-            function doResumeSuccess() {
-                updateJobState();
-            }
-
-            function doOnError() {
-                updateJobState();
-                ui.setContent('run-control-panel.execMessage', '');
-            }
-
-            function doExitError() {
-                ui.setContent('run-control-panel.execMessage', '');
-            }
-
-            function doOnCancelling() {
-                ui.setContent('run-control-panel.execMessage', 'Cancelling...');
-            }
-
-            function doExitCancelling() {
-                ui.setContent('run-control-panel.execMessage', '');
-            }
-
-            function doOnCancelled() {
-                updateJobState();
-            }
-
-            function doExitCancelled() {
-                ui.setContent('run-control-panel.execMessage', '');
-            }
-
             function doDeleteCell() {
                 DialogMessages.showDialog({ action: 'deleteCell' }).then((confirmed) => {
                     if (!confirmed) {
@@ -1550,14 +1481,15 @@ define(
                         ui.setButtonLabel('toggle-code-view', label);
                     })
                 );
+
                 busEventManager.add(
                     bus.on('edit-cell-metadata', () => {
-                        doEditCellMetadata();
+                        Narrative.editCellMetadata(cell);
                     })
                 );
                 busEventManager.add(
                     bus.on('edit-notebook-metadata', () => {
-                        doEditNotebookMetadata();
+                        Narrative.editNotebookMetadata();
                     })
                 );
 

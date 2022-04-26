@@ -362,8 +362,8 @@ define([
                     `${selectors.actionButton}.hidden`
                 );
                 expect(hiddenButtons.length).toEqual(0);
-                // run, cancel, reset, rerun, offline
-                expect(actionButtons.length).toBeGreaterThan(4);
+                // run, cancel, reset, offline
+                expect(actionButtons.length).toBeGreaterThan(3);
             });
 
             it('starts, adding a load of event listeners', async function () {
@@ -592,9 +592,9 @@ define([
                             ...runStatusArgs,
                             event_at: 1234567890,
                         });
-                        // action button should be rerunApp
+                        // action button should be resetApp
                         expect(
-                            this.kbaseNode.querySelector(`${selectors.actionButton}.-rerun`)
+                            this.kbaseNode.querySelector(`${selectors.reset}`)
                         ).not.toHaveClass('hidden');
                         // expect the error tab to be visible
                         expect(
@@ -745,7 +745,6 @@ define([
                 },
                 {
                     fsm: { currentState: fsmState.INTERNAL_ERROR },
-                    button: '-reset',
                 },
             ].forEach((state) => {
                 it('resets the cell', async function () {
@@ -760,9 +759,8 @@ define([
                     await this.appCellWidgetInstance.start();
                     await this.appCellWidgetInstance.run();
 
-                    const selector = state.button || '-rerun';
                     const resetButton = this.kbaseNode.querySelector(
-                        `${selectors.actionButton}.${selector}`
+                        `${selectors.reset}`
                     );
                     const runButton = this.kbaseNode.querySelector(selectors.run);
                     // confirm the cancel/reset action

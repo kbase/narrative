@@ -56,12 +56,12 @@ define([
      */
     function ConfigureWidget(options) {
         const viewOnly = options.viewOnly || false;
-        const { model, specs, fileTypesDisplay, typesToFiles } = options;
+        const { model, specs, fileTypesDisplay, typesToFiles, fileTypeMapping } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params',
-            xsvGen = new XsvGenerator({ model, typesToFiles }),
+            xsvGen = new XsvGenerator({ model, typesToFiles, fileTypeMapping }),
             cssBaseClass = 'kb-bulk-import-configure';
         let container = null,
             filePathWidget,

@@ -1,6 +1,6 @@
 # Job Management Architecture
 
-The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative (also known as the narrative backend), and the KBase Execution Engine (EE2) behind that. Some frontend components access external resources directly, but job-related data flows between those three stops across a single channel from frontend and backend, and backend and EE2.
+The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative (also known as the narrative backend), and the [KBase Execution Engine](https://github.com/kbase/execution_engine2) (EE2) behind that. Some frontend components access external resources directly, but job-related data flows between those three stops across a single channel from frontend and backend, and backend and EE2.
 
 - [Job Management Architecture](#job-management-architecture)
   - [Comm channels](#comm-channels)
@@ -65,11 +65,11 @@ define(['common/jobCommMessages'], (jcm) => {
 
 ## Messages from frontend to backend
 
-These messages are sent from the frontend's `JobCommChannel` to the narrative backend, using a websocket established by one of the Jupyter notebook modules, `Jupyter.kernel.comm`. On the kernel side, a complementary comm channel is used. This is set up in the `biokbase.narrative.jobs.jobcomm.JobComm` class. On Narrative load, page reload, or kernel restart, the comm channel is initialized to handle any messages sent to the kernel. It uses the same controlled vocabulary of terms for message types and job parameters as the frontend.
+Messages are sent from the frontend's `JobCommChannel` to the narrative backend, using a websocket established by one of the Jupyter notebook modules, `Jupyter.kernel.comm`. On the kernel side, a complementary comm channel is used. This is set up in the `biokbase.narrative.jobs.jobcomm.JobComm` class. On Narrative load, page reload, or kernel restart, the comm channel is initialized to handle any messages sent to the kernel. It uses the same controlled vocabulary of terms for message types and job parameters as the frontend.
 
 Most of these messages take one or more inputs. These are listed below the command, where applicable.
 
-The documentation will use the message type and parameter names used in the job config file (e.g. `STATUS` instead of `job_status`, `RETRY` instead of `retry_job`, `JOB_ID` instead of `job_id`, etc.) as the JS code will refer to those values using the names in the JobCommMessages object, rather than hardcoding the strings.
+The documentation will use the message type and parameter names used in the job config file (e.g. [`STATUS`](#status) instead of `job_status`, [`RETRY`](#retry) instead of `retry_job`, `JOB_ID` instead of `job_id`, etc.) as [the JavaScript code](#usage-examples) will refer to those values using the names in the JobCommMessages object, rather than hardcoding the strings.
 
 ### `CANCEL`
 
@@ -154,7 +154,7 @@ The messages listed above undergo minor modifications to be sent over the websoc
 }
 ```
 
-All messages are assigned a `msg_id` and the message type is added as the `request_type` field, and merged with any other fields, such as `JOB_ID`, `JOB_ID_LIST`, etc.
+All messages are assigned a `msg_id` by the Jupyter comm framework (KBase does not use this ID for anything); the message type is added as the `request_type` field, and merged with any other fields, such as `JOB_ID`, `JOB_ID_LIST`, etc.
 
 The python `JobComm` module uses the `request_type` field to trigger the appropriate method in the `JobManager`.
 
@@ -163,7 +163,7 @@ The python `JobComm` module uses the `request_type` field to trigger the appropr
 
 These messages are sent by the python `JobComm` module and received by the `JobCommChannel` on the browser side, then parsed and distributed to frontend components over the bus system. Like other kernel messages sent by the Jupyter notebook, they have a `msg_type` field, and a `content` field containing data meant for the frontend to use. They have a rough structure like this:
 
-```json
+```js
 {
   "data": {
     "msg_type": "some_message",
@@ -174,24 +174,21 @@ These messages are sent by the python `JobComm` module and received by the `JobC
   }
 }
 ```
+Although the backend message types are included in the controlled vocabulary, the content keys are not, as there are too many to make it worthwhile capturing them.
 
 The full set of messages sent by the backend are described below. The name (`msg_type`) is given, followed by the keys given in the `content` block.
 
 The backend bundles together multiple messages of the same type in an object indexed by key (usually job or cell ID). In nearly all cases, the frontend then separates out the data and sends it out on individual channels for each job, batch job, or cell. The exception to this is `ERROR` messages; if the error contains data pertaining to the original request, the request parameters (`JOB_ID`, `BATCH_ID`, etc.) can be used to route the message to specific frontend components. Otherwise, the JobCommChannel emits the message in the browser console to assist in debugging.
 
-By design, these messages are only seen by the `JobCommChannel`; the JobComm interface does not constitute an API for narrative job data.
-
 ### `ERROR`
 
 A general job comm error message, capturing exceptions that get thrown by the kernel. The frontend uses the `request` data to distribute error messages on the appropriate job or cell channels.
 
-Content varies, but usually includes the below:
-  * `source` - what triggered the error; this may be the request type, arbitrary string, or null, meant to indicate what triggered the error
-  * `request` - request data, arbitrary string, or null, meant to indicate the comm request that triggered the error.
-
-Error messages usually also contain data about the error itself:
+Error messages contain the following information:
   * `name` - the exception type name
   * `message` - the exception message
+  * `source` - what triggered the error; this may be the request type, or a string or null in the case of errors from the backend job lookup loop. Note that the lookup loop is to be deprecated.
+  * `request` - the frontend request that triggered that error, or a string or null in the case of errors from the backend job lookup loop.
 
 
 ### `INFO` (response)
@@ -210,13 +207,13 @@ In case of error, the response has instead the keys:
   * `error` - brief message explaining the issue
 
 Sample response JSON:
-```json
+```js
 {
   "job_id_1": {
     "app_id": "MyFaveApp/Best_App_in_the_World",
     "app_name": "An Overrated App",
     "job_id": "job_id_1",
-    "job_params": [{ ... }],
+    "job_params": [{"param_1": "value_1", "param_2": "value_2"}],
     "batch_id": "some_batch_id",
   },
   "error_id_1": {
@@ -262,7 +259,7 @@ In case of error, the response has instead the keys:
   * `error` - brief message explaining the issue
 
 Sample response JSON:
-```json
+```js
 {
   "job_id_1": {
     "job_id": "job_id_1",
@@ -306,7 +303,7 @@ Error when attempting to launch a job:
   * `error_message` - string, the error
   * `error_type` - string, the type of Exception that was raised.
   * `error_stacktrace` - string, a stacktrace
-  * `error_code` - int, an error code from EE2
+  * `error_code` - int, an [error code from EE2](https://github.com/kbase/execution_engine2)
   * `error_source` - string, the "source" of the error (generally "appmanager")
 
 
@@ -324,7 +321,7 @@ In case of error, the response has instead the keys:
   * `error` - brief message explaining the issue
 
 Sample response JSON:
-```json
+```js
 {
   "job_id_1": {
     "job_id": "job_id_1",
@@ -344,8 +341,9 @@ Sample response JSON:
 
 #### Job output state
 
-As sent to browser, includes cell info and run info
-```
+As sent to browser, includes cell info and run info. The structure below indicates the type of data in each field.
+
+```js
 {
     "job_id": string,
     "outputWidgetInfo": object if job completed successfully; otherwise null
@@ -354,8 +352,8 @@ As sent to browser, includes cell info and run info
         "status": string,
         "batch_id": str or null,
         "batch_job": bool,
-        "child_jobs": array,
-        "retry_ids": array,
+        "child_jobs": array of job IDs,
+        "retry_ids": array of job IDs,
         "retry_parent": str,
         "created": epoch ms,
         "queued": optional - epoch ms,
@@ -387,7 +385,7 @@ As [`STATUS`](#status-response)
 
 ## Usage Examples
 
-The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
+The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all JavaScript modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
 
 Generally, this is used as follows (without much detail. For a readable real example, check out the `jobLogViewer.js` module):
 
@@ -464,7 +462,7 @@ const cellBus = runtime.bus().makeChannelBus({
       }
     });
     const listenerId = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, (message) => {
-      // process the message...
+        // process the message...
     });
   }
 );
@@ -486,7 +484,7 @@ JobManager().initialize_jobs()
 JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)
 ```
 * The `JobManager` runs `check_workspace_jobs` on EE2 with the current workspace ID to fetch the list of jobs associated with the workspace. This is filtered to include only those in `cell_list`, and then `Job` objects are built from the data.
-* `JobComm` does:
+* The `JobComm`:
   * Starts the lookup loop thread.
   * On the first pass, this looks up status of all jobs and pushes them forward to the browser.
   * If any jobs are in a terminal state, they'll stopped being looked up automatically. If all jobs are terminated, then the loop thread itself stops.
@@ -500,7 +498,7 @@ These steps define the process by which jobs are created by running an app.
   * Cell provides app_id, cell_id, run_id, and parameters.
   * Invokes `biokbase.narrative.appmanager.AppManager.run_app` or `run_app_batch`.
 * `AppManager.run_app` validates the following bits of information before passing them on to EE2:
-  * App (based on app id, version, and spec).
+  * App specifications (validated against the [Narrative Method Store](https://github.com/kbase/narrative_method_store))
   * Parameters (based on the app spec).
 * `AppManager.run_app` preparation and start:
   * Convert app params from user-readable to machine-understandable (via the spec input_mapping).
@@ -510,7 +508,7 @@ These steps define the process by which jobs are created by running an app.
 * Get response from EE2
 * Send a `RUN_STATUS` message to the browser, giving the results of the job submission; this will either contain a job ID or list of job IDs, if the submission was successful, or an error if not.
 * Assuming the submission was successful, the job IDs are combined with info from the job submission to create `biokbase.narrative.jobs.job.Job` objects, and stored in the `biokbase.narrative.jobs.jobmanager.JobManager` singleton object.
-* On the frontend, the cell receiving the `RUN_STATUS` message will send `STATUS` requests to the backend periodically to track the progress of the job. Other message types (`LOGS`, `CANCEL`, `RETRY`, etc.) are sent as needed.
+* On the frontend, the cell receiving the `RUN_STATUS` message will send `STATUS` requests to the backend periodically (configurable; set in the JavaScript `JobManager` module) to track the progress of the job. Other message types (`LOGS`, `CANCEL`, `RETRY`, etc.) are sent as needed.
   * Batch cells have an update mechanism that triggers a `STATUS` request a short period after receiving the last update from the backend.
   * App cells also use the [job lookup loop](#jobcomm-status-lookup-loop----to-be-deprecated), backend code that sends periodic job updates, to keep up to date with job status.
 

@@ -39,7 +39,7 @@ CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 DOES_NOT_EXIST = "does_not_exist"
 
 
-class JobManager(object):
+class JobManager:
     """
     The KBase Job Manager class. This handles all jobs and makes their status available.
     It sends the results to the KBaseJobs channel that the front end
@@ -49,9 +49,9 @@ class JobManager(object):
     __instance = None
 
     # keys: job_id, values: { refresh = 1/0, job = Job object }
-    _running_jobs = dict()
+    _running_jobs = {}
     # keys: cell_id, values: set(job_1_id, job_2_id, job_3_id)
-    _jobs_by_cell_id = dict()
+    _jobs_by_cell_id = {}
 
     _log = kblogging.get_logger(__name__)
 
@@ -68,19 +68,27 @@ class JobManager(object):
                 ordering.append(job_id)
             else:
                 ordering.insert(0, job_id)
-        states = {job_id: states[job_id] for job_id in ordering}
+        return {job_id: states[job_id] for job_id in ordering}
 
-        return states
-
-    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
+    def _check_job_list(self, input_ids: List[str] = None) -> Tuple[List[str], List[str]]:
         """
-        Deduplicates the input job list, maintaining insertion order
+        Deduplicates the input job list, maintaining insertion order.
         Any jobs not present in self._running_jobs are added to an error list
 
-        :param input_ids: a list of putative job IDs
-        :return results: tuple with items "job_ids", containing valid IDs;
-        and "error_ids", for jobs that the narrative backend does not know about
+        :param input_ids: list of putative job IDs, defaults to []
+        :type input_ids: List[str], optional
+
+        :raises JobRequestException: if the input_ids parameter is not a list or
+        or if there are no valid job IDs supplied
+
+        :return: tuple with items
+            job_ids - valid job IDs
+            error_ids - jobs that the narrative backend does not know about
+        :rtype: Tuple[List[str], List[str]]
         """
+        if not input_ids:
+            raise JobRequestException(JOBS_MISSING_ERR, input_ids)
+
         if not isinstance(input_ids, list):
             raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
 
@@ -103,10 +111,10 @@ class JobManager(object):
         Registers a new Job with the manager and stores the job locally.
         This should only be invoked when a new Job gets started.
 
-        Parameters:
-        -----------
-        job : biokbase.narrative.jobs.job.Job object
-            The new Job that was started.
+        :param job: a Job object for the new job that was started
+        :type job: Job
+        :param refresh: whether or not the job should be refreshed, defaults to None
+        :type refresh: bool, optional
         """
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
 
@@ -127,20 +135,25 @@ class JobManager(object):
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
-        So it does the following steps.
+        It runs the following steps:
         1. gets the current workspace ID from app_util.system_variable('workspace_id')
-        2. get list of jobs with that ws id from ee2 (also gets tag, cell_id, run_id)
+        2. get job state data on all jobs with that ws id from ee2
         3. initialize the Job objects and add them to the running jobs list
         4. start the status lookup loop.
+
+        :param cell_ids: list of cell IDs to filter the existing jobs for, defaults to None
+        :type cell_ids: List[str], optional
+
+        :raises NarrativeException: if the call to ee2 fails
         """
         ws_id = system_variable("workspace_id")
-        job_states = dict()
+        job_states = {}
         kblogging.log_event(self._log, "JobManager.initialize_jobs", {"ws_id": ws_id})
         try:
             job_states = clients.get("execution_engine2").check_workspace_jobs(
                 {
                     "workspace_id": ws_id,
-                    "return_list": 0,  # do not remove
+                    "return_list": 0,
                     "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
                 }
             )
@@ -149,7 +162,7 @@ class JobManager(object):
             new_e = transform_job_exception(e, "Unable to initialize jobs")
             raise new_e
 
-        self._running_jobs = dict()
+        self._running_jobs = {}
         job_states = self._reorder_parents_children(job_states)
         for job_state in job_states.values():
             child_jobs = None
@@ -170,13 +183,19 @@ class JobManager(object):
 
             self.register_new_job(job, refresh)
 
-    def _create_jobs(self, job_ids) -> dict:
+    def _create_jobs(self, job_ids: List[str]) -> dict:
         """
+        Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary.
         TODO: error handling
-        Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
+
+        :param job_ids: job IDs to create job objects for
+        :type job_ids: List[str]
+
+        :return: dictionary of job states indexed by job ID
+        :rtype: dict
         """
         job_ids = [job_id for job_id in job_ids if job_id not in self._running_jobs]
-        if not len(job_ids):
+        if not job_ids:
             return {}
 
         job_states = clients.get("execution_engine2").check_jobs(
@@ -193,10 +212,17 @@ class JobManager(object):
 
         return job_states
 
-    def get_job(self, job_id):
+    def get_job(self, job_id: str) -> Job:
         """
-        Returns a Job with the given job_id.
-        Raises a JobRequestException if not found.
+        Retrieve a job from the Job Manager's _running_jobs index.
+
+        :param job_id: the job ID to be retrieved
+        :type job_id: str
+
+        :raises JobRequestException: if the job cannot be found
+
+        :return: Job object corresponding to that job ID
+        :rtype: Job
         """
         if job_id not in self._running_jobs:
             raise JobRequestException(JOB_NOT_REG_ERR, job_id)
@@ -207,17 +233,44 @@ class JobManager(object):
     ) -> dict:
         """
         Builds a set of job states for the list of job ids.
-        :param job_ids: list of job IDs (may be empty)
-        :param states: dict, where each value is a state is from EE2
+
+        The job output state for a given job ID is generated by job.output_state() and
+        has the basic form:
+        {
+            "job_id": string,
+            "jobState": dictionary containing job data from EE2,
+            "outputWidgetInfo": dictionary | None
+            "batch_id": string if present; otherwise None,
+        }
+
+        If the call to refresh job data from ee2 fails, the job output state will have an additional
+        'error' key with the error message from the failed data refresh
+        {
+            "job_id": string,
+            ...,
+            "error": <ee2 error message>
+        }
+
+        :param job_ids: list of job IDs
+        :type job_ids: List[str]
+        :param states: dict of job state data from EE2, indexed by job ID, defaults to None
+        :type states: dict, optional
+
+        :raises JobRequestException: if job_ids is not a list
+
+        :return: dict containing the output_state for each job, indexed by job ID. If an error
+        occurs during job look up on ee2, a message will be added to the output_state for the
+        job under the key 'error'
+        :rtype: dict
         """
         if not isinstance(job_ids, list):
             raise JobRequestException("job_ids must be a list")
 
-        if not len(job_ids):
+        if not job_ids:
             return {}
 
-        output_states = dict()
-        jobs_to_lookup = list()
+        output_states = {}
+        jobs_to_lookup = []
 
         # Fetch from cache of terminated jobs, where available.
         # These are already post-processed and ready to return.
@@ -231,9 +284,9 @@ class JobManager(object):
             else:
                 jobs_to_lookup.append(job_id)
 
-        fetched_states = dict()
+        fetched_states = {}
         # Get the rest of states direct from EE2.
-        if len(jobs_to_lookup):
+        if jobs_to_lookup:
             try:
                 fetched_states = clients.get("execution_engine2").check_jobs(
                     {
@@ -265,7 +318,27 @@ class JobManager(object):
 
         return output_states
 
-    def get_job_states(self, job_ids: List[str]) -> dict:
+    def get_job_states(self, job_ids: List[str], ts: int = None) -> dict:
+        """
+        Retrieves the job states for the supplied job_ids.
+
+        TODO: UPDATE ME!
+        If the ts parameter is present, only jobs that have been updated since that time are returned.
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param job_ids: job IDs to retrieve job state data for
+        :type job_ids: List[str]
+        :param ts: timestamp (as generated by time.time_ns()) to filter the jobs, defaults to None
+        :type ts: int, optional
+
+        :return: dictionary of job states, indexed by job ID
+        :rtype: dict
+        """
         job_ids, error_ids = self._check_job_list(job_ids)
         output_states = self._construct_job_output_state_set(job_ids)
         return self.add_errors_to_results(output_states, error_ids)
@@ -276,11 +349,14 @@ class JobManager(object):
         If ignore_refresh_flag is True, then returns states for all jobs this
         JobManager knows about (i.e. all jobs associated with the workspace).
 
-        This returns them all as a dictionary, keyed on the job id.
-        :param ignore_refresh_flag: boolean - if True, ignore the usual refresh state of the job.
-            Even if the job is stopped, or completed, fetch and return its state from the service.
+        :param ignore_refresh_flag: if True, ignore the refresh state of the job -- return the state
+        regardless of whether the job is stopped or completed. Defaults to False.
+        :type ignore_refresh_flag: bool, optional
+
+        :return: dictionary of job states, indexed by job ID
+        :rtype: dict
         """
-        jobs_to_lookup = list()
+        jobs_to_lookup = []
 
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
@@ -288,21 +364,27 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         if len(jobs_to_lookup) > 0:
             return self._construct_job_output_state_set(jobs_to_lookup)
-        return dict()
+        return {}
 
     def _get_job_ids_by_cell_id(self, cell_id_list: List[str] = None) -> tuple:
         """
-        Finds jobs with a cell_id in cell_id_list
-        Mappings of job ID to cell ID are added when new jobs are registered
-        Returns a list of job IDs and a mapping of cell IDs to the list of
-        job IDs associated with the cell.
+        Finds jobs with a cell_id in cell_id_list.
+        Mappings of job ID to cell ID are added when new jobs are registered.
+
+        :param cell_id_list: cell IDs to retrieve job state data for
+        :type cell_id_list: List[str]
+
+        :return: tuple with two components:
+            job_id_list: list of job IDs associated with the cell IDs supplied
+            cell_to_job_mapping: mapping of cell IDs to the list of job IDs associated with the cell
+        :rtype: tuple
         """
         if not cell_id_list:
             raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
-            id: self._jobs_by_cell_id[id] if id in self._jobs_by_cell_id else set()
-            for id in cell_id_list
+            cell_id: self._jobs_by_cell_id[cell_id] if cell_id in self._jobs_by_cell_id else set()
+            for cell_id in cell_id_list
         }
         # union of all the job_ids in the cell_to_job_mapping
         job_id_list = set().union(*cell_to_job_mapping.values())
@@ -310,9 +392,15 @@ class JobManager(object):
 
     def get_job_states_by_cell_id(self, cell_id_list: List[str] = None) -> dict:
         """
-        Fetch job states for jobs with a cell_id in cell_id_list
-        Returns a dictionary of job states keyed by job ID and a mapping of
-        cell IDs to the list of job IDs associated with the cell.
+        Retrieves the job states for jobs associated with the cell_id_list supplied.
+
+        :param cell_id_list: cell IDs to retrieve job state data for
+        :type cell_id_list: List[str]
+
+        :return: dictionary with two keys:
+            'jobs': job states, indexed by job ID
+            'mapping': mapping of cell IDs to the list of job IDs associated with the cell
+        :rtype: dict
         """
         (jobs_to_lookup, cell_to_job_mapping) = self._get_job_ids_by_cell_id(
             cell_id_list
@@ -325,19 +413,31 @@ class JobManager(object):
 
     def get_job_info(self, job_ids: List[str]) -> dict:
         """
-        Sends the info over the comm channel as these packets:
+        Gets job information for a list of job IDs.
+
+        Job info for a given job ID is in the form:
         {
-            app_id: module/name,
-            app_name: random string,
-            job_id: string,
-            job_params: dictionary,
-            batch_id: string,
+            "app_id": string in the form "<module>/<name>",
+            "app_name": string,
+            "job_id": string,
+            "job_params": dictionary,
+            "batch_id": string | None,
         }
-        Will set packet to the generic job not found message if job_id doesn't exist.
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param job_ids: job IDs to retrieve job info for
+        :type job_ids: List[str]
+        :return: job info for each job, indexed by job ID
+        :rtype: dict
         """
         job_ids, error_ids = self._check_job_list(job_ids)
 
-        infos = dict()
+        infos = {}
         for job_id in job_ids:
             job = self.get_job(job_id)
             infos[job_id] = {
@@ -357,32 +457,47 @@ class JobManager(object):
         latest: bool = False,
     ) -> dict:
         """
-        :param job_id: str - the job id from the execution engine
-        :param first_line: int - the first line to be requested by the log. 0-indexed. If < 0,
+        Retrieves job logs for the job ID supplied.
+
+        Jobs logs for a given job ID are in the form:
+        {
+            "job_id":     string,
+            "batch_id":   string | None,
+            "first":      int - the first line returned,
+            "latest":     bool - whether the latest lines were returned,
+            "max_lines":  int - the number of logs lines currently available for that job,
+            "lines":      list - the lines themselves, fresh from the server; these are dicts in the form
+                "line" - the log line string
+                "is_error" - either 0 or 1
+        }
+
+        If there is an error when retrieving logs (e.g. the job has yet to start or
+        it is a batch job and does not generate logs), the return structure will be:
+        {
+            "job_id":     string
+            "batch_id":   string | None
+            "error":      string - error message
+        }
+
+        :param job_id: the job id from the execution engine
+        :type job_id: str
+        :param first_line: the first line to be requested by the log. 0-indexed. If < 0,
             this will be set to 0
+        :type first_line: int, defaults to 0
         :param num_lines: int - the maximum number of lines to return.
             if < 0, will be reset to 0.
             if None, then will not be considered, and just return all the lines.
-        :param latest: bool - if True, will only return the most recent max_lines
-            of logs. This overrides the first_line parameter if set to True. If the call made is
-            get_job_logs(id, first_line=0, num_lines=5, latest=True), and there are 100
-            log lines available, then lines 96-100 will be returned.
-        :returns: dict with keys:
-            job_id:     string
-            batch_id:   string | None
-            first:      int - the first line returned
-            latest:     bool - whether the latest lines were returned
-            max_lines:  int - the number of logs lines currently available for that job
-            lines:      list - the lines themselves, fresh from the server. These are all tiny dicts with keys
-                "line" - the log line string
-                "is_error" - either 0 or 1
+        :type num_lines: int, defaults to None.
+        :param latest: if True, will only return the most recent num_lines
+            of logs. If set to True, overrides the first_line parameter; e.g. for the call
 
-            If there is an error when retrieving logs (e.g. the job
-            has yet to start or it is a batch job and does not generate
-            logs), the return structure will be:
-                job_id:     string
-                batch_id:   string | None
-                error:      string - error message
+            get_job_logs(id, first_line=0, num_lines=5, latest=True)
+
+            if there are 100 log lines available, then lines 96-100 will be returned.
+        :type latest: boolean, defaults to False.
+
+        :return: job log data for each job, indexed by job ID
+        :rtype: dict
         """
         job = self.get_job(job_id)
 
@@ -406,7 +521,7 @@ class JobManager(object):
                 "job_id": job.job_id,
                 "batch_id": job.batch_id,
                 "first": first_line,
-                "latest": True if latest else False,
+                "latest": latest,
                 "max_lines": max_lines,
                 "lines": logs,
             }
@@ -426,6 +541,24 @@ class JobManager(object):
     ) -> dict:
         """
         Fetch the logs for a list of jobs. Note that the parameters supplied are applied to all jobs.
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param job_id_list: list of jobs to fetch logs for
+        :type job_id_list: List[str]
+        :param first_line: the first line to be returned, defaults to 0
+        :type first_line: int, optional
+        :param num_lines: number of lines to be returned, defaults to None
+        :type num_lines: int, optional
+        :param latest: whether to return the latest log lines; only relevant if num_lines is set. Defaults to False
+        :type latest: bool, optional
+
+        :return: job log data indexed by job ID; see get_job_logs for details
+        :rtype: dict
         """
         job_ids, error_ids = self._check_job_list(job_id_list)
 
@@ -437,19 +570,29 @@ class JobManager(object):
 
     def cancel_jobs(self, job_id_list: List[str]) -> dict:
         """
-        Cancel a list of running jobs, placing them in a canceled state
-        Does NOT delete the jobs.
-        If the job_ids are not present or are not found in the Narrative,
-        a JobRequestException is raised.
+        Cancel a list of jobs and return their new state. After sending the cancellation
+        request, the job states are refreshed and their new output states returned.
 
-        Results are returned as a dict of job status objects keyed by job id
+        Jobs that trigger an error when cancelled will return
+        {
+            "job_id": string,
+            "error": <error message from attempted cancellation>
+        }
 
-        :param job_id_list: list of strs
-        :return job_states: dict with keys job IDs and values job state objects
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
 
+        :param job_id_list: job IDs to cancel
+        :type job_id_list: List[str]
+
+        :return: job output states, indexed by job ID
+        :rtype: dict
         """
         job_ids, error_ids = self._check_job_list(job_id_list)
-        error_states = dict()
+        error_states = {}
         for job_id in job_ids:
             if not self.get_job(job_id).was_terminal():
                 error = self._cancel_job(job_id)
@@ -463,6 +606,15 @@ class JobManager(object):
         return self.add_errors_to_results(job_states, error_ids)
 
     def _cancel_job(self, job_id: str) -> None:
+        """
+        Cancel a single job. If an error occurs during cancellation, that error is converted
+        into a NarrativeException and returned to the caller.
+
+        :param job_id: job ID to be cancelled
+        :type job_id: str
+        :return: if present, the exception raised when trying to cancel the job
+        :rtype: NarrativeException | None
+        """
         # Stop updating the job status while we try to cancel.
         # Set the job to a special state of 'canceling' while we're doing the cancel
         is_refreshing = self._running_jobs[job_id].get("refresh", False)
@@ -473,32 +625,51 @@ class JobManager(object):
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
             error = transform_job_exception(e, "Unable to cancel job")
+
         self._running_jobs[job_id]["refresh"] = is_refreshing
         del self._running_jobs[job_id]["canceling"]
         return error
 
     def retry_jobs(self, job_id_list: List[str]) -> dict:
         """
-        Returns
-        [
-            {
-                "job_id": job_id,
-                "job": {"state": {"job_id": job_id, "status": status, ...} ...},
-                "retry_id": retry_id,
-                "retry": {"state": {"job_id": retry_id, "status": status, ...} ...}
+        Retry a list of job IDs, returning job output states for the jobs to be retried
+        and the new jobs created by the retry command.
+
+        Retry data for a given job ID is in the form:
+        {
+            "job_id": "job_id_1",
+            "job": { # i.e. a job.output_state() object
+                "jobState": {"job_id": "job_id_1", "status": status, ...}
+                ...
             },
-            {
-                "job": {"state": {"job_id": job_id, "status": status, ...} ...},
-                "error": "..."
+            "retry_id": "retry_id_1",
+            "retry": { # i.e. a job.output_state() object
+                "jobState": {"job_id": "retry_id_1", "status": status, ...}
+                ...
             }
-            ...
-            {
-                "job": {"state": {"job_id": job_id, "status": DOES_NOT_EXIST}},
-                "error": f"Cannot find job with ID {job_id}",
-            }
-        ]
-        where the innermost dictionaries are job states from ee2 and are within the
-        job states from job.output_state()
+        }
+
+        If the job cannot be retried (e.g. it is a batch job or the user doesn't have permissions),
+        the error message from ee2 will be returned:
+        {
+            "job_id": string,
+            "job": { "jobState": { ... }, ... },
+            "error": "Cannot retry a batch parent job", # from ee2
+        }
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param job_id_list: list of job IDs
+        :type job_id_list: List[str]
+
+        :raises NarrativeException: if EE2 returns an error from the retry request
+
+        :return: job retry data indexed by job ID
+        :rtype: dict
         """
         job_ids, error_ids = self._check_job_list(job_id_list)
         try:
@@ -506,7 +677,8 @@ class JobManager(object):
                 {"job_ids": job_ids}
             )
         except Exception as e:
-            raise transform_job_exception(e, "Unable to retry job(s)")
+            raise transform_job_exception(e, "Unable to retry job(s)") from e
+
         # for each retry result, refresh the state of the retried and new jobs
         orig_ids = [result["job_id"] for result in retry_results]
         retry_ids = [
@@ -533,7 +705,16 @@ class JobManager(object):
 
     def add_errors_to_results(self, results: dict, error_ids: List[str]) -> dict:
         """
-        Add the generic "not found" error for each job_id in error_ids
+        Add the generic "not found" error for each job_id in error_ids.
+
+        :param results: dictionary of job data (output state, info, retry, etc.) indexed by job ID
+        :type results: dict
+        :param error_ids: list of IDs that could not be found
+        :type error_ids: List[str]
+
+        :return: input results dictionary augmented by a dictionary containing job ID and a short
+        not found error message for every ID in the error_ids list
+        :rtype: dict
         """
         for error_id in error_ids:
             results[error_id] = {
@@ -592,7 +773,7 @@ class JobManager(object):
             all_states = self.get_all_job_states(ignore_refresh_flag=True)
             state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
 
-            if not len(state_list):
+            if not state_list:
                 return "No running jobs!"
 
             state_list = sorted(state_list, key=lambda s: s.get("created", 0))

@@ -413,7 +413,7 @@ define([
                 };
                 const lastLine = this.model.getItem('lastLine');
                 if (lastLine) {
-                    requestParams.first_line = lastLine;
+                    requestParams[jcm.PARAM.FIRST_LINE] = lastLine;
                 }
                 this.bus.emit(jcm.MESSAGE_TYPE.LOGS, requestParams);
             }

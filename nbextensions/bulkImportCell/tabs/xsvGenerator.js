@@ -8,6 +8,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
     'use strict';
     const div = html.tag('div'),
         p = html.tag('p'),
+        aTag = html.tag('a'),
         ul = html.tag('ul'),
         li = html.tag('li'),
         select = html.tag('select'),
@@ -16,6 +17,8 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         label = html.tag('label'),
         fieldset = html.tag('fieldset'),
         cssBaseClass = 'kb-xsv-gen';
+
+    const DOCS_LINK = 'https://docs.kbase.us/data/upload-download-guide/csv';
 
     const formConfig = {
         layout: [
@@ -217,6 +220,18 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                         errorMessage ? p(errorMessage) : null
                     ),
                     this.createForm(),
+                    p(
+                        {
+                            class: `${cssBaseClass}__help`,
+                        },
+                        aTag(
+                            {
+                                href: DOCS_LINK,
+                                target: '_blank',
+                            },
+                            'Help and documentation on using templates'
+                        )
+                    ),
                 ]
             );
         }

@@ -2040,6 +2040,49 @@ define([
                 testInitialisation(this, TEST_JOB_ID);
             });
 
+            it('should cancel an existing job', function () {
+                const initialJob = {
+                    job_id: TEST_JOB_ID,
+                    status: 'running',
+                    created: 12345678,
+                };
+                createSingleJobManager(this, initialJob);
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.restoreFromSaved();
+                expect(this.jobManagerInstance.looper).toBeDefined();
+                spyOn(this.jobManagerInstance.looper, 'clearRequest');
+                this.jobManagerInstance.cancelJob();
+                expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
+                ]);
+                expect(this.jobManagerInstance.looper.clearRequest.calls.allArgs()).toEqual([[]]);
+                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(initialJob);
+            });
+
+            it('should reset appropriately', function () {
+                const initialJob = {
+                    job_id: TEST_JOB_ID,
+                    status: 'running',
+                    created: 12345678,
+                };
+                createSingleJobManager(this, initialJob);
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.restoreFromSaved();
+                expect(this.jobManagerInstance.looper).toBeDefined();
+                spyOn(this.jobManagerInstance.looper, 'clearRequest');
+                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(initialJob);
+                expect(Object.keys(this.jobManagerInstance.listeners)).toEqual([
+                    '{"job_id":"someJob"}',
+                ]);
+
+                this.jobManagerInstance.resetJobs();
+                // no args to clearRequest
+                expect(this.jobManagerInstance.looper.clearRequest.calls.allArgs()).toEqual([[]]);
+                expect(this.jobManagerInstance.model.getItem('exec')).toBeUndefined();
+                expect(this.jobManagerInstance.listeners).toEqual({});
+            });
+
             JobsData.allJobsWithBatchParent.forEach((job) => {
                 it(`should restore job ${job.job_id} from saved`, function () {
                     createSingleJobManager(this, job);

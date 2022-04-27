@@ -718,7 +718,7 @@ define([
                     });
 
                     this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
-                        expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, first_line: 0 });
+                        expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, [jcm.PARAM.FIRST_LINE]: 0 });
                         TestUtil.send_LOGS({
                             bus: this.bus,
                             message: { lines: logLines, [jcm.PARAM.JOB_ID]: jobId },
@@ -749,7 +749,7 @@ define([
                     });
 
                     this.bus.on(jcm.MESSAGE_TYPE.LOGS, (msg) => {
-                        expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, first_line: 0 });
+                        expect(msg).toEqual({ [jcm.PARAM.JOB_ID]: jobId, [jcm.PARAM.FIRST_LINE]: 0 });
                         TestUtil.send_LOGS({
                             bus: this.bus,
                             message: { error: 'DANGER!', [jcm.PARAM.JOB_ID]: jobId },

@@ -8,23 +8,9 @@ define([
     'util/icon',
     'common/jupyter',
     'common/error',
-    'common/cellComponents/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec',
-], (
-    Promise,
-    Uuid,
-    utils,
-    Runtime,
-    html,
-    Ui,
-    Icon,
-    jupyter,
-    Error,
-    appInfoDialog,
-    AppCellWidget,
-    Spec
-) => {
+], (Promise, Uuid, utils, Runtime, html, Ui, Icon, jupyter, Error, AppCellWidget, Spec) => {
     'use strict';
 
     const t = html.tag,
@@ -144,8 +130,7 @@ define([
                 kbaseNode = ui.createNode(div({ dataSubareaType: 'app-cell-input' }));
             appCellWidget = AppCellWidget.make({
                 bus: cellBus,
-                cell: cell,
-                runtime: runtime,
+                cell,
             });
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
@@ -175,9 +160,7 @@ define([
                     return appCellWidget.start();
                 })
                 .then(() => {
-                    return appCellWidget.run({
-                        authToken: runtime.authToken(),
-                    });
+                    return appCellWidget.run();
                 })
                 .then(() => {
                     cell.renderMinMax();

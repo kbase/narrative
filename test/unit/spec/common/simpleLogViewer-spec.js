@@ -152,7 +152,7 @@ define([
         },
         {
             model: logLines.slice(0, 3),
-            request: { first_line: 3 },
+            request: { [jcm.PARAM.FIRST_LINE]: 3 },
             // no new lines
             lines: logLines.slice(2, 3),
             first: 2,
@@ -160,7 +160,7 @@ define([
         },
         {
             model: logLines.slice(0, 3),
-            request: { first_line: 3 },
+            request: { [jcm.PARAM.FIRST_LINE]: 3 },
             // one new line
             lines: logLines.slice(1, 4),
             first: 1,
@@ -168,7 +168,7 @@ define([
         },
         {
             model: logLines.slice(0, 4),
-            request: { first_line: 4 },
+            request: { [jcm.PARAM.FIRST_LINE]: 4 },
             // the remaining lines
             lines: logLines.slice(2),
             first: 2,

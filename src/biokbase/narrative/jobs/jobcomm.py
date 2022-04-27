@@ -12,10 +12,7 @@ from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
 
-JOB_NOT_PROVIDED_ERR = "job_id not provided"
-JOBS_NOT_PROVIDED_ERR = "job_id_list not provided"
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-BATCH_NOT_PROVIDED_ERR = "batch_id not provided"
 ONE_INPUT_TYPE_ONLY_ERR = "Please provide one of job_id, job_id_list, or batch_id"
 
 INVALID_REQUEST_ERR = "Improperly formatted job channel message!"
@@ -24,16 +21,17 @@ MISSING_REQUEST_TYPE_ERR = "Missing request type in job channel message!"
 LOOKUP_TIMER_INTERVAL = 5
 
 
-class JobRequest(object):
+class JobRequest:
     """
+
     A small wrapper for job comm channel request data.
     This generally comes in the form of a packet from the kernel Comm object.
-    It's expected to be a dict of the format:
+    It is expected to be a dict of the format:
     {
         content: {
             'comm_id': <some string>,
             'data': {
-                'request_type': effectively, the function requested.
+                'request_type': job function requested
                 'job_id': optional
                 'job_id_list': optional
             }
@@ -89,7 +87,7 @@ class JobRequest(object):
     def job_id(self):
         if PARAM["JOB_ID"] in self.rq_data:
             return self.rq_data[PARAM["JOB_ID"]]
-        raise JobRequestException(JOB_NOT_PROVIDED_ERR)
+        raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
     def job_id_list(self):
@@ -97,13 +95,13 @@ class JobRequest(object):
             return self.rq_data[PARAM["JOB_ID_LIST"]]
         if PARAM["JOB_ID"] in self.rq_data:
             return [self.rq_data[PARAM["JOB_ID"]]]
-        raise JobRequestException(JOBS_NOT_PROVIDED_ERR)
+        raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
     def batch_id(self):
         if PARAM["BATCH_ID"] in self.rq_data:
             return self.rq_data[PARAM["BATCH_ID"]]
-        raise JobRequestException(BATCH_NOT_PROVIDED_ERR)
+        raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     def has_batch_id(self):
         return PARAM["BATCH_ID"] in self.rq_data
@@ -181,7 +179,16 @@ class JobComm:
                 MESSAGE_TYPE["STOP_UPDATE"]: self._modify_job_updates,
             }
 
-    def _get_job_ids(self, req: JobRequest = None):
+    def _get_job_ids(self, req: JobRequest) -> List[str]:
+        """
+        Extract the job IDs from a job request object
+
+        :param req: the job request to take the IDs from
+        :type req: JobRequest
+
+        :return: list of job IDs
+        :rtype: List[str]
+        """
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
 
@@ -196,7 +203,7 @@ class JobComm:
         cell_list: List[str] = None,
     ) -> None:
         """
-        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL seconds.
+        Starts the job status lookup loop, which runs every LOOKUP_TIMER_INTERVAL seconds.
 
         :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
             the JobManager's list of known jobs from the workspace.
@@ -221,7 +228,7 @@ class JobComm:
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
-    def stop_job_status_loop(self, *args, **kwargs) -> None:
+    def stop_job_status_loop(self) -> None:
         """
         Stops the job status lookup loop if it's running. Otherwise, this effectively
         does nothing.
@@ -258,11 +265,14 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
         return all_job_states
 
-    def _get_job_states_by_cell_id(self, req: JobRequest = None) -> dict:
+    def _get_job_states_by_cell_id(self, req: JobRequest) -> dict:
         """
-        Fetches status of all jobs associated with the given cell ID(s)
-        :param req: a JobRequest with the cell_id_list of interest
-        :returns: dict in the form
+        Fetches status of all jobs associated with the given cell ID(s).
+
+        :param req: job request object with the cell_id_list param set
+        :type req: JobRequest, optional
+
+        :return: dictionary in the form
         {
             "jobs": {
                 # dict with job IDs as keys and job states as values
@@ -276,6 +286,7 @@ class JobComm:
                 "cell_two": [ ... ],
             }
         }
+        :rtype: dict
         """
         cell_job_states = self._jm.get_job_states_by_cell_id(
             cell_id_list=req.cell_id_list
@@ -285,15 +296,27 @@ class JobComm:
 
     def _get_job_info(self, req: JobRequest) -> dict:
         """
-        Look up job info. This is just some high-level generic information about the running
-        job, including the app id, name, and job parameters.
-        :param req: a JobRequest with the job_id_list of interest
-        :returns: a dict keyed with job IDs and with values of dicts with the following keys:
-            - app_id - str - module/name,
-            - app_name - str - name of the app as it shows up in the Narrative interface
-            - batch_id - str - the batch parent ID (if appropriate)
-            - job_id - str - just re-reporting the id string
-            - job_params - dict - the params that were passed to that particular job
+        Gets job information for a list of job IDs.
+
+        Job info for a given job ID is in the form:
+        {
+            "app_id": string in the form "<module>/<name>",
+            "app_name": string,
+            "job_id": string,
+            "job_params": dictionary,
+            "batch_id": string | None,
+        }
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param req: job request with a list of job IDs
+        :type req: JobRequest
+        :return: dictionary containing job info for each input job, indexed by job ID
+        :rtype: dict
         """
         job_id_list = self._get_job_ids(req)
         job_info = self._jm.get_job_info(job_id_list)
@@ -302,9 +325,26 @@ class JobComm:
 
     def __get_job_states(self, job_id_list) -> dict:
         """
-        Look up job states.
+        Retrieves the job states for the supplied job_ids.
 
-        Returns a dictionary of job state information indexed by job ID.
+        See Job.output_state() for details of job state structure.
+
+        TODO: update as required
+        If the ts parameter is present, only jobs that have been updated since that time are returned.
+
+        Jobs that cannot be found in the `_running_jobs` index will return
+        {
+            "job_id": string,
+            "error": "Cannot find job with ID <job_id>"
+        }
+
+        :param job_id_list: job IDs to retrieve job states for
+        :type job_id_list: list
+        :param ts: timestamp, in the format generated by time.time_ns(); defaults to None
+        :type ts: int, optional
+
+        :return: dictionary of job states, indexed by job ID
+        :rtype: dict
         """
         output_states = self._jm.get_job_states(job_id_list)
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
@@ -312,12 +352,31 @@ class JobComm:
 
     def get_job_state(self, job_id: str) -> dict:
         """
+        Retrieve the job state for a single job.
+
         This differs from the _get_job_state (underscored version) in that
         it just takes a job_id string, not a JobRequest.
+
+        :param job_id: the job ID to get the state for
+        :type job_id: string
+
+        :return: dictionary of job states, indexed by job ID
+        :rtype: dict
         """
         return self.__get_job_states([job_id])
 
     def _get_job_states(self, req: JobRequest) -> dict:
+        """
+        Retrieves the job states for the supplied job_ids.
+
+        See Job.output_state() for details of job state structure.
+
+        :param req: job request with a list of job IDs
+        :type req: JobRequest
+
+        :return: dictionary of job states, indexed by job ID
+        :rtype: dict
+        """
         job_id_list = self._get_job_ids(req)
         return self.__get_job_states(job_id_list)
 
@@ -354,11 +413,16 @@ class JobComm:
 
     def _cancel_jobs(self, req: JobRequest) -> dict:
         """
-        This cancels a running job.
-        If there are no valid jobs, this raises a JobRequestException.
-        If there's an error while attempting to cancel, this raises a NarrativeError.
-        In the end, after a successful cancel, this finishes up by fetching and returning the
-        job state with the new status.
+        Cancel a job or list of jobs. After sending the cancellation request, the job states
+        are refreshed and their new output states returned.
+
+        See JobManager.cancel_jobs() for more details.
+
+        :param req: job request containing job ID or list of job IDs to be cancelled
+        :type req: JobRequest
+
+        :return: job output states, indexed by job ID
+        :rtype: dict
         """
         job_id_list = self._get_job_ids(req)
         cancel_results = self._jm.cancel_jobs(job_id_list)
@@ -366,6 +430,17 @@ class JobComm:
         return cancel_results
 
     def _retry_jobs(self, req: JobRequest) -> dict:
+        """
+        Retry a job or list of jobs.
+
+        See JobManager.retry_jobs() for more details.
+
+        :param req: job request containing job ID or list of job IDs to be retried
+        :type req: JobRequest
+
+        :return: job retry data, indexed by job ID
+        :rtype: dict
+        """
         job_id_list = self._get_job_ids(req)
         retry_results = self._jm.retry_jobs(job_id_list)
         self.send_comm_message(MESSAGE_TYPE["RETRY"], retry_results)
@@ -373,21 +448,30 @@ class JobComm:
 
     def _get_job_logs(self, req: JobRequest) -> dict:
         """
-        This returns a set of job logs based on the info in the request.
+        Fetch the logs for a job or list of jobs.
+
+        See JobManager.get_job_logs_for_list() for more details.
+
+        :param req: job request containing job ID or list of job IDs to fetch logs for
+        :type req: JobRequest
+
+        :return: job log data, indexed by job ID
+        :rtype: dict
         """
         job_id_list = self._get_job_ids(req)
         log_output = self._jm.get_job_logs_for_list(
             job_id_list,
-            num_lines=req.rq_data.get("num_lines", None),
-            first_line=req.rq_data.get("first_line", 0),
-            latest=req.rq_data.get("latest", False),
+            num_lines=req.rq_data.get(PARAM["NUM_LINES"], None),
+            first_line=req.rq_data.get(PARAM["FIRST_LINE"], 0),
+            latest=req.rq_data.get(PARAM["LATEST"], False),
         )
         self.send_comm_message(MESSAGE_TYPE["LOGS"], log_output)
         return log_output
 
     def _handle_comm_message(self, msg: dict) -> dict:
         """
-        Handles comm messages that come in from the other end of the KBaseJobs channel.
+        Handle incoming messages on the KBaseJobs channel.
+
         Messages get translated into one or more JobRequest objects, which are then
         passed to the right handler, based on the request.
 
@@ -395,6 +479,15 @@ class JobComm:
 
         Any unknown request is returned over the channel with message type 'job_error', and a
         JobRequestException is raised.
+
+        :param msg: incoming comm message
+        :type msg: dict
+
+        :raises JobRequestException: if the message type is not recognised
+
+        :return: result of running the appropriate method; generally this is a dictionary
+        of job data indexed by job ID.
+        :rtype: dict
         """
         with exc_to_msg(msg):
             request = JobRequest(msg)
@@ -421,7 +514,7 @@ class JobComm:
         self, req: Union[JobRequest, dict, str], content: dict = None
     ) -> None:
         """
-        Sends a comm message over the KBaseJobs channel as an error. This will have msg_type set to
+        Sends an error message over the KBaseJobs channel. This will have msg_type set to
         ERROR ('job_error'), and include the original request in the message content as
         "source".
 
@@ -429,12 +522,17 @@ class JobComm:
         Since the latter is made from the former, they have the same information.
         It can also be a string or None if this context manager is invoked outside of a JC request
 
-        This sends a packet that looks like:
+        Job error messages have the format:
         {
             request: the original JobRequest data object, function params, or function name
             source: the function request that spawned the error
             other fields about the error, dependent on the content.
         }
+
+        :param req: job request context, either a job request received over the channel or a string
+        :type req: Union[JobRequest, dict, str]
+        :param content: dictionary of extra data to include in the error message, defaults to None
+        :type content: dict, optional
         """
         error_content = {}
         if isinstance(req, JobRequest):

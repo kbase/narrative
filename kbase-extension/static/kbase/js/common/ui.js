@@ -41,6 +41,7 @@ define([
         showConfirmDialog,
         showDialog,
         showErrorDialog,
+        showGenericDialog,
         showInfoDialog,
         cssClassName,
     };

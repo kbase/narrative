@@ -330,16 +330,24 @@ class JobManagerTest(unittest.TestCase):
             jobs_html_0 = self.jm.list_jobs().data
             jobs_html_1 = self.jm.list_jobs().data
 
-            try:
-                self.assertEqual(jobs_html_0, jobs_html_1)
-            except AssertionError:
-                # Sometimes the time is off by a second
-                # This will still fail if on the hour
-                pattern = r"(\d\d:)\d\d:\d\d"
-                sub = r"\1"
-                jobs_html_0 = re.sub(pattern, sub, jobs_html_0)
-                jobs_html_1 = re.sub(pattern, sub, jobs_html_1)
-                self.assertEqual(jobs_html_0, jobs_html_1)
+            def convert_to_s(tstr):
+                arr = tstr.split(":")
+                return int(arr[2]) + int(arr[1]) * 60 + int(arr[0]) * 3600
+
+            time_pattern = r"\d\d:\d\d:\d\d"
+            t0 = convert_to_s(re.search(time_pattern, jobs_html_0)[0])
+            t1 = convert_to_s(re.search(time_pattern, jobs_html_1)[0])
+
+            # if the time wrapped over midnight, increase latter time
+            if t1 < t0:
+                t1 += 24 * 3600
+
+            self.assertTrue(t1 - t0 < 5)  # give it a 5s tol, though usually 1 is enough
+
+            sub = ""
+            jobs_html_0 = re.sub(time_pattern, sub, jobs_html_0)
+            jobs_html_1 = re.sub(time_pattern, sub, jobs_html_1)
+            self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(
@@ -535,7 +543,7 @@ class JobManagerTest(unittest.TestCase):
             states,
         )
 
-    ## get_job_states_by_cell_id
+    # get_job_states_by_cell_id
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_states_by_cell_id__cell_id_list_None(self):
         with self.assertRaisesRegex(JobRequestException, CELLS_NOT_PROVIDED_ERR):

@@ -9,7 +9,7 @@ define([
 ], ($, DynamicDropdownInput, Runtime, Jupyter, Config, Mocks, TestUtil) => {
     'use strict';
 
-    fdescribe('Test dynamic dropdown input widget', () => {
+    describe('Test dynamic dropdown input widget', () => {
         const testConfig = {
                 parameterSpec: {
                     data: {

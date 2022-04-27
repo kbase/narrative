@@ -129,10 +129,7 @@ define([
          */
         function updateControlValue() {
             const value = model.value;
-            const displayValue = model.displayValue || {
-                scientific_name: 'Foobar baz',
-                ncbi_taxon_id: model.value,
-            };
+            const displayValue = model.displayValue || {};
             const control = ui.getElement('input-container.input');
             if (model.value) {
                 const selectorValue = value.replace(/"/g, '\\"').replace(/'/g, "\\'");

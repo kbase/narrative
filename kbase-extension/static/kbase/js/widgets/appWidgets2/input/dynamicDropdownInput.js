@@ -4,7 +4,6 @@ define([
     'common/html',
     'StagingServiceClient',
     '../validation',
-    'common/events',
     'common/runtime',
     'common/ui',
     '../validators/constants',
@@ -20,7 +19,6 @@ define([
     html,
     StagingServiceClient,
     Validation,
-    Events,
     Runtime,
     UI,
     Constants,
@@ -48,13 +46,20 @@ define([
             ddOptions = spec.original.dynamic_dropdown_options || {},
             dataSource = ddOptions.data_source || 'ftp_staging',
             model = {
+                displayValue: undefined,
                 value: undefined,
-            },
-            userId = runtime.userId();
+                descriptionFields: new Set(),
+            };
         let parent, container, ui;
 
         if (typeof ddOptions.query_on_empty_input === 'undefined') {
             ddOptions.query_on_empty_input = 1;
+        }
+
+        // if there's a template, process it so we have expected fields
+        if (ddOptions.description_template) {
+            const m = [...ddOptions.description_template.matchAll(/{{(.+?)}}/g)];
+            m.forEach((match) => model.descriptionFields.add(match[1]));
         }
 
         /**
@@ -122,24 +127,36 @@ define([
          * Sets the dropdown value to the given value. Constructs an id from it that (should)
          * be unique enough to apply to the dropdown.
          */
-        function setControlValue(value) {
+        function updateControlValue() {
+            const value = model.value;
+            const displayValue = model.displayValue || {
+                scientific_name: 'Foobar baz',
+                ncbi_taxon_id: model.value,
+            };
             const control = ui.getElement('input-container.input');
-            if ($(control).find('option[value="' + value + '"]').length) {
-                $(control).val(value).trigger('change');
-            } else {
-                const newOption = new Option(value, value, true, true);
-                $(control).append(newOption).trigger('change');
+            if (model.value) {
+                const selectorValue = value.replace(/"/g, '\\"').replace(/'/g, "\\'");
+                if ($(control).find(`option[value="${selectorValue}"]`).length) {
+                    $(control).val(value).trigger('change');
+                } else {
+                    const dataAdapter = $(control).data('select2').dataAdapter;
+                    const newOption = dataAdapter.option(
+                        Object.assign({ id: model.value, value: model.value }, displayValue)
+                    );
+                    dataAdapter.addOptions(newOption);
+                    $(control).val(value).trigger('change');
+                }
             }
         }
-
         // MODEL
 
-        function setModelValue(value) {
+        function setModelValue(value, displayValue) {
             if (model.value === undefined) {
                 return;
             }
             if (model.value !== value) {
                 model.value = value;
+                model.displayValue = displayValue;
             }
         }
 
@@ -186,6 +203,25 @@ define([
             );
         }
 
+        async function fetchFtpStagingData(searchTerm) {
+            const userId = runtime.userId();
+            const stagingService = new StagingServiceClient({
+                root: runtime.config('services.staging_api_url.url'),
+                token: runtime.authToken(),
+            });
+            let results = await Promise.resolve(stagingService.search({ query: searchTerm }));
+            results = JSON.parse(results).filter((file) => {
+                return !file.isFolder;
+            });
+            results.forEach((file) => {
+                file.text = file.path;
+                file.subdir = file.path.substring(0, file.path.length - file.name.length);
+                file.subpath = file.path.substring(userId.length + 1);
+                file.id = file.subpath;
+            });
+            return results;
+        }
+
         async function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
 
@@ -193,21 +229,7 @@ define([
                 return Promise.resolve([]);
             }
             if (dataSource === 'ftp_staging') {
-                const stagingService = new StagingServiceClient({
-                    root: runtime.config('services.staging_api_url.url'),
-                    token: runtime.authToken(),
-                });
-                let results = await Promise.resolve(stagingService.search({ query: searchTerm }));
-                results = JSON.parse(results).filter((file) => {
-                    return !file.isFolder;
-                });
-                results.forEach((file) => {
-                    file.text = file.path;
-                    file.subdir = file.path.substring(0, file.path.length - file.name.length);
-                    file.subpath = file.path.substring(userId.length + 1);
-                    file.id = file.subpath;
-                });
-                return results;
+                return fetchFtpStagingData(searchTerm);
             } else {
                 let callParams = JSON.stringify(ddOptions.service_params).replace(
                     '{{dynamic_dropdown_input}}',
@@ -230,7 +252,7 @@ define([
                                         `Parameter "{{${dParam[0]}}}" does not exist as a parameter for this method. ` +
                                             `this dynamic parameter will be omitted in the call to ${ddOptions.service_function}.`
                                     );
-                                    // dont include bad parameters that don't exist
+                                    // don't include bad parameters that don't exist
                                     return acc;
                                 }
                                 // replace dynamic values with actual param values
@@ -272,7 +294,7 @@ define([
                         // could check here that each item is a map? YAGNI
                         obj = flattenObject(obj);
                         if (!('id' in obj)) {
-                            obj.id = _index; // what the fuck
+                            obj.id = _index;
                         }
                         // this blows away any 'text' field
                         obj.text = obj[ddOptions.selection_id];
@@ -283,18 +305,32 @@ define([
             }
         }
 
-        function doChange() {
+        /**
+         *
+         * @param {Object} dataElement
+         */
+        function doChange(dataElement) {
             validate().then((result) => {
                 if (result.isValid) {
                     const newValue =
                         result.parsedValue === undefined ? result.value : result.parsedValue;
                     model.value = newValue;
+                    if (dataElement) {
+                        model.displayValue = [...model.descriptionFields].reduce((acc, key) => {
+                            acc[key] = dataElement[key];
+                            return acc;
+                        }, {});
+                    } else {
+                        model.displayValue = undefined;
+                    }
                     channel.emit('changed', {
-                        newValue: newValue,
+                        newDisplayValue: model.displayValue,
+                        newValue,
                     });
                 } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                     model.value = spec.data.nullValue;
                     channel.emit('changed', {
+                        newDisplayValue: undefined,
                         newValue: spec.data.nullValue,
                     });
                 }
@@ -309,90 +345,136 @@ define([
          * Clears the current selection and updates the model.
          */
         function doClear() {
+            $(ui.getElement('input-container.input')).html('');
             model.value = spec.data.nullValue;
             channel.emit('changed', {
+                newDisplayValue: undefined,
                 newValue: spec.data.nullValue,
             });
         }
 
         /**
-         * Formats the display of an object in the dropdown.
-         * id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
-         * isFolder: false
-         * mtime: 1508441424000
-         * name: "i_am_a_file.txt"
-         * path: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
-         * size: 0
-         * text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         * Formats Staging Area file data for display in the dropdown.
+         * Expects an example fileData object as below:
+         * {
+         *   id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         *   isFolder: false
+         *   mtime: 1508441424000
+         *   name: "i_am_a_file.txt"
+         *   path: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         *   size: 0
+         *   text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         * }
+         * @param {Object} fileData
+         * @returns {JQueryElement} a jQuery-wrapped div element
+         */
+        function formatFtpStagingDisplay(fileData) {
+            return $(
+                div([
+                    span(
+                        {
+                            class: `${baseCssClass}_display__filepath`,
+                        },
+                        [StringUtil.escape(fileData.subdir), b(StringUtil.escape(fileData.name))]
+                    ),
+                    div(
+                        {
+                            class: `${baseCssClass}_display__indent`,
+                        },
+                        [
+                            'Size: ' + StringUtil.readableBytes(fileData.size) + '<br>',
+                            'Uploaded ' + TimeFormat.getTimeStampStr(fileData.mtime, true),
+                        ]
+                    ),
+                ])
+            );
+        }
+
+        /**
+         * Formats the display of an object in the dropdown. Every Option in Select2 gets passed
+         * through here, for better or worse. This includes temporary ones inserted by Select2,
+         * like "Searching..." or "Loading..." fields.
+         *
+         * This returns either a text string (which will be escaped before rendering)
+         * or a jQuery element, which expects pre-escaped "safe" HTML.
+         *
+         * So here are input cases:
+         * 1. (most common), an object with an id, text, and fields as returned from the dynamic
+         *    search. This gets rendered using the ddOptions template.
+         * 2. (on search/load), an object without an id, but with a text field. Expects to
+         *    just return the bare text or an empty string - this lets Select2 use the default
+         *    "Searching..." or "Loading..." strings as temporary/unselectable options.
+         * 3. (on widget load), an object with id, text, and nothing else should just return
+         *    the text?
+         * See https://select2.org/dropdown#templating for more details.
          */
         function formatObjectDisplay(retObj) {
             if (!retObj.id) {
                 return retObj.text || '';
             } else if (dataSource === 'ftp_staging') {
-                if (!retObj.id) {
-                    return $(
-                        div(
-                            {
-                                class: `${baseCssClass}_display`,
-                            },
-                            StringUtil.escape(retObj.text)
-                        )
-                    );
-                }
-                return $(
-                    div([
-                        span(
-                            {
-                                class: `${baseCssClass}_display__filepath`,
-                            },
-                            [StringUtil.escape(retObj.subdir), b(StringUtil.escape(retObj.name))]
-                        ),
-                        div(
-                            {
-                                class: `${baseCssClass}_display__indent`,
-                            },
-                            [
-                                'Size: ' + StringUtil.readableBytes(retObj.size) + '<br>',
-                                'Uploaded ' + TimeFormat.getTimeStampStr(retObj.mtime, true),
-                            ]
-                        ),
-                    ])
-                );
+                return formatFtpStagingDisplay(retObj);
             } else {
-                const replacer = function (_match, p1) {
-                    return retObj[p1];
-                };
                 let formattedString;
-                if (ddOptions.description_template) {
-                    // use slice to avoid modifying global description_template
-                    formattedString = ddOptions.description_template
-                        .slice()
-                        .replace(/{{(.+?)}}/g, replacer);
-                } else {
-                    formattedString = JSON.stringify(retObj);
+                // if we have a template and at least one item to fill the template with,
+                // do the formatted template
+                if (
+                    ddOptions.description_template &&
+                    [...model.descriptionFields].some((key) => key in retObj)
+                ) {
+                    formattedString = formatDescriptionTemplate(retObj);
                 }
+                // otherwise, if we have a text use that. And if not, use the id as a last resort.
+                else {
+                    formattedString = retObj.text || retObj.id;
+                }
+                // and squash the result in a jQuery object with a div.
                 return $(
                     div(
                         {
                             class: `${baseCssClass}_display`,
                         },
-                        StringUtil.escape(formattedString)
+                        formattedString
                     )
                 );
             }
         }
 
-        function selectionTemplate(object) {
+        /**
+         * Formats the dynamic dropdown description template by replacing templated
+         * values with values from the given object.
+         * For example, if the template (in ddOptions.description_template) looks like this:
+         *
+         * Template value: {{foo}}
+         *
+         * and the given object is:
+         * {
+         *   foo: "bar"
+         * }
+         *
+         * This returns the string "Template value: bar".
+         *
+         * Note that this assumes that ddOptions.description_template exists, for simplicity.
+         * @param {any} obj the object to use for replacing template fields
+         * @returns {String} the formatted string
+         */
+        function formatDescriptionTemplate(obj) {
+            const replacer = (_match, paramId) => {
+                return obj[paramId];
+            };
+            return ddOptions.description_template.replace(/{{(.+?)}}/g, replacer);
+        }
+
+        function selectionTemplate(obj) {
             if (ddOptions.description_template) {
-                return formatObjectDisplay(object);
+                return formatObjectDisplay(obj);
             }
             if (ddOptions.selection_id) {
-                return object[ddOptions.selection_id];
+                return obj[ddOptions.selection_id];
             }
-            if (!object.id) {
-                return object.text;
+            if (!obj.id) {
+                return obj.text;
             }
-            return object.id;
+            return obj.id;
         }
 
         /*
@@ -402,41 +484,56 @@ define([
          */
         function render() {
             return Promise.try(() => {
-                const events = Events.make(),
-                    inputControl = makeInputControl(),
+                const inputControl = makeInputControl(),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
-
-                $(ui.getElement('input-container.input'))
-                    .select2({
-                        allowClear: true,
-                        templateResult: formatObjectDisplay,
-                        templateSelection: selectionTemplate,
-                        ajax: {
-                            delay: 250,
-                            transport: function (params, success, failure) {
-                                return fetchData(params.data.term)
-                                    .then((data) => {
-                                        success({ results: data });
-                                    })
-                                    .catch((err) => {
-                                        console.error(err);
-                                        failure(err);
-                                    });
-                            },
+                const dropdown = $(ui.getElement('input-container.input'));
+                dropdown.select2({
+                    allowClear: true,
+                    templateResult: formatObjectDisplay,
+                    templateSelection: selectionTemplate,
+                    ajax: {
+                        delay: 250,
+                        processResults: (data) => {
+                            // update the currently selected one if applicable
+                            const currentData = dropdown.select2('data')[0];
+                            if (currentData) {
+                                const updatedData = data.results.filter((item) => {
+                                    return item.id === currentData.id;
+                                });
+                                if (updatedData.length) {
+                                    for (const key of Object.keys(updatedData[0])) {
+                                        currentData[key] = updatedData[0][key];
+                                    }
+                                    dropdown.trigger('change');
+                                }
+                            }
+                            return data;
                         },
-                        placeholder: {
-                            id: 'select an option',
+                        transport: function (params, success, failure) {
+                            return fetchData(params.data.term)
+                                .then((data) => {
+                                    success({ results: data });
+                                })
+                                .catch((err) => {
+                                    console.error(err);
+                                    failure(err);
+                                });
                         },
-                    })
+                    },
+                    placeholder: {
+                        id: 'select an option',
+                    },
+                });
+                dropdown
                     .on('change', () => {
-                        doChange();
+                        const data = dropdown.select2('data');
+                        doChange(data ? data[0] : {});
                     })
                     .on('select2:clear', () => {
                         doClear();
                     });
-                events.attachEvents(container);
             });
         }
 
@@ -469,14 +566,14 @@ define([
             container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            const events = Events.make();
-
             container.innerHTML = layout();
-            events.attachEvents(container);
 
             if (config.initialValue !== undefined) {
                 // note this might come from a different workspace...
                 model.value = config.initialValue;
+            }
+            if (config.initialDisplayValue !== undefined) {
+                model.displayValue = config.initialDisplayValue;
             }
 
             return render().then(() => {
@@ -484,15 +581,19 @@ define([
                     resetModelValue();
                 });
                 channel.on('update', (message) => {
-                    setModelValue(message.value);
+                    setModelValue(message.value, message.displayValue);
                 });
-                setControlValue(getModelValue());
+                updateControlValue();
                 return autoValidate();
             });
         }
 
         function stop() {
             return Promise.try(() => {
+                const control = ui.getElement('input-container.input');
+                if (control) {
+                    $(control).select2('destroy').html('');
+                }
                 if (container) {
                     parent.removeChild(container);
                 }

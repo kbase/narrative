@@ -3,12 +3,13 @@ define([
     'widgets/appWidgets2/input/dynamicDropdownInput',
     'common/runtime',
     'base/js/namespace',
+    'narrativeConfig',
     'narrativeMocks',
     'testUtil',
-], ($, DynamicDropdownInput, Runtime, Jupyter, Mocks, TestUtil) => {
+], ($, DynamicDropdownInput, Runtime, Jupyter, Config, Mocks, TestUtil) => {
     'use strict';
 
-    describe('Test dynamic dropdown input widget', () => {
+    fdescribe('Test dynamic dropdown input widget', () => {
         const testConfig = {
                 parameterSpec: {
                     data: {
@@ -62,17 +63,12 @@ define([
             });
         });
 
-        it('should start up and stop correctly', () => {
+        it('should start up and stop correctly', async () => {
             const widget = DynamicDropdownInput.make(testConfig);
-            return widget
-                .start({ node: container })
-                .then(() => {
-                    expect(container.innerHTML).toContain('input-container');
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(container.innerHTML).not.toContain('input-container');
-                });
+            await widget.start({ node: container });
+            expect(container.innerHTML).toContain('input-container');
+            await widget.stop();
+            expect(container.innerHTML).not.toContain('input-container');
         });
 
         it('should request all parameters over its parent bus before doing a custom lookup', async () => {
@@ -158,7 +154,7 @@ define([
                 $(selectElem).select2('open');
                 $(selectElem).val('foo').trigger('change');
             });
-            await TestUtil.wait(1000);
+            await TestUtil.wait(500);
             const req = jasmine.Ajax.requests.mostRecent();
             expect(req.url).toBe(nsUrl);
             // the client used here sends request payloads as text, which gets form encoded, which is silly and should be
@@ -175,6 +171,114 @@ define([
             const options = document.querySelectorAll('.select2-results__option');
             expect(optionsBoxChildren.length).toBe(3);
             expect(options[1].innerText).toBe('foo value1 bar');
+            await widget.stop();
+        });
+
+        describe('Staging Area dynamic dropdown', () => {
+            const stagingServiceUrl = Config.url('staging_api_url');
+            const fakeUser = 'someUser';
+            const files = [
+                {
+                    name: 'file1.txt',
+                    path: fakeUser + '/file1.txt',
+                    mtime: 1532738637400,
+                    size: 2048,
+                    isFolder: false,
+                },
+                {
+                    name: 'test_folder',
+                    path: fakeUser + '/test_folder',
+                    mtime: 1532738637499,
+                    size: 34,
+                    isFolder: true,
+                },
+                {
+                    name: 'file_list.txt',
+                    path: fakeUser + '/test_folder/file_list.txt',
+                    mtime: 1532738637555,
+                    size: 49233,
+                    source: 'KBase upload',
+                    isFolder: false,
+                },
+            ];
+            let ddStagingConfig;
+            beforeEach(() => {
+                ddStagingConfig = {
+                    parameterSpec: {
+                        data: {
+                            defaultValue: '',
+                            nullValue: '',
+                            constraints: {
+                                required: false,
+                            },
+                        },
+                        original: {
+                            dynamic_dropdown_options: {
+                                data_source: 'ftp_staging',
+                                multiselection: 0,
+                                query_on_empty_input: 1,
+                                result_array_index: 0,
+                            },
+                        },
+                    },
+                    channelName: bus.channelName,
+                };
+            });
+
+            async function testWithStagingService(testFiles, displayTexts) {
+                jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/search/`)).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseJSON: testFiles,
+                });
+
+                const widget = DynamicDropdownInput.make(ddStagingConfig);
+                await widget.start({ node: container });
+
+                const selector = 'select.form-control[data-element="input"]';
+                const selectElem = container.querySelector(selector);
+
+                await TestUtil.waitForElementChange(container.querySelector('span.select2'), () => {
+                    $(selectElem).select2('open');
+                });
+                await TestUtil.wait(500);
+                const req = jasmine.Ajax.requests.mostRecent();
+                expect(req.url).toMatch(stagingServiceUrl + '/search');
+
+                // verify that the dropdown gets populated with results
+                // the options box get put as a sibling to the element, because Select2 enjoys that.
+                const optionsBoxChildren = document.querySelector(
+                    '.select2-results__options'
+                ).children;
+                const options = document.querySelectorAll('.select2-results__option');
+                expect(optionsBoxChildren.length).toBe(displayTexts.length);
+                options.forEach((option, index) => {
+                    expect(option.innerText).toContain(displayTexts[index]);
+                });
+                await widget.stop();
+            }
+
+            it('Should search the staging area and show files', async () => {
+                await testWithStagingService(files, [files[0].path, files[2].path]);
+            });
+
+            it('Should load with a previously selected file chosen', async () => {
+                const config = TestUtil.JSONcopy(ddStagingConfig);
+                config.initialValue = 'some_random_file.txt';
+                const widget = DynamicDropdownInput.make(config);
+                await widget.start({ node: container });
+                const selector = 'select.form-control[data-element="input"]';
+
+                const selectElem = container.querySelector(selector);
+                expect($(selectElem).select2('data')[0].value).toEqual(config.initialValue);
+                await widget.stop();
+            });
+
+            it('Should show a "Nothing found" notification if no files are returned', async () => {
+                await testWithStagingService([], ['No results found']);
+            });
         });
     });
 });

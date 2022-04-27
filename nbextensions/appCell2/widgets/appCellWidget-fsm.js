@@ -191,9 +191,9 @@ define([], () => {
         },
     };
 
-    const appStates = [
+    const indexedAppStates = {
         // new
-        {
+        NEW: {
             state: STATE.NEW,
             ui: {
                 tabs: {
@@ -223,10 +223,10 @@ define([], () => {
                     disabled: true,
                 },
             },
-            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE],
+            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE, STATE.EDITING_COMPLETE],
         },
         // editing - incomplete
-        {
+        EDITING_INCOMPLETE: {
             state: STATE.EDITING_INCOMPLETE,
             ui: {
                 tabs: standardModeTabs,
@@ -243,7 +243,7 @@ define([], () => {
             ],
         },
         // editing - complete
-        {
+        EDITING_COMPLETE: {
             state: STATE.EDITING_COMPLETE,
             ui: {
                 tabs: standardModeTabs,
@@ -267,7 +267,7 @@ define([], () => {
             ],
         },
         // batch editing - incomplete
-        {
+        EDITING_BATCH_INCOMPLETE: {
             state: STATE.EDITING_BATCH_INCOMPLETE,
             ui: {
                 tabs: batchModeTabs,
@@ -284,7 +284,7 @@ define([], () => {
             ],
         },
         // batch editing - complete
-        {
+        EDITING_BATCH_COMPLETE: {
             state: STATE.EDITING_BATCH_COMPLETE,
             ui: {
                 tabs: batchModeTabs,
@@ -308,7 +308,7 @@ define([], () => {
             ],
         },
         // execute-requested
-        {
+        EXECUTE_REQUESTED: {
             state: STATE.EXECUTE_REQUESTED,
             doc: [
                 'This state is entered when the cell is first executing, and before the back end has received the code and begun processing it.',
@@ -382,7 +382,7 @@ define([], () => {
             ],
         },
         // processing - launched
-        {
+        PROCESSING_LAUNCHED: {
             state: STATE.PROCESSING_LAUNCHED,
             ui: {
                 tabs: {
@@ -449,7 +449,7 @@ define([], () => {
             ],
         },
         // processing - queued
-        {
+        PROCESSING_QUEUED: {
             state: STATE.PROCESSING_QUEUED,
             ui: {
                 tabs: uiTabs.inProgress,
@@ -497,7 +497,7 @@ define([], () => {
             ],
         },
         // processing - running
-        {
+        PROCESSING_RUNNING: {
             state: STATE.PROCESSING_RUNNING,
             ui: {
                 tabs: uiTabs.inProgress,
@@ -539,7 +539,7 @@ define([], () => {
             ],
         },
         // cancelling the app run
-        {
+        CANCELING: {
             state: STATE.CANCELING,
             ui: {
                 tabs: uiTabs.inProgress,
@@ -584,7 +584,7 @@ define([], () => {
             ],
         },
         // app run cancelled
-        {
+        TERMINATED: {
             state: STATE.TERMINATED,
             ui: {
                 tabs: {
@@ -640,7 +640,7 @@ define([], () => {
             next: [STATE.TERMINATED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // completed
-        {
+        COMPLETED: {
             state: STATE.COMPLETED,
             ui: {
                 tabs: {
@@ -696,7 +696,7 @@ define([], () => {
             next: [STATE.COMPLETED, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // launch error
-        {
+        LAUNCH_ERROR: {
             state: STATE.LAUNCH_ERROR,
             ui: {
                 tabs: uiTabs.error,
@@ -707,7 +707,7 @@ define([], () => {
             next: [STATE.LAUNCH_ERROR, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // error during job execution (including whilst queueing)
-        {
+        RUNTIME_ERROR: {
             state: STATE.RUNTIME_ERROR,
             ui: {
                 tabs: Object.assign({}, uiTabs.error, { jobStatus: { enabled: true } }),
@@ -741,7 +741,7 @@ define([], () => {
             next: [STATE.RUNTIME_ERROR, STATE.EDITING_COMPLETE, STATE.INTERNAL_ERROR],
         },
         // A fatal error represents an app cell which cannot operate.
-        {
+        INTERNAL_ERROR: {
             state: STATE.INTERNAL_ERROR,
             ui: {
                 tabs: uiTabs.error,
@@ -751,10 +751,11 @@ define([], () => {
             },
             next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE, STATE.EDITING_COMPLETE],
         },
-    ];
+    };
 
     return {
-        appStates,
+        indexedAppStates,
+        appStates: Object.values(indexedAppStates),
         STATE,
     };
 });

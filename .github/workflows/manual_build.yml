@@ -1,0 +1,23 @@
+name: Build and Tag Latest Image
+
+# Controls when the workflow will run
+on:
+  # Manually triggers the workflow on the develop branch 
+  workflow_dispatch:
+    inputs:
+      branch: 
+        description: 'Branch to build the new image from'     
+        required: true
+        default: 'develop' 
+        type: choice
+        options:
+        - develop
+        - main
+    
+jobs:
+  run_build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+    - 
+      name: say hello
+      run: echo "hello world"

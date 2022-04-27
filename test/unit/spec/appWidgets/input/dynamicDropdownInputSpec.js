@@ -71,107 +71,135 @@ define([
             expect(container.innerHTML).not.toContain('input-container');
         });
 
-        it('should request all parameters over its parent bus before doing a custom lookup', async () => {
-            const service = 'SomeService';
-            const method = 'some_method';
-            const nsUrl = 'https://kbase.us/service/fakeNSUrl';
-            const customConfig = {
-                parameterSpec: {
-                    data: {
-                        defaultValue: '',
-                        nullValue: '',
-                        constraints: {
-                            required: false,
+        describe('Custom data source', () => {
+            const service = 'SomeService',
+                method = 'some_method',
+                nsUrl = 'https://kbase.us/service/fakeNSUrl';
+            let customConfig;
+
+            beforeEach(() => {
+                customConfig = {
+                    parameterSpec: {
+                        data: {
+                            defaultValue: '',
+                            nullValue: '',
+                            constraints: {
+                                required: false,
+                            },
+                        },
+                        original: {
+                            dynamic_dropdown_options: {
+                                data_source: 'custom',
+                                description_template: 'foo {{field}} bar',
+                                multiselection: 0,
+                                query_on_empty_input: 1,
+                                result_array_index: 0,
+                                selection_id: 'field',
+                                service_function: `${service}.${method}`,
+                                service_params: [
+                                    {
+                                        some_param: '{{other_param}}',
+                                    },
+                                ],
+                                service_version: 'dev',
+                            },
                         },
                     },
-                    original: {
-                        dynamic_dropdown_options: {
-                            data_source: 'custom',
-                            description_template: 'foo {{field}} bar',
-                            multiselection: 0,
-                            query_on_empty_input: 1,
-                            result_array_index: 0,
-                            selection_id: 'field',
-                            service_function: `${service}.${method}`,
-                            service_params: [
-                                {
-                                    some_param: '{{other_param}}',
-                                },
-                            ],
-                            service_version: 'dev',
+                    channelName: bus.channelName,
+                };
+
+                Mocks.mockServiceWizardLookup({
+                    module: service,
+                    url: nsUrl,
+                });
+            });
+
+            it('should request all parameters over its parent bus before doing a custom lookup', async () => {
+                const mockJsonBody = {
+                    url: nsUrl,
+                    body: new RegExp(`${service}.${method}`),
+                    response: [
+                        {
+                            field: 'value0',
                         },
-                    },
-                },
-                channelName: bus.channelName,
-            };
+                        {
+                            field: 'value1',
+                        },
+                        {
+                            field: 'value2',
+                        },
+                    ],
+                };
+                Mocks.mockJsonRpc1Call(mockJsonBody);
 
-            Mocks.mockServiceWizardLookup({
-                module: service,
-                url: nsUrl,
+                let busResponseCalls = 0;
+                bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: (message) => {
+                        expect(message).toEqual({});
+                        busResponseCalls++;
+                        return Promise.resolve({
+                            unused_param: null,
+                            other_param: 'banana',
+                            third_param: 'apple',
+                        });
+                    },
+                });
+
+                const widget = DynamicDropdownInput.make(customConfig);
+                await widget.start({ node: container });
+                expect(container.innerHTML).toContain('input-container');
+                const selector = 'select.form-control[data-element="input"]';
+                const selectElem = container.querySelector(selector);
+                const select2Elem = container.querySelector('span.select2');
+
+                await TestUtil.waitForElementChange(select2Elem, () => {
+                    $(selectElem).select2('open');
+                    $(selectElem).val('foo').trigger('change');
+                });
+                await TestUtil.wait(500);
+                const req = jasmine.Ajax.requests.mostRecent();
+                expect(req.url).toBe(nsUrl);
+                // the client used here sends request payloads as text, which gets form encoded, which is silly and should be
+                // updated to use application/json. But that's later. For now, unpack it for checking.
+                const data = JSON.parse(Object.keys(req.data())[0]);
+                expect(data.params).toEqual([{ some_param: 'banana' }]);
+                expect(data.method).toEqual(`${service}.${method}`);
+
+                // verify that the bus was called exactly once
+                expect(busResponseCalls).toBe(1);
+
+                // verify that the dropdown gets populated with results
+                // the options get put as a sibling to the element, because Select2 enjoys that.
+                const optionsBoxChildren = document.querySelector(
+                    '.select2-results__options'
+                ).children;
+                const options = document.querySelectorAll('.select2-results__option');
+                expect(optionsBoxChildren.length).toBe(3);
+                expect(options[1].innerText).toBe('foo value1 bar');
+                await widget.stop();
             });
 
-            const mockJsonBody = {
-                url: nsUrl,
-                body: new RegExp(`${service}.${method}`),
-                response: [
-                    {
-                        field: 'value0',
-                    },
-                    {
-                        field: 'value1',
-                    },
-                    {
-                        field: 'value2',
-                    },
-                ],
-            };
-            Mocks.mockJsonRpc1Call(mockJsonBody);
+            it('should load with a previous selection showing', async () => {
+                const testConfig = TestUtil.JSONcopy(customConfig);
+                testConfig.initialValue = 'a_value';
+                testConfig.initialDisplayValue = {
+                    field: 'Some Value',
+                };
 
-            let busResponseCalls = 0;
-            bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: (message) => {
-                    expect(message).toEqual({});
-                    busResponseCalls++;
-                    return Promise.resolve({
-                        unused_param: null,
-                        other_param: 'banana',
-                        third_param: 'apple',
-                    });
-                },
+                const widget = DynamicDropdownInput.make(testConfig);
+                await widget.start({ node: container });
+                const selector = 'select.form-control[data-element="input"]';
+
+                const selectElem = container.querySelector(selector);
+                expect($(selectElem).select2('data')[0].value).toEqual(testConfig.initialValue);
+                const selectedOption = container.querySelector('.kb-appInput__dynDropdown_display');
+                expect(selectedOption.innerText).toBe('foo Some Value bar');
+
+                await widget.stop();
             });
-
-            const widget = DynamicDropdownInput.make(customConfig);
-            await widget.start({ node: container });
-            expect(container.innerHTML).toContain('input-container');
-            const selector = 'select.form-control[data-element="input"]';
-            const selectElem = container.querySelector(selector);
-            const select2Elem = container.querySelector('span.select2');
-
-            await TestUtil.waitForElementChange(select2Elem, () => {
-                $(selectElem).select2('open');
-                $(selectElem).val('foo').trigger('change');
-            });
-            await TestUtil.wait(500);
-            const req = jasmine.Ajax.requests.mostRecent();
-            expect(req.url).toBe(nsUrl);
-            // the client used here sends request payloads as text, which gets form encoded, which is silly and should be
-            // updated to use application/json. But that's later. For now, unpack it for checking.
-            const data = JSON.parse(Object.keys(req.data())[0]);
-            expect(data.params).toEqual([{ some_param: 'banana' }]);
-            expect(data.method).toEqual(`${service}.${method}`);
-
-            // verify that the bus was called exactly once
-            expect(busResponseCalls).toBe(1);
-
-            // verify that the dropdown gets populated with results
-            const optionsBoxChildren = document.querySelector('.select2-results__options').children;
-            const options = document.querySelectorAll('.select2-results__option');
-            expect(optionsBoxChildren.length).toBe(3);
-            expect(options[1].innerText).toBe('foo value1 bar');
-            await widget.stop();
         });
 
         describe('Staging Area dynamic dropdown', () => {
@@ -248,7 +276,6 @@ define([
                 expect(req.url).toMatch(stagingServiceUrl + '/search');
 
                 // verify that the dropdown gets populated with results
-                // the options box get put as a sibling to the element, because Select2 enjoys that.
                 const optionsBoxChildren = document.querySelector(
                     '.select2-results__options'
                 ).children;

@@ -203,6 +203,15 @@ define([
             );
         }
 
+        /**
+         * Special case for Staging area file seach, which is a little different from the
+         * generalized dynamic service approach.
+         * This returns a list of file objects returned from searching the staging service. Each
+         * object contains the keys "text", "subdir", "subpath", and "id", the values of which
+         * are all strings.
+         * @param {string} searchTerm
+         * @returns Array
+         */
         async function fetchFtpStagingData(searchTerm) {
             const userId = runtime.userId();
             const stagingService = new StagingServiceClient({
@@ -309,35 +318,34 @@ define([
          *
          * @param {Object} dataElement
          */
-        function doChange(dataElement) {
-            validate().then((result) => {
-                if (result.isValid) {
-                    const newValue =
-                        result.parsedValue === undefined ? result.value : result.parsedValue;
-                    model.value = newValue;
-                    if (dataElement) {
-                        model.displayValue = [...model.descriptionFields].reduce((acc, key) => {
-                            acc[key] = dataElement[key];
-                            return acc;
-                        }, {});
-                    } else {
-                        model.displayValue = undefined;
-                    }
-                    channel.emit('changed', {
-                        newDisplayValue: model.displayValue,
-                        newValue,
-                    });
-                } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
-                    model.value = spec.data.nullValue;
-                    channel.emit('changed', {
-                        newDisplayValue: undefined,
-                        newValue: spec.data.nullValue,
-                    });
+        async function doChange(dataElement) {
+            const result = await validate();
+            const changeMsg = {
+                newDisplayValue: undefined,
+                newValue: spec.data.nullValue,
+            };
+
+            if (result.isValid) {
+                const newValue =
+                    result.parsedValue === undefined ? result.value : result.parsedValue;
+                model.value = newValue;
+                if (dataElement) {
+                    model.displayValue = [...model.descriptionFields].reduce((acc, key) => {
+                        acc[key] = dataElement[key];
+                        return acc;
+                    }, {});
+                } else {
+                    model.displayValue = undefined;
                 }
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                changeMsg.newDisplayValue = model.displayValue;
+                changeMsg.newValue = newValue;
+            } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
+                model.value = spec.data.nullValue;
+            }
+            channel.emit('changed', changeMsg);
+            channel.emit('validation', {
+                errorMessage: result.errorMessage,
+                diagnosis: result.diagnosis,
             });
         }
 
@@ -529,7 +537,7 @@ define([
                 dropdown
                     .on('change', () => {
                         const data = dropdown.select2('data');
-                        doChange(data ? data[0] : {});
+                        return doChange(data ? data[0] : {});
                     })
                     .on('select2:clear', () => {
                         doClear();

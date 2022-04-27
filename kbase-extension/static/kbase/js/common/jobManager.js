@@ -481,7 +481,10 @@ define([
             handleJobStatus(self, message) {
                 const job = this.model.getItem('exec.jobState');
                 if (message[job.job_id]) {
-                    const jobState = message[job.job_id].jobState;
+                    const { outputWidgetInfo, jobState } = message[job.job_id];
+                    if (outputWidgetInfo) {
+                        self.model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
+                    }
                     if (_.isEqual(jobState, job)) {
                         // no update required
                         return;
@@ -503,6 +506,34 @@ define([
                     return job;
                 }
                 return undefined;
+            }
+
+            /**
+             * Cancel a job in an app cell.
+             *
+             * This action is triggered by hitting the 'Cancel' button at the top left of the
+             * app cell
+             */
+            cancelJob() {
+                const jobId = this.model.getItem('exec.jobState.job_id');
+                if (jobId) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: jobId });
+                    if (this.looper) {
+                        this.looper.clearRequest();
+                    }
+                }
+            }
+
+            /**
+             * Reset the job manager, removing all listeners and stored job data
+             */
+            resetJobs() {
+                // remove all listeners and cancel any pending job requests
+                if (this.looper) {
+                    this.looper.clearRequest();
+                }
+                this.removeAllListeners();
+                this.model.deleteItem('exec');
             }
         };
 

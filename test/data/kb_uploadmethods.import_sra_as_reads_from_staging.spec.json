@@ -6,12 +6,12 @@
         "target_property": "workspace_name"
       },
       {
-        "constant_value": "FASTQ/FASTA",
+        "constant_value": "SRA",
         "target_property": "import_type"
       },
       {
-        "input_parameter": "fastq_fwd_staging_file_name",
-        "target_property": "fastq_fwd_staging_file_name"
+        "input_parameter": "sra_staging_file_name",
+        "target_property": "sra_staging_file_name"
       },
       {
         "input_parameter": "sequencing_tech",
@@ -91,18 +91,18 @@
       "upload"
     ],
     "contact": "http://kbase.us/contact-us/",
-    "description": "<p> Import a Interleaved FASTQ file from your staging area into your Narrative as an Assembly data object.\nPlease see the <a href=\"https://docs.kbase.us/data/upload-download-guide/\">Data Upload/Download Guide</a> for more information. </p>",
+    "description": "<p> Import a SRA file from your staging area into your Narrative as READS data object.\nPlease see the <a href=\"https://docs.kbase.us/data/upload-download-guide/\">Data Upload/Download Guide</a> for more information. </p>",
     "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
     "icon": {
-      "url": "img?method_id=kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging&image_name=data-pink.png&tag=release"
+      "url": "img?method_id=kb_uploadmethods/import_sra_as_reads_from_staging&image_name=data-pink.png&tag=release"
     },
-    "id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+    "id": "kb_uploadmethods/import_sra_as_reads_from_staging",
     "module_name": "kb_uploadmethods",
-    "name": "Import Interleaved FASTQ file as Reads from Staging Area",
+    "name": "Import SRA File as Reads from Staging Area",
     "namespace": "kb_uploadmethods",
     "publications": [],
     "screenshots": [],
-    "subtitle": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "subtitle": "Import a SRA file into your Narrative as a Reads data object",
     "suggestions": {
       "next_apps": [],
       "next_methods": [],
@@ -111,7 +111,7 @@
     },
     "tag": "release",
     "technical_description": "none",
-    "tooltip": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "tooltip": "Import a SRA file into your Narrative as a Reads data object",
     "ver": "1.0.55"
   },
   "info": {
@@ -126,19 +126,19 @@
     ],
     "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
     "icon": {
-      "url": "img?method_id=kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging&image_name=data-pink.png&tag=release"
+      "url": "img?method_id=kb_uploadmethods/import_sra_as_reads_from_staging&image_name=data-pink.png&tag=release"
     },
-    "id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+    "id": "kb_uploadmethods/import_sra_as_reads_from_staging",
     "input_types": [],
     "module_name": "kb_uploadmethods",
-    "name": "Import Interleaved FASTQ file as Reads from Staging Area",
+    "name": "Import SRA File as Reads from Staging Area",
     "namespace": "kb_uploadmethods",
     "output_types": [
       "KBaseFile.PairedEndLibrary",
       "KBaseFile.SingleEndLibrary"
     ],
-    "subtitle": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
-    "tooltip": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "subtitle": "Import a SRA file into your Narrative as a Reads data object",
+    "tooltip": "Import a SRA file into your Narrative as a Reads data object",
     "ver": "1.0.55"
   },
   "job_id_output_field": "docker",
@@ -149,7 +149,7 @@
       "default_values": [
         ""
       ],
-      "description": "Valid file extensions for FASTQ: .fastq, .fnq, .fq;",
+      "description": "SRA staging file path",
       "disabled": 0,
       "dynamic_dropdown_options": {
         "data_source": "ftp_staging",
@@ -159,11 +159,11 @@
         "service_params": null
       },
       "field_type": "dynamic_dropdown",
-      "id": "fastq_fwd_staging_file_name",
+      "id": "sra_staging_file_name",
       "optional": 0,
-      "short_hint": "Short read file containing a paired end library in FASTQ format",
+      "short_hint": "SRA staging file path",
       "ui_class": "parameter",
-      "ui_name": "Forward/left FASTQ file path"
+      "ui_name": "SRA file path"
     },
     {
       "advanced": 0,

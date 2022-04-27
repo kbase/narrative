@@ -41,6 +41,7 @@ define([
         showConfirmDialog,
         showDialog,
         showErrorDialog,
+        showGenericDialog,
         showInfoDialog,
         cssClassName,
     };
@@ -429,6 +430,8 @@ define([
             confirmNode = _generateConfirmNode(dialog),
             modalDialogNode = _setUpModalNodes(confirmNode);
 
+        args.modalDialogNode = modalDialogNode;
+
         // this shows the modal
         $(modalDialogNode).modal({ keyboard: false });
 
@@ -457,7 +460,7 @@ define([
                 resolve(resolution);
             });
             if (args.doThisFirst) {
-                args.doThisFirst();
+                args.doThisFirst(modalDialogNode);
             }
         });
     }

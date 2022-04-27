@@ -4,10 +4,11 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
+    'common/ui',
     'testUtil',
     'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, Mocks, TestBulkImportObject) => {
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, UI, TestUtil, Mocks, TestBulkImportObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -141,6 +142,14 @@ define([
                             '[data-parameter="import_type"] select[data-element="input"]'
                         );
                         expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
+                        spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
+                        const xsvButton = container.querySelector(
+                            '.kb-bulk-import-configure__button--generate-template'
+                        );
+                        // click on the button to check it functions correctly
+                        xsvButton.click();
+                        expect(xsvButton.textContent).toContain('Generate CSV Template');
+                        expect(UI.showConfirmDialog).toHaveBeenCalled();
                         return configure.stop();
                     });
             });

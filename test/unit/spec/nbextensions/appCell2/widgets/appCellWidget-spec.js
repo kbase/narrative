@@ -2,7 +2,6 @@ define([
     'bluebird',
     '/narrative/nbextensions/appCell2/widgets/appCellWidget',
     '/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm',
-    'common/dialogMessages',
     'common/jobCommMessages',
     'common/jobs',
     'common/jupyter',
@@ -12,13 +11,13 @@ define([
     'testUtil',
     'narrativeMocks',
     '/test/data/jobsData',
+    'json!/test/data/NarrativeTest.app_sleep',
     'base/js/namespace',
     'uuid',
 ], (
     Promise,
     AppCellWidget,
     AppStates,
-    DialogMessages,
     jcm,
     Jobs,
     Narrative,
@@ -28,14 +27,21 @@ define([
     TestUtil,
     Mocks,
     JobsData,
+    AppSleepSpec,
     Jupyter,
     UUID
 ) => {
     'use strict';
 
     const fsmState = AppStates.STATE;
-
     const TEST_JOB = 'test_job_id';
+    const selectors = {
+        actionButton: '.kb-rcp__action-button',
+        cancel: '.kb-rcp__action-button.-cancel',
+        run: '.kb-rcp__action-button.-run',
+        reset: '.kb-rcp__action-button.-reset',
+        execMessage: '[data-element="execMessage"]',
+    };
 
     const appSpec = {
         id: 'NarrativeTest/app_succeed',
@@ -351,9 +357,9 @@ define([
                 );
 
                 // all the action buttons are alive and well
-                const actionButtons = this.kbaseNode.querySelectorAll(`.kb-rcp__action-button`);
+                const actionButtons = this.kbaseNode.querySelectorAll(selectors.actionButton);
                 const hiddenButtons = this.kbaseNode.querySelectorAll(
-                    `.kb-rcp__action-button.hidden`
+                    `${selectors.actionButton}.hidden`
                 );
                 expect(hiddenButtons.length).toEqual(0);
                 // run, cancel, reset, rerun, offline
@@ -389,11 +395,55 @@ define([
                     fsmState.NEW
                 );
                 // UI should have been rendered; only one action button visible
-                const actionButtons = this.kbaseNode.querySelectorAll(`.kb-rcp__action-button`);
+                const actionButtons = this.kbaseNode.querySelectorAll(selectors.actionButton);
                 const hiddenButtons = this.kbaseNode.querySelectorAll(
-                    `.kb-rcp__action-button.hidden`
+                    `${selectors.actionButton}.hidden`
                 );
                 expect(actionButtons.length).toEqual(hiddenButtons.length + 1);
+            });
+
+            describe('app cell startup states', () => {
+                beforeEach(async function () {
+                    await this.appCellWidgetInstance.init();
+                    await this.appCellWidgetInstance.attach(this.kbaseNode);
+                    await this.appCellWidgetInstance.start();
+                });
+                it('can validate params on startup, params incomplete', async function () {
+                    await this.appCellWidgetInstance.run();
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.EDITING_INCOMPLETE
+                    );
+                    const runButton = this.kbaseNode.querySelector(selectors.run);
+                    expect(runButton).not.toHaveClass('hidden');
+                    expect(runButton).toHaveClass('disabled');
+                });
+
+                it('can validate params on startup and be ready to run', async function () {
+                    // add a valid param so the cell starts up ready to run
+                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
+                    await this.appCellWidgetInstance.run();
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.EDITING_COMPLETE
+                    );
+                    const runButton = this.kbaseNode.querySelector(selectors.run);
+                    expect(runButton).not.toHaveClass('hidden');
+                    expect(runButton).not.toHaveClass('disabled');
+                });
+
+                it('can start in an internal error state', async function () {
+                    this.cell.metadata.kbase.appCell.fsm = {
+                        currentState: { mode: 'internal-error' },
+                    };
+                    await this.appCellWidgetInstance.init();
+                    await this.appCellWidgetInstance.attach(this.kbaseNode);
+                    await this.appCellWidgetInstance.start();
+                    await this.appCellWidgetInstance.run();
+
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.INTERNAL_ERROR
+                    );
+                    // the
+                });
             });
         });
 
@@ -439,7 +489,7 @@ define([
                         this.cell.execute = () => {
                             resolve();
                         };
-                        this.kbaseNode.querySelector('.kb-rcp__action-button.-run').click();
+                        this.kbaseNode.querySelector(selectors.run).click();
                     });
                 });
 
@@ -447,9 +497,12 @@ define([
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EXECUTE_REQUESTED
                     );
-                    expect(
-                        this.kbaseNode.querySelector(`.kb-rcp__action-button.-cancel`)
-                    ).not.toHaveClass('hidden');
+                    expect(this.kbaseNode.querySelector(selectors.cancel)).not.toHaveClass(
+                        'hidden'
+                    );
+                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        'Sending...'
+                    );
                 });
 
                 it('responds to job launch', function () {
@@ -459,6 +512,9 @@ define([
                         job_id: TEST_JOB,
                     };
                     const channelKeys = Array.from(Object.keys(this.bus.channels));
+                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        'Sending...'
+                    );
                     return new Promise((resolve) => {
                         spyOn(Narrative, 'saveNotebook').and.callFake(() => {
                             resolve();
@@ -485,15 +541,18 @@ define([
                             event_at: 1234567890,
                         });
                         // action button: cancel
-                        expect(
-                            this.kbaseNode.querySelector(`.kb-rcp__action-button.-cancel`)
-                        ).not.toHaveClass('hidden');
+                        expect(this.kbaseNode.querySelector(selectors.cancel)).not.toHaveClass(
+                            'hidden'
+                        );
                         // expect the status tab to be available
                         expect(
                             this.kbaseNode.querySelector(
                                 `.kb-rcp__tab-button[data-button="jobStatus"]`
                             )
                         ).not.toHaveClass('hidden');
+                        expect(
+                            this.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toEqual('Launching...');
 
                         // a channel should have been added to listen for job updates
                         expect(Object.keys(this.bus.channels).length).toBeGreaterThan(
@@ -515,6 +574,9 @@ define([
                 it('responds to launch errors', function () {
                     const runStatusArgs = { event: 'error', cell_id: this.cell_id };
 
+                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        'Sending...'
+                    );
                     return new Promise((resolve) => {
                         spyOn(Narrative, 'saveNotebook').and.callFake(() => {
                             resolve();
@@ -532,12 +594,15 @@ define([
                         });
                         // action button should be rerunApp
                         expect(
-                            this.kbaseNode.querySelector(`.kb-rcp__action-button.-rerun`)
+                            this.kbaseNode.querySelector(`${selectors.actionButton}.-rerun`)
                         ).not.toHaveClass('hidden');
                         // expect the error tab to be visible
                         expect(
                             this.kbaseNode.querySelector(`.kb-rcp__tab-button[data-button="error"]`)
                         ).not.toHaveClass('hidden');
+                        expect(
+                            this.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toEqual('');
                     });
                 });
 
@@ -561,14 +626,13 @@ define([
             const startState = { job_id: TEST_JOB, status: 'running', created: 12345678 };
 
             it('cancels a running job', async function () {
-                // beforeEach(async function () {
                 cellStartUp(this);
                 this.cell.metadata.kbase.appCell.exec = {
                     launchState: { event: 'launched_job', job_id: TEST_JOB },
                     jobState: { job_id: TEST_JOB, status: 'running', created: 12345678 },
                 };
                 this.cell.metadata.kbase.appCell.fsm = {
-                    currentState: { mode: 'processing', stage: 'running' },
+                    currentState: fsmState.PROCESSING_RUNNING,
                 };
                 await this.appCellWidgetInstance.init();
                 await this.appCellWidgetInstance.attach(this.kbaseNode);
@@ -581,9 +645,9 @@ define([
                 // confirm the cancel/reset action
                 spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                 spyOn(this.bus, 'emit');
-                const cancelButton = this.kbaseNode.querySelector('.kb-rcp__action-button.-cancel');
+                const cancelButton = this.kbaseNode.querySelector(selectors.cancel);
                 await TestUtil.waitForElementChange(
-                    this.kbaseNode.querySelector('[data-element="execMessage"]'),
+                    this.kbaseNode.querySelector(selectors.execMessage),
                     () => {
                         cancelButton.click();
                     }
@@ -596,9 +660,9 @@ define([
                 expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                     fsmState.CANCELING
                 );
-                expect(
-                    this.kbaseNode.querySelector('[data-element="execMessage"]').textContent
-                ).toContain('Cancelling...');
+                expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toContain(
+                    'Cancelling...'
+                );
             });
 
             // reset states
@@ -698,9 +762,9 @@ define([
 
                     const selector = state.button || '-rerun';
                     const resetButton = this.kbaseNode.querySelector(
-                        `.kb-rcp__action-button.${selector}`
+                        `${selectors.actionButton}.${selector}`
                     );
-                    const runButton = this.kbaseNode.querySelector('.kb-rcp__action-button.-run');
+                    const runButton = this.kbaseNode.querySelector(selectors.run);
                     // confirm the cancel/reset action
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                     spyOn(this.bus, 'emit');
@@ -716,9 +780,9 @@ define([
                         }
                     );
 
-                    expect(
-                        this.kbaseNode.querySelector('[data-element="execMessage"]').textContent
-                    ).toEqual('');
+                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        ''
+                    );
                     expect(this.appCellWidgetInstance.model.getItem('exec')).toBeUndefined();
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EDITING_COMPLETE
@@ -764,6 +828,9 @@ define([
                         expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                             currentState
                         );
+                        expect(
+                            this.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toEqual('Launching...');
                         // send a job status update; this will trigger an FSM mode change,
                         // which will enable the jobStatus tab
                         await TestUtil.waitForElementChange(

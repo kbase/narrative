@@ -223,7 +223,7 @@ define([], () => {
                     disabled: true,
                 },
             },
-            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE],
+            next: [STATE.INTERNAL_ERROR, STATE.EDITING_INCOMPLETE, STATE.EDITING_COMPLETE],
         },
         // editing - incomplete
         EDITING_INCOMPLETE: {

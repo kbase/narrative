@@ -714,10 +714,6 @@ define(
 
             // RENDER API
 
-            function syncFatalError() {
-                return;
-            }
-
             function doActionButton(action) {
                 switch (action) {
                     case 'runApp':
@@ -1036,7 +1032,6 @@ define(
                         info: null,
                         detail: null,
                     });
-                    syncFatalError();
                     fsm.start(fsmState.INTERNAL_ERROR);
                 }
             }
@@ -1254,7 +1249,7 @@ define(
                 // Update the exec state.
                 // NB we need to do this because the launch events are only
                 // sent once from the narrative back end.
-
+                let newExecMessage = '';
                 // Update FSM
                 const newFsmState = (function () {
                     switch (message.event) {
@@ -1265,6 +1260,7 @@ define(
                                 status: 'created',
                                 created: 0,
                             });
+                            newExecMessage = 'Launching...';
                             startListeningForJobMessages(message.job_id);
                             return fsmState.PROCESSING_LAUNCHED;
                         case 'error':
@@ -1274,6 +1270,7 @@ define(
                     }
                 })();
                 fsm.newState(newFsmState);
+                ui.setContent('run-control-panel.execMessage', newExecMessage);
                 renderUI();
             }
 
@@ -1313,6 +1310,7 @@ define(
                     return;
                 }
                 fsm.newState(fsmState.EXECUTE_REQUESTED);
+                ui.setContent('run-control-panel.execMessage', 'Sending...');
                 renderUI();
 
                 // We want to close down the configure tab, so let's forget about
@@ -1966,7 +1964,6 @@ define(
                             info: error.info,
                             detail: error.detail || 'no additional details',
                         });
-                        syncFatalError();
                         fsm.newState(fsmState.INTERNAL_ERROR);
                         renderUI();
                     });

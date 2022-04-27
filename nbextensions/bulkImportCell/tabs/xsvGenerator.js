@@ -10,7 +10,101 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         p = html.tag('p'),
         ul = html.tag('ul'),
         li = html.tag('li'),
+        select = html.tag('select'),
+        option = html.tag('option'),
+        input = html.tag('input'),
+        label = html.tag('label'),
+        fieldset = html.tag('fieldset'),
         cssBaseClass = 'kb-xsv-gen';
+
+    const formConfig = {
+        layout: [
+            'types', // multiple choice
+            'output_file_type', // CSV / TSV / EXCEL
+            'output_directory', // file path
+        ],
+        specs: {
+            types: {
+                original: {
+                    advanced: 0,
+                    allow_multiple: 1,
+                    default_values: [
+                        '', // current type
+                    ],
+                    description: 'File types to generate templates for',
+                    disabled: 0,
+                    dropdown_options: {
+                        multiselection: 1,
+                        options: [
+                            // map file type to display name
+                        ],
+                    },
+                    field_type: 'dropdown',
+                    id: 'types',
+                    optional: 0,
+                    short_hint: 'File types to generate templates for',
+                    ui_class: 'parameter',
+                    ui_name: 'Import types(s)',
+                },
+                _position: 1,
+            },
+            output_file_type: {
+                original: {
+                    advanced: 0,
+                    allow_multiple: 0,
+                    default_values: ['CSV'],
+                    description: 'Format for the output file',
+                    disabled: 0,
+                    dropdown_options: {
+                        multiselection: 1,
+                        options: [
+                            {
+                                display: 'Comma-separated (CSV)',
+                                value: 'CSV',
+                            },
+                            {
+                                display: 'Tab-separated (TSV)',
+                                value: 'TSV',
+                            },
+                            {
+                                display: 'Excel (XLSX)',
+                                value: 'EXCEL',
+                            },
+                        ],
+                    },
+                    field_type: 'dropdown',
+                    id: 'output_file_type',
+                    optional: 0,
+                    short_hint: 'Format for the output file',
+                    ui_class: 'parameter',
+                    ui_name: 'Output file type',
+                },
+                _position: 1,
+            },
+            output_directory: {
+                original: {
+                    advanced: 0,
+                    allow_multiple: 0,
+                    default_values: [''],
+                    description: 'Directory where template files will be created',
+                    disabled: 0,
+                    field_type: 'text',
+                    id: 'output_directory',
+                    optional: 0,
+                    short_hint: 'Directory where template files will be created',
+                    text_options: {
+                        is_output_name: 1,
+                        placeholder: 'bulk_import_templates',
+                        regex_constraint: [],
+                        valid_ws_types: [],
+                    },
+                    ui_class: 'output',
+                    ui_name: 'Destination directory',
+                },
+                _position: 3,
+            },
+        },
+    };
 
     /**
      * This widget allows the user to generate a downloadable template suitable for using
@@ -33,7 +127,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         }
 
         _init(options) {
-            ['model', 'typesToFiles'].forEach((prop) => {
+            ['model', 'typesToFiles', 'fileTypeMapping'].forEach((prop) => {
                 if (!options || !options[prop]) {
                     throw new Error(`XSV Generator requires the param "${prop}" for instantiation`);
                 }
@@ -45,25 +139,39 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
 
         async run() {
             const body = this.renderLayout();
-            const confirmed = await UI.showConfirmDialog({
+            const modalArgs = {
                 title: 'Create CSV Template',
                 body,
-                okLabel: 'Create Template',
-            });
-            // return if the user clicks 'cancel'
-            if (!confirmed) {
-                return;
-            }
-
-            // TODO:
-            // validate the form params
-            const formValues = {
-                output_directory: 'some_string',
-                output_file_type: 'CSV',
-                types: ['sra_reads'],
+                okLabel: 'Generate template!',
+                doThisFirst: (mdn) => {
+                    const submit = mdn.querySelector('[data-element="ok"]');
+                    // TODO: the form should monitor its state of validity and
+                    // only allow the query to be submitted when the form is valid
+                    submit.addEventListener('click', this.runRequest.bind(this));
+                },
             };
+            await UI.showConfirmDialog(modalArgs);
+        }
+
+        runRequest() {
+            const form = document.querySelector('#' + this.id);
+            const params = ['output_directory', 'output_file_type', 'types'];
+            const formValues = {};
+
+            // TODO: validate the form params
+            params.forEach((param) => {
+                const formEl = form.querySelector(`[name="${param}"]`);
+                if (formEl) {
+                    if (param === 'types') {
+                        formValues[param] = Array.from(formEl.selectedOptions).map((x) => x.value);
+                    } else {
+                        formValues[param] = formEl.value;
+                    }
+                }
+            });
+
             // generate the request params to send to the staging service
-            // send the request
+            // and send the request
             this.sendRequest(this.generateRequest(formValues)).then(
                 // promise resolved
                 (data) => {
@@ -90,8 +198,6 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          * @returns {string} string of HTML to use as the body of the dialog box
          */
         renderLayout() {
-            this.id = html.genId();
-
             const state = this.model.getItem('state');
             let errorMessage;
             const hasErrors = Object.values(state.params).some((val) => val !== 'complete');
@@ -99,7 +205,6 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                 errorMessage =
                     'Please note that there are errors in the input parameters for the selected data types, and that data upload will fail if the template is used unaltered.';
             }
-
             return div(
                 {
                     class: `${cssBaseClass}__container`,
@@ -111,13 +216,126 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                         },
                         errorMessage ? p(errorMessage) : null
                     ),
-                    // TODO: add form in here!
-                    p('Import types'),
-                    p('Output file type'),
-                    p('Destination directory'),
-                    div({
-                        id: this.id,
-                    }),
+                    this.createForm(),
+                ]
+            );
+        }
+
+        /**
+         * Generate the appropriate form for creating template downloads
+         *
+         * @returns {string} HTML string containing the form
+         */
+        createForm() {
+            this.id = html.genId();
+            const typeArray = Object.keys(this.model.getItem('params'));
+            const state = this.model.getItem('state');
+
+            return div(
+                {
+                    id: this.id,
+                },
+                [
+                    // input file types
+                    fieldset([
+                        p(
+                            label(
+                                {
+                                    for: formConfig.specs.types.original.id,
+                                },
+                                formConfig.specs.types.original.ui_name +
+                                    ' (select all appropriate)'
+                            )
+                        ),
+                        select(
+                            {
+                                id: formConfig.specs.types.original.id,
+                                name: formConfig.specs.types.original.id,
+                                // er...
+                                multiple: 'multiple',
+                                required: 'required',
+                            },
+                            typeArray.sort().map((opt) => {
+                                if (state.selectedFileType === opt) {
+                                    return option(
+                                        {
+                                            value: opt,
+                                            selected: 'selected',
+                                        },
+                                        this.fileTypeMapping[opt]
+                                    );
+                                }
+                                return option(
+                                    {
+                                        value: opt,
+                                    },
+                                    this.fileTypeMapping[opt]
+                                );
+                            })
+                        ),
+                    ]),
+
+                    // output_file_types
+                    fieldset([
+                        p(
+                            label(
+                                {
+                                    for: formConfig.specs.output_file_type.original.id,
+                                },
+                                formConfig.specs.output_file_type.original.ui_name
+                            )
+                        ),
+                        select(
+                            {
+                                id: formConfig.specs.output_file_type.original.id,
+                                name: formConfig.specs.output_file_type.original.id,
+                            },
+                            formConfig.specs.output_file_type.original.dropdown_options.options.map(
+                                (opt) => {
+                                    if (
+                                        formConfig.specs.output_file_type.original
+                                            .default_values[0] === opt.value
+                                    ) {
+                                        return option(
+                                            {
+                                                value: opt.value,
+                                                selected: 'selected',
+                                            },
+                                            opt.display
+                                        );
+                                    }
+                                    return option(
+                                        {
+                                            value: opt.value,
+                                        },
+                                        opt.display
+                                    );
+                                }
+                            )
+                        ),
+                    ]),
+
+                    // output file directory
+                    fieldset([
+                        p(
+                            `<label for="${formConfig.specs.output_directory.original.id}">${formConfig.specs.output_directory.original.ui_name}</label>`
+                        ),
+                        input(
+                            {
+                                id: formConfig.specs.output_directory.original.id,
+                                type: 'text',
+                                name: formConfig.specs.output_directory.original.id,
+                                placeholder:
+                                    formConfig.specs.output_directory.original.text_options
+                                        .placeholder,
+                                value: formConfig.specs.output_directory.original.text_options
+                                    .placeholder,
+                                minlength: 1,
+                                required: true,
+                            },
+                            ''
+                        ),
+                    ]),
                 ]
             );
         }
@@ -208,7 +426,8 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                 });
             }
 
-            const s_have = Object.keys(resp.files_created).length === 1 ? ' has' : 's have';
+            const newFiles = new Set(Object.values(resp.files_created));
+            const s_have = newFiles.size === 1 ? ' has' : 's have';
             const body = div(
                 {
                     class: `${cssBaseClass}__result--success`,
@@ -224,7 +443,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                         {
                             class: `${cssBaseClass}__file_list`,
                         },
-                        Object.values(resp.files_created)
+                        Array.from(newFiles)
                             .sort()
                             .map((file) => {
                                 return li(

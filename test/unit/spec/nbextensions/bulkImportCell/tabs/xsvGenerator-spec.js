@@ -3,177 +3,19 @@ define([
     '/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator',
     'common/props',
     'common/ui',
-], ($, XSVGenerator, Props, UI) => {
+    'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
+    'json!/test/data/kb_uploadmethods.import_fastq_noninterleaved_as_reads_from_staging.spec.json',
+    'json!/test/data/kb_uploadmethods.import_sra_as_reads_from_staging.spec.json',
+], (
+    $,
+    XSVGenerator,
+    Props,
+    UI,
+    ImportFastqInterleavedSpec,
+    ImportFastqNonInterleavedSpec,
+    ImportSraReadsSpec
+) => {
     'use strict';
-
-    const miniSpec = {
-        'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging': {
-            parameters: [
-                {
-                    id: 'fastq_fwd_staging_file_name',
-                    ui_name: 'Forward/left FASTQ file path',
-                },
-                {
-                    id: 'name',
-                    ui_name: 'Reads object name',
-                },
-            ],
-        },
-        'kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging': {
-            parameters: [
-                {
-                    id: 'fastq_fwd_staging_file_name',
-                    ui_name: 'Forward/left FASTQ file path',
-                },
-                {
-                    id: 'fastq_rev_staging_file_name',
-                    ui_name: 'Reverse/right FASTQ file path',
-                },
-                {
-                    id: 'name',
-                    ui_name: 'Reads object name',
-                },
-                {
-                    id: 'read_orientation_outward',
-                    ui_name: 'Reads orientation outward',
-                },
-            ],
-        },
-        'kb_uploadmethods/import_sra_as_reads_from_staging': {
-            parameters: [
-                {
-                    id: 'sra_staging_file_name',
-                    ui_name: 'SRA file path',
-                },
-                {
-                    id: 'sequencing_tech',
-                    ui_name: 'Sequencing technology',
-                },
-                {
-                    id: 'name',
-                    ui_name: 'Reads object name',
-                },
-                {
-                    id: 'read_orientation_outward',
-                    ui_name: 'Reads orientation outward',
-                },
-            ],
-        },
-    };
-
-    const params = {
-        fastq_reads_interleaved: {
-            filePaths: [
-                {
-                    fastq_fwd_staging_file_name: 'go.fastq',
-                    name: 'go.fastq_reads',
-                },
-            ],
-            params: {},
-        },
-        fastq_reads_noninterleaved: {
-            filePaths: [
-                {
-                    fastq_fwd_staging_file_name: null,
-                    fastq_rev_staging_file_name: null,
-                    name: null,
-                },
-                {
-                    fastq_fwd_staging_file_name: null,
-                    fastq_rev_staging_file_name: null,
-                    name: null,
-                },
-            ],
-            params: {
-                read_orientation_outward: 0,
-            },
-        },
-        sra_reads: {
-            filePaths: [
-                {
-                    name: 'sample_sra_reads',
-                    sra_staging_file_name: 'sample_sra',
-                },
-            ],
-            params: {
-                read_orientation_outward: 0,
-                sequencing_tech: 'Illumina',
-            },
-        },
-    };
-
-    const expectedOutput = {
-        fastq_reads_interleaved: {
-            order_and_display: [
-                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
-                ['name', 'Reads object name'],
-            ],
-            data: [
-                {
-                    fastq_fwd_staging_file_name: 'go.fastq',
-                    name: 'go.fastq_reads',
-                },
-            ],
-        },
-        fastq_reads_noninterleaved: {
-            order_and_display: [
-                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
-                ['fastq_rev_staging_file_name', 'Reverse/right FASTQ file path'],
-                ['name', 'Reads object name'],
-                ['read_orientation_outward', 'Reads orientation outward'],
-            ],
-            data: [
-                {
-                    fastq_fwd_staging_file_name: null,
-                    fastq_rev_staging_file_name: null,
-                    name: null,
-                    read_orientation_outward: 0,
-                },
-                {
-                    fastq_fwd_staging_file_name: null,
-                    fastq_rev_staging_file_name: null,
-                    name: null,
-                    read_orientation_outward: 0,
-                },
-            ],
-        },
-        sra_reads: {
-            order_and_display: [
-                ['sra_staging_file_name', 'SRA file path'],
-                ['sequencing_tech', 'Sequencing technology'],
-                ['name', 'Reads object name'],
-                ['read_orientation_outward', 'Reads orientation outward'],
-            ],
-            data: [
-                {
-                    name: 'sample_sra_reads',
-                    sra_staging_file_name: 'sample_sra',
-                    read_orientation_outward: 0,
-                    sequencing_tech: 'Illumina',
-                },
-            ],
-        },
-    };
-
-    const state = {
-        params: {
-            fastq_reads_interleaved: 'complete',
-            fastq_reads_noninterleaved: 'error',
-            sra_reads: 'complete',
-        },
-        selectedAppId: 'kb_uploadmethods/import_sra_as_reads_from_staging',
-        selectedFileType: 'fastq_reads_noninterleaved',
-    };
-
-    const defaultModel = Props.make({
-        data: {
-            state,
-            params,
-            app: {
-                specs: miniSpec,
-            },
-        },
-    });
 
     const typesToFiles = {
         fastq_reads_interleaved: {
@@ -186,24 +28,198 @@ define([
             appId: 'kb_uploadmethods/import_sra_as_reads_from_staging',
         },
     };
-    describe('the xsv generator', () => {
+    const fileTypeMapping = {
+        fastq_reads_interleaved: 'FASTQ something',
+        fastq_reads_noninterleaved: 'FASTQ something else',
+        sra_reads: 'SRA reads',
+    };
+
+    const miniSpec = {
+        'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging':
+            ImportFastqInterleavedSpec,
+        'kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging':
+            ImportFastqNonInterleavedSpec,
+        'kb_uploadmethods/import_sra_as_reads_from_staging': ImportSraReadsSpec,
+    };
+
+    const params = {
+        fastq_reads_interleaved: {
+            filePaths: [
+                {
+                    fastq_fwd_staging_file_name: 'only_forward.fastq',
+                    name: 'only_forward.fastq_reads',
+                },
+            ],
+            params: {
+                insert_size_mean: null,
+                insert_size_std_dev: null,
+                read_orientation_outward: 0,
+                sequencing_tech: 'Illumina',
+                single_genome: 1,
+            },
+        },
+        fastq_reads_noninterleaved: {
+            filePaths: [
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                },
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                },
+            ],
+            params: {
+                insert_size_mean: null,
+                insert_size_std_dev: null,
+                read_orientation_outward: 0,
+                sequencing_tech: 'Illumina',
+                single_genome: 1,
+            },
+        },
+        sra_reads: {
+            filePaths: [
+                {
+                    name: 'some_sra_file_reads',
+                    sra_staging_file_name: 'some_sra_file',
+                },
+            ],
+            params: {
+                insert_size_mean: null,
+                insert_size_std_dev: null,
+                read_orientation_outward: 0,
+                sequencing_tech: 'Illumina',
+                single_genome: 1,
+            },
+        },
+    };
+
+    const expectedOutput = {
+        fastq_reads_noninterleaved: {
+            order_and_display: [
+                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
+                ['fastq_rev_staging_file_name', 'Reverse/right FASTQ file path'],
+                ['sequencing_tech', 'Sequencing technology'],
+                ['name', 'Reads object name'],
+                ['single_genome', 'Single genome'],
+                ['read_orientation_outward', 'Reads orientation outward'],
+                ['insert_size_std_dev', 'St. dev. of insert size'],
+                ['insert_size_mean', 'Mean insert size'],
+            ],
+            data: [
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                    insert_size_mean: null,
+                    insert_size_std_dev: null,
+                    read_orientation_outward: 0,
+                    sequencing_tech: 'Illumina',
+                    single_genome: 1,
+                },
+                {
+                    fastq_fwd_staging_file_name: null,
+                    fastq_rev_staging_file_name: null,
+                    name: null,
+                    insert_size_mean: null,
+                    insert_size_std_dev: null,
+                    read_orientation_outward: 0,
+                    sequencing_tech: 'Illumina',
+                    single_genome: 1,
+                },
+            ],
+        },
+        fastq_reads_interleaved: {
+            order_and_display: [
+                ['fastq_fwd_staging_file_name', 'Forward/left FASTQ file path'],
+                ['sequencing_tech', 'Sequencing technology'],
+                ['name', 'Reads object name'],
+                ['single_genome', 'Single genome'],
+                ['read_orientation_outward', 'Reads orientation outward'],
+                ['insert_size_std_dev', 'St. dev. of insert size'],
+                ['insert_size_mean', 'Mean insert size'],
+            ],
+            data: [
+                {
+                    fastq_fwd_staging_file_name: 'only_forward.fastq',
+                    name: 'only_forward.fastq_reads',
+                    insert_size_mean: null,
+                    insert_size_std_dev: null,
+                    read_orientation_outward: 0,
+                    sequencing_tech: 'Illumina',
+                    single_genome: 1,
+                },
+            ],
+        },
+        sra_reads: {
+            order_and_display: [
+                ['sra_staging_file_name', 'SRA file path'],
+                ['sequencing_tech', 'Sequencing technology'],
+                ['name', 'Reads object name'],
+                ['single_genome', 'Single genome'],
+                ['read_orientation_outward', 'Reads orientation outward'],
+                ['insert_size_std_dev', 'St. dev. of insert size'],
+                ['insert_size_mean', 'Mean insert size'],
+            ],
+            data: [
+                {
+                    name: 'some_sra_file_reads',
+                    sra_staging_file_name: 'some_sra_file',
+                    insert_size_mean: null,
+                    insert_size_std_dev: null,
+                    read_orientation_outward: 0,
+                    sequencing_tech: 'Illumina',
+                    single_genome: 1,
+                },
+            ],
+        },
+    };
+
+    const state = {
+        params: {
+            fastq_reads_interleaved: 'complete',
+            fastq_reads_noninterleaved: 'error',
+            sra_reads: 'complete',
+        },
+        selectedAppId: 'kb_uploadmethods/import_sra_as_reads_from_staging',
+        selectedFileType: 'sra_reads',
+    };
+
+    const defaultModel = Props.make({
+        data: {
+            state,
+            params,
+            app: {
+                specs: miniSpec,
+            },
+        },
+    });
+
+    function createXsvGen() {
+        return new XSVGenerator({ model: defaultModel, typesToFiles, fileTypeMapping });
+    }
+
+    describe('the XSV Generator', () => {
         describe('module', () => {
             it('can be instantiated', () => {
-                const xsvGen = new XSVGenerator({ model: {}, typesToFiles });
+                const xsvGen = createXsvGen();
                 expect(xsvGen).toBeDefined();
                 expect(xsvGen.run).toEqual(jasmine.any(Function));
                 expect(xsvGen.cssBaseClass).toEqual(jasmine.any(String));
             });
         });
 
-        const cssBaseClass = new XSVGenerator({ model: {}, typesToFiles }).cssBaseClass;
+        const cssBaseClass = new XSVGenerator({ model: {}, typesToFiles, fileTypeMapping })
+            .cssBaseClass;
         describe('instance', () => {
-            it('requires a model to work', () => {
+            it('requires a model', () => {
                 expect(() => {
                     new XSVGenerator();
                 }).toThrowError(/XSV Generator requires the param "model" for instantiation/);
             });
-            it('requires the typesToFiles mapping to work', () => {
+            it('requires the typesToFiles mapping', () => {
                 expect(() => {
                     new XSVGenerator({ model: {} });
                 }).toThrowError(
@@ -211,12 +227,27 @@ define([
                 );
             });
 
+            it('requires the fileTypeMapping param', () => {
+                expect(() => {
+                    new XSVGenerator({ model: {}, typesToFiles: {} });
+                }).toThrowError(
+                    /XSV Generator requires the param "fileTypeMapping" for instantiation/
+                );
+            });
+
             describe('run', () => {
                 async function checkStartUpDialog(modelData, hasError) {
                     const model = Props.make({
-                        data: modelData,
+                        data: {
+                            state,
+                            params,
+                            app: {
+                                specs: miniSpec,
+                            },
+                            ...modelData,
+                        },
                     });
-                    const xsvGen = new XSVGenerator({ model, typesToFiles });
+                    const xsvGen = new XSVGenerator({ model, typesToFiles, fileTypeMapping });
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
                     await xsvGen.run();
                     expect(UI.showConfirmDialog).toHaveBeenCalledTimes(1);
@@ -263,9 +294,46 @@ define([
                 });
             });
 
+            describe('createForm', () => {
+                beforeEach(function () {
+                    this.xsvGen = createXsvGen();
+                });
+
+                it('creates a form with the appropriate inputs', function () {
+                    const form = document.createElement('div');
+                    form.innerHTML = this.xsvGen.createForm();
+                    const formParams = ['output_directory', 'output_file_type', 'types'];
+                    formParams.forEach((param) => {
+                        const paramElement = form.querySelector(`[name="${param}"]`);
+                        expect(paramElement).toBeDefined();
+                        if (param === 'output_file_type') {
+                            // ensure that all the output file types are present
+                            ['CSV', 'TSV', 'EXCEL'].forEach((type) => {
+                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
+                            });
+                        } else if (param === 'types') {
+                            // ensure that all the input types are present
+                            Object.keys(params).forEach((type) => {
+                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
+                            });
+                        }
+                    });
+                });
+            });
+
+            xdescribe('runRequest', () => {
+                // TODO:
+                // retrieving form values
+                // form validation
+            });
+
             describe('generateRequest', () => {
                 beforeEach(function () {
-                    this.xsvGen = new XSVGenerator({ model: defaultModel, typesToFiles });
+                    this.xsvGen = new XSVGenerator({
+                        model: defaultModel,
+                        typesToFiles,
+                        fileTypeMapping,
+                    });
                 });
                 const output_file_type = 'CSV',
                     output_directory = 'new_folder';
@@ -301,7 +369,7 @@ define([
 
             describe('sendRequest', () => {
                 beforeEach(function () {
-                    this.xsvGen = new XSVGenerator({ model: {}, typesToFiles });
+                    this.xsvGen = new XSVGenerator({ model: {}, typesToFiles, fileTypeMapping });
                     this.xsvGen.runtime = {
                         config: () => {
                             return 'http://example.com';
@@ -362,7 +430,7 @@ define([
 
             describe('responses', () => {
                 beforeEach(function () {
-                    this.xsvGen = new XSVGenerator({ model: {}, typesToFiles });
+                    this.xsvGen = new XSVGenerator({ model: {}, typesToFiles, fileTypeMapping });
                     spyOn(UI, 'showInfoDialog').and.callFake((args) => {
                         this.title = args.title;
                         this.container = document.createElement('div');
@@ -389,6 +457,34 @@ define([
                     ).toEqual('your_name_here/new folder/assembly.csv');
                 });
 
+                it('displays a success message, multiple types, single output file', function () {
+                    const result = {
+                        output_file_type: 'EXCEL',
+                        files_created: {
+                            assembly: 'your_name_here/new folder/import_specification.xlsx',
+                            fastq_reads_interleaved:
+                                'your_name_here/new folder/import_specification.xlsx',
+                            fastq_reads_noninterleaved:
+                                'your_name_here/new folder/import_specification.xlsx',
+                            genbank_genome: 'your_name_here/new folder/import_specification.xlsx',
+                            sra_reads: 'your_name_here/new folder/import_specification.xlsx',
+                        },
+                    };
+                    this.xsvGen.displayResult(result);
+                    expect(this.title).toEqual('Template Generation Successful!');
+                    expect(
+                        this.container.querySelector(`.${cssBaseClass}__result_text`).textContent
+                    ).toEqual('The following file has been added to the staging area:');
+                    const fileList = Array.from(
+                        this.container.querySelectorAll(`.${cssBaseClass}__file_list_item`)
+                    );
+                    expect(fileList.length).toEqual(1);
+                    expect(
+                        fileList.map((liElement) => {
+                            return liElement.textContent;
+                        })
+                    ).toEqual(['your_name_here/new folder/import_specification.xlsx']);
+                });
                 it('displays a success message, multiple files', function () {
                     const result = {
                         output_file_type: 'CSV',

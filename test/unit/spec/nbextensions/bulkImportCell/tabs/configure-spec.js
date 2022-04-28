@@ -20,6 +20,17 @@ define([
                 },
             },
             fileTypesDisplay = {
+                fastq_reads: {
+                    label: 'FASTQ Reads Interleaved',
+                },
+                dataType1: {
+                    label: 'Data Type One',
+                },
+                dataType2: {
+                    label: 'Data Type II',
+                },
+            },
+            fileTypeMapping = {
                 fastq_reads: 'FASTQ Reads Interleaved',
                 dataType1: 'Data Type One',
                 dataType2: 'Data Type II',
@@ -128,6 +139,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 return configure
@@ -168,6 +180,7 @@ define([
                 specs,
                 typesToFiles,
                 fileTypesDisplay,
+                fileTypeMapping,
             });
 
             return configure
@@ -209,6 +222,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
@@ -243,6 +257,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector =
@@ -312,6 +327,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -382,6 +398,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -465,6 +482,7 @@ define([
                         specs,
                         typesToFiles: messageTypesToFiles,
                         fileTypesDisplay,
+                        fileTypeMapping,
                     });
 
                     await configure.start({ node: container });
@@ -531,6 +549,7 @@ define([
                     specs,
                     typesToFiles: messageTypesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });

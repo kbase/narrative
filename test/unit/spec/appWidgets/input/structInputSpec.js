@@ -150,7 +150,7 @@ define([
         });
 
         it('should use a dynamic dropdown and propagate a get-parameters bus message', async () => {
-            const service = 'SomeService';
+            const service = 'SomeDynamicService';
             const method = 'some_method';
             const nsUrl = 'https://kbase.us/service/fakeNSUrl';
 

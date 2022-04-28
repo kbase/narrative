@@ -9,7 +9,7 @@ define([
 ], (DataList, $, Config, Workspace, Jupyter, Mocks, TestUtil) => {
     'use strict';
 
-    const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
+    const FAKE_NS_URL = 'https://kbase.us/service/fakeNSUrl';
     const FAKE_WS_NAME = 'some_workspace';
 
     function mockNarrativeServiceListObjects(objData) {

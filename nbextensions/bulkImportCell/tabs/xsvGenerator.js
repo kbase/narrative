@@ -202,37 +202,23 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          */
         renderLayout() {
             const state = this.model.getItem('state');
-            let errorMessage;
+            let errorMessage = '';
             const hasErrors = Object.values(state.params).some((val) => val !== 'complete');
             if (hasErrors) {
-                errorMessage =
-                    'Please note that there are errors in the input parameters for the selected data types, and that data upload will fail if the template is used unaltered.';
+                errorMessage = div(
+                    {
+                        class: `${cssBaseClass}__container--errors alert alert-warning`,
+                    },
+                    p(
+                        'Please note that there are errors in the input parameters for the selected data types, and that data upload will fail if the template is used unaltered.'
+                    )
+                );
             }
             return div(
                 {
                     class: `${cssBaseClass}__container`,
                 },
-                [
-                    div(
-                        {
-                            class: `${cssBaseClass}__container--errors`,
-                        },
-                        errorMessage ? p(errorMessage) : null
-                    ),
-                    this.createForm(),
-                    p(
-                        {
-                            class: `${cssBaseClass}__help`,
-                        },
-                        aTag(
-                            {
-                                href: DOCS_LINK,
-                                target: '_blank',
-                            },
-                            'Help and documentation on using templates'
-                        )
-                    ),
-                ]
+                [errorMessage, this.createForm()]
             );
         }
 
@@ -246,11 +232,34 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             const typeArray = Object.keys(this.model.getItem('params'));
             const state = this.model.getItem('state');
 
+            const multiFileInfo = p(
+                'Choosing Excel as output file type will create a single file with ' +
+                    'a page for each import type; CSV and TSV create one file per import type.'
+            );
+
             return div(
                 {
                     id: this.id,
                 },
                 [
+                    fieldset([
+                        p(
+                            'Templates will be created in the specified destination directory in the staging area.'
+                        ),
+                        typeArray.length > 1 ? multiFileInfo : null,
+                        p(
+                            {
+                                class: `${cssBaseClass}__help`,
+                            },
+                            aTag(
+                                {
+                                    href: DOCS_LINK,
+                                    target: '_blank',
+                                },
+                                'Help and documentation on using templates'
+                            )
+                        ),
+                    ]),
                     // input file types
                     fieldset([
                         p(

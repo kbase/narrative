@@ -79,35 +79,6 @@ define([
                     paths: [[upa]],
                 },
             });
-            // jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
-            //     status: 200,
-            //     statusText: 'success',
-            //     contentType: 'application/json',
-            //     responseHeaders: '',
-            //     responseText: JSON.stringify({
-            //         version: '1.1',
-            //         result: [
-            //             {
-            //                 infos: [
-            //                     [
-            //                         oid,
-            //                         name,
-            //                         objType,
-            //                         saveDate,
-            //                         ver,
-            //                         userId,
-            //                         ws,
-            //                         wsName,
-            //                         checksum,
-            //                         size,
-            //                         meta,
-            //                     ],
-            //                 ],
-            //                 paths: [[upa]],
-            //             },
-            //         ],
-            //     }),
-            // });
 
             const w = new KBaseDefaultObjectView($div, { upas: { upas: [upa] } });
             w.render([upa]).then(() => {
@@ -182,35 +153,6 @@ define([
                     paths: [[upa]],
                 },
             });
-            // jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
-            //     status: 200,
-            //     statusText: 'success',
-            //     contentType: 'application/json',
-            //     responseHeaders: '',
-            //     responseText: JSON.stringify({
-            //         version: '1.1',
-            //         result: [
-            //             {
-            //                 infos: [
-            //                     [
-            //                         oid,
-            //                         name,
-            //                         objType,
-            //                         saveDate,
-            //                         ver,
-            //                         userId,
-            //                         ws,
-            //                         wsName,
-            //                         checksum,
-            //                         size,
-            //                         meta,
-            //                     ],
-            //                 ],
-            //                 paths: [[upa]],
-            //             },
-            //         ],
-            //     }),
-            // });
 
             const w = new KBaseDefaultObjectView($div, { upas: { upas: [upa] } });
             w.render([upa]).then(() => {

@@ -140,8 +140,9 @@ define([
             });
         }
 
-        function doChanged(index, value) {
+        function doChanged(index, value, display) {
             viewModel.setItem(['items', index, 'value'], value);
+            viewModel.setItem(['items', index, 'display'], display);
             return validate(exportModel()).then((result) => {
                 channel.emit('validation', result);
             });
@@ -178,7 +179,7 @@ define([
                     }
                 });
                 fieldWidget.bus.on('changed', (message) => {
-                    doChanged(control.index, message.newValue);
+                    doChanged(control.index, message.newValue, message.newDisplayValue);
                 });
 
                 fieldWidget.bus.on('touched', () => {

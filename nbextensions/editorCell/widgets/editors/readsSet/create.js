@@ -87,6 +87,7 @@ define([
                 parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
                     newValue: message.newValue,
+                    newDisplayValue: message.newDisplayValue,
                 });
             });
 

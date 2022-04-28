@@ -77,11 +77,13 @@ define([
 
             this.workspaceId = 54745;
             this.initialParams = this.model.getItem('params').fastq_reads.params;
+            this.initialDisplay = this.model.getItem('params').fastq_reads.paramDisplay;
 
             this.defaultArgs = {
                 bus: this.bus,
                 workspaceId: this.workspaceId,
                 initialParams: this.initialParams,
+                initialDisplay: this.initialDisplay,
                 paramIds: this.paramIds,
             };
         });

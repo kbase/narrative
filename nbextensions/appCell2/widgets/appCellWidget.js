@@ -203,6 +203,7 @@ define(
                     widget = AppParamsWidget.make({
                         bus: widgetBus,
                         initialParams: model.getItem('params'),
+                        initialDisplay: model.getItem('paramDisplay') || {},
                     });
 
                 widgetBus.on('sync-params', (message) => {
@@ -281,6 +282,7 @@ define(
                     const isError = Boolean(message.isError);
                     if (state.mode === 'editing') {
                         model.setItem(['params', message.parameter], message.newValue);
+                        model.setItem(['paramDisplay', message.parameter], message.newDisplayValue);
                         evaluateAppState(isError);
                     } else {
                         console.warn(
@@ -392,6 +394,7 @@ define(
                     const { state } = fsm.getCurrentState();
                     if (state.mode === 'editing') {
                         model.setItem(['params', message.parameter], message.newValue);
+                        model.setItem(['paramDisplay', message.parameter], message.newDisplayValue);
                         evaluateAppState();
                     } else {
                         console.warn(

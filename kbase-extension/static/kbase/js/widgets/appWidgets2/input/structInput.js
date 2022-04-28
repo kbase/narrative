@@ -225,11 +225,13 @@ define([
             });
         }
 
-        function doChanged(id, newValue) {
+        function doChanged(id, newValue, newDisplayValue) {
             // Absorb and propagate the new value...
             viewModel.data[id] = Util.copy(newValue);
+            viewModel.display[id] = Util.copy(newDisplayValue);
             bus.emit('changed', {
                 newValue: Util.copy(viewModel.data),
+                newDisplayValue: Util.copy(viewModel.display),
             });
 
             // Validate and propagate.
@@ -276,7 +278,7 @@ define([
                     }
                 });
                 fieldWidget.bus.on('changed', (message) => {
-                    doChanged(fieldSpec.id, message.newValue);
+                    doChanged(fieldSpec.id, message.newValue, message.newDisplayValue);
                 });
 
                 fieldWidget.bus.on('touched', () => {

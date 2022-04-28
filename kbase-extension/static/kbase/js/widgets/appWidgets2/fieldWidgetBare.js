@@ -53,6 +53,7 @@ define([
                 paramsChannelName: config.paramsChannelName,
                 channelName: bus.channelName,
                 initialValue: config.initialValue,
+                initialDisplayValue: config.initialDisplayValue,
                 appSpec: config.appSpec,
                 parameterSpec: config.parameterSpec,
                 workspaceInfo: config.workspaceInfo,

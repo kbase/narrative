@@ -20,7 +20,7 @@ define([
 
     function factory(config) {
         const viewOnly = config.viewOnly || false;
-        const { bus, workspaceId, paramIds, initialParams } = config;
+        const { bus, workspaceId, paramIds, initialParams, initialDisplay } = config;
         // key = param id, value = boolean, true if is in error
         const advancedParamErrors = {};
         const runtime = Runtime.make(),
@@ -78,12 +78,20 @@ define([
             be cross-validated for uniqueness (optional)
         */
 
-        function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
+        function makeFieldWidget(
+            inputWidget,
+            appSpec,
+            parameterSpec,
+            value,
+            displayValue,
+            closeParameters
+        ) {
             const fieldWidget = FieldWidget.make({
                 inputControlFactory: inputWidget,
                 showHint: true,
                 useRowHighight: true,
                 initialValue: value,
+                initialDisplayValue: displayValue,
                 referenceType: 'name',
                 paramsChannelName: bus.channelName,
                 appSpec,
@@ -100,6 +108,7 @@ define([
                         {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
+                            newDisplayValue: message.newDisplayValue,
                             isError: message.isError,
                         },
                         {
@@ -113,6 +122,7 @@ define([
                     bus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: message.newValue,
+                        newDisplayValue: message.newDisplayValue,
                         isError: message.isError,
                     });
                 });
@@ -463,7 +473,8 @@ define([
                         inputWidget,
                         appSpec,
                         paramSpec,
-                        initialParams[paramSpec.id]
+                        initialParams[paramSpec.id],
+                        initialDisplay[paramSpec.id]
                     );
 
                     widgets.push(widget);

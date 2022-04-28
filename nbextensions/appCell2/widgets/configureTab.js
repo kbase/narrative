@@ -63,6 +63,7 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
 
                 bus.on('parameter-changed', (message) => {
                     arg.model.setItem(['params', message.parameter], message.newValue);
+                    arg.model.setItem(['paramDisplay', message.parameter], message.newDisplayValue);
                 });
 
                 return widget.start().then(() => {

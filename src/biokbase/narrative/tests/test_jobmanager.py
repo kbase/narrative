@@ -7,6 +7,7 @@ import itertools
 from unittest import mock
 import re
 import os
+from datetime import datetime
 from IPython.display import HTML
 
 from biokbase.narrative.jobs.jobmanager import (
@@ -329,36 +330,63 @@ class JobManagerTest(unittest.TestCase):
             not_started_count = html.count('<td class="run_time">Not started</td>')
             self.assertEqual(not_started_count, n_not_started)
 
-    def test_list_jobs_twice(self):
+    def test_list_jobs_twice__no_jobs(self):
         # with no jobs
         with mock.patch.object(self.jm, "_running_jobs", {}):
             expected = "No running jobs!"
             self.assertEqual(self.jm.list_jobs(), expected)
             self.assertEqual(self.jm.list_jobs(), expected)
 
-        # with some jobs
+    def test_list_jobs_twice__jobs(self):
+        """
+        The trick is to adapt to timestamps that might be off by 1s
+        Each block in jm.list_jobs().data looks like:
+                <tr>
+                    <td class="job_id">61a6b44b2ace7e90ad6dc48f</td>
+                    <td class="app_id">kb_uploadmethods/import_fasta_as_assembly_from_staging</td>
+                    <td class="created">2021-11-30 23:31:23</td>
+                    <td class="batch_id">61a6b44b2ace7e90ad6dc48c</td>
+                    <td class="user">swwang</td>
+                    <td class="status">error</td>
+                    <td class="run_time">0:00:42</td>
+                    <td class="finish_time">2021-11-30 23:32:22</td>
+                </tr>
+        """
         with mock.patch(CLIENTS, get_mock_client):
             jobs_html_0 = self.jm.list_jobs().data
             jobs_html_1 = self.jm.list_jobs().data
 
-            def convert_to_s(tstr):
-                arr = tstr.split(":")
-                return int(arr[2]) + int(arr[1]) * 60 + int(arr[0]) * 3600
+        sub = ""  # when stripping out date-times or delta-times
 
-            time_pattern = r"\d\d:\d\d:\d\d"
-            t0 = convert_to_s(re.search(time_pattern, jobs_html_0)[0])
-            t1 = convert_to_s(re.search(time_pattern, jobs_html_1)[0])
+        # collect date-times
+        date_time_re_pattern = r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d"
+        date_time_fmt_pattern = "%Y-%m-%d %H:%M:%S"
+        date_times_0 = [
+            datetime.strptime(s, date_time_fmt_pattern)
+            for s in re.findall(date_time_re_pattern, jobs_html_0)
+        ]
+        date_times_1 = [
+            datetime.strptime(s, date_time_fmt_pattern)
+            for s in re.findall(date_time_re_pattern, jobs_html_1)
+        ]
 
-            # if the time wrapped over midnight, increase latter time
-            if t1 < t0:
-                t1 += 24 * 3600
+        # strip date-times
+        jobs_html_0 = re.sub(date_time_re_pattern, sub, jobs_html_0)
+        jobs_html_1 = re.sub(date_time_re_pattern, sub, jobs_html_1)
 
-            self.assertTrue(t1 - t0 < 5)  # give it a 5s tol, though usually 1 is enough
+        # compare date-times
+        for dt0, dt1 in zip(date_times_0, date_times_1):
+            self.assertTrue((dt1 - dt0).total_seconds() <= 5)  # usually 1s suffices
 
-            sub = ""
-            jobs_html_0 = re.sub(time_pattern, sub, jobs_html_0)
-            jobs_html_1 = re.sub(time_pattern, sub, jobs_html_1)
-            self.assertEqual(jobs_html_0, jobs_html_1)
+        # just strip delta-times (don't compare)
+        # delta-times are difficult to parse into date-times
+        # and are computed from the aforetested datetimes anyway
+        time_re_pattern = r"(\d+ days?, )?\d+:\d\d:\d\d"
+        jobs_html_0 = re.sub(time_re_pattern, sub, jobs_html_0)
+        jobs_html_1 = re.sub(time_re_pattern, sub, jobs_html_1)
+
+        # compare stripped
+        self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(

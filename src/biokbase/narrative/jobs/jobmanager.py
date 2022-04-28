@@ -1,7 +1,6 @@
 from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
-import copy
 from typing import List, Tuple
 import biokbase.narrative.clients as clients
 from .job import (
@@ -771,7 +770,7 @@ class JobManager:
         """
         try:
             all_states = self.get_all_job_states(ignore_refresh_flag=True)
-            state_list = [copy.deepcopy(s["jobState"]) for s in all_states.values()]
+            state_list = [s["jobState"] for s in all_states.values()]
 
             if not state_list:
                 return "No running jobs!"

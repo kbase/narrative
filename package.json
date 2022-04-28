@@ -23,7 +23,7 @@
         "eslint-config-prettier": "^8.3.0",
         "expect-webdriverio": "3.1.4",
         "glob": "^7.1.7",
-        "grunt": "^1.4.1",
+        "grunt": "^1.5.2",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-concat": "^1.0.1",
         "grunt-contrib-copy": "^1.0.0",

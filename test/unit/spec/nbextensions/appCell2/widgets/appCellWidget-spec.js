@@ -11,7 +11,6 @@ define([
     'testUtil',
     'narrativeMocks',
     '/test/data/jobsData',
-    'json!/test/data/NarrativeTest.app_sleep',
     'base/js/namespace',
     'uuid',
 ], (
@@ -27,7 +26,6 @@ define([
     TestUtil,
     Mocks,
     JobsData,
-    AppSleepSpec,
     Jupyter,
     UUID
 ) => {
@@ -593,9 +591,9 @@ define([
                             event_at: 1234567890,
                         });
                         // action button should be resetApp
-                        expect(
-                            this.kbaseNode.querySelector(`${selectors.reset}`)
-                        ).not.toHaveClass('hidden');
+                        expect(this.kbaseNode.querySelector(`${selectors.reset}`)).not.toHaveClass(
+                            'hidden'
+                        );
                         // expect the error tab to be visible
                         expect(
                             this.kbaseNode.querySelector(`.kb-rcp__tab-button[data-button="error"]`)
@@ -759,9 +757,7 @@ define([
                     await this.appCellWidgetInstance.start();
                     await this.appCellWidgetInstance.run();
 
-                    const resetButton = this.kbaseNode.querySelector(
-                        `${selectors.reset}`
-                    );
+                    const resetButton = this.kbaseNode.querySelector(`${selectors.reset}`);
                     const runButton = this.kbaseNode.querySelector(selectors.run);
                     // confirm the cancel/reset action
                     spyOn(UI, 'showConfirmDialog').and.resolveTo(true);

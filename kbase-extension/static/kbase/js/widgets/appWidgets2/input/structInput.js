@@ -318,12 +318,8 @@ define([
          */
         function renderSubcontrols() {
             if (viewModel.state.enabled) {
-                const events = Events.make({
-                    node: container,
-                });
-                return makeInputControl(events).then((result) => {
+                return makeInputControl().then((result) => {
                     ui.setContent('input-container.subcontrols', result.content);
-                    events.attachEvents();
                     structFields = {};
                     result.fields.forEach((field) => {
                         structFields[field.fieldName] = field;

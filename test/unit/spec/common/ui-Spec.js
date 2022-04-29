@@ -657,33 +657,75 @@ define(['common/ui', 'testUtil'], (UI, TestUtil) => {
                 27: false,
             };
             Object.keys(clickLocation).forEach((loc) => {
-                it(`returns ${clickLocation[loc]} when clicking on ${loc}`, async () => {
-                    await UI.showConfirmDialog({
+                it(`returns ${clickLocation[loc]} when clicking on ${loc}, using onConfirm`, async () => {
+                    const res = await UI.showConfirmDialog({
                         title: 'showConfirmDialog',
                         body: 'blah blah blah',
                         doThisFirst: () => {
                             document.querySelector(loc).click();
                         },
-                    }).then((res) => {
-                        expect(res).toBe(clickLocation[loc]);
-                        expect(document.querySelector('.modal-dialog')).toBeNull();
+                        onConfirm: (resolution) => {
+                            // onConfirm should only be triggered when the OK button is clicked
+                            expect(resolution).toEqual(true);
+                            // and then set it to the location clicked
+                            return loc;
+                        },
                     });
+                    if (res) {
+                        expect(res).toEqual(loc);
+                    } else {
+                        expect(res).toEqual(false);
+                    }
+                    expect(document.querySelector('.modal-dialog')).toBeNull();
+                });
+
+                it(`returns ${clickLocation[loc]} when clicking on ${loc}, no onConfirm`, async () => {
+                    const res = await UI.showConfirmDialog({
+                        title: 'showConfirmDialog',
+                        body: 'blah blah blah',
+                        doThisFirst: () => {
+                            document.querySelector(loc).click();
+                        },
+                    });
+                    expect(res).toBe(clickLocation[loc]);
+                    expect(document.querySelector('.modal-dialog')).toBeNull();
                 });
             });
 
             Object.keys(keyCode).forEach((key) => {
-                it(`returns ${keyCode[key]} when hitting key ${key}`, async () => {
-                    await UI.showConfirmDialog({
+                it(`returns ${keyCode[key]} when hitting key ${key}, using onConfirm`, async () => {
+                    const res = await UI.showConfirmDialog({
                         title: 'showConfirmDialog',
                         body: 'blah blah blah',
                         doThisFirst: () => {
                             const e = new KeyboardEvent('keyup', { key: key });
                             document.querySelector('.modal').dispatchEvent(e);
                         },
-                    }).then((res) => {
-                        expect(res).toBe(keyCode[key]);
-                        expect(document.querySelector('.modal-dialog')).toBeNull();
+                        onConfirm: (resolution) => {
+                            expect(resolution).toEqual(true);
+                            return { say: 'ZOMG!' };
+                        },
                     });
+
+                    if (res) {
+                        expect(res).toEqual({ say: 'ZOMG!' });
+                    } else {
+                        expect(res).toBe(keyCode[key]);
+                    }
+                    expect(document.querySelector('.modal-dialog')).toBeNull();
+                });
+
+                it(`returns ${keyCode[key]} when hitting key ${key}, no onConfirm`, async () => {
+                    const res = await UI.showConfirmDialog({
+                        title: 'showConfirmDialog',
+                        body: 'blah blah blah',
+                        doThisFirst: () => {
+                            const e = new KeyboardEvent('keyup', { key: key });
+                            document.querySelector('.modal').dispatchEvent(e);
+                        },
+                    });
+                    expect(res).toBe(keyCode[key]);
+                    expect(document.querySelector('.modal-dialog')).toBeNull();
                 });
             });
         });

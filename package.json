@@ -149,7 +149,7 @@
         "kbase-service-clients-js": "https://github.com/kbase/kbase-service-clients-js/archive/refs/tags/v3.3.4.tar.gz",
         "kbase-ui-plugin-catalog": "https://github.com/kbase/kbase-ui-plugin-catalog/archive/refs/tags/v2.2.5.tar.gz",
         "numeral": "1.5.0",
-        "plotly.js-dist-min": "1.50.0",
+        "plotly.js-dist-min": "2.11.1",
         "pure-uuid": "1.4.2",
         "require-css": "0.1.8",
         "require-yaml": "github:m90/require-yaml",

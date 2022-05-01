@@ -83,6 +83,16 @@ define(
             cssCellType = 'kb-app-cell',
             fsmState = AppStates.STATE;
 
+        const stateMessages = {
+            EDITING_INCOMPLETE: '',
+            EDITING_COMPLETE: '',
+            EXECUTE_REQUESTED: 'Sending...',
+            PROCESSING_LAUNCHED: 'Launching...',
+            LAUNCH_ERROR: 'App launch error',
+            CANCELING: 'Cancelling...',
+            INTERNAL_ERROR: 'Internal error',
+        };
+
         function factory(config) {
             const runtime = Runtime.make(),
                 { cell } = config,
@@ -915,7 +925,7 @@ define(
                 }
             }
 
-            function buildPython(_cell, cellId, app, params) {
+            function buildPython(cellId, app, params) {
                 const runId = new Uuid(4).format(),
                     fixedApp = fixApp(app);
                 let code;
@@ -927,11 +937,11 @@ define(
                 } else {
                     code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
                 }
-                _cell.set_text(code);
+                cell.set_text(code);
             }
 
-            function resetPython(_cell) {
-                _cell.set_text('');
+            function resetPython() {
+                cell.set_text('');
             }
 
             function initializeFSM() {
@@ -948,21 +958,18 @@ define(
                 });
                 // fsm events
                 fsm.bus.on('disconnected', () => {
-                    ui.setContent(
-                        'run-control-panel.execMessage',
-                        'Disconnected. Unable to communicate with server.'
-                    );
+                    setExecMessage('Disconnected. Unable to communicate with server.');
                 });
 
                 fsm.bus.on('on-execute-requested', () => {
-                    setExecMessage('Sending...');
+                    setExecMessage(stateMessages.EXECUTE_REQUESTED);
                 });
                 fsm.bus.on('exit-execute-requested', () => {
                     setExecMessage('');
                 });
 
                 fsm.bus.on('on-launched', () => {
-                    setExecMessage('Launching...');
+                    setExecMessage(stateMessages.PROCESSING_LAUNCHED);
                 });
                 fsm.bus.on('exit-launched', () => {
                     setExecMessage('');
@@ -987,14 +994,14 @@ define(
                 });
 
                 fsm.bus.on('on-error', () => {
-                    setExecMessage('');
+                    updateJobState();
                 });
                 fsm.bus.on('exit-error', () => {
                     setExecMessage('');
                 });
 
                 fsm.bus.on('on-cancelling', () => {
-                    setExecMessage('Cancelling...');
+                    setExecMessage(stateMessages.CANCELING);
                 });
                 fsm.bus.on('exit-cancelling', () => {
                     setExecMessage('');
@@ -1015,8 +1022,8 @@ define(
                         title: 'Error initializing app state',
                         message: ex.message,
                         advice: [
-                            'Reset the app with the red recycle button and try again.',
-                            'If that fails, delete the app cell and re-insert it.',
+                            'Reset the app and try again.',
+                            'If that fails, delete the app cell and create a new one.',
                         ],
                         info: null,
                         detail: null,
@@ -1060,7 +1067,7 @@ define(
              *
              * Render the UI according to the FSM
              */
-            function renderUI() {
+            function updateState() {
                 if (!ui) {
                     throw new Error(
                         'Cannot render UI without defining a node for the widget. Have you run `widget.attach()`?'
@@ -1087,6 +1094,20 @@ define(
                             model.getItem('newAppName') +
                             '" app cell for the update.'
                     );
+                }
+
+                let stateName;
+                // hideous way to find the name of the current state
+                for (const name of Object.keys(AppStates.STATE)) {
+                    if (_.isEqual(AppStates.STATE[name], state.state)) {
+                        stateName = name;
+                        break;
+                    }
+                }
+
+                // set the execMessage
+                if (stateName && stateName in stateMessages) {
+                    setExecMessage(stateMessages[stateName]);
                 }
 
                 // Tab state
@@ -1182,12 +1203,11 @@ define(
 
             // Reset the app to edit mode
             function resetToEditMode() {
-                // only do this if we are not editing.
                 model.deleteItem('exec');
                 clearOutput();
                 setExecMessage('');
 
-                // renderUI is called as part of this function
+                // updateState is called as part of this function
                 evaluateAppState();
             }
 
@@ -1216,7 +1236,7 @@ define(
 
                     cancelJob(model.getItem('exec.jobState.job_id'));
                     fsm.newState(fsmState.CANCELING);
-                    renderUI();
+                    updateState();
                 });
             }
 
@@ -1224,7 +1244,7 @@ define(
                 // Update the exec state.
                 // NB we need to do this because the launch events are only
                 // sent once from the narrative back end.
-                let newExecMessage = '';
+
                 // Update FSM
                 const newFsmState = (function () {
                     switch (message.event) {
@@ -1235,48 +1255,31 @@ define(
                                 status: 'created',
                                 created: 0,
                             });
-                            newExecMessage = 'Launching...';
                             startListeningForJobMessages(message.job_id);
                             return fsmState.PROCESSING_LAUNCHED;
                         case 'error':
+                            model.setItem('appError', {
+                                type: 'App Startup Error',
+                                message: message.error_message,
+                                stacktrace: message.error_stacktrace,
+                                code: message.error_code,
+                                source: message.error_source,
+                                method: message.error_method,
+                                exceptionType: message.error_type,
+                            });
                             return fsmState.LAUNCH_ERROR;
                         default:
-                            throw new Error('Invalid launch state ' + message.event);
+                            console.warn(`Unknown run-status event ${message.event}!`, message);
+                            model.setItem('appError', {
+                                type: 'App Startup Error',
+                                message: 'App launch returned an invalid response',
+                                stacktrace: message,
+                            });
+                            return fsmState.LAUNCH_ERROR;
                     }
                 })();
                 fsm.newState(newFsmState);
-                ui.setContent('run-control-panel.execMessage', newExecMessage);
-                renderUI();
-            }
-
-            function updateFromJobState(jobState, forceRender) {
-                const newFsmState = (function () {
-                    switch (jobState.status) {
-                        case 'created':
-                        case 'estimating':
-                        case 'queued':
-                            return fsmState.PROCESSING_QUEUED;
-                        case 'running':
-                            return fsmState.PROCESSING_RUNNING;
-                        case 'completed':
-                            stopListeningForJobMessages();
-                            return fsmState.COMPLETED;
-                        case 'terminated':
-                            stopListeningForJobMessages();
-                            return fsmState.TERMINATED;
-                        case 'error':
-                        case 'does_not_exist':
-                            stopListeningForJobMessages();
-                            return fsmState.RUNTIME_ERROR;
-                        default:
-                            throw new Error('Invalid job state ' + jobState.status);
-                    }
-                })();
-                fsm.newState(newFsmState);
-                if (forceRender) {
-                    initializeFSM();
-                }
-                renderUI();
+                updateState();
             }
 
             function doRun() {
@@ -1285,8 +1288,7 @@ define(
                     return;
                 }
                 fsm.newState(fsmState.EXECUTE_REQUESTED);
-                ui.setContent('run-control-panel.execMessage', 'Sending...');
-                renderUI();
+                updateState();
 
                 // We want to close down the configure tab, so let's forget about
                 // the fact that the user may have opened and closed the tab...
@@ -1317,24 +1319,46 @@ define(
             }
 
             function doJobStatus(message) {
-                const existingState = model.getItem('exec.jobState'),
-                    existingJobId = existingState
-                        ? existingState.job_id
+                const existingJobState = model.getItem('exec.jobState'),
+                    existingJobId = existingJobState
+                        ? existingJobState.job_id
                         : model.getItem('exec.launchState.job_id'),
                     newJobState = message[existingJobId].jobState,
-                    { outputWidgetInfo } = message[existingJobId],
-                    forceRender =
-                        (!existingState || !Jobs.isValidJobStateObject(existingState)) &&
-                        Jobs.isValidJobStateObject(newJobState);
-                if (!existingState || !_.isEqual(existingState, newJobState)) {
+                    { outputWidgetInfo } = message[existingJobId];
+                if (!existingJobState || !_.isEqual(existingJobState, newJobState)) {
                     model.setItem('exec.jobState', newJobState);
                     if (outputWidgetInfo) {
                         model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
                     }
+                    // update the job state
+                    updateJobState();
                 }
                 model.setItem('exec.jobStateUpdated', new Date().getTime());
 
-                updateFromJobState(newJobState, forceRender);
+                const newFsmState = (function () {
+                    switch (newJobState.status) {
+                        case 'created':
+                        case 'estimating':
+                        case 'queued':
+                            return fsmState.PROCESSING_QUEUED;
+                        case 'running':
+                            return fsmState.PROCESSING_RUNNING;
+                        case 'completed':
+                            stopListeningForJobMessages();
+                            return fsmState.COMPLETED;
+                        case 'terminated':
+                            stopListeningForJobMessages();
+                            return fsmState.TERMINATED;
+                        case 'error':
+                        case 'does_not_exist':
+                            stopListeningForJobMessages();
+                            return fsmState.RUNTIME_ERROR;
+                        default:
+                            throw new Error('Invalid job state ' + newJobState.status);
+                    }
+                })();
+                fsm.newState(newFsmState);
+                updateState();
             }
 
             function stopListeningForJobMessages() {
@@ -1379,7 +1403,7 @@ define(
 
             function updateJobState() {
                 const jobState = model.getItem('exec.jobState');
-                setExecMessage(Jobs.createJobStatusLines(jobState));
+                setExecMessage(Jobs.createJobStatusSummary(jobState));
             }
 
             function generateJobOutput() {
@@ -1482,17 +1506,6 @@ define(
                     })
                 );
 
-                busEventManager.add(
-                    bus.on('edit-cell-metadata', () => {
-                        Narrative.editCellMetadata(cell);
-                    })
-                );
-                busEventManager.add(
-                    bus.on('edit-notebook-metadata', () => {
-                        Narrative.editNotebookMetadata();
-                    })
-                );
-
                 // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
                 // and events can be abstracted or should be
 
@@ -1562,13 +1575,13 @@ define(
                 busEventManager.add(
                     runtime.bus().on('read-only-changed', (msg) => {
                         toggleViewOnlyMode(msg.readOnly);
-                        renderUI();
+                        updateState();
                     })
                 );
 
                 busEventManager.add(
                     runtime.bus().on('kernel-state-changed', () => {
-                        renderUI();
+                        updateState();
                     })
                 );
             }
@@ -1656,17 +1669,16 @@ define(
 
                         if (messages.length === 0 && !isError) {
                             buildPython(
-                                cell,
                                 cellUtils.getMeta(cell, 'attributes').id,
                                 model.getItem('app'),
                                 exportParams()
                             );
                             fsm.newState(fsmState.EDITING_COMPLETE);
                         } else {
-                            resetPython(cell);
+                            resetPython();
                             fsm.newState(fsmState.EDITING_INCOMPLETE);
                         }
-                        renderUI();
+                        updateState();
                     })
                     .catch((err) => {
                         console.error('INTERNAL ERROR', err);
@@ -1797,7 +1809,6 @@ define(
                         cell.element.on('toggleCodeArea.cell', () => {
                             toggleCodeInputArea();
                         });
-
                         addBusEvents();
 
                         return null;
@@ -1859,31 +1870,31 @@ define(
                         // this will not change, so we can just render it here.
                         PR.prettyPrint(null, container);
 
+                        const currentFsmState = fsm.getCurrentState().state;
+
                         // if we start out in 'new' state, we need to promote it to
                         // one of the 'editing' states
-                        if (fsm.getCurrentState().state.mode === 'new') {
+                        if (currentFsmState.mode === 'new') {
                             evaluateAppState();
                             return;
                         }
 
+                        let jobState = model.getItem('exec.jobState');
+                        // this should never happen but it may be present in old cells
+                        if (!jobState && model.getItem('exec.launchState.job_id')) {
+                            jobState = {
+                                job_id: model.getItem('exec.launchState.job_id'),
+                                status: 'created',
+                            };
+                        }
                         /*
-                         * Check the job state and request an update if it looks outdated.
+                         * Check the job state and request an update if it isn't a terminal status
                          */
-                        const jobState = model.getItem('exec.jobState');
-                        if (jobState && !Jobs.isValidJobStateObject(jobState)) {
-                            startListeningForJobMessages(jobState.job_id);
-                        } else if (!jobState && model.getItem('exec.launchState.job_id')) {
-                            startListeningForJobMessages(model.getItem('exec.launchState.job_id'));
-                        }
-
-                        renderUI();
-
-                        // Initial job state listening.
-                        const jobListeningModes = ['canceling', 'processing', 'error'];
-                        const currentMode = fsm.getCurrentState().state.mode;
-                        if (jobListeningModes.includes(currentMode)) {
+                        if (jobState && !Jobs.isTerminalStatus(jobState.status)) {
                             startListeningForJobMessages(jobState.job_id);
                         }
+
+                        updateState();
                     })
                     .catch((err) => {
                         const error = ToErr.grokError(err);
@@ -1897,7 +1908,7 @@ define(
                             detail: error.detail || 'no additional details',
                         });
                         fsm.newState(fsmState.INTERNAL_ERROR);
-                        renderUI();
+                        updateState();
                     });
             }
 
@@ -1927,6 +1938,7 @@ define(
                 return factory(config);
             },
             cssCellType,
+            stateMessages,
         };
     },
     (err) => {

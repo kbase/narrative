@@ -142,40 +142,50 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
 
         async run() {
             const body = this.renderLayout();
+            const formValues = {};
             const modalArgs = {
                 title: 'Create CSV Template',
                 body,
                 okLabel: 'Generate template!',
-                doThisFirst: (mdn) => {
-                    const submit = mdn.querySelector('[data-element="ok"]');
+                onConfirm: () => {
                     // TODO: the form should monitor its state of validity and
                     // only allow the query to be submitted when the form is valid
-                    submit.addEventListener('click', this.runRequest.bind(this));
+                    const form = document.querySelector('#' + this.id);
+                    const params = ['output_directory', 'output_file_type', 'types'];
+
+                    // TODO: validate the form params
+                    params.forEach((param) => {
+                        const formEl = form.querySelector(`[name="${param}"]`);
+                        if (formEl) {
+                            if (param === 'types') {
+                                formValues[param] = Array.from(formEl.selectedOptions).map(
+                                    (x) => x.value
+                                );
+                            } else {
+                                formValues[param] = formEl.value;
+                            }
+                        }
+                    });
+                    // generate the request params to send to the staging service
+                    return this.generateRequest(formValues);
                 },
             };
-            await UI.showConfirmDialog(modalArgs);
+
+            const resolution = await UI.showConfirmDialog(modalArgs);
+            if (resolution) {
+                // if the "confirm" option was chosen, `resolution`
+                // will be a data structure containing the request params
+                this.runRequest(resolution);
+            }
         }
 
-        runRequest() {
-            const form = document.querySelector('#' + this.id);
-            const params = ['output_directory', 'output_file_type', 'types'];
-            const formValues = {};
-
-            // TODO: validate the form params
-            params.forEach((param) => {
-                const formEl = form.querySelector(`[name="${param}"]`);
-                if (formEl) {
-                    if (param === 'types') {
-                        formValues[param] = Array.from(formEl.selectedOptions).map((x) => x.value);
-                    } else {
-                        formValues[param] = formEl.value;
-                    }
-                }
-            });
-
-            // generate the request params to send to the staging service
-            // and send the request
-            this.sendRequest(this.generateRequest(formValues)).then(
+        /**
+         * Send the request to the staging service and display the result
+         *
+         * @param {object} requestParams - validated parameters
+         */
+        runRequest(requestParams) {
+            this.sendRequest(requestParams).then(
                 // promise resolved
                 (data) => {
                     // display the results
@@ -202,7 +212,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          */
         renderLayout() {
             const state = this.model.getItem('state');
-            let errorMessage = '';
+            let errorMessage;
             const hasErrors = Object.values(state.params).some((val) => val !== 'complete');
             if (hasErrors) {
                 errorMessage = div(
@@ -210,7 +220,8 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                         class: `${cssBaseClass}__container--errors alert alert-warning`,
                     },
                     p(
-                        'Please note that there are errors in the input parameters for the selected data types, and that data upload will fail if the template is used unaltered.'
+                        'Please note that there are errors in the input parameters for one or more ' +
+                            'data types, and that data upload will fail if the template is used unaltered.'
                     )
                 );
             }
@@ -231,7 +242,6 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             this.id = html.genId();
             const typeArray = Object.keys(this.model.getItem('params'));
             const state = this.model.getItem('state');
-
             const multiFileInfo = p(
                 'Choosing Excel as output file type will create a single file with ' +
                     'a page for each import type; CSV and TSV create one file per import type.'
@@ -242,24 +252,29 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                     id: this.id,
                 },
                 [
-                    fieldset([
-                        p(
-                            'Templates will be created in the specified destination directory in the staging area.'
-                        ),
-                        typeArray.length > 1 ? multiFileInfo : null,
-                        p(
-                            {
-                                class: `${cssBaseClass}__help`,
-                            },
-                            aTag(
+                    fieldset(
+                        {
+                            class: `${cssBaseClass}__paragraph--guide`,
+                        },
+                        [
+                            p(
+                                'Templates will be created in the specified destination directory in the staging area.'
+                            ),
+                            typeArray.length > 1 ? multiFileInfo : null,
+                            p(
                                 {
-                                    href: DOCS_LINK,
-                                    target: '_blank',
+                                    class: `${cssBaseClass}__help`,
                                 },
-                                'Help and documentation on using templates'
-                            )
-                        ),
-                    ]),
+                                aTag(
+                                    {
+                                        href: DOCS_LINK,
+                                        target: '_blank',
+                                    },
+                                    'Help and documentation on using templates'
+                                )
+                            ),
+                        ]
+                    ),
                     // input file types
                     fieldset([
                         p(
@@ -342,7 +357,12 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                     // output file directory
                     fieldset([
                         p(
-                            `<label for="${formConfig.specs.output_directory.original.id}">${formConfig.specs.output_directory.original.ui_name}</label>`
+                            label(
+                                {
+                                    for: formConfig.specs.output_directory.original.id,
+                                },
+                                formConfig.specs.output_directory.original.ui_name
+                            )
                         ),
                         input(
                             {
@@ -409,6 +429,10 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
          * @returns jQuery.ajax
          */
         sendRequest(requestParams) {
+            if (!requestParams) {
+                throw new Error('No request parameters specified!');
+            }
+
             if (!this.stagingServiceClient) {
                 this.stagingServiceClient = new StagingServiceClient({
                     root: this.runtime.config('services.staging_api_url.url'),

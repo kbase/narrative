@@ -3,6 +3,7 @@ define([
     '/narrative/nbextensions/bulkImportCell/tabs/xsvGenerator',
     'common/props',
     'common/ui',
+    'testUtil',
     'json!/test/data/kb_uploadmethods.import_fastq_interleaved_as_reads_from_staging.spec.json',
     'json!/test/data/kb_uploadmethods.import_fastq_noninterleaved_as_reads_from_staging.spec.json',
     'json!/test/data/kb_uploadmethods.import_sra_as_reads_from_staging.spec.json',
@@ -11,6 +12,7 @@ define([
     XSVGenerator,
     Props,
     UI,
+    TestUtil,
     ImportFastqInterleavedSpec,
     ImportFastqNonInterleavedSpec,
     ImportSraReadsSpec
@@ -197,6 +199,24 @@ define([
         },
     });
 
+    const singleModel = Props.make({
+        data: {
+            state: {
+                params: {
+                    sra_reads: state.params.sra_reads,
+                },
+            },
+            params: {
+                sra_reads: params.sra_reads,
+            },
+            app: {
+                specs: {
+                    'kb_uploadmethods/import_sra_as_reads_from_staging': ImportSraReadsSpec,
+                },
+            },
+        },
+    });
+
     function createXsvGen() {
         return new XSVGenerator({ model: defaultModel, typesToFiles, fileTypeMapping });
     }
@@ -235,8 +255,58 @@ define([
                 );
             });
 
-            describe('run', () => {
-                async function checkStartUpDialog(modelData, hasError) {
+            describe('createForm', () => {
+                function checkFormInputs(xsvGen, form, isMulti = false) {
+                    const formParams = ['output_directory', 'output_file_type', 'types'];
+                    formParams.forEach((param) => {
+                        const paramElement = form.querySelector(`[name="${param}"]`);
+                        expect(paramElement).toBeDefined();
+                        if (param === 'output_file_type') {
+                            // ensure that all the output file types are present
+                            ['CSV', 'TSV', 'EXCEL'].forEach((type) => {
+                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
+                            });
+                        } else if (param === 'types') {
+                            const modelParams = xsvGen.model.getItem('params');
+                            // ensure that all the input types are present
+                            Object.keys(modelParams).forEach((type) => {
+                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
+                            });
+                        }
+                    });
+                    const multiFileInfo =
+                        'Choosing Excel as output file type will create a single file with a page for each';
+                    const guidanceSection = form.querySelector(
+                        `.${cssBaseClass}__paragraph--guide`
+                    );
+                    if (isMulti) {
+                        expect(guidanceSection.textContent).toContain(multiFileInfo);
+                    } else {
+                        expect(guidanceSection.textContent).not.toContain(multiFileInfo);
+                    }
+                }
+
+                it('creates a form with the appropriate inputs, single type', function () {
+                    this.xsvGen = new XSVGenerator({
+                        model: singleModel,
+                        typesToFiles,
+                        fileTypeMapping,
+                    });
+                    const form = document.createElement('div');
+                    form.innerHTML = this.xsvGen.createForm();
+                    checkFormInputs(this.xsvGen, form);
+                });
+
+                it('creates a form with the appropriate inputs, multiple types', function () {
+                    this.xsvGen = createXsvGen();
+                    const form = document.createElement('div');
+                    form.innerHTML = this.xsvGen.createForm();
+                    checkFormInputs(this.xsvGen, form, true);
+                });
+            });
+
+            describe('renderLayout', () => {
+                function checkStartUpDialog(modelData, hasError) {
                     const model = Props.make({
                         data: {
                             state,
@@ -248,21 +318,18 @@ define([
                         },
                     });
                     const xsvGen = new XSVGenerator({ model, typesToFiles, fileTypeMapping });
-                    spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
-                    await xsvGen.run();
-                    expect(UI.showConfirmDialog).toHaveBeenCalledTimes(1);
-                    const calls = UI.showConfirmDialog.calls.allArgs()[0];
-                    expect(calls.length).toEqual(1);
-                    expect(calls[0].title).toEqual('Create CSV Template');
+                    const container = document.createElement('div');
+                    container.innerHTML = xsvGen.renderLayout();
                     const errorString = 'Please note that there are errors in the input parameters';
                     if (hasError) {
-                        expect(calls[0].body).toContain(errorString);
+                        expect(container.textContent).toMatch(errorString);
                     } else {
-                        expect(calls[0].body).not.toContain(errorString);
+                        expect(container.textContent).not.toMatch(errorString);
                     }
                 }
-                it('does not show a warning with no errors', async () => {
-                    await checkStartUpDialog(
+
+                it('does not show a warning with no errors', () => {
+                    checkStartUpDialog(
                         {
                             state: {
                                 params: {
@@ -277,8 +344,8 @@ define([
                     );
                 });
 
-                it('shows a warning if there are app input validation errors', async () => {
-                    await checkStartUpDialog(
+                it('shows a warning if there are app input validation errors', () => {
+                    checkStartUpDialog(
                         {
                             state: {
                                 params: {
@@ -294,46 +361,9 @@ define([
                 });
             });
 
-            describe('createForm', () => {
-                beforeEach(function () {
-                    this.xsvGen = createXsvGen();
-                });
-
-                it('creates a form with the appropriate inputs', function () {
-                    const form = document.createElement('div');
-                    form.innerHTML = this.xsvGen.createForm();
-                    const formParams = ['output_directory', 'output_file_type', 'types'];
-                    formParams.forEach((param) => {
-                        const paramElement = form.querySelector(`[name="${param}"]`);
-                        expect(paramElement).toBeDefined();
-                        if (param === 'output_file_type') {
-                            // ensure that all the output file types are present
-                            ['CSV', 'TSV', 'EXCEL'].forEach((type) => {
-                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
-                            });
-                        } else if (param === 'types') {
-                            // ensure that all the input types are present
-                            Object.keys(params).forEach((type) => {
-                                expect(paramElement.innerHTML).toMatch(`value="${type}"`);
-                            });
-                        }
-                    });
-                });
-            });
-
-            xdescribe('runRequest', () => {
-                // TODO:
-                // retrieving form values
-                // form validation
-            });
-
             describe('generateRequest', () => {
                 beforeEach(function () {
-                    this.xsvGen = new XSVGenerator({
-                        model: defaultModel,
-                        typesToFiles,
-                        fileTypeMapping,
-                    });
+                    this.xsvGen = createXsvGen();
                 });
                 const output_file_type = 'CSV',
                     output_directory = 'new_folder';
@@ -364,6 +394,71 @@ define([
                         output_directory,
                         output_file_type,
                     });
+                });
+            });
+
+            describe('run', () => {
+                beforeEach(function () {
+                    this.xsvGen = createXsvGen();
+                });
+
+                async function summonAndDismissModal(xsvGen, element) {
+                    // wait for modal to appear
+                    await TestUtil.waitForElement(document, element, () => {
+                        xsvGen.run();
+                    });
+
+                    // click button and wait for modal to disappear
+                    await TestUtil.waitForElementState(
+                        document,
+                        () => {
+                            return document.querySelector(element) === null;
+                        },
+                        () => {
+                            document.querySelector(element).click();
+                        }
+                    );
+                }
+
+                it('does not submit a request if the user does not click OK', async function () {
+                    spyOn(this.xsvGen, 'runRequest');
+                    spyOn(this.xsvGen, 'generateRequest').and.callThrough();
+                    const element = '[data-element="cancel"]';
+                    await summonAndDismissModal(this.xsvGen, element);
+                    expect(this.xsvGen.runRequest.calls.allArgs()).toEqual([]);
+                });
+
+                it('submits a request if the user OKs it', async function () {
+                    spyOn(this.xsvGen, 'runRequest');
+                    spyOn(this.xsvGen, 'generateRequest').and.callThrough();
+                    const element = '[data-element="ok"]';
+                    await summonAndDismissModal(this.xsvGen, element);
+                    // this should have generated the request params
+                    expect(this.xsvGen.runRequest.calls.allArgs()).toEqual([
+                        [
+                            {
+                                types: {
+                                    // only the SRA reads are selected
+                                    sra_reads: expectedOutput.sra_reads,
+                                },
+                                // these are the defaults
+                                output_directory: 'bulk_import_templates',
+                                output_file_type: 'CSV',
+                            },
+                        ],
+                    ]);
+                    expect(this.xsvGen.generateRequest).toHaveBeenCalled();
+                });
+            });
+
+            describe('runRequest', () => {
+                beforeEach(function () {
+                    this.xsvGen = createXsvGen();
+                });
+                it('throws an error if there are no request params', function () {
+                    expect(() => {
+                        this.xsvGen.runRequest();
+                    }).toThrowError('No request parameters specified!');
                 });
             });
 

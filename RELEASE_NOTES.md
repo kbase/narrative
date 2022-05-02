@@ -6,6 +6,10 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 - PTV-1783 - fixed issue where the previous object revert option was unavailable
+- DATAUP-639 - fix problems with dynamic dropdown app cell input
+  - selected value wasn't being displayed properly after a page reload or cell refresh
+  - selected value wasn't being displayed in view-only version
+  - "Loading..." message wasn't displayed while fetching data from a service.
 
 Dependency Changes
 - Javascript dependency updates

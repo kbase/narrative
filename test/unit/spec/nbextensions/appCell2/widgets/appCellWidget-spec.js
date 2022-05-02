@@ -188,6 +188,16 @@ define([
 
         ctx.cell.metadata.kbase.appCell.params.param = 'RAWR!';
 
+        if (stateName === 'INTERNAL_ERROR') {
+            ctx.cell.metadata.kbase.appCell.fatalError = {
+                title: 'Error loading main widgets',
+                message: 'Something went horribly wrong',
+                advice: ['Abandon hope, all ye who enter here'],
+                info: 'No further info',
+                detail: 'no additional details',
+            };
+        }
+
         if (['EDITING_COMPLETE', 'EXECUTE_REQUESTED', 'INTERNAL_ERROR'].includes(stateName)) {
             return;
         }
@@ -841,6 +851,11 @@ define([
                         );
 
                         expect(this.appCellWidgetInstance.model.getItem('exec')).toBeUndefined();
+                        ['app', 'fatal', 'internal'].forEach((errType) => {
+                            expect(
+                                this.appCellWidgetInstance.model.getItem(`${errType}error`)
+                            ).toBeUndefined();
+                        });
                         expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                             fsmState.EDITING_COMPLETE
                         );

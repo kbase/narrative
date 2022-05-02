@@ -1206,6 +1206,9 @@ define(
                 model.deleteItem('exec');
                 clearOutput();
                 setExecMessage('');
+                ['app', 'internal', 'fatal'].forEach((errType) => {
+                    model.deleteItem(`${errType}Error`);
+                });
 
                 // updateState is called as part of this function
                 evaluateAppState();

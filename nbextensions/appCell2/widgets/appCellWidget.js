@@ -317,6 +317,7 @@ define(
                     widget = AppParamsViewWidget.make({
                         bus: widgetBus,
                         initialParams: model.getItem('params'),
+                        initialDisplay: model.getItem('paramDisplay'),
                     });
 
                 widgetBus.on('sync-params', (message) => {

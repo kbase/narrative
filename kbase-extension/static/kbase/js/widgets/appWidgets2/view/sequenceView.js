@@ -41,6 +41,7 @@ define([
             channel = busConnection.channel(config.channelName),
             model = {
                 value: [],
+                display: [],
             },
             viewModel = Props.make({
                 data: {
@@ -56,17 +57,20 @@ define([
             model.value = newModel;
         }
 
-        function setModelValue(value, index) {
+        function setModelValue(value, display, index) {
             return Promise.try(() => {
                 if (index !== undefined) {
                     if (value) {
                         model.value[index] = value;
+                        model.display[index] = display;
                     } else {
                         model.value.splice(index, 1);
+                        model.display.splice(index, 1);
                     }
                 } else {
                     if (value) {
                         model.value = value;
+                        model.display = display;
                     } else {
                         unsetModelValue();
                     }
@@ -118,7 +122,7 @@ define([
                         showInfo: false,
                         useRowHighight: true,
                         initialValue: control.value,
-                        initialDisplayValue: control.display,
+                        initialDisplayValue: control.displayValue,
                         parameterSpec: itemSpec,
                         referenceType: 'ref',
                         paramsChannelName: config.paramsChannelName,
@@ -200,7 +204,7 @@ define([
               Set focus on the new input control
         */
 
-        function addNewControl(initialValue) {
+        function addNewControl(initialValue, initialDisplayValue) {
             if (initialValue === undefined) {
                 initialValue = Util.copy(itemSpec.data.defaultValue);
             }
@@ -209,6 +213,7 @@ define([
                 const control = {
                     // current native value.
                     value: initialValue,
+                    displayValue: initialDisplayValue,
                     // the actual input control (or field wrapper around such)
                     inputControl: null,
                     // the actual dome node (used?) to which the input control is attached
@@ -258,7 +263,7 @@ define([
             );
         }
 
-        function render(initialValue) {
+        function render(initialValue, initialDisplayValue) {
             return Promise.try(() => {
                 // render now just builds the initial view
                 container.innerHTML = makeLayout();
@@ -266,9 +271,12 @@ define([
                 if (!initialValue || initialValue.length === 0) {
                     return addEmptyControl();
                 }
+                if (!initialDisplayValue) {
+                    initialDisplayValue = Array(initialValue.length);
+                }
                 return Promise.all(
-                    initialValue.map((value) => {
-                        return addNewControl(value);
+                    initialValue.map((value, index) => {
+                        return addNewControl(value, initialDisplayValue[index]);
                     })
                 ).then(() => {
                     autoValidate();
@@ -303,7 +311,7 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                return render(config.initialValue).then(() => {
+                return render(config.initialValue, config.initialDisplayValue).then(() => {
                     channel.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
@@ -313,26 +321,23 @@ define([
                     channel.on('refresh', () => {});
 
                     return autoValidate();
-                    // bus.emit('sync');
                 });
             });
         }
 
         function stop() {
-            return Promise.try(() => {
-                return Promise.all(
-                    viewModel.getItem('items').map((item) => {
-                        return item.inputControl.instance.stop();
-                    })
-                ).then(() => {
-                    busConnection.stop();
-                });
+            return Promise.all(
+                viewModel.getItem('items').map((item) => {
+                    return item.inputControl.instance.stop();
+                })
+            ).then(() => {
+                busConnection.stop();
             });
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

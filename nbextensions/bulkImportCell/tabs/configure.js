@@ -403,6 +403,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'otherParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                initialDisplay: model.getItem(['paramDisplay', selectedFileType, PARAM_TYPE]) || {},
                 viewOnly,
             });
 
@@ -645,6 +646,10 @@ define([
                 ] = message.newValue;
             } else {
                 model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
+                model.setItem(
+                    ['paramDisplay', fileType, paramType, message.parameter],
+                    message.newDisplayValue
+                );
             }
 
             return updateAppConfigState(message.isError);

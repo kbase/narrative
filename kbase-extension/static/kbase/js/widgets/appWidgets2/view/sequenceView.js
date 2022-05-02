@@ -118,6 +118,7 @@ define([
                         showInfo: false,
                         useRowHighight: true,
                         initialValue: control.value,
+                        initialDisplayValue: control.display,
                         parameterSpec: itemSpec,
                         referenceType: 'ref',
                         paramsChannelName: config.paramsChannelName,

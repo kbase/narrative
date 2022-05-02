@@ -74,7 +74,7 @@ define([
         };
 
     describe('The kbaseNarrativeAppPanel widget', () => {
-        beforeEach(() => {
+        beforeEach(async () => {
             Jupyter.narrative = {
                 getAuthToken: () => FAKE_TOKEN,
                 userId: FAKE_USER,
@@ -108,7 +108,7 @@ define([
 
             $panel = $('<div>');
             appPanel = new AppPanel($panel);
-            return appPanel.refreshFromService();
+            await appPanel.refreshFromService();
         });
 
         afterEach(() => {

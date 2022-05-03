@@ -2007,10 +2007,6 @@ define([
             expect(ctx.jobManagerInstance.looper).toBeDefined();
             expect(ctx.jobManagerInstance.looper.pollInterval).toEqual(TEST_POLL_INTERVAL);
 
-            // should have emitted a request for job status
-            expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
-                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-            ]);
             // should have the job data in exec.jobState and exec.jobs.byId
             const jobState = ctx.jobManagerInstance.model.getItem('exec.jobState');
             expect(jobState).toBeDefined();
@@ -2018,6 +2014,23 @@ define([
             expect(jobState).toEqual(
                 ctx.jobManagerInstance.model.getItem(`exec.jobs.byId.${jobId}`)
             );
+
+            if (jobState.meta && jobState.meta.terminal) {
+                // should not have emitted any status requests
+                expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([]);
+                expect(
+                    ctx.jobManagerInstance.handlers[jcm.MESSAGE_TYPE.STATUS].jobStatusLooper
+                ).not.toBeDefined();
+            } else {
+                // this includes the 'proto' job
+                // should have emitted a request for job status
+                expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
+                ]);
+                expect(
+                    ctx.jobManagerInstance.handlers[jcm.MESSAGE_TYPE.STATUS].jobStatusLooper
+                ).toBeDefined();
+            }
         }
 
         describe('single job mixin', () => {
@@ -2041,23 +2054,87 @@ define([
             });
 
             it('should cancel an existing job', function () {
-                const initialJob = {
-                    job_id: TEST_JOB_ID,
-                    status: 'running',
-                    created: 12345678,
-                };
-                createSingleJobManager(this, initialJob);
-                spyOn(this.jobManagerInstance.bus, 'emit');
-                this.jobManagerInstance.restoreFromSaved();
-                expect(this.jobManagerInstance.looper).toBeDefined();
-                spyOn(this.jobManagerInstance.looper, 'clearRequest');
-                this.jobManagerInstance.cancelJob();
-                expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
-                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
-                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
-                ]);
-                expect(this.jobManagerInstance.looper.clearRequest.calls.allArgs()).toEqual([[]]);
-                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(initialJob);
+                const jobId = TEST_JOB_ID,
+                    initialJobState = {
+                        job_id: jobId,
+                        status: 'running',
+                        created: 12345678,
+                    },
+                    terminalJobState = {
+                        job_id: jobId,
+                        status: 'terminated',
+                        created: 12345678,
+                    };
+                createSingleJobManager(this, initialJobState);
+
+                return new Promise((resolve) => {
+                    // after the cancel request, send a status update with the new (cancelled) status
+                    spyOn(this.jobManagerInstance.bus, 'emit').and.callFake((...args) => {
+                        if (args[0] === jcm.MESSAGE_TYPE.CANCEL) {
+                            expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
+                                initialJobState
+                            );
+                            TestUtil.sendBusMessage({
+                                bus: this.jobManagerInstance.bus,
+                                message: {
+                                    [jobId]: {
+                                        [jcm.PARAM.JOB_ID]: jobId,
+                                        jobState: terminalJobState,
+                                    },
+                                },
+                                channelType: jcm.CHANNEL.JOB,
+                                channelId: jobId,
+                                type: jcm.MESSAGE_TYPE.STATUS,
+                            });
+                        }
+                    });
+
+                    // add an event handler to finish the test when the model updates
+                    this.jobManagerInstance.addEventHandler('modelUpdate', {
+                        testStopper: () => {
+                            expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
+                                terminalJobState
+                            );
+                            expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([
+                                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
+                                [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: TEST_JOB_ID }],
+                            ]);
+                            // handleJobStatus is called once
+                            expect(this.jobManagerInstance.handleJobStatus).toHaveBeenCalledTimes(
+                                1
+                            );
+                            // the looper never gets called
+                            expect(
+                                this.jobManagerInstance.looper.scheduleRequest
+                            ).not.toHaveBeenCalled();
+                            expect(this.jobManagerInstance.requestJobStatus).not.toHaveBeenCalled();
+
+                            // clear request should have been called once, after receiving the terminalJobState
+                            expect(
+                                this.jobManagerInstance.looper.clearRequest.calls.allArgs()
+                            ).toEqual([[]]);
+                            expect(
+                                this.jobManagerInstance.removeEventHandler.calls.allArgs()
+                            ).toEqual([[jcm.MESSAGE_TYPE.STATUS, 'jobStatusLooper']]);
+
+                            resolve();
+                        },
+                    });
+
+                    spyOn(this.jobManagerInstance, 'requestJobStatus').and.callThrough();
+                    spyOn(this.jobManagerInstance, 'handleJobStatus').and.callThrough();
+                    spyOn(this.jobManagerInstance, 'removeEventHandler').and.callThrough();
+                    this.jobManagerInstance.restoreFromSaved();
+
+                    expect(this.jobManagerInstance.looper).toBeDefined();
+                    expect(
+                        this.jobManagerInstance.handlers[jcm.MESSAGE_TYPE.STATUS].jobStatusLooper
+                    ).toBeDefined();
+                    spyOn(this.jobManagerInstance.looper, 'clearRequest').and.callThrough();
+                    spyOn(this.jobManagerInstance.looper, 'scheduleRequest').and.callThrough();
+
+                    this.jobManagerInstance.cancelJob();
+                });
             });
 
             it('should reset appropriately', function () {
@@ -2157,7 +2234,12 @@ define([
                                 { [jcm.PARAM.JOB_ID]: jobId },
                             ];
 
-                        createSingleJobManager(this, job);
+                        // start the job off with status "created" so that
+                        // at least one status request will be made
+                        createSingleJobManager(this, {
+                            ...job,
+                            status: 'created',
+                        });
                         let acc = 0;
                         const busMessageArgs = {
                             bus: this.jobManagerInstance.bus,
@@ -2192,13 +2274,8 @@ define([
                                 this.jobManagerInstance.looper,
                                 'scheduleRequest'
                             ).and.callThrough();
-
-                            spyOn(this.jobManagerInstance, 'removeEventHandler').and.callFake(
-                                () => {
-                                    resolve();
-                                }
-                            );
                             spyOn(this.jobManagerInstance, 'requestJobStatus').and.callThrough();
+                            spyOn(this.jobManagerInstance, 'removeEventHandler').and.callThrough();
 
                             spyOn(this.jobManagerInstance.bus, 'emit').and.callFake((...args) => {
                                 if (args[0] === jcm.MESSAGE_TYPE.STATUS) {
@@ -2213,24 +2290,40 @@ define([
                                     }
                                 }
                             });
+
+                            // in the case of terminal jobs, we can't really test the absence of status
+                            // requests; instead we resolve the test when the job manager updates the
+                            // stored job to a terminal state
+                            this.jobManagerInstance.addEventHandler('modelUpdate', {
+                                testStopper: () => {
+                                    const currentJob = this.jobManagerInstance.getJob();
+                                    if (currentJob.meta.terminal) {
+                                        resolve();
+                                    }
+                                },
+                            });
+
                             // start things off by sending a status message
                             TestUtil.sendBusMessage(busMessageArgs);
                         }).then(() => {
                             // the job is terminal
                             if (job.meta.terminal) {
-                                // will be called once, in response to the first job status message
-                                expect(
-                                    this.jobManagerInstance.looper.scheduleRequest
-                                ).toHaveBeenCalledTimes(1);
-                                // the scheduled request
+                                // requestJobStatus never gets called as the first status message
+                                // updates the job to a terminal state
                                 expect(
                                     this.jobManagerInstance.requestJobStatus
-                                ).toHaveBeenCalledTimes(1);
-                                // the job is terminal, so the event handler is removed
+                                ).toHaveBeenCalledTimes(0);
+
+                                // the looper never gets to schedule a request as the event handler
+                                // is removed as part of `jobManagerInstance.handleJobStatus`
+                                expect(
+                                    this.jobManagerInstance.looper.scheduleRequest
+                                ).toHaveBeenCalledTimes(0);
                                 expect(
                                     this.jobManagerInstance.removeEventHandler.calls.allArgs()
                                 ).toEqual([[jcm.MESSAGE_TYPE.STATUS, 'jobStatusLooper']]);
                                 expect(this.jobManagerInstance.looper.requestLoop).toBeNull();
+
                                 // no request for a status update is sent
                                 expect(filterClockTicks(this.jobManagerInstance.bus.emit)).toEqual(
                                     []

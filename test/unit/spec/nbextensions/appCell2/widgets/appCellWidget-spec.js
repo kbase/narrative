@@ -258,7 +258,7 @@ define([
                     jobState: jobsById[JOB_NAMES.TERMINATED_WHILST_RUNNING],
                     launchState: {
                         event: 'launched_job',
-                        job_id: JOB_NAMES.TERMINATED_WHILST_RUNNIN,
+                        job_id: JOB_NAMES.TERMINATED_WHILST_RUNNING,
                     },
                 };
                 break;
@@ -329,6 +329,16 @@ define([
         await ctx.appCellWidgetInstance.run();
     }
 
+    /**
+     * filter the "clock-tick"s out of an argument list
+     * @param {function} fn
+     */
+    function filterClockTicks(fn) {
+        return fn.calls.allArgs().filter((call) => {
+            return call[0] !== 'clock-tick';
+        });
+    }
+
     describe('The AppCellWidget module', () => {
         it('Should load and return a make function', () => {
             expect(AppCellWidget).toEqual(jasmine.any(Object));
@@ -342,6 +352,7 @@ define([
             expect(AppCellWidget.stateMessages).toEqual(jasmine.any(Object));
         });
     });
+
     describe('The AppCellWidget instance', () => {
         beforeEach(function () {
             Jupyter.notebook = {
@@ -523,10 +534,12 @@ define([
             describe('app cell startup states', () => {
                 it('can validate params on startup, params incomplete', async function () {
                     setUpCellInState(this, 'EDITING_INCOMPLETE');
+                    spyOn(this.appCellWidgetInstance.jobManager, '_initJob').and.callThrough();
                     await startRunningCell(this);
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EDITING_INCOMPLETE
                     );
+                    expect(this.appCellWidgetInstance.jobManager._initJob).not.toHaveBeenCalled();
                     const runButton = this.kbaseNode.querySelector(selectors.run);
                     expect(runButton).not.toHaveClass('hidden');
                     expect(runButton).toHaveClass('disabled');
@@ -535,13 +548,68 @@ define([
                 it('can validate params on startup and be ready to run', async function () {
                     // add a valid param so the cell starts up ready to run
                     setUpCellInState(this, 'EDITING_COMPLETE');
+                    spyOn(this.appCellWidgetInstance.jobManager, '_initJob').and.callThrough();
                     await startRunningCell(this);
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EDITING_COMPLETE
                     );
+                    expect(this.appCellWidgetInstance.jobManager._initJob).not.toHaveBeenCalled();
                     const runButton = this.kbaseNode.querySelector(selectors.run);
                     expect(runButton).not.toHaveClass('hidden');
                     expect(runButton).not.toHaveClass('disabled');
+                });
+
+                it('restores the state of an existing job', async function () {
+                    setUpCellInState(this, 'PROCESSING_RUNNING');
+                    spyOn(
+                        this.appCellWidgetInstance.jobManager,
+                        'restoreFromSaved'
+                    ).and.callThrough();
+                    spyOn(this.appCellWidgetInstance.jobManager, '_initJob').and.callThrough();
+                    await startRunningCell(this);
+                    expect(
+                        this.appCellWidgetInstance.jobManager.restoreFromSaved
+                    ).toHaveBeenCalled();
+                    expect(
+                        this.appCellWidgetInstance.jobManager.restoreFromSaved.calls.allArgs()
+                    ).toEqual([[]]);
+                    expect(this.appCellWidgetInstance.jobManager._initJob).toHaveBeenCalled();
+                    expect(this.appCellWidgetInstance.jobManager._initJob.calls.allArgs()).toEqual([
+                        [jobsById[JOB_NAMES.RUNNING]],
+                    ]);
+                });
+
+                // this should not happen but may be present in old cells
+                it('calls initJob with a launch state', async function () {
+                    setUpCellInState(this, 'PROCESSING_LAUNCHED');
+                    // leave just the exec.launchState
+                    delete this.cell.metadata.kbase.appCell.exec.jobState;
+                    spyOn(this.appCellWidgetInstance.jobManager, 'initJob').and.callThrough();
+                    spyOn(this.appCellWidgetInstance.jobManager, '_initJob').and.callThrough();
+                    await startRunningCell(this);
+
+                    expect(this.appCellWidgetInstance.jobManager.initJob.calls.allArgs()).toEqual([
+                        [JOB_NAMES.QUEUED],
+                    ]);
+                    expect(this.appCellWidgetInstance.jobManager._initJob.calls.allArgs()).toEqual([
+                        [{ job_id: JOB_NAMES.QUEUED, status: 'created', created: 0 }],
+                    ]);
+                });
+
+                // this should not happen but may be present in old cells
+                it('calls initJob with an invalid jobState', async function () {
+                    setUpCellInState(this, 'PROCESSING_LAUNCHED');
+                    spyOn(this.appCellWidgetInstance.jobManager, 'initJob').and.callThrough();
+                    spyOn(this.appCellWidgetInstance.jobManager, '_initJob').and.callThrough();
+                    this.cell.metadata.kbase.appCell.exec.jobState = { job_id: JOB_NAMES.QUEUED };
+                    await startRunningCell(this);
+
+                    expect(this.appCellWidgetInstance.jobManager.initJob.calls.allArgs()).toEqual([
+                        [JOB_NAMES.QUEUED],
+                    ]);
+                    expect(this.appCellWidgetInstance.jobManager._initJob.calls.allArgs()).toEqual([
+                        [{ job_id: JOB_NAMES.QUEUED, status: 'created', created: 0 }],
+                    ]);
                 });
 
                 it('can start in an internal error state', async function () {
@@ -728,11 +796,9 @@ define([
                         expect(Object.keys(this.bus.channels)).toEqual(
                             jasmine.arrayContaining(channelKeys)
                         );
-                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
-                            return call[0] !== 'clock-tick';
-                        });
+                        const busEmissions = filterClockTicks(this.bus.emit);
                         expect(busEmissions).toContain([
-                            jcm.MESSAGE_TYPE.START_UPDATE,
+                            jcm.MESSAGE_TYPE.STATUS,
                             { [jcm.PARAM.JOB_ID]: TEST_JOB },
                         ]);
                     });
@@ -797,6 +863,7 @@ define([
             it('cancels a running job', async function () {
                 cellStartUp(this);
                 setUpCellInState(this, 'PROCESSING_RUNNING');
+                spyOn(this.bus, 'emit');
                 await startRunningCell(this);
                 expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
                     jobsById[JOB_NAMES.RUNNING]
@@ -804,7 +871,10 @@ define([
 
                 // confirm the cancel/reset action
                 spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
-                spyOn(this.bus, 'emit');
+                spyOn(
+                    this.appCellWidgetInstance.jobManager.looper,
+                    'clearRequest'
+                ).and.callThrough();
                 const cancelButton = this.kbaseNode.querySelector(selectors.cancel);
                 await TestUtil.waitForElementChange(
                     this.kbaseNode.querySelector(selectors.execMessage),
@@ -814,6 +884,9 @@ define([
                 );
 
                 expect(this.bus.emit.calls.allArgs()).toEqual([
+                    // start up status call
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: JOB_NAMES.RUNNING }],
+                    // cancel request
                     [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: JOB_NAMES.RUNNING }],
                 ]);
                 // app state should have changed to 'CANCELING'
@@ -823,6 +896,43 @@ define([
                 expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toContain(
                     stateMessages.CANCELING
                 );
+
+                const terminatedJob = jobsById[JOB_NAMES.TERMINATED_WHILST_RUNNING];
+                // send a status update to show that the job has been cancelled,
+                // then wait for the execMessage to change
+                await TestUtil.waitForElementChange(
+                    this.kbaseNode.querySelector(selectors.execMessage),
+                    () => {
+                        TestUtil.sendBusMessage({
+                            bus: this.bus,
+                            channelId: JOB_NAMES.RUNNING,
+                            channelType: jcm.CHANNEL.JOB,
+                            message: {
+                                [JOB_NAMES.RUNNING]: {
+                                    job_id: JOB_NAMES.RUNNING,
+                                    jobState: {
+                                        ...terminatedJob,
+                                        job_id: JOB_NAMES.RUNNING,
+                                    },
+                                },
+                            },
+                            type: jcm.MESSAGE_TYPE.STATUS,
+                        });
+                    }
+                );
+
+                // app state should have changed to 'TERMINATED' and the exec line updated
+                expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                    fsmState.TERMINATED
+                );
+                expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toContain(
+                    terminatedJob.meta.createJobStatusLines.line
+                );
+                // there should not be anything scheduled
+                expect(this.appCellWidgetInstance.jobManager.looper.requestLoop).toEqual(null);
+                expect(
+                    this.appCellWidgetInstance.jobManager.looper.clearRequest
+                ).toHaveBeenCalledTimes(1);
             });
 
             // reset states
@@ -874,26 +984,16 @@ define([
                 if (!jobsById[jobId].batch_job) {
                     it(`processes a ${jobId} update`, async function () {
                         const jobState = jobsById[jobId];
-                        const currentState = fsmState.PROCESSING_LAUNCHED;
                         cellStartUp(this);
+                        setUpCellInState(this, 'PROCESSING_LAUNCHED');
+
                         // start up cell as if it just received the job launched message
-                        this.cell.metadata.kbase.appCell.fsm = { currentState };
                         this.cell.metadata.kbase.appCell.exec = {
                             jobState: { job_id: jobId },
                             launchState: { event: 'launched_job', job_id: jobId },
                         };
 
-                        spyOn(this.bus, 'emit').and.callFake((...args) => {
-                            const [msgType] = args;
-                            if (msgType === jcm.MESSAGE_TYPE.START_UPDATE) {
-                                // send a status update
-                                TestUtil.send_STATUS({
-                                    bus: this.bus,
-                                    jobId,
-                                    jobState,
-                                });
-                            }
-                        });
+                        spyOn(this.bus, 'emit');
 
                         await startRunningCell(this);
 
@@ -904,10 +1004,19 @@ define([
                         expect(
                             this.kbaseNode.querySelector(selectors.execMessage).textContent
                         ).toEqual(stateMessages.PROCESSING_LAUNCHED);
+
                         // send a job status update; this will trigger an FSM mode change,
                         // which will enable the jobStatus tab
                         await TestUtil.waitForElementChange(
-                            this.kbaseNode.querySelector('[data-button="jobStatus"]')
+                            this.kbaseNode.querySelector('[data-button="jobStatus"]'),
+                            () => {
+                                // send a status update
+                                TestUtil.send_STATUS({
+                                    bus: this.bus,
+                                    jobId,
+                                    jobState,
+                                });
+                            }
                         );
 
                         // after processing
@@ -918,21 +1027,35 @@ define([
                             jobState
                         );
 
-                        const busEmissions = this.bus.emit.calls.allArgs().filter((call) => {
-                            return call[0] !== 'clock-tick';
-                        });
+                        const busEmissions = filterClockTicks(this.bus.emit);
                         // the cell will emit at least one request for status updates when
                         // the cell starts up
-                        expect(busEmissions).toContain([
-                            jcm.MESSAGE_TYPE.START_UPDATE,
+                        expect(busEmissions[0]).toEqual([
+                            jcm.MESSAGE_TYPE.STATUS,
                             { [jcm.PARAM.JOB_ID]: jobId },
                         ]);
-                        // if the job state is terminal, expect there to be a request to stop updates
-                        if (Jobs.isTerminalStatus(jobState.status)) {
-                            expect(busEmissions).toContain([
-                                jcm.MESSAGE_TYPE.STOP_UPDATE,
-                                { [jcm.PARAM.JOB_ID]: jobId },
-                            ]);
+
+                        // if the job state is terminal, expect the jobStatusLooper handler
+                        // to have been removed
+                        if (jobState.meta.terminal) {
+                            expect(
+                                this.appCellWidgetInstance.jobManager.handlers[
+                                    jcm.MESSAGE_TYPE.STATUS
+                                ].jobStatusLooper
+                            ).not.toBeDefined();
+                            expect(
+                                this.appCellWidgetInstance.jobManager.looper.requestLoop
+                            ).toBeNull();
+                        } else {
+                            // otherwise, it should still be in place and the request loop should be defined
+                            expect(
+                                this.appCellWidgetInstance.jobManager.handlers[
+                                    jcm.MESSAGE_TYPE.STATUS
+                                ].jobStatusLooper
+                            ).toBeDefined();
+                            expect(
+                                this.appCellWidgetInstance.jobManager.looper.requestLoop
+                            ).toBeDefined();
                         }
                         // expect the execMessage to be set to the job status summary
                         expect(

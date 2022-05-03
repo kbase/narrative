@@ -32,6 +32,8 @@ define([
     'use strict';
 
     const fsmState = AppStates.STATE;
+    const { indexedAppStates } = AppStates;
+    const { jobsById, JOB_NAMES } = JobsData;
     const TEST_JOB = 'test_job_id';
     const selectors = {
         actionButton: '.kb-rcp__action-button',
@@ -40,6 +42,8 @@ define([
         reset: '.kb-rcp__action-button.-reset',
         execMessage: '[data-element="execMessage"]',
     };
+
+    const { cssCellType, stateMessages } = AppCellWidget;
 
     const appSpec = {
         id: 'NarrativeTest/app_succeed',
@@ -167,6 +171,120 @@ define([
         });
     }
 
+    function setUpCellInState(ctx, stateName) {
+        ctx.cell.metadata.kbase.appCell.fsm = { currentState: fsmState[stateName] };
+
+        if (
+            [
+                'NEW',
+                'EDITING_BATCH_INCOMPLETE',
+                'EDITING_BATCH_COMPLETE',
+                'EDITING_INCOMPLETE',
+            ].includes(stateName)
+        ) {
+            // nothing more to do here
+            return;
+        }
+
+        ctx.cell.metadata.kbase.appCell.params.param = 'RAWR!';
+
+        if (stateName === 'INTERNAL_ERROR') {
+            ctx.cell.metadata.kbase.appCell.fatalError = {
+                title: 'Error loading main widgets',
+                message: 'Something went horribly wrong',
+                advice: ['Abandon hope, all ye who enter here'],
+                info: 'No further info',
+                detail: 'no additional details',
+            };
+        }
+
+        if (['EDITING_COMPLETE', 'EXECUTE_REQUESTED', 'INTERNAL_ERROR'].includes(stateName)) {
+            return;
+        }
+
+        switch (stateName) {
+            case 'PROCESSING_LAUNCHED':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: {
+                        job_id: JOB_NAMES.QUEUED,
+                        status: 'created',
+                        created: 0,
+                    },
+                    launchState: {
+                        job_id: JOB_NAMES.QUEUED,
+                        event: 'launched_job',
+                    },
+                };
+                break;
+
+            case 'PROCESSING_QUEUED':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: jobsById[JOB_NAMES.QUEUED],
+                    launchState: {
+                        job_id: JOB_NAMES.QUEUED,
+                        event: 'launched_job',
+                    },
+                };
+                break;
+
+            case 'CANCELING':
+            case 'PROCESSING_RUNNING':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: jobsById[JOB_NAMES.RUNNING],
+                    launchState: {
+                        job_id: JOB_NAMES.RUNNING,
+                        event: 'launched_job',
+                    },
+                };
+                break;
+
+            case 'COMPLETED':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: jobsById[JOB_NAMES.COMPLETED],
+                    launchState: {
+                        event: 'launched_job',
+                        job_id: JOB_NAMES.COMPLETED,
+                    },
+                    outputWidgetInfo: {
+                        name: 'no-display',
+                        params: {},
+                        tag: 'dev',
+                    },
+                };
+                break;
+
+            case 'TERMINATED':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: jobsById[JOB_NAMES.TERMINATED_WHILST_RUNNING],
+                    launchState: {
+                        event: 'launched_job',
+                        job_id: JOB_NAMES.TERMINATED_WHILST_RUNNIN,
+                    },
+                };
+                break;
+
+            case 'LAUNCH_ERROR':
+                ctx.cell.metadata.kbase.appCell.appError = {
+                    type: 'App Startup Error',
+                    message: 'Something went terribly wrong',
+                    code: 'throw new Error("ZOMG! NOOO!")',
+                };
+                break;
+
+            case 'RUNTIME_ERROR':
+                ctx.cell.metadata.kbase.appCell.exec = {
+                    jobState: jobsById[JOB_NAMES.DIED_WHILST_RUNNING],
+                    launchState: {
+                        event: 'launched_job',
+                        job_id: JOB_NAMES.DIED_WHILST_RUNNING,
+                    },
+                };
+                break;
+            default:
+                throw new Error(`invalid FSM state ${stateName}`);
+        }
+    }
+
     function cellStartUp(ctx) {
         const mockCell = Mocks.buildMockCell('code');
         mockCell.metadata = ctx.cell.metadata;
@@ -205,7 +323,6 @@ define([
     }
 
     async function startRunningCell(ctx) {
-        cellStartUp(ctx);
         await ctx.appCellWidgetInstance.init();
         await ctx.appCellWidgetInstance.attach(ctx.kbaseNode);
         await ctx.appCellWidgetInstance.start();
@@ -219,6 +336,10 @@ define([
         });
         it('should have cssCellType defined', () => {
             expect(AppCellWidget.cssCellType).toEqual(jasmine.any(String));
+        });
+
+        it('should have stateMessages defined', () => {
+            expect(AppCellWidget.stateMessages).toEqual(jasmine.any(Object));
         });
     });
     describe('The AppCellWidget instance', () => {
@@ -338,10 +459,9 @@ define([
                 // attach runs renderLayout and adds the run control panel
                 await this.appCellWidgetInstance.attach(this.kbaseNode);
 
-                const cellType = AppCellWidget.cssCellType;
-                expect(this.kbaseNode.querySelector(`.${cellType}__container`)).toBeDefined();
+                expect(this.kbaseNode.querySelector(`.${cssCellType}__container`)).toBeDefined();
                 const widgetContainer = this.kbaseNode.querySelector(
-                    `.${cellType}__widget_container`
+                    `.${cssCellType}__widget_container`
                 );
                 expect(widgetContainer).toBeDefined();
 
@@ -361,7 +481,7 @@ define([
                 );
                 expect(hiddenButtons.length).toEqual(0);
                 // run, cancel, reset, offline
-                expect(actionButtons.length).toBeGreaterThan(3);
+                expect(actionButtons.length).toEqual(4);
             });
 
             it('starts, adding a load of event listeners', async function () {
@@ -374,7 +494,7 @@ define([
                 // a ton of bus events get added
                 expect(
                     this.appCellWidgetInstance.busEventManager.add.calls.allArgs().length
-                ).toBeGreaterThan(10);
+                ).toBeGreaterThan(8);
                 expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                     fsmState.NEW
                 );
@@ -401,13 +521,9 @@ define([
             });
 
             describe('app cell startup states', () => {
-                beforeEach(async function () {
-                    await this.appCellWidgetInstance.init();
-                    await this.appCellWidgetInstance.attach(this.kbaseNode);
-                    await this.appCellWidgetInstance.start();
-                });
                 it('can validate params on startup, params incomplete', async function () {
-                    await this.appCellWidgetInstance.run();
+                    setUpCellInState(this, 'EDITING_INCOMPLETE');
+                    await startRunningCell(this);
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EDITING_INCOMPLETE
                     );
@@ -418,8 +534,8 @@ define([
 
                 it('can validate params on startup and be ready to run', async function () {
                     // add a valid param so the cell starts up ready to run
-                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
-                    await this.appCellWidgetInstance.run();
+                    setUpCellInState(this, 'EDITING_COMPLETE');
+                    await startRunningCell(this);
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.EDITING_COMPLETE
                     );
@@ -429,24 +545,82 @@ define([
                 });
 
                 it('can start in an internal error state', async function () {
-                    this.cell.metadata.kbase.appCell.fsm = {
-                        currentState: { mode: 'internal-error' },
-                    };
-                    await this.appCellWidgetInstance.init();
-                    await this.appCellWidgetInstance.attach(this.kbaseNode);
-                    await this.appCellWidgetInstance.start();
-                    await this.appCellWidgetInstance.run();
+                    setUpCellInState(this, 'INTERNAL_ERROR');
+                    await startRunningCell(this);
 
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         fsmState.INTERNAL_ERROR
                     );
-                    // the
+                    // the reset button should be active
+                    const resetButton = this.kbaseNode.querySelector(selectors.reset);
+                    expect(resetButton).not.toHaveClass('hidden');
+                    expect(resetButton).not.toHaveClass('disabled');
+                });
+
+                it('shows an internal error if the FSM throws a hissy fit', async function () {
+                    this.cell.metadata.kbase.appCell.fsm = {
+                        currentState: { this: 'does', not: 'exist' },
+                    };
+                    await startRunningCell(this);
+
+                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        fsmState.INTERNAL_ERROR
+                    );
+                    const expectedError = {
+                        title: 'Error initializing app state',
+                        message: 'Cannot find initial state',
+                        advice: [
+                            'Reset the app and try again.',
+                            'If that fails, delete the app cell and create a new one.',
+                        ],
+                        info: null,
+                        detail: null,
+                    };
+                    expect(this.appCellWidgetInstance.model.getItem('internalError')).toEqual(
+                        expectedError
+                    );
+
+                    [...expectedError.advice, expectedError.title, expectedError.message].forEach(
+                        (text) => {
+                            expect(this.kbaseNode.textContent).toMatch(text);
+                        }
+                    );
+                    // the reset button should be active
+                    const resetButton = this.kbaseNode.querySelector(selectors.reset);
+                    expect(resetButton).not.toHaveClass('hidden');
+                    expect(resetButton).not.toHaveClass('disabled');
+                });
+
+                Object.keys(indexedAppStates).forEach((state) => {
+                    // can't start in NEW -- it gets converted to an editing mode
+                    if (state !== 'NEW' && state.indexOf('BATCH') === -1) {
+                        it(`shows the correct execMessage when starting in state ${state}`, async function () {
+                            setUpCellInState(this, state);
+                            await startRunningCell(this);
+                            expect(
+                                this.appCellWidgetInstance.__fsm().getCurrentState().state
+                            ).toEqual(fsmState[state]);
+                            const jobState =
+                                this.appCellWidgetInstance.model.getItem('exec.jobState');
+                            const execMessage = this.kbaseNode.querySelector(selectors.execMessage);
+                            if (state in stateMessages) {
+                                expect(execMessage.textContent).toEqual(stateMessages[state]);
+                            } else if (jobState) {
+                                expect(execMessage.textContent.trim()).toEqual(
+                                    jobState.meta.createJobStatusLines.line
+                                );
+                            } else {
+                                fail('unexpected FSM state');
+                            }
+                        });
+                    }
                 });
             });
         });
 
         describe('cell stop', () => {
             beforeEach(async function () {
+                cellStartUp(this);
                 await startRunningCell(this);
             });
 
@@ -472,13 +646,8 @@ define([
                 beforeEach(async function () {
                     const currentState = fsmState.EDITING_COMPLETE;
                     cellStartUp(this);
-                    // add a valid param so the cell starts up ready to run
-                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
-                    this.cell.metadata.kbase.appCell.fsm = { currentState };
-                    await this.appCellWidgetInstance.init();
-                    await this.appCellWidgetInstance.attach(this.kbaseNode);
-                    await this.appCellWidgetInstance.start();
-                    await this.appCellWidgetInstance.run();
+                    setUpCellInState(this, 'EDITING_COMPLETE');
+                    await startRunningCell(this);
                     // ensure that the app cell is in the correct state
                     expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                         currentState
@@ -499,7 +668,7 @@ define([
                         'hidden'
                     );
                     expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
-                        'Sending...'
+                        stateMessages.EXECUTE_REQUESTED
                     );
                 });
 
@@ -511,7 +680,7 @@ define([
                     };
                     const channelKeys = Array.from(Object.keys(this.bus.channels));
                     expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
-                        'Sending...'
+                        stateMessages.EXECUTE_REQUESTED
                     );
                     return new Promise((resolve) => {
                         spyOn(Narrative, 'saveNotebook').and.callFake(() => {
@@ -550,7 +719,7 @@ define([
                         ).not.toHaveClass('hidden');
                         expect(
                             this.kbaseNode.querySelector(selectors.execMessage).textContent
-                        ).toEqual('Launching...');
+                        ).toEqual(stateMessages.PROCESSING_LAUNCHED);
 
                         // a channel should have been added to listen for job updates
                         expect(Object.keys(this.bus.channels).length).toBeGreaterThan(
@@ -569,75 +738,68 @@ define([
                     });
                 });
 
-                it('responds to launch errors', function () {
-                    const runStatusArgs = { event: 'error', cell_id: this.cell_id };
-
-                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
-                        'Sending...'
+                function runLaunchErrorTest(ctx) {
+                    expect(ctx.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        stateMessages.EXECUTE_REQUESTED
                     );
                     return new Promise((resolve) => {
                         spyOn(Narrative, 'saveNotebook').and.callFake(() => {
                             resolve();
                         });
-                        TestUtil.send_RUN_STATUS({ bus: this.bus, runStatusArgs });
+                        TestUtil.send_RUN_STATUS(ctx);
                     }).then(() => {
                         // FSM state to { mode: 'error', stage: 'launching' }
-                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                        expect(ctx.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                             fsmState.LAUNCH_ERROR
                         );
-                        const exec = this.appCellWidgetInstance.model.getItem('exec');
+                        const exec = ctx.appCellWidgetInstance.model.getItem('exec');
                         expect(exec.launchState).toEqual({
-                            ...runStatusArgs,
+                            ...ctx.runStatusArgs,
                             event_at: 1234567890,
                         });
                         // action button should be resetApp
-                        expect(this.kbaseNode.querySelector(`${selectors.reset}`)).not.toHaveClass(
+                        expect(ctx.kbaseNode.querySelector(`${selectors.reset}`)).not.toHaveClass(
                             'hidden'
                         );
                         // expect the error tab to be visible
                         expect(
-                            this.kbaseNode.querySelector(`.kb-rcp__tab-button[data-button="error"]`)
+                            ctx.kbaseNode.querySelector(`.kb-rcp__tab-button[data-button="error"]`)
                         ).not.toHaveClass('hidden');
                         expect(
-                            this.kbaseNode.querySelector(selectors.execMessage).textContent
-                        ).toEqual('');
+                            ctx.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toEqual(stateMessages.LAUNCH_ERROR);
+                        // TODO when tabs use the `cellTabs` module:
+                        // test error tab content
                     });
+                }
+                it('responds to launch errors', function () {
+                    this.runStatusArgs = {
+                        event: 'error',
+                        cell_id: this.cell_id,
+                        error_message: 'Something went terribly wrong',
+                        error_code: 'throw new Error("ZOMG! NOOO!")',
+                    };
+                    runLaunchErrorTest(this);
                 });
 
-                // TODO: ATM the app cell doesn't respond to invalid messages
-                xit('responds to crazy messages', function () {
-                    const runStatusArgs = { event: 'THE APOCALYPSE', cell_id: this.cell_id };
-                    TestUtil.send_RUN_STATUS({
-                        bus: this.bus,
-                        runStatusArgs,
-                    });
-                    // message doesn't get saved and there's no narrative save, so how to know when
-                    // message is processed?
-                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
-                        fsmState.EDITING_COMPLETE
-                    );
+                it('responds to crazy messages', function () {
+                    this.runStatusArgs = {
+                        event: 'THE APOCALYPSE',
+                        cell_id: this.cell_id,
+                        when: 'Any day now',
+                    };
+                    runLaunchErrorTest(this);
                 });
             });
         });
 
         describe('cancel and reset', () => {
-            const startState = { job_id: TEST_JOB, status: 'running', created: 12345678 };
-
             it('cancels a running job', async function () {
                 cellStartUp(this);
-                this.cell.metadata.kbase.appCell.exec = {
-                    launchState: { event: 'launched_job', job_id: TEST_JOB },
-                    jobState: { job_id: TEST_JOB, status: 'running', created: 12345678 },
-                };
-                this.cell.metadata.kbase.appCell.fsm = {
-                    currentState: fsmState.PROCESSING_RUNNING,
-                };
-                await this.appCellWidgetInstance.init();
-                await this.appCellWidgetInstance.attach(this.kbaseNode);
-                await this.appCellWidgetInstance.start();
-                await this.appCellWidgetInstance.run();
+                setUpCellInState(this, 'PROCESSING_RUNNING');
+                await startRunningCell(this);
                 expect(this.appCellWidgetInstance.model.getItem('exec.jobState')).toEqual(
-                    startState
+                    jobsById[JOB_NAMES.RUNNING]
                 );
 
                 // confirm the cancel/reset action
@@ -652,146 +814,66 @@ define([
                 );
 
                 expect(this.bus.emit.calls.allArgs()).toEqual([
-                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: TEST_JOB }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: JOB_NAMES.RUNNING }],
                 ]);
                 // app state should have changed to 'CANCELING'
                 expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
                     fsmState.CANCELING
                 );
                 expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toContain(
-                    'Cancelling...'
+                    stateMessages.CANCELING
                 );
             });
 
             // reset states
-            // can also reset from fsmState.TERMINATED
-            // and fsmState.LAUNCH_ERROR but the mechanism is
-            // basically the same
-            [
-                {
-                    fsm: { currentState: fsmState.RUNTIME_ERROR },
-                    exec: {
-                        jobState: {
-                            batch_id: null,
-                            batch_job: false,
-                            child_jobs: [],
-                            created: 1650382769000,
-                            error: {
-                                code: -32000,
-                                error: 'Traceback (most recent call last):\n  File "/kb/module/bin/../lib/NarrativeTest/NarrativeTestServer.py", line 101, in _call_method\n    result = method(ctx, *params)\n  File "/kb/module/lib/NarrativeTest/NarrativeTestImpl.py", line 345, in app_sleep\n    raise RuntimeError(\'App woke up from its nap very cranky!\')\nRuntimeError: App woke up from its nap very cranky!\n',
-                                message: "'App woke up from its nap very cranky!'",
-                                name: 'Server error',
+            ['LAUNCH_ERROR', 'TERMINATED', 'RUNTIME_ERROR', 'COMPLETED', 'INTERNAL_ERROR'].forEach(
+                (state) => {
+                    it(`resets a cell in state ${state}`, async function () {
+                        cellStartUp(this);
+                        setUpCellInState(this, state);
+                        await startRunningCell(this);
+
+                        const resetButton = this.kbaseNode.querySelector(`${selectors.reset}`);
+                        const runButton = this.kbaseNode.querySelector(selectors.run);
+                        // confirm the cancel/reset action
+                        spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
+                        spyOn(this.bus, 'emit');
+
+                        await TestUtil.waitForElementState(
+                            runButton,
+                            () => {
+                                return !runButton.classList.contains('hidden');
                             },
-                            error_code: 1,
-                            errormsg: 'Job output contains an error',
-                            finished: 1650382783129,
-                            job_id: '625ed7b128c29d4fd84dcf3a',
-                            job_output: {},
-                            queued: 1650382769657,
-                            retry_count: 0,
-                            retry_ids: [],
-                            running: 1650382777753,
-                            status: 'error',
-                            updated: 1650382783214,
-                        },
-                        jobStateUpdated: 1650670508992,
-                        launchState: {
-                            cell_id: '2aff3fd9-a61c-41d9-b28e-e03ed7f0f854',
-                            event: 'launched_job',
-                            event_at: '2022-04-19T15:39:29.835265Z',
-                            job_id: '625ed7b128c29d4fd84dcf3a',
-                            run_id: '5737126c-b533-4295-aed7-075c527b84b8',
-                        },
-                    },
-                },
-                {
-                    fsm: { currentState: fsmState.COMPLETED },
-                    exec: {
-                        jobState: {
-                            batch_id: null,
-                            batch_job: false,
-                            child_jobs: [],
-                            created: 1650894376000,
-                            finished: 1650894391740,
-                            job_id: '6266a62883eff4a9b770db1e',
-                            job_output: {
-                                id: '6266a62883eff4a9b770db1e',
-                                result: [5],
-                                version: '1.1',
-                            },
-                            queued: 1650894377047,
-                            retry_count: 0,
-                            retry_ids: [],
-                            running: 1650894383195,
-                            status: 'completed',
-                            updated: 1650894392018,
-                        },
-                        jobStateUpdated: 1650894393361,
-                        launchState: {
-                            cell_id: '2245aad3-2ed0-4f50-bea2-06f17cb38fdd',
-                            event: 'launched_job',
-                            event_at: '2022-04-25T13:46:17.373294Z',
-                            job_id: '6266a62883eff4a9b770db1e',
-                            run_id: '8db0ac8a-0fad-41d8-9942-d17f0d6750c4',
-                        },
-                        outputWidgetInfo: {
-                            name: 'no-display',
-                            params: {},
-                            tag: 'dev',
-                        },
-                    },
-                },
-                {
-                    fsm: { currentState: fsmState.INTERNAL_ERROR },
-                },
-            ].forEach((state) => {
-                it('resets the cell', async function () {
-                    cellStartUp(this);
-                    this.cell.metadata.kbase.appCell.exec = state.exec;
-                    this.cell.metadata.kbase.appCell.fsm = state.fsm;
-                    // set a valid param so the cell resets to EDITING_COMPLETE
-                    this.cell.metadata.kbase.appCell.params.param = 'RAWR!';
+                            () => {
+                                // click reset and wait for the run button to appear
+                                resetButton.click();
+                            }
+                        );
 
-                    await this.appCellWidgetInstance.init();
-                    await this.appCellWidgetInstance.attach(this.kbaseNode);
-                    await this.appCellWidgetInstance.start();
-                    await this.appCellWidgetInstance.run();
-
-                    const resetButton = this.kbaseNode.querySelector(`${selectors.reset}`);
-                    const runButton = this.kbaseNode.querySelector(selectors.run);
-                    // confirm the cancel/reset action
-                    spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
-                    spyOn(this.bus, 'emit');
-
-                    await TestUtil.waitForElementState(
-                        runButton,
-                        () => {
-                            return !runButton.classList.contains('hidden');
-                        },
-                        () => {
-                            // click reset and wait for the run button to appear
-                            resetButton.click();
-                        }
-                    );
-
-                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
-                        ''
-                    );
-                    expect(this.appCellWidgetInstance.model.getItem('exec')).toBeUndefined();
-                    expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
-                        fsmState.EDITING_COMPLETE
-                    );
-                });
-            });
+                        expect(this.appCellWidgetInstance.model.getItem('exec')).toBeUndefined();
+                        ['app', 'fatal', 'internal'].forEach((errType) => {
+                            expect(
+                                this.appCellWidgetInstance.model.getItem(`${errType}error`)
+                            ).toBeUndefined();
+                        });
+                        expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
+                            fsmState.EDITING_COMPLETE
+                        );
+                        expect(
+                            this.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toEqual(stateMessages.EDITING_COMPLETE);
+                    });
+                }
+            );
         });
 
         describe('job status updates', () => {
             // ensure that the app cell goes from { mode: 'processing', stage: 'launched', }
             // to the appropriate state on receiving a job status message
-            Object.keys(JobsData.jobsById).forEach((jobId) => {
-                if (!JobsData.jobsById[jobId].batch_job) {
+            Object.keys(jobsById).forEach((jobId) => {
+                if (!jobsById[jobId].batch_job) {
                     it(`processes a ${jobId} update`, async function () {
-                        const jobState = JobsData.jobsById[jobId];
+                        const jobState = jobsById[jobId];
                         const currentState = fsmState.PROCESSING_LAUNCHED;
                         cellStartUp(this);
                         // start up cell as if it just received the job launched message
@@ -813,18 +895,15 @@ define([
                             }
                         });
 
-                        await this.appCellWidgetInstance.init();
-                        await this.appCellWidgetInstance.attach(this.kbaseNode);
-                        await this.appCellWidgetInstance.start();
-                        await this.appCellWidgetInstance.run();
+                        await startRunningCell(this);
 
                         // ensure that the app cell is in the correct state
                         expect(this.appCellWidgetInstance.__fsm().getCurrentState().state).toEqual(
-                            currentState
+                            fsmState.PROCESSING_LAUNCHED
                         );
                         expect(
                             this.kbaseNode.querySelector(selectors.execMessage).textContent
-                        ).toEqual('Launching...');
+                        ).toEqual(stateMessages.PROCESSING_LAUNCHED);
                         // send a job status update; this will trigger an FSM mode change,
                         // which will enable the jobStatus tab
                         await TestUtil.waitForElementChange(
@@ -855,6 +934,13 @@ define([
                                 { [jcm.PARAM.JOB_ID]: jobId },
                             ]);
                         }
+                        // expect the execMessage to be set to the job status summary
+                        expect(
+                            this.kbaseNode.querySelector(selectors.execMessage).textContent
+                        ).toContain(
+                            jobState.meta.createJobStatusLines.summary ||
+                                jobState.meta.createJobStatusLines.line
+                        );
                     });
                 }
             });

@@ -22,6 +22,7 @@ define([
         'createJobStatusFromFsm',
         'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
+        'createJobStatusSummary',
         'getCurrentJobCounts',
         'getCurrentJobs',
         'getFsmStateFromJobs',
@@ -207,9 +208,9 @@ define([
         });
     });
 
-    describe('createJobStatusLines', () => {
+    describe('createJobStatusLines and createJobStatusSummary', () => {
         let container;
-        beforeAll(() => {
+        beforeEach(() => {
             container = document.createElement('div');
         });
 
@@ -226,6 +227,14 @@ define([
                 const statusLines = Jobs.createJobStatusLines(state);
                 container.innerHTML = arrayToHTML(statusLines);
                 expect(container.textContent).toContain(state.meta.createJobStatusLines.line);
+            });
+            it(`should create an appropriate summary string for ${state.job_id}`, () => {
+                container.innerHTML = Jobs.createJobStatusSummary(state);
+                const summary = state.meta.createJobStatusLines.summary
+                    ? state.meta.createJobStatusLines.summary
+                    : state.meta.createJobStatusLines.line;
+                // queued and running jobs have a spinner, which adds a space at the beginning
+                expect(container.textContent.trim()).toEqual(summary);
             });
         });
         JobsData.allJobs.forEach((state) => {
@@ -245,6 +254,8 @@ define([
                     container.innerHTML = arrayToHTML(statusLines);
                     expect(container.textContent).toContain(JobsData.jobStrings.unknown);
                 });
+                container.innerHTML = Jobs.createJobStatusSummary(state);
+                expect(container.textContent).toEqual(JobsData.jobStrings.unknown);
             });
         });
     });

@@ -341,8 +341,8 @@ define([
         });
     });
 
-    describe('createJobStatusFromFsm', function () {
-        beforeAll(() => {
+    describe('createJobStatusFromFsm', () => {
+        beforeEach(function () {
             this.container = document.createElement('div');
         });
         afterEach(() => {

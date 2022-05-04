@@ -1,7 +1,6 @@
 define([
     'bluebird',
     'common/html',
-    'common/events',
     'common/ui',
     'common/runtime',
     'util/util',
@@ -11,7 +10,7 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (Promise, html, Events, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
+], (Promise, html, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -44,23 +43,14 @@ define([
             model.value = newModel;
         }
 
-        function setModelValue(value, display, index) {
+        // TODO: actually make this update the set of inputs.
+        function setModelValue(value, display) {
             return Promise.try(() => {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
-                        model.display[index] = display;
-                    } else {
-                        model.value.splice(index, 1);
-                        model.display.splice(index, 1);
-                    }
+                if (value) {
+                    model.value = value;
+                    model.display = display;
                 } else {
-                    if (value) {
-                        model.value = value;
-                        model.display = display;
-                    } else {
-                        unsetModelValue();
-                    }
+                    unsetModelValue();
                 }
                 normalizeModel();
             }).then(() => {
@@ -170,46 +160,42 @@ define([
             if (initialValue === undefined) {
                 initialValue = Util.copy(itemSpec.data.defaultValue);
             }
-            return Promise.try(() => {
-                const events = Events.make({ node: container });
-                const control = {
-                    // current native value.
-                    value: initialValue,
-                    displayValue: initialDisplayValue,
-                    // the actual input control (or field wrapper around such)
-                    inputControl: null,
-                    // the actual dome node (used?) to which the input control is attached
-                    node: null,
-                    // the current index - note: used by the inputControl
-                    index: null,
-                };
-                const index = viewModel.pushItem(['items'], control);
-                control.index = index;
-                const parent = ui.getElement('control-container');
-                const controlNode = document.createElement('div');
-                parent.appendChild(controlNode);
-                return makeSingleViewControl(control, events)
-                    .then((inputControl) => {
-                        // This adds the control wrapper html.
-                        controlNode.innerHTML = inputControl.content;
-                        // Each wrapper has a node inside with id "id" for
-                        // the control to attach to.
-                        const attachmentNode = document.getElementById(inputControl.id);
-                        control.node = controlNode;
-                        control.inputControl = inputControl;
+            const control = {
+                // current native value.
+                value: initialValue,
+                displayValue: initialDisplayValue,
+                // the actual input control (or field wrapper around such)
+                inputControl: null,
+                // the actual dome node (used?) to which the input control is attached
+                node: null,
+                // the current index - note: used by the inputControl
+                index: null,
+            };
+            const index = viewModel.pushItem(['items'], control);
+            control.index = index;
+            const parent = ui.getElement('control-container');
+            const controlNode = document.createElement('div');
+            parent.appendChild(controlNode);
+            return makeSingleViewControl(control)
+                .then((inputControl) => {
+                    // This adds the control wrapper html.
+                    controlNode.innerHTML = inputControl.content;
+                    // Each wrapper has a node inside with id "id" for
+                    // the control to attach to.
+                    const attachmentNode = document.getElementById(inputControl.id);
+                    control.node = controlNode;
+                    control.inputControl = inputControl;
 
-                        return inputControl.instance.start({
-                            node: attachmentNode,
-                        });
-                    })
-                    .then(() => {
-                        events.attachEvents();
-                        return index;
-                    })
-                    .catch((err) => {
-                        console.error('ERROR!!!', err);
+                    return inputControl.instance.start({
+                        node: attachmentNode,
                     });
-            });
+                })
+                .then(() => {
+                    return index;
+                })
+                .catch((err) => {
+                    console.error('ERROR!!!', err);
+                });
         }
 
         function addEmptyControl() {
@@ -270,7 +256,7 @@ define([
 
                 return render(config.initialValue, config.initialDisplayValue).then(() => {
                     channel.on('update', (message) => {
-                        setModelValue(message.value);
+                        setModelValue(message.value, message.displayValue);
                     });
                     return autoValidate();
                 });
@@ -283,6 +269,9 @@ define([
                     return item.inputControl.instance.stop();
                 })
             ).then(() => {
+                if (container) {
+                    container.remove();
+                }
                 busConnection.stop();
             });
         }

@@ -506,8 +506,8 @@ define([
                         if (typeof config.initialDisplayValue === 'string') {
                             viewData.text = config.initialDisplayValue;
                         } else if (
-                            typeof config.initialDisplayValue === 'object' &&
-                            config.initialDisplayValue !== null
+                            config.initialDisplayValue !== null &&
+                            typeof config.initialDisplayValue === 'object'
                         ) {
                             viewData = Object.assign(viewData, config.initialDisplayValue);
                             if (!viewData.text) {

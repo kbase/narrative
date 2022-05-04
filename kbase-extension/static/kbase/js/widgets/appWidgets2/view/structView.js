@@ -3,14 +3,13 @@ define([
     'common/html',
     '../validators/resolver',
     '../validators/constants',
-    'common/events',
     'common/ui',
     'util/util',
     '../paramResolver',
     '../fieldWidgetCompact',
 
     'bootstrap',
-], (Promise, html, Validation, Constants, Events, UI, Util, Resolver, FieldWidget) => {
+], (Promise, html, Validation, Constants, UI, Util, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -170,12 +169,8 @@ define([
          */
         function renderSubcontrols() {
             if (viewModel.state.enabled) {
-                const events = Events.make({
-                    node: container,
-                });
-                return makeInputControl(events).then((result) => {
+                return makeInputControl().then((result) => {
                     ui.setContent('input-container', result.content);
-                    events.attachEvents();
                     structFields = {};
                     result.fields.forEach((field) => {
                         structFields[field.fieldName] = field;

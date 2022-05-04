@@ -54,4 +54,25 @@
             }
         }
     }
+
+    // .kb-appInput__sequence
+    &__sequence {
+        // .kb-appInput__sequence__button_container
+        &__button_container {
+            padding: 0;
+            height: 100%;
+        }
+
+        // .kb-appInput__sequence__row
+        &__row {
+            width: 100%;
+            padding: 2px;
+        }
+
+        // .kb-appInput__sequence__empty
+        &__empty {
+            font-style: italic;
+            color: use-color('grey');
+        }
+    }
 }

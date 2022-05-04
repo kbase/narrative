@@ -1,5 +1,4 @@
 define([
-    'require',
     'bluebird',
     'common/html',
     'common/events',
@@ -12,25 +11,13 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (
-    require,
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Util,
-    Props,
-    Resolver,
-    Validation,
-    FieldWidget
-) => {
+], (Promise, html, Events, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
-        button = t('button');
+        baseCssClass = 'kb-appInput__sequence';
 
     function factory(config) {
         let container, parent, ui;
@@ -89,10 +76,6 @@ define([
             });
         }
 
-        function resetModelValue() {
-            return;
-        }
-
         function exportModel() {
             return viewModel.getItem('items').map((value) => {
                 return value.value;
@@ -101,7 +84,6 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                // TODO: validate all items within the list as well!
                 return Validation.validate(rawValue, spec);
             });
         }
@@ -155,39 +137,19 @@ define([
                     },
                 });
 
-                const postButton = div(
-                    {
-                        class: 'input-group-addon kb-input-group-addon',
-                        style: {
-                            padding: '0',
-                        },
-                    },
-                    button(
-                        {
-                            class: 'btn btn-link btn-xs',
-                            type: 'button',
-                            style: { width: '4ex' },
-                            dataIndex: String(control.index),
-                        },
-                        ''
-                    )
-                );
                 const content = div(
                     {
+                        class: `${baseCssClass}__row`,
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
-                        style: {
-                            width: '100%',
-                            padding: '2px',
-                        },
                     },
-                    [div({ class: 'input-group' }, [div({ id: widgetId }), postButton])]
+                    div({ id: widgetId })
                 );
                 return {
                     id: widgetId,
                     instance: fieldWidget,
                     bus: inputBus,
-                    content: content,
+                    content,
                 };
             });
         }
@@ -253,12 +215,7 @@ define([
         function addEmptyControl() {
             const controlContainer = ui.getElement('control-container');
             controlContainer.innerHTML = div(
-                {
-                    style: {
-                        fontStyle: 'italic',
-                        color: 'gray',
-                    },
-                },
+                { class: `${baseCssClass}__empty` },
                 'no items to display'
             );
         }
@@ -312,14 +269,9 @@ define([
                 ui = UI.make({ node: container });
 
                 return render(config.initialValue, config.initialDisplayValue).then(() => {
-                    channel.on('reset-to-defaults', () => {
-                        resetModelValue();
-                    });
                     channel.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    channel.on('refresh', () => {});
-
                     return autoValidate();
                 });
             });

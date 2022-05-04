@@ -1,76 +1,63 @@
-"""
-Tests for job management
-"""
-import unittest
 import copy
 import itertools
-from unittest import mock
-import re
 import os
-from typing import List, Tuple
-import time
+import re
+import unittest
 from datetime import datetime
+from unittest import mock
+
 from IPython.display import HTML
 
-from biokbase.narrative.jobs.jobmanager import (
-    JobManager,
-    OutputStateErrMsg,
-    JOB_NOT_REG_ERR,
-    JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_ERR,
-    CELLS_NOT_PROVIDED_ERR,
-)
+from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.job import (
-    Job,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+    Job,
 )
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
-from biokbase.narrative.exception_util import (
-    NarrativeException,
-    JobRequestException,
+from biokbase.narrative.jobs.jobmanager import (
+    CELLS_NOT_PROVIDED_ERR,
+    JOB_NOT_BATCH_ERR,
+    JOB_NOT_REG_ERR,
+    JOBS_MISSING_ERR,
+    JobManager,
 )
-from biokbase.narrative.tests.job_test_constants import (
-    CLIENTS,
-    JOB_COMPLETED,
-    JOB_CREATED,
-    JOB_RUNNING,
-    JOB_TERMINATED,
-    JOB_ERROR,
-    BATCH_PARENT,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    BATCH_RETRY_RUNNING,
-    JOB_NOT_FOUND,
-    BAD_JOB_ID,
-    ALL_JOBS,
-    BAD_JOBS,
-    TERMINAL_JOBS,
-    ACTIVE_JOBS,
-    REFRESH_STATE,
-    BATCH_CHILDREN,
-    TEST_JOBS,
-    TEST_EPOCH_NS,
-    get_test_job,
-    get_test_jobs,
-    generate_error,
-)
-
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
     JOBS_BY_CELL_ID,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
 )
-
-from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    assert_obj_method_called,
-    MockClients,
+from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BAD_JOB_ID,
+    BAD_JOBS,
+    BATCH_CHILDREN,
+    BATCH_ERROR_RETRIED,
+    BATCH_PARENT,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    CLIENTS,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_ERROR,
+    JOB_NOT_FOUND,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    REFRESH_STATE,
+    TERMINAL_JOBS,
+    TEST_JOBS,
+    generate_error,
+    get_test_job,
 )
 
+from .narrative_mock.mockclients import (
+    MockClients,
+    assert_obj_method_called,
+    get_failing_mock_client,
+    get_mock_client,
+)
 from .util import ConfigTests
 
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
@@ -78,6 +65,10 @@ NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
 
 class JobManagerTest(unittest.TestCase):
+    """
+    Tests for job management
+    """
+
     @classmethod
     @mock.patch(CLIENTS, get_mock_client)
     def setUpClass(cls):
@@ -253,12 +244,9 @@ class JobManagerTest(unittest.TestCase):
             for job_id in ALL_JOBS
         }
 
-        for job_id, meta_exc_msg in zip(
-            ACTIVE_JOBS,
-            OutputStateErrMsg.QUERY_EE2_STATES.gen_err_msg([ACTIVE_JOBS, exc_msg])
-        ):
+        for job_id in ACTIVE_JOBS:
             # expect there to be an error message added
-            expected[job_id]["error"] = meta_exc_msg
+            expected[job_id]["error"] = exc_msg
 
         self.assertEqual(
             expected,
@@ -719,67 +707,6 @@ class JobManagerTest(unittest.TestCase):
         ):
             self.jm.get_job_states([])
 
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_get_job_states__last_updated(self):
-        """
-        Test that only updated jobs return an actual state
-        and that the rest of the jobs return an error stub state
-        """
-        # what FE would say was the last time the jobs were checked
-        NOW = time.time_ns()
-
-        # mix of terminal and not terminal
-        not_updated_ids = [JOB_COMPLETED, JOB_ERROR, JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
-        # not terminal
-        updated_ids = [BATCH_PARENT, BATCH_RETRY_RUNNING]
-
-        job_ids = not_updated_ids + updated_ids
-        active_ids = list(set(job_ids) & set(ACTIVE_JOBS))
-
-        # output_states will be partitioned as
-        terminal_ids = list(set(job_ids) - set(ACTIVE_JOBS))
-        not_updated_active_ids = list(set(not_updated_ids) & set(active_ids))
-        updated_active_ids = list(set(updated_ids) & set(active_ids))  # (yes, redundant)
-
-        def mock_check_jobs(self_, params):
-            """Update appropriate job states"""
-            lookup_ids = params["job_ids"]
-            self.assertCountEqual(active_ids, lookup_ids)  # sanity check
-
-            job_states_ret = get_test_jobs(lookup_ids)
-            for job_id, job_state in job_states_ret.items():
-                # if job was updated, return an updated version
-                if job_id in updated_active_ids:
-                    job_state["updated"] += 1
-            return job_states_ret
-
-        with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
-            output_states = self.jm.get_job_states(job_ids, ts=NOW)
-
-        updated_output_states = {
-            job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]) for job_id in updated_active_ids
-        }
-        for job_state in updated_output_states.values():
-            job_state["jobState"]["updated"] += 1
-
-        expected = {
-            # corresponding to updated_active_ids
-            **updated_output_states,
-            # corresponding to not_updated_active_ids and terminal_ids
-            **{
-                job_id: {
-                    "job_id": job_id,
-                    "error": OutputStateErrMsg.NOT_UPDATED.value % (job_id, NOW)
-                }
-                for job_id in not_updated_active_ids + terminal_ids
-            }
-        }
-
-        self.assertEqual(
-            expected,
-            output_states
-        )
-
     def test_update_batch_job__dne(self):
         with self.assertRaisesRegex(
             JobRequestException, f"{JOB_NOT_REG_ERR}: {JOB_NOT_FOUND}"
@@ -883,219 +810,6 @@ class JobManagerTest(unittest.TestCase):
                 for job_id in ALL_JOBS
             },
         )
-
-    @mock.patch(CLIENTS, get_mock_client)
-    def test_add_errors_to_results__concat_errs__integrated(self):
-        active_ids = [JOB_CREATED, JOB_RUNNING]
-        terminal_ids = [JOB_COMPLETED]
-        job_ids = active_ids + terminal_ids
-
-        check_jobs_err = "Something went wrong in EE2.check_jobs"
-        check_jobs_exc = RuntimeError(check_jobs_err)
-        cancel_job_errs = {
-            job_id: err
-            for job_id, err in zip(
-                job_ids, [f"EE2.check_job err {num}" for num in ["UNO", "DOS"]]
-            )
-        }
-
-        def mock_check_jobs(self, params):
-            raise check_jobs_exc
-
-        def mock_cancel_job(self, job_id):
-            return NarrativeException(
-                None, cancel_job_errs[job_id], None, None, None
-            )
-
-        with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
-            with mock.patch.object(JobManager, "_cancel_job", mock_cancel_job):
-                output_states = self.jm.cancel_jobs(job_ids)
-
-        exp = {job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id]) for job_id in job_ids}
-        for job_id in active_ids:
-            exp[job_id]["error"] = (
-                f"A Job.query_ee2_states error occurred for job with ID {job_id}: {check_jobs_err}"
-                "\n"
-                f"An EE2.cancel_job error occurred for job with ID {job_id}: {cancel_job_errs[job_id]}"
-            )
-
-        self.assertEqual(
-            exp,
-            output_states
-        )
-
-    def test_add_errors_to_results__concat_errs__unit(self):
-        job_ids = ALL_JOBS
-        error_ids = [JOB_RUNNING, JOB_COMPLETED]
-        output_states = get_test_jobs(job_ids)
-
-        check_jobs_err = "Test check_jobs exception"
-        cancel_job_errs = ["Test cancel_job exception UNO", "Test cancel_job exception DOS"]
-
-        self.jm.add_errors_to_results(
-            output_states, error_ids, OutputStateErrMsg.QUERY_EE2_STATES, check_jobs_err
-        )
-        self.jm.add_errors_to_results(
-            output_states, error_ids, OutputStateErrMsg.CANCEL, cancel_job_errs
-        )
-
-        for error_id, cancel_job_err in zip(error_ids, cancel_job_errs):
-            output_state = output_states[error_id]
-            self.assertIn("error", output_state)
-            self.assertEqual(
-                (
-                    f"A Job.query_ee2_states error occurred for job with ID {error_id}: {check_jobs_err}"
-                    "\n"
-                    f"An EE2.cancel_job error occurred for job with ID {error_id}: {cancel_job_err}"
-                ),
-                output_state["error"]
-            )
-
-    def test_add_errors_to_results__cannot_add_err(self):
-        job_ids = [JOB_RUNNING, JOB_COMPLETED]
-        error_ids = [JOB_CREATED]
-        output_states = get_test_jobs(job_ids)
-
-        with self.assertRaisesRegex(
-            ValueError, f"Cannot add error because response dict is missing key {error_ids[0]}"
-        ):
-            self.jm.add_errors_to_results(
-                output_states, error_ids, OutputStateErrMsg.CANCEL, ["Test cancel_job exception`"]
-            )
-
-
-class OutputStateErrMsgTest(unittest.TestCase):
-    """
-    Unit tests
-    """
-
-    JOB_IDS = [c + str(i) for c, i in zip(list("abc"), range(3))]
-    ERROR_IDS = JOB_IDS[1:]
-    CHECK_JOBS_ERR = "ee2.check_jobs rejection"
-    CANCEL_JOBS_ERR = [
-        "ee2.cancel_job rejection UNO", "ee2.cancel_job rejection DOS"
-    ]
-
-    maxDiff = None
-
-    def get_orig_results(self):
-        return {
-            job_id: {"some": "random", "content": "with", "job_id": job_id}
-            for job_id in self.JOB_IDS
-        }
-
-    def get_first_orig_result(self):
-        job_id = self.JOB_IDS[0]
-        return {
-            job_id: {"some": "random", "content": "with", "job_id": job_id}
-        }
-
-    def add_errors_to_results(
-        self, results: dict, error_ids: List[str], error_enum: OutputStateErrMsg, *extra_its: Tuple
-    ):
-        """
-        Strongly resembles jm.add_errors_to_results
-        But a pared down happy path method
-        """
-        gen_err_msg = error_enum.gen_err_msg([error_ids] + list(extra_its))
-
-        for error_id, err_msg in zip(error_ids, gen_err_msg):
-            if error_enum.replace_result():
-                results[error_id] = {
-                    "job_id": error_id,
-                    "error": err_msg,
-                }
-            else:
-                results[error_id].update(
-                    {"error": err_msg}
-                )
-        return results
-
-    def test__NOT_FOUND(self):
-        results = self.add_errors_to_results(
-            self.get_orig_results(), self.ERROR_IDS, OutputStateErrMsg.NOT_FOUND
-        )
-        self.assertEqual(
-            {
-                **self.get_first_orig_result(),
-                **{
-                    job_id: {
-                        "job_id": job_id,
-                        "error": f"Cannot find job with ID {job_id}"
-                    }
-                    for job_id in self.ERROR_IDS
-                }
-            },
-            results
-        )
-
-    def test__NOT_UPDATED(self):
-        results = self.add_errors_to_results(
-            self.get_orig_results(), self.ERROR_IDS, OutputStateErrMsg.NOT_UPDATED, TEST_EPOCH_NS
-        )
-        self.assertEqual(
-            {
-                **self.get_first_orig_result(),
-                **{
-                    job_id: {
-                        "job_id": job_id,
-                        "error": f"Job with ID {job_id} has not been updated since ts {TEST_EPOCH_NS}"
-                    }
-                    for job_id in self.ERROR_IDS
-                }
-            },
-            results
-        )
-
-    def test__QUERY_EE2_STATES(self):
-        results = self.add_errors_to_results(
-            self.get_orig_results(), self.ERROR_IDS, OutputStateErrMsg.QUERY_EE2_STATES, self.CHECK_JOBS_ERR
-        )
-        self.assertEqual(
-            {
-                **self.get_first_orig_result(),
-                **{
-                    job_id: {
-                        "some": "random", "content": "with", "job_id": job_id,
-                        "error": f"A Job.query_ee2_states error occurred for job with ID {job_id}: {self.CHECK_JOBS_ERR}"
-                    }
-                    for job_id in self.ERROR_IDS
-                }
-            },
-            results
-        )
-
-    def test__CANCEL(self):
-        results = self.add_errors_to_results(
-            self.get_orig_results(), self.ERROR_IDS, OutputStateErrMsg.CANCEL, self.CANCEL_JOBS_ERR
-        )
-        self.assertEqual(
-            {
-                **self.get_first_orig_result(),
-                **{
-                    job_id: {
-                        "some": "random", "content": "with", "job_id": job_id,
-                        "error": f"An EE2.cancel_job error occurred for job with ID {job_id}: {cancel_job_err}"
-                    }
-                    for job_id, cancel_job_err in zip(self.ERROR_IDS, self.CANCEL_JOBS_ERR)
-                }
-            },
-            results
-        )
-
-    def test_gen_err_msg__wrong_type_arg(self):
-        with self.assertRaisesRegex(
-            TypeError,
-            "Argument its must be of type list"
-        ):
-            OutputStateErrMsg.NOT_FOUND.gen_err_msg(42)
-
-    def test_gen_err_msg__wrong_num_format(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            re.escape("OutputStateErrMsg.NOT_FOUND must be formatted with 1 argument(s). Received 2 argument(s)")
-        ):
-            OutputStateErrMsg.NOT_FOUND.gen_err_msg([self.ERROR_IDS, "extra_unused_format_arg"])
 
 
 if __name__ == "__main__":

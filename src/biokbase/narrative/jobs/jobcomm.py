@@ -1,13 +1,13 @@
 import copy
 import threading
 from typing import List, Union
-import time
-from ipykernel.comm import Comm
-from biokbase.narrative.jobs.util import load_job_constants
-from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.exception_util import NarrativeException, JobRequestException
-from biokbase.narrative.common import kblogging
 
+from ipykernel.comm import Comm
+
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.exception_util import JobRequestException, NarrativeException
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.util import load_job_constants
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 
@@ -105,9 +105,6 @@ class JobRequest:
             return self.rq_data[PARAM["BATCH_ID"]]
         raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
-    def has_job_ids(self):
-        return any([input_type in self.rq_data for input_type in self.INPUT_TYPES])
-
     def has_batch_id(self):
         return PARAM["BATCH_ID"] in self.rq_data
 
@@ -178,14 +175,14 @@ class JobComm:
             self._jm = JobManager()
         if self._msg_map is None:
             self._msg_map = {
-                MESSAGE_TYPE["CANCEL"]: self._cancel_jobs,
-                MESSAGE_TYPE["CELL_JOB_STATUS"]: self._get_job_states_by_cell_id,
-                MESSAGE_TYPE["INFO"]: self._get_job_info,
-                MESSAGE_TYPE["LOGS"]: self._get_job_logs,
-                MESSAGE_TYPE["RETRY"]: self._retry_jobs,
+                MESSAGE_TYPE["CANCEL"]: self.cancel_jobs,
+                MESSAGE_TYPE["CELL_JOB_STATUS"]: self.get_job_states_by_cell_id,
+                MESSAGE_TYPE["INFO"]: self.get_job_info,
+                MESSAGE_TYPE["LOGS"]: self.get_job_logs,
+                MESSAGE_TYPE["RETRY"]: self.retry_jobs,
                 MESSAGE_TYPE["START_UPDATE"]: self._modify_job_updates,
-                MESSAGE_TYPE["STATUS"]: self._get_job_states,
-                MESSAGE_TYPE["STATUS_ALL"]: self._get_all_job_states,
+                MESSAGE_TYPE["STATUS"]: self.get_job_states,
+                MESSAGE_TYPE["STATUS_ALL"]: self.get_all_job_states,
                 MESSAGE_TYPE["STOP_UPDATE"]: self._modify_job_updates,
             }
 
@@ -199,11 +196,13 @@ class JobComm:
         :return: list of job IDs
         :rtype: List[str]
         """
-        if not req.has_job_ids():
-            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
-        return req.job_id_list
+
+        try:
+            return req.job_id_list
+        except Exception as ex:
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
 
     def start_job_status_loop(
         self,
@@ -223,12 +222,12 @@ class JobComm:
                 self._jm.initialize_jobs(cell_list)
             except Exception as e:
                 error = {
-                    "source": getattr(e, "source", "jc.start_job_status_loop"),
-                    "request": getattr(e, "request", "jc.start_job_status_loop"),
-                    "name": getattr(e, "name", type(e).__name__),
-                    "message": getattr(e, "message", UNKNOWN_REASON),
-                    "error": "Unable to get initial jobs list",
                     "code": getattr(e, "code", -1),
+                    "error": "Unable to get initial jobs list",
+                    "message": getattr(e, "message", UNKNOWN_REASON),
+                    "name": getattr(e, "name", type(e).__name__),
+                    "request": getattr(e, "request", "jc.start_job_status_loop"),
+                    "source": getattr(e, "source", "jc.start_job_status_loop"),
                 }
                 self.send_comm_message(MESSAGE_TYPE["ERROR"], error)
                 # if job init failed, set the lookup loop var back to False and return
@@ -252,7 +251,7 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on
         a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
-        all_job_states = self._get_all_job_states()
+        all_job_states = self.get_all_job_states()
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
@@ -261,7 +260,7 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _get_all_job_states(
+    def get_all_job_states(
         self, req: JobRequest = None, ignore_refresh_flag: bool = False
     ) -> dict:
         """
@@ -274,7 +273,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
         return all_job_states
 
-    def _get_job_states_by_cell_id(self, req: JobRequest) -> dict:
+    def get_job_states_by_cell_id(self, req: JobRequest) -> dict:
         """
         Fetches status of all jobs associated with the given cell ID(s).
 
@@ -303,7 +302,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
         return cell_job_states
 
-    def _get_job_info(self, req: JobRequest) -> dict:
+    def get_job_info(self, req: JobRequest) -> dict:
         """
         Gets job information for a list of job IDs.
 
@@ -332,7 +331,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["INFO"], job_info)
         return job_info
 
-    def _get_send_job_states(self, job_id_list: list, ts: int = None) -> dict:
+    def _get_job_states(self, job_id_list: list, ts: int = None) -> dict:
         """
         Retrieves the job states for the supplied job_ids.
 
@@ -362,7 +361,7 @@ class JobComm:
         """
         Retrieve the job state for a single job.
 
-        This differs from the _get_job_state (underscored version) in that
+        This differs from the _get_job_states (underscored version) in that
         it just takes a job_id string, not a JobRequest.
 
         :param job_id: the job ID to get the state for
@@ -371,9 +370,9 @@ class JobComm:
         :return: dictionary of job states, indexed by job ID
         :rtype: dict
         """
-        return self._get_send_job_states([job_id])
+        return self._get_job_states([job_id])
 
-    def _get_job_states(self, req: JobRequest) -> dict:
+    def get_job_states(self, req: JobRequest) -> dict:
         """
         Retrieves the job states for the supplied job_ids.
 
@@ -386,7 +385,7 @@ class JobComm:
         :rtype: dict
         """
         job_id_list = self._get_job_ids(req)
-        return self._get_send_job_states(job_id_list, req.ts)
+        return self._get_job_states(job_id_list, req.ts)
 
     def _modify_job_updates(self, req: JobRequest) -> dict:
         """
@@ -419,7 +418,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
-    def _cancel_jobs(self, req: JobRequest) -> dict:
+    def cancel_jobs(self, req: JobRequest) -> dict:
         """
         Cancel a job or list of jobs. After sending the cancellation request, the job states
         are refreshed and their new output states returned.
@@ -437,7 +436,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["STATUS"], cancel_results)
         return cancel_results
 
-    def _retry_jobs(self, req: JobRequest) -> dict:
+    def retry_jobs(self, req: JobRequest) -> dict:
         """
         Retry a job or list of jobs.
 
@@ -454,7 +453,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["RETRY"], retry_results)
         return retry_results
 
-    def _get_job_logs(self, req: JobRequest) -> dict:
+    def get_job_logs(self, req: JobRequest) -> dict:
         """
         Fetch the logs for a job or list of jobs.
 
@@ -515,9 +514,6 @@ class JobComm:
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
-        if msg_type == MESSAGE_TYPE["STATUS"]:
-            content["last_checked"] = time.time_ns()
-
         msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 
@@ -538,8 +534,8 @@ class JobComm:
         {
             "msg_type": "job_error",
             "content": {
-                "source": request type from original incoming comm request, if available, else an arbitrary str/NoneType,
                 "request": request data from original incoming comm request, if available, else an arbitrary str/NoneType,
+                "source": request type from original incoming comm request, if available, else an arbitrary str/NoneType,
                 **{any extra error information}
             }
         }

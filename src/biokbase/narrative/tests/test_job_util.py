@@ -1,5 +1,6 @@
-from biokbase.narrative.jobs.util import load_job_constants
 import unittest
+
+from biokbase.narrative.jobs.util import load_job_constants
 
 
 class JobUtilTestCase(unittest.TestCase):

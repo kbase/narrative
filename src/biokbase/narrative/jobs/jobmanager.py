@@ -1,22 +1,19 @@
+import copy
+from datetime import datetime, timedelta, timezone
+from typing import List, Tuple
+
 from IPython.display import HTML
 from jinja2 import Template
-from datetime import datetime, timezone, timedelta
-import copy
-from enum import Enum
-from itertools import cycle
-from typing import List, Tuple, Union
-from collections.abc import Iterable
+
 import biokbase.narrative.clients as clients
-from .job import (
-    Job,
-    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
-)
-from biokbase.narrative.common import kblogging
 from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import (
-    transform_job_exception,
     JobRequestException,
+    transform_job_exception,
 )
+
+from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
 
 """
 KBase Job Manager
@@ -38,57 +35,7 @@ JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-
-
-class OutputStateErrMsg(Enum):
-    """
-    For errors that go into the STATUS response.
-    Enum mapping from error names to formattable error messages.
-    The first formatting argument of each error message must be the job ID
-    """
-
-    NOT_FOUND = "Cannot find job with ID %s"
-    NOT_UPDATED = "Job with ID %s has not been updated since ts %d"
-    QUERY_EE2_STATES = "A Job.query_ee2_states error occurred for job with ID %s: %s"
-    CANCEL = "An EE2.cancel_job error occurred for job with ID %s: %s"
-
-    def gen_err_msg(self, its: List[Union[str, int, Iterable]]):
-        """
-        Create a generator for filled in enum values
-
-        :param its:     A list of arguments, where each argument
-                        should be either a literal or an iterable of literals
-                        The iterables will then be zipped and used to format the enum values.
-                        The first argument must be the list of job_ids
-        """
-        if not isinstance(its, list):
-            raise TypeError(
-                "Argument its must be of type list"
-            )
-        # check number of arguments matches number of %s or %d to be formatted
-        num_format = self.value.count("%")
-        if num_format != len(its):
-            raise ValueError(
-                f"{self.__class__.__name__}.{self.name} must be formatted with {num_format} argument(s). "
-                f"Received {len(its)} argument(s)"
-            )
-
-        for i, e in enumerate(its):
-            # if element is a literal, convert to iterable of literal
-            if isinstance(e, str) or isinstance(e, int):
-                its[i] = cycle([e])
-
-        def gen():
-            for tup in zip(*its):
-                yield self.value % tup
-
-        return gen()
-
-    def replace_result(self) -> bool:
-        names = [e.name for e in list(OutputStateErrMsg)]
-        replace = [True, True, False, False]
-        ans = dict(zip(names, replace))
-        return ans[self.name]
+DOES_NOT_EXIST = "does_not_exist"
 
 
 class JobManager:
@@ -366,13 +313,9 @@ class JobManager:
                     output_states[job_id] = job.output_state(fetched_states[job_id])
                 else:
                     # fetch the current state without updating it
-                    output_states[job_id] = job.output_state(no_refresh=True)
-
-            failed_ids = [job_id for job_id in jobs_to_lookup if job_id not in fetched_states]
-            if failed_ids:
-                self.add_errors_to_results(
-                    output_states, failed_ids, OutputStateErrMsg.QUERY_EE2_STATES, error_message
-                )
+                    output_states[job_id] = job.output_state({})
+                    # add an error field with the error message from the failed look up
+                    output_states[job_id]["error"] = error_message
 
         return output_states
 
@@ -395,16 +338,9 @@ class JobManager:
         :return: dictionary of job states, indexed by job ID
         :rtype: dict
         """
-        job_ids, not_found_ids = self._check_job_list(job_ids)
+        job_ids, error_ids = self._check_job_list(job_ids)
         output_states = self._construct_job_output_state_set(job_ids)
-        not_updated_ids = []
-        if ts is not None:
-            for job_id in output_states:
-                if self.get_job(job_id).last_updated <= ts:
-                    not_updated_ids.append(job_id)
-        self.add_errors_to_results(output_states, not_found_ids, OutputStateErrMsg.NOT_FOUND)
-        self.add_errors_to_results(output_states, not_updated_ids, OutputStateErrMsg.NOT_UPDATED, ts)
-        return output_states
+        return self.add_errors_to_results(output_states, error_ids)
 
     def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
@@ -510,7 +446,7 @@ class JobManager:
                 "job_id": job_id,
                 "job_params": job.params,
             }
-        return self.add_errors_to_results(infos, error_ids, OutputStateErrMsg.NOT_FOUND)
+        return self.add_errors_to_results(infos, error_ids)
 
     def get_job_logs(
         self,
@@ -629,7 +565,7 @@ class JobManager:
         for job_id in job_ids:
             output[job_id] = self.get_job_logs(job_id, first_line, num_lines, latest)
 
-        return self.add_errors_to_results(output, error_ids, OutputStateErrMsg.NOT_FOUND)
+        return self.add_errors_to_results(output, error_ids)
 
     def cancel_jobs(self, job_id_list: List[str]) -> dict:
         """
@@ -664,9 +600,10 @@ class JobManager:
 
         job_states = self._construct_job_output_state_set(job_ids)
 
-        self.add_errors_to_results(job_states, list(error_states.keys()), OutputStateErrMsg.CANCEL, list(error_states.values()))
-        self.add_errors_to_results(job_states, error_ids, OutputStateErrMsg.NOT_FOUND)
-        return job_states
+        for job_id in error_states:
+            job_states[job_id]["error"] = error_states[job_id]
+
+        return self.add_errors_to_results(job_states, error_ids)
 
     def _cancel_job(self, job_id: str) -> None:
         """
@@ -764,49 +701,26 @@ class JobManager:
                 )
             if "error" in result:
                 results_by_job_id[job_id]["error"] = result["error"]
-        return self.add_errors_to_results(results_by_job_id, error_ids, OutputStateErrMsg.NOT_FOUND)
+        return self.add_errors_to_results(results_by_job_id, error_ids)
 
-    @staticmethod
-    def add_errors_to_results(
-        results: dict, error_ids: List[str], error_enum: OutputStateErrMsg, *extra_its: Tuple
-    ) -> dict:
+    def add_errors_to_results(self, results: dict, error_ids: List[str]) -> dict:
         """
-        Add error states to results
+        Add the generic "not found" error for each job_id in error_ids.
 
         :param results: dictionary of job data (output state, info, retry, etc.) indexed by job ID
         :type results: dict
         :param error_ids: list of IDs that could not be found
         :type error_ids: List[str]
-        :param error_enum: an enum instance from JobStateErrMsg
-        :type error_enum: JobStateErrMsg
-        :param its: any extra arguments to feed into error_enum.gen_str_fill to format the error message
-        :type its: list
 
-        :return: input results augmented by either extra error dictionaries or errors in existing dictionaries
+        :return: input results dictionary augmented by a dictionary containing job ID and a short
+        not found error message for every ID in the error_ids list
         :rtype: dict
         """
-        # create generator yielding error messages
-        gen_err_msg = error_enum.gen_err_msg([error_ids] + list(extra_its))
-
-        for error_id, err_msg in zip(error_ids, gen_err_msg):
-            # if there's already an error there
-            if error_id in results and "error" in results[error_id]:
-                existing_error = results[error_id]["error"]
-                # concatenate the errors (works recursively)
-                err_msg = f"{existing_error}\n{err_msg}"
-
-            if error_enum.replace_result():
-                results[error_id] = {
-                    "job_id": error_id,
-                    "error": err_msg,
-                }
-            else:
-                if error_id not in results:
-                    raise ValueError(f"Cannot add error because response dict is missing key {error_id}")
-                results[error_id].update(
-                    {"error": err_msg}
-                )
-
+        for error_id in error_ids:
+            results[error_id] = {
+                "job_id": error_id,
+                "error": f"Cannot find job with ID {error_id}",
+            }
         return results
 
     def modify_job_refresh(self, job_ids: List[str], update_refresh: bool) -> None:

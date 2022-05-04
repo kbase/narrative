@@ -1,19 +1,20 @@
 import copy
-import sys
 import os.path
-from biokbase.narrative.tests.util import ConfigTests
+import sys
+
 from biokbase.narrative.app_util import app_version_tags
-from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.jobs.job import (
+    COMPLETED_STATUS,
     JOB_ATTR_DEFAULTS,
     OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS,
-    COMPLETED_STATUS,
 )
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.tests.job_test_constants import (
     BAD_JOBS,
-    get_test_job,
     generate_error,
+    get_test_job,
 )
+from biokbase.narrative.tests.util import ConfigTests
 
 """
 generate_test_results.py is used to generate the job message data that the narrative backend produces and that the frontend consumes. It uses data from `ee2_job_test_data_file` and `app_specs_file` and provides expected narrative backend message data, as well as a number of mappings that are used in python tests.
@@ -30,7 +31,7 @@ spec_list = config.load_json_file(config.get("specs", "app_specs_file"))
 TEST_SPECS = {}
 
 for tag in app_version_tags:
-    spec_dict = dict()
+    spec_dict = {}
     for spec in spec_list:
         spec_dict[spec["info"]["id"]] = spec
     TEST_SPECS[tag] = spec_dict
@@ -95,11 +96,10 @@ def _generate_job_output(job_id):
 
 
 def generate_bad_jobs():
-    bad_jobs = {
+    return {
         job_id: {"job_id": job_id, "error": generate_error(job_id, "not_found")}
         for job_id in BAD_JOBS
     }
-    return bad_jobs
 
 
 def generate_job_output_state(all_jobs):
@@ -215,7 +215,7 @@ def generate_job_logs(all_jobs):
 INVALID_CELL_ID = "invalid_cell_id"
 TEST_CELL_ID_LIST = list(JOBS_BY_CELL_ID.keys()) + [INVALID_CELL_ID]
 # mapping expected as output from get_job_states_by_cell_id
-TEST_CELL_IDs = {id: list(JOBS_BY_CELL_ID[id]) for id in JOBS_BY_CELL_ID.keys()}
+TEST_CELL_IDs = {cell_id: list(JOBS_BY_CELL_ID[cell_id]) for cell_id in JOBS_BY_CELL_ID.keys()}
 TEST_CELL_IDs[INVALID_CELL_ID] = []
 
 
@@ -230,8 +230,8 @@ if not os.path.exists(RESPONSE_DATA_FILE):
     config.write_json_file(RESPONSE_DATA_FILE, ALL_RESPONSE_DATA)
 
 
-def main(args=[]):
-    if len(args) and args[0] == "--force" or not os.path.exists(RESPONSE_DATA_FILE):
+def main(args=None):
+    if args and args[0] == "--force" or not os.path.exists(RESPONSE_DATA_FILE):
         config.write_json_file(RESPONSE_DATA_FILE, ALL_RESPONSE_DATA)
 
 

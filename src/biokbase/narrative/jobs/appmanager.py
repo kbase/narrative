@@ -1,30 +1,32 @@
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
-import biokbase.auth as auth
-from .job import Job
-from .jobmanager import JobManager
-from .jobcomm import JobComm, MESSAGE_TYPE
-from . import specmanager
-import biokbase.narrative.clients as clients
-from biokbase.narrative.widgetmanager import WidgetManager
-from biokbase.narrative.app_util import (
-    system_variable,
-    strict_system_variable,
-    map_outputs_from_state,
-    validate_parameters,
-    resolve_ref_if_typed,
-    transform_param_value,
-    extract_ws_refs,
-)
-from biokbase.narrative.exception_util import transform_job_exception
-from biokbase.narrative.common import kblogging
-import re
 import datetime
-import traceback
-import random
 import functools
-from typing import Callable, Union, Dict
+import random
+import re
+import traceback
+from typing import Callable, Dict, Union
+
+import biokbase.auth as auth
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import (
+    extract_ws_refs,
+    map_outputs_from_state,
+    resolve_ref_if_typed,
+    strict_system_variable,
+    system_variable,
+    transform_param_value,
+    validate_parameters,
+)
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.widgetmanager import WidgetManager
+
+from . import specmanager
+from .job import Job
+from .jobcomm import MESSAGE_TYPE, JobComm
+from .jobmanager import JobManager
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -1002,7 +1004,7 @@ class AppManager:
         if "prefix" in generator:
             ret = str(generator["prefix"]) + ret
         if "suffix" in generator:
-            ret = ret + str(generator["suffix"])
+            return ret + str(generator["suffix"])
         return ret
 
     def _send_comm_message(self, msg_type, content):

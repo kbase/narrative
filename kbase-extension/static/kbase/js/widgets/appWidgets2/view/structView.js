@@ -16,7 +16,8 @@ define([
     // Constants
     const t = html.tag,
         div = t('div'),
-        resolver = Resolver.make();
+        resolver = Resolver.make(),
+        baseCssClass = 'kb-appInput__struct';
 
     function factory(config) {
         let container,
@@ -27,6 +28,7 @@ define([
             bus = config.bus,
             viewModel = {
                 data: {},
+                display: {},
                 state: {
                     enabled: null,
                 },
@@ -40,56 +42,36 @@ define([
             viewModel.state.enabled = false;
         }
 
-        function setModelValue(value) {
-            return Promise.try(() => {
-                viewModel.data = value;
-            })
-                .then(() => {
-                    // render();
-                })
-                .catch((err) => {
-                    console.error('Error setting model value', err);
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(() => {
-                viewModel.data = {};
-            }).then(() => {
-                // render();
-            });
+        function setModelValue(value, display) {
+            viewModel.data = value;
+            viewModel.display = display;
         }
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(Util.copy(spec.defaultValue));
+                setModelValue(Util.copy(spec.defaultValue), {});
             } else {
-                unsetModelValue();
+                setModelValue({}, {});
             }
         }
 
         function validate(rawValue) {
             return Promise.try(() => {
-                // var validationOptions = {
-                //     required: spec.data.constraints.required
-                // };
                 return Validation.validate(rawValue, spec);
             });
         }
 
-        function makeInputControl(events, bus) {
+        function makeInputControl() {
             const promiseOfFields = fieldLayout.map((fieldName) => {
-                const fieldSpec = struct.specs[fieldName];
-                const fieldValue = viewModel.data[fieldName];
+                const fieldSpec = struct.specs[fieldName],
+                    fieldValue = viewModel.data[fieldName],
+                    fieldDisplayValue = viewModel.display[fieldName];
 
-                return makeSingleInputControl(fieldValue, fieldSpec, events, bus);
+                return makeSingleInputControl(fieldValue, fieldDisplayValue, fieldSpec);
             });
 
-            // TODO: support different layouts, this is a simple stacked
-            // one for now.
-
             return Promise.all(promiseOfFields).then((fields) => {
-                const layout = div(
+                const content = div(
                     {
                         class: 'row',
                     },
@@ -97,23 +79,27 @@ define([
                         .map((field) => {
                             return div({
                                 id: field.id,
-                                style: { border: '0px orange dashed', padding: '0px' },
+                                class: `${baseCssClass}__field`,
                             });
                         })
                         .join('\n')
                 );
                 return {
-                    content: layout,
-                    fields: fields,
+                    content,
+                    fields,
                 };
             });
         }
 
-        function doChanged(id, newValue) {
+        function doChanged(id, newValue, newDisplayValue) {
             // Absorb and propagate the new value...
             viewModel.data[id] = Util.copy(newValue);
+            if (newDisplayValue) {
+                viewModel.display[id] = Util.copy(newDisplayValue);
+            }
             bus.emit('changed', {
                 newValue: Util.copy(viewModel.data),
+                newDisplayValue: Util.copy(viewModel.display),
             });
 
             // Validate and propagate.
@@ -130,7 +116,7 @@ define([
          * The single input control wraps a field widget, which provides the
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(value, fieldSpec) {
+        function makeSingleInputControl(value, displayValue, fieldSpec) {
             return resolver.loadViewControl(fieldSpec).then((widgetFactory) => {
                 const id = html.genId(),
                     fieldWidget = FieldWidget.make({
@@ -138,9 +124,8 @@ define([
                         showHint: true,
                         useRowHighight: true,
                         initialValue: value,
-                        // appSpec: appSpec,
+                        initialDisplayValue: displayValue,
                         parameterSpec: fieldSpec,
-                        // workspaceId: workspaceInfo.id,
                         referenceType: 'ref',
                         paramsChannelName: config.paramsChannelName,
                     });
@@ -172,7 +157,7 @@ define([
                 });
 
                 return {
-                    id: id,
+                    id,
                     fieldName: fieldSpec.id,
                     instance: fieldWidget,
                 };
@@ -217,58 +202,36 @@ define([
             }
         }
 
-        function renderStruct() {
-            const layout = div(
-                {
-                    style: {
-                        'border-left': '5px solid silver',
-                        padding: '2px',
-                        margin: '6px',
-                    },
-                },
-                [div({ dataElement: 'subcontrols' })]
-            );
-            ui.setContent('input-container', layout);
-        }
-
-        function render(events) {
+        function render() {
             container.innerHTML = div(
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' })]
+                div(
+                    {
+                        dataElement: 'input-container',
+                    },
+                    div({ dataElement: 'subcontrols', class: `${baseCssClass}__subcontrols` })
+                )
             );
-
-            renderStruct(events);
         }
 
-        // LIFECYCLE API
-
-        // Okay, we need to
-
         function start(arg) {
-            let events;
             return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-                events = Events.make({ node: container });
 
                 viewModel.data = Util.copy(config.initialValue);
-
-                // return bus.request({}, {
-                //     key: 'get-param-state'
-                // });
+                viewModel.display = Util.copy(config.initialDisplayValue);
             })
                 .then(() => {
-                    return render(events);
+                    return render();
                 })
                 .then(() => {
                     return renderSubcontrols();
                 })
                 .then(() => {
-                    events.attachEvents(container);
-
                     bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
@@ -276,14 +239,17 @@ define([
                     bus.on('update', (message) => {
                         // Update the model, and since we have sub widgets,
                         // we should send the individual data to them.
-                        // setModelValue(message.value);
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
                             viewModel.data = Util.copy(message.value);
+                            if (message.displayValue) {
+                                viewModel.display = Util.copy(message.display);
+                            }
                             Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id],
+                                    displayValue: message.display[id],
                                 });
                             });
                         }
@@ -295,11 +261,6 @@ define([
                             value: Util.copy(viewModel.data),
                         });
                     });
-
-                    // bus.on('')
-                    // The controller of this widget will be smart enough to
-                    // know...
-                    // bus.emit('sync');
                 })
                 .catch((err) => {
                     console.error('ERROR', err);
@@ -324,8 +285,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -5,7 +5,7 @@ define(['widgets/appWidgets2/view/sequenceView', 'common/runtime', 'testUtil'], 
 ) => {
     'use strict';
 
-    fdescribe('Sequence view widget', () => {
+    describe('Sequence view widget', () => {
         const paramSpec = {
             id: 'textList',
             data: {

@@ -100,7 +100,7 @@ class Job(object):
         if ee2_state.get("job_id") is None:
             raise ValueError("Cannot create a job without a job ID!")
 
-        self._acc_state = ee2_state
+        self._update_state(ee2_state)
         self.extra_data = extra_data
 
         # verify parent-children relationship
@@ -325,20 +325,31 @@ class Job(object):
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if state:
+        if not isinstance(state, dict):
+            raise TypeError("state must be a dict")
 
+        # Check job_id match
+        if self._acc_state:
             if "job_id" in state and state["job_id"] != self.job_id:
                 raise ValueError(
                     f"Job ID mismatch in _update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
                 )
 
-            state = copy.deepcopy(state)
-            if self._acc_state is None:
-                self._acc_state = state
-            else:
-                self._acc_state.update(state)
+        # Check if there would be no change in updating
+        # i.e., if state <= self._acc_state
+        if self._acc_state is not None:
+            if {**self._acc_state, **state} == self._acc_state:
+                return
 
-    def state(self, force_refresh=False):
+        state = copy.deepcopy(state)
+        if self._acc_state is None:
+            self._acc_state = state
+        else:
+            self._acc_state.update(state)
+
+        self.last_updated = time.time_ns()
+
+    def state(self, force_refresh=False, exclude=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
         """
         Queries the job service to see the state of the current job.
         """
@@ -347,7 +358,7 @@ class Job(object):
             state = self.query_ee2_state(self.job_id, init=False)
             self._update_state(state)
 
-        return self._internal_state(JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+        return self._internal_state(exclude)
 
     def _internal_state(self, exclude=None):
         """Wrapper for self._acc_state"""
@@ -355,39 +366,65 @@ class Job(object):
         self._trim_ee2_state(state, exclude)
         return state
 
-    def output_state(self, state=None) -> dict:
+    def output_state(self, state=None, no_refresh=False) -> dict:
         """
-        :param state: can be queried individually from ee2/cache with self.state(),
-            but sometimes want it to be queried in bulk from ee2 upstream
-        :return: dict, with structure
+        :param state:   Supplied when the state is queried beforehand from EE2 in bulk,
+                        or when it is retrieved from a cache. If not supplied, must be
+                        queried with self.state() or self._internal_state()
+        :return:        dict, with structure
 
         {
-            outputWidgetInfo: (if not finished, None, else...) job.get_viewer_params result
-            jobState: {
-                job_id: string,
-                status: string,
-                created: epoch ms,
-                updated: epoch ms,
-                queued: optional - epoch ms,
-                finished: optional - epoc ms,
-                terminated_code: optional - int,
-                tag: string (release, beta, dev),
-                parent_job_id: optional - string or null,
-                run_id: string,
-                cell_id: string,
-                errormsg: optional - string,
-                error (optional): {
-                    code: int,
-                    name: string,
-                    message: string (should be for the user to read),
-                    error: string, (likely a stacktrace)
+            "job_id": string,
+            "jobState": {
+                "job_id": string,
+                "status": string - enum,
+                "batch_id": string or None,
+                "batch_job": bool,
+                "child_jobs": list,
+                "created": epoch ms,
+                "updated": epoch ms,
+                "queued": epoch ms,
+                "running": epoch ms,
+                "finished": epoch ms,
+                "tag": string (release, beta, dev),
+                "run_id": string,
+                "cell_id": string,
+                "job_output": {     # completed jobs only
+                    "version": string,
+                    "result": [
+                        {
+                            # result params, e.g.
+                            "report_name": string,
+                            "report_ref": string,
+                        }
+                    ],
+                    "id": string
                 },
-                error_code: optional - int
+                "terminated_code": terminated jobs only; optional - int,
+                "error": {  # jobs that did not complete successfully
+                    "code": int,
+                    "name": string,
+                    "message": string (should be for the user to read),
+                    "error": string, (likely a stacktrace)
+                },
+                "errormsg": optional - string,
+                "error_code": optional - int
+            },
+            "outputWidgetInfo": {  # None if job does not have status "completed"
+                "name": string,
+                "tag": string - (release, beta, dev),
+                "params": {
+                    # output widget params, e.g.
+                    "report_name": string,
+                    "report_ref": string
+                }
             }
+
         }
+        :rtype: dict
         """
         if not state:
-            state = self.state()
+            state = self._internal_state() if no_refresh else self.state()
         else:
             self._update_state(state)
             state = self._internal_state()

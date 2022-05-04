@@ -377,13 +377,20 @@ class JobTest(unittest.TestCase):
             state = job.output_state()
         self.assertEqual(expected, state)
 
+    # TODO: improve this test
     def test_job_update__no_state(self):
         """
         test that without a state object supplied, the job state is unchanged
         """
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        job._update_state(None)
+
+        # should fail with error 'state must be a dict'
+        with self.assertRaisesRegex(TypeError, "state must be a dict"):
+            job._update_state(None)
+        self.assertFalse(job.was_terminal())
+
+        job._update_state({})
         self.assertFalse(job.was_terminal())
 
     @mock.patch(CLIENTS, get_mock_client)

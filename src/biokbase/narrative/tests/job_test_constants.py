@@ -35,8 +35,14 @@ def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
-CLIENTS = "biokbase.narrative.clients.get"
+def get_test_jobs(job_ids):
+    return {job_id: get_test_job(job_id) for job_id in job_ids}
 
+
+CLIENTS = "biokbase.narrative.clients.get"
+TIME_NS = "biokbase.narrative.jobs.jobcomm.time.time_ns"
+
+TEST_EPOCH_NS = 42  # arbitrary epoch ns
 MAX_LOG_LINES = 10
 
 # test_jobs contains jobs in the following states

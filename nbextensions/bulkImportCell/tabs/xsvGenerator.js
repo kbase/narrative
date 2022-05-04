@@ -144,7 +144,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             const body = this.renderLayout();
             const formValues = {};
             const modalArgs = {
-                title: 'Create CSV Template',
+                title: 'Create Import Specification Template',
                 body,
                 okLabel: 'Generate template!',
                 onConfirm: () => {
@@ -241,7 +241,6 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         createForm() {
             this.id = html.genId();
             const typeArray = Object.keys(this.model.getItem('params'));
-            const state = this.model.getItem('state');
             const multiFileInfo = p(
                 'Choosing Excel as output file type will create a single file with ' +
                     'a page for each import type; CSV and TSV create one file per import type.'
@@ -295,18 +294,10 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                                 required: 'required',
                             },
                             typeArray.sort().map((opt) => {
-                                if (state.selectedFileType === opt) {
-                                    return option(
-                                        {
-                                            value: opt,
-                                            selected: 'selected',
-                                        },
-                                        this.fileTypeMapping[opt]
-                                    );
-                                }
                                 return option(
                                     {
                                         value: opt,
+                                        selected: 'selected',
                                     },
                                     this.fileTypeMapping[opt]
                                 );
@@ -501,6 +492,12 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                                     String.escape(file)
                                 );
                             })
+                    ),
+                    p(
+                        {
+                            class: `${cssBaseClass}__result_text`,
+                        },
+                        'Import specification templates can be downloaded from the staging area and edited locally, and then re-uploaded and used for bulk import.'
                     ),
                 ]
             );

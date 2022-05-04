@@ -12,24 +12,33 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
 
     describe('Dynamic Dropdown View tests', () => {
         beforeEach(function () {
-            this.paramSpec = {
+            this.ftpParamSpec = {
                 data: {
                     defaultValue: DEFAULT_VALUE,
+                    constraints: {},
                 },
-                original: {},
+                original: {
+                    dynamic_dropdown_options: {
+                        data_source: 'ftp_staging',
+                    },
+                },
             };
             this.templateParamSpec = {
                 data: {
                     defaultValue: DEFAULT_VALUE,
+                    constraints: {},
                 },
                 original: {
                     dynamic_dropdown_options: {
+                        data_source: 'custom',
                         description_template: 'value: {{someKey}}',
                         selection_id: 'selection_id',
                     },
                 },
             };
-            this.bus = Runtime.make().bus();
+            this.bus = Runtime.make()
+                .bus()
+                .makeChannelBus({ description: 'dynamicDropdownView testing' });
             this.node = document.createElement('div');
             document.body.appendChild(this.node);
         });
@@ -41,7 +50,7 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
 
         it('should have a valid constructor', function () {
             const widget = DynamicDropdownView.make({
-                parameterSpec: this.paramSpec,
+                parameterSpec: this.ftpParamSpec,
                 bus: this.bus,
                 initialValue: DEFAULT_VALUE,
             });
@@ -53,14 +62,15 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
         it(`Should start and stop with an initial value and show an expected value`, async function () {
             const displayValue = 'foo';
             const widget = DynamicDropdownView.make({
-                parameterSpec: this.paramSpec,
+                parameterSpec: this.ftpParamSpec,
                 bus: this.bus,
                 initialValue: displayValue,
+                channelName: this.bus.channelName,
             });
             await widget.start({ node: this.node });
             const selectElem = this.node.querySelector(SELECTOR);
             expect(selectElem).not.toBeNull();
-            expect(selectElem.children.length).toBe(1); // blank is an option
+            expect(selectElem.children.length).toBe(2); // blank is an option
             expect($(selectElem).select2('data')[0].text).toBe(displayValue);
 
             await widget.stop();
@@ -70,35 +80,35 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
         it('Should start and revert to a default value', async function () {
             const displayValue = 'foo';
             const widget = DynamicDropdownView.make({
-                parameterSpec: this.paramSpec,
+                parameterSpec: this.ftpParamSpec,
                 bus: this.bus,
                 initialValue: displayValue,
+                channelName: this.bus.channelName,
             });
 
             await widget.start({ node: this.node });
-            const selectElem = this.node.querySelector(SELECTOR);
-            expect(selectElem.firstChild.text).toBe(displayValue);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(displayValue);
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
                     this.bus.emit('reset-to-defaults');
                 }
             );
-            expect($(selectElem).select2('data')[0].text).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
             await widget.stop();
         });
 
         it('Should start and update its value', async function () {
             const widget = DynamicDropdownView.make({
-                parameterSpec: this.paramSpec,
+                parameterSpec: this.ftpParamSpec,
                 bus: this.bus,
                 initialValue: DEFAULT_VALUE,
+                channelName: this.bus.channelName,
             });
 
             const updatedValue = 'apple';
             await widget.start({ node: this.node });
-            const selectElem = this.node.querySelector(SELECTOR);
-            expect(selectElem.firstChild.text).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
@@ -107,8 +117,9 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                     });
                 }
             );
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(updatedValue);
 
-            expect($(selectElem).select2('data')[0].text).toBe(updatedValue);
+            // expect($(selectElem).select2('data')[0].text).toBe(updatedValue);
             await widget.stop();
         });
 
@@ -135,13 +146,14 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                     bus: this.bus,
                     initialValue: DEFAULT_VALUE,
                     initialDisplayValue: testCase.dv,
+                    channelName: this.bus.channelName,
                 });
 
                 await widget.start({ node: this.node });
                 const selectElem = this.node.querySelector(SELECTOR);
                 expect(selectElem).not.toBeNull();
-                expect(selectElem.children.length).toBe(1); // blank is an option
-                expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).textContent).toBe(
+                expect(selectElem.children.length).toBe(2); // blank is an option
+                expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(
                     testCase.expected
                 );
 
@@ -154,13 +166,13 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                 parameterSpec: this.templateParamSpec,
                 bus: this.bus,
                 initialValue: DEFAULT_VALUE,
+                channelName: this.bus.channelName,
             });
 
             const updateValue = 'apple';
             const updateDisplayValue = { someKey: 'some display value' };
             await widget.start({ node: this.node });
-            const selectElem = this.node.querySelector(SELECTOR);
-            expect(selectElem.firstChild.text).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
@@ -171,7 +183,7 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                 }
             );
 
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).textContent).toBe(
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(
                 `value: ${updateDisplayValue.someKey}`
             );
             await widget.stop();

@@ -44,7 +44,7 @@ define([
 
         function setModelValue(value, display) {
             viewModel.data = value;
-            viewModel.display = display;
+            viewModel.display = display || {};
         }
 
         function resetModelValue() {
@@ -174,7 +174,7 @@ define([
                     node: container,
                 });
                 return makeInputControl(events).then((result) => {
-                    ui.setContent('input-container.subcontrols', result.content);
+                    ui.setContent('input-container', result.content);
                     events.attachEvents();
                     structFields = {};
                     result.fields.forEach((field) => {
@@ -196,7 +196,7 @@ define([
                         return structFields[fieldName].instance.stop();
                     })
                 ).then(() => {
-                    ui.setContent('input-container.subcontrols', '');
+                    ui.setContent('input-container', '');
                     structFields = {};
                 });
             }
@@ -207,12 +207,10 @@ define([
                 {
                     dataElement: 'main-panel',
                 },
-                div(
-                    {
-                        dataElement: 'input-container',
-                    },
-                    div({ dataElement: 'subcontrols', class: `${baseCssClass}__subcontrols` })
-                )
+                div({
+                    dataElement: 'input-container',
+                    class: `${baseCssClass}__subcontrols`,
+                })
             );
         }
 
@@ -223,7 +221,7 @@ define([
                 ui = UI.make({ node: container });
 
                 viewModel.data = Util.copy(config.initialValue);
-                viewModel.display = Util.copy(config.initialDisplayValue);
+                viewModel.display = Util.copy(config.initialDisplayValue || {});
             })
                 .then(() => {
                     return render();

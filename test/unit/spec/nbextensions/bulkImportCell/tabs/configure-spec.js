@@ -160,7 +160,7 @@ define([
                         );
                         // click on the button to check it functions correctly
                         xsvButton.click();
-                        expect(xsvButton.textContent).toContain('Generate CSV Template');
+                        expect(xsvButton.textContent).toContain('Create Import Template');
                         expect(UI.showConfirmDialog).toHaveBeenCalled();
                         return configure.stop();
                     });

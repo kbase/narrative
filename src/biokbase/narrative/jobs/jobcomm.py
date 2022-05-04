@@ -1,6 +1,7 @@
 import copy
 import threading
 from typing import List, Union
+import time
 from ipykernel.comm import Comm
 from biokbase.narrative.jobs.util import load_job_constants
 from biokbase.narrative.jobs.jobmanager import JobManager
@@ -23,7 +24,6 @@ LOOKUP_TIMER_INTERVAL = 5
 
 class JobRequest:
     """
-
     A small wrapper for job comm channel request data.
     This generally comes in the form of a packet from the kernel Comm object.
     It is expected to be a dict of the format:
@@ -34,11 +34,12 @@ class JobRequest:
                 'request_type': job function requested
                 'job_id': optional
                 'job_id_list': optional
+                'batch_id': optional
             }
         }
     }
 
-    This little wrapper fills 2 roles:
+    This little wrapper fills two roles:
     1. It validates that the packet is correct and has some expected values.
     2. If there's a job_id field, it makes sure that it's real (by asking the
        JobManager - avoids a bunch of duplicate validation code)
@@ -52,32 +53,33 @@ class JobRequest:
     Provides the following attributes:
     raw_request     dict    the unedited request received by the job comm
     msg_id          str     unique message id
-    request_type    str     the function to perform. This isn't
-        strictly controlled here, but by JobComm._handle_comm_message.
+    request_type    str     the function to perform. This isn't strictly controlled
+                            here, but by JobComm._handle_comm_message.
     rq_data         dict    the actual data of the request. Contains the request
-        type and other parameters specific to the function to be performed
+                            type and other parameters specific to the function to be
+                            performed
 
-    Optional:
+    The IDs of the job(s) to perform the function on (optional):
     job_id          str
     job_id_list     list(str)
     batch_id        str
-
-    The IDs of the job(s) to perform the function on.
-
     """
 
+    INPUT_TYPES = [PARAM["JOB_ID"], PARAM["JOB_ID_LIST"], PARAM["BATCH_ID"]]
+
     def __init__(self, rq: dict):
-        self.raw_request = copy.deepcopy(rq)
+        rq = copy.deepcopy(rq)
+        self.raw_request = rq
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
-        if self.rq_data is None:
+        if not self.rq_data:
             raise JobRequestException(INVALID_REQUEST_ERR)
         self.request_type = self.rq_data.get("request_type")
-        if self.request_type is None:
+        if not self.request_type:
             raise JobRequestException(MISSING_REQUEST_TYPE_ERR)
 
         input_type_count = 0
-        for input_type in [PARAM["JOB_ID"], PARAM["JOB_ID_LIST"], PARAM["BATCH_ID"]]:
+        for input_type in self.INPUT_TYPES:
             if input_type in self.rq_data:
                 input_type_count += 1
         if input_type_count > 1:
@@ -103,6 +105,9 @@ class JobRequest:
             return self.rq_data[PARAM["BATCH_ID"]]
         raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
+    def has_job_ids(self):
+        return any([input_type in self.rq_data for input_type in self.INPUT_TYPES])
+
     def has_batch_id(self):
         return PARAM["BATCH_ID"] in self.rq_data
 
@@ -111,6 +116,11 @@ class JobRequest:
         if PARAM["CELL_ID_LIST"] in self.rq_data:
             return self.rq_data[PARAM["CELL_ID_LIST"]]
         raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
+
+    @property
+    def ts(self):
+        """This param is completely optional"""
+        return self.rq_data.get(PARAM["TS"])
 
 
 class JobComm:
@@ -189,13 +199,11 @@ class JobComm:
         :return: list of job IDs
         :rtype: List[str]
         """
+        if not req.has_job_ids():
+            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
-
-        try:
-            return req.job_id_list
-        except Exception as ex:
-            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
+        return req.job_id_list
 
     def start_job_status_loop(
         self,
@@ -215,11 +223,12 @@ class JobComm:
                 self._jm.initialize_jobs(cell_list)
             except Exception as e:
                 error = {
-                    "error": "Unable to get initial jobs list",
-                    "message": getattr(e, "message", UNKNOWN_REASON),
-                    "code": getattr(e, "code", -1),
-                    "source": getattr(e, "source", "jobmanager"),
+                    "source": getattr(e, "source", "jc.start_job_status_loop"),
+                    "request": getattr(e, "request", "jc.start_job_status_loop"),
                     "name": getattr(e, "name", type(e).__name__),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
+                    "error": "Unable to get initial jobs list",
+                    "code": getattr(e, "code", -1),
                 }
                 self.send_comm_message(MESSAGE_TYPE["ERROR"], error)
                 # if job init failed, set the lookup loop var back to False and return
@@ -323,13 +332,12 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["INFO"], job_info)
         return job_info
 
-    def __get_job_states(self, job_id_list) -> dict:
+    def _get_send_job_states(self, job_id_list: list, ts: int = None) -> dict:
         """
         Retrieves the job states for the supplied job_ids.
 
         See Job.output_state() for details of job state structure.
 
-        TODO: update as required
         If the ts parameter is present, only jobs that have been updated since that time are returned.
 
         Jobs that cannot be found in the `_running_jobs` index will return
@@ -346,7 +354,7 @@ class JobComm:
         :return: dictionary of job states, indexed by job ID
         :rtype: dict
         """
-        output_states = self._jm.get_job_states(job_id_list)
+        output_states = self._jm.get_job_states(job_id_list, ts)
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
@@ -363,7 +371,7 @@ class JobComm:
         :return: dictionary of job states, indexed by job ID
         :rtype: dict
         """
-        return self.__get_job_states([job_id])
+        return self._get_send_job_states([job_id])
 
     def _get_job_states(self, req: JobRequest) -> dict:
         """
@@ -378,7 +386,7 @@ class JobComm:
         :rtype: dict
         """
         job_id_list = self._get_job_ids(req)
-        return self.__get_job_states(job_id_list)
+        return self._get_send_job_states(job_id_list, req.ts)
 
     def _modify_job_updates(self, req: JobRequest) -> dict:
         """
@@ -507,6 +515,9 @@ class JobComm:
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
+        if msg_type == MESSAGE_TYPE["STATUS"]:
+            content["last_checked"] = time.time_ns()
+
         msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 
@@ -523,14 +534,18 @@ class JobComm:
         It can also be a string or None if this context manager is invoked outside of a JC request
 
         Job error messages have the format:
+
         {
-            request: the original JobRequest data object, function params, or function name
-            source: the function request that spawned the error
-            other fields about the error, dependent on the content.
+            "msg_type": "job_error",
+            "content": {
+                "source": request type from original incoming comm request, if available, else an arbitrary str/NoneType,
+                "request": request data from original incoming comm request, if available, else an arbitrary str/NoneType,
+                **{any extra error information}
+            }
         }
 
         :param req: job request context, either a job request received over the channel or a string
-        :type req: Union[JobRequest, dict, str]
+        :type req:          JobRequest, dict, str, or NoneType
         :param content: dictionary of extra data to include in the error message, defaults to None
         :type content: dict, optional
         """
@@ -546,7 +561,7 @@ class JobComm:
             error_content["request"] = req
             error_content["source"] = req
 
-        if content is not None:
+        if content:
             error_content.update(content)
 
         self.send_comm_message(MESSAGE_TYPE["ERROR"], error_content)
@@ -554,7 +569,8 @@ class JobComm:
 
 class exc_to_msg:
     """
-    This is a context manager to wrap around JC code
+    This is a context manager to wrap around JobComm code in order to catch any exception,
+    send it back as a comm error messages, and then re-raise that exception
     """
 
     jc = JobComm()
@@ -574,17 +590,18 @@ class exc_to_msg:
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         """
-        If exception is caught, will send job comm message in this format
+        If an exception is caught during execution in the JobComm code,
+        this will send back a comm error message like:
         {
-            "msg_type": ERROR,
+            "msg_type": "job_error",
             "content": {
-                "source": "request_type",
-                "job_id": "0123456789abcdef",  # or job_id_list. optional and mutually exclusive
-                "name": "ValueError",
-                "message": "Something happened",
-                #---------- Below, NarrativeException only -----------
-                "code": -1,
-                "error": "Unable to complete this request"
+                "source": request type from original incoming comm request, if available, else an arbitrary str/NoneType,
+                "request": request data from original incoming comm request, if available, else an arbitrary str/NoneType,
+                "name": exception name,  # e.g., ValueError
+                "message": exception message,  # e.g. "Something specifically went wrong!"
+                #---------- Below, for NarrativeException only -----------
+                "error": exception error attribute,  # e.g. "Unable to complete this request"
+                "code": exception code attribute,  # e.g., -1
             }
         }
         Will then re-raise exception

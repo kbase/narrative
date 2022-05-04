@@ -7,7 +7,8 @@
         "JOB_ID_LIST": "job_id_list",
         "FIRST_LINE": "first_line",
         "LATEST": "latest",
-        "NUM_LINES": "num_lines"
+        "NUM_LINES": "num_lines",
+        "TS": "ts"
     },
     "message_types": {
         "CANCEL": "cancel_job",

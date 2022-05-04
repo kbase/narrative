@@ -23,17 +23,25 @@ define(['bluebird', 'common/html'], (Promise, html) => {
      */
 
     function normaliseErrorObject(rawObject) {
-        if (rawObject.exec && rawObject.exec.jobState) {
-            rawObject = { jobState: rawObject.exec.jobState };
-        }
-
         let errorObject;
-        if (rawObject.jobState && (rawObject.jobState.error || rawObject.jobState.errormsg)) {
-            errorObject = convertJobError(rawObject.jobState);
+        if (rawObject.fatalError) {
+            errorObject = convertInternalError(rawObject.fatalError);
         } else if (rawObject.internalError) {
             errorObject = convertInternalError(rawObject.internalError);
         } else if (rawObject.appError) {
             errorObject = convertAppError(rawObject.appError);
+        } else if (
+            rawObject.exec &&
+            rawObject.exec.jobState &&
+            (rawObject.exec.jobState.error || rawObject.exec.jobState.errormsg)
+        ) {
+            rawObject = { jobState: rawObject.exec.jobState };
+            errorObject = convertJobError(rawObject.jobState);
+        } else if (
+            rawObject.jobState &&
+            (rawObject.jobState.error || rawObject.jobState.errormsg)
+        ) {
+            errorObject = convertJobError(rawObject.jobState);
         }
 
         if (!errorObject) {

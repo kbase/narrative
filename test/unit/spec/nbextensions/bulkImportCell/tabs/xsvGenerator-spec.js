@@ -437,10 +437,7 @@ define([
                     expect(this.xsvGen.runRequest.calls.allArgs()).toEqual([
                         [
                             {
-                                types: {
-                                    // only the SRA reads are selected
-                                    sra_reads: expectedOutput.sra_reads,
-                                },
+                                types: expectedOutput,
                                 // these are the defaults
                                 output_directory: 'bulk_import_templates',
                                 output_file_type: 'CSV',

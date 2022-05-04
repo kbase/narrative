@@ -292,7 +292,7 @@ define([
                     span({
                         class: `${cssBaseClass}__button_icon--add_row fa fa-download`,
                     }),
-                    'Generate CSV Template',
+                    'Create Import Template',
                 ]
             );
         }

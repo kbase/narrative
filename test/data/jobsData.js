@@ -317,6 +317,7 @@ define([
             canCancel: false,
             canRetry: false,
             createJobStatusLines: {
+                summary: 'Job not found',
                 line: jobStrings.not_found,
                 history: [jobStrings.not_found],
             },

@@ -243,7 +243,7 @@ define([
             if (
                 !this._isValidEvent(event) ||
                 !this.handlers[event] ||
-                !Object.keys(this.handlers[event])
+                !Object.keys(this.handlers[event]).length
             ) {
                 return;
             }
@@ -251,10 +251,14 @@ define([
             Object.keys(this.handlers[event])
                 .sort()
                 .forEach((handlerName) => {
-                    try {
-                        this.handlers[event][handlerName](ctx, ...args);
-                    } catch (err) {
-                        console.warn(`Error executing handler ${handlerName}:`, err);
+                    // ensure the handler exists before trying to execute as it's possible
+                    // for the handler to be removed by another process during iteration
+                    if (this.handlers[event][handlerName]) {
+                        try {
+                            this.handlers[event][handlerName](ctx, ...args);
+                        } catch (err) {
+                            console.warn(`Error executing handler ${handlerName}:`, err);
+                        }
                     }
                 });
         }
@@ -430,16 +434,21 @@ define([
                     this.looper = new Looper({ pollInterval: this.pollInterval });
                 }
 
+                // add the default job status handler
                 this.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
-                    // default job status handler
                     [`__default_${jcm.MESSAGE_TYPE.STATUS}`]: self.handleJobStatus.bind(self),
-
-                    // set up a delayed request for job status, executed after this.pollInterval ms
-                    jobStatusLooper: () => {
-                        self.looper.scheduleRequest(self.requestJobStatus.bind(self));
-                    },
                 });
-                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: job.job_id });
+
+                if (!Jobs.isTerminalStatus(job.status)) {
+                    // if the job isn't terminal, add the job status request scheduler
+                    this.addEventHandler(jcm.MESSAGE_TYPE.STATUS, {
+                        // set up a delayed request for job status, executed after this.pollInterval ms
+                        jobStatusLooper: () => {
+                            self.looper.scheduleRequest(self.requestJobStatus.bind(self));
+                        },
+                    });
+                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: job.job_id });
+                }
             }
 
             /**
@@ -463,8 +472,8 @@ define([
 
                 if (Jobs.isTerminalStatus(job.status)) {
                     // no more updates. Remove the looping request handler
-                    this.looper.clearRequest();
                     this.removeEventHandler(jcm.MESSAGE_TYPE.STATUS, 'jobStatusLooper');
+                    this.looper.clearRequest();
                     return;
                 }
 
@@ -488,6 +497,11 @@ define([
                     if (_.isEqual(jobState, job)) {
                         // no update required
                         return;
+                    }
+                    if (Jobs.isTerminalStatus(jobState.status)) {
+                        // no more updates. Remove the looping request handler
+                        this.removeEventHandler(jcm.MESSAGE_TYPE.STATUS, 'jobStatusLooper');
+                        this.looper.clearRequest();
                     }
                     // update the model
                     self.updateModel(jobState);
@@ -518,9 +532,6 @@ define([
                 const jobId = this.model.getItem('exec.jobState.job_id');
                 if (jobId) {
                     this.bus.emit(jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID]: jobId });
-                    if (this.looper) {
-                        this.looper.clearRequest();
-                    }
                 }
             }
 

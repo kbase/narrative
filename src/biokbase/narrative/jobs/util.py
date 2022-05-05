@@ -51,7 +51,7 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
                 f"job_config.json is missing the '{datatype}' config section"
             )
         missing = [item for item in example_list if item not in config[datatype]]
-        if len(missing):
+        if missing:
             raise ValueError(
                 f"job_config.json is missing the following values for {datatype}: "
                 + ", ".join(missing)

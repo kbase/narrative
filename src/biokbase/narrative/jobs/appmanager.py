@@ -1004,7 +1004,7 @@ class AppManager:
         if "prefix" in generator:
             ret = str(generator["prefix"]) + ret
         if "suffix" in generator:
-            ret = ret + str(generator["suffix"])
+            return ret + str(generator["suffix"])
         return ret
 
     def _send_comm_message(self, msg_type, content):

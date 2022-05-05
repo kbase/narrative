@@ -82,8 +82,8 @@ JOB_INPUT_ATTRS = [
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
 
 
-class Job(object):
-    _job_logs = list()
+class Job:
+    _job_logs = []
     _acc_state = None  # accumulates state
 
     def __init__(self, ee2_state, extra_data=None, children=None):
@@ -119,7 +119,7 @@ class Job(object):
     @classmethod
     def from_job_ids(cls, job_ids, return_list=True):
         states = cls.query_ee2_states(job_ids, init=True)
-        jobs = dict()
+        jobs = {}
         for job_id, state in states.items():
             jobs[job_id] = cls(state)
 
@@ -175,25 +175,25 @@ class Job(object):
         """
         Map expected job attributes to paths in stored ee2 state
         """
-        attr = dict(
-            app_id=lambda: self._acc_state.get("job_input", {}).get(
+        attr = {
+            "app_id": lambda: self._acc_state.get("job_input", {}).get(
                 "app_id", JOB_ATTR_DEFAULTS["app_id"]
             ),
-            app_version=lambda: self._acc_state.get("job_input", {}).get(
+            "app_version": lambda: self._acc_state.get("job_input", {}).get(
                 "service_ver", JOB_ATTR_DEFAULTS["app_version"]
             ),
-            batch_id=lambda: (
+            "batch_id": lambda: (
                 self.job_id
                 if self.batch_job
                 else self._acc_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
             ),
-            batch_job=lambda: self._acc_state.get(
+            "batch_job": lambda: self._acc_state.get(
                 "batch_job", JOB_ATTR_DEFAULTS["batch_job"]
             ),
-            cell_id=lambda: self._acc_state.get("job_input", {})
+            "cell_id": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
-            child_jobs=lambda: copy.deepcopy(
+            "child_jobs": lambda: copy.deepcopy(
                 # TODO
                 # Only batch container jobs have a child_jobs field
                 # and need the state refresh.
@@ -205,13 +205,13 @@ class Job(object):
                 if self.batch_job
                 else self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
             ),
-            job_id=lambda: self._acc_state.get("job_id"),
-            params=lambda: copy.deepcopy(
+            "job_id": lambda: self._acc_state.get("job_id"),
+            "params": lambda: copy.deepcopy(
                 self._acc_state.get("job_input", {}).get(
                     "params", JOB_ATTR_DEFAULTS["params"]
                 )
             ),
-            retry_ids=lambda: copy.deepcopy(
+            "retry_ids": lambda: copy.deepcopy(
                 # Batch container and retry jobs don't have a
                 # retry_ids field so skip the state refresh
                 self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
@@ -220,18 +220,18 @@ class Job(object):
                     "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
                 )
             ),
-            retry_parent=lambda: self._acc_state.get(
+            "retry_parent": lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
             ),
-            run_id=lambda: self._acc_state.get("job_input", {})
+            "run_id": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
             # TODO: add the status attribute!
-            tag=lambda: self._acc_state.get("job_input", {})
+            "tag": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("tag", JOB_ATTR_DEFAULTS["tag"]),
-            user=lambda: self._acc_state.get("user", JOB_ATTR_DEFAULTS["user"]),
-        )
+            "user": lambda: self._acc_state.get("user", JOB_ATTR_DEFAULTS["user"]),
+        }
 
         if name not in attr:
             raise AttributeError(f"'Job' object has no attribute '{name}'")
@@ -543,7 +543,7 @@ class Job(object):
             num_lines = 0
 
         if first_line >= num_available_lines or num_lines <= 0:
-            return (num_available_lines, list())
+            return (num_available_lines, [])
         return (
             num_available_lines,
             self._job_logs[first_line : first_line + num_lines],

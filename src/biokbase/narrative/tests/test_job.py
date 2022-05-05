@@ -69,8 +69,7 @@ CHILD_ID_MISMATCH = "Child job id mismatch"
 
 def create_job_from_ee2(job_id, extra_data=None, children=None):
     state = get_test_job(job_id)
-    job = Job(state, extra_data=extra_data, children=children)
-    return job
+    return Job(state, extra_data=extra_data, children=children)
 
 
 def create_state_from_ee2(job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
@@ -91,26 +90,25 @@ def create_attrs_from_ee2(job_id):
 
     job_input = state.get("job_input", {})
     narr_cell_info = job_input.get("narrative_cell_info", {})
-    attrs = dict(
-        app_id=job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"]),
-        app_version=job_input.get("service_ver", JOB_ATTR_DEFAULTS["app_version"]),
-        batch_id=(
+    return {
+        "app_id": job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"]),
+        "app_version": job_input.get("service_ver", JOB_ATTR_DEFAULTS["app_version"]),
+        "batch_id": (
             state.get("job_id")
             if state.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
             else state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
         ),
-        batch_job=state.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"]),
-        cell_id=narr_cell_info.get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
-        child_jobs=state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]),
-        job_id=state.get("job_id"),
-        params=job_input.get("params", JOB_ATTR_DEFAULTS["params"]),
-        retry_ids=state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]),
-        retry_parent=state.get("retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]),
-        run_id=narr_cell_info.get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
-        tag=narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"]),
-        user=state.get("user", JOB_ATTR_DEFAULTS["user"]),
-    )
-    return attrs
+        "batch_job": state.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"]),
+        "cell_id": narr_cell_info.get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
+        "child_jobs": state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]),
+        "job_id": state.get("job_id"),
+        "params": job_input.get("params", JOB_ATTR_DEFAULTS["params"]),
+        "retry_ids": state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]),
+        "retry_parent": state.get("retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]),
+        "run_id": narr_cell_info.get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
+        "tag": narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"]),
+        "user": state.get("user", JOB_ATTR_DEFAULTS["user"]),
+    }
 
 
 def get_widget_info(job_id):
@@ -165,7 +163,7 @@ def get_all_jobs(return_list=False):
         if job_id not in jobs:
             jobs[job_id] = create_job_from_ee2(job_id)
     if return_list:
-        jobs = list(jobs.values())
+        return [jobs.values()]
     return jobs
 
 
@@ -185,15 +183,19 @@ class JobTest(unittest.TestCase):
         for attr in JOB_ATTRS:
             self.assertEqual(getattr(jobl, attr), getattr(jobr, attr))
 
-    def check_job_attrs_custom(self, job, exp_attr={}):
+    def check_job_attrs_custom(self, job, exp_attr=None):
+        if not exp_attr:
+            exp_attr = {}
         attr = dict(JOB_ATTR_DEFAULTS)
         attr.update(exp_attr)
         with mock.patch(CLIENTS, get_mock_client):
             for name, value in attr.items():
                 self.assertEqual(value, getattr(job, name))
 
-    def check_job_attrs(self, job, job_id, exp_attrs={}, skip_state=False):
+    def check_job_attrs(self, job, job_id, exp_attrs=None, skip_state=False):
         # TODO check _acc_state full vs pruned, extra_data
+        if not exp_attrs:
+            exp_attrs = {}
 
         # Check state() if no special values expected
         if not exp_attrs and not skip_state:
@@ -720,7 +722,7 @@ class JobTest(unittest.TestCase):
         self.assertFalse(batch_job.was_terminal())
 
         def mock_check_job(self_, params):
-            assert params["job_id"] in BATCH_CHILDREN
+            self.assertTrue(params["job_id"] in BATCH_CHILDREN)
             return {"status": COMPLETED_STATUS}
 
         with mock.patch.object(MockClients, "check_job", mock_check_job):

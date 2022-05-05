@@ -1,6 +1,3 @@
-"""
-Tests for job management
-"""
 import copy
 import itertools
 import os
@@ -74,6 +71,10 @@ NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
 
 class JobManagerTest(unittest.TestCase):
+    """
+    Tests for job management
+    """
+
     @classmethod
     @mock.patch(CLIENTS, get_mock_client)
     def setUpClass(cls):

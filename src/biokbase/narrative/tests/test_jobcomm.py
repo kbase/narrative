@@ -490,7 +490,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jm._jobs_by_cell_id = {}
         self.jm = JobManager()
         self.assertEqual(self.jm._running_jobs, {})
-        # this will trigger a call to _get_all_job_states
+        # this will trigger a call to get_all_job_states
         # a message containing all jobs (i.e. {}) will be sent out
         # when it returns 0 jobs, the JobComm will run stop_job_status_loop
         self.jc.start_job_status_loop()

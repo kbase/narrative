@@ -49,6 +49,7 @@ define([
                 displayValue: undefined,
                 value: undefined,
                 descriptionFields: new Set(),
+                exactMatchError: false,
             };
         let parent, container, ui;
         if (typeof ddOptions.query_on_empty_input === 'undefined') {
@@ -170,6 +171,9 @@ define([
 
         function validate() {
             return Promise.try(() => {
+                if (model.exactMatchError) {
+                    return Validation.validateFalse(model.value);
+                }
                 let selectedItem = getControlValue();
                 const validationConstraints = {
                     min_length: spec.data.constraints.min_length,
@@ -324,6 +328,7 @@ define([
             };
 
             if (result.isValid) {
+                model.exactMatchError = false;
                 const newValue =
                     result.parsedValue === undefined ? result.value : result.parsedValue;
                 model.value = newValue;
@@ -337,20 +342,21 @@ define([
                 }
                 changeMsg.newDisplayValue = model.displayValue;
                 changeMsg.newValue = newValue;
+                channel.emit('changed', changeMsg);
             } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                 model.value = spec.data.nullValue;
+                channel.emit('changed', changeMsg);
+            } else if (result.diagnosis === Constants.DIAGNOSIS.INVALID && model.exactMatchError) {
+                result.errorMessage = `An exact match was not found for "${model.value}". Please search again.`;
             }
-            channel.emit('changed', changeMsg);
-            channel.emit('validation', {
-                errorMessage: result.errorMessage,
-                diagnosis: result.diagnosis,
-            });
+            channel.emit('validation', result);
         }
 
         /**
          * Clears the current selection and updates the model.
          */
         function doClear() {
+            model.exactMatchError = false;
             $(ui.getElement('input-container.input')).html('');
             model.value = spec.data.nullValue;
             channel.emit('changed', {
@@ -488,83 +494,106 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function render() {
-            return Promise.try(() => {
-                const inputControl = makeInputControl(),
-                    content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
+        async function render() {
+            const inputControl = makeInputControl(),
+                content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
-                ui.setContent('input-container', content);
-                const dropdown = $(ui.getElement('input-container.input'));
-                const data = [];
-                if (config.isViewOnly) {
-                    let viewData = {
-                        selected: true,
-                        id: config.initialValue || undefined,
-                        text: config.initialValue,
-                    };
-                    if (config.initialDisplayValue) {
-                        if (typeof config.initialDisplayValue === 'string') {
-                            viewData.text = config.initialDisplayValue;
-                        } else if (
-                            config.initialDisplayValue !== null &&
-                            typeof config.initialDisplayValue === 'object'
-                        ) {
-                            viewData = Object.assign(viewData, config.initialDisplayValue);
-                            if (!viewData.text) {
-                                viewData.text = viewData.id;
-                            }
+            ui.setContent('input-container', content);
+            const dropdown = $(ui.getElement('input-container.input'));
+            const data = [];
+
+            if (config.isViewOnly) {
+                let viewData = {
+                    selected: true,
+                    id: config.initialValue || undefined,
+                    text: config.initialValue,
+                };
+                if (config.initialDisplayValue) {
+                    if (typeof config.initialDisplayValue === 'string') {
+                        viewData.text = config.initialDisplayValue;
+                    } else if (
+                        config.initialDisplayValue !== null &&
+                        typeof config.initialDisplayValue === 'object'
+                    ) {
+                        viewData = Object.assign(viewData, config.initialDisplayValue);
+                        if (!viewData.text) {
+                            viewData.text = viewData.id;
                         }
                     }
-                    data.push(viewData);
                 }
-                dropdown.select2({
-                    allowClear: true,
-                    disabled: config.isViewOnly,
-                    templateResult: formatObjectDisplay,
-                    templateSelection: selectionTemplate,
-                    data: config.isViewOnly ? data : null,
-                    ajax: {
-                        delay: 250,
-                        processResults: (data) => {
-                            // update the currently selected one if applicable
-                            const currentData = dropdown.select2('data')[0];
-                            if (currentData) {
-                                const updatedData = data.results.filter((item) => {
-                                    return item.id === currentData.id;
-                                });
-                                if (updatedData.length) {
-                                    for (const key of Object.keys(updatedData[0])) {
-                                        currentData[key] = updatedData[0][key];
-                                    }
-                                    dropdown.trigger('change');
+                data.push(viewData);
+            }
+
+            // if there's an initialValue AND the config says to do a lookup
+            // on startup, do that as part of rendering?
+            else if (model.value && !model.displayValue && ddOptions.exact_match_on) {
+                const searchResults = await fetchData(model.value);
+                // verify that we have an exact match
+                let match = null;
+                for (const result of searchResults) {
+                    if (
+                        model.value.toLowerCase() === result[ddOptions.exact_match_on].toLowerCase()
+                    ) {
+                        match = result;
+                        break;
+                    }
+                }
+                if (match) {
+                    data.push(Object.assign(match, { selected: true }));
+                    model.value = match.id;
+                } else {
+                    model.exactMatchError = true;
+                }
+            }
+
+            dropdown.select2({
+                allowClear: true,
+                disabled: config.isViewOnly,
+                templateResult: formatObjectDisplay,
+                templateSelection: selectionTemplate,
+                data,
+                ajax: {
+                    delay: 250,
+                    processResults: (data) => {
+                        // update the currently selected one if applicable
+                        const currentData = dropdown.select2('data')[0];
+                        if (currentData) {
+                            const updatedData = data.results.filter((item) => {
+                                return item.id === currentData.id;
+                            });
+                            if (updatedData.length) {
+                                for (const key of Object.keys(updatedData[0])) {
+                                    currentData[key] = updatedData[0][key];
                                 }
+                                dropdown.trigger('change');
                             }
-                            return data;
-                        },
-                        transport: function (params, success, failure) {
-                            return fetchData(params.data.term)
-                                .then((data) => {
-                                    success({ results: data });
-                                })
-                                .catch((err) => {
-                                    console.error(err);
-                                    failure(err);
-                                });
-                        },
+                        }
+                        return data;
                     },
-                    placeholder: {
-                        id: 'select an option',
+                    transport: function (params, success, failure) {
+                        model.exactMatchError = false;
+                        return fetchData(params.data.term)
+                            .then((data) => {
+                                success({ results: data });
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                failure(err);
+                            });
                     },
-                });
-                dropdown
-                    .on('change', () => {
-                        const data = dropdown.select2('data');
-                        return doChange(data ? data[0] : {});
-                    })
-                    .on('select2:clear', () => {
-                        doClear();
-                    });
+                },
+                placeholder: {
+                    id: 'select an option',
+                },
             });
+            dropdown
+                .on('change', () => {
+                    const data = dropdown.select2('data');
+                    return doChange(data ? data[0] : {});
+                })
+                .on('select2:clear', () => {
+                    doClear();
+                });
         }
 
         /*
@@ -591,7 +620,7 @@ define([
         }
 
         // LIFECYCLE API
-        function start(arg) {
+        async function start(arg) {
             parent = arg.node;
             container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
@@ -606,16 +635,15 @@ define([
                 model.displayValue = config.initialDisplayValue;
             }
 
-            return render().then(() => {
-                channel.on('reset-to-defaults', () => {
-                    resetModelValue();
-                });
-                channel.on('update', (message) => {
-                    setModelValue(message.value, message.displayValue);
-                });
-                updateControlValue();
-                return autoValidate();
+            await render();
+            channel.on('reset-to-defaults', () => {
+                resetModelValue();
             });
+            channel.on('update', (message) => {
+                setModelValue(message.value, message.displayValue);
+            });
+            updateControlValue();
+            return autoValidate();
         }
 
         function stop() {

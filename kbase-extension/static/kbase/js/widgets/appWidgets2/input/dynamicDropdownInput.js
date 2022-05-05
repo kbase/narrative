@@ -131,7 +131,7 @@ define([
             const value = model.value;
             const displayValue = model.displayValue || {};
             const control = ui.getElement('input-container.input');
-            if (model.value) {
+            if (value) {
                 const selectorValue = value.replace(/"/g, '\\"').replace(/'/g, "\\'");
                 if ($(control).find(`option[value="${selectorValue}"]`).length) {
                     $(control).val(value).trigger('change');
@@ -172,7 +172,9 @@ define([
         function validate() {
             return Promise.try(() => {
                 if (model.exactMatchError) {
-                    return Validation.validateFalse(model.value);
+                    const response = Validation.validateFalse(model.value);
+                    response.errorMessage = `An exact match was not found for "${model.value}". Please search again.`;
+                    return response;
                 }
                 let selectedItem = getControlValue();
                 const validationConstraints = {
@@ -305,7 +307,7 @@ define([
                         // could check here that each item is a map? YAGNI
                         obj = flattenObject(obj);
                         if (!('id' in obj)) {
-                            obj.id = _index;
+                            obj.id = String(_index);
                         }
                         // this blows away any 'text' field
                         obj.text = obj[ddOptions.selection_id];
@@ -346,8 +348,6 @@ define([
             } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                 model.value = spec.data.nullValue;
                 channel.emit('changed', changeMsg);
-            } else if (result.diagnosis === Constants.DIAGNOSIS.INVALID && model.exactMatchError) {
-                result.errorMessage = `An exact match was not found for "${model.value}". Please search again.`;
             }
             channel.emit('validation', result);
         }
@@ -522,11 +522,7 @@ define([
                     }
                 }
                 data.push(viewData);
-            }
-
-            // if there's an initialValue AND the config says to do a lookup
-            // on startup, do that as part of rendering?
-            else if (model.value && !model.displayValue && ddOptions.exact_match_on) {
+            } else if (model.value && !model.displayValue && ddOptions.exact_match_on) {
                 const searchResults = await fetchData(model.value);
                 // verify that we have an exact match
                 let match = null;
@@ -612,10 +608,7 @@ define([
 
         function autoValidate() {
             return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                channel.emit('validation', result);
             });
         }
 

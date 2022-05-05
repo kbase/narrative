@@ -39,6 +39,7 @@ define([
         const runtime = Runtime.make(),
             paramsBus = config.bus,
             initialParams = config.initialParams,
+            initialDisplay = config.initialDisplay,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
@@ -87,13 +88,14 @@ define([
         - intercepts messages in order to display status.
         */
 
-        function makeFieldWidget(appSpec, parameterSpec, value) {
+        function makeFieldWidget(appSpec, parameterSpec, value, displayValue) {
             return paramResolver.loadViewControl(parameterSpec).then((inputWidget) => {
                 const fieldWidget = FieldWidget.make({
                     inputControlFactory: inputWidget,
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
+                    initialDisplayValue: displayValue,
                     appSpec,
                     parameterSpec,
                     workspaceId: runtime.workspaceId(),
@@ -467,7 +469,8 @@ define([
                                         return makeFieldWidget(
                                             appSpec,
                                             spec,
-                                            initialParams[spec.id]
+                                            initialParams[spec.id],
+                                            initialDisplay[spec.id]
                                         ).then((widget) => {
                                             widgets.push(widget);
 
@@ -507,7 +510,8 @@ define([
                                         return makeFieldWidget(
                                             appSpec,
                                             spec,
-                                            initialParams[spec.id]
+                                            initialParams[spec.id],
+                                            initialDisplay[spec.id]
                                         ).then((widget) => {
                                             widgets.push(widget);
 
@@ -547,7 +551,8 @@ define([
                                         return makeFieldWidget(
                                             appSpec,
                                             spec,
-                                            initialParams[spec.id]
+                                            initialParams[spec.id],
+                                            initialDisplay[spec.id]
                                         ).then((widget) => {
                                             widgets.push(widget);
 

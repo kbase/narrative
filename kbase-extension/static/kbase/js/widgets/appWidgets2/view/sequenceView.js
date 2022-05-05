@@ -1,8 +1,6 @@
 define([
-    'require',
     'bluebird',
     'common/html',
-    'common/events',
     'common/ui',
     'common/runtime',
     'util/util',
@@ -12,25 +10,13 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (
-    require,
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Util,
-    Props,
-    Resolver,
-    Validation,
-    FieldWidget
-) => {
+], (Promise, html, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
-        button = t('button');
+        baseCssClass = 'kb-appInput__sequence';
 
     function factory(config) {
         let container, parent, ui;
@@ -41,6 +27,7 @@ define([
             channel = busConnection.channel(config.channelName),
             model = {
                 value: [],
+                display: [],
             },
             viewModel = Props.make({
                 data: {
@@ -56,20 +43,14 @@ define([
             model.value = newModel;
         }
 
-        function setModelValue(value, index) {
+        // TODO: actually make this update the set of inputs.
+        function setModelValue(value, display) {
             return Promise.try(() => {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
-                    } else {
-                        model.value.splice(index, 1);
-                    }
+                if (value) {
+                    model.value = value;
+                    model.display = display;
                 } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
+                    unsetModelValue();
                 }
                 normalizeModel();
             }).then(() => {
@@ -85,10 +66,6 @@ define([
             });
         }
 
-        function resetModelValue() {
-            return;
-        }
-
         function exportModel() {
             return viewModel.getItem('items').map((value) => {
                 return value.value;
@@ -97,7 +74,6 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                // TODO: validate all items within the list as well!
                 return Validation.validate(rawValue, spec);
             });
         }
@@ -118,7 +94,7 @@ define([
                         showInfo: false,
                         useRowHighight: true,
                         initialValue: control.value,
-                        initialDisplayValue: control.display,
+                        initialDisplayValue: control.displayValue,
                         parameterSpec: itemSpec,
                         referenceType: 'ref',
                         paramsChannelName: config.paramsChannelName,
@@ -151,39 +127,19 @@ define([
                     },
                 });
 
-                const postButton = div(
-                    {
-                        class: 'input-group-addon kb-input-group-addon',
-                        style: {
-                            padding: '0',
-                        },
-                    },
-                    button(
-                        {
-                            class: 'btn btn-link btn-xs',
-                            type: 'button',
-                            style: { width: '4ex' },
-                            dataIndex: String(control.index),
-                        },
-                        ''
-                    )
-                );
                 const content = div(
                     {
+                        class: `${baseCssClass}__row`,
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
-                        style: {
-                            width: '100%',
-                            padding: '2px',
-                        },
                     },
-                    [div({ class: 'input-group' }, [div({ id: widgetId }), postButton])]
+                    div({ id: widgetId })
                 );
                 return {
                     id: widgetId,
                     instance: fieldWidget,
                     bus: inputBus,
-                    content: content,
+                    content,
                 };
             });
         }
@@ -200,65 +156,57 @@ define([
               Set focus on the new input control
         */
 
-        function addNewControl(initialValue) {
+        function addNewControl(initialValue, initialDisplayValue) {
             if (initialValue === undefined) {
                 initialValue = Util.copy(itemSpec.data.defaultValue);
             }
-            return Promise.try(() => {
-                const events = Events.make({ node: container });
-                const control = {
-                    // current native value.
-                    value: initialValue,
-                    // the actual input control (or field wrapper around such)
-                    inputControl: null,
-                    // the actual dome node (used?) to which the input control is attached
-                    node: null,
-                    // the current index - note: used by the inputControl
-                    index: null,
-                };
-                const index = viewModel.pushItem(['items'], control);
-                control.index = index;
-                const parent = ui.getElement('control-container');
-                const controlNode = document.createElement('div');
-                parent.appendChild(controlNode);
-                return makeSingleViewControl(control, events)
-                    .then((inputControl) => {
-                        // This adds the control wrapper html.
-                        controlNode.innerHTML = inputControl.content;
-                        // Each wrapper has a node inside with id "id" for
-                        // the control to attach to.
-                        const attachmentNode = document.getElementById(inputControl.id);
-                        control.node = controlNode;
-                        control.inputControl = inputControl;
+            const control = {
+                // current native value.
+                value: initialValue,
+                displayValue: initialDisplayValue,
+                // the actual input control (or field wrapper around such)
+                inputControl: null,
+                // the actual dome node (used?) to which the input control is attached
+                node: null,
+                // the current index - note: used by the inputControl
+                index: null,
+            };
+            const index = viewModel.pushItem(['items'], control);
+            control.index = index;
+            const parent = ui.getElement('control-container');
+            const controlNode = document.createElement('div');
+            parent.appendChild(controlNode);
+            return makeSingleViewControl(control)
+                .then((inputControl) => {
+                    // This adds the control wrapper html.
+                    controlNode.innerHTML = inputControl.content;
+                    // Each wrapper has a node inside with id "id" for
+                    // the control to attach to.
+                    const attachmentNode = document.getElementById(inputControl.id);
+                    control.node = controlNode;
+                    control.inputControl = inputControl;
 
-                        return inputControl.instance.start({
-                            node: attachmentNode,
-                        });
-                    })
-                    .then(() => {
-                        events.attachEvents();
-                        return index;
-                    })
-                    .catch((err) => {
-                        console.error('ERROR!!!', err);
+                    return inputControl.instance.start({
+                        node: attachmentNode,
                     });
-            });
+                })
+                .then(() => {
+                    return index;
+                })
+                .catch((err) => {
+                    console.error('ERROR!!!', err);
+                });
         }
 
         function addEmptyControl() {
             const controlContainer = ui.getElement('control-container');
             controlContainer.innerHTML = div(
-                {
-                    style: {
-                        fontStyle: 'italic',
-                        color: 'gray',
-                    },
-                },
+                { class: `${baseCssClass}__empty` },
                 'no items to display'
             );
         }
 
-        function render(initialValue) {
+        function render(initialValue, initialDisplayValue) {
             return Promise.try(() => {
                 // render now just builds the initial view
                 container.innerHTML = makeLayout();
@@ -266,9 +214,12 @@ define([
                 if (!initialValue || initialValue.length === 0) {
                     return addEmptyControl();
                 }
+                if (!initialDisplayValue) {
+                    initialDisplayValue = Array(initialValue.length);
+                }
                 return Promise.all(
-                    initialValue.map((value) => {
-                        return addNewControl(value);
+                    initialValue.map((value, index) => {
+                        return addNewControl(value, initialDisplayValue[index]);
                     })
                 ).then(() => {
                     autoValidate();
@@ -303,36 +254,31 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                return render(config.initialValue).then(() => {
-                    channel.on('reset-to-defaults', () => {
-                        resetModelValue();
-                    });
+                return render(config.initialValue, config.initialDisplayValue).then(() => {
                     channel.on('update', (message) => {
-                        setModelValue(message.value);
+                        setModelValue(message.value, message.displayValue);
                     });
-                    channel.on('refresh', () => {});
-
                     return autoValidate();
-                    // bus.emit('sync');
                 });
             });
         }
 
         function stop() {
-            return Promise.try(() => {
-                return Promise.all(
-                    viewModel.getItem('items').map((item) => {
-                        return item.inputControl.instance.stop();
-                    })
-                ).then(() => {
-                    busConnection.stop();
-                });
+            return Promise.all(
+                viewModel.getItem('items').map((item) => {
+                    return item.inputControl.instance.stop();
+                })
+            ).then(() => {
+                if (container) {
+                    container.remove();
+                }
+                busConnection.stop();
             });
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

@@ -51,7 +51,6 @@ define([
                 descriptionFields: new Set(),
             };
         let parent, container, ui;
-
         if (typeof ddOptions.query_on_empty_input === 'undefined') {
             ddOptions.query_on_empty_input = 1;
         }
@@ -145,16 +144,18 @@ define([
                 }
             }
         }
+
         // MODEL
 
         function setModelValue(value, displayValue) {
-            if (model.value === undefined) {
+            if (value === undefined) {
                 return;
             }
             if (model.value !== value) {
                 model.value = value;
-                model.displayValue = displayValue;
+                model.displayValue = displayValue || {};
             }
+            updateControlValue();
         }
 
         function resetModelValue() {
@@ -413,24 +414,24 @@ define([
          *    the text?
          * See https://select2.org/dropdown#templating for more details.
          */
-        function formatObjectDisplay(retObj) {
-            if (!retObj.id) {
-                return retObj.text || '';
+        function formatObjectDisplay(obj) {
+            if (!obj.id) {
+                return obj.text || '';
             } else if (dataSource === 'ftp_staging') {
-                return formatFtpStagingDisplay(retObj);
+                return config.isViewOnly ? obj.id : formatFtpStagingDisplay(obj);
             } else {
                 let formattedString;
                 // if we have a template and at least one item to fill the template with,
                 // do the formatted template
                 if (
                     ddOptions.description_template &&
-                    [...model.descriptionFields].some((key) => key in retObj)
+                    [...model.descriptionFields].some((key) => key in obj)
                 ) {
-                    formattedString = formatDescriptionTemplate(retObj);
+                    formattedString = formatDescriptionTemplate(obj);
                 }
                 // otherwise, if we have a text use that. And if not, use the id as a last resort.
                 else {
-                    formattedString = retObj.text || retObj.id;
+                    formattedString = obj.text || obj.id;
                 }
                 // and squash the result in a jQuery object with a div.
                 return $(
@@ -494,10 +495,34 @@ define([
 
                 ui.setContent('input-container', content);
                 const dropdown = $(ui.getElement('input-container.input'));
+                const data = [];
+                if (config.isViewOnly) {
+                    let viewData = {
+                        selected: true,
+                        id: config.initialValue || undefined,
+                        text: config.initialValue,
+                    };
+                    if (config.initialDisplayValue) {
+                        if (typeof config.initialDisplayValue === 'string') {
+                            viewData.text = config.initialDisplayValue;
+                        } else if (
+                            config.initialDisplayValue !== null &&
+                            typeof config.initialDisplayValue === 'object'
+                        ) {
+                            viewData = Object.assign(viewData, config.initialDisplayValue);
+                            if (!viewData.text) {
+                                viewData.text = viewData.id;
+                            }
+                        }
+                    }
+                    data.push(viewData);
+                }
                 dropdown.select2({
                     allowClear: true,
+                    disabled: config.isViewOnly,
                     templateResult: formatObjectDisplay,
                     templateSelection: selectionTemplate,
+                    data: config.isViewOnly ? data : null,
                     ajax: {
                         delay: 250,
                         processResults: (data) => {

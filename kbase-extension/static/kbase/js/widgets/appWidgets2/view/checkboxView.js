@@ -143,14 +143,16 @@ define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui'
         }
 
         function stop() {
-            if (container) {
-                parent.removeChild(container);
-            }
+            return Promise.resolve(() => {
+                if (container) {
+                    parent.removeChild(container);
+                }
+            });
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

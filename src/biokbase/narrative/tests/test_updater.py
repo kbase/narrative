@@ -1,9 +1,11 @@
 import unittest
+
 from biokbase.narrative.contents.updater import (
-    update_narrative,
     find_app_info,
     suggest_apps,
+    update_narrative,
 )
+
 from .util import ConfigTests
 
 

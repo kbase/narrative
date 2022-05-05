@@ -1,7 +1,8 @@
 import unittest
-import biokbase.auth
-from . import util
 
+import biokbase.auth
+
+from . import util
 
 """
 Tests for the viewer module
@@ -40,6 +41,7 @@ class ViewersTestCase(unittest.TestCase):
 
     def test__get_categories(self):
         import pandas as pd
+
         from biokbase.narrative import viewers
 
         ids = ["WRI_RS00010_CDS_1", "WRI_RS00015_CDS_1", "WRI_RS00025_CDS_1"]
@@ -122,6 +124,7 @@ class ViewersTestCase(unittest.TestCase):
 
     def test_get_df(self):
         import pandas as pd
+
         from biokbase.narrative import viewers
 
         res = viewers.get_df(self.generic_ref)

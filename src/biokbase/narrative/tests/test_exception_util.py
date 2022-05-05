@@ -1,10 +1,10 @@
 import unittest
-from biokbase.narrative.exception_util import (
-    transform_job_exception,
-)
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
-from requests.exceptions import HTTPError
+
 import requests
+from requests.exceptions import HTTPError
+
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from biokbase.narrative.exception_util import transform_job_exception
 
 ERROR_MSG = "some error message"
 

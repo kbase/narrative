@@ -1,9 +1,11 @@
 """
 Some tests for the App Editor module.
 """
-import unittest
-from biokbase.narrative.appeditor import generate_app_cell
 import json
+import unittest
+
+from biokbase.narrative.appeditor import generate_app_cell
+
 from .util import ConfigTests
 
 

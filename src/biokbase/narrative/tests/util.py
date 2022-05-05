@@ -1,21 +1,22 @@
 """
 Test utility functions
 """
+import configparser
+import json
 import logging
+import os
 import pickle
+import socket
+import socketserver
 import struct
 import threading
 import time
 import unittest
-import socketserver
-import socket
-import os
-import json
-import configparser
 from contextlib import closing
+
 from biokbase.narrative.common import util
-from biokbase.workspace.client import Workspace
 from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.workspace.client import Workspace
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>"
 _log = logging.getLogger("kbtest")

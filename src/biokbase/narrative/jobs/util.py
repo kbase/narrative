@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 JOB_CONFIG_FILE_PATH_PARTS = [
     "kbase-extension",

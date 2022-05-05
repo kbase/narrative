@@ -1,5 +1,6 @@
-from biokbase.narrative.common.url_config import URLS
 import unittest
+
+from biokbase.narrative.common.url_config import URLS
 
 
 class UrlConfigTest(unittest.TestCase):

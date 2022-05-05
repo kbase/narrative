@@ -1,19 +1,20 @@
 import copy
-import sys
 import os.path
-from biokbase.narrative.tests.util import ConfigTests
+import sys
+
 from biokbase.narrative.app_util import app_version_tags
-from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.jobs.job import (
+    COMPLETED_STATUS,
     JOB_ATTR_DEFAULTS,
     OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS,
-    COMPLETED_STATUS,
 )
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.tests.job_test_constants import (
     BAD_JOBS,
-    get_test_job,
     generate_error,
+    get_test_job,
 )
+from biokbase.narrative.tests.util import ConfigTests
 
 """
 generate_test_results.py is used to generate the job message data that the narrative backend produces and that the frontend consumes. It uses data from `ee2_job_test_data_file` and `app_specs_file` and provides expected narrative backend message data, as well as a number of mappings that are used in python tests.

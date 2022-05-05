@@ -5,8 +5,10 @@ import logging
 import os
 import time
 import unittest
-from . import util
+
 from biokbase.narrative.common import kblogging
+
+from . import util
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 

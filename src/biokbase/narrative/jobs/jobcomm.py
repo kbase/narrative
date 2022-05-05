@@ -1,13 +1,14 @@
 import copy
 import threading
-from typing import List, Union
 import time
-from ipykernel.comm import Comm
-from biokbase.narrative.jobs.util import load_job_constants
-from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.exception_util import NarrativeException, JobRequestException
-from biokbase.narrative.common import kblogging
+from typing import List, Union
 
+from ipykernel.comm import Comm
+
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.exception_util import JobRequestException, NarrativeException
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.util import load_job_constants
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 

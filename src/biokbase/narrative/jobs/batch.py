@@ -1,15 +1,17 @@
 """
 A collection of helpful utilities for running batches of jobs.
 """
-from biokbase.narrative.staging.helper import Helper as StagingHelper
-from . import specmanager
-import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import system_variable
 import re
+from copy import deepcopy
 from decimal import Decimal
 from itertools import product
-from copy import deepcopy
 from string import Formatter, Template
+
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.staging.helper import Helper as StagingHelper
+
+from . import specmanager
 
 
 def get_input_scaffold(app, tag="release", use_defaults=False):

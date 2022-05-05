@@ -1,22 +1,22 @@
-from IPython.display import HTML
-from jinja2 import Template
-from datetime import datetime, timezone, timedelta
 import copy
+from collections.abc import Iterable
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from itertools import cycle
 from typing import List, Tuple, Union
-from collections.abc import Iterable
+
+from IPython.display import HTML
+from jinja2 import Template
+
 import biokbase.narrative.clients as clients
-from .job import (
-    Job,
-    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
-)
-from biokbase.narrative.common import kblogging
 from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import (
-    transform_job_exception,
     JobRequestException,
+    transform_job_exception,
 )
+
+from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
 
 """
 KBase Job Manager

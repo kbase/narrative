@@ -1,8 +1,8 @@
 import unittest
-
 from unittest import mock
 
 from biokbase.narrative.jobs.specmanager import SpecManager
+
 from .narrative_mock.mockclients import get_mock_client
 
 

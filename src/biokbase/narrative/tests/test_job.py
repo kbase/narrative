@@ -1,47 +1,46 @@
-import unittest
-from unittest import mock
 import copy
 import itertools
+import sys
+import unittest
+from contextlib import contextmanager
+from io import StringIO
+from unittest import mock
+
 from biokbase.execution_engine2.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
-    Job,
     COMPLETED_STATUS,
     EXCLUDED_JOB_STATE_FIELDS,
-    JOB_ATTRS,
     JOB_ATTR_DEFAULTS,
+    JOB_ATTRS,
+    Job,
 )
 from biokbase.narrative.jobs.jobmanager import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
 from biokbase.narrative.jobs.specmanager import SpecManager
-
-from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    MockClients,
-    assert_obj_method_called,
-)
-from contextlib import contextmanager
-from io import StringIO
-import sys
-
+from biokbase.narrative.tests.generate_test_results import JOBS_BY_CELL_ID
 from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BATCH_CHILDREN,
+    BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
     CLIENTS,
-    MAX_LOG_LINES,
     JOB_COMPLETED,
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
-    BATCH_PARENT,
-    BATCH_RETRY_RUNNING,
     JOBS_TERMINALITY,
-    ALL_JOBS,
+    MAX_LOG_LINES,
     TERMINAL_JOBS,
-    ACTIVE_JOBS,
-    BATCH_CHILDREN,
     get_test_job,
 )
 
-from biokbase.narrative.tests.generate_test_results import JOBS_BY_CELL_ID
+from .narrative_mock.mockclients import (
+    MockClients,
+    assert_obj_method_called,
+    get_failing_mock_client,
+    get_mock_client,
+)
 
 
 @contextmanager

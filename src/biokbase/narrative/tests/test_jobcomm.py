@@ -1,78 +1,77 @@
+import copy
+import itertools
+import os
+import re
+import time
 import unittest
 from unittest import mock
-import os
-import itertools
-import re
-import copy
-import time
 
-from biokbase.narrative.jobs.jobmanager import (
-    JobManager,
-    OutputStateErrMsg,
-    JOB_NOT_REG_ERR,
-    JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_ERR,
-)
-from biokbase.narrative.jobs.jobcomm import (
-    JobRequest,
-    JobComm,
-    exc_to_msg,
-    CELLS_NOT_PROVIDED_ERR,
-    ONE_INPUT_TYPE_ONLY_ERR,
-    INVALID_REQUEST_ERR,
-    MISSING_REQUEST_TYPE_ERR,
-    MESSAGE_TYPE,
-    PARAM,
-)
 from biokbase.narrative.exception_util import (
-    NarrativeException,
     JobRequestException,
+    NarrativeException,
     transform_job_exception,
 )
-
-from .util import ConfigTests, validate_job_state
-from biokbase.narrative.tests.job_test_constants import (
-    CLIENTS,
-    TIME_NS,
-    TEST_EPOCH_NS,
-    MAX_LOG_LINES,
-    JOB_COMPLETED,
-    JOB_CREATED,
-    JOB_RUNNING,
-    JOB_TERMINATED,
-    JOB_ERROR,
-    BATCH_PARENT,
-    BATCH_COMPLETED,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    BATCH_RETRY_RUNNING,
-    JOB_NOT_FOUND,
-    BAD_JOB_ID,
-    BAD_JOB_ID_2,
-    ALL_JOBS,
-    BAD_JOBS,
-    ACTIVE_JOBS,
-    REFRESH_STATE,
-    BATCH_PARENT_CHILDREN,
-    BATCH_CHILDREN,
-    generate_error,
-    get_test_jobs,
+from biokbase.narrative.jobs.jobcomm import (
+    CELLS_NOT_PROVIDED_ERR,
+    INVALID_REQUEST_ERR,
+    MESSAGE_TYPE,
+    MISSING_REQUEST_TYPE_ERR,
+    ONE_INPUT_TYPE_ONLY_ERR,
+    PARAM,
+    JobComm,
+    JobRequest,
+    exc_to_msg,
+)
+from biokbase.narrative.jobs.jobmanager import (
+    JOB_NOT_BATCH_ERR,
+    JOB_NOT_REG_ERR,
+    JOBS_MISSING_ERR,
+    JobManager,
+    OutputStateErrMsg,
 )
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
+    JOBS_BY_CELL_ID,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
-    JOBS_BY_CELL_ID,
+)
+from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BAD_JOB_ID,
+    BAD_JOB_ID_2,
+    BAD_JOBS,
+    BATCH_CHILDREN,
+    BATCH_COMPLETED,
+    BATCH_ERROR_RETRIED,
+    BATCH_PARENT,
+    BATCH_PARENT_CHILDREN,
+    BATCH_RETRY_RUNNING,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    CLIENTS,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_ERROR,
+    JOB_NOT_FOUND,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    MAX_LOG_LINES,
+    REFRESH_STATE,
+    TEST_EPOCH_NS,
+    TIME_NS,
+    generate_error,
+    get_test_jobs,
 )
 
-from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    generate_ee2_error,
     MockClients,
+    generate_ee2_error,
+    get_failing_mock_client,
+    get_mock_client,
 )
+from .narrative_mock.mockcomm import MockComm
+from .util import ConfigTests, validate_job_state
 
 APP_NAME = "The Best App in the World"
 

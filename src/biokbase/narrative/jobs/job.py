@@ -1,14 +1,17 @@
-import biokbase.narrative.clients as clients
-from .specmanager import SpecManager
-from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
-from biokbase.narrative.exception_util import transform_job_exception
 import copy
 import json
 import time
 import uuid
-from jinja2 import Template
 from pprint import pprint
 from typing import List
+
+from jinja2 import Template
+
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
+from biokbase.narrative.exception_util import transform_job_exception
+
+from .specmanager import SpecManager
 
 """
 KBase job class

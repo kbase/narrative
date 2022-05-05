@@ -1,76 +1,72 @@
 """
 Tests for job management
 """
-import unittest
 import copy
 import itertools
-from unittest import mock
-import re
 import os
-from typing import List, Tuple
+import re
 import time
+import unittest
 from datetime import datetime
+from typing import List, Tuple
+from unittest import mock
+
 from IPython.display import HTML
 
-from biokbase.narrative.jobs.jobmanager import (
-    JobManager,
-    OutputStateErrMsg,
-    JOB_NOT_REG_ERR,
-    JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_ERR,
-    CELLS_NOT_PROVIDED_ERR,
-)
+from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.job import (
-    Job,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+    Job,
 )
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
-from biokbase.narrative.exception_util import (
-    NarrativeException,
-    JobRequestException,
+from biokbase.narrative.jobs.jobmanager import (
+    CELLS_NOT_PROVIDED_ERR,
+    JOB_NOT_BATCH_ERR,
+    JOB_NOT_REG_ERR,
+    JOBS_MISSING_ERR,
+    JobManager,
+    OutputStateErrMsg,
 )
-from biokbase.narrative.tests.job_test_constants import (
-    CLIENTS,
-    JOB_COMPLETED,
-    JOB_CREATED,
-    JOB_RUNNING,
-    JOB_TERMINATED,
-    JOB_ERROR,
-    BATCH_PARENT,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    BATCH_RETRY_RUNNING,
-    JOB_NOT_FOUND,
-    BAD_JOB_ID,
-    ALL_JOBS,
-    BAD_JOBS,
-    TERMINAL_JOBS,
-    ACTIVE_JOBS,
-    REFRESH_STATE,
-    BATCH_CHILDREN,
-    TEST_JOBS,
-    TEST_EPOCH_NS,
-    get_test_job,
-    get_test_jobs,
-    generate_error,
-)
-
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
     JOBS_BY_CELL_ID,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
 )
-
-from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    assert_obj_method_called,
-    MockClients,
+from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BAD_JOB_ID,
+    BAD_JOBS,
+    BATCH_CHILDREN,
+    BATCH_ERROR_RETRIED,
+    BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    CLIENTS,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_ERROR,
+    JOB_NOT_FOUND,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    REFRESH_STATE,
+    TERMINAL_JOBS,
+    TEST_EPOCH_NS,
+    TEST_JOBS,
+    generate_error,
+    get_test_job,
+    get_test_jobs,
 )
 
+from .narrative_mock.mockclients import (
+    MockClients,
+    assert_obj_method_called,
+    get_failing_mock_client,
+    get_mock_client,
+)
 from .util import ConfigTests
 
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]

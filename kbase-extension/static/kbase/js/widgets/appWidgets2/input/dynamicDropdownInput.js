@@ -493,6 +493,17 @@ define([
             return obj.id;
         }
 
+        function getCopyString() {
+            const data = $(ui.getElement('input-container.input')).select2('data')[0];
+            if (!data) {
+                return '';
+            } else if (ddOptions.exact_match_on && data[ddOptions.exact_match_on]) {
+                return data[ddOptions.exact_match_on];
+            } else {
+                return 'omg text';
+            }
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -512,7 +523,8 @@ define([
                 events,
                 ui,
                 _container,
-                inputControl
+                inputControl,
+                getCopyString
             );
             ui.setContent('input-container', content);
 

@@ -185,6 +185,7 @@ define([
                         }
                         if (!message.isValid) {
                             expect(message.diagnosis).toBe(Constants.DIAGNOSIS.REQUIRED_MISSING);
+                            expect(message.errorMessage).toBe('A value is required.');
                             resolve();
                         }
                     });

@@ -6,11 +6,13 @@ define([
     '../validation',
     'common/runtime',
     'common/ui',
+    'common/events',
     '../validators/constants',
     'util/timeFormat',
     'util/string',
     'kbase-generic-client-api',
     'common/props',
+    'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
 ], (
@@ -21,11 +23,13 @@ define([
     Validation,
     Runtime,
     UI,
+    Events,
     Constants,
     TimeFormat,
     StringUtil,
     GenericClient,
-    Props
+    Props,
+    WidgetCommon
 ) => {
     'use strict';
 
@@ -495,10 +499,23 @@ define([
          * Hooks up event listeners
          */
         async function render() {
-            const inputControl = makeInputControl(),
-                content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
-
+            // const inputControl = makeInputControl(),
+            //     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
+            // ui.setContent('input-container', content);
+            const events = Events.make();
+            const inputControl = makeInputControl();
+            ui.setContent('input-container', '');
+            const _container = ui.getElement('input-container');
+            const content = WidgetCommon.containerContent(
+                div,
+                t('button'),
+                events,
+                ui,
+                _container,
+                inputControl
+            );
             ui.setContent('input-container', content);
+
             const dropdown = $(ui.getElement('input-container.input'));
             const data = [];
 
@@ -590,6 +607,7 @@ define([
                 .on('select2:clear', () => {
                     doClear();
                 });
+            events.attachEvents(_container);
         }
 
         /*

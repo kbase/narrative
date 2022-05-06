@@ -11,6 +11,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
   - selected value wasn't being displayed in view-only version
   - "Loading..." message wasn't displayed while fetching data from a service.
   - Update the dynamic dropdown to support the `exact_match_on` field in app specs.
+- DATAUP-751 - add link to staging area docs in the upload tour
 
 Dependency Changes
 - Javascript dependency updates

@@ -500,7 +500,11 @@ define([
             } else if (ddOptions.exact_match_on && data[ddOptions.exact_match_on]) {
                 return data[ddOptions.exact_match_on];
             } else {
-                return 'omg text';
+                const rendered = selectionTemplate(data);
+                if (typeof rendered !== 'string') {
+                    return rendered.text();
+                }
+                return rendered;
             }
         }
 

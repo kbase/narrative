@@ -81,7 +81,7 @@ define([
                     }
                 );
                 if (validation.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
-                    validation.errorMessage = 'Please select a value from the dropdown.';
+                    validation.errorMessage = 'A value is required.';
                 }
                 return validation;
             });

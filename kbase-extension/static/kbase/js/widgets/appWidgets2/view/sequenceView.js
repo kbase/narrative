@@ -10,7 +10,7 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (Promise, html, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
+], (Promise, html, UI, Runtime, Util, Props, ParamResolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -34,7 +34,7 @@ define([
                     items: [],
                 },
             }),
-            resolver = Resolver.make();
+            resolver = ParamResolver.make();
 
         function normalizeModel() {
             const newModel = model.value.filter((item) => {

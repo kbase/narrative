@@ -6,7 +6,7 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
     Promise,
     Util,
     sdk,
-    validationResolver
+    ValidationResolver
 ) => {
     'use strict';
 
@@ -92,7 +92,7 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
             const validationMap = {};
             options = options || {};
             paramIds.forEach((id) => {
-                validationMap[id] = validationResolver.validate(
+                validationMap[id] = ValidationResolver.validate(
                     values[id],
                     spec.parameters.specs[id],
                     options[id] || {}

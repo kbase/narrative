@@ -25,7 +25,6 @@ define(['common/props'], (Props) => {
             case 'f':
             case 'no':
             case 'n':
-                return false;
             default:
                 return false;
         }
@@ -43,18 +42,11 @@ define(['common/props'], (Props) => {
             switch (converted.data.type) {
                 case 'string':
                     return '';
-                case 'int':
-                    return null;
-                case 'float':
-                    return null;
-                case 'workspaceObjectRef':
-                    return null;
-                case 'workspaceObjectName':
-                    return null;
                 case 'struct':
                     return {};
                 case '[]struct':
                     return [];
+                // other cases: int, float, workspaceObjectRef, workspaceObjectName
                 default:
                     return null;
             }
@@ -68,26 +60,22 @@ define(['common/props'], (Props) => {
     /*
      * Default values are strings.
      */
-    function defaultToNative(converted, defaultValue) {
+    function defaultToNative(converted, value) {
         switch (converted.data.type) {
-            case 'string':
-                return defaultValue;
             case 'int':
-                return parseInt(defaultValue);
+                return parseInt(value);
             case 'float':
-                return parseFloat(defaultValue);
+                return parseFloat(value);
+            case 'boolean':
+                return coerceToBoolean(value);
             case 'workspaceObjectRef':
-                if (defaultValue === '') {
+                if (value === '') {
                     return null;
                 }
-                return defaultValue;
-            case 'workspaceObjectName':
-                return defaultValue;
-            case 'boolean':
-                return coerceToBoolean(defaultValue);
+                return value;
             default:
                 // Assume it is a string...
-                return defaultValue;
+                return value;
         }
     }
 
@@ -104,15 +92,10 @@ define(['common/props'], (Props) => {
                  * TODO: more cases of bad default value? Or a generic
                  * default value validator?
                  */
-                if (!defaultValues || defaultValues.length === 0) {
+                if (defaultValues.length === 0) {
                     return spec.checkbox_options.unchecked_value;
                 }
                 return coerceToIntBoolean(defaultValues[0]);
-            case 'custom_textsubdata':
-                if (!defaultValues) {
-                    // ??
-                }
-                break;
             case 'textsubdata':
                 if (spec.default_values) {
                     if (spec.default_values.length === 1 && spec.default_values[0] === '') {
@@ -122,11 +105,6 @@ define(['common/props'], (Props) => {
                 } else {
                     return [];
                 }
-        }
-
-        // No default in spec, yet required.
-        if (!defaultValues && converted.required) {
-            return converted.data.nullValue;
         }
 
         if (defaultValues.length === 0) {
@@ -148,34 +126,26 @@ define(['common/props'], (Props) => {
     }
 
     function grokDataType(spec) {
-        /*
-         * Special case here --
-         * is actually an int, although Mike says it can be any type...
-         */
         switch (spec.field_type) {
             case 'checkbox':
                 return 'int';
+            // file datatype is really a file which is uploaded to shock,
+            // which results in a shock file handle.
             case 'file':
-                // file datatype is really a file which is uploaded to shock, which results in a
-                // shock file handle. maybe this field type should be "shock_file"
-                return 'string';
             case 'textarea':
-                return 'string';
             case 'dropdown':
-                return 'string';
             case 'dynamic_dropdown':
+            case 'autocomplete':
                 return 'string';
             case 'textsubdata':
                 return 'subdata';
             case 'custom_textsubdata':
                 return 'customSubdata';
             case 'custom_button':
-                switch (spec.id) {
-                    case 'input_check_other_params':
-                        return 'boolean';
-                    default:
-                        return 'unspecified';
+                if (spec.id === 'input_check_other_params') {
+                    return 'boolean';
                 }
+                return 'unspecified';
             case 'custom_widget':
                 if (spec.dropdown_options) {
                     return '[]string';
@@ -183,8 +153,6 @@ define(['common/props'], (Props) => {
                 break;
             case 'group':
                 return 'struct';
-            case 'autocomplete':
-                return 'string';
             case 'custom':
                 return 'custom';
         }
@@ -226,10 +194,8 @@ define(['common/props'], (Props) => {
         // Okay, if it has no specific type assigned (validate_as), and is
         // not flagged from the various properties above by grousing through
         // the text_options, we assume it is a string.
-
-        switch (spec.field_type) {
-            case 'text':
-                return 'string';
+        if (spec.field_type === 'text') {
+            return 'string';
         }
 
         console.error('ERROR could not determine type from spec', spec);
@@ -316,8 +282,6 @@ define(['common/props'], (Props) => {
                         };
                         break;
                     case 'autocomplete':
-                        constraints = {};
-                        break;
                     case 'file':
                         constraints = {};
                         break;
@@ -355,20 +319,10 @@ define(['common/props'], (Props) => {
                 };
                 break;
             case '[]string':
-                switch (fieldType) {
-                    case 'dynamic_dropdown':
-                        constraints = {
-                            options: spec.text_options,
-                        };
-                        break;
-                    case 'dropdown':
-                        break;
-                    case 'text':
-                        break;
-                    case 'textarea':
-                        break;
-                    default:
-                    // throw new Error('Unknown []string field type: ' + fieldType);
+                if (fieldType === 'dynamic_dropdown') {
+                    constraints = {
+                        options: spec.text_options,
+                    };
                 }
                 break;
             case 'subdata':
@@ -382,75 +336,6 @@ define(['common/props'], (Props) => {
                     multiple: false,
                 };
                 break;
-            //                case 'xxinput_property_x':
-            //                    return {
-            //                        defaultValue: defaultValue(),
-            //                        referredParameter: 'input_sample_property_matrix',
-            //                        subdataIncluded: 'metadata/column_metadata',
-            //                        path: 'metadata/column_metadata',
-            //                        // custom function to collect
-            //                        mapper: {
-            //                            before: function () {
-            //                                return {
-            //                                    collected: {}
-            //                                };
-            //                            },
-            //                            during: function (values, state) {
-            //                                values.forEach(function (value) {
-            //                                    if (value.entity === 'Condition') {
-            //                                        state.collected[value.property_name] = true;
-            //                                    }
-            //                                });
-            //                            },
-            //                            after: function (state) {
-            //                                return Object.keys(state.collected).map(function (key) {
-            //                                    return {
-            //                                        id: key,
-            //                                        desc: key
-            //                                    };
-            //                                });
-            //                            }
-            //                        }
-            //                    };
-            //                case 'sample_property':
-            //                    return {
-            //                        required: required(),
-            //                        defaultValue: defaultValue(),
-            //                        referredParameter: 'input_sample_property_matrix',
-            //                        subdataIncluded: 'metadata/column_metadata',
-            //                        subdataPath: 'metadata.column_metadata',
-            //                        // custom function to collect
-            //                        map: function (subdata) {
-            //                            var collected = {};
-            //                            Object.keys(subdata).forEach(function (key) {
-            //                                    var id, name, column = subdata[key];
-            //                                    column.forEach(function (value) {
-            //                                        if (value.category === 'DataSeries' && value.property_name === 'SeriesID') {
-            //                                            id = value.property_value;
-            //                                        } else if (value.category === 'Property' && value.property_name === 'Name') {
-            //                                            name = value.property_value;
-            //                                        }
-            //                                        if (id && name) {
-            //                                            collected[id] = name;
-            //                                        }
-            //                                    });
-            //                                });
-            //                                return Object.keys(collected).map(function (key) {
-            //                                    return {
-            //                                        id: key,
-            //                                        desc: collected[key]
-            //                                    };
-            //                                })
-            //                                    .sort(function (a, b) {
-            //                                        if (a.desc < b.desc) {
-            //                                            return -1;
-            //                                        } else if (a.desc > b.desc) {
-            //                                            return 1;
-            //                                        }
-            //                                        return 0;
-            //                                    });
-            //                        }
-            //                    };
             case 'struct':
                 break;
             case 'unspecified':
@@ -487,11 +372,8 @@ define(['common/props'], (Props) => {
 
     // Stepwise conversion
     function updateData(converted, spec) {
-        switch (converted.data.type) {
-            case 'subdata':
-                converted.data.multiple = spec.textsubdata_options.multipleitems ? true : false;
-                break;
-            default:
+        if (converted.data.type === 'subdata') {
+            converted.data.multiple = spec.textsubdata_options.multipleitems ? true : false;
         }
     }
 
@@ -531,7 +413,7 @@ define(['common/props'], (Props) => {
             },
             original: spec,
         };
-        updateNullValue(itemSpec, spec);
+        updateNullValue(itemSpec);
         updateDefaultValue(itemSpec, spec);
         updateConstraints(itemSpec, spec);
         updateUI(itemSpec, spec);
@@ -611,7 +493,7 @@ define(['common/props'], (Props) => {
             original: spec,
         };
 
-        updateNullValue(converted, spec);
+        updateNullValue(converted);
         updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
@@ -632,12 +514,12 @@ define(['common/props'], (Props) => {
         });
         const required = group.optional ? false : true;
 
-        const nullValue = null;
-        const defaultValue = {};
+        const defaultValues = {};
+        const zeroValue = defaultValues;
+
         Object.keys(groupParams).forEach((id) => {
-            defaultValue[id] = groupParams[id].data.defaultValue;
+            defaultValues[id] = groupParams[id].data.defaultValue;
         });
-        const zeroValue = defaultValue;
 
         return {
             id: group.id,
@@ -656,9 +538,9 @@ define(['common/props'], (Props) => {
                 constraints: {
                     required: required,
                 },
-                defaultValue: defaultValue,
-                nullValue: nullValue,
-                zeroValue: zeroValue,
+                defaultValue: defaultValues,
+                nullValue: null,
+                zeroValue,
             },
             parameters: {
                 layout: group.parameter_ids,
@@ -811,5 +693,6 @@ define(['common/props'], (Props) => {
 
     return {
         convertAppSpec,
+        convertParameter,
     };
 });

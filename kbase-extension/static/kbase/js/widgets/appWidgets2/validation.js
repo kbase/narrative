@@ -203,10 +203,7 @@ define([
                         if (objectInfo) {
                             const type = objectInfo.typeModule + '.' + objectInfo.typeName,
                                 matchingType = options.types.some((typeId) => {
-                                    if (typeId === type) {
-                                        return true;
-                                    }
-                                    return false;
+                                    return typeId === type;
                                 });
                             if (!matchingType) {
                                 messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
@@ -334,8 +331,6 @@ define([
                 }
                 if (errorMessage) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                } else {
-                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -507,11 +502,8 @@ define([
             const minLength = constraints.min_length,
                 maxLength = constraints.max_length;
 
-            if (constraints.type) {
-                switch (constraints.type) {
-                    case 'WorkspaceObjectName':
-                        return validateWorkspaceObjectNameString(value, constraints);
-                }
+            if (constraints.type && constraints.type === 'WorkspaceObjectName') {
+                return validateWorkspaceObjectNameString(value, constraints);
             }
 
             if (StringUtil.isEmptyString(value)) {
@@ -710,6 +702,14 @@ define([
             };
         }
 
+        function validateCustomInput() {
+            return {
+                isValid: true,
+                errorMessage: null,
+                diagnosis: Constants.DIAGNOSIS.VALID,
+            };
+        }
+
         function validateTrue(value) {
             return {
                 isValid: true,
@@ -838,6 +838,7 @@ define([
             validateTextSet,
             validateStringSet: validateTextSet,
             validateBoolean,
+            validateCustomInput,
             validateTrue,
             validateFalse,
             importTextString,

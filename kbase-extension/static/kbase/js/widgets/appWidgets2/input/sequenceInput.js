@@ -11,7 +11,7 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (Promise, html, Events, UI, Runtime, Util, Props, Resolver, Validation, FieldWidget) => {
+], (Promise, html, Events, UI, Runtime, Util, Props, ParamResolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -34,7 +34,7 @@ define([
                     doModelUpdated();
                 },
             }),
-            resolver = Resolver.make();
+            resolver = ParamResolver.make();
 
         function doModelUpdated() {
             const exported = exportModel();

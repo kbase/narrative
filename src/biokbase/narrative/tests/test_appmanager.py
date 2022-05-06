@@ -1,30 +1,30 @@
 """
 Tests for the app manager.
 """
+import copy
+import io
+import os
+import sys
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock
-from biokbase.narrative.jobs.specmanager import SpecManager
-from biokbase.narrative.jobs.appmanager import AppManager, BATCH_APP
-from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
-import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job
+
 from IPython.display import HTML, Javascript
-from .narrative_mock.mockclients import (
-    get_mock_client,
-    WSID_STANDARD,
-)
-import os
-import sys
-import io
-import copy
-from .util import ConfigTests
+
+import biokbase.narrative.app_util as app_util
+from biokbase.narrative.jobs.appmanager import BATCH_APP, AppManager
+from biokbase.narrative.jobs.job import Job
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.tests.job_test_constants import (
     CLIENTS,
     READS_OBJ_1,
     READS_OBJ_2,
 )
+
+from .narrative_mock.mockclients import WSID_STANDARD, get_mock_client
+from .util import ConfigTests
 
 CONFIG = ConfigTests()
 WS_NAME = CONFIG.get("app_tests", "public_ws_name")

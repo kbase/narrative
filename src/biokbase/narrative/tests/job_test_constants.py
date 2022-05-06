@@ -1,7 +1,8 @@
-from .util import ConfigTests
 import copy
+
 from biokbase.narrative.jobs.job import TERMINAL_STATUSES
 
+from .util import ConfigTests
 
 config = ConfigTests()
 TEST_JOBS = config.load_json_file(config.get("jobs", "ee2_job_test_data_file"))
@@ -35,8 +36,14 @@ def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
-CLIENTS = "biokbase.narrative.clients.get"
+def get_test_jobs(job_ids):
+    return {job_id: get_test_job(job_id) for job_id in job_ids}
 
+
+CLIENTS = "biokbase.narrative.clients.get"
+TIME_NS = "biokbase.narrative.jobs.jobcomm.time.time_ns"
+
+TEST_EPOCH_NS = 42  # arbitrary epoch ns
 MAX_LOG_LINES = 10
 
 # test_jobs contains jobs in the following states
@@ -89,7 +96,7 @@ BATCH_CHILDREN = [
 BATCH_PARENT_CHILDREN = [BATCH_PARENT] + BATCH_CHILDREN
 
 JOBS_TERMINALITY = {
-    id: TEST_JOBS[id]["status"] in TERMINAL_STATUSES for id in TEST_JOBS.keys()
+    job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES for job_id in TEST_JOBS.keys()
 }
 
 TERMINAL_JOBS = []

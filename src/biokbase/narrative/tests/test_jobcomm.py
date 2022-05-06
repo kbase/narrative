@@ -1,73 +1,72 @@
+import copy
+import itertools
+import os
+import re
 import unittest
 from unittest import mock
-import os
-import itertools
-import re
-import copy
 
-from biokbase.narrative.jobs.jobmanager import (
-    JobManager,
-    JOB_NOT_REG_ERR,
-    JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_ERR,
-)
-from biokbase.narrative.jobs.jobcomm import (
-    JobRequest,
-    JobComm,
-    exc_to_msg,
-    CELLS_NOT_PROVIDED_ERR,
-    ONE_INPUT_TYPE_ONLY_ERR,
-    INVALID_REQUEST_ERR,
-    MISSING_REQUEST_TYPE_ERR,
-    MESSAGE_TYPE,
-    PARAM,
-)
 from biokbase.narrative.exception_util import (
-    NarrativeException,
     JobRequestException,
+    NarrativeException,
     transform_job_exception,
 )
-
-from .util import ConfigTests, validate_job_state
-from biokbase.narrative.tests.job_test_constants import (
-    CLIENTS,
-    MAX_LOG_LINES,
-    JOB_COMPLETED,
-    JOB_CREATED,
-    JOB_RUNNING,
-    JOB_TERMINATED,
-    JOB_ERROR,
-    BATCH_PARENT,
-    BATCH_COMPLETED,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    BATCH_RETRY_RUNNING,
-    JOB_NOT_FOUND,
-    BAD_JOB_ID,
-    BAD_JOB_ID_2,
-    ALL_JOBS,
-    BAD_JOBS,
-    ACTIVE_JOBS,
-    REFRESH_STATE,
-    BATCH_PARENT_CHILDREN,
-    BATCH_CHILDREN,
-    generate_error,
+from biokbase.narrative.jobs.jobcomm import (
+    CELLS_NOT_PROVIDED_ERR,
+    INVALID_REQUEST_ERR,
+    MESSAGE_TYPE,
+    MISSING_REQUEST_TYPE_ERR,
+    ONE_INPUT_TYPE_ONLY_ERR,
+    PARAM,
+    JobComm,
+    JobRequest,
+    exc_to_msg,
+)
+from biokbase.narrative.jobs.jobmanager import (
+    JOB_NOT_BATCH_ERR,
+    JOB_NOT_REG_ERR,
+    JOBS_MISSING_ERR,
+    JobManager,
 )
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
+    JOBS_BY_CELL_ID,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
-    JOBS_BY_CELL_ID,
+)
+from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BAD_JOB_ID,
+    BAD_JOB_ID_2,
+    BAD_JOBS,
+    BATCH_CHILDREN,
+    BATCH_COMPLETED,
+    BATCH_ERROR_RETRIED,
+    BATCH_PARENT,
+    BATCH_PARENT_CHILDREN,
+    BATCH_RETRY_RUNNING,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    CLIENTS,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_ERROR,
+    JOB_NOT_FOUND,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    MAX_LOG_LINES,
+    REFRESH_STATE,
+    generate_error,
 )
 
-from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    generate_ee2_error,
     MockClients,
+    generate_ee2_error,
+    get_failing_mock_client,
+    get_mock_client,
 )
+from .narrative_mock.mockcomm import MockComm
+from .util import ConfigTests, validate_job_state
 
 APP_NAME = "The Best App in the World"
 
@@ -102,6 +101,8 @@ LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG
 def make_comm_msg(
     msg_type: str, job_id_like, as_job_request: bool, content: dict = None
 ):
+    if content is None:
+        content = {}
     job_arguments = {}
     if isinstance(job_id_like, dict):
         job_arguments = job_id_like
@@ -112,10 +113,9 @@ def make_comm_msg(
 
     msg = {
         "msg_id": "some_id",
-        "content": {"data": {"request_type": msg_type, **job_arguments}},
+        "content": {"data": {"request_type": msg_type, **job_arguments, **content}},
     }
-    if content is not None:
-        msg["content"]["data"].update(content)
+
     if as_job_request:
         return JobRequest(msg)
     else:
@@ -362,6 +362,22 @@ class JobCommTestCase(unittest.TestCase):
                 self.jc._handle_comm_message(req_dict)
             self.check_error_message(req_dict, err)
 
+    def test_req_multiple_inputs__fail(self):
+        functions = [
+            CANCEL,
+            INFO,
+            LOGS,
+            RETRY,
+            STATUS,
+        ]
+
+        for msg_type in functions:
+            req_dict = make_comm_msg(msg_type, {"job_id": "something", "batch_id": "another_thing"}, False)
+            err = JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
+            with self.assertRaisesRegex(type(err), str(err)):
+                self.jc._handle_comm_message(req_dict)
+            self.check_error_message(req_dict, err)
+
     # ---------------------
     # Start job status loop
     # ---------------------
@@ -437,11 +453,12 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": ERROR,
                 "content": {
+                    "code": -32000,
                     "error": "Unable to get initial jobs list",
                     "message": "check_workspace_jobs failed",
-                    "code": -32000,
-                    "source": "ee2",
                     "name": "JSONRPCError",
+                    "request": "jc.start_job_status_loop",
+                    "source": "ee2",
                 },
             },
         )
@@ -454,7 +471,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jm._jobs_by_cell_id = {}
         self.jm = JobManager()
         self.assertEqual(self.jm._running_jobs, {})
-        # this will trigger a call to _get_all_job_states
+        # this will trigger a call to get_all_job_states
         # a message containing all jobs (i.e. {}) will be sent out
         # when it returns 0 jobs, the JobComm will run stop_job_status_loop
         self.jc.start_job_status_loop()
@@ -542,7 +559,6 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------------
     # Lookup select job states
     # -----------------------
-
     def test_get_job_states__job_id__ok(self):
         self.check_job_output_states(
             params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED]
@@ -829,6 +845,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = [JOB_RUNNING, BATCH_RETRY_RUNNING]
         req_dict = make_comm_msg(CANCEL, job_id_list, False)
         output = self.jc._handle_comm_message(req_dict)
+
         expected = {
             JOB_RUNNING: ALL_RESPONSE_DATA[STATUS][JOB_RUNNING],
             BATCH_RETRY_RUNNING: {
@@ -1284,14 +1301,19 @@ class JobRequestTestCase(unittest.TestCase):
             rq.job_id_list
 
     def test_request_no_data(self):
-        rq_msg = {"msg_id": "some_id", "content": {}}
-        with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
-            JobRequest(rq_msg)
+        rq_msg1 = {"msg_id": "some_id", "content": {}}
+        rq_msg2 = {"msg_id": "some_id", "content": {"data": {}}}
+        rq_msg3 = {"msg_id": "some_id", "content": {"data": None}}
+        rq_msg4 = {"msg_id": "some_id", "content": {"what": "?"}}
+        for msg in [rq_msg1, rq_msg2, rq_msg3, rq_msg4]:
+            with self.assertRaisesRegex(JobRequestException, INVALID_REQUEST_ERR):
+                JobRequest(msg)
 
     def test_request_no_req(self):
-        rq_msg = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
-        rq_msg2 = {"msg_id": "some_other_id", "content": {"data": {}}}
-        for msg in [rq_msg, rq_msg2]:
+        rq_msg1 = {"msg_id": "some_id", "content": {"data": {"request_type": None}}}
+        rq_msg2 = {"msg_id": "some_id", "content": {"data": {"request_type": ""}}}
+        rq_msg3 = {"msg_id": "some_id", "content": {"data": {"what": {}}}}
+        for msg in [rq_msg1, rq_msg2, rq_msg3]:
             with self.assertRaisesRegex(JobRequestException, MISSING_REQUEST_TYPE_ERR):
                 JobRequest(msg)
 

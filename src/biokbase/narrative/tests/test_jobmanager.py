@@ -1,78 +1,74 @@
-"""
-Tests for job management
-"""
-import unittest
 import copy
 import itertools
-from unittest import mock
-import re
 import os
+import re
+import unittest
 from datetime import datetime
+from unittest import mock
+
 from IPython.display import HTML
 
-from biokbase.narrative.jobs.jobmanager import (
-    JobManager,
-    JOB_NOT_REG_ERR,
-    JOB_NOT_BATCH_ERR,
-    JOBS_MISSING_ERR,
-    CELLS_NOT_PROVIDED_ERR,
-)
+from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.job import (
-    Job,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+    Job,
 )
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
-from biokbase.narrative.exception_util import (
-    NarrativeException,
-    JobRequestException,
+from biokbase.narrative.jobs.jobmanager import (
+    CELLS_NOT_PROVIDED_ERR,
+    JOB_NOT_BATCH_ERR,
+    JOB_NOT_REG_ERR,
+    JOBS_MISSING_ERR,
+    JobManager,
 )
-
-from .util import ConfigTests
-
-from biokbase.narrative.tests.job_test_constants import (
-    CLIENTS,
-    JOB_COMPLETED,
-    JOB_CREATED,
-    JOB_RUNNING,
-    JOB_TERMINATED,
-    JOB_ERROR,
-    BATCH_PARENT,
-    BATCH_TERMINATED,
-    BATCH_TERMINATED_RETRIED,
-    BATCH_ERROR_RETRIED,
-    JOB_NOT_FOUND,
-    BAD_JOB_ID,
-    ALL_JOBS,
-    BAD_JOBS,
-    TERMINAL_JOBS,
-    ACTIVE_JOBS,
-    REFRESH_STATE,
-    BATCH_CHILDREN,
-    TEST_JOBS,
-    get_test_job,
-    generate_error,
-)
-
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
     JOBS_BY_CELL_ID,
     TEST_CELL_ID_LIST,
     TEST_CELL_IDs,
 )
+from biokbase.narrative.tests.job_test_constants import (
+    ACTIVE_JOBS,
+    ALL_JOBS,
+    BAD_JOB_ID,
+    BAD_JOBS,
+    BATCH_CHILDREN,
+    BATCH_ERROR_RETRIED,
+    BATCH_PARENT,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    CLIENTS,
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_ERROR,
+    JOB_NOT_FOUND,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    REFRESH_STATE,
+    TERMINAL_JOBS,
+    TEST_JOBS,
+    generate_error,
+    get_test_job,
+)
 
 from .narrative_mock.mockclients import (
-    get_mock_client,
-    get_failing_mock_client,
-    assert_obj_method_called,
     MockClients,
+    assert_obj_method_called,
+    get_failing_mock_client,
+    get_mock_client,
 )
+from .util import ConfigTests
 
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
 
 class JobManagerTest(unittest.TestCase):
+    """
+    Tests for job management
+    """
+
     @classmethod
     @mock.patch(CLIENTS, get_mock_client)
     def setUpClass(cls):
@@ -235,7 +231,7 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def test__construct_job_output_state_set__ee2_error(self):
         exc = Exception("Test exception")
-        exc_message = str(exc)
+        exc_msg = str(exc)
 
         def mock_check_jobs(params):
             raise exc
@@ -250,7 +246,7 @@ class JobManagerTest(unittest.TestCase):
 
         for job_id in ACTIVE_JOBS:
             # expect there to be an error message added
-            expected[job_id]["error"] = exc_message
+            expected[job_id]["error"] = exc_msg
 
         self.assertEqual(
             expected,

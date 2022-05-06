@@ -1,5 +1,6 @@
-from biokbase.narrative.jobs.util import load_job_constants
 import unittest
+
+from biokbase.narrative.jobs.util import load_job_constants
 
 
 class JobUtilTestCase(unittest.TestCase):
@@ -43,7 +44,7 @@ class JobUtilTestCase(unittest.TestCase):
         ]
         with self.assertRaisesRegex(
             ValueError,
-            "job_config.json is missing the following values for params: BATCH_ID, JOB_ID",
+            "job_config.json is missing the following values for params: BATCH_ID, FIRST_LINE, JOB_ID, LATEST, NUM_LINES, TS",
         ):
             load_job_constants(file_path)
 

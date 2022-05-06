@@ -130,7 +130,7 @@ $panel-separator-color: use_color('mid-blue');
 
     // kb-field-cell__input_control select2-selection--single
     & .select2-selection--single {
-      border-radius: 0;
+      border-radius: 2px;
       height: inherit;
 
       & .select2-selection__rendered {
@@ -138,8 +138,9 @@ $panel-separator-color: use_color('mid-blue');
       }
     }
 
-
-
+    & .select2-dropdown {
+      border-radius: 2px;
+    }
   }
 
   // kb-field-cell__cell_label

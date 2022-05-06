@@ -181,10 +181,12 @@ define([
             const control = ui.getElement('input-container.input');
             model.availableValuesSet.forEach((value) => {
                 const option = control.querySelector(`option[value="${value}"]`);
-                if (model.disabledValues.has(value) && value !== model.value) {
-                    option.setAttribute('disabled', true);
-                } else {
-                    option.removeAttribute('disabled');
+                if (option) {
+                    if (model.disabledValues.has(value) && value !== model.value) {
+                        option.setAttribute('disabled', true);
+                    } else {
+                        option.removeAttribute('disabled');
+                    }
                 }
             });
         }

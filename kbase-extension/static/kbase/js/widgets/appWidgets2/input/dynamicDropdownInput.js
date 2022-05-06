@@ -49,6 +49,7 @@ define([
                 displayValue: undefined,
                 value: undefined,
                 descriptionFields: new Set(),
+                exactMatchError: false,
             };
         let parent, container, ui;
         if (typeof ddOptions.query_on_empty_input === 'undefined') {
@@ -130,14 +131,17 @@ define([
             const value = model.value;
             const displayValue = model.displayValue || {};
             const control = ui.getElement('input-container.input');
-            if (model.value) {
+            if (value) {
                 const selectorValue = value.replace(/"/g, '\\"').replace(/'/g, "\\'");
                 if ($(control).find(`option[value="${selectorValue}"]`).length) {
                     $(control).val(value).trigger('change');
                 } else {
                     const dataAdapter = $(control).data('select2').dataAdapter;
                     const newOption = dataAdapter.option(
-                        Object.assign({ id: model.value, value: model.value }, displayValue)
+                        Object.assign(
+                            { id: String(model.value).trim(), value: model.value },
+                            displayValue
+                        )
                     );
                     dataAdapter.addOptions(newOption);
                     $(control).val(value).trigger('change');
@@ -170,6 +174,11 @@ define([
 
         function validate() {
             return Promise.try(() => {
+                if (model.exactMatchError) {
+                    const response = Validation.validateFalse(model.value);
+                    response.errorMessage = `An exact match was not found for "${model.value}". Please search again.`;
+                    return response;
+                }
                 let selectedItem = getControlValue();
                 const validationConstraints = {
                     min_length: spec.data.constraints.min_length,
@@ -301,7 +310,7 @@ define([
                         // could check here that each item is a map? YAGNI
                         obj = flattenObject(obj);
                         if (!('id' in obj)) {
-                            obj.id = _index;
+                            obj.id = String(_index);
                         }
                         // this blows away any 'text' field
                         obj.text = obj[ddOptions.selection_id];
@@ -324,6 +333,7 @@ define([
             };
 
             if (result.isValid) {
+                model.exactMatchError = false;
                 const newValue =
                     result.parsedValue === undefined ? result.value : result.parsedValue;
                 model.value = newValue;
@@ -337,20 +347,19 @@ define([
                 }
                 changeMsg.newDisplayValue = model.displayValue;
                 changeMsg.newValue = newValue;
+                channel.emit('changed', changeMsg);
             } else if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                 model.value = spec.data.nullValue;
+                channel.emit('changed', changeMsg);
             }
-            channel.emit('changed', changeMsg);
-            channel.emit('validation', {
-                errorMessage: result.errorMessage,
-                diagnosis: result.diagnosis,
-            });
+            channel.emit('validation', result);
         }
 
         /**
          * Clears the current selection and updates the model.
          */
         function doClear() {
+            model.exactMatchError = false;
             $(ui.getElement('input-container.input')).html('');
             model.value = spec.data.nullValue;
             channel.emit('changed', {
@@ -488,83 +497,108 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function render() {
-            return Promise.try(() => {
-                const inputControl = makeInputControl(),
-                    content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
+        async function render() {
+            const inputControl = makeInputControl(),
+                content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
-                ui.setContent('input-container', content);
-                const dropdown = $(ui.getElement('input-container.input'));
-                const data = [];
-                if (config.isViewOnly) {
-                    let viewData = {
-                        selected: true,
-                        id: config.initialValue || undefined,
-                        text: config.initialValue,
-                    };
-                    if (config.initialDisplayValue) {
-                        if (typeof config.initialDisplayValue === 'string') {
-                            viewData.text = config.initialDisplayValue;
-                        } else if (
-                            config.initialDisplayValue !== null &&
-                            typeof config.initialDisplayValue === 'object'
-                        ) {
-                            viewData = Object.assign(viewData, config.initialDisplayValue);
-                            if (!viewData.text) {
-                                viewData.text = viewData.id;
-                            }
+            ui.setContent('input-container', content);
+            const dropdown = $(ui.getElement('input-container.input'));
+            const data = [];
+
+            if (config.isViewOnly) {
+                // For select2, ids should be a string, not "0" or empty string
+                // This sets the value of the <option> element. For view only it doesn't
+                // matter much.
+                // see also: https://select2.org/data-sources/formats#automatic-string-casting
+                let viewData = {
+                    selected: true,
+                    id: config.initialValue || '1',
+                    text: config.initialValue,
+                };
+                if (config.initialDisplayValue) {
+                    if (typeof config.initialDisplayValue === 'string') {
+                        viewData.text = config.initialDisplayValue;
+                    } else if (
+                        config.initialDisplayValue !== null &&
+                        typeof config.initialDisplayValue === 'object'
+                    ) {
+                        viewData = Object.assign(viewData, config.initialDisplayValue);
+                        if (!viewData.text) {
+                            viewData.text = viewData.id;
                         }
                     }
-                    data.push(viewData);
                 }
-                dropdown.select2({
-                    allowClear: true,
-                    disabled: config.isViewOnly,
-                    templateResult: formatObjectDisplay,
-                    templateSelection: selectionTemplate,
-                    data: config.isViewOnly ? data : null,
-                    ajax: {
-                        delay: 250,
-                        processResults: (data) => {
-                            // update the currently selected one if applicable
-                            const currentData = dropdown.select2('data')[0];
-                            if (currentData) {
-                                const updatedData = data.results.filter((item) => {
-                                    return item.id === currentData.id;
-                                });
-                                if (updatedData.length) {
-                                    for (const key of Object.keys(updatedData[0])) {
-                                        currentData[key] = updatedData[0][key];
-                                    }
-                                    dropdown.trigger('change');
+                data.push(viewData);
+            } else if (model.value && !model.displayValue && ddOptions.exact_match_on) {
+                const searchResults = await fetchData(model.value);
+                // verify that we have an exact match
+                let match = null;
+                for (const result of searchResults) {
+                    if (
+                        result[ddOptions.exact_match_on] &&
+                        String(model.value).trim().toLowerCase() ===
+                            String(result[ddOptions.exact_match_on]).trim().toLowerCase()
+                    ) {
+                        match = result;
+                        break;
+                    }
+                }
+                if (match) {
+                    data.push(Object.assign(match, { selected: true }));
+                    model.value = String(match.id).trim();
+                } else {
+                    model.exactMatchError = true;
+                }
+            }
+
+            dropdown.select2({
+                allowClear: true,
+                disabled: config.isViewOnly,
+                templateResult: formatObjectDisplay,
+                templateSelection: selectionTemplate,
+                data,
+                ajax: {
+                    delay: 250,
+                    processResults: (data) => {
+                        // update the currently selected one if applicable
+                        const currentData = dropdown.select2('data')[0];
+                        if (currentData) {
+                            const updatedData = data.results.filter((item) => {
+                                return item.id === currentData.id;
+                            });
+                            if (updatedData.length) {
+                                for (const key of Object.keys(updatedData[0])) {
+                                    currentData[key] = updatedData[0][key];
                                 }
+                                dropdown.trigger('change');
                             }
-                            return data;
-                        },
-                        transport: function (params, success, failure) {
-                            return fetchData(params.data.term)
-                                .then((data) => {
-                                    success({ results: data });
-                                })
-                                .catch((err) => {
-                                    console.error(err);
-                                    failure(err);
-                                });
-                        },
+                        }
+                        return data;
                     },
-                    placeholder: {
-                        id: 'select an option',
+                    transport: function (params, success, failure) {
+                        model.exactMatchError = false;
+                        return fetchData(params.data.term)
+                            .then((data) => {
+                                success({ results: data });
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                failure(err);
+                            });
                     },
-                });
-                dropdown
-                    .on('change', () => {
-                        const data = dropdown.select2('data');
-                        return doChange(data ? data[0] : {});
-                    })
-                    .on('select2:clear', () => {
-                        doClear();
-                    });
+                },
+                placeholder: {
+                    id: 'select an option',
+                },
             });
+            dropdown
+                .on('change', () => {
+                    const data = dropdown.select2('data');
+                    return doChange(data ? data[0] : {});
+                })
+                .on('select2:clear', () => {
+                    doClear();
+                });
         }
 
         /*
@@ -583,15 +617,12 @@ define([
 
         function autoValidate() {
             return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                channel.emit('validation', result);
             });
         }
 
         // LIFECYCLE API
-        function start(arg) {
+        async function start(arg) {
             parent = arg.node;
             container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
@@ -599,23 +630,21 @@ define([
             container.innerHTML = layout();
 
             if (config.initialValue !== undefined) {
-                // note this might come from a different workspace...
                 model.value = config.initialValue;
             }
             if (config.initialDisplayValue !== undefined) {
                 model.displayValue = config.initialDisplayValue;
             }
 
-            return render().then(() => {
-                channel.on('reset-to-defaults', () => {
-                    resetModelValue();
-                });
-                channel.on('update', (message) => {
-                    setModelValue(message.value, message.displayValue);
-                });
-                updateControlValue();
-                return autoValidate();
+            await render();
+            channel.on('reset-to-defaults', () => {
+                resetModelValue();
             });
+            channel.on('update', (message) => {
+                setModelValue(message.value, message.displayValue);
+            });
+            updateControlValue();
+            return autoValidate();
         }
 
         function stop() {

@@ -1649,4 +1649,33 @@ define([
             });
         });
     });
+
+    describe('validateFalse', () => {
+        // very simple, but with a few cases to test
+        const value = 'val';
+        const simpleResult = {
+            isValid: false,
+            diagnosis: Constants.DIAGNOSIS.INVALID,
+            errorMessage: 'error',
+            value,
+        };
+
+        [undefined, 1, null, 'foobar'].forEach((badDiag) => {
+            it(`should default to "invalid" for with a given diagnosis of ${badDiag}`, () => {
+                expect(Validation.validateFalse(value, badDiag)).toEqual(simpleResult);
+            });
+        });
+
+        it('should return an "invalid" diagnosis by default', () => {
+            expect(Validation.validateFalse(value)).toEqual(simpleResult);
+        });
+
+        ['ERROR', 'SUSPECT', 'REQUIRED_MISSING'].forEach((diag) => {
+            it(`should show a ${diag} diagnosis`, () => {
+                const expectation = TestUtil.JSONcopy(simpleResult);
+                expectation.diagnosis = Constants.DIAGNOSIS[diag];
+                expect(Validation.validateFalse(value, expectation.diagnosis)).toEqual(expectation);
+            });
+        });
+    });
 });

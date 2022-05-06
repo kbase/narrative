@@ -10,6 +10,7 @@ define([
     'use strict';
 
     describe('Test dynamic dropdown input widget', () => {
+        const CONTROL_SELECTOR = 'select.form-control[data-element="input"]';
         const testConfig = {
                 parameterSpec: {
                     data: {
@@ -151,8 +152,7 @@ define([
                 const widget = DynamicDropdownInput.make(customConfig);
                 await widget.start({ node: container });
                 expect(container.innerHTML).toContain('input-container');
-                const selector = 'select.form-control[data-element="input"]';
-                const selectElem = container.querySelector(selector);
+                const selectElem = container.querySelector(CONTROL_SELECTOR);
                 const select2Elem = container.querySelector('span.select2');
 
                 await TestUtil.waitForElementChange(select2Elem, () => {
@@ -191,13 +191,150 @@ define([
 
                 const widget = DynamicDropdownInput.make(testConfig);
                 await widget.start({ node: container });
-                const selector = 'select.form-control[data-element="input"]';
 
-                const selectElem = container.querySelector(selector);
+                const selectElem = container.querySelector(CONTROL_SELECTOR);
                 expect($(selectElem).select2('data')[0].value).toEqual(testConfig.initialValue);
                 const selectedOption = container.querySelector('.kb-appInput__dynDropdown_display');
                 expect(selectedOption.innerText).toBe('foo Some Value bar');
 
+                await widget.stop();
+            });
+        });
+
+        describe('Custom data source with exact_match_on', () => {
+            const service = 'SomeService',
+                method = 'some_search_method',
+                nsUrl = 'https://kbase.us/service/fakeNSUrl';
+            const parameterSpec = {
+                data: {
+                    defaultValue: '',
+                    nullValue: '',
+                    constraints: {
+                        required: false,
+                    },
+                },
+                original: {
+                    dynamic_dropdown_options: {
+                        data_source: 'custom',
+                        description_template: 'foo {{field}} bar',
+                        multiselection: 0,
+                        query_on_empty_input: 1,
+                        result_array_index: 0,
+                        selection_id: 'field',
+                        service_function: `${service}.${method}`,
+                        service_params: [],
+                        service_version: 'dev',
+                        exact_match_on: 'searchField',
+                    },
+                },
+            };
+
+            beforeEach(() => {
+                Mocks.mockServiceWizardLookup({
+                    module: service,
+                    url: nsUrl,
+                });
+            });
+
+            it('should automatically lookup and populate results when given a value, no display value, and exact_match_on', async () => {
+                const initialValue = 'initial value';
+                const mockJsonBody = {
+                    url: nsUrl,
+                    body: new RegExp(`${service}.${method}`),
+                    response: [
+                        {
+                            id: 'first',
+                            field: 'value0',
+                            searchField: 'some response',
+                        },
+                        {
+                            id: 'second',
+                            field: 'value1',
+                            searchField: initialValue,
+                        },
+                        {
+                            id: 'third',
+                            field: 'value2',
+                            searchField: 'another response',
+                        },
+                    ],
+                };
+                Mocks.mockJsonRpc1Call(mockJsonBody);
+
+                bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: () => {
+                        return Promise.resolve({});
+                    },
+                });
+
+                const widget = DynamicDropdownInput.make({
+                    parameterSpec,
+                    initialValue,
+                    channelName: bus.channelName,
+                });
+                await widget.start({ node: container });
+                const validResponse = mockJsonBody.response[1];
+                const selectElem = container.querySelector(CONTROL_SELECTOR);
+                const selectedData = $(selectElem).select2('data')[0];
+                expect(selectedData.id).toEqual(validResponse.id);
+                expect(selectedData.field).toEqual(validResponse.field);
+                expect(selectedData.selected).toBeTrue();
+                expect(container.querySelector('.select2-selection__rendered').innerText).toContain(
+                    `foo ${validResponse.field} bar`
+                );
+                await widget.stop();
+            });
+
+            it('should fail validation when given a value, no display value, exact_match_on is present, and no exact match is found', async () => {
+                const initialValue = 'initial value';
+                const mockJsonBody = {
+                    url: nsUrl,
+                    body: new RegExp(`${service}.${method}`),
+                    response: [
+                        {
+                            id: 'first',
+                            field: 'value0',
+                            searchField: 'some response',
+                        },
+                        {
+                            id: 'second',
+                            field: 'value1',
+                            searchField: 'not the expectation',
+                        },
+                        {
+                            id: 'third',
+                            field: 'value2',
+                            searchField: 'another response',
+                        },
+                    ],
+                };
+                Mocks.mockJsonRpc1Call(mockJsonBody);
+
+                bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: () => {
+                        return Promise.resolve({});
+                    },
+                });
+
+                const widget = DynamicDropdownInput.make({
+                    parameterSpec,
+                    initialValue,
+                    channelName: bus.channelName,
+                });
+
+                await new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeFalse();
+                        resolve();
+                    });
+                    return widget.start({ node: container });
+                });
                 await widget.stop();
             });
         });
@@ -265,8 +402,7 @@ define([
                 const widget = DynamicDropdownInput.make(ddStagingConfig);
                 await widget.start({ node: container });
 
-                const selector = 'select.form-control[data-element="input"]';
-                const selectElem = container.querySelector(selector);
+                const selectElem = container.querySelector(CONTROL_SELECTOR);
 
                 await TestUtil.waitForElementChange(container.querySelector('span.select2'), () => {
                     $(selectElem).select2('open');
@@ -296,9 +432,8 @@ define([
                 config.initialValue = 'some_random_file.txt';
                 const widget = DynamicDropdownInput.make(config);
                 await widget.start({ node: container });
-                const selector = 'select.form-control[data-element="input"]';
 
-                const selectElem = container.querySelector(selector);
+                const selectElem = container.querySelector(CONTROL_SELECTOR);
                 expect($(selectElem).select2('data')[0].value).toEqual(config.initialValue);
                 await widget.stop();
             });

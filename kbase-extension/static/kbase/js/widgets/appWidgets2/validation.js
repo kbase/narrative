@@ -721,6 +721,34 @@ define([
         }
 
         /**
+         * Return the correct structure for a result that's always invalid.
+         * For use with widgets that need to trigger validation errors, but the value
+         * might be technically valid. E.g. a dynamic dropdown search result was not
+         * found with an existing value. Technically, the value would pass validation,
+         * but it's not really a valid result.
+         *
+         * The diagnosis is optional, if given, it should be in the Constants.DIAGNOSIS
+         * structure. Otherwise, this will default to Constants.DIAGNOSIS.INVALID.
+         * @param {any} value
+         * @param {string} diagnosis (optional) - should be one of Constants.DIAGNOSIS
+         * @returns an invalid validation structure.
+         */
+        function validateFalse(value, diagnosis) {
+            const defaultDiagnosis = Constants.DIAGNOSIS.INVALID;
+
+            if (!Object.values(Constants.DIAGNOSIS).includes(diagnosis)) {
+                diagnosis = defaultDiagnosis;
+            }
+
+            return {
+                isValid: false,
+                errorMessage: 'error',
+                diagnosis,
+                value,
+            };
+        }
+
+        /**
          * Basically casts undefined -> null, otherwise returns the given string.
          * @param {String} value the value to verify
          * @returns the imported string or null
@@ -811,6 +839,7 @@ define([
             validateStringSet: validateTextSet,
             validateBoolean,
             validateTrue,
+            validateFalse,
             importTextString,
             importIntString,
             importFloatString,

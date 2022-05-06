@@ -138,7 +138,10 @@ define([
                 } else {
                     const dataAdapter = $(control).data('select2').dataAdapter;
                     const newOption = dataAdapter.option(
-                        Object.assign({ id: model.value, value: model.value }, displayValue)
+                        Object.assign(
+                            { id: String(model.value).trim(), value: model.value },
+                            displayValue
+                        )
                     );
                     dataAdapter.addOptions(newOption);
                     $(control).val(value).trigger('change');
@@ -503,9 +506,13 @@ define([
             const data = [];
 
             if (config.isViewOnly) {
+                // For select2, ids should be a string, not "0" or empty string
+                // This sets the value of the <option> element. For view only it doesn't
+                // matter much.
+                // see also: https://select2.org/data-sources/formats#automatic-string-casting
                 let viewData = {
                     selected: true,
-                    id: config.initialValue || undefined,
+                    id: config.initialValue || '1',
                     text: config.initialValue,
                 };
                 if (config.initialDisplayValue) {
@@ -528,7 +535,9 @@ define([
                 let match = null;
                 for (const result of searchResults) {
                     if (
-                        model.value.toLowerCase() === result[ddOptions.exact_match_on].toLowerCase()
+                        result[ddOptions.exact_match_on] &&
+                        String(model.value).trim().toLowerCase() ===
+                            String(result[ddOptions.exact_match_on]).trim().toLowerCase()
                     ) {
                         match = result;
                         break;
@@ -536,7 +545,7 @@ define([
                 }
                 if (match) {
                     data.push(Object.assign(match, { selected: true }));
-                    model.value = match.id;
+                    model.value = String(match.id).trim();
                 } else {
                     model.exactMatchError = true;
                 }
@@ -621,7 +630,6 @@ define([
             container.innerHTML = layout();
 
             if (config.initialValue !== undefined) {
-                // note this might come from a different workspace...
                 model.value = config.initialValue;
             }
             if (config.initialDisplayValue !== undefined) {

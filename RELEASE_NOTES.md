@@ -12,6 +12,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
   - "Loading..." message wasn't displayed while fetching data from a service.
   - Update the dynamic dropdown to support the `exact_match_on` field in app specs.
 - DATAUP-751 - add link to staging area docs in the upload tour
+- DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
 
 Dependency Changes
 - Javascript dependency updates

@@ -81,7 +81,7 @@ define([
                     }
                 );
                 if (validation.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
-                    validation.errorMessage = 'Please select a value from the dropdown.';
+                    validation.errorMessage = 'A value is required.';
                 }
                 return validation;
             });
@@ -181,10 +181,12 @@ define([
             const control = ui.getElement('input-container.input');
             model.availableValuesSet.forEach((value) => {
                 const option = control.querySelector(`option[value="${value}"]`);
-                if (model.disabledValues.has(value) && value !== model.value) {
-                    option.setAttribute('disabled', true);
-                } else {
-                    option.removeAttribute('disabled');
+                if (option) {
+                    if (model.disabledValues.has(value) && value !== model.value) {
+                        option.setAttribute('disabled', true);
+                    } else {
+                        option.removeAttribute('disabled');
+                    }
                 }
             });
         }

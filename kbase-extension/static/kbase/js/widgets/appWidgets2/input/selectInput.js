@@ -52,6 +52,7 @@ define([
                 disabledValues: new Set(config.disabledValues || []),
                 invalidValues: new Set(config.invalidValues || []),
             };
+
         let parent, ui, container;
         model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
 
@@ -180,12 +181,12 @@ define([
         function setDisabledValuesFromModel() {
             const control = ui.getElement('input-container.input');
             model.availableValuesSet.forEach((value) => {
-                const option = control.querySelector(`option[value="${value}"]`);
-                if (option) {
+                const opt = control.querySelector(`option[value="${value}"]`);
+                if (opt) {
                     if (model.disabledValues.has(value) && value !== model.value) {
-                        option.setAttribute('disabled', true);
+                        opt.setAttribute('disabled', true);
                     } else {
-                        option.removeAttribute('disabled');
+                        opt.removeAttribute('disabled');
                     }
                 }
             });
@@ -198,7 +199,6 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
                 container.innerHTML = layout();
                 $(ui.getElement('input-container.input'))
                     .select2({

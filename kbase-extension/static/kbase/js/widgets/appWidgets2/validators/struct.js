@@ -1,4 +1,4 @@
-define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants) => {
+define(['bluebird', './resolver', './constants'], (Promise, ValidationResolver, Constants) => {
     'use strict';
 
     function applyConstraints(value, constraints) {
@@ -7,14 +7,14 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                 return {
                     isValid: false,
                     diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                    messageId: 'required-missing',
+                    messageId: Constants.MESSAGE_IDS.REQUIRED_MISSING,
                     errorMessage: 'value is required',
                 };
             } else {
                 return {
                     isValid: true,
                     diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                    messageId: 'optional-empty',
+                    messageId: Constants.MESSAGE_IDS.OPTIONAL_EMPTY,
                 };
             }
         }
@@ -37,7 +37,7 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                 if (spec.data.constraints.required) {
                     validationResult.isValid = false;
                     validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                    validationResult.messageId = 'required-missing';
+                    validationResult.messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                 }
                 return validationResult;
             } else {
@@ -45,7 +45,7 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                 Object.keys(spec.parameters.specs).forEach((id) => {
                     const paramSpec = spec.parameters.specs[id];
                     const paramValue = value[id];
-                    validationMap[id] = resolver.validate(paramValue, paramSpec);
+                    validationMap[id] = ValidationResolver.validate(paramValue, paramSpec);
                 });
                 return Promise.props(validationMap).then((subValidationResults) => {
                     /*
@@ -65,13 +65,13 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                     let resolved = false;
                     let subFieldsEmpty = true;
                     const subParamIds = Object.keys(subValidationResults);
-                    for (let i = 0; i < subParamIds.length; i += 1) {
-                        const result = subValidationResults[subParamIds[i]];
+                    for (const element of subParamIds) {
+                        const result = subValidationResults[element];
                         if (!result.isValid) {
                             validationResult.isValid = false;
                             if (result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
                                 validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                                validationResult.messageId = 'required-missing';
+                                validationResult.messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                             } else {
                                 validationResult.diagnosis = Constants.DIAGNOSIS.INVALID;
                                 validationResult.messageId = 'subfield-invalid';
@@ -95,13 +95,13 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                         if (!resolved && subFieldsEmpty) {
                             validationResult.isValid = false;
                             validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                            validationResult.messageId = 'required-missing';
+                            validationResult.messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         }
                     } else {
                         if (!resolved && subFieldsEmpty) {
                             validationResult.isValid = false;
                             validationResult.diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
-                            validationResult.messageId = 'optional-empty';
+                            validationResult.messageId = Constants.MESSAGE_IDS.OPTIONAL_EMPTY;
                         }
                     }
 

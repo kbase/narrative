@@ -10,7 +10,7 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-], (Promise, html, Validation, Constants, Events, UI, Util, Resolver, FieldWidget) => {
+], (Promise, html, ValidationResolver, Constants, Events, UI, Util, ParamResolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -18,7 +18,7 @@ define([
         div = t('div'),
         button = t('button'),
         p = t('p'),
-        resolver = Resolver.make();
+        resolver = ParamResolver.make();
 
     /**
      * Creates the Struct Input widget, which displays one or more sub-input widgets in a given
@@ -110,7 +110,7 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                return Validation.validate(rawValue, spec);
+                return ValidationResolver.validate(rawValue, spec);
             });
         }
 

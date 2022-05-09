@@ -83,7 +83,6 @@ define([], () => {
                         yaml: 'require-yaml/0.1.2/yaml',
 
                         // kbase
-                        // kbase
                         kb_service: 'kbase-service-clients-js/1.4.0',
                         kb_common: 'kbase-common-js/1.5.4',
                         kb_widget_service: 'kbase-widget-service/0.1.0',
@@ -135,8 +134,8 @@ define([], () => {
         }
 
         return {
-            getRuntime: getRuntime,
-            getModuleLoader: getModuleLoader,
+            getRuntime,
+            getModuleLoader,
         };
     }
 

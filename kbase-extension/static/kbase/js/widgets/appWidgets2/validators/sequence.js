@@ -1,4 +1,4 @@
-define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants) => {
+define(['bluebird', './resolver', './constants'], (Promise, ValidationResolver, Constants) => {
     'use strict';
 
     function applyConstraints(value, constraints) {
@@ -7,14 +7,14 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                 return {
                     isValid: false,
                     diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                    messageId: 'required-missing',
+                    messageId: Constants.MESSAGE_IDS.REQUIRED_MISSING,
                     errorMessage: 'value is required',
                 };
             } else {
                 return {
                     isValid: true,
                     diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                    messageId: 'optional-empty',
+                    messageId: Constants.MESSAGE_IDS.OPTIONAL_EMPTY,
                 };
             }
         }
@@ -34,16 +34,16 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                 if (spec.data.constraints.required) {
                     validationResult.isValid = false;
                     validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                    validationResult.messageId = 'required-missing';
+                    validationResult.messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                 }
                 return validationResult;
             } else {
                 return Promise.all(
                     values.map((value) => {
-                        // nb a sequenc always has a param named "item".
+                        // nb a sequence always has a param named "item".
                         const paramSpec = spec.parameters.specs.item;
                         const paramValue = value;
-                        return resolver.validate(paramValue, paramSpec);
+                        return ValidationResolver.validate(paramValue, paramSpec);
                     })
                 ).then((subValidationResults) => {
                     if (spec.data.constraints.required) {
@@ -56,7 +56,7 @@ define(['bluebird', './resolver', './constants'], (Promise, resolver, Constants)
                             if (result.isValid === false) {
                                 validationResult.isValid = false;
                                 validationResult.diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
-                                validationResult.messageId = 'required-missing';
+                                validationResult.messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                             }
                         });
                     }

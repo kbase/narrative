@@ -2,9 +2,12 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
     'use strict';
 
     const typeToValidator = {
-        string: Validator.validateTextString,
-        int: Validator.validateIntString,
-        float: Validator.validateFloatString,
+        string: 'validateTextString',
+        int: 'validateIntString',
+        float: 'validateFloatString',
+        custom: 'validateCustomInput',
+        customSubdata: 'validateCustomInput',
+        subdata: 'validateCustomInput',
     };
 
     const typeToValidatorModule = {
@@ -12,10 +15,6 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
         struct: 'struct',
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
-        subdata: 'subdata',
-        customSubdata: 'subdata',
-        custom: 'custom',
-        dynamicDropdown: 'dynamicDropdown',
     };
 
     function validate(fieldValue, fieldSpec, options) {
@@ -25,7 +24,7 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
                 reject(new Error(`No validator for type: ${fieldType}`));
             } else if (fieldType in typeToValidator) {
                 resolve(
-                    typeToValidator[fieldType](
+                    Validator[typeToValidator[fieldType]](
                         fieldValue,
                         fieldSpec.data.constraints || {},
                         options || {}
@@ -45,5 +44,7 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
 
     return {
         validate,
+        typeToValidator,
+        typeToValidatorModule,
     };
 });

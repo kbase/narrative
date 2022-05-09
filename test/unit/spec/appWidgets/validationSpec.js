@@ -6,7 +6,31 @@ define([
 ], (Promise, Validation, Constants, TestUtil) => {
     'use strict';
 
+    const aLoadOfInputs = [
+        null,
+        undefined,
+        '',
+        'string',
+        42,
+        [],
+        {},
+        [1, 2, 3],
+        { this: 'that' },
+        () => {
+            return;
+        },
+    ];
     describe('Validator functions', () => {
+        it('Is alive', () => {
+            let alive;
+            if (Validation) {
+                alive = true;
+            } else {
+                alive = false;
+            }
+            expect(alive).toBeTruthy();
+        });
+
         /* map from wsid to objects that match the name
          * used for mocking out the responses needed for validateWorkspaceObjectName,
          * in the case where we want to ensure that the object
@@ -85,324 +109,340 @@ define([
             jasmine.Ajax.uninstall();
         });
 
-        it('validateWorkspaceObjectName - returns valid when they should not exist', (done) => {
-            Validation.validateWorkspaceObjectName(wsObjName, {
-                shouldNotExist: true,
-                workspaceId: 1,
-                workspaceServiceUrl: fakeWsUrl,
-                types: [wsObjType],
-            }).then((result) => {
-                expect(result).toEqual({
-                    isValid: true,
-                    messageId: undefined,
-                    errorMessage: undefined,
-                    shortMessage: undefined,
-                    diagnosis: Constants.DIAGNOSIS.VALID,
-                    value: wsObjName,
-                    parsedValue: wsObjName,
+        describe('validateWorkspaceObjectName', () => {
+            it('returns valid when they should not exist', (done) => {
+                Validation.validateWorkspaceObjectName(wsObjName, {
+                    shouldNotExist: true,
+                    workspaceId: 1,
+                    workspaceServiceUrl: fakeWsUrl,
+                    types: [wsObjType],
+                }).then((result) => {
+                    expect(result).toEqual({
+                        isValid: true,
+                        messageId: undefined,
+                        errorMessage: undefined,
+                        shortMessage: undefined,
+                        diagnosis: Constants.DIAGNOSIS.VALID,
+                        value: wsObjName,
+                        parsedValue: wsObjName,
+                    });
+                    done();
                 });
-                done();
+            });
+
+            it('returns valid-ish when type exists of same type', (done) => {
+                Validation.validateWorkspaceObjectName(wsObjName, {
+                    shouldNotExist: true,
+                    workspaceId: 2,
+                    workspaceServiceUrl: fakeWsUrl,
+                    types: [wsObjType],
+                }).then((result) => {
+                    expect(result).toEqual({
+                        isValid: true,
+                        messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN,
+                        shortMessage: 'an object already exists with this name',
+                        diagnosis: Constants.DIAGNOSIS.SUSPECT,
+                        errorMessage: undefined,
+                        value: wsObjName,
+                        parsedValue: wsObjName,
+                    });
+                    done();
+                });
+            });
+
+            it('returns invalid when type exists of different type', (done) => {
+                Validation.validateWorkspaceObjectName(wsObjName, {
+                    shouldNotExist: true,
+                    workspaceId: 3,
+                    workspaceServiceUrl: fakeWsUrl,
+                    types: [wsObjType],
+                }).then((result) => {
+                    expect(result).toEqual({
+                        isValid: false,
+                        messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE,
+                        errorMessage:
+                            'an object already exists with this name and is not of the same type',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                        shortMessage: undefined,
+                        value: wsObjName,
+                        parsedValue: wsObjName,
+                    });
+                    done();
+                });
             });
         });
 
-        it('validateWorkspaceObjectName - returns valid-ish when type exists of same type', (done) => {
-            Validation.validateWorkspaceObjectName(wsObjName, {
-                shouldNotExist: true,
-                workspaceId: 2,
-                workspaceServiceUrl: fakeWsUrl,
-                types: [wsObjType],
-            }).then((result) => {
-                expect(result).toEqual({
-                    isValid: true,
-                    messageId: 'obj-overwrite-warning',
-                    shortMessage: 'an object already exists with this name',
-                    diagnosis: Constants.DIAGNOSIS.SUSPECT,
-                    errorMessage: undefined,
-                    value: wsObjName,
-                    parsedValue: wsObjName,
+        describe('workspace lookup', () => {
+            it('Can look up workspace names', (done) => {
+                Validation.validateWorkspaceObjectName('somename', {
+                    shouldNotExist: true,
+                    workspaceId: 1,
+                    workspaceServiceUrl: 'https://test.kbase.us/services/ws',
+                    types: [wsObjType],
+                }).then((result) => {
+                    expect(result).toEqual({
+                        isValid: true,
+                        messageId: undefined,
+                        errorMessage: undefined,
+                        diagnosis: Constants.DIAGNOSIS.VALID,
+                        shortMessage: undefined,
+                        value: 'somename',
+                        parsedValue: 'somename',
+                    });
+                    done();
                 });
-                done();
             });
         });
 
-        it('validateWorkspaceObjectName - returns invalid when type exists of different type', (done) => {
-            Validation.validateWorkspaceObjectName(wsObjName, {
-                shouldNotExist: true,
-                workspaceId: 3,
-                workspaceServiceUrl: fakeWsUrl,
-                types: [wsObjType],
-            }).then((result) => {
-                expect(result).toEqual({
-                    isValid: false,
-                    messageId: 'obj-overwrite-diff-type',
-                    errorMessage:
-                        'an object already exists with this name and is not of the same type',
-                    diagnosis: Constants.DIAGNOSIS.INVALID,
-                    shortMessage: undefined,
-                    value: wsObjName,
-                    parsedValue: wsObjName,
+        describe('validateCustomInput', () => {
+            it('returns valid', () => {
+                aLoadOfInputs.forEach((value) => {
+                    expect(Validation.validateCustomInput(value)).toEqual({
+                        isValid: true,
+                        errorMessage: null,
+                        diagnosis: Constants.DIAGNOSIS.VALID,
+                    });
                 });
-                done();
             });
         });
 
-        it('Can look up workspace names', (done) => {
-            Validation.validateWorkspaceObjectName('somename', {
-                shouldNotExist: true,
-                workspaceId: 1,
-                workspaceServiceUrl: 'https://test.kbase.us/services/ws',
-                types: [wsObjType],
-            }).then((result) => {
-                expect(result).toEqual({
-                    isValid: true,
-                    messageId: undefined,
-                    errorMessage: undefined,
-                    diagnosis: Constants.DIAGNOSIS.VALID,
-                    shortMessage: undefined,
-                    value: 'somename',
-                    parsedValue: 'somename',
+        describe('validateTrue', () => {
+            it('should be an instant truthy no-op-ish response', () => {
+                aLoadOfInputs.forEach((value) => {
+                    expect(Validation.validateTrue(value)).toEqual({
+                        isValid: true,
+                        errorMessage: null,
+                        diagnosis: Constants.DIAGNOSIS.VALID,
+                        value: value,
+                        parsedValue: value,
+                    });
                 });
-                done();
             });
-        });
-
-        it('Is alive', () => {
-            let alive;
-            if (Validation) {
-                alive = true;
-            } else {
-                alive = false;
-            }
-            expect(alive).toBeTruthy();
         });
 
         // STRING
+        describe('validateTextString', () => {
+            it('a simple string without constraints', () => {
+                expect(Validation.validateTextString('test', {}).isValid).toEqual(true);
+            });
 
-        it('validateTrue - should be an instant truthy no-op-ish response', () => {
-            const value = 'foo';
-            expect(Validation.validateTrue(value)).toEqual({
-                isValid: true,
-                errorMessage: null,
-                diagnosis: Constants.DIAGNOSIS.VALID,
-                value: value,
-                parsedValue: value,
+            it('a simple string required and supplied', () => {
+                const result = Validation.validateTextString('test', {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(true);
             });
-        });
-
-        it('validateTextString - Validate a simple string without constraints', () => {
-            expect(Validation.validateTextString('test', {}).isValid).toEqual(true);
-        });
-
-        it('validateTextString - Validate a simple string required and supplied', () => {
-            const result = Validation.validateTextString('test', {
-                required: true,
+            it('a simple string, required, empty string', () => {
+                const result = Validation.validateTextString('', { required: true });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateTextString - Validate a simple string, required, empty string', () => {
-            const result = Validation.validateTextString('', { required: true });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateTextString - Validate a simple string, required, null', () => {
-            const result = Validation.validateTextString(null, {
-                required: true,
+            it('a simple string, required, null', () => {
+                const result = Validation.validateTextString(null, {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateTextString - Validate a simple string, min and max length, within range', () => {
-            const result = Validation.validateTextString('hello', {
-                required: true,
-                min_length: 5,
-                max_length: 10,
+            it('a simple string, min and max length, within range', () => {
+                const result = Validation.validateTextString('hello', {
+                    required: true,
+                    min_length: 5,
+                    max_length: 10,
+                });
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateTextString - Validate a simple string, min and max length, below', () => {
-            const result = Validation.validateTextString('hi', {
-                required: true,
-                min_length: 5,
-                max_length: 10,
+            it('a simple string, min and max length, below', () => {
+                const result = Validation.validateTextString('hi', {
+                    required: true,
+                    min_length: 5,
+                    max_length: 10,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateTextString - Validate a simple string, min and max length, above range', () => {
-            const result = Validation.validateTextString('hello earthling', {
-                required: true,
-                min_length: 5,
-                max_length: 10,
+            it('a simple string, min and max length, above range', () => {
+                const result = Validation.validateTextString('hello earthling', {
+                    required: true,
+                    min_length: 5,
+                    max_length: 10,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateTextString - Validate a regexp with matching string', () => {
-            const value = 'foobar';
-            const options = {
-                regexp: [
-                    {
-                        regex: '^foo',
-                        error_text: 'error',
-                        match: 1,
-                    },
-                ],
-            };
-            const result = Validation.validateTextString(value, options);
-            expect(result).toEqual({
-                isValid: true,
-                diagnosis: Constants.DIAGNOSIS.VALID,
-                value: value,
-                parsedValue: value,
-                errorMessage: undefined,
-                messageId: undefined,
+            it('a regexp with matching string', () => {
+                const value = 'foobar';
+                const options = {
+                    regexp: [
+                        {
+                            regex: '^foo',
+                            error_text: 'error',
+                            match: 1,
+                        },
+                    ],
+                };
+                const result = Validation.validateTextString(value, options);
+                expect(result).toEqual({
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    value: value,
+                    parsedValue: value,
+                    errorMessage: undefined,
+                    messageId: undefined,
+                });
             });
-        });
-        it('validateTextString - Validate a regexp with non-matching string', () => {
-            const value = 'barfoo';
-            const options = {
-                regexp: [
-                    {
-                        regex: '^\\d+$',
-                        match: 1,
-                    },
-                ],
-            };
-            expect(Validation.validateTextString(value, options)).toEqual({
-                isValid: false,
-                diagnosis: Constants.DIAGNOSIS.INVALID,
-                value: value,
-                parsedValue: value,
-                errorMessage: `Failed regular expression /${options.regexp[0].regex}/`,
-                messageId: Constants.MESSAGE_IDS.INVALID,
+            it('a regexp with non-matching string', () => {
+                const value = 'barfoo';
+                const options = {
+                    regexp: [
+                        {
+                            regex: '^\\d+$',
+                            match: 1,
+                        },
+                    ],
+                };
+                expect(Validation.validateTextString(value, options)).toEqual({
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    value: value,
+                    parsedValue: value,
+                    errorMessage: `Failed regular expression /${options.regexp[0].regex}/`,
+                    messageId: Constants.MESSAGE_IDS.INVALID,
+                });
             });
         });
 
         // INTEGER
-        it('validateIntString - Validate an integer without constraints', () => {
-            const result = Validation.validateIntString('42', {});
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString('42', {
-                required: true,
+        describe('validateIntString', () => {
+            it('an integer without constraints', () => {
+                const result = Validation.validateIntString('42', {});
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString('', {
-                required: true,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString('42', {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString(null, {
-                required: true,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString('', {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString('7', {
-                required: true,
-                min: 5,
-                max: 10,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString(null, {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString('3', {
-                required: true,
-                min: 5,
-                max: 10,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString('7', {
+                    required: true,
+                    min: 5,
+                    max: 10,
+                });
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateIntString - Validate an integer, required', () => {
-            const result = Validation.validateIntString('42', {
-                required: true,
-                min: 5,
-                max: 10,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString('3', {
+                    required: true,
+                    min: 5,
+                    max: 10,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateIntString - Validate an integer string, wrong type (int)', () => {
-            const result = Validation.validateIntString(42, {
-                required: true,
-                min: 5,
-                max: 10,
+            it('an integer, required', () => {
+                const result = Validation.validateIntString('42', {
+                    required: true,
+                    min: 5,
+                    max: 10,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
+            it('an integer string, wrong type (int)', () => {
+                const result = Validation.validateIntString(42, {
+                    required: true,
+                    min: 5,
+                    max: 10,
+                });
+                expect(result.isValid).toEqual(false);
+            });
         });
 
-        // FLOAT
-        it('validateFloatString - Validate a float without constraints', () => {
-            const result = Validation.validateFloatString('42.12', {});
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateFloatString - Validate a bad without constraints', () => {
-            const result = Validation.validateFloatString('x', {});
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateFloatString - Validate an empty without constraints', () => {
-            const result = Validation.validateFloatString('', {});
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateFloatString - Validate a float string, required', () => {
-            const result = Validation.validateFloatString('42.12', {
-                required: true,
+        describe('validateFloatString', () => {
+            // FLOAT
+            it('a float without constraints', () => {
+                const result = Validation.validateFloatString('42.12', {});
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(true);
-        });
-        it('validateFloatString - Validate an empty string, required', () => {
-            const result = Validation.validateFloatString('', {
-                required: true,
+            it('a bad without constraints', () => {
+                const result = Validation.validateFloatString('x', {});
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateFloatString - Validate an empty string, required', () => {
-            const result = Validation.validateFloatString(null, {
-                required: true,
+            it('an empty without constraints', () => {
+                const result = Validation.validateFloatString('', {});
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        // bad types
-        it('validateFloatString - Validate an undefined, required', () => {
-            const result = Validation.validateFloatString(undefined, {
-                required: true,
+            it('a float string, required', () => {
+                const result = Validation.validateFloatString('42.12', {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(true);
             });
-            expect(result.isValid).toEqual(false);
-        });
-        it('validateFloatString - Validate an array, required', () => {
-            const result = Validation.validateFloatString([], {
-                required: true,
+            it('an empty string, required', () => {
+                const result = Validation.validateFloatString('', {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
             });
-            expect(result.isValid).toEqual(false);
+            it('an empty string, required', () => {
+                const result = Validation.validateFloatString(null, {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
+            });
+            // bad types
+            it('an undefined, required', () => {
+                const result = Validation.validateFloatString(undefined, {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
+            });
+            it('an array, required', () => {
+                const result = Validation.validateFloatString([], {
+                    required: true,
+                });
+                expect(result.isValid).toEqual(false);
+            });
         });
 
         function runTests(method, tests) {
-            tests.forEach((testSet) => {
-                testSet.forEach((test) => {
-                    if (test.options.required === undefined) {
-                        [true, false].forEach((required) => {
-                            it(method + ' - ' + test.title + ' - required: ' + required, () => {
+            describe(method, () => {
+                tests.forEach((testSet) => {
+                    testSet.forEach((test) => {
+                        if (test.options.required === undefined) {
+                            [true, false].forEach((required) => {
+                                it(test.title + ' - required: ' + required, () => {
+                                    return Promise.try(() => {
+                                        const options = test.options;
+                                        options.required = required;
+                                        return Validation[method](test.value, options);
+                                    }).then((result) => {
+                                        Object.keys(test.result).forEach((key) => {
+                                            expect(result[key]).toEqual(test.result[key]);
+                                        });
+                                    });
+                                });
+                            });
+                        } else {
+                            it(test.title, () => {
                                 return Promise.try(() => {
-                                    const options = test.options;
-                                    options.required = required;
-                                    return Validation[method](test.value, options);
+                                    return Validation[method](test.value, test.options);
                                 }).then((result) => {
                                     Object.keys(test.result).forEach((key) => {
                                         expect(result[key]).toEqual(test.result[key]);
                                     });
                                 });
                             });
-                        });
-                    } else {
-                        it(method + ' - ' + test.title, () => {
-                            return Promise.try(() => {
-                                return Validation[method](test.value, test.options);
-                            }).then((result) => {
-                                Object.keys(test.result).forEach((key) => {
-                                    expect(result[key]).toEqual(test.result[key]);
-                                });
-                            });
-                        });
-                    }
+                        }
+                    });
                 });
             });
         }
@@ -1008,7 +1048,7 @@ define([
         // ObjectReferenceName
 
         // validateSet
-        (function () {
+        describe('validateSet', () => {
             const testCases = [
                 {
                     title: 'undefined all the way',
@@ -1078,14 +1118,14 @@ define([
             ];
 
             testCases.forEach((testCase) => {
-                it('validateSet - ' + testCase.title, () => {
+                it(testCase.title, () => {
                     const result = Validation.validateSet(testCase.value, testCase.options);
                     Object.keys(testCase.result).forEach((key) => {
                         expect(testCase.result[key]).toEqual(result[key]);
                     });
                 });
             });
-        })();
+        });
 
         // validate data palette object reference path
         (function () {
@@ -1251,6 +1291,7 @@ define([
             runTests('validateWorkspaceObjectRef', testCases);
         })();
 
+        // validateBoolean
         (function () {
             const nonStringValues = [1, 0, -1, undefined, [], {}],
                 nonStringCases = nonStringValues.map((value) => {

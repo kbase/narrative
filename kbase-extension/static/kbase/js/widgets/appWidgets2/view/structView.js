@@ -9,13 +9,13 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-], (Promise, html, Validation, Constants, UI, Util, Resolver, FieldWidget) => {
+], (Promise, html, ValidationResolver, Constants, UI, Util, ParamResolver, FieldWidget) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         div = t('div'),
-        resolver = Resolver.make(),
+        resolver = ParamResolver.make(),
         baseCssClass = 'kb-appInput__struct';
 
     function factory(config) {
@@ -56,7 +56,7 @@ define([
 
         function validate(rawValue) {
             return Promise.try(() => {
-                return Validation.validate(rawValue, spec);
+                return ValidationResolver.validate(rawValue, spec);
             });
         }
 

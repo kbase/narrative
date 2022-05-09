@@ -72,6 +72,16 @@ define([
             expect(container.innerHTML).not.toContain('input-container');
         });
 
+        it('should copy an empty string when nothing is selected', async () => {
+            const widget = DynamicDropdownInput.make(testConfig);
+            await widget.start({ node: container });
+            const copyBtn = container.querySelector('button.kb-app-row-clip-btn');
+            spyOn(navigator.clipboard, 'writeText');
+            copyBtn.click();
+            expect(navigator.clipboard.writeText).toHaveBeenCalledWith('');
+            await widget.stop();
+        });
+
         describe('Custom data source', () => {
             const service = 'SomeService',
                 method = 'some_method',
@@ -196,6 +206,24 @@ define([
                 expect($(selectElem).select2('data')[0].value).toEqual(testConfig.initialValue);
                 const selectedOption = container.querySelector('.kb-appInput__dynDropdown_display');
                 expect(selectedOption.innerText).toBe('foo Some Value bar');
+
+                await widget.stop();
+            });
+
+            it('should copy the formatted, selected field', async () => {
+                const testConfig = TestUtil.JSONcopy(customConfig);
+                testConfig.initialValue = 'a_value';
+                testConfig.initialDisplayValue = {
+                    field: 'Some Value',
+                };
+
+                const widget = DynamicDropdownInput.make(testConfig);
+                await widget.start({ node: container });
+
+                const copyBtn = container.querySelector('button.kb-app-row-clip-btn');
+                spyOn(navigator.clipboard, 'writeText');
+                copyBtn.click();
+                expect(navigator.clipboard.writeText).toHaveBeenCalledWith('foo Some Value bar');
 
                 await widget.stop();
             });
@@ -337,6 +365,45 @@ define([
                 });
                 await widget.stop();
             });
+
+            it('should copy the exact_match_on field, regardless of formatting', async () => {
+                const initialValue = 'some exact search';
+                const mockJsonBody = {
+                    url: nsUrl,
+                    body: new RegExp(`${service}.${method}`),
+                    response: [
+                        {
+                            id: 'first',
+                            field: 'value0',
+                            searchField: initialValue,
+                        },
+                    ],
+                };
+                Mocks.mockJsonRpc1Call(mockJsonBody);
+                const widget = DynamicDropdownInput.make({
+                    parameterSpec,
+                    initialValue,
+                    channelName: bus.channelName,
+                });
+
+                bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: () => {
+                        return Promise.resolve({});
+                    },
+                });
+
+                await widget.start({ node: container });
+
+                const copyBtn = container.querySelector('button.kb-app-row-clip-btn');
+                spyOn(navigator.clipboard, 'writeText');
+                copyBtn.click();
+                expect(navigator.clipboard.writeText).toHaveBeenCalledWith(initialValue);
+
+                await widget.stop();
+            });
         });
 
         describe('Staging Area dynamic dropdown', () => {
@@ -440,6 +507,19 @@ define([
 
             it('Should show a "Nothing found" notification if no files are returned', async () => {
                 await testWithStagingService([], ['No results found']);
+            });
+
+            it('should copy the selected staging file name', async () => {
+                const config = TestUtil.JSONcopy(ddStagingConfig);
+                config.initialValue = 'some_random_file.txt';
+                const widget = DynamicDropdownInput.make(config);
+                await widget.start({ node: container });
+
+                const copyBtn = container.querySelector('button.kb-app-row-clip-btn');
+                spyOn(navigator.clipboard, 'writeText');
+                copyBtn.click();
+                expect(navigator.clipboard.writeText).toHaveBeenCalledWith(config.initialValue);
+                await widget.stop();
             });
         });
     });

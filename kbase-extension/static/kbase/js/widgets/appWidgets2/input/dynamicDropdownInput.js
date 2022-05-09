@@ -6,11 +6,13 @@ define([
     '../validation',
     'common/runtime',
     'common/ui',
+    'common/events',
     '../validators/constants',
     'util/timeFormat',
     'util/string',
     'kbase-generic-client-api',
     'common/props',
+    'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
 ], (
@@ -21,11 +23,13 @@ define([
     Validation,
     Runtime,
     UI,
+    Events,
     Constants,
     TimeFormat,
     StringUtil,
     GenericClient,
-    Props
+    Props,
+    WidgetCommon
 ) => {
     'use strict';
 
@@ -492,16 +496,42 @@ define([
             return obj.id;
         }
 
+        function getCopyString() {
+            const data = $(ui.getElement('input-container.input')).select2('data')[0];
+            if (!data) {
+                return '';
+            } else if (ddOptions.exact_match_on && data[ddOptions.exact_match_on]) {
+                return data[ddOptions.exact_match_on];
+            } else {
+                const rendered = selectionTemplate(data);
+                if (typeof rendered !== 'string') {
+                    return rendered.text();
+                }
+                return rendered;
+            }
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
          * Hooks up event listeners
          */
         async function render() {
-            const inputControl = makeInputControl(),
-                content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
-
+            const events = Events.make();
+            const inputControl = makeInputControl();
+            ui.setContent('input-container', '');
+            const _container = ui.getElement('input-container');
+            const content = WidgetCommon.containerContent(
+                div,
+                t('button'),
+                events,
+                ui,
+                _container,
+                inputControl,
+                getCopyString
+            );
             ui.setContent('input-container', content);
+
             const dropdown = $(ui.getElement('input-container.input'));
             const data = [];
 
@@ -599,6 +629,7 @@ define([
                 .on('select2:clear', () => {
                     doClear();
                 });
+            events.attachEvents(_container);
         }
 
         /*

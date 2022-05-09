@@ -121,8 +121,26 @@ $panel-separator-color: use_color('mid-blue');
   }
 
   // kb-field-cell__input_control
-  &__input_control select {
-    margin-left: 0;
+  &__input_control {
+
+    // kb-field-cell__input_control select
+    & select {
+      margin-left: 0;
+    }
+
+    // kb-field-cell__input_control select2-selection--single
+    & .select2-selection--single {
+      border-radius: 2px;
+      height: inherit;
+
+      & .select2-selection__rendered {
+        line-height: 30px;
+      }
+    }
+
+    & .select2-dropdown {
+      border-radius: 2px;
+    }
   }
 
   // kb-field-cell__cell_label

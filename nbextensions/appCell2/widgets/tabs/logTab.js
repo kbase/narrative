@@ -1,15 +1,14 @@
-/**
- * This is the entrypoint module for the job status / log viewer tab of the app cell.
- */
-define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
-    Promise,
-    html,
-    UI,
-    JobLogViewerModule
-) => {
+define([
+    'bluebird',
+    'common/html',
+    'common/ui',
+    'common/jobStateViewer',
+    'common/simpleLogViewer',
+], (Promise, html, UI, JobStateViewerModule, SimpleLogViewerModule) => {
     'use strict';
 
-    const { JobLogViewer } = JobLogViewerModule;
+    const { JobStateViewer } = JobStateViewerModule;
+    const JobLogViewer = SimpleLogViewerModule.SimpleLogViewer;
 
     const t = html.tag,
         div = t('div'),
@@ -19,6 +18,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
         'This app is running in batch mode. The status and log of the parent job are shown below.';
 
     /**
+     * This is the entrypoint module for the job status / log viewer tab of the app cell.
      *
      * @param {object} config with key 'model', containing the cell model
      * @returns log tab instance
@@ -26,7 +26,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
     function factory(config) {
         let container, // The top level node used by this widget
             ui; // UI module interface to this container
-        const { model } = config,
+        const { model, jobManager } = config,
             widgets = {};
 
         function generateLayout(isBatchJob = false) {
@@ -34,7 +34,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
             if (isBatchJob) {
                 intro = p(BATCH_MODE_TEXT);
             }
-            return intro + div({ dataElement: 'log' });
+            return intro + div({ dataElement: 'state' }) + div({ dataElement: 'log' });
         }
 
         /**
@@ -50,19 +50,26 @@ define(['bluebird', 'common/html', 'common/ui', 'util/jobLogViewer'], (
             });
 
             let isBatchJob = false;
-            const childJobs = model.getItem('exec.jobState.child_jobs');
+            const jobState = jobManager.getJob();
+            const childJobs = jobState.child_jobs;
             if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
                 isBatchJob = true;
             }
 
-            return Promise.try(() => {
-                container.innerHTML = generateLayout(isBatchJob);
-                widgets.log = new JobLogViewer({ showHistory: true });
-                return widgets.log.start({
+            container.innerHTML = generateLayout(isBatchJob);
+            widgets.log = new JobLogViewer({ jobManager });
+            widgets.state = new JobStateViewer({ jobManager, showHistory: true });
+            const startPromises = [
+                widgets.log.start({
+                    jobId: jobState.job_id,
                     node: ui.getElement('log'),
-                    jobId: model.getItem('exec.jobState.job_id'),
-                });
-            });
+                }),
+                widgets.state.start({
+                    jobId: jobState.job_id,
+                    node: ui.getElement('state'),
+                }),
+            ];
+            return Promise.all(startPromises);
         }
 
         function stop() {

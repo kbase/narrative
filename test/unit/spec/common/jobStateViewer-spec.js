@@ -180,7 +180,7 @@ define([
                 expect(this.node.innerHTML).toBe('');
             });
 
-            it('Should send bus messages requesting job status information at startup', async function () {
+            it('Should send bus messages requesting job status information at startup if there is no job data', async function () {
                 const jobId = 'test_bus_request';
                 const arg = {
                     node: this.node,
@@ -194,6 +194,17 @@ define([
                         resolve();
                     });
                 });
+            });
+
+            it('Should not request job data if there is already data available', async function () {
+                spyOn(this.bus, 'emit');
+                const jobId = JobsData.JOB_NAMES.COMPLETED;
+                const arg = {
+                    node: this.node,
+                    jobId,
+                };
+                await this.jobStateViewerInstance.start(arg);
+                expect(this.bus.emit).not.toHaveBeenCalled();
             });
         });
 

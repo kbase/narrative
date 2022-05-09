@@ -710,11 +710,10 @@ define([
                         // some kind of 'await job info' message
                         this.ui.setContent(LOG_PANEL, p(this.messages.JOB_STATUS_UNKNOWN));
                         this._renderButtonState('default');
+                        this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                            [jcm.PARAM.JOB_ID]: this.jobId,
+                        });
                     }
-
-                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
-                        [jcm.PARAM.JOB_ID]: this.jobId,
-                    });
                 }).catch((err) => {
                     throw err;
                 });

@@ -51,6 +51,8 @@ define([
 ) => {
     'use strict';
 
+    // This module should be updated to use the Job Manager and the Job State Viewer and Simple Log Viewer.
+
     const { JobLogViewer } = JobLogViewerModule;
 
     return new KBWidget({

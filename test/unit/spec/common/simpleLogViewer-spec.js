@@ -325,7 +325,7 @@ define([
                 expect(this.node.innerHTML).toBe('');
             });
 
-            it('Should send bus messages requesting job status information at startup', async function () {
+            it('Should send bus messages requesting job status if there is no job data', async function () {
                 const jobId = TEST_JOB_ID;
                 const arg = {
                     node: this.node,
@@ -358,11 +358,7 @@ define([
                         expect(this.simpleLogViewerInstance.getLogPanel().textContent).toContain(
                             this.simpleLogViewerInstance.messages.BATCH_JOB
                         );
-                        expect(this.bus.emit.calls.allArgs()).toEqual(
-                            jasmine.arrayWithExactContents([
-                                [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                            ])
-                        );
+                        expect(this.bus.emit.calls.allArgs()).toEqual([]);
                         checkButtons(this, 'default');
                         return;
                     }
@@ -372,11 +368,7 @@ define([
                         case 'queued':
                             // queued: LOG_PANEL should contain a message
                             expectQueuedMessage(this);
-                            expect(this.bus.emit.calls.allArgs()).toEqual(
-                                jasmine.arrayWithExactContents([
-                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                                ])
-                            );
+                            expect(this.bus.emit.calls.allArgs()).toEqual([]);
                             checkButtons(this, 'default');
                             break;
 
@@ -384,7 +376,6 @@ define([
                         case 'terminal':
                             expect(this.bus.emit.calls.allArgs()).toEqual(
                                 jasmine.arrayWithExactContents([
-                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
                                     [jcm.MESSAGE_TYPE.LOGS, { [jcm.PARAM.JOB_ID]: jobId }],
                                 ])
                             );
@@ -395,11 +386,7 @@ define([
                             expect(
                                 this.simpleLogViewerInstance.getLogPanel().textContent
                             ).toContain(this.simpleLogViewerInstance.messages.JOB_NOT_FOUND);
-                            expect(this.bus.emit.calls.allArgs()).toEqual(
-                                jasmine.arrayWithExactContents([
-                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                                ])
-                            );
+                            expect(this.bus.emit.calls.allArgs()).toEqual([]);
                             checkButtons(this, 'default');
                             break;
                     }
@@ -528,8 +515,6 @@ define([
                     logContent.scrollHeight - logContent.clientHeight
                 );
             });
-
-            xit('should have stop and play buttons to turn logs off and on', () => {});
         });
 
         // the log display
@@ -951,9 +936,6 @@ define([
                         input = generateInput(jobId);
                     let acc = -1;
 
-                    // // set the job manager's status request loop going
-                    this.jobManager.restoreFromSaved();
-
                     // status updates
                     const jobStatusSeries = TestUtil.JSONcopy(JobsData.jobProgression);
 
@@ -969,8 +951,10 @@ define([
                     spyOn(this.bus, 'emit').and.callFake((...args) => {
                         if (args[0] === jcm.MESSAGE_TYPE.STATUS) {
                             const jobIdList = args[1][jcm.PARAM.JOB_ID_LIST] || [
-                                args[1][jcm.PARAM.JOB_ID],
-                            ];
+                                    args[1][jcm.PARAM.JOB_ID],
+                                ],
+                                batchId = args[1][jcm.PARAM.BATCH_ID];
+
                             acc++;
 
                             if (acc < jobStatusSeries.length) {
@@ -978,7 +962,10 @@ define([
 
                                 // the final request will not contain CREATED as it has already completed
                                 // but we added on the 'does_not_exist' message for fun
-                                if (status === 'does_not_exist') {
+                                if (acc === 0) {
+                                    // this is the kick off message
+                                    expect(batchId).toEqual(BATCH_ID);
+                                } else if (status === 'does_not_exist') {
                                     expect(jobIdList).not.toContain(JobsData.JOB_NAMES.CREATED);
                                 } else {
                                     expect(jobIdList).toContain(JobsData.JOB_NAMES.CREATED);
@@ -1045,6 +1032,9 @@ define([
                         node: this.node,
                         jobId,
                     });
+
+                    // set the job manager's status request loop going
+                    this.jobManager.restoreFromSaved();
 
                     await TestUtil.waitForElementState(this.node, () => {
                         return (

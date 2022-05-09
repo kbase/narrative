@@ -1,5 +1,6 @@
 import copy
 import threading
+import time
 from typing import List, Union
 
 from ipykernel.comm import Comm
@@ -354,6 +355,11 @@ class JobComm:
         :rtype: dict
         """
         output_states = self._jm.get_job_states(job_id_list, ts)
+
+        now = time.time_ns()
+        for output_state in output_states.values():
+            output_state["last_checked"] = now
+
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 

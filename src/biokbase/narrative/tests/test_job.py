@@ -74,7 +74,7 @@ def create_job_from_ee2(job_id, extra_data=None, children=None):
 
 def create_state_from_ee2(job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
     """
-    create the output of job.state() from raw job data
+    create the output of job.refresh_state() from raw job data
     """
     state = get_test_job(job_id)
 
@@ -178,7 +178,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(jobl._acc_state, jobr._acc_state)
 
         with mock.patch(CLIENTS, get_mock_client):
-            self.assertEqual(jobl.state(), jobr.state())
+            self.assertEqual(jobl.refresh_state(), jobr.refresh_state())
 
         for attr in JOB_ATTRS:
             self.assertEqual(getattr(jobl, attr), getattr(jobr, attr))
@@ -201,7 +201,7 @@ class JobTest(unittest.TestCase):
         if not exp_attrs and not skip_state:
             state = create_state_from_ee2(job_id)
             with mock.patch(CLIENTS, get_mock_client):
-                self.assertEqual(state, job.state())
+                self.assertEqual(state, job.refresh_state())
 
         attrs = create_attrs_from_ee2(job_id)
         attrs.update(exp_attrs)
@@ -322,7 +322,7 @@ class JobTest(unittest.TestCase):
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        state = job.state()
+        state = job.refresh_state()
         self.assertFalse(job.was_terminal())
         self.assertEqual(state["status"], "created")
 
@@ -338,7 +338,7 @@ class JobTest(unittest.TestCase):
         expected = create_state_from_ee2(JOB_COMPLETED)
 
         with assert_obj_method_called(MockClients, "check_job", call_status=False):
-            state = job.state()
+            state = job.refresh_state()
             self.assertEqual(state["status"], "completed")
             self.assertEqual(state, expected)
 
@@ -350,7 +350,7 @@ class JobTest(unittest.TestCase):
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
         with self.assertRaisesRegex(ServerError, "check_job failed"):
-            job.state()
+            job.refresh_state()
 
     def test_state__returns_none(self):
         def mock_state(self, state=None):
@@ -400,7 +400,7 @@ class JobTest(unittest.TestCase):
         """
         job = create_job_from_ee2(JOB_RUNNING)
         expected = create_state_from_ee2(JOB_RUNNING)
-        self.assertEqual(job.state(), expected)
+        self.assertEqual(job.refresh_state(), expected)
 
         # try to update it with the job state from a different job
         with self.assertRaisesRegex(ValueError, "Job ID mismatch in _update_state"):
@@ -559,7 +559,7 @@ class JobTest(unittest.TestCase):
             mock.Mock(return_value={"status": COMPLETED_STATUS}),
         ):
             for child_job in child_jobs:
-                child_job.state(force_refresh=True)
+                child_job.refresh_state(force_refresh=True)
 
         self.assertTrue(parent_job.was_terminal())
 
@@ -726,7 +726,7 @@ class JobTest(unittest.TestCase):
 
         with mock.patch.object(MockClients, "check_job", mock_check_job):
             for job in child_jobs:
-                job.state(force_refresh=True)
+                job.refresh_state(force_refresh=True)
 
         self.assertTrue(batch_job.was_terminal())
 

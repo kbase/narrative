@@ -322,7 +322,7 @@ class JobManager:
     def get_job_states(self, job_ids: List[str], ts: int = None) -> dict:
         """
         Retrieves the job states for the supplied job_ids, with the option to
-        replace any jobs that have not been updated since ts with a short stub
+        remove any jobs that have not been updated since ts
 
         Jobs that cannot be found in the `_running_jobs` index will return
         {
@@ -340,6 +340,12 @@ class JobManager:
         """
         job_ids, error_ids = self._check_job_list(job_ids)
         output_states = self._construct_job_output_state_set(job_ids)
+
+        if ts is not None:
+            for job_id in job_ids:
+                if self.get_job(job_id).last_updated < ts:
+                    del output_states[job_id]
+
         return self.add_errors_to_results(output_states, error_ids)
 
     def get_all_job_states(self, ignore_refresh_flag=False) -> dict:

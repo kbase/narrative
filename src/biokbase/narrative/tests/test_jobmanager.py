@@ -736,7 +736,7 @@ class JobManagerTest(unittest.TestCase):
         new_child_ids = BATCH_CHILDREN[1:] + [JOB_CREATED, JOB_NOT_FOUND]
 
         def mock_check_job(params):
-            """Called from job.state()"""
+            """Called from job.refresh_state()"""
             job_id = params["job_id"]
             if job_id == BATCH_PARENT:
                 return {"child_jobs": new_child_ids}

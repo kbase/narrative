@@ -295,14 +295,6 @@ class Job:
         else:
             return self._acc_state.get("status") in TERMINAL_STATUSES
 
-    def is_terminal(self):
-        self.refresh_state()
-        if self._acc_state.get("batch_job"):
-            for child_job in self.children:
-                if child_job._acc_state.get("status") != COMPLETED_STATUS:
-                    child_job.refresh_state(force_refresh=True)
-        return self.was_terminal()
-
     def in_cells(self, cell_ids: List[str]) -> bool:
         """
         For job initialization.
@@ -384,9 +376,9 @@ class Job:
             state = self.query_ee2_state(self.job_id, init=False)
             self._update_state(state)
 
-        return self.static_state(exclude)
+        return self.current_state(exclude)
 
-    def static_state(self, exclude=None):
+    def current_state(self, exclude=None):
         """Wrapper for self._acc_state"""
         state = copy.deepcopy(self._acc_state)
         self._trim_ee2_state(state, exclude)
@@ -396,7 +388,7 @@ class Job:
         """
         :param state:   Supplied when the state is queried beforehand from EE2 in bulk,
                         or when it is retrieved from a cache. If not supplied, must be
-                        queried with self.refresh_state() or self.static_state()
+                        queried with self.refresh_state() or self.current_state()
         :return:        dict, with structure
 
         {
@@ -449,10 +441,10 @@ class Job:
         :rtype: dict
         """
         if not state:
-            state = self.static_state() if no_refresh else self.refresh_state()
+            state = self.current_state() if no_refresh else self.refresh_state()
         else:
             self._update_state(state)
-            state = self.static_state()
+            state = self.current_state()
 
         if state is None:
             return self._create_error_state(
@@ -503,7 +495,7 @@ class Job:
             state = self.refresh_state()
         else:
             self._update_state(state)
-            state = self.static_state()
+            state = self.current_state()
 
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)

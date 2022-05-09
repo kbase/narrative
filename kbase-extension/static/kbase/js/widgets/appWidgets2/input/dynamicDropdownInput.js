@@ -514,9 +514,6 @@ define([
          * Hooks up event listeners
          */
         async function render() {
-            // const inputControl = makeInputControl(),
-            //     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
-            // ui.setContent('input-container', content);
             const events = Events.make();
             const inputControl = makeInputControl();
             ui.setContent('input-container', '');

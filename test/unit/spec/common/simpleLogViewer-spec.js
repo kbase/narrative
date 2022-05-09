@@ -358,12 +358,7 @@ define([
                         expect(this.simpleLogViewerInstance.getLogPanel().textContent).toContain(
                             this.simpleLogViewerInstance.messages.BATCH_JOB
                         );
-                        expect(this.bus.emit.calls.allArgs()).toEqual(
-                            []
-                            // jasmine.arrayWithExactContents([
-                            //     [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                            // ])
-                        );
+                        expect(this.bus.emit.calls.allArgs()).toEqual([]);
                         checkButtons(this, 'default');
                         return;
                     }
@@ -373,12 +368,7 @@ define([
                         case 'queued':
                             // queued: LOG_PANEL should contain a message
                             expectQueuedMessage(this);
-                            expect(this.bus.emit.calls.allArgs()).toEqual(
-                                []
-                                // jasmine.arrayWithExactContents([
-                                //     [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                                // ])
-                            );
+                            expect(this.bus.emit.calls.allArgs()).toEqual([]);
                             checkButtons(this, 'default');
                             break;
 
@@ -386,7 +376,6 @@ define([
                         case 'terminal':
                             expect(this.bus.emit.calls.allArgs()).toEqual(
                                 jasmine.arrayWithExactContents([
-                                    // [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
                                     [jcm.MESSAGE_TYPE.LOGS, { [jcm.PARAM.JOB_ID]: jobId }],
                                 ])
                             );
@@ -398,10 +387,6 @@ define([
                                 this.simpleLogViewerInstance.getLogPanel().textContent
                             ).toContain(this.simpleLogViewerInstance.messages.JOB_NOT_FOUND);
                             expect(this.bus.emit.calls.allArgs()).toEqual([]);
-                            //     jasmine.arrayWithExactContents([
-                            //         [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.JOB_ID]: jobId }],
-                            //     ])
-                            // );
                             checkButtons(this, 'default');
                             break;
                     }

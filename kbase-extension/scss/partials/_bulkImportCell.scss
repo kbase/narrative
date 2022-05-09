@@ -56,6 +56,17 @@ $panel-separator-color: use_color('mid-blue');
       display: flex;
     }
 
+    // kb-bulk-import-configure__button--generate-template
+    &__button--generate-template {
+      @extend %kbase-button;
+
+      @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+
+      position: absolute;
+      right: 15px; // panel-body padding
+      margin: 1rem 0;
+    }
+
     // kb-bulk-import-configure__message
     &__message {
       padding: 0.5rem;
@@ -63,9 +74,7 @@ $panel-separator-color: use_color('mid-blue');
       color: use-color('ink');
 
       // kb-bulk-import-configure__message_container
-      &_container {
-
-      }
+      &_container {}
 
       // kb-bulk-import-configure__message--error
       &--error {

@@ -44,7 +44,7 @@ define([
         };
     }
 
-    describe('Select Input tests', () => {
+    fdescribe('Select Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
             container = document.createElement('div');
@@ -287,6 +287,36 @@ define([
                 for (const child of inputElem.children) {
                     expect(['dirigible', 'elephant', 'frittata'].includes(child.value)).toBeTrue();
                 }
+            });
+        });
+
+        [
+            {
+                initialValue: 'apple',
+                expected: 'Apple',
+            },
+            {
+                initialValue: 'banana',
+                expected: 'Banana',
+            },
+            {
+                initialValue: 'nope',
+                expected: '',
+            },
+            {
+                initialValue: null,
+                expected: '',
+            },
+        ].forEach((testCase) => {
+            it(`Should copy the display text of the currently selected option "${testCase.initialValue}"`, async () => {
+                testConfig.initialValue = testCase.initialValue;
+                const widget = SelectInput.make(testConfig);
+                await widget.start({ node: container });
+
+                const copyBtn = container.querySelector('button.kb-app-row-clip-btn');
+                spyOn(navigator.clipboard, 'writeText');
+                copyBtn.click();
+                expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testCase.expected);
             });
         });
     });

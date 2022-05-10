@@ -4,12 +4,14 @@ define([
     'common/html',
     'common/ui',
     'common/runtime',
+    'common/events',
     '../validation',
+    'widgets/appWidgets2/common',
     '../inputUtils',
     '../validators/constants',
     'select2',
     'bootstrap',
-], ($, Promise, html, UI, Runtime, Validation, inputUtils, Constants) => {
+], ($, Promise, html, UI, Runtime, Events, Validation, WidgetCommon, inputUtils, Constants) => {
     'use strict';
 
     // Constants
@@ -155,7 +157,7 @@ define([
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeInputControl())]
+                [div({ dataElement: 'input-container' })] //, makeInputControl())]
             );
         }
 
@@ -192,6 +194,14 @@ define([
             });
         }
 
+        function getCopyString() {
+            const data = $(ui.getElement('input-container.input')).select2('data')[0];
+            if (!data || !data.text) {
+                return '';
+            }
+            return data.text;
+        }
+
         // LIFECYCLE API
 
         function start(arg) {
@@ -200,6 +210,18 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
                 container.innerHTML = layout();
+                const events = Events.make();
+                const content = WidgetCommon.containerContent(
+                    div,
+                    t('button'),
+                    events,
+                    ui,
+                    ui.getElement('input-container'),
+                    makeInputControl(),
+                    getCopyString
+                );
+                ui.setContent('input-container', content);
+
                 $(ui.getElement('input-container.input'))
                     .select2({
                         allowClear: true,
@@ -214,6 +236,8 @@ define([
                     .on('select2:clear', () => {
                         handleChanged();
                     });
+
+                events.attachEvents(container);
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();

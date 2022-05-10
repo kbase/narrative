@@ -11,8 +11,13 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
   - selected value wasn't being displayed in view-only version
   - "Loading..." message wasn't displayed while fetching data from a service.
   - Update the dynamic dropdown to support the `exact_match_on` field in app specs.
+  - Add a copy button to the dynamic dropdown - this will copy the most relevant text from the dropdown to the clipboard.
+    - For dropdowns with an `exact_match_on` field, this will copy the contents of that field (e.g. for those that present taxonomy ids for a species, this copies just the scientific name)
+    - For dropdowns that go against the FTP staging area, this copies the file name and path.
+    - For other dropdowns, this copies the formatted text
 - DATAUP-751 - add link to staging area docs in the upload tour
 - DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
+- DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
 
 Dependency Changes
 - Javascript dependency updates

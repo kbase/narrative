@@ -355,11 +355,6 @@ class JobComm:
         :rtype: dict
         """
         output_states = self._jm.get_job_states(job_id_list, ts)
-
-        now = time.time_ns()
-        for output_state in output_states.values():
-            output_state["last_checked"] = now
-
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
         return output_states
 
@@ -520,6 +515,14 @@ class JobComm:
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
+        # For STATUS responses, add a last_checked field
+        # to each output_state. Note: error states will have
+        # the last_checked field too
+        if msg_type == MESSAGE_TYPE["STATUS"]:
+            now = time.time_ns()
+            for output_state in content.values():
+                output_state["last_checked"] = now
+
         msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 

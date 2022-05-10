@@ -2,6 +2,7 @@ import copy
 import itertools
 import os
 import re
+import time
 import unittest
 from datetime import datetime
 from unittest import mock
@@ -36,6 +37,7 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_CHILDREN,
     BATCH_ERROR_RETRIED,
     BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
     BATCH_TERMINATED,
     BATCH_TERMINATED_RETRIED,
     CLIENTS,
@@ -50,6 +52,7 @@ from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
     generate_error,
     get_test_job,
+    get_test_jobs,
 )
 
 from .narrative_mock.mockclients import (
@@ -706,6 +709,63 @@ class JobManagerTest(unittest.TestCase):
             JobRequestException, re.escape(f"{JOBS_MISSING_ERR}: {[]}")
         ):
             self.jm.get_job_states([])
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states__last_updated(self):
+        """
+        Test that only updated jobs return an actual state
+        and that the rest of the jobs are removed
+        """
+        # what FE will say was the last time the jobs were checked
+        ts = time.time_ns()
+
+        # mix of terminal and not terminal
+        not_updated_ids = [JOB_COMPLETED, JOB_ERROR, JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
+        # not terminal
+        updated_ids = [BATCH_PARENT, BATCH_RETRY_RUNNING]
+
+        # error ids
+        not_found_ids = [JOB_NOT_FOUND]
+
+        job_ids = not_updated_ids + updated_ids
+        active_ids = list(set(job_ids) & set(ACTIVE_JOBS))
+
+        # all job IDs partitioned as
+        not_found_ids
+        terminal_ids = list(set(job_ids) - set(ACTIVE_JOBS))  # noqa: F841
+        not_updated_active_ids = list(set(not_updated_ids) & set(active_ids))  # noqa: F841
+        updated_active_ids = list(set(updated_ids) & set(active_ids))
+
+        def mock_check_jobs(self_, params):
+            """Mutate only chosen job states"""
+            lookup_ids = params["job_ids"]
+            self.assertCountEqual(active_ids, lookup_ids)  # sanity check
+
+            job_states_ret = get_test_jobs(lookup_ids)
+            for job_id, job_state in job_states_ret.items():
+                # if job is chosen to be updated, mutate it
+                if job_id in updated_active_ids:
+                    job_state["updated"] += 1
+            return job_states_ret
+
+        with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
+            output_states = self.jm.get_job_states(job_ids + not_found_ids, ts=ts)
+
+        expected = {
+            job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id])
+            for job_id in updated_active_ids
+        }
+        for job_state in expected.values():
+            job_state["jobState"]["updated"] += 1
+        expected[JOB_NOT_FOUND] = {
+            "job_id": JOB_NOT_FOUND,
+            "error": f"Cannot find job with ID {JOB_NOT_FOUND}"
+        }
+
+        self.assertEqual(
+            expected,
+            output_states
+        )
 
     def test_update_batch_job__dne(self):
         with self.assertRaisesRegex(

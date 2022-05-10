@@ -373,7 +373,7 @@ class JobTest(unittest.TestCase):
             "created": 0,
         }
 
-        with mock.patch.object(Job, "state", mock_state):
+        with mock.patch.object(Job, "refresh_state", mock_state):
             state = job.output_state()
         self.assertEqual(expected, state)
 

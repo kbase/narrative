@@ -9,6 +9,7 @@ from jinja2 import Template
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.jobs.util import merge, merge_inplace
 
 from .specmanager import SpecManager
 
@@ -80,33 +81,6 @@ JOB_INPUT_ATTRS = [
     "params",
 ]
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
-
-
-def merge(d0: dict, d1: dict):
-    d0 = copy.deepcopy(d0)
-    merge_inplace(d0, d1)
-    return d0
-
-
-def merge_inplace(d0: dict, d1: dict):
-    """
-    Recursively merge nested dicts d1 into d0,
-    overwriting any values in d0 that are not nested dicts.
-    Mutates d0
-    """
-    for k, v1 in d1.items():
-        if k in d0:
-            v0 = d0[k]
-            is_dict_0 = isinstance(v0, dict)
-            is_dict_1 = isinstance(v1, dict)
-            if is_dict_0 ^ is_dict_1:
-                raise ValueError(f"For key {k}: is_dict(v0) xor is_dict(v1)")
-            elif not is_dict_0 and not is_dict_1:
-                d0[k] = v1
-            elif is_dict_0 and is_dict_1:
-                merge_inplace(v0, v1)
-        else:
-            d0[k] = v0
 
 
 class Job:
@@ -558,7 +532,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line : first_line + num_lines],
+            self._job_logs[first_line: first_line + num_lines],
         )
 
     def _update_log(self):

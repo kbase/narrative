@@ -41,7 +41,7 @@ def get_test_jobs(job_ids):
 
 
 CLIENTS = "biokbase.narrative.clients.get"
-TIME_NS = "biokbase.narrative.jobs.jobcomm.time.time_ns"
+JC_TIME_NS = "biokbase.narrative.jobs.jobcomm.time.time_ns"
 
 TEST_EPOCH_NS = 42  # arbitrary epoch ns
 MAX_LOG_LINES = 10

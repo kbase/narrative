@@ -25,7 +25,7 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap'], (Promise, html, UI
             setModelValue(spec.data.defaultValue);
         }
 
-        function render() {
+        function render(value) {
             const inputControl = input({
                 class: 'form-control',
                 dataElement: 'input',
@@ -61,10 +61,8 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap'], (Promise, html, UI
                     bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', () => {});
 
-                    render();
-                    bus.emit('sync');
+                    render(config.initialValue);
                 });
             });
         }

@@ -43,6 +43,14 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
         if (filePathValues.length === 0) {
             return Promise.resolve('incomplete');
         }
+
+        // const filePathValidationParams = filePathValues.reduce((paramSet, filePathRow) => {
+        //     for (const key of Object.keys(filePathRow)) {
+        //         paramSet[key].push(filePathRow[key]);
+        //     }
+        //     return paramSet;
+        // }, Object.keys(filePathValues[0]).reduce((acc, curr) => (acc[curr] = [], acc), {}));
+
         const filePathValidations = filePathValues.map((filePathRow, index) => {
             return spec.validateParams(filePathIds, filePathRow, filePathOptions[index]);
         });

@@ -3,7 +3,8 @@ define([
     'widgets/appWidgets2/validation',
     'widgets/appWidgets2/validators/constants',
     'testUtil',
-], (Promise, Validation, Constants, TestUtil) => {
+    'narrativeMocks',
+], (Promise, Validation, Constants, TestUtil, Mocks) => {
     'use strict';
 
     const aLoadOfInputs = [
@@ -21,7 +22,7 @@ define([
         },
     ];
 
-    describe('Validator functions', () => {
+    fdescribe('Validator functions', () => {
         it('Is alive', () => {
             let alive;
             if (Validation) {
@@ -43,13 +44,14 @@ define([
          */
         const wsObjName = 'SomeObject',
             wsObjType = 'SomeModule.SomeType',
+            fullType = `${wsObjType}-1.0`,
             wsObjMapping = {
                 1: [null],
                 2: [
                     [
                         1,
                         wsObjName,
-                        wsObjType,
+                        fullType,
                         '2019-07-23T22:42:44+0000',
                         1,
                         'someuser',
@@ -64,7 +66,7 @@ define([
                     [
                         1,
                         wsObjName,
-                        'SomeOtherModule.SomeOtherType',
+                        'SomeOtherModule.SomeOtherType-2.0',
                         '2019-07-23T22:42:44+0000',
                         1,
                         'someotheruser',
@@ -81,27 +83,22 @@ define([
         beforeEach(() => {
             jasmine.Ajax.install();
 
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*1\s*,/).andReturn(
-                (function () {
-                    return {
-                        status: 200,
-                        statusText: 'HTTP/1.1 200 OK',
-                        contentType: 'application/json',
-                        responseText: JSON.stringify({ result: [wsObjMapping['1']] }),
-                    };
-                })()
-            );
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*2\s*,/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({ result: [wsObjMapping['2']] }),
+            Mocks.mockJsonRpc1Call({
+                url: fakeWsUrl,
+                body: /wsid.\s*:\s*1\s*,/,
+                response: wsObjMapping['1'],
             });
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*3\s*,/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({ result: [wsObjMapping['3']] }),
+
+            Mocks.mockJsonRpc1Call({
+                url: fakeWsUrl,
+                body: /wsid.\s*:\s*2\s*,/,
+                response: wsObjMapping['2'],
+            });
+
+            Mocks.mockJsonRpc1Call({
+                url: fakeWsUrl,
+                body: /wsid.\s*:\s*3\s*,/,
+                response: wsObjMapping['3'],
             });
         });
 
@@ -111,8 +108,8 @@ define([
         });
 
         describe('validateWorkspaceObjectName', () => {
-            it('returns valid when they should not exist', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
+            it('returns valid when they should not exist', () => {
+                return Validation.validateWorkspaceObjectName(wsObjName, {
                     shouldNotExist: true,
                     workspaceId: 1,
                     workspaceServiceUrl: fakeWsUrl,
@@ -127,12 +124,11 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
 
-            it('returns valid-ish when type exists of same type', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
+            it('returns valid-ish when type exists of same type', () => {
+                return Validation.validateWorkspaceObjectName(wsObjName, {
                     shouldNotExist: true,
                     workspaceId: 2,
                     workspaceServiceUrl: fakeWsUrl,
@@ -147,12 +143,11 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
 
-            it('returns invalid when type exists of different type', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
+            it('returns invalid when type exists of different type', () => {
+                return Validation.validateWorkspaceObjectName(wsObjName, {
                     shouldNotExist: true,
                     workspaceId: 3,
                     workspaceServiceUrl: fakeWsUrl,
@@ -168,14 +163,13 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
         });
 
         describe('workspace lookup', () => {
-            it('Can look up workspace names', (done) => {
-                Validation.validateWorkspaceObjectName('somename', {
+            it('Can look up workspace names', () => {
+                return Validation.validateWorkspaceObjectName('somename', {
                     shouldNotExist: true,
                     workspaceId: 1,
                     workspaceServiceUrl: 'https://test.kbase.us/services/ws',
@@ -190,7 +184,6 @@ define([
                         value: 'somename',
                         parsedValue: 'somename',
                     });
-                    done();
                 });
             });
         });

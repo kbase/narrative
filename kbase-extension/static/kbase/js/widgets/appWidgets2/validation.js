@@ -150,7 +150,15 @@ define([
             };
         }
 
-        function getObjectInfos(workspaceId, objectNames, authToken, serviceUrl) {
+        /**
+         *
+         * @param {number} workspaceId
+         * @param {Array<string>} objectNames
+         * @param {string} authToken
+         * @param {string} serviceUrl
+         * @returns Promise resolving into an Array of strings, in the same order as the given objectNames
+         */
+        function getObjectTypes(workspaceId, objectNames, authToken, serviceUrl) {
             const workspace = new Workspace(serviceUrl, {
                 token: authToken,
             });
@@ -161,11 +169,12 @@ define([
                     ignoreErrors: 1,
                 })
                 .then((data) => {
-                    if (data[0]) {
-                        return serviceUtils.objectInfoToObject(data[0]);
-                    } else {
-                        return null;
-                    }
+                    return data.map((objectInfo) => {
+                        if (!objectInfo) {
+                            return null;
+                        }
+                        return objectInfo[2].split('-')[0];
+                    });
                 });
         }
 
@@ -181,9 +190,9 @@ define([
          * - workspaceServiceUrl - string(url),
          * - types - Array
          */
-        function validateWorkspaceObjectNameArray(values, options) {
+        // function validateWorkspaceObjectNameArray(values, options) {
 
-        }
+        // }
 
         /**
          * Validate that a workspace object name is syntactically valid, and exists as a real workspace
@@ -210,29 +219,37 @@ define([
                     return;
                 }
                 if (options.shouldNotExist) {
-                    return getObjectInfos(
+                    return getObjectTypes(
                         options.workspaceId,
                         [parsedValue],
                         options.authToken,
                         options.workspaceServiceUrl
-                    ).then((objectInfo) => {
-                        if (objectInfo) {
-                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                matchingType = options.types.some((typeId) => {
-                                    return typeId === type;
-                                });
-                            if (!matchingType) {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
-                                errorMessage =
-                                    'an object already exists with this name and is not of the same type';
-                                diagnosis = Constants.DIAGNOSIS.INVALID;
-                            } else {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
-                                shortMessage = 'an object already exists with this name';
-                                diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                    )
+                        .then((objectTypes) => {
+                            const objType = objectTypes[0];
+                            if (objType) {
+                                const matchingType = options.types.some(
+                                    (typeId) => typeId === objType
+                                );
+                                if (!matchingType) {
+                                    messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
+                                    errorMessage =
+                                        'an object already exists with this name and is not of the same type';
+                                    diagnosis = Constants.DIAGNOSIS.INVALID;
+                                } else {
+                                    messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
+                                    shortMessage = 'an object already exists with this name';
+                                    diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                                }
                             }
-                        }
-                    });
+                        })
+                        .catch((error) => {
+                            messageId = Constants.MESSAGE_IDS.ERROR;
+                            diagnosis = Constants.DIAGNOSIS.ERROR;
+                            errorMessage = 'an error occurred while validating';
+                            console.error('error while validating workspace object name');
+                            console.error(error);
+                        });
                 }
             }).then(() => {
                 return {
@@ -861,7 +878,7 @@ define([
             importIntString,
             importFloatString,
 
-            validateWorkspaceObjectNameArray
+            // validateWorkspaceObjectNameArray
         };
     }
 

@@ -17,6 +17,11 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
         workspaceObjectRef: 'workspaceObjectRef',
     };
 
+    const typeToArrayValidator = {
+        workspaceObjectName: 'workspaceObjectNameArray',
+        string: 'stringArray'
+    };
+
     function validate(fieldValue, fieldSpec, options) {
         return new Promise((resolve, reject) => {
             const fieldType = fieldSpec.data.type;
@@ -42,8 +47,23 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
         });
     }
 
+    function validateArray(values, parameterSpec, options) {
+        return new Promise((resolve, reject) => {
+            const paramType = parameterSpec.data.type;
+            if (!(paramType in typeToArrayValidator)) {
+                reject(new Error(`No array validator for type: ${paramType}`));
+            }
+            resolve(Validator[typeToArrayValidator[paramType]](
+                values,
+                parameterSpec.data.constraints || {},
+                options || {}
+            ));
+        });
+    }
+
     return {
         validate,
+        validateArray,
         typeToValidator,
         typeToValidatorModule,
     };

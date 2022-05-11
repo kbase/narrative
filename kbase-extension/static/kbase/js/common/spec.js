@@ -101,11 +101,34 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
             return Promise.props(validationMap);
         }
 
+        /**
+         * This validates parameter sets by using a bulk form of validator for each parameter type.
+         * If options are available for the parameter validation, they're expected to apply to all
+         * parameters of that type.
+         * This returns a
+         * @param {Object} paramValues - keys = parameter ids, values = list of parameter values
+         * @param {Object} options - keys = parameter ids, values = set of options for that parameter
+         */
+        function validateMultipleParamsArray(paramValues, options) {
+
+        }
+
+        /**
+         *
+         * @param {string} paramId
+         * @param {Array} paramValues
+         */
+        function validateParamsArray(paramId, paramValues, options) {
+            ValidationResolver.validateArray(paramId, paramValues, options);
+        }
+
+
         return Object.freeze({
             getSpec,
             makeDefaultedModel,
             validateModel,
             validateParams,
+            validateParamsSet
         });
     }
 

@@ -44,16 +44,18 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
             return Promise.resolve('incomplete');
         }
 
-        // const filePathValidationParams = filePathValues.reduce((paramSet, filePathRow) => {
-        //     for (const key of Object.keys(filePathRow)) {
-        //         paramSet[key].push(filePathRow[key]);
-        //     }
-        //     return paramSet;
-        // }, Object.keys(filePathValues[0]).reduce((acc, curr) => (acc[curr] = [], acc), {}));
+        const filePathValidationParams = filePathValues.reduce((paramSet, filePathRow) => {
+            for (const key of Object.keys(filePathRow)) {
+                paramSet[key].push(filePathRow[key]);
+            }
+            return paramSet;
+        }, Object.keys(filePathValues[0]).reduce((acc, curr) => (acc[curr] = [], acc), {}));
 
-        const filePathValidations = filePathValues.map((filePathRow, index) => {
-            return spec.validateParams(filePathIds, filePathRow, filePathOptions[index]);
-        });
+        const filePathValidations = spec.validateParamsSet(filePathValidationParams, filePathOptions[0]);
+
+        // const filePathValidations = filePathValues.map((filePathRow, index) => {
+        //     return spec.validateParams(filePathIds, filePathRow, filePathOptions[index]);
+        // });
         return Promise.all([
             spec.validateParams(paramIds, paramValues, paramOptions),
             ...filePathValidations,

@@ -150,14 +150,14 @@ define([
             };
         }
 
-        function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
+        function getObjectInfos(workspaceId, objectNames, authToken, serviceUrl) {
             const workspace = new Workspace(serviceUrl, {
                 token: authToken,
             });
 
             return workspace
                 .get_object_info_new({
-                    objects: [{ wsid: workspaceId, name: objectName }],
+                    objects: objectNames.map((name) => ({ wsid: workspaceId, name })),
                     ignoreErrors: 1,
                 })
                 .then((data) => {
@@ -167,6 +167,22 @@ define([
                         return null;
                     }
                 });
+        }
+
+        /**
+         * Validates that every element of an array of workspace object names is valid. Optionally,
+         * validate that it does not already exist as a workspace object.
+         *
+         * @param {Array<string>} values
+         * @param {object} options
+         * - required - boolean
+         * - shouldNotExist - boolean
+         * - workspaceId - int
+         * - workspaceServiceUrl - string(url),
+         * - types - Array
+         */
+        function validateWorkspaceObjectNameArray(values, options) {
+
         }
 
         /**
@@ -194,9 +210,9 @@ define([
                     return;
                 }
                 if (options.shouldNotExist) {
-                    return getObjectInfo(
+                    return getObjectInfos(
                         options.workspaceId,
-                        parsedValue,
+                        [parsedValue],
                         options.authToken,
                         options.workspaceServiceUrl
                     ).then((objectInfo) => {
@@ -844,6 +860,8 @@ define([
             importTextString,
             importIntString,
             importFloatString,
+
+            validateWorkspaceObjectNameArray
         };
     }
 

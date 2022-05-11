@@ -55,16 +55,6 @@ define([
                 invalidValues: new Set(config.invalidValues || []),
             };
 
-        // whether or not this represents a multiselect dropdown
-        let isMultiple = false;
-        try {
-            if (spec.original.dropdown_options.multiselection) {
-                isMultiple = true;
-            }
-        } catch (err) {
-            // no op
-        }
-
         let parent, ui, container;
         model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
 
@@ -220,12 +210,6 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-                const select2Args = {
-                    allowClear: true,
-                    placeholder: 'select an option',
-                    width: '100%',
-                    mutiple: isMultiple,
-                };
                 container.innerHTML = layout();
                 const events = Events.make();
                 const content = WidgetCommon.containerContent(
@@ -240,7 +224,11 @@ define([
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input'))
-                    .select2(select2Args)
+                    .select2({
+                        allowClear: true,
+                        placeholder: 'select an option',
+                        width: '100%',
+                    })
                     .val(model.value)
                     .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
                     .on('change', () => {

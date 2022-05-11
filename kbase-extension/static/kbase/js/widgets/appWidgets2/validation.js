@@ -4,7 +4,7 @@ define([
     'kb_service/utils',
     'util/util',
     'util/string',
-    './validators/constants',
+    'widgets/appWidgets2/validators/constants',
 ], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
     'use strict';
 
@@ -134,7 +134,7 @@ define([
                     }
                 } else if (!/^\d+\/\d+\/\d+$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                    messageId = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.INVALID;
                     errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;

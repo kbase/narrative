@@ -1,11 +1,11 @@
 define([
     'bluebird',
     'common/html',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
     'bootstrap',
 ], (Promise, html, Validation, Events, Runtime, UI, Constants) => {
     'use strict';

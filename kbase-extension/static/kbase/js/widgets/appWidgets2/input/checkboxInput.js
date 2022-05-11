@@ -4,8 +4,8 @@ define([
     'common/events',
     'common/ui',
     'common/runtime',
-    '../validation',
-    '../validators/constants',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
 
     'bootstrap',
 ], (Promise, html, Events, UI, Runtime, Validation, Constants) => {

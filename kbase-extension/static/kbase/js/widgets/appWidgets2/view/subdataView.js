@@ -2,7 +2,7 @@ define([
     'jquery',
     'bluebird',
     'common/html',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',

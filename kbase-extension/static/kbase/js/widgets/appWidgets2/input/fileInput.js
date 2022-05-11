@@ -9,8 +9,8 @@ define([
     'common/props',
     'kb_service/client/userAndJobState',
     'kb_service/client/shock',
-    '../validation',
-    '../validators/constants',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
     '../inputUtils',
 
     'bootstrap',

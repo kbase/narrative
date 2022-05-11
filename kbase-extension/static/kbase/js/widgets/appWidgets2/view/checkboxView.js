@@ -1,10 +1,11 @@
-define(['bluebird', 'common/html', '../validation', 'common/events', 'common/ui', 'bootstrap'], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI
-) => {
+define([
+    'bluebird',
+    'common/html',
+    'widgets/appWidgets2/validation',
+    'common/events',
+    'common/ui',
+    'bootstrap',
+], (Promise, html, Validation, Events, UI) => {
     'use strict';
 
     // Constants

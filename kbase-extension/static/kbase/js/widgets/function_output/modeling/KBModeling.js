@@ -45,7 +45,7 @@ function KBModeling(token) {
             s_url =
                 window.kbconfig.urls.service_wizard ||
                 'https://ci.kbase.us/services/service_wizard';
-            s_params = { module_name: 'BiochemistryAPI' };
+            s_params = { module_name: 'BiochemistryAPI', version: null };
             s_method = 'ServiceWizard.get_service_status';
             callback = function (service_status_ret) {
                 srv_url = service_status_ret['result'][0]['url'];

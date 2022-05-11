@@ -18,7 +18,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         fieldset = html.tag('fieldset'),
         cssBaseClass = 'kb-xsv-gen';
 
-    const DOCS_LINK = 'https://docs.kbase.us/data/upload-download-guide/csv';
+    const DOCS_LINK = 'https://docs.kbase.us/data/upload-download-guide/bulk';
 
     const formConfig = {
         layout: [

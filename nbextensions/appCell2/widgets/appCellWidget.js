@@ -1734,15 +1734,6 @@ define(
                         // this will not change, so we can just render it here.
                         PR.prettyPrint(null, container);
 
-                        const currentFsmState = fsm.getCurrentState().state;
-
-                        // if we start out in 'new' state, we need to promote it to
-                        // one of the 'editing' states
-                        if (currentFsmState.mode === 'new') {
-                            evaluateAppState();
-                            return;
-                        }
-
                         jobManager.addEventHandler('modelUpdate', {
                             execMessage: () => {
                                 // Update the execMessage panel with details of the active job
@@ -1775,6 +1766,15 @@ define(
                                 updateState();
                             },
                         });
+
+                        const currentFsmState = fsm.getCurrentState().state;
+
+                        // if we start out in 'new' state, we need to promote it to
+                        // one of the 'editing' states
+                        if (currentFsmState.mode === 'new') {
+                            evaluateAppState();
+                            return;
+                        }
 
                         /*
                          * Check the job state and init the job manager if appropriate

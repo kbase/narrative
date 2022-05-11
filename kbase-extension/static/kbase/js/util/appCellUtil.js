@@ -146,7 +146,7 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
      * @returns
      */
     function evaluateConfigReadyState(model, specs, missingFiles) {
-        // given some missing files (precalcuate for now), set up options for evaluating all file inputs
+        // given some missing files (precalculate for now), set up options for evaluating all file inputs
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
             // make an array of empty options with the same length as the

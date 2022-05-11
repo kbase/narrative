@@ -44,7 +44,7 @@ define([
         };
     }
 
-    fdescribe('Select Input tests', () => {
+    describe('The Select input', () => {
         beforeEach(() => {
             runtime = Runtime.make();
             container = document.createElement('div');

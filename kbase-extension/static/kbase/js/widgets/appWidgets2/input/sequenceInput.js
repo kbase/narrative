@@ -7,7 +7,7 @@ define([
     'util/util',
     'common/props',
     '../paramResolver',
-    '../validators/sequence',
+    'widgets/appWidgets2/validators/sequence',
     '../fieldWidgetMicro',
 
     'bootstrap',

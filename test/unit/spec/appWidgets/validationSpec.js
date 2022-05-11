@@ -20,6 +20,7 @@ define([
             return;
         },
     ];
+
     describe('Validator functions', () => {
         it('Is alive', () => {
             let alive;
@@ -413,639 +414,604 @@ define([
             });
         });
 
-        function runTests(method, tests) {
+        function runTests(method, testSet) {
             describe(method, () => {
-                tests.forEach((testSet) => {
-                    testSet.forEach((test) => {
-                        if (test.options.required === undefined) {
-                            [true, false].forEach((required) => {
-                                it(test.title + ' - required: ' + required, () => {
-                                    return Promise.try(() => {
-                                        const options = test.options;
-                                        options.required = required;
-                                        return Validation[method](test.value, options);
-                                    }).then((result) => {
-                                        Object.keys(test.result).forEach((key) => {
-                                            expect(result[key]).toEqual(test.result[key]);
-                                        });
-                                    });
-                                });
-                            });
-                        } else {
-                            it(test.title, () => {
+                testSet.forEach((test) => {
+                    if (test.options.required === undefined) {
+                        [true, false].forEach((required) => {
+                            it(test.title + ' - required: ' + required, () => {
                                 return Promise.try(() => {
-                                    return Validation[method](test.value, test.options);
+                                    const options = test.options;
+                                    options.required = required;
+                                    return Validation[method](test.value, options);
                                 }).then((result) => {
                                     Object.keys(test.result).forEach((key) => {
                                         expect(result[key]).toEqual(test.result[key]);
                                     });
                                 });
                             });
-                        }
-                    });
+                        });
+                    } else {
+                        it(test.title, () => {
+                            return Promise.try(() => {
+                                return Validation[method](test.value, test.options);
+                            }).then((result) => {
+                                Object.keys(test.result).forEach((key) => {
+                                    expect(result[key]).toEqual(test.result[key]);
+                                });
+                            });
+                        });
+                    }
                 });
             });
         }
 
         // FLOATS
-        (function () {
-            const emptyValues = [
-                    {
-                        title: 'empty string',
-                        value: '',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of just spaces same as empty',
-                        value: '   ',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null',
-                        value: null,
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'empty string, required',
-                        value: '',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of empty spaces, required',
-                        value: '   ',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null, required',
-                        value: null,
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                acceptableFormatTests = [
-                    {
-                        title: 'integer format',
-                        value: '42',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '42',
-                            parsedValue: 42,
-                        },
-                    },
-                    {
-                        title: 'decmial format',
-                        value: '42.12',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '42.12',
-                            parsedValue: 42.12,
-                        },
-                    },
-                    {
-                        title: 'float exp format',
-                        value: '42e2',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '42e2',
-                            parsedValue: 42e2,
-                        },
-                    },
-                ],
-                badValueTests = [
-                    {
-                        title: 'string of chars',
-                        value: 'abc',
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid float format: abc',
-                            value: 'abc',
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                typeTests = [
-                    {
-                        title: 'validate undefined',
-                        value: undefined,
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "undefined")',
-                            value: undefined,
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate array',
-                        value: [],
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: [],
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate object',
-                        value: {},
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: {},
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate date',
-                        value: new Date(0),
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: new Date(0),
-                            parsedValue: undefined,
-                        },
-                    },
-                    // could go on..
-                ],
-                validateRangeTests = [
-                    {
-                        title: 'value over max',
-                        value: '123.45',
-                        options: {
-                            max: 100,
-                        },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'the maximum value for this parameter is 100',
-                            value: '123.45',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'value under min',
-                        value: '5',
-                        options: {
-                            min: 10,
-                        },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'the minimum value for this parameter is 10',
-                            value: '5',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'within range',
-                        value: '5.5',
-                        options: {
-                            min: 0,
-                            max: 10,
-                        },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '5.5',
-                            parsedValue: 5.5,
-                        },
-                    },
-                    {
-                        title: 'infinite',
-                        value: 'Infinity',
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be finite',
-                            value: 'Infinity',
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                tests = [
-                    emptyValues,
-                    acceptableFormatTests,
-                    badValueTests,
-                    typeTests,
-                    validateRangeTests,
-                ];
+        const floatTests = [
+            // empty values
+            {
+                title: 'empty string',
+                value: '',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of just spaces same as empty',
+                value: '   ',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null',
+                value: null,
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'empty string, required',
+                value: '',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of empty spaces, required',
+                value: '   ',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null, required',
+                value: null,
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            // acceptable format
+            {
+                title: 'integer format',
+                value: '42',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '42',
+                    parsedValue: 42,
+                },
+            },
+            {
+                title: 'decmial format',
+                value: '42.12',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '42.12',
+                    parsedValue: 42.12,
+                },
+            },
+            {
+                title: 'float exp format',
+                value: '42e2',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '42e2',
+                    parsedValue: 42e2,
+                },
+            },
+            // bad value
+            {
+                title: 'string of chars',
+                value: 'abc',
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'Invalid float format: abc',
+                    value: 'abc',
+                    parsedValue: undefined,
+                },
+            },
+            // type
+            {
+                title: 'validate undefined',
+                value: undefined,
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "undefined")',
+                    value: undefined,
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate array',
+                value: [],
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: [],
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate object',
+                value: {},
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: {},
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate date',
+                value: new Date(0),
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: new Date(0),
+                    parsedValue: undefined,
+                },
+            },
+            // could go on..
+            // validate range
+            {
+                title: 'value over max',
+                value: '123.45',
+                options: {
+                    max: 100,
+                },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'the maximum value for this parameter is 100',
+                    value: '123.45',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'value under min',
+                value: '5',
+                options: {
+                    min: 10,
+                },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'the minimum value for this parameter is 10',
+                    value: '5',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'within range',
+                value: '5.5',
+                options: {
+                    min: 0,
+                    max: 10,
+                },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '5.5',
+                    parsedValue: 5.5,
+                },
+            },
+            {
+                title: 'infinite',
+                value: 'Infinity',
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be finite',
+                    value: 'Infinity',
+                    parsedValue: undefined,
+                },
+            },
+        ];
 
-            runTests('validateFloatString', tests);
-        })();
+        runTests('validateFloatString', floatTests);
 
         // INTEGERS
-        (function () {
-            const emptyValues = [
-                    {
-                        title: 'empty string',
-                        value: '',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of just spaces same as empty',
-                        value: '   ',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null',
-                        value: null,
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'empty string, required',
-                        value: '',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of empty spaces, required',
-                        value: '   ',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null, required',
-                        value: null,
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                acceptableFormatTests = [
-                    {
-                        title: 'integer format',
-                        value: '42',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '42',
-                            parsedValue: 42,
-                        },
-                    },
-                ],
-                badValueTests = [
-                    {
-                        title: 'string of chars',
-                        value: 'abc',
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid integer format: abc',
-                            value: 'abc',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'decimal format',
-                        value: '42.12',
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'Invalid integer format: 42.12',
-                            value: '42.12',
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                typeTests = [
-                    {
-                        title: 'validate undefined',
-                        value: undefined,
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "undefined")',
-                            value: undefined,
-                            pasedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate array',
-                        value: [],
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: [],
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate object',
-                        value: {},
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: {},
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate date',
-                        value: new Date(0),
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage:
-                                'value must be a string or number (it is of type "object")',
-                            value: new Date(0),
-                            parsedValue: undefined,
-                        },
-                    },
-                    // could go on..
-                ],
-                tests = [emptyValues, acceptableFormatTests, badValueTests, typeTests];
-
-            runTests('validateIntString', tests);
-        })();
+        const integerTests = [
+            // empty values
+            {
+                title: 'empty string',
+                value: '',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of just spaces same as empty',
+                value: '   ',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null',
+                value: null,
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'empty string, required',
+                value: '',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of empty spaces, required',
+                value: '   ',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null, required',
+                value: null,
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            // acceptableFormatTests
+            {
+                title: 'integer format',
+                value: '42',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '42',
+                    parsedValue: 42,
+                },
+            },
+            // badValueTests
+            {
+                title: 'string of chars',
+                value: 'abc',
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'Invalid integer format: abc',
+                    value: 'abc',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'decimal format',
+                value: '42.12',
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'Invalid integer format: 42.12',
+                    value: '42.12',
+                    parsedValue: undefined,
+                },
+            },
+            // typeTests
+            {
+                title: 'validate undefined',
+                value: undefined,
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "undefined")',
+                    value: undefined,
+                    pasedValue: undefined,
+                },
+            },
+            {
+                title: 'validate array',
+                value: [],
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: [],
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate object',
+                value: {},
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: {},
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate date',
+                value: new Date(0),
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string or number (it is of type "object")',
+                    value: new Date(0),
+                    parsedValue: undefined,
+                },
+            },
+            // could go on..
+        ];
+        runTests('validateIntString', integerTests);
 
         // STRINGS
-        (function () {
-            const emptyValues = [
-                    {
-                        title: 'empty string',
-                        value: '',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of just spaces same as empty',
-                        value: '   ',
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null',
-                        value: null,
-                        options: { required: false },
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                            errorMessage: undefined,
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'empty string, required',
-                        value: '',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'string of empty spaces, required',
-                        value: '   ',
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: '   ',
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'null, required',
-                        value: null,
-                        options: { required: true },
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            errorMessage: 'value is required',
-                            value: null,
-                            parsedValue: undefined,
-                        },
-                    },
-                ],
-                acceptableFormatTests = [
-                    {
-                        title: 'string format',
-                        value: '42',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: '42',
-                            parsedValue: '42',
-                        },
-                    },
-                    {
-                        title: 'string format',
-                        value: 'abc',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: 'abc',
-                            parsedValue: 'abc',
-                        },
-                    },
-                    {
-                        title: 'string format',
-                        value: 'uniîcodé',
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                            errorMessage: undefined,
-                            value: 'uniîcodé',
-                            parsedValue: 'uniîcodé',
-                        },
-                    },
-                ],
-                badValueTests = [],
-                typeTests = [
-                    {
-                        title: 'validate undefined',
-                        value: undefined,
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "undefined")',
-                            value: undefined,
-                            pasedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate array',
-                        value: [],
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
-                            value: [],
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate object',
-                        value: {},
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
-                            value: {},
-                            parsedValue: undefined,
-                        },
-                    },
-                    {
-                        title: 'validate date',
-                        value: new Date(0),
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                            errorMessage: 'value must be a string (it is of type "object")',
-                            value: new Date(0),
-                            parsedValue: undefined,
-                        },
-                    },
-                    // could go on..
-                ],
-                tests = [emptyValues, acceptableFormatTests, badValueTests, typeTests];
-
-            runTests('validateTextString', tests);
-        })();
-
-        // ObjectReferenceName
+        const stringTests = [
+            // emptyValues
+            {
+                title: 'empty string',
+                value: '',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of just spaces same as empty',
+                value: '   ',
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null',
+                value: null,
+                options: { required: false },
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    errorMessage: undefined,
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'empty string, required',
+                value: '',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'string of empty spaces, required',
+                value: '   ',
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: '   ',
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'null, required',
+                value: null,
+                options: { required: true },
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                    errorMessage: 'value is required',
+                    value: null,
+                    parsedValue: undefined,
+                },
+            },
+            // acceptableFormatTests
+            {
+                title: 'string format',
+                value: '42',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: '42',
+                    parsedValue: '42',
+                },
+            },
+            {
+                title: 'string format',
+                value: 'abc',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: 'abc',
+                    parsedValue: 'abc',
+                },
+            },
+            {
+                title: 'string format',
+                value: 'uniîcodé',
+                options: {},
+                result: {
+                    isValid: true,
+                    diagnosis: Constants.DIAGNOSIS.VALID,
+                    errorMessage: undefined,
+                    value: 'uniîcodé',
+                    parsedValue: 'uniîcodé',
+                },
+            },
+            // no badValueTests
+            // typeTests
+            {
+                title: 'validate undefined',
+                value: undefined,
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string (it is of type "undefined")',
+                    value: undefined,
+                    pasedValue: undefined,
+                },
+            },
+            {
+                title: 'validate array',
+                value: [],
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string (it is of type "object")',
+                    value: [],
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate object',
+                value: {},
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string (it is of type "object")',
+                    value: {},
+                    parsedValue: undefined,
+                },
+            },
+            {
+                title: 'validate date',
+                value: new Date(0),
+                options: {},
+                result: {
+                    isValid: false,
+                    diagnosis: Constants.DIAGNOSIS.INVALID,
+                    errorMessage: 'value must be a string (it is of type "object")',
+                    value: new Date(0),
+                    parsedValue: undefined,
+                },
+            },
+            // could go on..
+        ];
+        runTests('validateTextString', stringTests);
 
         // validateSet
         describe('validateSet', () => {
@@ -1127,6 +1093,102 @@ define([
             });
         });
 
+        // validateBoolean
+        const boolNonStringValues = [1, 0, -1, undefined, [], {}],
+            boolNonStringCases = boolNonStringValues.map((value) => {
+                return {
+                    title: 'non string - ' + value,
+                    value: value,
+                    options: {},
+                    result: {
+                        isValid: false,
+                        errorMessage:
+                            'value must be a string (it is of type "' + typeof value + '")',
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                    },
+                };
+            }),
+            boolEmptyStringValues = ['', ' ', '\t'],
+            boolEmptyStringCases = boolEmptyStringValues
+                .map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx + 1) + ' - required',
+                        value: value,
+                        options: { required: true },
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value is required',
+                            diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
+                        },
+                    };
+                })
+                .concat(
+                    boolEmptyStringValues.map((value, idx) => {
+                        return {
+                            title: 'empty string type ' + (idx + 1) + ' - not required',
+                            value: value,
+                            options: { required: false },
+                            result: {
+                                isValid: true,
+                                diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                            },
+                        };
+                    })
+                ),
+            boolBadStringValues = [
+                'wat',
+                '123/45/6/7',
+                '123/456/789;123',
+                '123/456/7;123/45/6/7',
+                'foo/bar/baz',
+            ],
+            boolBadStringCases = boolBadStringValues.map((value) => {
+                return {
+                    title: 'bad string - ' + value,
+                    value: value,
+                    options: {},
+                    result: {
+                        isValid: false,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                    },
+                };
+            }),
+            boolGoodStringValues = [
+                'true',
+                'false',
+                'TRUE',
+                'FALSE',
+                'True',
+                'False',
+                't',
+                'f',
+                'T',
+                'F',
+                'yes',
+                'no',
+                'y',
+                'n',
+            ],
+            boolGoodStringCases = boolGoodStringValues.map((value) => {
+                return {
+                    title: 'good string - ' + value,
+                    value: value,
+                    options: {},
+                    result: {
+                        isValid: true,
+                        diagnosis: Constants.DIAGNOSIS.VALID,
+                    },
+                };
+            });
+
+        const booleanTestCases = [
+            ...boolNonStringCases,
+            ...boolEmptyStringCases,
+            ...boolBadStringCases,
+            ...boolGoodStringCases,
+        ];
+        runTests('validateBoolean', booleanTestCases);
+
         // validate data palette object reference path
         (function () {
             const nonStringValues = [1, 0, -1, undefined, null, [], {}],
@@ -1204,7 +1266,12 @@ define([
                     };
                 });
 
-            const testCases = [nonStringCases, emptyStringCases, badStringCases, goodStringCases];
+            const testCases = [
+                ...nonStringCases,
+                ...emptyStringCases,
+                ...badStringCases,
+                ...goodStringCases,
+            ];
             runTests('validateWorkspaceDataPaletteRef', testCases);
         })();
 
@@ -1287,101 +1354,13 @@ define([
                     };
                 });
 
-            const testCases = [nonStringCases, emptyStringCases, badStringCases, goodStringCases];
+            const testCases = [
+                ...nonStringCases,
+                ...emptyStringCases,
+                ...badStringCases,
+                ...goodStringCases,
+            ];
             runTests('validateWorkspaceObjectRef', testCases);
-        })();
-
-        // validateBoolean
-        (function () {
-            const nonStringValues = [1, 0, -1, undefined, [], {}],
-                nonStringCases = nonStringValues.map((value) => {
-                    return {
-                        title: 'non string - ' + value,
-                        value: value,
-                        options: {},
-                        result: {
-                            isValid: false,
-                            errorMessage:
-                                'value must be a string (it is of type "' + typeof value + '")',
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                        },
-                    };
-                }),
-                emptyStringValues = ['', ' ', '\t'],
-                emptyStringCases = emptyStringValues
-                    .map((value, idx) => {
-                        return {
-                            title: 'empty string type ' + (idx + 1) + ' - required',
-                            value: value,
-                            options: { required: true },
-                            result: {
-                                isValid: false,
-                                errorMessage: 'value is required',
-                                diagnosis: Constants.DIAGNOSIS.REQUIRED_MISSING,
-                            },
-                        };
-                    })
-                    .concat(
-                        emptyStringValues.map((value, idx) => {
-                            return {
-                                title: 'empty string type ' + (idx + 1) + ' - not required',
-                                value: value,
-                                options: { required: false },
-                                result: {
-                                    isValid: true,
-                                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                                },
-                            };
-                        })
-                    ),
-                badStringValues = [
-                    'wat',
-                    '123/45/6/7',
-                    '123/456/789;123',
-                    '123/456/7;123/45/6/7',
-                    'foo/bar/baz',
-                ],
-                badStringCases = badStringValues.map((value) => {
-                    return {
-                        title: 'bad string - ' + value,
-                        value: value,
-                        options: {},
-                        result: {
-                            isValid: false,
-                            diagnosis: Constants.DIAGNOSIS.INVALID,
-                        },
-                    };
-                }),
-                goodStringValues = [
-                    'true',
-                    'false',
-                    'TRUE',
-                    'FALSE',
-                    'True',
-                    'False',
-                    't',
-                    'f',
-                    'T',
-                    'F',
-                    'yes',
-                    'no',
-                    'y',
-                    'n',
-                ],
-                goodStringCases = goodStringValues.map((value) => {
-                    return {
-                        title: 'good string - ' + value,
-                        value: value,
-                        options: {},
-                        result: {
-                            isValid: true,
-                            diagnosis: Constants.DIAGNOSIS.VALID,
-                        },
-                    };
-                });
-
-            const testCases = [nonStringCases, emptyStringCases, badStringCases, goodStringCases];
-            runTests('validateBoolean', testCases);
         })();
 
         // validate workspace object name string -- a case of validateText/validateTextString
@@ -1506,18 +1485,19 @@ define([
                 });
 
             const testCases = [
-                nonStringCases,
-                emptyStringCases,
-                spacedStringCases,
-                intStringCases,
-                invalidCharCases,
-                tooLongCase,
-                goodStringCases,
+                ...nonStringCases,
+                ...emptyStringCases,
+                ...spacedStringCases,
+                ...intStringCases,
+                ...invalidCharCases,
+                ...tooLongCase,
+                ...goodStringCases,
             ];
             runTests('validateTextString', testCases);
             runTests('validateWorkspaceObjectName', testCases); // covers all but the case where we have to see if the object exists
         })();
 
+        // text string / string set
         (function () {
             const emptySets = [null, [], [''], [' '], ['\t', '', '  ']],
                 emptySetCases = emptySets
@@ -1602,11 +1582,11 @@ define([
                 });
 
             const testCases = [
-                emptySetCases,
-                populatedOkCases,
-                populatedFailCases,
-                populatedNoopCase,
-                notArrayCases,
+                ...emptySetCases,
+                ...populatedOkCases,
+                ...populatedFailCases,
+                ...populatedNoopCase,
+                ...notArrayCases,
             ];
             runTests('validateTextSet', testCases);
             runTests('validateStringSet', testCases);

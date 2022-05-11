@@ -1,4 +1,4 @@
-define(['require', 'bluebird', '../validation'], (require, Promise, Validator) => {
+define(['require', 'bluebird', 'widgets/appWidgets2/validation'], (require, Promise, Validator) => {
     'use strict';
 
     const typeToValidator = {
@@ -31,7 +31,9 @@ define(['require', 'bluebird', '../validation'], (require, Promise, Validator) =
                     )
                 );
             } else {
-                require(['./' + typeToValidatorModule[fieldType]], (validator) => {
+                require(['widgets/appWidgets2/validators/' + typeToValidatorModule[fieldType]], (
+                    validator
+                ) => {
                     resolve(validator.validate(fieldValue, fieldSpec, options));
                 }, (err) => {
                     console.error('error while loading');

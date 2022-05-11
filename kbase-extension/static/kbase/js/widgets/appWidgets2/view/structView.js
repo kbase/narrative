@@ -1,12 +1,12 @@
 define([
     'bluebird',
     'common/html',
-    '../validators/resolver',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/resolver',
+    'widgets/appWidgets2/validators/constants',
     'common/ui',
     'util/util',
-    '../paramResolver',
-    '../fieldWidgetCompact',
+    'widgets/appWidgets2/paramResolver',
+    'widgets/appWidgets2/fieldWidgetCompact',
 
     'bootstrap',
 ], (Promise, html, ValidationResolver, Constants, UI, Util, ParamResolver, FieldWidget) => {

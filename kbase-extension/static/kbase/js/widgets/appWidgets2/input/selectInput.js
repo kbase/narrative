@@ -5,10 +5,10 @@ define([
     'common/ui',
     'common/runtime',
     'common/events',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'widgets/appWidgets2/common',
     '../inputUtils',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
     'select2',
     'bootstrap',
 ], ($, Promise, html, UI, Runtime, Events, Validation, WidgetCommon, inputUtils, Constants) => {
@@ -74,6 +74,7 @@ define([
         function validate(value) {
             return Promise.try(() => {
                 const defaultInvalidMessage = `Invalid ${spec.ui.label}: ${value}. Please select a value from the dropdown.`;
+
                 const validation = Validation.validateTextString(
                     value || '',
                     spec.data.constraints,

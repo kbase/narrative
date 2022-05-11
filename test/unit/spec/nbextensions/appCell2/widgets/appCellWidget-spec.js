@@ -738,7 +738,55 @@ define([
                     );
                 });
 
-                it('responds to job launch', function () {
+                it('responds to job launch and proceeding job status updates', function () {
+                    const runStatusArgs = {
+                        event: 'launched_job',
+                        cell_id: this.cell_id,
+                        job_id: TEST_JOB,
+                    };
+                    expect(this.kbaseNode.querySelector(selectors.execMessage).textContent).toEqual(
+                        stateMessages.EXECUTE_REQUESTED
+                    );
+                    return new Promise((resolve) => {
+                        spyOn(Narrative, 'saveNotebook').and.callFake(() => {
+                            resolve();
+                        });
+                        spyOn(this.bus, 'emit');
+                        TestUtil.send_RUN_STATUS({
+                            bus: this.bus,
+                            runStatusArgs,
+                        });
+                    })
+                        .then(() => {
+                            // FSM state to { mode: 'processing', stage: 'launched' }
+                            expect(
+                                this.appCellWidgetInstance.__fsm().getCurrentState().state
+                            ).toEqual(fsmState.PROCESSING_LAUNCHED);
+                            return TestUtil.waitForElementChange(
+                                this.kbaseNode.querySelector(selectors.execMessage),
+                                () => {
+                                    TestUtil.send_STATUS({
+                                        bus: this.bus,
+                                        jobState: {
+                                            job_id: TEST_JOB,
+                                            queued: 1234567,
+                                            status: 'queued',
+                                            updated: 1234567,
+                                            created: 1234566,
+                                        },
+                                    });
+                                }
+                            );
+                        })
+                        .then(() => {
+                            // FSM state to { mode: 'processing', stage: 'queued' }
+                            expect(
+                                this.appCellWidgetInstance.__fsm().getCurrentState().state
+                            ).toEqual(fsmState.PROCESSING_QUEUED);
+                        });
+                });
+
+                it('responds to job launch ', function () {
                     const runStatusArgs = {
                         event: 'launched_job',
                         cell_id: this.cell_id,

@@ -3,11 +3,11 @@ define([
     'jquery',
     'base/js/namespace',
     'common/html',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/ui',
     'common/props',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
 
     'bootstrap',
 ], (Promise, $, Jupyter, html, Validation, Events, UI, Props, Constants) => {

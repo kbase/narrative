@@ -18,11 +18,9 @@ define([
         optionalEmpty: {
             isValid: true,
             diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-            // messageId: Constants.MESSAGE_IDS.OPTIONAL_EMPTY,
         },
         valueAboveMax: {
             isValid: false,
-            // messageId: 'value-above-maximum',
             messageId: Constants.MESSAGE_IDS.VALUE_OVER_MAX,
             diagnosis: Constants.DIAGNOSIS.INVALID,
         },

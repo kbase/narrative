@@ -579,8 +579,8 @@ define([
         /**
          * Validates that all values in the given "set" (an Array) are present in options.values.
          * If any are missing, this will not validate.
-         * @param {Array} value
-         * @param {*} options
+         * @param {Array} set - array of values to be checked
+         * @param {Object} options - validation constraints
          */
         function validateTextSet(set, options) {
             let errorMessage, messageId, diagnosis, parsedSet;
@@ -610,9 +610,15 @@ define([
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
-                } else if (options.values) {
+                } else if (options.values || options.options) {
+                    let targetSet;
+                    if (options.values) {
+                        targetSet = options.values;
+                    } else {
+                        targetSet = options.options.map((opt) => opt.value);
+                    }
                     const matchedSet = parsedSet.filter((setValue) => {
-                        return options.values.indexOf(setValue) >= 0;
+                        return targetSet.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;

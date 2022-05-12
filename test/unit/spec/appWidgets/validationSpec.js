@@ -1554,6 +1554,39 @@ define([
                         },
                     };
                 }),
+                populatedOkOptionsCases = populatedSets.map((set) => {
+                    return {
+                        title: 'options set ok - ' + JSON.stringify(set),
+                        value: set,
+                        options: {
+                            options: ['a', 'b', 'c', 1, 2, 3].map((opt) => {
+                                return { value: opt, display: `Display ${opt}` };
+                            }),
+                        },
+                        result: {
+                            isValid: true,
+                            diagnosis: Constants.DIAGNOSIS.VALID,
+                            messageId: undefined,
+                        },
+                    };
+                }),
+                populatedFailOptionsCases = populatedSets.map((set) => {
+                    return {
+                        title: 'options set not ok - ' + JSON.stringify(set),
+                        value: set,
+                        options: {
+                            options: ['b', 'd', 1, 4].map((opt) => {
+                                return { value: opt, display: `Display ${opt}` };
+                            }),
+                        },
+                        result: {
+                            isValid: false,
+                            diagnosis: Constants.DIAGNOSIS.INVALID,
+                            errorMessage: 'Value not in the set',
+                            messageId: Constants.MESSAGE_IDS.VALUE_NOT_FOUND,
+                        },
+                    };
+                }),
                 populatedNoopCase = [
                     {
                         title: 'set with no test',
@@ -1585,6 +1618,8 @@ define([
                 ...emptySetCases,
                 ...populatedOkCases,
                 ...populatedFailCases,
+                ...populatedOkOptionsCases,
+                ...populatedFailOptionsCases,
                 ...populatedNoopCase,
                 ...notArrayCases,
             ];

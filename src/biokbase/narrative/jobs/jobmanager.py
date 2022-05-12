@@ -1,4 +1,5 @@
 import copy
+import time
 from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 
@@ -29,13 +30,15 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 JOB_NOT_REG_ERR = "Job ID is not registered"
+JOB_NOT_REG_2_ERR = "Cannot find job with ID %s"  # TODO unify these
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-DOES_NOT_EXIST = "does_not_exist"
+
+NO_UPDATED_JOBS_ERR = "No updated jobs"
 
 
 class JobManager:
@@ -345,8 +348,17 @@ class JobManager:
             for job_id in job_ids:
                 if self.get_job(job_id).last_updated < ts:
                     del output_states[job_id]
+        no_updated_jobs = ts is not None and job_ids and not output_states
 
-        return self.add_errors_to_results(output_states, error_ids)
+        # add error_ids first in the unlikely case one of the error_ids
+        # is "error" which is a reserved key which is prioritized
+        # for indicating an actual error event
+        self.add_errors_to_results(output_states, error_ids)
+
+        if no_updated_jobs:
+            output_states["error"] = {"error": NO_UPDATED_JOBS_ERR}
+
+        return output_states
 
     def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
@@ -725,7 +737,7 @@ class JobManager:
         for error_id in error_ids:
             results[error_id] = {
                 "job_id": error_id,
-                "error": f"Cannot find job with ID {error_id}",
+                "error": JOB_NOT_REG_2_ERR % error_id,
             }
         return results
 

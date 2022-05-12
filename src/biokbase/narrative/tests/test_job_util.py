@@ -60,7 +60,8 @@ class JobUtilTestCase(unittest.TestCase):
 
 
 class MergeTest(unittest.TestCase):
-    def _check_merge_inplace(self, d0: dict, d1: dict, exp_merge: dict):
+    def _check(self, d0: dict, d1: dict, exp_merge: dict):
+        d0_copy = copy.deepcopy(d0)
         d1_copy = copy.deepcopy(d1)
         merge_inplace(d0, d1)
         self.assertEqual(
@@ -71,11 +72,19 @@ class MergeTest(unittest.TestCase):
             d1,
             d1_copy
         )
+        d0 = copy.deepcopy(d0_copy)
+        dmerge = merge(d0, d1)
+        self.assertEqual(
+            dmerge,
+            exp_merge
+        )
+        self.assertEqual(d0, d0_copy)
+        self.assertEqual(d1, d1_copy)
 
     def test_merge_inplace__empty(self):
         d0 = {}
         d1 = {}
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {}
@@ -85,7 +94,7 @@ class MergeTest(unittest.TestCase):
         # flat
         d0 = {}
         d1 = {"level00": "l00"}
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {"level00": "l00"}
@@ -99,7 +108,7 @@ class MergeTest(unittest.TestCase):
                 "level10": "l10"
             }
         }
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {
@@ -114,7 +123,7 @@ class MergeTest(unittest.TestCase):
         # flat
         d0 = {"level00": "l00"}
         d1 = {}
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {"level00": "l00"}
@@ -128,7 +137,7 @@ class MergeTest(unittest.TestCase):
             }
         }
         d1 = {}
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {
@@ -148,7 +157,7 @@ class MergeTest(unittest.TestCase):
             "level01": "l01_",
             "level02": "l02"
         }
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {
@@ -163,7 +172,10 @@ class MergeTest(unittest.TestCase):
             "level00": {
                 "level10": {
                     "level20": "l20",
-                    "level21": "l21"
+                    "level21": "l21",
+                    "level23": {
+                        "level30": "l30"
+                    }
                 }
             },
             "level01": "l01"
@@ -171,20 +183,30 @@ class MergeTest(unittest.TestCase):
         d1 = {
             "level00": {
                 "level10": {
-                    "level22": "l22"
+                    "level21": "l21_",
+                    "level22": "l22",
+                    "level24": {
+                        "level30": "l30"
+                    }
                 }
             },
             "level01": "l01_"
         }
-        self._check_merge_inplace(
+        self._check(
             d0,
             d1,
             {
                 "level00": {
                     "level10": {
                         "level20": "l20",
-                        "level21": "l21",
-                        "level22": "l22"
+                        "level21": "l21_",
+                        "level22": "l22",
+                        "level23": {
+                            "level30": "l30"
+                        },
+                        "level24": {
+                            "level30": "l30"
+                        }
                     }
                 },
                 "level01": "l01_"
@@ -205,7 +227,7 @@ class MergeTest(unittest.TestCase):
         ):
             merge_inplace(d0, d1)
 
-    def test_merge(self):
+    def test_random(self):
         d0 = {
             "level00": "l00",
             "level01": {
@@ -222,13 +244,9 @@ class MergeTest(unittest.TestCase):
                 }
             }
         }
-        d0_copy = copy.deepcopy(d0)
-        d1_copy = copy.deepcopy(d1)
-        d0_merge = merge(d0, d1)
-        self.assertEqual(d0, d0_copy)
-        self.assertEqual(d1, d1_copy)
-        self.assertEqual(
-            d0_merge,
+        self._check(
+            d0,
+            d1,
             {
                 "level00": "l00",
                 "level01": {

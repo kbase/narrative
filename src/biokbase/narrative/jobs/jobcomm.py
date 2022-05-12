@@ -117,7 +117,11 @@ class JobRequest:
 
     @property
     def ts(self):
-        """This param is completely optional"""
+        """
+        Optional field sent with STATUS requests indicating to filter out
+        job states in the STATUS response that have not been updated since
+        this epoch time (in ns)
+        """
         return self.rq_data.get(PARAM["TS"])
 
 
@@ -200,10 +204,7 @@ class JobComm:
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
 
-        try:
-            return req.job_id_list
-        except Exception as ex:
-            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
+        return req.job_id_list
 
     def start_job_status_loop(
         self,

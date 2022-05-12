@@ -2,6 +2,7 @@ import copy
 import itertools
 import os
 import re
+import sys
 import time
 import unittest
 from unittest import mock
@@ -25,7 +26,9 @@ from biokbase.narrative.jobs.jobcomm import (
 from biokbase.narrative.jobs.jobmanager import (
     JOB_NOT_BATCH_ERR,
     JOB_NOT_REG_ERR,
+    JOB_NOT_REG_2_ERR,
     JOBS_MISSING_ERR,
+    NO_UPDATED_JOBS_ERR,
     JobManager,
 )
 from biokbase.narrative.tests.generate_test_results import (
@@ -501,7 +504,7 @@ class JobCommTestCase(unittest.TestCase):
         """
         For STATUS responses, each output_state will have an extra field `last_checked`
         that is variable and is not in the test data. Check that here and delete before
-        other checkd
+        other checks
         """
         for output_state in output_states.values():
             self.assertIn("last_checked", output_state)
@@ -683,12 +686,36 @@ class JobCommTestCase(unittest.TestCase):
             msg,
         )
 
+    def _reset_last_updated(self):
+        """Set last_updated back a minute"""
+        for job_id in self.jm._running_jobs:
+            job = self.jm.get_job(job_id)
+            job.last_updated -= 60 * 1e9
+            self.assertTrue(job.last_updated > 0)  # sanity check
+
+    def _check_last_updated(self, exp_updated):
+        """Make sure the right jobs had `last_updated` bumped"""
+        exp_not_updated = list(set(ALL_JOBS) - set(exp_updated))  # exclusion
+        now = time.time_ns()
+
+        exp_updated = [
+            self.jm.get_job(job_id).last_updated for job_id in exp_updated
+        ]
+        for ts in exp_updated:
+            self.assertTrue(ts_are_close(ts, now))
+
+        exp_not_updated = [
+            self.jm.get_job(job_id).last_updated for job_id in exp_not_updated
+        ]
+        for ts in exp_not_updated:
+            # was long time ago
+            self.assertTrue(ts < now)
+            self.assertFalse(ts_are_close(ts, now))
+
     @mock.patch(CLIENTS, get_mock_client)
-    def test_get_job_states__last_updated(self):
-        """
-        Copied from test_jobmanager.py
-        But also tests the last_checked field
-        """
+    def test_get_job_states__by_last_updated(self):
+        self._reset_last_updated()
+
         # what FE will say was the last time the jobs were checked
         ts = time.time_ns()
 
@@ -733,14 +760,83 @@ class JobCommTestCase(unittest.TestCase):
             job_state["jobState"]["updated"] += 1
         expected[JOB_NOT_FOUND] = {
             "job_id": JOB_NOT_FOUND,
-            "error": f"Cannot find job with ID {JOB_NOT_FOUND}"
+            "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
         }
 
-        self._check_pop_last_checked(output_states, ts)
+        self._check_pop_last_checked(output_states, time.time_ns())
         self.assertEqual(
             expected,
             output_states
         )
+        self._check_last_updated(updated_active_ids)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states__all_updated_jobs(self):
+        """
+        If theoretically all the jobs were last checked at the beginning of time,
+        all job states would be returned
+        """
+        self._reset_last_updated()
+
+        def mock_check_jobs(self_, params):
+            """Mutate all given job states"""
+            lookup_ids = params["job_ids"]
+            self.assertCountEqual(ACTIVE_JOBS, lookup_ids)  # sanity check
+
+            job_states_ret = get_test_jobs(lookup_ids)
+            for _, job_state in job_states_ret.items():
+                job_state["updated"] += 1
+            return job_states_ret
+
+        rq = make_comm_msg(STATUS, ALL_JOBS + [JOB_NOT_FOUND], False, {"ts": 0})
+        with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
+            output_states = self.jc._handle_comm_message(rq)
+
+        expected = {
+            job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id])
+            for job_id in ALL_JOBS
+        }
+        for job_id, job_state in expected.items():
+            if job_id in ACTIVE_JOBS:
+                job_state["jobState"]["updated"] += 1
+        expected[JOB_NOT_FOUND] = {
+            "job_id": JOB_NOT_FOUND,
+            "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
+        }
+
+        self._check_pop_last_checked(output_states, time.time_ns())
+        self.assertEqual(
+            expected,
+            output_states
+        )
+        self._check_last_updated(ACTIVE_JOBS)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_get_job_states__no_updated_jobs(self):
+        """
+        If theoretically all the jobs were last checked at the end of time,
+        no job states would be returned, and there would be an error state
+        to indicate that
+        """
+        self._reset_last_updated()
+
+        rq = make_comm_msg(STATUS, ALL_JOBS + [JOB_NOT_FOUND], False, {"ts": sys.maxsize})
+        output_states = self.jc._handle_comm_message(rq)
+
+        self._check_pop_last_checked(output_states, time.time_ns())
+        self.assertEqual(
+            {
+                JOB_NOT_FOUND: {
+                    "job_id": JOB_NOT_FOUND,
+                    "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
+                },
+                "error": {
+                    "error": NO_UPDATED_JOBS_ERR
+                }
+            },
+            output_states
+        )
+        self._check_last_updated([])
 
     # -----------------------
     # get cell job states

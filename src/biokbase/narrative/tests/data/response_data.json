@@ -398,7 +398,6 @@
                 "retry_ids": [],
                 "running": 1625755954453,
                 "status": "completed",
-                "updated": 1625756075071,
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -447,8 +446,7 @@
                     "BATCH_RETRY_ERROR"
                 ],
                 "running": 1625755952628,
-                "status": "error",
-                "updated": 1625755962079
+                "status": "error"
             },
             "job_id": "BATCH_ERROR_RETRIED",
             "outputWidgetInfo": null
@@ -471,8 +469,7 @@
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "status": "created",
-                "updated": 1625755944607
+                "status": "created"
             },
             "job_id": "BATCH_PARENT",
             "outputWidgetInfo": null
@@ -502,7 +499,6 @@
                 "retry_parent": "BATCH_TERMINATED_RETRIED",
                 "running": 1625756004391,
                 "status": "completed",
-                "updated": 1625756123553,
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -550,8 +546,7 @@
                 "retry_ids": [],
                 "retry_parent": "BATCH_ERROR_RETRIED",
                 "running": 1625757662469,
-                "status": "error",
-                "updated": 1625757676740
+                "status": "error"
             },
             "job_id": "BATCH_RETRY_ERROR",
             "outputWidgetInfo": null
@@ -569,8 +564,7 @@
                 "retry_ids": [],
                 "retry_parent": "BATCH_TERMINATED_RETRIED",
                 "running": 1625757285899,
-                "status": "running",
-                "updated": 1625757405384
+                "status": "running"
             },
             "job_id": "BATCH_RETRY_RUNNING",
             "outputWidgetInfo": null
@@ -589,8 +583,7 @@
                 "retry_ids": [],
                 "running": 1625755952599,
                 "status": "terminated",
-                "terminated_code": 0,
-                "updated": 1625755985250
+                "terminated_code": 0
             },
             "job_id": "BATCH_TERMINATED",
             "outputWidgetInfo": null
@@ -612,8 +605,7 @@
                 ],
                 "running": 1625755952563,
                 "status": "terminated",
-                "terminated_code": 0,
-                "updated": 1625755977130
+                "terminated_code": 0
             },
             "job_id": "BATCH_TERMINATED_RETRIED",
             "outputWidgetInfo": null
@@ -641,7 +633,6 @@
                 "retry_ids": [],
                 "running": 1642431816870,
                 "status": "completed",
-                "updated": 1642431852275,
                 "widget_info": {
                     "name": "no-display",
                     "params": {
@@ -673,8 +664,7 @@
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "status": "created",
-                "updated": 1642522062069
+                "status": "created"
             },
             "job_id": "JOB_CREATED",
             "outputWidgetInfo": null
@@ -700,8 +690,7 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "running": 1642431847689,
-                "status": "error",
-                "updated": 1642431856323
+                "status": "error"
             },
             "job_id": "JOB_ERROR",
             "outputWidgetInfo": null
@@ -718,8 +707,7 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "running": 1642521775867,
-                "status": "running",
-                "updated": 1642521775870
+                "status": "running"
             },
             "job_id": "JOB_RUNNING",
             "outputWidgetInfo": null
@@ -737,8 +725,7 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "status": "terminated",
-                "terminated_code": 0,
-                "updated": 1642521729372
+                "terminated_code": 0
             },
             "job_id": "JOB_TERMINATED",
             "outputWidgetInfo": null
@@ -783,7 +770,6 @@
                     "retry_ids": [],
                     "running": 1625755954453,
                     "status": "completed",
-                    "updated": 1625756075071,
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -835,8 +821,7 @@
                         "BATCH_RETRY_ERROR"
                     ],
                     "running": 1625755952628,
-                    "status": "error",
-                    "updated": 1625755962079
+                    "status": "error"
                 },
                 "job_id": "BATCH_ERROR_RETRIED",
                 "outputWidgetInfo": null
@@ -864,8 +849,7 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
                     "running": 1625757662469,
-                    "status": "error",
-                    "updated": 1625757676740
+                    "status": "error"
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -892,8 +876,7 @@
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "status": "created",
-                    "updated": 1625755944607
+                    "status": "created"
                 },
                 "job_id": "BATCH_PARENT",
                 "outputWidgetInfo": null
@@ -927,7 +910,6 @@
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
                     "running": 1625756004391,
                     "status": "completed",
-                    "updated": 1625756123553,
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -979,8 +961,7 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
                     "running": 1625757662469,
-                    "status": "error",
-                    "updated": 1625757676740
+                    "status": "error"
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -1002,8 +983,7 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
                     "running": 1625757285899,
-                    "status": "running",
-                    "updated": 1625757405384
+                    "status": "running"
                 },
                 "job_id": "BATCH_RETRY_RUNNING",
                 "outputWidgetInfo": null
@@ -1026,8 +1006,7 @@
                     "retry_ids": [],
                     "running": 1625755952599,
                     "status": "terminated",
-                    "terminated_code": 0,
-                    "updated": 1625755985250
+                    "terminated_code": 0
                 },
                 "job_id": "BATCH_TERMINATED",
                 "outputWidgetInfo": null
@@ -1052,8 +1031,7 @@
                     ],
                     "running": 1625755952563,
                     "status": "terminated",
-                    "terminated_code": 0,
-                    "updated": 1625755977130
+                    "terminated_code": 0
                 },
                 "job_id": "BATCH_TERMINATED_RETRIED",
                 "outputWidgetInfo": null
@@ -1084,7 +1062,6 @@
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
                     "running": 1625756004391,
                     "status": "completed",
-                    "updated": 1625756123553,
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -1137,7 +1114,6 @@
                     "retry_ids": [],
                     "running": 1642431816870,
                     "status": "completed",
-                    "updated": 1642431852275,
                     "widget_info": {
                         "name": "no-display",
                         "params": {
@@ -1173,8 +1149,7 @@
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "status": "created",
-                    "updated": 1642522062069
+                    "status": "created"
                 },
                 "job_id": "JOB_CREATED",
                 "outputWidgetInfo": null
@@ -1204,8 +1179,7 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "running": 1642431847689,
-                    "status": "error",
-                    "updated": 1642431856323
+                    "status": "error"
                 },
                 "job_id": "JOB_ERROR",
                 "outputWidgetInfo": null
@@ -1226,8 +1200,7 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "running": 1642521775867,
-                    "status": "running",
-                    "updated": 1642521775870
+                    "status": "running"
                 },
                 "job_id": "JOB_RUNNING",
                 "outputWidgetInfo": null
@@ -1249,8 +1222,7 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "status": "terminated",
-                    "terminated_code": 0,
-                    "updated": 1642521729372
+                    "terminated_code": 0
                 },
                 "job_id": "JOB_TERMINATED",
                 "outputWidgetInfo": null

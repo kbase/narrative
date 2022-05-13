@@ -425,9 +425,9 @@ define([
                                     options.required = required;
                                     return Validation[method](test.value, options);
                                 }).then((result) => {
-                                    Object.keys(test.result).forEach((key) => {
-                                        expect(result[key]).toEqual(test.result[key]);
-                                    });
+                                    // ensure the result contains everything
+                                    // in test.result
+                                    expect(result).toEqual(jasmine.objectContaining(test.result));
                                 });
                             });
                         });
@@ -436,9 +436,9 @@ define([
                             return Promise.try(() => {
                                 return Validation[method](test.value, test.options);
                             }).then((result) => {
-                                Object.keys(test.result).forEach((key) => {
-                                    expect(result[key]).toEqual(test.result[key]);
-                                });
+                                // ensure the result contains everything
+                                // in test.result
+                                expect(result).toEqual(jasmine.objectContaining(test.result));
                             });
                         });
                     }
@@ -804,7 +804,7 @@ define([
                     diagnosis: Constants.DIAGNOSIS.INVALID,
                     errorMessage: 'value must be a string or number (it is of type "undefined")',
                     value: undefined,
-                    pasedValue: undefined,
+                    parsedValue: undefined,
                 },
             },
             {
@@ -970,7 +970,7 @@ define([
                     diagnosis: Constants.DIAGNOSIS.INVALID,
                     errorMessage: 'value must be a string (it is of type "undefined")',
                     value: undefined,
-                    pasedValue: undefined,
+                    parsedValue: undefined,
                 },
             },
             {
@@ -1604,6 +1604,21 @@ define([
             [undefined, null].forEach((val) => {
                 expect(Validation.importTextString(val)).toBeNull();
             });
+        });
+
+        it('importTextStringArray - plain strings are unchanged', () => {
+            const inputs = ['a', 'bb', 'ccc', '  ', ''];
+            inputs.forEach((str) => {
+                expect(Validation.importTextStringArray([str])).toEqual([str]);
+            });
+            expect(Validation.importTextStringArray(inputs)).toEqual(inputs);
+        });
+
+        it('importTextStringArray - undefined and null are nullified', () => {
+            [undefined, null].forEach((val) => {
+                expect(Validation.importTextStringArray(val)).toEqual([]);
+            });
+            expect(Validation.importTextStringArray([undefined, null])).toEqual([null, null]);
         });
 
         const empties = [undefined, null, '', '  '];

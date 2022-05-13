@@ -38,6 +38,15 @@ define(['common/props'], (Props) => {
         if (converted.multipleItems) {
             return [];
         }
+        try {
+            const isMultiSelect = converted.original.dropdown_options.multiselection;
+            if (isMultiSelect === 1) {
+                return [];
+            }
+        } catch (err) {
+            // ignore the error
+        }
+
         return (function () {
             switch (converted.data.type) {
                 case 'string':
@@ -51,10 +60,6 @@ define(['common/props'], (Props) => {
                     return null;
             }
         })();
-    }
-
-    function updateNullValue(converted) {
-        converted.data.nullValue = nullValue(converted);
     }
 
     /*
@@ -107,6 +112,14 @@ define(['common/props'], (Props) => {
                 }
         }
 
+        if (
+            'dropdown_options' in spec &&
+            spec.allow_multiple === 0 &&
+            spec.dropdown_options.multiselection === 1
+        ) {
+            return spec.default_values;
+        }
+
         if (defaultValues.length === 0) {
             return converted.data.nullValue;
         }
@@ -119,10 +132,6 @@ define(['common/props'], (Props) => {
 
         // Singular item?
         return defaultToNative(converted, defaultValues[0]);
-    }
-
-    function updateDefaultValue(converted, spec) {
-        converted.data.defaultValue = defaultValue(converted, spec);
     }
 
     function grokDataType(spec) {
@@ -272,6 +281,10 @@ define(['common/props'], (Props) => {
                     case 'dropdown':
                         constraints = {
                             options: spec.dropdown_options ? spec.dropdown_options.options : {},
+                            multiselection:
+                                spec.dropdown_options && spec.dropdown_options.multiselection
+                                    ? spec.dropdown_options.multiselection
+                                    : 0,
                         };
                         break;
                     case 'textarea':
@@ -407,14 +420,14 @@ define(['common/props'], (Props) => {
                 type: dataType,
                 sequence: false,
                 constraints: {
-                    required: required,
+                    required,
                 },
                 defaultValue: null,
             },
             original: spec,
         };
-        updateNullValue(itemSpec);
-        updateDefaultValue(itemSpec, spec);
+        itemSpec.data.nullValue = nullValue(itemSpec);
+        itemSpec.data.defaultValue = defaultValue(itemSpec, spec);
         updateConstraints(itemSpec, spec);
         updateUI(itemSpec, spec);
         updateData(itemSpec, spec);
@@ -493,8 +506,8 @@ define(['common/props'], (Props) => {
             original: spec,
         };
 
-        updateNullValue(converted);
-        updateDefaultValue(converted, spec);
+        converted.data.nullValue = nullValue(converted);
+        converted.data.defaultValue = defaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);

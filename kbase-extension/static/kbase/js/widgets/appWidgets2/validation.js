@@ -749,6 +749,19 @@ define([
         }
 
         /**
+         * Runs importTextString over an array
+         * @param {*} value -- array of values or null
+         * @returns {array} imported values
+         */
+
+        function importTextStringArray(value) {
+            if (value === null || value === undefined) {
+                return [];
+            }
+            return value.map((val) => importTextString(val));
+        }
+
+        /**
          * Basically casts undefined -> null, otherwise returns the given string.
          * @param {String} value the value to verify
          * @returns the imported string or null
@@ -841,6 +854,7 @@ define([
             validateCustomInput,
             validateTrue,
             validateFalse,
+            importTextStringArray,
             importTextString,
             importIntString,
             importFloatString,

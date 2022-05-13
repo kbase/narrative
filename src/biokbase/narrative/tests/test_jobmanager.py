@@ -776,14 +776,11 @@ class JobManagerTest(unittest.TestCase):
         reg_child_jobs = [
             self.jm.get_job(job_id) for job_id in batch_job._acc_state["child_jobs"]
         ]
-
         self.assertCountEqual(batch_job.children, reg_child_jobs)
-        self.assertCountEqual(batch_job._acc_state["child_jobs"], new_child_ids)
 
-        with mock.patch.object(
-            MockClients, "check_job", side_effect=mock_check_job
-        ) as m:
+        with assert_obj_method_called(MockClients, "check_job", call_status=False):
             self.assertCountEqual(batch_job.child_jobs, new_child_ids)
+            self.assertCountEqual(batch_job.child_jobs, batch_job._acc_state["child_jobs"])
 
     def test_modify_job_refresh(self):
         for job_id, refreshing in REFRESH_STATE.items():

@@ -742,6 +742,8 @@ class JobManager:
         if not batch_job.batch_job:
             raise JobRequestException(JOB_NOT_BATCH_ERR, batch_id)
 
+        # update the batch job
+        batch_job.state()
         child_ids = batch_job.child_jobs
 
         reg_child_jobs = []

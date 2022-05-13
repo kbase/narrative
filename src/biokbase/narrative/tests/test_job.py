@@ -206,11 +206,8 @@ class JobTest(unittest.TestCase):
         attrs = create_attrs_from_ee2(job_id)
         attrs.update(exp_attrs)
 
-        # Mock here because job.child_jobs and job.retry_ids can
-        # cause EE2 query
-        with mock.patch(CLIENTS, get_mock_client):
-            for name, value in attrs.items():
-                self.assertEqual(value, getattr(job, name))
+        for name, value in attrs.items():
+            self.assertEqual(value, getattr(job, name))
 
     def test_job_init__error_no_job_id(self):
 
@@ -322,7 +319,10 @@ class JobTest(unittest.TestCase):
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
         self.assertFalse(job.was_terminal())
-        state = job.state()
+
+        with assert_obj_method_called(MockClients, "check_job", call_status=True):
+            state = job.state()
+
         self.assertFalse(job.was_terminal())
         self.assertEqual(state["status"], "created")
 
@@ -650,62 +650,6 @@ class JobTest(unittest.TestCase):
                 job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS
             )
             self.assertEqual(exp, got)
-
-    def test_refresh_attrs__non_batch_active(self):
-        """
-        retry_ids should be refreshed
-        """
-        job_id = JOB_CREATED
-        job = create_job_from_ee2(job_id)
-        self.check_job_attrs(job, job_id)
-
-        def mock_check_job(self_, params):
-            self.assertEqual(params["job_id"], job_id)
-            return {"retry_ids": self.NEW_RETRY_IDS}
-
-        with mock.patch.object(MockClients, "check_job", mock_check_job):
-            self.check_job_attrs(job, job_id, {"retry_ids": self.NEW_RETRY_IDS})
-
-    def test_refresh_attrs__non_batch_terminal(self):
-        """
-        retry_ids should be refreshed
-        """
-        job_id = JOB_TERMINATED
-        job = create_job_from_ee2(job_id)
-        self.check_job_attrs(job, job_id)
-
-        def mock_check_job(self_, params):
-            self.assertEqual(params["job_id"], job_id)
-            return {"retry_ids": self.NEW_RETRY_IDS}
-
-        with mock.patch.object(MockClients, "check_job", mock_check_job):
-            self.check_job_attrs(job, job_id, {"retry_ids": self.NEW_RETRY_IDS})
-
-    def test_refresh_attrs__non_batch__is_retry(self):
-        """
-        neither retry_ids/child_jobs should be refreshed
-        """
-        job_id = BATCH_RETRY_RUNNING
-        job = create_job_from_ee2(job_id)
-        self.check_job_attrs(job, job_id)
-
-        with assert_obj_method_called(MockClients, "check_job", call_status=False):
-            self.check_job_attrs(job, job_id, skip_state=True)
-
-    def test_refresh_attrs__batch(self):
-        """
-        child_jobs should be refreshed
-        """
-        job_id = BATCH_PARENT
-        job = get_batch_family_jobs()[job_id]
-        self.check_job_attrs(job, job_id)
-
-        def mock_check_job(self_, params):
-            self.assertEqual(params["job_id"], job_id)
-            return {"child_jobs": self.NEW_CHILD_JOBS}
-
-        with mock.patch.object(MockClients, "check_job", mock_check_job):
-            self.check_job_attrs(job, job_id, {"child_jobs": self.NEW_CHILD_JOBS})
 
     def test_was_terminal(self):
         all_jobs = get_all_jobs()

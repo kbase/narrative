@@ -194,16 +194,7 @@ class Job:
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
             "child_jobs": lambda: copy.deepcopy(
-                # TODO
-                # Only batch container jobs have a child_jobs field
-                # and need the state refresh.
-                # But KBParallel/KB Batch App jobs may not have the
-                # batch_job field
-                self.state(force_refresh=True).get(
-                    "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
-                )
-                if self.batch_job
-                else self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
+                self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
             ),
             "job_id": lambda: self._acc_state.get("job_id"),
             "params": lambda: copy.deepcopy(
@@ -212,13 +203,7 @@ class Job:
                 )
             ),
             "retry_ids": lambda: copy.deepcopy(
-                # Batch container and retry jobs don't have a
-                # retry_ids field so skip the state refresh
                 self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
-                if self.batch_job or self.retry_parent
-                else self.state(force_refresh=True).get(
-                    "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
-                )
             ),
             "retry_parent": lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
@@ -226,7 +211,7 @@ class Job:
             "run_id": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
-            # TODO: add the status attribute!
+            "status": lambda: self._acc_state.get("status", ""),
             "tag": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("tag", JOB_ATTR_DEFAULTS["tag"]),
@@ -560,7 +545,7 @@ class Job:
             )
 
         inst_child_ids = [job.job_id for job in children]
-        if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
+        if sorted(inst_child_ids) != sorted(self.child_jobs):
             raise ValueError("Child job id mismatch")
 
     def update_children(self, children: List["Job"]) -> None:

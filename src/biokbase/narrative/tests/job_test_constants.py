@@ -32,6 +32,13 @@ def generate_error(job_id, err_type):
     return error_strings[err_type]
 
 
+def trim_ee2_state(ee2_state, exclude_fields):
+    if exclude_fields:
+        for field in exclude_fields:
+            if field in ee2_state:
+                del ee2_state[field]
+
+
 def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 

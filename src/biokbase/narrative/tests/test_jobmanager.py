@@ -2,7 +2,6 @@ import copy
 import itertools
 import os
 import re
-import time
 import unittest
 from datetime import datetime
 from unittest import mock
@@ -37,7 +36,6 @@ from biokbase.narrative.tests.job_test_constants import (
     BATCH_CHILDREN,
     BATCH_ERROR_RETRIED,
     BATCH_PARENT,
-    BATCH_RETRY_RUNNING,
     BATCH_TERMINATED,
     BATCH_TERMINATED_RETRIED,
     CLIENTS,
@@ -52,7 +50,6 @@ from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
     generate_error,
     get_test_job,
-    get_test_jobs,
 )
 
 from .narrative_mock.mockclients import (

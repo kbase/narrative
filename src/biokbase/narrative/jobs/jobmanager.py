@@ -310,10 +310,16 @@ class JobManager:
             # fill in the output states for the missing jobs
             # if the job fetch failed, add an error message to the output
             # and return the cached job state
+            now = time.time_ns()
             for job_id in jobs_to_lookup:
                 job = self.get_job(job_id)
                 if job_id in fetched_states:
-                    output_states[job_id] = job.output_state(fetched_states[job_id])
+                    fetched_state = fetched_states[job_id]
+                    # pre-emptively try a job state update
+                    # so can mark the bolus of fetched (but changed) states
+                    # with a simultaneous timestamp
+                    job._update_state(fetched_state, now)
+                    output_states[job_id] = job.output_state(fetched_state)
                 else:
                     # fetch the current state without updating it
                     output_states[job_id] = job.output_state({})

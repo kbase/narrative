@@ -17,6 +17,7 @@ from biokbase.narrative.tests.job_test_constants import (
     READS_OBJ_1,
     READS_OBJ_2,
     generate_error,
+    trim_ee2_state,
 )
 from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
 
@@ -244,7 +245,13 @@ class MockClients:
     # ----- Execution Engine (EE2) functions -----
 
     def check_workspace_jobs(self, params):
-        return self.job_state_data
+        ee2_states = self.job_state_data
+        if params.get("exclude_fields"):
+            for ee2_state in ee2_states.values():
+                trim_ee2_state(ee2_state, params["exclude_fields"])
+        if params.get("return_list"):
+            ee2_states = list(ee2_states.values())
+        return ee2_states
 
     def run_job(self, params):
         return self.test_job_id

@@ -63,7 +63,9 @@ from biokbase.narrative.tests.job_test_constants import (
     TEST_EPOCH_NS,
     JC_TIME_NS,
     generate_error,
+    get_test_job,
     get_test_jobs,
+    trim_ee2_state,
 )
 
 from .narrative_mock.mockclients import (
@@ -687,30 +689,37 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     def _reset_last_updated(self):
-        """Set last_updated back a minute"""
+        """Set each last_updated back 3min"""
         for job_id in self.jm._running_jobs:
             job = self.jm.get_job(job_id)
-            job.last_updated -= 60 * 1e9
+            job.last_updated -= 180 * 1e9
             self.assertTrue(job.last_updated > 0)  # sanity check
 
-    def _check_last_updated(self, exp_updated):
+    def _check_last_updated(self, exp_updated_ids):
         """Make sure the right jobs had `last_updated` bumped"""
-        exp_not_updated = list(set(ALL_JOBS) - set(exp_updated))  # exclusion
+        exp_not_updated_ids = list(set(ALL_JOBS) - set(exp_updated_ids))  # exclusion
         now = time.time_ns()
 
         exp_updated = [
-            self.jm.get_job(job_id).last_updated for job_id in exp_updated
+            self.jm.get_job(job_id).last_updated for job_id in exp_updated_ids
         ]
         for ts in exp_updated:
             self.assertTrue(ts_are_close(ts, now))
+        # should all be the same
+        if exp_updated:
+            self.assertEqual(
+                len(set(exp_updated)),
+                1,
+                list(zip(exp_updated_ids, exp_updated))
+            )
 
         exp_not_updated = [
-            self.jm.get_job(job_id).last_updated for job_id in exp_not_updated
+            self.jm.get_job(job_id).last_updated for job_id in exp_not_updated_ids
         ]
         for ts in exp_not_updated:
-            # was long time ago
-            self.assertTrue(ts < now)
-            self.assertFalse(ts_are_close(ts, now))
+            # was at least 3min ago
+            # (i.e., from self._reset_last_updated)
+            self.assertTrue(ts < now - 180 * 1e9)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_states__by_last_updated(self):
@@ -736,21 +745,34 @@ class JobCommTestCase(unittest.TestCase):
         not_updated_active_ids = list(set(not_updated_ids) & set(active_ids))  # noqa: F841
         updated_active_ids = list(set(updated_ids) & set(active_ids))
 
+        def mock_check_job(self_, params):
+            """Mutate only chosen job states"""
+            lookup_id = params["job_id"]
+
+            job_state = get_test_job(lookup_id)
+            trim_ee2_state(job_state, params.get("exclude_fields"))
+            if lookup_id in updated_active_ids:
+                job_state["updated"] += 1
+
+            return job_state
+
         def mock_check_jobs(self_, params):
             """Mutate only chosen job states"""
             lookup_ids = params["job_ids"]
             self.assertCountEqual(active_ids, lookup_ids)  # sanity check
 
-            job_states_ret = get_test_jobs(lookup_ids)
-            for job_id, job_state in job_states_ret.items():
+            job_states = get_test_jobs(lookup_ids)
+            for job_id, job_state in job_states.items():
+                trim_ee2_state(job_state, params.get("exclude_fields"))
                 # if job is chosen to be updated, mutate it
                 if job_id in updated_active_ids:
                     job_state["updated"] += 1
-            return job_states_ret
+            return job_states
 
         rq = make_comm_msg(STATUS, job_ids + not_found_ids, False, {"ts": ts})
         with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
-            output_states = self.jc._handle_comm_message(rq)
+            with mock.patch.object(MockClients, "check_job", mock_check_job):
+                output_states = self.jc._handle_comm_message(rq)
 
         expected = {
             job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id])
@@ -778,19 +800,31 @@ class JobCommTestCase(unittest.TestCase):
         """
         self._reset_last_updated()
 
+        def mock_check_job(self_, params):
+            """Mutate all given job states"""
+            lookup_id = params["job_id"]
+
+            job_state = get_test_job(lookup_id)
+            trim_ee2_state(job_state, params.get("exclude_fields"))
+            job_state["updated"] += 1
+
+            return job_state
+
         def mock_check_jobs(self_, params):
             """Mutate all given job states"""
             lookup_ids = params["job_ids"]
             self.assertCountEqual(ACTIVE_JOBS, lookup_ids)  # sanity check
 
-            job_states_ret = get_test_jobs(lookup_ids)
-            for _, job_state in job_states_ret.items():
+            job_states = get_test_jobs(lookup_ids)
+            for _, job_state in job_states.items():
+                trim_ee2_state(job_state, params.get("exclude_fields"))
                 job_state["updated"] += 1
-            return job_states_ret
+            return job_states
 
         rq = make_comm_msg(STATUS, ALL_JOBS + [JOB_NOT_FOUND], False, {"ts": 0})
         with mock.patch.object(MockClients, "check_jobs", mock_check_jobs):
-            output_states = self.jc._handle_comm_message(rq)
+            with mock.patch.object(MockClients, "check_job", mock_check_job):
+                output_states = self.jc._handle_comm_message(rq)
 
         expected = {
             job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id])

@@ -312,7 +312,7 @@ class Job:
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def _update_state(self, state: dict) -> None:
+    def _update_state(self, state: dict, ts: int = None) -> None:
         """
         Given a state data structure (as emitted by ee2), update the stored state in the job object
         All updates to the job state should go through here to keep the last_updated field accurate
@@ -339,7 +339,7 @@ class Job:
         else:
             merge_inplace(self._acc_state, state)
 
-        self.last_updated = time.time_ns()
+        self.last_updated = time.time_ns() if ts is None else ts
 
     def refresh_state(self, force_refresh=False, exclude=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
         """

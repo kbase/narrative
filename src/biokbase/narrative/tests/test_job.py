@@ -11,6 +11,7 @@ from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_st
 from biokbase.narrative.jobs.job import (
     COMPLETED_STATUS,
     EXCLUDED_JOB_STATE_FIELDS,
+    OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTR_DEFAULTS,
     JOB_ATTRS,
     Job,
@@ -33,6 +34,7 @@ from biokbase.narrative.tests.job_test_constants import (
     MAX_LOG_LINES,
     TERMINAL_JOBS,
     get_test_job,
+    trim_ee2_state,
 )
 
 from .narrative_mock.mockclients import (
@@ -405,6 +407,68 @@ class JobTest(unittest.TestCase):
         # try to update it with the job state from a different job
         with self.assertRaisesRegex(ValueError, "Job ID mismatch in _update_state"):
             job._update_state(get_test_job(JOB_COMPLETED))
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_job_update__last_updated__no_change(self):
+        for job_id, job in get_all_jobs().items():
+
+            last_updated = job.last_updated
+
+            # job has full ee2 state
+            ee2_state = get_test_job(job_id)
+            job._acc_state = get_test_job(job_id)
+
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            trim_ee2_state(ee2_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            trim_ee2_state(ee2_state, EXCLUDED_JOB_STATE_FIELDS)
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            trim_ee2_state(ee2_state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            job._update_state({})
+            self.assertEqual(last_updated, job.last_updated)
+
+            # job has init ee2 state
+            ee2_state = get_test_job(job_id)
+            job._acc_state = get_test_job(job_id)
+            trim_ee2_state(ee2_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+            trim_ee2_state(job._acc_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            trim_ee2_state(ee2_state, EXCLUDED_JOB_STATE_FIELDS)
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            trim_ee2_state(ee2_state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
+            job._update_state(ee2_state)
+            self.assertEqual(last_updated, job.last_updated)
+
+            job._update_state({})
+            self.assertEqual(last_updated, job.last_updated)
+
+    @mock.patch(CLIENTS, get_mock_client)
+    def test_job_update__last_updated__change(self):
+        for job_id, job in get_all_jobs().items():
+
+            last_updated = job.last_updated
+
+            # job has init ee2 state
+            job._acc_state = get_test_job(job_id)
+            trim_ee2_state(job._acc_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+
+            ee2_state = get_test_job(job_id)
+            job._update_state(ee2_state)
+            self.assertTrue(last_updated < job.last_updated)
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_job_info(self):

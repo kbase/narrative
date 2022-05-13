@@ -1,15 +1,18 @@
 define([
     'common/runtime',
     'widgets/appWidgets2/input/newObjectInput',
+    'widgets/appWidgets2/validators/constants',
     'base/js/namespace',
     'narrativeMocks',
     'testUtil',
-], (Runtime, NewObjectInput, Jupyter, Mocks, TestUtil) => {
+], (Runtime, NewObjectInput, Constants, Jupyter, Mocks, TestUtil) => {
     'use strict';
 
     const AUTH_TOKEN = 'fakeAuthToken',
+        INPUT_SELECTOR = 'input[data-element="input"]',
+        WSID = 777,
+        DEFAULT_VALUE = 'a_default_value',
         required = false,
-        defaultValue = 'apple',
         wsObjName = 'SomeObject',
         wsObjType = 'SomeModule.SomeType',
         wsObjMapping = {
@@ -46,28 +49,69 @@ define([
             ],
         };
 
-    function buildTestConfig(_required, _defaultValue, _bus) {
+    function buildTestConfig(_required, _bus, initialValue) {
         return {
             bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: _defaultValue,
+                    defaultValue: DEFAULT_VALUE,
                     nullValue: '',
                     constraints: {
                         required: _required,
-                        defaultValue: _defaultValue,
-                        types: ['SomeModule.SomeType'],
+                        defaultValue: DEFAULT_VALUE,
+                        types: [wsObjType],
                     },
                 },
             },
+            initialValue,
             channelName: _bus.channelName,
             closeParameters: [],
-            workspaceId: 777,
+            workspaceId: WSID,
         };
     }
 
-    describe('New Object Input tests', () => {
+    function checkValidValidationMessage(value, message, options = {}) {
+        const standardMsg = {
+            isValid: true,
+            messageId: undefined,
+            errorMessage: undefined,
+            shortMessage: undefined,
+            diagnosis: Constants.DIAGNOSIS.VALID,
+            value,
+            parsedValue: value,
+        };
+        expect(message).toEqual(Object.assign(standardMsg, options));
+    }
+
+    function mockGetObjectInfo(response) {
+        if (!response) {
+            response = [null];
+        }
+        Mocks.mockJsonRpc1Call({
+            url: Runtime.make().config('services.workspace.url'),
+            body: /(?=.*get_object_info_new)/,
+            response,
+        });
+    }
+
+    function setDefaultBusResponse(_bus) {
+        _bus.respond({
+            key: {
+                type: 'get-parameters',
+            },
+            handle: () => {
+                return {
+                    p1: null,
+                    p2: 'banana',
+                    p3: 'bar2',
+                };
+            },
+        });
+    }
+
+    fdescribe('New Object Input tests', () => {
         let bus, testConfig, runtime, container;
+
         beforeEach(() => {
             runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
@@ -80,23 +124,10 @@ define([
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing - ' + Math.random().toString(36).substring(2),
             });
-            testConfig = buildTestConfig(required, defaultValue, bus);
+            testConfig = buildTestConfig(required, bus);
 
             // mock workspace calls.
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(
-                runtime.config('services.workspace.url'),
-                /wsid.\s*:\s*777\s*,/
-            ).andReturn(
-                (function () {
-                    return {
-                        status: 200,
-                        statusText: 'HTTP/1.1 200 OK',
-                        contentType: 'application/json',
-                        responseText: JSON.stringify({ result: [wsObjMapping['2']] }),
-                    };
-                })()
-            );
         });
 
         afterEach(() => {
@@ -118,134 +149,130 @@ define([
             expect(widget.start).toEqual(jasmine.any(Function));
         });
 
-        it('Should start a widget', (done) => {
+        it('Should start and stop a widget', async () => {
+            setDefaultBusResponse(bus);
+            mockGetObjectInfo();
             const widget = NewObjectInput.make(testConfig);
-
-            bus.on('sync', () => {
-                const inputElem = container.querySelector('input');
-                expect(inputElem).toBeDefined();
-                done();
-            });
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
-            });
+            await widget.start({ node: container });
+            expect(container.querySelector('input')).toBeDefined();
+            await widget.stop();
+            expect(container.innerHTML).toBe('');
         });
 
-        it('Should update value via bus', (done) => {
+        it('Should update value via bus', () => {
             // start with one value, change it, then reset.
             // check along the way.
-            bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: () => {
-                    return {
-                        p1: null,
-                        p2: 'banana',
-                        p3: 'bar2',
-                    };
-                },
-            });
-
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                const inputElem = container.querySelector('input[data-element="input"]');
-                if (inputElem) {
-                    expect(inputElem.value).toBe('foo');
-                    done();
-                }
-            });
-
+            setDefaultBusResponse(bus);
+            mockGetObjectInfo();
+            const initialValue = 'some_starting_value';
+            const newValue = 'some_other_value';
+            const widgetConfig = buildTestConfig(required, bus, initialValue);
+            widgetConfig.skipAutoValidate = true;
             bus.on('sync', () => {
                 bus.emit('update', { value: 'foo' });
             });
-            const widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
+            const widget = NewObjectInput.make(widgetConfig);
+            return widget.start({ node: container }).then(() => {
+                expect(container.querySelector(INPUT_SELECTOR).value).toBe(initialValue);
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        const inputElem = container.querySelector(INPUT_SELECTOR);
+                        expect(inputElem.value).toBe(newValue);
+                        resolve();
+                    });
+                    bus.emit('update', { value: newValue });
+                });
             });
         });
 
-        it('Should reset to default via bus', (done) => {
-            let validationCount = 0;
+        it('Should validate on startup when configured', () => {
+            setDefaultBusResponse(bus);
+            mockGetObjectInfo();
 
-            bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: () => {
-                    return {
-                        p1: null,
-                        p2: 'banana',
-                        p3: 'bar2',
-                    };
-                },
+            const initialValue = 'an_initial_value';
+            const startupValidConfig = buildTestConfig(required, bus, initialValue);
+            const widget = NewObjectInput.make(startupValidConfig);
+            return new Promise((resolve) => {
+                bus.on('validation', (message) => {
+                    expect(container.querySelector(INPUT_SELECTOR).value).toBe(initialValue);
+                    checkValidValidationMessage(initialValue, message);
+                    resolve();
+                });
+                return widget.start({ node: container });
             });
+        });
 
-            bus.on('validation', () => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                if (inputElem) {
-                    if (validationCount < 1) {
-                        expect(inputElem.value).toBe('foobarbaz');
-                        validationCount++;
+        it('Should reset to default string via bus message', () => {
+            setDefaultBusResponse(bus);
+            mockGetObjectInfo();
+            const initialValue = 'an_initial_value';
+            const startupValidConfig = buildTestConfig(required, bus, initialValue);
+            const widget = NewObjectInput.make(startupValidConfig);
+
+            let validatedInitValue = false,
+                validatedDefaultValue = false;
+            return new Promise((resolve, reject) => {
+                bus.on('validation', (message) => {
+                    const value = message.value;
+                    expect(container.querySelector(INPUT_SELECTOR).value).toBe(value);
+                    checkValidValidationMessage(value, message);
+
+                    if (value === DEFAULT_VALUE) {
+                        validatedDefaultValue = true;
+                    } else if (value === initialValue) {
+                        validatedInitValue = true;
                         bus.emit('reset-to-defaults');
                     } else {
-                        expect(inputElem.value).toBe('apple');
-                        done();
+                        reject(`got unexpected value: ${value}`);
                     }
-                }
-            });
-            bus.on('sync', () => {
-                bus.emit('update', { value: 'foobarbaz' });
-            });
-
-            const widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
+                    if (validatedDefaultValue && validatedInitValue) {
+                        resolve();
+                    }
+                });
+                return widget.start({ node: container });
             });
         });
 
-        it('Should reset to empty string via bus without default', (done) => {
-            testConfig = buildTestConfig(false, undefined, bus);
-            let validationCount = 0;
-            bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: () => {
-                    return {
-                        p1: null,
-                        p2: 'banana',
-                        p3: 'bar2',
-                    };
-                },
-            });
+        it('Should reset to empty string via bus without default', () => {
+            setDefaultBusResponse(bus);
+            mockGetObjectInfo();
+            const initialValue = 'an_initial_value';
+            const startupValidConfig = buildTestConfig(required, bus, initialValue);
+            delete startupValidConfig.parameterSpec.data.defaultValue;
+            const widget = NewObjectInput.make(startupValidConfig);
 
-            bus.on('validation', () => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                if (inputElem) {
-                    if (validationCount < 1) {
-                        expect(inputElem.value).toBe('foobarbaz');
-                        validationCount++;
+            let validatedInitValue = false,
+                validatedResetValue = false;
+            return new Promise((resolve, reject) => {
+                bus.on('validation', (message) => {
+                    const value = message.value;
+                    expect(container.querySelector(INPUT_SELECTOR).value).toBe(value);
+                    if (value === '') {
+                        validatedResetValue = true;
+                        checkValidValidationMessage(value, message, {
+                            diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                        });
+                    } else if (value === initialValue) {
+                        checkValidValidationMessage(value, message);
+                        validatedInitValue = true;
                         bus.emit('reset-to-defaults');
                     } else {
-                        expect(inputElem.value).toBe('');
-                        done();
+                        reject(`got unexpected value: ${value}`);
                     }
-                }
-            });
-
-            bus.on('sync', () => {
-                bus.emit('update', { value: 'foobarbaz' });
-            });
-            const widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
+                    if (validatedResetValue && validatedInitValue) {
+                        resolve();
+                    }
+                });
+                return widget.start({ node: container });
             });
         });
 
-        it('Should respond to duplicate parameter change events with "validation"', (done) => {
-            const widget = NewObjectInput.make(testConfig);
+        it('Should respond to duplicate parameter change events with "validation"', () => {
             const inputStr = 'banana';
+            const testConfig = buildTestConfig(false, bus, inputStr);
+            const widget = NewObjectInput.make(testConfig);
+            mockGetObjectInfo();
             bus.respond({
                 key: {
                     type: 'get-parameters',
@@ -259,57 +286,24 @@ define([
                 },
             });
 
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeFalsy();
-                expect(message.diagnosis).toBe('invalid');
-                expect(message.errorMessage).toContain('must have a unique name');
-                done();
-            });
-            bus.on('sync', () => {
-                bus.emit('update', { value: inputStr });
-            });
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
-            });
-        });
-
-        it('Should respond to non-unique parameter change events with "validation"', (done) => {
-            const widget = NewObjectInput.make(testConfig);
-            const inputStr = 'banana';
-            bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: () => {
-                    return {
-                        p1: null,
-                        p2: 'foo2',
-                        p3: 'bar2',
-                    };
-                },
-            });
-
-            bus.on('validation', () => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                if (inputElem) {
-                    inputElem.dispatchEvent(new Event('change'));
-                }
-            });
-            bus.on('sync', () => {
-                bus.emit('update', { value: inputStr });
-            });
-            bus.on('changed', (message) => {
-                expect(message.newValue).toBe('banana');
-                done();
-            });
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
+            return new Promise((resolve) => {
+                bus.on('validation', (message) => {
+                    expect(message).toEqual({
+                        isValid: false,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                        errorMessage:
+                            'Every output object from a single app run must have a unique name.',
+                    });
+                    resolve();
+                });
+                return widget.start({ node: container });
             });
         });
 
-        it('Should validate against workspace with non-unique parameter change events with "validation"', (done) => {
-            const widget = NewObjectInput.make(testConfig);
+        it('Should validate against workspace with non-unique parameter change events with "validation"', () => {
             const inputStr = wsObjName;
+            const testConfig = buildTestConfig(false, bus, inputStr);
+            const widget = NewObjectInput.make(testConfig);
             bus.respond({
                 key: {
                     type: 'get-parameters',
@@ -322,18 +316,18 @@ define([
                     };
                 },
             });
+            mockGetObjectInfo(wsObjMapping[2]);
 
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.shortMessage).toBe('an object already exists with this name');
-                expect(message.diagnosis).toBe('suspect');
-                done();
-            });
-            bus.on('sync', () => {
-                bus.emit('update', { value: inputStr });
-            });
-            widget.start().then(() => {
-                bus.emit('run', { node: container });
+            return new Promise((resolve) => {
+                bus.on('validation', (message) => {
+                    checkValidValidationMessage(inputStr, message, {
+                        shortMessage: 'an object already exists with this name',
+                        diagnosis: Constants.DIAGNOSIS.SUSPECT,
+                        messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN,
+                    });
+                    resolve();
+                });
+                return widget.start({ node: container });
             });
         });
     });

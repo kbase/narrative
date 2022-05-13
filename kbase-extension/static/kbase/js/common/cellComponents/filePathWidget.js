@@ -143,7 +143,7 @@ define([
                 invalidValues: unavailableFiles,
                 invalidError: 'file not found',
                 disabledValues: getAllSelectedFiles(),
-                batchAutoValidate: true,
+                skipAutoValidate: true,
             });
 
             /**

@@ -25,11 +25,9 @@ define([
             },
             runtime = Runtime.make(),
             otherOutputParams = config.closeParameters
-                ? config.closeParameters.filter((value) => {
-                      return value !== spec.id;
-                  })
+                ? config.closeParameters.filter((value) => value !== spec.id)
                 : [];
-        let parent, container, ui;
+        let container, ui, autoChangeTimer;
 
         // Validate configuration.
         // Nothing to do...
@@ -50,31 +48,10 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(() => {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            }).then(() => {
-                render();
-            });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(() => {
-                model.value = undefined;
-            }).then(() => {
-                render();
-            });
-        }
-
-        function resetModelValue() {
-            if (spec.data.defaultValue) {
-                setModelValue(spec.data.defaultValue);
-            } else {
-                unsetModelValue();
+            if (model.value !== value) {
+                model.value = value;
             }
+            ui.getElement('input-container.input').value = value;
         }
 
         /*
@@ -86,12 +63,10 @@ define([
 
         function validate() {
             if (!options.enabled) {
-                return Promise.try(() => {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: Constants.DIAGNOSIS.DISABLED,
-                    };
+                return Promise.resolve({
+                    isValid: true,
+                    validated: false,
+                    diagnosis: Constants.DIAGNOSIS.DISABLED,
                 });
             }
             const rawValue = getInputValue();
@@ -119,6 +94,16 @@ define([
                     }
                 })
                 .then((validationResult) => {
+                    bus.emit('validation', validationResult);
+                    return validationResult;
+                })
+                .catch((error) => {
+                    const validationResult = {
+                        errorMessage: error.message,
+                        diagnosis: Constants.DIAGNOSIS.ERROR,
+                        messageId: Constants.DIAGNOSIS.ERROR,
+                    };
+                    bus.emit('validation', validationResult);
                     return validationResult;
                 });
         }
@@ -144,22 +129,16 @@ define([
                 });
         }
 
-        let autoChangeTimer;
-
-        function cancelTouched() {
-            if (autoChangeTimer) {
-                window.clearTimeout(autoChangeTimer);
-                autoChangeTimer = null;
-            }
-        }
-
         function handleTouched(interval) {
             const editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
                 handler: function (e) {
                     bus.emit('touched');
-                    cancelTouched();
+                    if (autoChangeTimer) {
+                        clearTimeout(autoChangeTimer);
+                        autoChangeTimer = null;
+                    }
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
@@ -176,63 +155,39 @@ define([
                         console.error('value is not changed! not validating!');
                         return;
                     }
-                    validate()
-                        .then((result) => {
-                            const changeMsg = {
-                                newValue: result.parsedValue,
-                            };
-                            if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
-                                changeMsg.isError = true;
-                            }
-                            if (
-                                result.isValid ||
-                                result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING ||
-                                result.diagnosis === Constants.DIAGNOSIS.INVALID
-                            ) {
-                                model.value = result.parsedValue;
-                                bus.emit('changed', changeMsg);
-                            }
-                            bus.emit('validation', result);
-                        })
-                        .catch((err) => {
-                            bus.emit('validation', {
-                                errorMessage: err.message,
-                                diagnosis: Constants.DIAGNOSIS.ERROR,
-                            });
-                        });
+                    validate().then((result) => {
+                        const changeMsg = {
+                            newValue: result.parsedValue,
+                        };
+                        if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
+                            changeMsg.isError = true;
+                        }
+                        if (
+                            result.isValid ||
+                            result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING ||
+                            result.diagnosis === Constants.DIAGNOSIS.INVALID
+                        ) {
+                            model.value = result.parsedValue;
+                            bus.emit('changed', changeMsg);
+                        }
+                    });
                 },
             };
         }
 
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-        function makeInputControl(currentValue, events) {
-            // CONTROL
-            return input({
-                id: events.addEvents({
-                    events: [handleChanged(), handleTouched()],
-                }),
-                class: 'form-control',
-                dataElement: 'input',
-                value: currentValue,
-            });
-        }
-
         function render() {
-            Promise.try(() => {
-                const events = Events.make(),
-                    inputControl = makeInputControl(model.value, events);
+            const events = Events.make(),
+                inputControl = input({
+                    id: events.addEvents({
+                        events: [handleChanged(), handleTouched()],
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                    value: model.value,
+                });
 
-                ui.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            }).then(() => {
-                if (!config.batchAutoValidate) {
-                    return autoValidate();
-                }
-            });
+            ui.setContent('input-container', inputControl);
+            events.attachEvents(container);
         }
 
         function layout() {
@@ -244,43 +199,33 @@ define([
             );
         }
 
-        function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', result);
-                })
-                .catch((err) => {
-                    bus.emit('validation', {
-                        errorMessage: err.message,
-                        diagnosis: Constants.DIAGNOSIS.ERROR,
-                    });
-                });
-        }
-
         // LIFECYCLE API
 
-        function start() {
+        function start(args) {
             return Promise.try(() => {
-                bus.on('run', (message) => {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
+                container = args.node;
+                ui = UI.make({ node: container });
 
-                    container.innerHTML = layout();
+                container.innerHTML = layout();
+                render();
 
-                    bus.on('reset-to-defaults', () => {
-                        resetModelValue();
-                    });
-                    bus.on('update', (_message) => {
-                        setModelValue(_message.value);
-                    });
-                    bus.on('refresh', () => {});
-                    bus.emit('sync');
+                bus.on('reset-to-defaults', () => {
+                    setModelValue(spec.data.defaultValue || '');
+                    return validate();
                 });
+                bus.on('update', (message) => {
+                    setModelValue(message.value);
+                    return validate();
+                });
+                setModelValue(config.initialValue);
+                return config.skipAutoValidate ? Promise.resolve() : validate();
             });
         }
 
         function stop() {
+            if (container) {
+                container.innerHTML = '';
+            }
             return Promise.resolve();
         }
 

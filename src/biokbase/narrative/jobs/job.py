@@ -1,6 +1,5 @@
 import copy
 import json
-import time
 import uuid
 from pprint import pprint
 from typing import List
@@ -27,6 +26,7 @@ JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
     "retry_saved_toggle",
     "scheduler_type",
     "scheduler_id",
+    "updated",
 ]
 
 EXCLUDED_JOB_STATE_FIELDS = JOB_INIT_EXCLUDED_JOB_STATE_FIELDS + ["job_input"]
@@ -383,7 +383,6 @@ class Job:
                 "batch_job": bool,
                 "child_jobs": list,
                 "created": epoch ms,
-                "updated": epoch ms,
                 "queued": epoch ms,
                 "running": epoch ms,
                 "finished": epoch ms,
@@ -461,8 +460,6 @@ class Job:
                         "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
                     },
                 }
-                # update timestamp if there was an error
-                state.update({"updated": int(time.time())})
 
         return {
             "job_id": self.job_id,
@@ -600,7 +597,6 @@ class Job:
             "cell_id": self.cell_id,
             "run_id": self.run_id,
             "created": 0,
-            "updated": 0,
         }
 
     def __repr__(self):

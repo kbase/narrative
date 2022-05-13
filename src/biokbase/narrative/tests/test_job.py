@@ -371,7 +371,6 @@ class JobTest(unittest.TestCase):
             "cell_id": job.cell_id,
             "run_id": job.run_id,
             "created": 0,
-            "updated": 0,
         }
 
         with mock.patch.object(Job, "state", mock_state):

@@ -38,33 +38,45 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
          * 2 - eval the array of file inputs and outputs.
          * If both are up to snuff, we're good.
          */
-
         // must have at least one file row of file paths to be complete
         if (filePathValues.length === 0) {
             return Promise.resolve('incomplete');
         }
 
-        const filePathValidationParams = filePathValues.reduce((paramSet, filePathRow) => {
-            for (const key of Object.keys(filePathRow)) {
-                paramSet[key].push(filePathRow[key]);
-            }
-            return paramSet;
-        }, Object.keys(filePathValues[0]).reduce((acc, curr) => (acc[curr] = [], acc), {}));
+        const filePathValidationParams = filePathValues.reduce(
+            (paramSet, filePathRow) => {
+                for (const key of Object.keys(filePathRow)) {
+                    paramSet[key].push(filePathRow[key]);
+                }
+                return paramSet;
+            },
+            Object.keys(filePathValues[0]).reduce((acc, curr) => ((acc[curr] = []), acc), {})
+        );
 
-        const filePathValidations = spec.validateParamsSet(filePathValidationParams, filePathOptions[0]);
+        const filePathValidations = spec.validateMultipleParamsArray(
+            filePathValidationParams,
+            filePathOptions[0]
+        );
 
-        // const filePathValidations = filePathValues.map((filePathRow, index) => {
-        //     return spec.validateParams(filePathIds, filePathRow, filePathOptions[index]);
-        // });
         return Promise.all([
+            filePathValidations,
             spec.validateParams(paramIds, paramValues, paramOptions),
-            ...filePathValidations,
-        ]).then((results) => {
-            const isValid = results.every((result) => {
-                return Object.values(result).every((param) => param.isValid);
+        ])
+            .then(([filePathValidations, paramValidations]) => {
+                // filePathValidations - kvp, keys = paramIds, vals = array of validations
+                // paramValidations = vals = validations
+                const filePathsValid = Object.values(filePathValidations).every(
+                    (filePathValidations) => {
+                        return filePathValidations.every((validation) => validation.isValid);
+                    }
+                );
+                const paramsValid = Object.values(paramValidations).every((param) => param.isValid);
+
+                return filePathsValid && paramsValid ? 'complete' : 'incomplete';
+            })
+            .catch((error) => {
+                console.error(error);
             });
-            return isValid ? 'complete' : 'incomplete';
-        });
     }
 
     /**
@@ -222,5 +234,6 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
         evaluateConfigReadyState,
         getMissingFiles,
         generateFileTypeMappings,
+        getFilePathOptionsForValidation,
     };
 });

@@ -109,8 +109,16 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
          * @param {Object} paramValues - keys = parameter ids, values = list of parameter values
          * @param {Object} options - keys = parameter ids, values = set of options for that parameter
          */
-        function validateMultipleParamsArray(paramValues, options) {
-
+        function validateMultipleParamsArray(paramValues, options = {}) {
+            const validationMap = {};
+            Object.keys(paramValues).forEach((paramId) => {
+                validationMap[paramId] = validateParamsArray(
+                    paramId,
+                    paramValues[paramId],
+                    options[paramId]
+                );
+            });
+            return Promise.props(validationMap);
         }
 
         /**
@@ -118,17 +126,21 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
          * @param {string} paramId
          * @param {Array} paramValues
          */
-        function validateParamsArray(paramId, paramValues, options) {
-            ValidationResolver.validateArray(paramId, paramValues, options);
+        function validateParamsArray(paramId, paramValues, options = {}) {
+            return ValidationResolver.validateArray(
+                paramValues,
+                spec.parameters.specs[paramId],
+                options
+            );
         }
-
 
         return Object.freeze({
             getSpec,
             makeDefaultedModel,
             validateModel,
             validateParams,
-            validateParamsSet
+            validateParamsArray,
+            validateMultipleParamsArray,
         });
     }
 

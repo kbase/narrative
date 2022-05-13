@@ -106,14 +106,16 @@ define([
                         };
                     } else {
                         const validationOptions = {
-                            required: spec.data.constraints.required,
                             shouldNotExist: true,
-                            workspaceId: workspaceId,
-                            types: spec.data.constraints.types,
+                            workspaceId,
                             authToken: runtime.authToken(),
                             workspaceServiceUrl: runtime.config('services.workspace.url'),
                         };
-                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(
+                            rawValue,
+                            spec.data.constraints,
+                            validationOptions
+                        );
                     }
                 })
                 .then((validationResult) => {
@@ -170,20 +172,25 @@ define([
             return {
                 type: 'change',
                 handler: function () {
+                    if (getInputValue() === model.value) {
+                        console.error('value is not changed! not validating!');
+                        return;
+                    }
                     validate()
                         .then((result) => {
+                            const changeMsg = {
+                                newValue: result.parsedValue,
+                            };
+                            if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
+                                changeMsg.isError = true;
+                            }
                             if (
                                 result.isValid ||
-                                result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING
+                                result.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING ||
+                                result.diagnosis === Constants.DIAGNOSIS.INVALID
                             ) {
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue,
-                                });
-                            } else if (result.diagnosis === Constants.DIAGNOSIS.INVALID) {
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue,
-                                    isError: true,
-                                });
+                                model.value = result.parsedValue;
+                                bus.emit('changed', changeMsg);
                             }
                             bus.emit('validation', result);
                         })
@@ -222,21 +229,19 @@ define([
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             }).then(() => {
-                return autoValidate();
+                if (!config.batchAutoValidate) {
+                    return autoValidate();
+                }
             });
         }
 
-        function layout(events) {
-            const content = div(
+        function layout() {
+            return div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content: content,
-                events: events,
-            };
         }
 
         function autoValidate() {
@@ -261,11 +266,7 @@ define([
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({ node: container });
 
-                    const events = Events.make(),
-                        theLayout = layout(events);
-
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
+                    container.innerHTML = layout();
 
                     bus.on('reset-to-defaults', () => {
                         resetModelValue();

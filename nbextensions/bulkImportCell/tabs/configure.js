@@ -468,7 +468,7 @@ define([
             return widget
                 .start({
                     node: node,
-                    appSpec: model.getItem('app.spec'),
+                    appSpec: specs[typesToFiles[selectedFileType].appId], //model.getItem('app.spec'),
                     parameters: spec.getSpec().parameters,
                 })
                 .then(() => {

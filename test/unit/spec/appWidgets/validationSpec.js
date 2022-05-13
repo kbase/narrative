@@ -22,7 +22,7 @@ define([
         },
     ];
 
-    fdescribe('Validator functions', () => {
+    describe('Validator functions', () => {
         it('Is alive', () => {
             let alive;
             if (Validation) {
@@ -109,12 +109,16 @@ define([
 
         describe('validateWorkspaceObjectName', () => {
             it('returns valid when they should not exist', () => {
-                return Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 1,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 1,
+                        workspaceServiceUrl: fakeWsUrl,
+                        types: [wsObjType],
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: undefined,
@@ -128,12 +132,15 @@ define([
             });
 
             it('returns valid-ish when type exists of same type', () => {
-                return Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 2,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 2,
+                        workspaceServiceUrl: fakeWsUrl,
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN,
@@ -147,12 +154,15 @@ define([
             });
 
             it('returns invalid when type exists of different type', () => {
-                return Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 3,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 3,
+                        workspaceServiceUrl: fakeWsUrl,
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: false,
                         messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE,
@@ -169,12 +179,16 @@ define([
 
         describe('workspace lookup', () => {
             it('Can look up workspace names', () => {
-                return Validation.validateWorkspaceObjectName('somename', {
-                    shouldNotExist: true,
-                    workspaceId: 1,
-                    workspaceServiceUrl: 'https://test.kbase.us/services/ws',
-                    types: [wsObjType],
-                }).then((result) => {
+                return Validation.validateWorkspaceObjectName(
+                    'somename',
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 1,
+                        workspaceServiceUrl: 'https://test.kbase.us/services/ws',
+                        types: [wsObjType],
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: undefined,

@@ -190,13 +190,64 @@ define([
          * - workspaceServiceUrl - string(url),
          * - types - Array
          */
-        // function validateWorkspaceObjectNameArray(values, options) {
-
-        // }
+        async function validateWorkspaceObjectNameArray(values, constraints = {}, options = {}) {
+            let hasError = false;
+            const validations = values.map((value) => {
+                const validation = validateWorkspaceObjectNameString(value, constraints);
+                if (validation.errorMessage) {
+                    hasError = true;
+                }
+                return validation;
+            });
+            if (!hasError && options.shouldNotExist && constraints.types) {
+                try {
+                    const objectTypes = await getObjectTypes(
+                        options.workspaceId,
+                        validations.map((v) => v.parsedValue),
+                        options.authToken,
+                        options.workspaceServiceUrl
+                    );
+                    objectTypes.forEach((objType, index) => {
+                        if (objType) {
+                            const matchingType = constraints.types.some(
+                                (typeId) => typeId === objType
+                            );
+                            if (!matchingType) {
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
+                                validations[index].errorMessage =
+                                    'an object already exists with this name and is not of the same type';
+                                validations[index].diagnosis = Constants.DIAGNOSIS.INVALID;
+                            } else {
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
+                                validations[index].shortMessage =
+                                    'an object already exists with this name';
+                                validations[index].diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('error while validating workspace object name');
+                    console.error(error);
+                    return [
+                        {
+                            messageId: Constants.MESSAGE_IDS.ERROR,
+                            diagnosis: Constants.DIAGNOSIS.ERROR,
+                            errorMessage: 'an error occurred while validating',
+                        },
+                    ];
+                }
+            }
+            validations.forEach((v) => {
+                v.isValid = v.errorMessage ? false : true;
+            });
+            return validations;
+        }
 
         /**
          * Validate that a workspace object name is syntactically valid, and exists as a real workspace
-         * object.
+         * object, when appropriate.
          * @param {string} value
          * @param {object} options
          * - required - boolean
@@ -205,63 +256,12 @@ define([
          * - workspaceServiceUrl - string(url),
          * - types - Array
          */
-        function validateWorkspaceObjectName(value, options) {
-            let parsedValue,
-                messageId,
-                shortMessage,
-                errorMessage,
-                diagnosis = Constants.DIAGNOSIS.VALID;
-
-            return Promise.try(() => {
-                ({ errorMessage, shortMessage, messageId, diagnosis, parsedValue } =
-                    validateWorkspaceObjectNameString(value, options));
-                if (errorMessage) {
-                    return;
+        function validateWorkspaceObjectName(value, constraints = {}, options = {}) {
+            return validateWorkspaceObjectNameArray([value], constraints, options).then(
+                (validations) => {
+                    return validations[0];
                 }
-                if (options.shouldNotExist) {
-                    return getObjectTypes(
-                        options.workspaceId,
-                        [parsedValue],
-                        options.authToken,
-                        options.workspaceServiceUrl
-                    )
-                        .then((objectTypes) => {
-                            const objType = objectTypes[0];
-                            if (objType) {
-                                const matchingType = options.types.some(
-                                    (typeId) => typeId === objType
-                                );
-                                if (!matchingType) {
-                                    messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
-                                    errorMessage =
-                                        'an object already exists with this name and is not of the same type';
-                                    diagnosis = Constants.DIAGNOSIS.INVALID;
-                                } else {
-                                    messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
-                                    shortMessage = 'an object already exists with this name';
-                                    diagnosis = Constants.DIAGNOSIS.SUSPECT;
-                                }
-                            }
-                        })
-                        .catch((error) => {
-                            messageId = Constants.MESSAGE_IDS.ERROR;
-                            diagnosis = Constants.DIAGNOSIS.ERROR;
-                            errorMessage = 'an error occurred while validating';
-                            console.error('error while validating workspace object name');
-                            console.error(error);
-                        });
-                }
-            }).then(() => {
-                return {
-                    isValid: errorMessage ? false : true,
-                    messageId,
-                    errorMessage,
-                    shortMessage,
-                    diagnosis,
-                    value,
-                    parsedValue,
-                };
-            });
+            );
         }
 
         /**
@@ -878,7 +878,7 @@ define([
             importIntString,
             importFloatString,
 
-            // validateWorkspaceObjectNameArray
+            validateWorkspaceObjectNameArray,
         };
     }
 

@@ -121,15 +121,15 @@ define([
             bus = runtime.bus().makeChannelBus({
                 description: 'A file path widget',
             });
-        let container, ui;
+        let container, ui, appSpec;
 
-        function makeFieldWidget(rowId, inputWidget, appSpec, parameterSpec, value) {
+        function makeFieldWidget(rowId, inputWidget, parameterSpec, value) {
             const fieldWidget = FieldWidget.make({
                 inputControlFactory: inputWidget,
                 showHint: true,
                 useRowHighight: true,
                 initialValue: value,
-                appSpec,
+                appSpec: appSpec.getSpec(),
                 parameterSpec,
                 workspaceId,
                 referenceType: 'name',
@@ -143,6 +143,7 @@ define([
                 invalidValues: unavailableFiles,
                 invalidError: 'file not found',
                 disabledValues: getAllSelectedFiles(),
+                batchAutoValidate: true,
             });
 
             /**
@@ -457,13 +458,12 @@ define([
          * Creates a new single file path widget for the parameter id with some initial value.
          * This returns a Promise that resolves into the new widget.
          * @param {string} rowId - the unique row id where this widget will live
-         * @param {object} appSpec - the entire app spec to pass along to the widget
          * @param {object} filePathParams - the object holding all file path param specs
          * @param {string} parameterId - the parameter id from the app spec
          * @param {any} parameterValue - the initial value of the parameter
          * @returns the created and started widget, linked to its parameterId in a tiny object
          */
-        function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
+        function createFilePathWidget(rowId, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
             let widget;
             let controlPromise;
@@ -479,7 +479,7 @@ define([
             }
             return controlPromise
                 .then((inputWidget) => {
-                    widget = makeFieldWidget(rowId, inputWidget, appSpec, spec, parameterValue);
+                    widget = makeFieldWidget(rowId, inputWidget, spec, parameterValue);
 
                     return widget.start({
                         node: container.querySelector('#' + filePathParams.view[spec.id].id),
@@ -543,7 +543,6 @@ define([
          * @returns a Promise that resolves when all widgets are created and saved.
          */
         function makeFilePathRow(filePathRow, rowId, params) {
-            const appSpec = model.getItem('appSpec');
             const filePathParams = makeFilePathsLayout(model.getItem('parameterSpecs'));
             const rowEvents = Events.make();
 
@@ -596,7 +595,6 @@ define([
                 filePathParams.layout.map(async (parameterId) => {
                     return await createFilePathWidget(
                         rowId,
-                        appSpec,
                         filePathParams,
                         parameterId,
                         params[parameterId]
@@ -616,7 +614,7 @@ define([
          * Update as changed, and propagate entire parameter list up to parent bus
          * @param {object} arg - has keys:
          *  node - the containing DOM node
-         *  appSpec - the appSpec for the app having its parameters portrayed here
+         *  appSpec - the appSpec (the processed common/spec object) for the app having its parameters portrayed here
          *  parameters - the parameter set with the layout order
          * @returns a promise that resolves when all file path rows are created from
          * the initial set of parameters
@@ -630,7 +628,7 @@ define([
             doAttach();
             attachEvents();
             model.setItem('parameterIds', paramIds);
-            model.setItem('appSpec', arg.appSpec);
+            appSpec = arg.appSpec;
             model.setItem('parameterValues', initialParams);
             // get the parameter specs in the right order.
             const parameterSpecs = [];
@@ -663,6 +661,17 @@ define([
                 })
             )
                 .then(() => {
+                    // At the end, we do a bulk validation job on all new file path widgets.
+                    // Grab all widgets of each type, get their values, use the specs to get all other
+                    // options / constraints. Feed this info into the validateArray command, then dole
+                    // out individual validation results to each widget for rendering errors, etc.
+                    if (!config.viewOnly) {
+                        return doBulkValidation(parameterSpecs);
+                    } else {
+                        return Promise.resolve();
+                    }
+                })
+                .then(() => {
                     // once all rows are set up and we have the data model
                     // disable all relevant files from each input widget.
                     // TODO: set this up to disable files from each column (i.e. parameter id) instead
@@ -678,6 +687,60 @@ define([
                 })
                 .catch((error) => {
                     throw new Error(`Unable to start filePathWidget: ${error}`);
+                });
+        }
+
+        /**
+         *
+         * @param {Array<ParameterSpec>} parameterSpecs
+         * @returns Promise that resolves into a whole bunch of validation objects
+         */
+        function doBulkValidation() {
+            // transform values to { paramId: [values] }
+            const paramValueMap = paramIds.reduce((valueMap, paramId) => {
+                valueMap[paramId] = [];
+                return valueMap;
+            }, {});
+            dataModel.rowOrder.forEach((row) => {
+                const rowData = dataModel.rows[row];
+                paramIds.forEach((paramId) => paramValueMap[paramId].push(rowData.values[paramId]));
+            });
+
+            const validationOptions = paramIds.reduce((optionsMap, paramId) => {
+                if (model.getItem('fileParamIds').includes(paramId)) {
+                    optionsMap[paramId] = { invalidValues: unavailableFiles };
+                } else {
+                    optionsMap[paramId] = {
+                        shouldNotExist: true,
+                        authToken: runtime.authToken(),
+                        workspaceId: runtime.workspaceId(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
+                    };
+                }
+                return optionsMap;
+            }, {});
+
+            return appSpec
+                .validateMultipleParamsArray(paramValueMap, validationOptions)
+                .then((validations) => {
+                    // send each validation to each widget
+                    // if any are invalid for a parameter id, track it so we can send up
+                    // the parameter bus
+                    const invalidParamIds = new Set();
+                    Object.keys(validations).forEach((paramId) => {
+                        validations[paramId].map((validation, index) => {
+                            const rowId = dataModel.rowOrder[index];
+                            dataModel.rows[rowId].widgets[paramId].validateField(validation);
+                            if (!validation.isValid) {
+                                invalidParamIds.add(paramId);
+                            }
+                        });
+                    });
+                    invalidParamIds.forEach((paramId) => {
+                        paramsBus.emit('invalid-param-value', {
+                            parameter: paramId,
+                        });
+                    });
                 });
         }
 

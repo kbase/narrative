@@ -2,8 +2,8 @@
 name: Build Dev Image
 on:
   pull_request:
-    branches:
-    - develop
+    branches-ignore:
+    - main
     types:
     - opened
     - synchronize

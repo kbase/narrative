@@ -23,7 +23,6 @@ from biokbase.narrative.tests.job_test_constants import (
     ALL_JOBS,
     BATCH_CHILDREN,
     BATCH_PARENT,
-    BATCH_RETRY_RUNNING,
     CLIENTS,
     JOB_COMPLETED,
     JOB_CREATED,

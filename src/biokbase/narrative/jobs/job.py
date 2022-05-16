@@ -249,20 +249,20 @@ class Job:
         # add in a check for the case where this is a batch parent job
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
-        if self._acc_state.get("batch_job"):
+        if self.batch_job:
             for child_job in self.children:
-                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                if child_job.status != COMPLETED_STATUS:
                     return False
             return True
 
         else:
-            return self._acc_state.get("status") in TERMINAL_STATUSES
+            return self.status in TERMINAL_STATUSES
 
     def is_terminal(self):
         self.state()
-        if self._acc_state.get("batch_job"):
+        if self.batch_job:
             for child_job in self.children:
-                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                if child_job.status != COMPLETED_STATUS:
                     child_job.state(force_refresh=True)
         return self.was_terminal()
 

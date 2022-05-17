@@ -139,9 +139,10 @@ define([
                         clearTimeout(autoChangeTimer);
                         autoChangeTimer = null;
                     }
+                    const target = e.target;
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 },
             };
@@ -152,7 +153,7 @@ define([
                 type: 'change',
                 handler: function () {
                     if (getInputValue() === model.value) {
-                        console.error('value is not changed! not validating!');
+                        // if the model hasn't changed, don't send another validation message
                         return;
                     }
                     validate().then((result) => {

@@ -330,5 +330,43 @@ define([
                 return widget.start({ node: container });
             });
         });
+
+        ['change', 'keyup'].forEach((eventType) => {
+            it('Should send "validation" and "changed" messages when the value changes', () => {
+                setDefaultBusResponse(bus);
+                mockGetObjectInfo();
+                const changedStr = 'new_str';
+                const testConfig = buildTestConfig(false, bus);
+                testConfig.skipAutoValidate = true;
+                const widget = NewObjectInput.make(testConfig);
+
+                return new Promise((resolve) => {
+                    let gotValidationMsg = false,
+                        gotChangedMsg = false;
+                    bus.on('validation', (message) => {
+                        checkValidValidationMessage(changedStr, message);
+                        gotValidationMsg = true;
+                        if (gotValidationMsg && gotChangedMsg) {
+                            resolve();
+                        }
+                    });
+
+                    bus.on('changed', (message) => {
+                        expect(message).toEqual({
+                            newValue: changedStr,
+                        });
+                        gotChangedMsg = true;
+                        if (gotValidationMsg && gotChangedMsg) {
+                            resolve();
+                        }
+                    });
+                    return widget.start({ node: container }).then(() => {
+                        const inputElem = container.querySelector(INPUT_SELECTOR);
+                        inputElem.value = changedStr;
+                        inputElem.dispatchEvent(new Event(eventType));
+                    });
+                });
+            });
+        });
     });
 });

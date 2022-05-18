@@ -708,13 +708,17 @@ define([
 
             const validationOptions = paramIds.reduce((optionsMap, paramId) => {
                 if (model.getItem('fileParamIds').includes(paramId)) {
-                    optionsMap[paramId] = { invalidValues: unavailableFiles };
+                    optionsMap[paramId] = {
+                        invalidValues: unavailableFiles,
+                        invalidError: 'file not found',
+                    };
                 } else {
                     optionsMap[paramId] = {
                         shouldNotExist: true,
                         authToken: runtime.authToken(),
                         workspaceId: runtime.workspaceId(),
                         workspaceServiceUrl: runtime.config('services.workspace.url'),
+                        nullToEmptyString: true,
                     };
                 }
                 return optionsMap;

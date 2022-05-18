@@ -193,7 +193,7 @@ define([
         async function validateWorkspaceObjectNameArray(values, constraints = {}, options = {}) {
             let hasError = false;
             const validations = values.map((value) => {
-                const validation = validateWorkspaceObjectNameString(value, constraints);
+                const validation = validateWorkspaceObjectNameString(value, constraints, options);
                 if (validation.errorMessage) {
                     hasError = true;
                 }
@@ -453,7 +453,10 @@ define([
             };
         }
 
-        function validateWorkspaceObjectNameString(value, options) {
+        function validateWorkspaceObjectNameString(value, constraints = {}, options = {}) {
+            if (options.nullToEmptyString && value === null) {
+                value = '';
+            }
             let parsedValue,
                 messageId,
                 shortMessage,
@@ -466,7 +469,7 @@ define([
             } else {
                 parsedValue = value.trim();
                 if (!parsedValue) {
-                    if (options.required) {
+                    if (constraints.required) {
                         messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
@@ -536,7 +539,7 @@ define([
                 maxLength = constraints.max_length;
 
             if (constraints.type && constraints.type === 'WorkspaceObjectName') {
-                return validateWorkspaceObjectNameString(value, constraints);
+                return validateWorkspaceObjectNameString(value, constraints, options);
             }
 
             if (StringUtil.isEmptyString(value)) {

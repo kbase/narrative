@@ -16,8 +16,7 @@ define([
         input = t('input');
 
     function factory(config) {
-        const options = {},
-            spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             workspaceId = config.workspaceId,
             bus = config.bus,
             model = {
@@ -29,25 +28,12 @@ define([
                 : [];
         let container, ui, autoChangeTimer;
 
-        // Validate configuration.
-        // Nothing to do...
-
-        options.enabled = true;
-
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
         function getInputValue() {
             return ui.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
+            value = value || ''; // cast null/undefined -> empty string
             if (model.value !== value) {
                 model.value = value;
             }
@@ -62,13 +48,6 @@ define([
          */
 
         function validate() {
-            if (!options.enabled) {
-                return Promise.resolve({
-                    isValid: true,
-                    validated: false,
-                    diagnosis: Constants.DIAGNOSIS.DISABLED,
-                });
-            }
             const rawValue = getInputValue();
             return validateUniqueOutput(rawValue)
                 .then((isUnique) => {

@@ -233,7 +233,7 @@ define([
 
                 // We're testing duplicate values of output objects. The validator calls out
                 // to the workspace to see if there's already an object of this name - crashes
-                // seem to occur when it can't get there.
+                // occur when it can't get there.
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('workspace'),
                     body: /get_object_info_new/,
@@ -265,7 +265,7 @@ define([
                         );
                     },
                     () => {
-                        input2.setAttribute('value', input1.getAttribute('value'));
+                        input2.value = input1.value;
                         input2.dispatchEvent(new Event('change'));
                     }
                 );

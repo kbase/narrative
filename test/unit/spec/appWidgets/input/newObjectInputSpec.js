@@ -109,7 +109,7 @@ define([
         });
     }
 
-    fdescribe('New Object Input tests', () => {
+    describe('New Object Input tests', () => {
         let bus, testConfig, runtime, container;
 
         beforeEach(() => {

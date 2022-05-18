@@ -316,7 +316,7 @@ class JobManager:
                 if job_id in fetched_states:
                     fetched_state = fetched_states[job_id]
                     # pre-emptively try a job state update
-                    # so can mark the bolus of fetched (but changed) states
+                    # so can mark the set of fetched (but also changed) states
                     # with a simultaneous timestamp
                     job._update_state(fetched_state, now)
                     output_states[job_id] = job.output_state(fetched_state)

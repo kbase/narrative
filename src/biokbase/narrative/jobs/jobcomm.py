@@ -1,6 +1,5 @@
 import copy
 import threading
-import time
 from typing import List, Union
 
 from ipykernel.comm import Comm
@@ -8,7 +7,7 @@ from ipykernel.comm import Comm
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.jobs.util import load_job_constants
+from biokbase.narrative.jobs.util import load_job_constants, time_ns
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 
@@ -520,7 +519,7 @@ class JobComm:
         # to each output_state. Note: error states will have
         # the last_checked field too
         if msg_type == MESSAGE_TYPE["STATUS"]:
-            now = time.time_ns()
+            now = time_ns()
             for output_state in content.values():
                 output_state["last_checked"] = now
 

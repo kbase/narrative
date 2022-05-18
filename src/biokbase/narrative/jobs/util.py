@@ -1,6 +1,8 @@
 import copy
 import json
 import os
+import time
+
 
 JOB_CONFIG_FILE_PATH_PARTS = [
     "kbase-extension",
@@ -59,6 +61,11 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
             )
 
     return (config["params"], config["message_types"])
+
+
+def time_ns():
+    """Simulate time.time_ns() which is only available in python 3.7+"""
+    return int(time.time() * 1e9)
 
 
 def merge(d0: dict, d1: dict):

@@ -3,7 +3,6 @@ import itertools
 import os
 import re
 import sys
-import time
 import unittest
 from unittest import mock
 
@@ -31,6 +30,7 @@ from biokbase.narrative.jobs.jobmanager import (
     NO_UPDATED_JOBS_ERR,
     JobManager,
 )
+from biokbase.narrative.jobs.util import time_ns
 from biokbase.narrative.tests.generate_test_results import (
     ALL_RESPONSE_DATA,
     JOBS_BY_CELL_ID,
@@ -593,7 +593,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_state__live_ts(self):
         output_states = self.jc.get_job_state(JOB_COMPLETED)
         self.check_job_output_states(
-            output_states=output_states, ok_states=[JOB_COMPLETED], last_checked=time.time_ns()
+            output_states=output_states, ok_states=[JOB_COMPLETED], last_checked=time_ns()
         )
 
     def test_get_job_state__no_job(self):
@@ -698,7 +698,7 @@ class JobCommTestCase(unittest.TestCase):
     def _check_last_updated(self, exp_updated_ids):
         """Make sure the right jobs had `last_updated` bumped"""
         exp_not_updated_ids = list(set(ALL_JOBS) - set(exp_updated_ids))  # exclusion
-        now = time.time_ns()
+        now = time_ns()
 
         exp_updated = [
             self.jm.get_job(job_id).last_updated for job_id in exp_updated_ids
@@ -726,7 +726,7 @@ class JobCommTestCase(unittest.TestCase):
         self._reset_last_updated()
 
         # what FE will say was the last time the jobs were checked
-        ts = time.time_ns()
+        ts = time_ns()
 
         # mix of terminal and not terminal
         not_updated_ids = [JOB_COMPLETED, JOB_ERROR, JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
@@ -785,7 +785,7 @@ class JobCommTestCase(unittest.TestCase):
             "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
         }
 
-        self._check_pop_last_checked(output_states, time.time_ns())
+        self._check_pop_last_checked(output_states, time_ns())
         self.assertEqual(
             expected,
             output_states
@@ -838,7 +838,7 @@ class JobCommTestCase(unittest.TestCase):
             "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
         }
 
-        self._check_pop_last_checked(output_states, time.time_ns())
+        self._check_pop_last_checked(output_states, time_ns())
         self.assertEqual(
             expected,
             output_states
@@ -857,7 +857,7 @@ class JobCommTestCase(unittest.TestCase):
         rq = make_comm_msg(STATUS, ALL_JOBS + [JOB_NOT_FOUND], False, {"ts": sys.maxsize})
         output_states = self.jc._handle_comm_message(rq)
 
-        self._check_pop_last_checked(output_states, time.time_ns())
+        self._check_pop_last_checked(output_states, time_ns())
         self.assertEqual(
             {
                 JOB_NOT_FOUND: {

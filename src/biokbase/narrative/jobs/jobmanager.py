@@ -1,5 +1,4 @@
 import copy
-import time
 from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 
@@ -15,6 +14,7 @@ from biokbase.narrative.exception_util import (
 )
 
 from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
+from .util import time_ns
 
 """
 KBase Job Manager
@@ -310,7 +310,7 @@ class JobManager:
             # fill in the output states for the missing jobs
             # if the job fetch failed, add an error message to the output
             # and return the cached job state
-            now = time.time_ns()
+            now = time_ns()
             for job_id in jobs_to_lookup:
                 job = self.get_job(job_id)
                 if job_id in fetched_states:

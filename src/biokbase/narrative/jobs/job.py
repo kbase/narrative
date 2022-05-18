@@ -9,7 +9,7 @@ from jinja2 import Template
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
-from biokbase.narrative.jobs.util import merge, merge_inplace
+from biokbase.narrative.jobs.util import time_ns, merge, merge_inplace
 
 from .specmanager import SpecManager
 
@@ -339,7 +339,7 @@ class Job:
         else:
             merge_inplace(self._acc_state, state)
 
-        self.last_updated = time.time_ns() if ts is None else ts
+        self.last_updated = time_ns() if ts is None else ts
 
     def refresh_state(self, force_refresh=False, exclude=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
         """

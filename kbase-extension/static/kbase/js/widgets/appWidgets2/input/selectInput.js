@@ -158,7 +158,7 @@ define([
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' })] //, makeInputControl())]
+                [div({ dataElement: 'input-container' })]
             );
         }
 

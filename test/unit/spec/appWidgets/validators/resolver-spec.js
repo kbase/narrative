@@ -56,6 +56,27 @@ define([
                         expect(Validation[validationFn].calls.allArgs()).toEqual([[null, {}, {}]]);
                     });
                 }
+                it(`sends multiselects to the ${ValidationResolver.typeToValidator.multiselection} module`, async () => {
+                    const validationFn = ValidationResolver.typeToValidator.multiselection;
+                    spyOn(Validation, validationFn);
+                    await ValidationResolver.validate(
+                        null,
+                        {
+                            data: {
+                                type: 'string',
+                                constraints: { options: [{ a: 1 }, { b: 2 }], multiselection: 1 },
+                            },
+                        },
+                        { this: 'that' }
+                    );
+                    expect(Validation[validationFn].calls.allArgs()).toEqual([
+                        [
+                            null,
+                            { options: [{ a: 1 }, { b: 2 }], multiselection: 1 },
+                            { this: 'that' },
+                        ],
+                    ]);
+                });
             });
 
             describe('resolving to an individual module', () => {

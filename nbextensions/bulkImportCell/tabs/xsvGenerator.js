@@ -152,6 +152,8 @@ define([
                 },
             };
 
+            // this is the model for the xsv template generator "app",
+            // which will store the XSV form values and overall state
             this.internalModel = Props.make({
                 data: internalModelContext,
             });
@@ -300,7 +302,7 @@ define([
                 workspaceId: this.runtime.workspaceId(),
                 paramIds: this.internalModel.getItem(['inputs', 'otherParamIds']),
                 initialParams: this.internalModel.getItem(['params']),
-                initialDisplay: this.internalModel.getItem(['inputs', 'paramDisplay']) || {},
+                initialDisplay: {},
             });
 
             return this.paramsWidget.start({
@@ -338,10 +340,6 @@ define([
          */
         updateModelParameterValue(message) {
             this.internalModel.setItem(['params', message.parameter], message.newValue);
-            this.internalModel.setItem(
-                ['inputs', 'paramDisplay', message.parameter],
-                message.newDisplayValue
-            );
 
             if (message.isError) {
                 return;

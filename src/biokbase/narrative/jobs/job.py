@@ -9,7 +9,7 @@ from jinja2 import Template
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
-from biokbase.narrative.jobs.util import time_ns, merge, merge_inplace
+from biokbase.narrative.jobs.util import time_ns
 
 from .specmanager import SpecManager
 
@@ -240,12 +240,8 @@ class Job:
         return attr[name]()
 
     def __setattr__(self, name, value):
-        if name in STATE_ATTRS:
+        if name in STATE_ATTRS:  # TODO are/should these assignments be used?
             self._update_state({name: value})
-        elif name in JOB_INPUT_ATTRS:
-            self._update_state({"job_input": {name: value}})
-        elif name in NARR_CELL_INFO_ATTRS:
-            self._update_state({"job_input": {"narrative_cell_info": {name: value}}})
         else:
             object.__setattr__(self, name, value)
 
@@ -330,14 +326,14 @@ class Job:
         # Check if there would be no change in updating
         # i.e., if state <= self._acc_state
         if self._acc_state is not None:
-            if merge(self._acc_state, state) == self._acc_state:
+            if {**self._acc_state, **state} == self._acc_state:
                 return
 
         state = copy.deepcopy(state)
         if self._acc_state is None:
             self._acc_state = state
         else:
-            merge_inplace(self._acc_state, state)
+            self._acc_state = {**self._acc_state, **state}
 
         self.last_updated = time_ns() if ts is None else ts
 

@@ -821,7 +821,7 @@ class JobTest(unittest.TestCase):
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
 
         for job in child_jobs:
-            job.cell_id = "hello"
+            job._acc_state["job_input"]["narrative_cell_info"]["cell_id"] = "hello"
 
         self.assertTrue(batch_job.in_cells(["hi", "hello"]))
 
@@ -833,7 +833,7 @@ class JobTest(unittest.TestCase):
 
         children_cell_ids = ["hi", "hello", "greetings"]
         for job, cell_id in zip(child_jobs, itertools.cycle(children_cell_ids)):
-            job.cell_id = cell_id
+            job._acc_state["job_input"]["narrative_cell_info"]["cell_id"] = cell_id
 
         for cell_id in children_cell_ids:
             self.assertTrue(batch_job.in_cells([cell_id]))

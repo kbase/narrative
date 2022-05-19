@@ -1,4 +1,3 @@
-import copy
 import json
 import os
 import time
@@ -66,30 +65,3 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
 def time_ns():
     """Simulate time.time_ns() which is only available in python 3.7+"""
     return int(time.time() * 1e9)
-
-
-def merge(d0: dict, d1: dict):
-    d0 = copy.deepcopy(d0)
-    merge_inplace(d0, d1)
-    return d0
-
-
-def merge_inplace(d0: dict, d1: dict):
-    """
-    Recursively merge nested dicts d1 into d0,
-    overwriting any values in d0 that are not nested dicts.
-    Mutates d0
-    """
-    for k, v1 in d1.items():
-        if k in d0:
-            v0 = d0[k]
-            is_dict_0 = isinstance(v0, dict)
-            is_dict_1 = isinstance(v1, dict)
-            if is_dict_0 ^ is_dict_1:
-                raise ValueError(f"For key {k}: is_dict(v0) xor is_dict(v1)")
-            elif not is_dict_0 and not is_dict_1:
-                d0[k] = v1
-            elif is_dict_0 and is_dict_1:
-                merge_inplace(v0, v1)
-        else:
-            d0[k] = v1

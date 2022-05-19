@@ -389,10 +389,10 @@ class JobTest(unittest.TestCase):
 
         # should fail with error 'state must be a dict'
         with self.assertRaisesRegex(TypeError, "state must be a dict"):
-            job._update_state(None)
+            job.update_state(None)
         self.assertFalse(job.was_terminal())
 
-        job._update_state({})
+        job.update_state({})
         self.assertFalse(job.was_terminal())
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -405,8 +405,8 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.refresh_state(), expected)
 
         # try to update it with the job state from a different job
-        with self.assertRaisesRegex(ValueError, "Job ID mismatch in _update_state"):
-            job._update_state(get_test_job(JOB_COMPLETED))
+        with self.assertRaisesRegex(ValueError, "Job ID mismatch in update_state"):
+            job.update_state(get_test_job(JOB_COMPLETED))
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_job_update__last_updated__no_change(self):
@@ -418,22 +418,22 @@ class JobTest(unittest.TestCase):
             ee2_state = get_test_job(job_id)
             job._acc_state = get_test_job(job_id)
 
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
             trim_ee2_state(ee2_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
             trim_ee2_state(ee2_state, EXCLUDED_JOB_STATE_FIELDS)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
             trim_ee2_state(ee2_state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
-            job._update_state({})
+            job.update_state({})
             self.assertEqual(last_updated, job.last_updated)
 
             # job has init ee2 state
@@ -442,18 +442,18 @@ class JobTest(unittest.TestCase):
             trim_ee2_state(ee2_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
             trim_ee2_state(job._acc_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
 
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
             trim_ee2_state(ee2_state, EXCLUDED_JOB_STATE_FIELDS)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
             trim_ee2_state(ee2_state, OUTPUT_STATE_EXCLUDED_JOB_STATE_FIELDS)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertEqual(last_updated, job.last_updated)
 
-            job._update_state({})
+            job.update_state({})
             self.assertEqual(last_updated, job.last_updated)
 
     @mock.patch(CLIENTS, get_mock_client)
@@ -467,7 +467,7 @@ class JobTest(unittest.TestCase):
             trim_ee2_state(job._acc_state, JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
 
             ee2_state = get_test_job(job_id)
-            job._update_state(ee2_state)
+            job.update_state(ee2_state)
             self.assertTrue(last_updated < job.last_updated)
 
     @mock.patch(CLIENTS, get_mock_client)

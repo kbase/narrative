@@ -318,7 +318,7 @@ class JobManager:
                     # pre-emptively try a job state update
                     # so can mark the set of fetched (but also changed) states
                     # with a simultaneous timestamp
-                    job._update_state(fetched_state, now)
+                    job.update_state(fetched_state, now)
                     output_states[job_id] = job.output_state(fetched_state)
                 else:
                     # fetch the current state without updating it

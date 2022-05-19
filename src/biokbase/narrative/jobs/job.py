@@ -104,7 +104,7 @@ class Job:
         if ee2_state.get("job_id") is None:
             raise ValueError("Cannot create a job without a job ID!")
 
-        self._update_state(ee2_state)
+        self.update_state(ee2_state)
         self.extra_data = extra_data
 
         # verify parent-children relationship
@@ -130,9 +130,9 @@ class Job:
             return jobs
 
     @staticmethod
-    def _trim_ee2_state(state: dict, exclude: list) -> None:
-        if exclude:
-            for field in exclude:
+    def _trim_ee2_state(state: dict, exclude_fields: list) -> None:
+        if exclude_fields:
+            for field in exclude_fields:
                 if field in state:
                     del state[field]
 
@@ -241,7 +241,7 @@ class Job:
 
     def __setattr__(self, name, value):
         if name in STATE_ATTRS:  # TODO are/should these assignments be used?
-            self._update_state({name: value})
+            self.update_state({name: value})
         else:
             object.__setattr__(self, name, value)
 
@@ -308,7 +308,7 @@ class Job:
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def _update_state(self, state: dict, ts: int = None) -> None:
+    def update_state(self, state: dict, ts: int = None) -> None:
         """
         Given a state data structure (as emitted by ee2), update the stored state in the job object
         All updates to the job state should go through here to keep the last_updated field accurate
@@ -320,7 +320,7 @@ class Job:
         if self._acc_state:
             if "job_id" in state and state["job_id"] != self.job_id:
                 raise ValueError(
-                    f"Job ID mismatch in _update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+                    f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
                 )
 
         # Check if there would be no change in updating
@@ -337,28 +337,28 @@ class Job:
 
         self.last_updated = time_ns() if ts is None else ts
 
-    def refresh_state(self, force_refresh=False, exclude=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
+    def refresh_state(self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
         """
         Queries the job service to see the state of the current job.
         """
 
         if force_refresh or not self.was_terminal():
             state = self.query_ee2_state(self.job_id, init=False)
-            self._update_state(state)
+            self.update_state(state)
 
-        return self.current_state(exclude)
+        return self.cached_state(exclude_fields)
 
-    def current_state(self, exclude=None):
+    def cached_state(self, exclude_fields=None):
         """Wrapper for self._acc_state"""
         state = copy.deepcopy(self._acc_state)
-        self._trim_ee2_state(state, exclude)
+        self._trim_ee2_state(state, exclude_fields)
         return state
 
     def output_state(self, state=None, no_refresh=False) -> dict:
         """
         :param state:   Supplied when the state is queried beforehand from EE2 in bulk,
                         or when it is retrieved from a cache. If not supplied, must be
-                        queried with self.refresh_state() or self.current_state()
+                        queried with self.refresh_state() or self.cached_state()
         :return:        dict, with structure
 
         {
@@ -411,10 +411,10 @@ class Job:
         :rtype: dict
         """
         if not state:
-            state = self.current_state() if no_refresh else self.refresh_state()
+            state = self.cached_state() if no_refresh else self.refresh_state()
         else:
-            self._update_state(state)
-            state = self.current_state()
+            self.update_state(state)
+            state = self.cached_state()
 
         if state is None:
             return self._create_error_state(
@@ -464,8 +464,8 @@ class Job:
         if not state:
             state = self.refresh_state()
         else:
-            self._update_state(state)
-            state = self.current_state()
+            self.update_state(state)
+            state = self.cached_state()
 
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)

@@ -315,10 +315,16 @@ Bundled job status information for one or more jobs, keyed by job ID, with the f
   * `job_id`
   * `jobState` - see [Job output state](#job-output-state) below for the detailed structure
   * `outputWidgetInfo` - the parameters to send to output widgets, generated from the app specifications and job output. This is only available for completed jobs and is set to null otherwise.
+  * `last_checked` - timestamp in ns added at comm sending time
 
-In case of error, the response has instead the keys:
+In case of per-input-job-ID error, the response has instead the keys:
   * `job_id`
   * `error` - brief message explaining the issue
+  * `last_checked` - timestamp in ns added at comm sending time
+
+In case that all valid jobs were filtered out by the `ts` input from the frontend, there will be a job-ID-to-job-state pattern breaking key-value pair keyed by "error" with a state keyed by:
+  * `error` - "No updated jobs"
+  * `last_checked` - timestamp in ns added at comm sending time
 
 Sample response JSON:
 ```js
@@ -330,11 +336,13 @@ Sample response JSON:
       "status": "running",
       "created": 123456789,
     },
-    "outputWidgetInfo": null, // only available for completed jobs
+    "outputWidgetInfo": null, // only available for completed jobs,
+    "last_checked": 1652992287210343298,
   },
   "job_id_2": {
     "job_id": "job_id_2",
-    "error": "Cannot find job with ID job_id_2"
+    "error": "Cannot find job with ID job_id_2",
+    "last_checked": 1652992287210343298,
   },
 }
 ```
@@ -358,7 +366,6 @@ As sent to browser, includes cell info and run info. The structure below indicat
         "created": epoch ms,
         "queued": optional - epoch ms,
         "finished": optional - epoch ms,
-        "updated": epoch ms,
         "terminated_code": optional - int,
         "error": {  // optional
           "code": int,
@@ -371,7 +378,8 @@ As sent to browser, includes cell info and run info. The structure below indicat
         "tag": string (release, beta, dev),
         "error_code": optional - int,
         "errormsg": optional - string,
-    }
+    },
+    "last_checked": int - ns
 }
 ```
 

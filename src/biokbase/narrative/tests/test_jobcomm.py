@@ -752,7 +752,7 @@ class JobCommTestCase(unittest.TestCase):
             job_state = get_test_job(lookup_id)
             trim_ee2_state(job_state, params.get("exclude_fields"))
             if lookup_id in updated_active_ids:
-                job_state["updated"] += 1
+                job_state["created"] += 1
 
             return job_state
 
@@ -766,7 +766,7 @@ class JobCommTestCase(unittest.TestCase):
                 trim_ee2_state(job_state, params.get("exclude_fields"))
                 # if job is chosen to be updated, mutate it
                 if job_id in updated_active_ids:
-                    job_state["updated"] += 1
+                    job_state["created"] += 1
             return job_states
 
         rq = make_comm_msg(STATUS, job_ids + not_found_ids, False, {"ts": ts})
@@ -779,7 +779,7 @@ class JobCommTestCase(unittest.TestCase):
             for job_id in updated_active_ids
         }
         for job_state in expected.values():
-            job_state["jobState"]["updated"] += 1
+            job_state["jobState"]["created"] += 1
         expected[JOB_NOT_FOUND] = {
             "job_id": JOB_NOT_FOUND,
             "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND
@@ -806,7 +806,7 @@ class JobCommTestCase(unittest.TestCase):
 
             job_state = get_test_job(lookup_id)
             trim_ee2_state(job_state, params.get("exclude_fields"))
-            job_state["updated"] += 1
+            job_state["created"] += 1
 
             return job_state
 
@@ -818,7 +818,7 @@ class JobCommTestCase(unittest.TestCase):
             job_states = get_test_jobs(lookup_ids)
             for _, job_state in job_states.items():
                 trim_ee2_state(job_state, params.get("exclude_fields"))
-                job_state["updated"] += 1
+                job_state["created"] += 1
             return job_states
 
         rq = make_comm_msg(STATUS, ALL_JOBS + [JOB_NOT_FOUND], False, {"ts": 0})
@@ -832,7 +832,7 @@ class JobCommTestCase(unittest.TestCase):
         }
         for job_id, job_state in expected.items():
             if job_id in ACTIVE_JOBS:
-                job_state["jobState"]["updated"] += 1
+                job_state["jobState"]["created"] += 1
         expected[JOB_NOT_FOUND] = {
             "job_id": JOB_NOT_FOUND,
             "error": JOB_NOT_REG_2_ERR % JOB_NOT_FOUND

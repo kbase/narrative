@@ -1,7 +1,8 @@
-define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
+define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime', 'util/util'], (
     Config,
     StagingFileCache,
-    Runtime
+    Runtime,
+    Util
 ) => {
     'use strict';
 
@@ -15,12 +16,12 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
      * @param {Object} paramValues - keys = param ids, values = param values
      * @param {Object} paramOptions - keys = param ids, values = object containing options for
      *  validating that parameter (parameter specific). Keys can also be missing.
-     * @param {Array} filePathIds
+     * @param {Array} filePathIds - array of strings, each is a file path parameter id
      * @param {Array} filePathValues - array of objects, where keys = param id, values = values,
      *  one for each file path row.
-     * @param {Array} filePathOptions - array of objects, where keys = param id, values = object
-     *  containing options for validating that input. Keys can also be missing. Each object
-     *  matches to a single row.
+     * @param {Object} filePathOptions - keys = param id, values = object
+     *  containing options for validating that input. Keys can also be missing. Options are applied
+     *  to file params in each row.
      * @param {Object} spec - the post-processed Spec object
      * @returns a promise that resolves into "complete" or "incomplete" strings
      */
@@ -45,17 +46,20 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
 
         const filePathValidationParams = filePathValues.reduce(
             (paramSet, filePathRow) => {
-                for (const key of Object.keys(filePathRow)) {
-                    paramSet[key].push(filePathRow[key]);
+                // this forces array normalization, in case any values are missing
+                for (const paramId of filePathIds) {
+                    paramSet[paramId].push(filePathRow[paramId]);
                 }
                 return paramSet;
             },
-            Object.keys(filePathValues[0]).reduce((acc, curr) => ((acc[curr] = []), acc), {})
+            // this little snippet converts [p1,p2] to {p1: [], p2: []}
+            filePathIds.reduce((acc, curr) => ((acc[curr] = []), acc), {})
         );
 
         const filePathValidations = spec.validateMultipleParamsArray(
+            filePathIds,
             filePathValidationParams,
-            filePathOptions[0]
+            filePathOptions
         );
 
         return Promise.all([
@@ -80,72 +84,59 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
     }
 
     /**
-     * This builds up an Array of file path validation options. The validation call
-     * takes a semi-arbitrary set of options in the form of an Object. For file types
-     * (and for text inputs in general), this comes in the form of a Set of invalidValues.
+     * This constructs a set of options for validating each item in a file path row.
+     * By default, it assigns the Set of missing files to `invalidValues` for all actual file path
+     * parameters, and it assigns a series of options to non-file path parameters (i.e. output
+     * objects) to validate the workspace object name against the Workspace service. These are:
+     * `shouldNotExist`: true,
+     * `authToken`: the current auth token
+     * `workspaceId`: the current workspace id
+     * `workspaceServiceUrl`: the URl of the workspace service
      *
-     * This function constructs an Array that matches the file input Array for a given fileType,
-     * populated with options for file inputs.
+     * These can be added to or overridden by adding fileOptions or outputOptions, respectively.
      *
-     * For example, if the filePath parameters in the data model looks like this:
-     * [
-     *   { input_file: 'file1', output_obj: 'obj1' },
-     *   { input_file: 'file2', output_obj: 'obj2' }
-     * ]
-     *
-     * where the fileParamIds are ['input_file', 'output_obj'], and the outputParamIds
-     * Array is just ['output_obj'], and we have a few missing files in a Set, {'file1', 'file3'},
-     * this would return:
-     * [
-     *   {
-     *      input_file: {
-     *          invalidValues: { 'file1', 'file3' }
-     *      }
-     *   },
-     *   {
-     *      input_file: {
-     *          invalidValues: { 'file1', 'file3' }
-     *      }
-     *   }
-     * ]
-     *
-     * This still seems a little bit arbitrary, but as long as the file inputs are validated as
-     * text (and not data objects), this will continue to work.
-     * @param {Object} model the main bulk import cell data model
-     * @param {string} fileType which filetype to build options for
-     * @param {Set} missingFiles the set of files that were present when this bulk import cell
-     *   was created, but are now missing from the server
-     * @returns {Array[Object]} each object has a key for each file input (not output). Values
-     *   are the validation options for each mapped input
+     * @param {Array} fpIds array of file parameter ids - those that describe files for import
+     * @param {Object} paramIds array of parameter ids to set options
+     * @param {Set} missingFiles Set of missing files
+     * @param {Object} fileOptions Options that can be used to augment or override the default file
+     *  input validation options
+     * @param {Object} outputOptions Options that can be used to augment or override the default
+     *  non-file input validation options
+     * @returns {Object} where keys are parameter ids and values are the sets of options to be
+     *  passed to the validator for that parameter.
      */
-    function getFilePathOptionsForValidation(model, fileType, missingFiles) {
-        let fpIds = model.getItem(['app', 'fileParamIds', fileType]) || [];
-        const outIds = model.getItem(['app', 'outputParamIds', fileType]) || [];
-        // overwrite fpIds with JUST the file inputs (not the outputs)
-        fpIds = new Set(fpIds.filter((id) => !outIds.includes(id)));
-        const fpVals = model.getItem(['params', fileType, 'filePaths']) || [];
-
-        // fpVals = Array of input file path rows from the importer for the current fileType
+    function getFilePathValidationOptions(
+        fpIds,
+        paramIds,
+        missingFiles,
+        fileOptions = {},
+        outputOptions = {}
+    ) {
         const runtime = Runtime.make();
-        return fpVals.map((filePath) => {
-            const fpOptions = {};
-            for (const id of Object.keys(filePath)) {
-                fpOptions[id] = {};
-                // They're either file paths or output paths.
-                // File paths get the invalidValues option.
-                if (fpIds.has(id)) {
-                    fpOptions[id].invalidValues = missingFiles;
-                } else {
-                    fpOptions[id] = {
+        const fpOptions = {};
+        for (const id of paramIds) {
+            // They're either file paths or output paths.
+            if (fpIds.includes(id)) {
+                // File paths always get the invalidValues option.
+                fpOptions[id] = Object.assign(
+                    { invalidValues: missingFiles },
+                    Util.copy(fileOptions)
+                );
+            } else {
+                // Not-file paths are expected to be workspace object names, and get the default
+                // things for validating those
+                fpOptions[id] = Object.assign(
+                    {
                         shouldNotExist: true,
                         authToken: runtime.authToken(),
                         workspaceId: runtime.workspaceId(),
                         workspaceServiceUrl: runtime.config('services.workspace.url'),
-                    };
-                }
+                    },
+                    Util.copy(outputOptions)
+                );
             }
-            return fpOptions;
-        });
+        }
+        return fpOptions;
     }
 
     /**
@@ -155,21 +146,25 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
      * @param {Object} specs keys = app id, values = app specs
      * @param {Set} missingFiles Set of files that the app cell expects to be present,
      *  but are missing from the staging area
-     * @returns
+     * @returns {Object} keys = file type ids, values = "complete" if ready, "incomplete" if not
      */
     function evaluateConfigReadyState(model, specs, missingFiles) {
         // given some missing files (precalculate for now), set up options for evaluating all file inputs
         const fileTypes = Object.keys(model.getItem(['inputs']));
+
         const evalPromises = fileTypes.map((fileType) => {
+            const fileParamIds = model.getItem(['app', 'fileParamIds', fileType]);
+            const filePathIds = getFilePathIds(model, fileType);
+            const fpOptions = getFilePathValidationOptions(filePathIds, fileParamIds, missingFiles);
             // make an array of empty options with the same length as the
             // number of file path values
             return evaluateAppConfig(
                 model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),
                 {}, // no particular options for non-file parameters right now
-                model.getItem(['app', 'fileParamIds', fileType]),
+                fileParamIds,
                 model.getItem(['params', fileType, 'filePaths']),
-                getFilePathOptionsForValidation(model, fileType, missingFiles),
+                fpOptions,
                 specs[model.getItem(['inputs', fileType, 'appId'])]
             );
         });
@@ -229,11 +224,28 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime'], (
         return { fileTypesDisplay, fileTypeMapping };
     }
 
+    /**
+     * This is a convenience function used to filter the file path parameter ids in a bulk import
+     * cell to just those parameters that describe actual file paths for import. I.e., given a
+     * model and file type, it will return those parameters that represent files in the Staging
+     * Area.
+     * @param {Object} model a Props object used with a Bulk Import cell
+     * @param {String} fileType a file type id
+     * @returns {Array<string>} file-input parameter ids
+     */
+    function getFilePathIds(model, fileType) {
+        const fileParamIds = model.getItem(['app', 'fileParamIds', fileType]);
+        const outIds = model.getItem(['app', 'outputParamIds', fileType]) || [];
+        // overwrite fpIds with JUST the file inputs (not the outputs)
+        return fileParamIds.filter((id) => !outIds.includes(id));
+    }
+
     return {
         evaluateAppConfig,
         evaluateConfigReadyState,
         getMissingFiles,
         generateFileTypeMappings,
-        getFilePathOptionsForValidation,
+        getFilePathValidationOptions,
+        getFilePathIds,
     };
 });

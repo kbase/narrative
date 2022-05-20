@@ -7,7 +7,8 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
+    'util/appCellUtil',
+], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime, Util) => {
     'use strict';
 
     const tag = html.tag,
@@ -692,7 +693,6 @@ define([
 
         /**
          *
-         * @param {Array<ParameterSpec>} parameterSpecs
          * @returns Promise that resolves into a whole bunch of validation objects
          */
         function doBulkValidation() {
@@ -706,26 +706,21 @@ define([
                 paramIds.forEach((paramId) => paramValueMap[paramId].push(rowData.values[paramId]));
             });
 
-            const validationOptions = paramIds.reduce((optionsMap, paramId) => {
-                if (model.getItem('fileParamIds').includes(paramId)) {
-                    optionsMap[paramId] = {
-                        invalidValues: unavailableFiles,
-                        invalidError: 'file not found',
-                    };
-                } else {
-                    optionsMap[paramId] = {
-                        shouldNotExist: true,
-                        authToken: runtime.authToken(),
-                        workspaceId: runtime.workspaceId(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url'),
-                        nullToEmptyString: true,
-                    };
+            const validationOptions = Util.getFilePathValidationOptions(
+                model.getItem('fileParamIds'),
+                paramIds,
+                unavailableFiles,
+                {
+                    invalidError: 'file not found',
+                },
+                {
+                    shouldNotExist: true,
+                    nullToEmptyString: true,
                 }
-                return optionsMap;
-            }, {});
+            );
 
             return appSpec
-                .validateMultipleParamsArray(paramValueMap, validationOptions)
+                .validateMultipleParamsArray(paramIds, paramValueMap, validationOptions)
                 .then((validations) => {
                     // send each validation to each widget
                     // if any are invalid for a parameter id, track it so we can send up

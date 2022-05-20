@@ -121,7 +121,7 @@ define([
                         {},
                         filePathIds,
                         model.getItem(['params', testFileType, 'filePaths']),
-                        Array.from({ length: fileCount }, () => ({})),
+                        {},
                         spec
                     );
                     expect(status).toEqual('complete');
@@ -168,7 +168,7 @@ define([
                         {},
                         filePathIds,
                         model.getItem(['params', testFileType, 'filePaths']),
-                        [{}],
+                        {},
                         spec
                     );
                     expect(status).toEqual('incomplete');
@@ -204,14 +204,13 @@ define([
                         testParams = Object.assign(testParams, testCase.data.alter);
                     }
                     model.setItem(['params', testFileType, 'params'], testParams);
-                    const filePathValues = model.getItem(['params', testFileType, 'filePaths']);
                     const status = await Util.evaluateAppConfig(
                         paramIds,
                         model.getItem(['params', testFileType, 'params']),
                         {},
                         filePathIds,
                         model.getItem(['params', testFileType, 'filePaths']),
-                        Array.from({ length: filePathValues.length }, () => ({})),
+                        {},
                         spec
                     );
                     expect(status).toEqual('incomplete');
@@ -253,7 +252,7 @@ define([
                         {},
                         filePathIds,
                         model.getItem(['params', testFileType, 'filePaths']),
-                        [{ name: outputNameOptions }],
+                        { name: outputNameOptions },
                         spec
                     );
                     expect(status).toEqual(testCase.result);
@@ -467,5 +466,9 @@ define([
                 });
             });
         });
+
+        describe('getFilePathIds', () => {});
+
+        describe('getFilePathValidationOptions', () => {});
     });
 });

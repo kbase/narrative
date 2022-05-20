@@ -69,7 +69,9 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap'], (Promise, html, UI
 
         function stop() {
             return Promise.try(() => {
-                container.innerHTML = '';
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 

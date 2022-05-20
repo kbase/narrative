@@ -105,19 +105,23 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
          * This validates parameter sets by using a bulk form of validator for each parameter type.
          * If options are available for the parameter validation, they're expected to apply to all
          * parameters of that type.
-         * This returns a
-         * @param {Object} paramValues - keys = parameter ids, values = list of parameter values
-         * @param {Object} options - keys = parameter ids, values = set of options for that parameter
+         * This returns a batch of promises that resolves to a arrays of validations, keyed on
+         * parameter id, matching the order of arrays in the paramValues structure.
+         * This expects that paramValues is normalized - that is, each array is present and the
+         * same length, otherwise unexpected behavior may occur.
+         * @param {Array} paramIds parameter ids to validate.
+         * @param {Object} paramValues keys = parameter ids, values = list of parameter values
+         * @param {Object} options keys = parameter ids, values = set of options for that parameter
          */
-        function validateMultipleParamsArray(paramValues, options = {}) {
+        function validateMultipleParamsArray(paramIds, paramValues, options = {}) {
             const validationMap = {};
-            Object.keys(paramValues).forEach((paramId) => {
+            for (const paramId of paramIds) {
                 validationMap[paramId] = validateParamsArray(
                     paramId,
                     paramValues[paramId],
                     options[paramId]
                 );
-            });
+            }
             return Promise.props(validationMap);
         }
 

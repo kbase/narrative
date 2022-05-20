@@ -6,7 +6,14 @@ define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_par
     'use strict';
 
     function testSpecFns(spec) {
-        ['getSpec', 'makeDefaultedModel', 'validateModel', 'validateParams'].forEach((fn) => {
+        [
+            'getSpec',
+            'makeDefaultedModel',
+            'validateModel',
+            'validateParams',
+            'validateParamsArray',
+            'validateMultipleParamsArray',
+        ].forEach((fn) => {
             expect(spec[fn]).toEqual(jasmine.any(Function));
         });
     }
@@ -111,4 +118,6 @@ define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_par
                 });
         });
     });
+
+    describe('validate arrays of parameters', () => {});
 });

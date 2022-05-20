@@ -19,7 +19,6 @@ define(['require', 'bluebird', 'widgets/appWidgets2/validation'], (require, Prom
 
     const typeToArrayValidator = {
         workspaceObjectName: 'validateWorkspaceObjectNameArray',
-        // string: 'stringArray'
     };
 
     function validate(fieldValue, fieldSpec, options) {

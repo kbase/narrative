@@ -67,5 +67,6 @@ define(['require', 'bluebird', 'widgets/appWidgets2/validation'], (require, Prom
         validateArray,
         typeToValidator,
         typeToValidatorModule,
+        typeToArrayValidator,
     };
 });

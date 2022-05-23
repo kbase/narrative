@@ -151,12 +151,6 @@ define([
                 body: '/get_object_info_new/',
                 response: [null],
             });
-            // jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
-            //     status: 200,
-            //     statusText: 'HTTP/1.1 200 OK',
-            //     contentType: 'application/json',
-            //     responseText: '',
-            // });
         });
 
         beforeEach(() => {

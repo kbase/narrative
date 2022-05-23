@@ -166,6 +166,7 @@ define([
             const doThisFirst = function (mdn) {
                 // attach the form widget to the UI modal
                 mdn.querySelector('#' + this.id).appendChild(this.paramsNode);
+                this.updateAppConfigState();
             };
 
             const modalArgs = {
@@ -281,14 +282,10 @@ define([
         }
 
         /**
-         * This shows the parameters widget - the inputs for the singleton set of parameters
-         * that get applied to every job in the bulk run.
-         * @param {DOMElement} node the container node for the widget
-         * @returns {object} keys:
-         *   bus - the message bus created for this widget
-         *   instance - the created widget
+         * This builds the parameters widget containing the inputs for the XSV form
          */
-        buildParamsWidget(node) {
+        startInputWidgets() {
+            this.paramsNode = document.createElement('div');
             this.paramsBus = this.runtime
                 .bus()
                 .makeChannelBus({ description: 'Parent comm bus for parameters widget' });
@@ -306,25 +303,14 @@ define([
             });
 
             return this.paramsWidget.start({
-                node,
+                node: this.paramsNode,
                 parameters: this.spec.getSpec().parameters,
-            });
-        }
-
-        startInputWidgets() {
-            this.paramsNode = document.createElement('div');
-            return Promise.try(() => {
-                this.buildParamsWidget(this.paramsNode).then(() => {
-                    this.updateAppConfigState();
-                });
             });
         }
 
         stopInputWidgets() {
             if (this.paramsWidget) {
-                return Promise.try(() => {
-                    this.paramsWidget.stop();
-                });
+                return this.paramsWidget.stop();
             }
             return Promise.resolve();
         }
@@ -356,7 +342,6 @@ define([
         async updateAppConfigState() {
             const paramIds = this.internalModel.getItem(['inputs', 'otherParamIds']),
                 paramValues = this.internalModel.getItem(['params']);
-
             const results = await this.spec.validateParams(paramIds, paramValues, {});
             const isValid = Object.values(results).every((param) => param.isValid);
             this.internalModel.setItem(['state', 'params'], isValid ? 'complete' : 'incomplete');

@@ -51,6 +51,7 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            bus = runtime.bus();
             const stagingServiceUrl = runtime.config('services.staging_api_url.url');
             jasmine.Ajax.install();
             // lifted from the used files in this test spec
@@ -87,7 +88,6 @@ define([
                 response: [null],
             });
 
-            bus = runtime.bus();
             container = document.createElement('div');
             initialState = {
                 state: 'editingIncomplete',

@@ -107,8 +107,8 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
          * parameters of that type.
          * This returns a batch of promises that resolves to a arrays of validations, keyed on
          * parameter id, matching the order of arrays in the paramValues structure.
-         * This expects that paramValues is normalized - that is, each array is present and the
-         * same length, otherwise unexpected behavior may occur.
+         * NOTE: This expects that paramValues is normalized - each array is present and the same
+         * length - otherwise unexpected behavior may occur.
          * @param {Array} paramIds parameter ids to validate.
          * @param {Object} paramValues keys = parameter ids, values = list of parameter values
          * @param {Object} options keys = parameter ids, values = set of options for that parameter
@@ -126,7 +126,8 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
         }
 
         /**
-         *
+         * This validates an array of parameters. It returns a Promise that resolves into an array
+         * of Validations from the validation resolver.
          * @param {string} paramId
          * @param {Array} paramValues
          */

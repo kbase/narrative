@@ -15,7 +15,7 @@ define([
 ) => {
     'use strict';
 
-    fdescribe('The ValidationResolver', () => {
+    describe('The ValidationResolver', () => {
         describe('module', () => {
             it('is defined', () => {
                 expect(ValidationResolver).toBeDefined();

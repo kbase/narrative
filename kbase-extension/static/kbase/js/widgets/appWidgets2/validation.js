@@ -181,17 +181,21 @@ define([
         /**
          * Validates that every element of an array of workspace object names is valid. Optionally,
          * validate that it does not already exist as a workspace object.
-         *
+         * If an empty array is given, then a single, resolved, empty Promise is given.
          * @param {Array<string>} values
+         * @param {object} constraints
+         * - types - Array<string> workspace object type string
          * @param {object} options
          * - required - boolean
          * - shouldNotExist - boolean
          * - workspaceId - int
          * - workspaceServiceUrl - string(url),
-         * - types - Array
+         * - authToken - string - valid auth token
+         * @returns Promise that resolves into a validation structure
          */
         async function validateWorkspaceObjectNameArray(values, constraints = {}, options = {}) {
             let hasError = false;
+            values = values || []; // if null/undefined, cast to an empty array
             const validations = values.map((value) => {
                 const validation = validateWorkspaceObjectNameString(value, constraints, options);
                 if (validation.errorMessage) {
@@ -249,12 +253,13 @@ define([
          * Validate that a workspace object name is syntactically valid, and exists as a real workspace
          * object, when appropriate.
          * @param {string} value
+         * @param {object} constraints
+         * - types - Array
          * @param {object} options
          * - required - boolean
          * - shouldNotExist - boolean
          * - workspaceId - int
          * - workspaceServiceUrl - string(url),
-         * - types - Array
          */
         function validateWorkspaceObjectName(value, constraints = {}, options = {}) {
             return validateWorkspaceObjectNameArray([value], constraints, options).then(

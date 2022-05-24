@@ -179,10 +179,7 @@ define([
             let names;
             let wsResponse; // set up default to return nulls, i.e. no object exists
             beforeEach(() => {
-                names = [];
-                for (let i = 0; i < numNames; i++) {
-                    names.push(`some_name_${i}`);
-                }
+                names = Array.from({ length: numNames }, (_v, x) => `some_name_${x}`);
                 wsResponse = new Array(numNames).fill(null);
             });
 

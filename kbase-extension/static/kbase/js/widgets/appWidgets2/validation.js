@@ -4,7 +4,7 @@ define([
     'kb_service/utils',
     'util/util',
     'util/string',
-    './validators/constants',
+    'widgets/appWidgets2/validators/constants',
 ], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
     'use strict';
 
@@ -134,7 +134,7 @@ define([
                     }
                 } else if (!/^\d+\/\d+\/\d+$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                    messageId = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.INVALID;
                     errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
@@ -203,10 +203,7 @@ define([
                         if (objectInfo) {
                             const type = objectInfo.typeModule + '.' + objectInfo.typeName,
                                 matchingType = options.types.some((typeId) => {
-                                    if (typeId === type) {
-                                        return true;
-                                    }
-                                    return false;
+                                    return typeId === type;
                                 });
                             if (!matchingType) {
                                 messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
@@ -334,8 +331,6 @@ define([
                 }
                 if (errorMessage) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                } else {
-                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -453,7 +448,7 @@ define([
                     messageId = Constants.MESSAGE_IDS.OBJ_NO_INT;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|.|_-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9.|_-]+$/.test(parsedValue)) {
                     messageId = Constants.MESSAGE_IDS.OBJ_INVALID;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
@@ -507,11 +502,8 @@ define([
             const minLength = constraints.min_length,
                 maxLength = constraints.max_length;
 
-            if (constraints.type) {
-                switch (constraints.type) {
-                    case 'WorkspaceObjectName':
-                        return validateWorkspaceObjectNameString(value, constraints);
-                }
+            if (constraints.type && constraints.type === 'WorkspaceObjectName') {
+                return validateWorkspaceObjectNameString(value, constraints);
             }
 
             if (StringUtil.isEmptyString(value)) {
@@ -587,8 +579,8 @@ define([
         /**
          * Validates that all values in the given "set" (an Array) are present in options.values.
          * If any are missing, this will not validate.
-         * @param {Array} value
-         * @param {*} options
+         * @param {Array} set - array of values to be checked
+         * @param {Object} options - validation constraints
          */
         function validateTextSet(set, options) {
             let errorMessage, messageId, diagnosis, parsedSet;
@@ -618,9 +610,15 @@ define([
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
-                } else if (options.values) {
+                } else if (options.values || options.options) {
+                    let targetSet;
+                    if (options.values) {
+                        targetSet = options.values;
+                    } else {
+                        targetSet = options.options.map((opt) => opt.value);
+                    }
                     const matchedSet = parsedSet.filter((setValue) => {
-                        return options.values.indexOf(setValue) >= 0;
+                        return targetSet.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
@@ -646,7 +644,7 @@ define([
         }
 
         function stringToBoolean(value) {
-            switch (value.toLowerCase(value)) {
+            switch (value.toLowerCase()) {
                 case 'true':
                 case 't':
                 case 'yes':
@@ -710,6 +708,14 @@ define([
             };
         }
 
+        function validateCustomInput() {
+            return {
+                isValid: true,
+                errorMessage: null,
+                diagnosis: Constants.DIAGNOSIS.VALID,
+            };
+        }
+
         function validateTrue(value) {
             return {
                 isValid: true,
@@ -718,6 +724,47 @@ define([
                 value,
                 parsedValue: value,
             };
+        }
+
+        /**
+         * Return the correct structure for a result that's always invalid.
+         * For use with widgets that need to trigger validation errors, but the value
+         * might be technically valid. E.g. a dynamic dropdown search result was not
+         * found with an existing value. Technically, the value would pass validation,
+         * but it's not really a valid result.
+         *
+         * The diagnosis is optional, if given, it should be in the Constants.DIAGNOSIS
+         * structure. Otherwise, this will default to Constants.DIAGNOSIS.INVALID.
+         * @param {any} value
+         * @param {string} diagnosis (optional) - should be one of Constants.DIAGNOSIS
+         * @returns an invalid validation structure.
+         */
+        function validateFalse(value, diagnosis) {
+            const defaultDiagnosis = Constants.DIAGNOSIS.INVALID;
+
+            if (!Object.values(Constants.DIAGNOSIS).includes(diagnosis)) {
+                diagnosis = defaultDiagnosis;
+            }
+
+            return {
+                isValid: false,
+                errorMessage: 'error',
+                diagnosis,
+                value,
+            };
+        }
+
+        /**
+         * Runs importTextString over an array
+         * @param {*} value -- array of values or null
+         * @returns {array} imported values
+         */
+
+        function importTextStringArray(value) {
+            if (value === null || value === undefined) {
+                return [];
+            }
+            return value.map((val) => importTextString(val));
         }
 
         /**
@@ -810,7 +857,10 @@ define([
             validateTextSet,
             validateStringSet: validateTextSet,
             validateBoolean,
+            validateCustomInput,
             validateTrue,
+            validateFalse,
+            importTextStringArray,
             importTextString,
             importIntString,
             importFloatString,

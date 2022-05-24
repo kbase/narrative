@@ -4,12 +4,14 @@ define([
     'common/html',
     'common/ui',
     'common/runtime',
-    '../validation',
+    'common/events',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/common',
     '../inputUtils',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
     'select2',
     'bootstrap',
-], ($, Promise, html, UI, Runtime, Validation, inputUtils, Constants) => {
+], ($, Promise, html, UI, Runtime, Events, Validation, WidgetCommon, inputUtils, Constants) => {
     'use strict';
 
     // Constants
@@ -51,45 +53,48 @@ define([
                 value: config.initialValue,
                 disabledValues: new Set(config.disabledValues || []),
                 invalidValues: new Set(config.invalidValues || []),
-            };
+            },
+            devMode = config.devMode || false;
+        let useMultiselect = false;
+        try {
+            if (spec.original.dropdown_options.multiselection) {
+                useMultiselect = true;
+            }
+        } catch (err) {
+            // no op
+        }
+
         let parent, ui, container;
         model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
 
-        function getControlValue() {
+        // VALIDATION
+        function importControlValue() {
             const control = ui.getElement('input-container.input'),
                 selected = $(control).val();
-
-            return selected;
-        }
-
-        // VALIDATION
-
-        function importControlValue() {
-            return Validation.importTextString(getControlValue());
+            const importFn = useMultiselect ? 'importTextStringArray' : 'importTextString';
+            return Validation[importFn](selected);
         }
 
         function validate(value) {
             return Promise.try(() => {
                 const defaultInvalidMessage = `Invalid ${spec.ui.label}: ${value}. Please select a value from the dropdown.`;
-                const validation = Validation.validateTextString(
-                    value || '',
-                    spec.data.constraints,
-                    {
-                        invalidValues: model.invalidValues,
-                        invalidError: invalidError || defaultInvalidMessage,
-                        validValues: model.availableValuesSet,
-                    }
-                );
+
+                const validationFn = useMultiselect ? 'validateTextSet' : 'validateTextString';
+                const validation = Validation[validationFn](value || '', spec.data.constraints, {
+                    invalidValues: model.invalidValues,
+                    invalidError: invalidError || defaultInvalidMessage,
+                    validValues: model.availableValuesSet,
+                });
                 if (validation.diagnosis === Constants.DIAGNOSIS.REQUIRED_MISSING) {
-                    validation.errorMessage = 'Please select a value from the dropdown.';
+                    validation.errorMessage = 'A value is required.';
+                }
+                if (validation.messageId === 'value-not-array') {
+                    validation.errorMessage = 'Invalid format: ' + validation.errorMessage;
+                } else if (validation.messageId === 'value-not-found') {
+                    validation.errorMessage =
+                        'Invalid value. Please select a value from the dropdown.';
                 }
                 return validation;
-            });
-        }
-
-        function autoValidate() {
-            return validate(model.value).then((result) => {
-                channel.emit('validation', result);
             });
         }
 
@@ -154,20 +159,17 @@ define([
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeInputControl())]
+                [div({ dataElement: 'input-container' })] //, makeInputControl())]
             );
         }
 
         function setModelValue(value) {
-            const oldValue = model.value;
-            if (oldValue !== value) {
-                model.value = value;
-            }
+            model.value = value;
             setDisabledValuesFromModel();
-        }
-
-        function resetModelValue() {
-            setModelValue(spec.data.defaultValue);
+            $(ui.getElement('input-container.input')).val(value);
+            if (devMode) {
+                channel.emit('set-value', value);
+            }
         }
 
         /**
@@ -180,13 +182,41 @@ define([
         function setDisabledValuesFromModel() {
             const control = ui.getElement('input-container.input');
             model.availableValuesSet.forEach((value) => {
-                const option = control.querySelector(`option[value="${value}"]`);
-                if (model.disabledValues.has(value) && value !== model.value) {
-                    option.setAttribute('disabled', true);
-                } else {
-                    option.removeAttribute('disabled');
+                const opt = control.querySelector(`option[value="${value}"]`);
+                if (opt) {
+                    if (model.disabledValues.has(value) && value !== model.value) {
+                        opt.setAttribute('disabled', true);
+                    } else {
+                        opt.removeAttribute('disabled');
+                    }
                 }
             });
+        }
+
+        /**
+         * Retrieves the user-facing value of the selected input value(s)
+         *
+         * If the input has multiselection enabled, selected values are returned as a comma-separated string
+         *
+         * @returns {string} text version of the current input value
+         */
+
+        function getCopyString() {
+            const data = $(ui.getElement('input-container.input')).select2('data');
+            if (!data || !data.length || !data[0].text) {
+                return '';
+            }
+            if (!useMultiselect) {
+                return data[0].text;
+            }
+            return Array.from(data)
+                .map((item) => {
+                    return item.text;
+                })
+                .filter((item) => {
+                    return item.length;
+                })
+                .join(', ');
         }
 
         // LIFECYCLE API
@@ -196,13 +226,25 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
                 container.innerHTML = layout();
+                const events = Events.make();
+                const content = WidgetCommon.containerContent(
+                    div,
+                    t('button'),
+                    events,
+                    ui,
+                    ui.getElement('input-container'),
+                    makeInputControl(),
+                    getCopyString
+                );
+                ui.setContent('input-container', content);
+
                 $(ui.getElement('input-container.input'))
                     .select2({
                         allowClear: true,
                         placeholder: 'select an option',
                         width: '100%',
+                        multiple: useMultiselect,
                     })
                     .val(model.value)
                     .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
@@ -213,8 +255,10 @@ define([
                         handleChanged();
                     });
 
+                events.attachEvents(container);
+
                 channel.on('reset-to-defaults', () => {
-                    resetModelValue();
+                    setModelValue(spec.data.defaultValue);
                 });
 
                 channel.on('update', (message) => {
@@ -228,7 +272,9 @@ define([
                     setDisabledValuesFromModel();
                 });
 
-                autoValidate();
+                return validate(model.value).then((result) => {
+                    channel.emit('validation', result);
+                });
             });
         }
 

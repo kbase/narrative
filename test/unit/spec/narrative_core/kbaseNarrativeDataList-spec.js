@@ -9,12 +9,13 @@ define([
 ], (DataList, $, Config, Workspace, Jupyter, Mocks, TestUtil) => {
     'use strict';
 
-    const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
+    const FAKE_NS_URL = 'https://kbase.us/service/fakeNSUrl';
     const FAKE_WS_NAME = 'some_workspace';
 
     function mockNarrativeServiceListObjects(objData) {
         Mocks.mockJsonRpc1Call({
             url: FAKE_NS_URL,
+            body: /list_objects_with_sets/,
             response: {
                 data: objData,
                 data_palette_refs: {},
@@ -22,9 +23,18 @@ define([
         });
     }
 
+    function mockNarrativeServiceReport(reportData) {
+        Mocks.mockJsonRpc1Call({
+            url: FAKE_NS_URL,
+            body: /find_object_report/,
+            response: reportData,
+        });
+    }
+
     function mockWorkSpaceService() {
         Mocks.mockJsonRpc1Call({
             url: Config.url('workspace'),
+            body: /get_workspace_info/,
             response: [
                 35855,
                 'testUser:narrative_1534979778065',
@@ -78,37 +88,54 @@ define([
     }
 
     const OBJDATA = [
-        {
-            object_info: [
-                5,
-                'Rhodobacter_CACIA_14H1',
-                'KBaseGenomes.Genome-7.0',
-                '2020-10-03T01:15:14+0000',
-                1,
-                'testuser',
-                54640,
-                'testuser:narrative_1601675739009',
-                '53af8071b814a1db43f81eb490a35491',
-                3110399,
-                {},
-            ],
-        },
-        {
-            object_info: [
-                6,
-                'Rhodobacter_CACIA_x',
-                'KBaseGenomes.Genome-7.0',
-                '2020-10-03T01:15:14+0000',
-                1,
-                'testuser',
-                54640,
-                'testuser:narrative_1601675739009',
-                '53af8071b814a1db43f81eb490a35491',
-                3110399,
-                {},
-            ],
-        },
-    ];
+            {
+                object_info: [
+                    5,
+                    'Rhodobacter_CACIA_14H1',
+                    'KBaseGenomes.Genome-7.0',
+                    '2020-10-03T01:15:14+0000',
+                    1,
+                    'testuser',
+                    54640,
+                    'testuser:narrative_1601675739009',
+                    '53af8071b814a1db43f81eb490a35491',
+                    3110399,
+                    {},
+                ],
+            },
+            {
+                object_info: [
+                    6,
+                    'Rhodobacter_CACIA_x',
+                    'KBaseGenomes.Genome-7.0',
+                    '2020-10-03T01:15:14+0000',
+                    1,
+                    'testuser',
+                    54640,
+                    'testuser:narrative_1601675739009',
+                    '53af8071b814a1db43f81eb490a35491',
+                    3110399,
+                    {},
+                ],
+            },
+        ],
+        MANY_VERSION_OBJECT = [
+            {
+                object_info: [
+                    5,
+                    'some_object',
+                    'KBaseGenomes.Genome-7.0',
+                    '2020-10-03T01:15:14+0000',
+                    5,
+                    'testuser',
+                    54640,
+                    'testuser:narrative_1601675739009',
+                    '53af8071b814a1db43f81eb490a35491',
+                    3110399,
+                    {},
+                ],
+            },
+        ];
 
     function makeDataListInstance($node) {
         const widget = new DataList($node, {});
@@ -234,6 +261,149 @@ define([
                 return $title.text() === objectName;
             });
             expect(success).toBeTrue();
+        });
+
+        describe('Functionality for reverting object versions', () => {
+            const objInfo = MANY_VERSION_OBJECT[0].object_info;
+
+            beforeEach(async () => {
+                mockNarrativeServiceListObjects(MANY_VERSION_OBJECT);
+                Jupyter.narrative.readonly = false;
+
+                // make a list of history object infos, one for each of our object versions
+                // they're identical for simplicity, other than version number
+                const objHistory = [];
+                for (let i = 1; i <= objInfo[4]; i++) {
+                    const histObj = TestUtil.JSONcopy(objInfo);
+                    histObj[4] = i;
+                    objHistory.push(histObj);
+                }
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /get_object_history/,
+                    response: objHistory,
+                });
+                mockNarrativeServiceReport({ report_upas: [] });
+                // make the datalist think we're in the proper workspace so we use the history button
+                dataListObj.wsId = objInfo[6];
+                await dataListObj.refresh();
+            });
+
+            it('should show options for reverting history', async () => {
+                // now some jquery/DOM jiggery-pokery!
+                // expect a single data object card
+                const $card = $dataList.find('.narrative-card-row');
+                expect($card.length).toEqual(1);
+                // get its "more info" container as a DOM element
+                const infoContainer = $card.find('.narrative-card-row-more')[0];
+                await TestUtil.waitForElementState(
+                    $card[0],
+                    () => {
+                        // when it's visible, it's display: block
+                        return infoContainer.style.display === 'block';
+                    },
+                    () => {
+                        $card.find('.narrative-card-ellipsis').click();
+                    }
+                );
+                // find the history icon button
+                const historyIcon = infoContainer.querySelector('.fa-history');
+                // below is the container where history info will go (as DOMElement, not jquery)
+                const historyContainer = infoContainer.querySelector(
+                    '.kb-data-list-more-div > div'
+                );
+                await TestUtil.waitForElementState(
+                    historyContainer,
+                    () => {
+                        // wait on this container to get populated
+                        return historyContainer.childElementCount > 0;
+                    },
+                    () => {
+                        historyIcon.click();
+                    }
+                );
+                // look for the following, in order:
+                // 1. a div with the "hide history" button
+                const hideBtn = historyContainer.querySelector('div:first-child');
+                expect(hideBtn.querySelector('.kb-data-list-cancel-btn')).not.toBeNull();
+                // 2. a table with an expected number of rows, and 3 columns:
+                //    a. revert button
+                //    b. "saved by testuser..."
+                //    c. a span that, when moused over, gives much more info
+                const verTableRows = historyContainer.querySelectorAll('table tr');
+                const expectRows = objInfo[4];
+                expect(verTableRows.length).toBe(objInfo[4]);
+                for (let i = 0; i < verTableRows.length; i++) {
+                    const row = verTableRows[i];
+                    // button check
+                    const buttonCol = row.querySelector('td:first-child');
+                    expect(
+                        buttonCol.querySelector('button.kb-data-list-btn').textContent
+                    ).toContain(`v${expectRows - i}`);
+                    // text check
+                    const textCol = row.querySelector('td:nth-child(2)');
+                    expect(textCol.textContent).toContain(`Saved by ${objInfo[5]}`);
+                    // span check
+                    const spanCol = row.querySelector('td:last-child');
+                    expect(spanCol.querySelector('span')).toHaveClass('fa-info');
+                }
+            });
+
+            it('should call out to the history reversion function on request', async () => {
+                const infoContainer = $dataList.find(
+                    '.narrative-card-row .narrative-card-row-more'
+                )[0];
+
+                await TestUtil.waitForElementState(
+                    infoContainer,
+                    () => {
+                        // when it's visible, it's display: block
+                        return infoContainer.style.display === 'block';
+                    },
+                    () => {
+                        infoContainer.parentElement
+                            .querySelector('.narrative-card-ellipsis')
+                            .click();
+                    }
+                );
+                // below is the container where history info will go (as DOMElement, not jquery)
+                const historyContainer = infoContainer.querySelector(
+                    '.kb-data-list-more-div > div'
+                );
+                await TestUtil.waitForElementState(
+                    historyContainer,
+                    () => {
+                        // wait on this container to get populated
+                        return historyContainer.childElementCount > 0;
+                    },
+                    () => {
+                        infoContainer.querySelector('.fa-history').click();
+                    }
+                );
+
+                const newVersion = TestUtil.JSONcopy(objInfo);
+                newVersion[4]++;
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /revert_object/,
+                    response: newVersion,
+                });
+
+                // revert to the oldest (last) version
+                spyOn(dataListObj, 'refresh').and.callThrough();
+                spyOn(dataListObj.ws, 'revert_object').and.callThrough();
+                historyContainer.querySelector('table tr:last-child button').click();
+                expect(dataListObj.ws.revert_object).toHaveBeenCalledWith(
+                    {
+                        wsid: objInfo[6],
+                        objid: objInfo[0],
+                        ver: 1,
+                    },
+                    jasmine.any(Function),
+                    jasmine.any(Function)
+                );
+                expect(dataListObj.refresh).toHaveBeenCalled();
+            });
         });
     });
 });

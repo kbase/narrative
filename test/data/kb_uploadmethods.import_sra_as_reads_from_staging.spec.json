@@ -1,0 +1,321 @@
+{
+  "behavior": {
+    "kb_service_input_mapping": [
+      {
+        "narrative_system_variable": "workspace",
+        "target_property": "workspace_name"
+      },
+      {
+        "constant_value": "SRA",
+        "target_property": "import_type"
+      },
+      {
+        "input_parameter": "sra_staging_file_name",
+        "target_property": "sra_staging_file_name"
+      },
+      {
+        "input_parameter": "sequencing_tech",
+        "target_property": "sequencing_tech"
+      },
+      {
+        "input_parameter": "name",
+        "target_property": "name"
+      },
+      {
+        "input_parameter": "single_genome",
+        "target_property": "single_genome"
+      },
+      {
+        "constant_value": "1",
+        "target_property": "interleaved"
+      },
+      {
+        "input_parameter": "insert_size_mean",
+        "target_property": "insert_size_mean"
+      },
+      {
+        "input_parameter": "insert_size_std_dev",
+        "target_property": "insert_size_std_dev"
+      },
+      {
+        "input_parameter": "read_orientation_outward",
+        "target_property": "read_orientation_outward"
+      }
+    ],
+    "kb_service_method": "import_reads_from_staging",
+    "kb_service_name": "kb_uploadmethods",
+    "kb_service_output_mapping": [
+      {
+        "narrative_system_variable": "workspace",
+        "target_property": "wsName"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "obj_ref"
+        ],
+        "target_property": "obj_ref",
+        "target_type_transform": "resolved-ref"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "report_name"
+        ],
+        "target_property": "report_name"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "report_ref"
+        ],
+        "target_property": "report_ref"
+      },
+      {
+        "constant_value": "16",
+        "target_property": "report_window_line_height"
+      }
+    ],
+    "kb_service_url": "",
+    "kb_service_version": "d67ff71a675aed5566d257c267689ea0d2a4a8b0"
+  },
+  "fixed_parameters": [],
+  "full_info": {
+    "app_type": "app",
+    "authors": [
+      "tgu2"
+    ],
+    "categories": [
+      "inactive",
+      "reads",
+      "upload"
+    ],
+    "contact": "http://kbase.us/contact-us/",
+    "description": "<p> Import a SRA file from your staging area into your Narrative as READS data object.\nPlease see the <a href=\"https://docs.kbase.us/data/upload-download-guide/\">Data Upload/Download Guide</a> for more information. </p>",
+    "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
+    "icon": {
+      "url": "img?method_id=kb_uploadmethods/import_sra_as_reads_from_staging&image_name=data-pink.png&tag=release"
+    },
+    "id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+    "module_name": "kb_uploadmethods",
+    "name": "Import SRA File as Reads from Staging Area",
+    "namespace": "kb_uploadmethods",
+    "publications": [],
+    "screenshots": [],
+    "subtitle": "Import a SRA file into your Narrative as a Reads data object",
+    "suggestions": {
+      "next_apps": [],
+      "next_methods": [],
+      "related_apps": [],
+      "related_methods": []
+    },
+    "tag": "release",
+    "technical_description": "none",
+    "tooltip": "Import a SRA file into your Narrative as a Reads data object",
+    "ver": "1.0.55"
+  },
+  "info": {
+    "app_type": "app",
+    "authors": [
+      "tgu2"
+    ],
+    "categories": [
+      "inactive",
+      "reads",
+      "upload"
+    ],
+    "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
+    "icon": {
+      "url": "img?method_id=kb_uploadmethods/import_sra_as_reads_from_staging&image_name=data-pink.png&tag=release"
+    },
+    "id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+    "input_types": [],
+    "module_name": "kb_uploadmethods",
+    "name": "Import SRA File as Reads from Staging Area",
+    "namespace": "kb_uploadmethods",
+    "output_types": [
+      "KBaseFile.PairedEndLibrary",
+      "KBaseFile.SingleEndLibrary"
+    ],
+    "subtitle": "Import a SRA file into your Narrative as a Reads data object",
+    "tooltip": "Import a SRA file into your Narrative as a Reads data object",
+    "ver": "1.0.55"
+  },
+  "job_id_output_field": "docker",
+  "parameters": [
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "SRA staging file path",
+      "disabled": 0,
+      "dynamic_dropdown_options": {
+        "data_source": "ftp_staging",
+        "multiselection": 0,
+        "query_on_empty_input": 1,
+        "result_array_index": 0,
+        "service_params": null
+      },
+      "field_type": "dynamic_dropdown",
+      "id": "sra_staging_file_name",
+      "optional": 0,
+      "short_hint": "SRA staging file path",
+      "ui_class": "parameter",
+      "ui_name": "SRA file path"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        "Illumina"
+      ],
+      "description": "The name of the sequencing technology used to create the reads file",
+      "disabled": 0,
+      "dropdown_options": {
+        "multiselection": 0,
+        "options": [
+          {
+            "display": "Illumina",
+            "value": "Illumina"
+          },
+          {
+            "display": "PacBio CLR",
+            "value": "PacBio CLR"
+          },
+          {
+            "display": "PacBio CCS",
+            "value": "PacBio CCS"
+          },
+          {
+            "display": "IonTorrent",
+            "value": "IonTorrent"
+          },
+          {
+            "display": "NanoPore",
+            "value": "NanoPore"
+          },
+          {
+            "display": "Unknown",
+            "value": "Unknown"
+          }
+        ]
+      },
+      "field_type": "dropdown",
+      "id": "sequencing_tech",
+      "optional": 0,
+      "short_hint": "The name of the sequencing technology used to create the reads file",
+      "ui_class": "parameter",
+      "ui_name": "Sequencing technology"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "Provide a name for the Reads object that will be created by this importer",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "name",
+      "optional": 0,
+      "short_hint": "Provide a name for the Reads object that will be created by this importer",
+      "text_options": {
+        "is_output_name": 1,
+        "placeholder": "",
+        "regex_constraint": [],
+        "valid_ws_types": [
+          "KBaseFile.SingleEndLibrary",
+          "KBaseFile.PairedEndLibrary"
+        ]
+      },
+      "ui_class": "output",
+      "ui_name": "Reads object name"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "checkbox_options": {
+        "checked_value": 1,
+        "unchecked_value": 0
+      },
+      "default_values": [
+        "1"
+      ],
+      "description": "Select if the reads are from a single genome, leave blank if from a metagenome",
+      "disabled": 0,
+      "field_type": "checkbox",
+      "id": "single_genome",
+      "optional": 0,
+      "short_hint": "Select if the reads are from a single genome, leave blank if from a metagenome",
+      "ui_class": "parameter",
+      "ui_name": "Single genome"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "checkbox_options": {
+        "checked_value": 1,
+        "unchecked_value": 0
+      },
+      "default_values": [
+        "0"
+      ],
+      "description": "Select if reads in a pair point outward",
+      "disabled": 0,
+      "field_type": "checkbox",
+      "id": "read_orientation_outward",
+      "optional": 1,
+      "short_hint": "Select if reads in a pair point outward",
+      "ui_class": "parameter",
+      "ui_name": "Reads orientation outward"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "The standard deviation of insert lengths",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "insert_size_std_dev",
+      "optional": 1,
+      "short_hint": "The standard deviation of insert lengths",
+      "text_options": {
+        "is_output_name": 0,
+        "placeholder": "",
+        "regex_constraint": [],
+        "validate_as": "float"
+      },
+      "ui_class": "parameter",
+      "ui_name": "St. dev. of insert size"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "The mean (average) insert length",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "insert_size_mean",
+      "optional": 1,
+      "short_hint": "The mean (average) insert length",
+      "text_options": {
+        "is_output_name": 0,
+        "placeholder": "",
+        "regex_constraint": [],
+        "validate_as": "float"
+      },
+      "ui_class": "parameter",
+      "ui_name": "Mean insert size"
+    }
+  ],
+  "widgets": {
+    "input": "null",
+    "output": "no-display"
+  }
+}

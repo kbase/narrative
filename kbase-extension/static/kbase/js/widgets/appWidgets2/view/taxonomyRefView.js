@@ -1,12 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/runtime',
     'common/ui',
     'kb_sdk_clients/genericClient',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
 
     'select2',
     'bootstrap',

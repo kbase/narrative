@@ -4,10 +4,11 @@ define([
     'common/events',
     'common/ui',
     'common/runtime',
-    '../validation',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
 
     'bootstrap',
-], (Promise, html, Events, UI, Runtime, Validation) => {
+], (Promise, html, Events, UI, Runtime, Validation, Constants) => {
     'use strict';
 
     // Constants
@@ -70,6 +71,13 @@ define([
 
         function validate() {
             return Promise.try(() => {
+                if (model.hasInitialValueError) {
+                    return {
+                        isValid: false,
+                        messageId: Constants.MESSAGE_IDS.INVALID,
+                        diagnosis: Constants.DIAGNOSIS.INVALID,
+                    };
+                }
                 const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
@@ -81,25 +89,25 @@ define([
 
         function autoValidate() {
             return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
+                channel.emit('validation', result);
             });
         }
 
         // RENDERING
 
-        function clearInitialValueError() {
+        function clearInitialValueError(useDefaultValue) {
             const inputContainer = container.querySelector(`.${cssBaseClass}_container`);
             inputContainer.classList.remove(cssErrorClass);
             inputContainer.querySelector(`.${cssBaseClass}_error`).remove();
             model.hasInitialValueError = false;
+            if (useDefaultValue) {
+                setModelValue(spec.data.defaultValue);
+                return autoValidate();
+            }
         }
 
         function renderInitialValueError(events) {
-            const defaultVal =
-                config.parameterSpec.data.defaultValue === 1 ? 'checked' : 'unchecked';
+            const defaultVal = spec.data.defaultValue === 1 ? 'checked' : 'unchecked';
             return div(
                 {
                     class: `${cssBaseClass}_error`,
@@ -116,7 +124,7 @@ define([
                             strong(' Error: '),
                         ]
                     ),
-                    `Invalid value of "${config.initialValue}" for parameter ${spec.ui.label}. Default value ${defaultVal} used.`,
+                    `Invalid value of "${config.initialValue}" for parameter ${spec.ui.label}. Default value of ${defaultVal} used.`,
                     button(
                         {
                             class: `${cssBaseClass}_error__close_button btn btn-default btn-xs`,
@@ -126,7 +134,7 @@ define([
                                 events: [
                                     {
                                         type: 'click',
-                                        handler: clearInitialValueError,
+                                        handler: () => clearInitialValueError(true),
                                     },
                                 ],
                             }),
@@ -143,7 +151,9 @@ define([
             // CONTROL
             const cssBaseClass = 'kb-appInput__checkbox';
             let checked = false;
-            if (model.value === 1) {
+            if (model.hasInitialValueError) {
+                checked = spec.data.defaultValue === 1;
+            } else if (model.value === 1) {
                 checked = true;
             }
 
@@ -165,10 +175,7 @@ define([
                                         }
                                         validate().then((result) => {
                                             setModelValue(result.parsedValue);
-                                            channel.emit('validation', {
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis,
-                                            });
+                                            channel.emit('validation', result);
                                         });
                                     },
                                 },
@@ -210,9 +217,8 @@ define([
 
                 // initialize based on config.initialValue. If it's not 0 or 1, then
                 // note that we have an initial value error, and set to the default.
-                let initValue = config.initialValue;
+                const initValue = config.initialValue || spec.data.defaultValue;
                 if (initValue !== 0 && initValue !== 1) {
-                    initValue = config.parameterSpec.data.defaultValue;
                     model.hasInitialValueError = true;
                 }
 

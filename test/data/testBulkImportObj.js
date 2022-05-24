@@ -423,7 +423,9 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
         },
         exec: {
             jobState: batchParentJob,
-            jobs: Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent),
+            jobs: {
+                byId: Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent),
+            },
             jobStateUpdated: 1607109635241,
             launchState: {
                 cell_id: '13395335-1f3d-4e0c-80f7-44b634968da0',
@@ -485,6 +487,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                     sequencing_tech: 'Illumina',
                     single_genome: 1,
                 },
+                paramDisplay: {},
             },
         },
         'user-settings': {

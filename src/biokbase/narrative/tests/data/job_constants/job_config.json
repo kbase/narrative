@@ -1,0 +1,21 @@
+{
+    "params": {
+        "BATCH_ID": "WHAT",
+        "CELL_ID_LIST": "IS",
+        "JOB_ID": "THIS",
+        "JOB_ID_LIST": "?"
+    },
+    "message_types": {
+        "CANCEL": "cancel_job",
+        "CELL_JOB_STATUS": "cell_job_status",
+        "ERROR": "job_error",
+        "INFO": "job_info",
+        "LOGS": "job_logs",
+        "RETRY": "retry_job",
+        "RUN_STATUS": "run_status",
+        "START_UPDATE": "start_job_update",
+        "STATUS_ALL": "job_status_all",
+        "STATUS": "job_status",
+        "STOP_UPDATE": "stop_job_update"
+    }
+}

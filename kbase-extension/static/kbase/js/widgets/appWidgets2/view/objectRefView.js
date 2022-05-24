@@ -2,14 +2,14 @@ define([
     'bluebird',
     'jquery',
     'underscore',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
     'bootstrap',
 ], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, UI, Constants) => {
     'use strict';

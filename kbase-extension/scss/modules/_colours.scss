@@ -147,6 +147,7 @@ $job_status_colors: (
   // error already exists, but we need it in our job status list
   "error": map-get($kbase-palette, 'error'),
   "does_not_exist": map-get($kbase-palette, 'error'),
+  "ee2_error": map-get($kbase-palette, 'warning-dark'),
 );
 
 $palette: map-merge($kbase-palette, $job_status_colors);

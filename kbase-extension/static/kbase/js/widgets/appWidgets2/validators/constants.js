@@ -17,6 +17,7 @@ define([], () => {
     const MESSAGE_IDS = {
         INFINITE: 'infinite-value',
         REQUIRED_MISSING: 'required-missing',
+        OPTIONAL_EMPTY: 'optional-empty',
 
         OBJ_OVERWRITE_DIFF_TYPE: 'obj-overwrite-diff-type',
         OBJ_OVERWRITE_WARN: 'obj-overwrite-warning',

@@ -71,11 +71,14 @@ define([
                         beforeIcon = {};
                     for (const cat of Object.keys(fileTypes)) {
                         const elem = container.querySelector(`[data-element="${cat}"]`);
+                        // expect no warning icon
+                        expect(elem.querySelector('[data-element="warning-icon"]')).toBeNull();
                         beforeNode[cat] = elem.outerHTML;
                         beforeIcon[cat] = elem.querySelector('[data-element="icon"]').outerHTML;
                     }
                     panel.updateState({
                         selected: 'file1',
+                        warnings: new Set(['file1']),
                     });
                     for (const cat of Object.keys(fileTypes)) {
                         const elem = container.querySelector(`[data-element="${cat}"]`);
@@ -84,6 +87,10 @@ define([
                             // different. (really I shouldn't even use the selector, but
                             // I gotta test something)
                             expect(elem.outerHTML).not.toEqual(beforeNode[cat]);
+                            // test here that there's a warning icon.
+                            expect(
+                                elem.querySelector('[data-element="warning-icon"]')
+                            ).not.toBeNull();
                         } else {
                             expect(elem.outerHTML).toEqual(beforeNode[cat]);
                         }
@@ -94,14 +101,16 @@ define([
                         },
                     });
                     for (const cat of Object.keys(fileTypes)) {
-                        const iconElem = container.querySelector(
-                            `[data-element="${cat}"] [data-element="icon"]`
-                        );
+                        const elem = container.querySelector(`[data-element="${cat}"]`);
+                        const iconElem = elem.querySelector(`[data-element="icon"]`);
+
                         if (cat === 'file2') {
                             expect(iconElem.outerHTML).not.toEqual(beforeIcon[cat]);
                         } else {
                             expect(iconElem.outerHTML).toEqual(beforeIcon[cat]);
                         }
+                        // expect no warning icon again
+                        expect(elem.querySelector('[data-element="warning-icon"]')).toBeNull();
                     }
                 });
         });

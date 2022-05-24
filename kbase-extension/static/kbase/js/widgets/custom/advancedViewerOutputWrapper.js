@@ -1,9 +1,10 @@
-define(['require', 'common/jupyter', 'common/cellUtils', 'common/runtime'], (
-    require,
-    jupyter,
-    utils,
-    Runtime
-) => {
+define([
+    'require',
+    'common/jupyter',
+    'common/cellUtils',
+    'common/runtime',
+    'common/jobCommMessages',
+], (require, jupyter, utils, Runtime, jcm) => {
     'use strict';
     /*
      id: '{{input_id}}',
@@ -37,13 +38,13 @@ define(['require', 'common/jupyter', 'common/cellUtils', 'common/runtime'], (
             }
 
             function emit(key, message) {
-                bus.channel({ cell: config.cellId }).emit(key, message);
+                bus.channel({ [jcm.CHANNEL.CELL]: config.cellId }).emit(key, message);
             }
 
             return {
-                saveState: saveState,
-                getState: getState,
-                emit: emit,
+                saveState,
+                getState,
+                emit,
             };
         }
         return factory(config);
@@ -54,7 +55,7 @@ define(['require', 'common/jupyter', 'common/cellUtils', 'common/runtime'], (
         require(['widgets/custom/' + arg.widget], (widget) => {
             widget
                 .make({
-                    node: node,
+                    node,
                     data: arg.data,
                     state: arg.state,
                     api: outputWidgetSupport({
@@ -70,6 +71,6 @@ define(['require', 'common/jupyter', 'common/cellUtils', 'common/runtime'], (
     }
 
     return {
-        launchWidget: launchWidget,
+        launchWidget,
     };
 });

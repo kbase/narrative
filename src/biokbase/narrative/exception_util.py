@@ -1,13 +1,13 @@
 from requests.exceptions import HTTPError
 from biokbase.execution_engine2.baseclient import ServerError as EEServerError
-from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
-class JobIDException(ValueError):
+class JobRequestException(ValueError):
     """
-    Raised when a job ID is not provided, invalid (e.g., None, ""),
-    not registered in JobManager._running_jobs, or
-    not a batch ID as intended.
+    Raised when a job request is invalid in some way; for example,
+    if the required parameter(s) are empty (e.g. job_id or batch_id),
+    if a job ID is not registered in JobManager._running_jobs, or
+    it is not a batch ID as intended.
     Subclasses ValueError for except-clause backwards compatibility
     """
 
@@ -47,8 +47,6 @@ def transform_job_exception(e, error=None):
     """
     if isinstance(e, EEServerError):
         return NarrativeException(e.code, e.message, e.name, "ee2", error)
-    elif isinstance(e, UJSServerError):
-        return NarrativeException(e.code, e.message, e.name, "ujs", error)
     elif isinstance(e, HTTPError):
         code = e.response.status_code
         if code == 404 or code == 502 or code == 503:
@@ -62,6 +60,8 @@ def transform_job_exception(e, error=None):
             msg = "An internal error occurred in the KBase service."
         else:
             msg = "An untracked error occurred."
-        return NarrativeException(e.response.status_code, msg, "HTTPError", "network", error)
+        return NarrativeException(
+            e.response.status_code, msg, "HTTPError", "network", error
+        )
     else:
         return NarrativeException(-1, str(e), "Exception", "unknown", error)

@@ -12,7 +12,7 @@ define([
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
-    'kb_common/html',
+    'common/html',
     'util/icon',
     'widgets/narrative_core/publicDataSources/workspaceDataSource',
     'widgets/narrative_core/publicDataSources/search2DataSource',
@@ -587,7 +587,7 @@ define([
         renderFromDataSource: function (dataSourceID, initial) {
             const dataSource = this.getDataSource(dataSourceID);
             this.resultsFooterMessage.html(`
-                <span>fetching another ${this.itemsPerPage} items</span> 
+                <span>fetching another ${this.itemsPerPage} items</span>
                 <span class='fa fa-spinner fa-spin' style='margin-left: 1ex'/>
             `);
 

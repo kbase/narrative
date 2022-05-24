@@ -4,6 +4,7 @@ define([
     'base/js/namespace',
     'common/dialogMessages',
     'common/jobs',
+    'common/jobCommMessages',
     'common/runtime',
     'narrativeMocks',
     'testUtil',
@@ -18,6 +19,7 @@ define([
     Jupyter,
     DialogMessages,
     Jobs,
+    jcm,
     Runtime,
     Mocks,
     TestUtil,
@@ -28,15 +30,16 @@ define([
     SimpleAppSpec
 ) => {
     'use strict';
+    const APP_ID = 'someApp';
     const fakeInputs = {
             dataType: {
                 files: ['some_file'],
-                appId: 'someApp',
+                appId: APP_ID,
                 suffix: '_obj',
             },
         },
         fakeSpecs = {
-            someApp:
+            [APP_ID]:
                 TestBulkImportObject.app.specs[
                     'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
                 ],
@@ -49,6 +52,15 @@ define([
         run: '.kb-rcp__action-button-container .-run',
     };
     const batchId = JobsData.batchParentJob.job_id;
+
+    const jobLaunchError = {
+        message: 'app startup error',
+        stacktrace: 'doom\nDoom\nDOOOM',
+        code: '-1',
+        source: 'app manager',
+        method: 'AppManager.run_job_batch',
+        exceptionType: 'ValueError',
+    };
 
     /**
      * Initialise a fake bulk import cell
@@ -80,7 +92,10 @@ define([
         };
         cell.metadata = {
             kbase: {
-                bulkImportCell: Object.assign({}, state, TestUtil.JSONcopy(TestBulkImportObject)),
+                bulkImportCell: {
+                    ...state,
+                    ...TestUtil.JSONcopy(TestBulkImportObject),
+                },
                 type: 'app-bulk-import',
                 attributes: {
                     id: `${args.cellId}-test-cell`,
@@ -406,7 +421,7 @@ define([
                         {},
                         {
                             channel: {
-                                cell: cell.metadata.kbase.attributes.id,
+                                [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                             },
                             key: {
                                 type: 'delete-cell',
@@ -421,14 +436,7 @@ define([
             [
                 {
                     msgEvent: 'error',
-                    msgData: {
-                        message: 'app startup error',
-                        stacktrace: 'doom\nDoom\nDOOOM',
-                        code: '-1',
-                        source: 'app manager',
-                        method: 'AppManager.run_job_bulk',
-                        exceptionType: 'ValueError',
-                    },
+                    msgData: jobLaunchError,
                     updatedState: 'error',
                     testSelector: selectors.reset,
                     testState: (elem) => !elem.classList.contains('hidden'),
@@ -474,6 +482,7 @@ define([
                     const runButton = cell.element[0].querySelector(selectors.run);
                     const cancelButton = cell.element[0].querySelector(selectors.cancel);
                     spyOn(console, 'error');
+                    spyOn(Jupyter.narrative, 'saveNarrative');
                     await TestUtil.waitForElementState(cancelButton, () => {
                         return (
                             !runButton.classList.contains('disabled') &&
@@ -487,9 +496,9 @@ define([
                         return !cancelButton.classList.contains('hidden');
                     });
                     checkTabState(cell, {
-                        selectedTab: 'viewConfigure',
-                        enabledTabs: ['viewConfigure', 'info'],
-                        visibleTabs: ['viewConfigure', 'info', 'jobStatus', 'results'],
+                        selectedTab: 'launching',
+                        enabledTabs: ['viewConfigure', 'info', 'launching'],
+                        visibleTabs: ['viewConfigure', 'info', 'launching', 'results'],
                     });
 
                     // wait for the cell to receive the run status message and transition
@@ -508,10 +517,10 @@ define([
                             );
                             runtime.bus().send(message, {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             });
                         }
@@ -521,6 +530,11 @@ define([
                         testCase.updatedState
                     );
                     checkTabState(cell, testCase);
+                    if (testCase.msgEvent === 'launched_job_batch') {
+                        expect(Jupyter.narrative.saveNarrative).toHaveBeenCalled();
+                    } else {
+                        expect(Jupyter.narrative.saveNarrative).not.toHaveBeenCalled();
+                    }
                 });
             });
 
@@ -641,6 +655,10 @@ define([
                     spyOn(Date, 'now').and.returnValue(1234567890);
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
+                    if (testCase.state === 'error') {
+                        // add an appError to the model
+                        bulkImportCellInstance.jobManager.model.setItem('appError', jobLaunchError);
+                    }
 
                     // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.
                     // I'm guessing it's a jquery fadeIn event thing.
@@ -692,15 +710,21 @@ define([
                             expect(bulkImportCellInstance.jobManager.model.getItem('exec')).toEqual(
                                 undefined
                             );
+                            expect(
+                                bulkImportCellInstance.jobManager.model.getItem('appError')
+                            ).toEqual(undefined);
                             expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {
                                 const allEmissions =
                                     bulkImportCellInstance.jobManager.bus.emit.calls.allArgs();
                                 expect([
-                                    ['request-job-updates-start', { batchId }],
-                                    ['request-job-cancel', { jobIdList: [batchId] }],
-                                    ['request-job-updates-stop', { batchId }],
+                                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                                    [
+                                        jcm.MESSAGE_TYPE.CANCEL,
+                                        { [jcm.PARAM.JOB_ID_LIST]: [batchId] },
+                                    ],
                                     [
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
@@ -790,10 +814,10 @@ define([
                             },
                             {
                                 channel: {
-                                    cell: cell.metadata.kbase.attributes.id,
+                                    [jcm.CHANNEL.CELL]: cell.metadata.kbase.attributes.id,
                                 },
                                 key: {
-                                    type: 'run-status',
+                                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
                                 },
                             }
                         );
@@ -803,11 +827,9 @@ define([
                 expect(bulkImportCellInstance.jobManager.initBatchJob).toHaveBeenCalledTimes(1);
                 // bus calls to init jobs, request info, cancel jobs, and stop updates
                 const callArgs = [
-                    ['request-job-updates-start', { batchId }],
-                    ['request-job-info', { batchId }],
-                    ['request-job-cancel', { jobIdList: [batchId] }],
-                    ['request-job-updates-stop', { batchId }],
-                    ['reset-cell', { cellId: `${cellId}-test-cell`, ts: 1234567890 }],
+                    [jcm.MESSAGE_TYPE.STATUS, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.INFO, { [jcm.PARAM.BATCH_ID]: batchId }],
+                    [jcm.MESSAGE_TYPE.CANCEL, { [jcm.PARAM.JOB_ID_LIST]: [batchId] }],
                 ];
                 expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                 expect(bulkImportCellInstance.jobManager.bus.emit.calls.allArgs()).toEqual(

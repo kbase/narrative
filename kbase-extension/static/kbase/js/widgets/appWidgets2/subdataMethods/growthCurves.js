@@ -1,12 +1,7 @@
-define(['common/runtime', 'kb_common/html'], (Runtime, html) => {
+define([], () => {
     'use strict';
 
-    const t = html.tag,
-        div = t('div');
-
-    function factory(config) {
-        const runtime = Runtime.make();
-
+    function factory() {
         function propertyValueToString(pv) {
             return (
                 pv.property_name +
@@ -26,9 +21,9 @@ define(['common/runtime', 'kb_common/html'], (Runtime, html) => {
 
         function buildSamples(columnsMetadata) {
             return Object.keys(columnsMetadata).map((columnId) => {
-                let columnMetadata = columnsMetadata[columnId],
-                    seriesId = null,
+                const columnMetadata = columnsMetadata[columnId],
                     conditions = [];
+                let seriesId = null;
 
                 columnMetadata.forEach((pv) => {
                     if (pv.category === 'Condition') {
@@ -54,22 +49,9 @@ define(['common/runtime', 'kb_common/html'], (Runtime, html) => {
             });
         }
 
-        function groupSamplesIntoSeries(samples) {
-            const seriesHash = {};
-            samples.forEach((sample) => {
-                seriesHash[sample.seriesId] = {
-                    seriesId: sample.seriesId,
-                    label: sample.label,
-                };
-            });
-            return Object.keys(seriesHash).map((seriesId) => {
-                return seriesHash[seriesId];
-            });
-        }
-
         function extractItems(result, params) {
-            let sampleSeriesIds,
-                valueType = params.input_value_type;
+            let sampleSeriesIds;
+            const valueType = params.input_value_type;
 
             const samples = buildSamples(result[0].data.metadata.column_metadata);
             switch (valueType) {
@@ -115,8 +97,8 @@ define(['common/runtime', 'kb_common/html'], (Runtime, html) => {
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

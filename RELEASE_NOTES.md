@@ -5,37 +5,95 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
-- DATAUP-641 - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
-- DATAUP-641 - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
-- DATAUP-641 - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
-- PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
-- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
-- SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
-
-- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+- PTV-1783 - fixed issue where the previous object revert option was unavailable
+- DATAUP-639 - fix problems with dynamic dropdown app cell input
+  - selected value wasn't being displayed properly after a page reload or cell refresh
+  - selected value wasn't being displayed in view-only version
+  - "Loading..." message wasn't displayed while fetching data from a service.
+  - Update the dynamic dropdown to support the `exact_match_on` field in app specs.
+  - Add a copy button to the dynamic dropdown - this will copy the most relevant text from the dropdown to the clipboard.
+    - For dropdowns with an `exact_match_on` field, this will copy the contents of that field (e.g. for those that present taxonomy ids for a species, this copies just the scientific name)
+    - For dropdowns that go against the FTP staging area, this copies the file name and path.
+    - For other dropdowns, this copies the formatted text
+- DATAUP-751 - add link to staging area docs in the upload tour
+- DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
+- DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
 - SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
 
 Dependency Changes
+- Javascript dependency updates
+  - @wdio/browserstack-service: 7.16.16 -> 7.19.5
+  - @wdio/cli: 7.16.16 -> 7.19.6
+  - @wdio/local-runner: 7.16.6 -> 7.19.3
+  - @wdio/mocha-framework: 7.16.15 -> 7.19.3
+  - @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
+  - @wdio/spec-reporter: 7.16.14 -> 7.19.1
+  - autoprefixer: 10.2.6 -> 10.4.5
+  - commander: 9.0.0 -> 9.1.0
+  - ejs: 3.1.6 -> 3.1.7
+  - grunt: 1.4.1 -> 1.5.2
+  - grunt-contrib-concat: 1.0.1 -> 2.1.0
+  - jasmine-core: 4.0.0 -> 4.1.0
+  - postcss-cli: 8.3.1 -> 9.1.0
+  - sass: 1.34.1 -> 1.51.0
+  - selenium-standalone: 8.0.9 -> 8.0.10
+  - selenium-webdriver: 4.1.1 -> 4.1.2
+  - webdriverio: 7.16.16 -> 7.19.5
+  - corejs-typeahead: 1.6.1 -> 1.3.1
+  - datatables.net: 1.11.3 -> 1.11.5
+  - handlebars: 4.0.5 -> 4.7.7
+  - jquery-nearest: 1.3.1 -> 1.4.0
+  - jquery-ui: 1.12.1 -> 1.13.1
+  - js-yaml: 3.3.1 -> 3.14.1
+  - pure-uuid: 1.4.2 -> 1.6.2
+  - underscore: 1.8.3 -> 1.13.3
+
 - Python dependency updates
-  - bokeh: 2.3.3 -> 2.4.2
-  - coverage: 5.5 -> 6.3.2
+  - beautifulsoup4: 4.8.1 -> 4.11.1
+  - cryptography: 3.3.2 -> 36.0.2
+  - html5lib: 1.0.1 -> 1.1
+  - idna: 2.8 -> 3.3
+  - jinja2: 3.1.1 -> 3.0.3
+  - plotly: 5.6.0 -> 5.7.0
+  - pygments: 2.11.2 -> 2.12.0
+  - jupyter-console: 6.0.0 -> 6.4.3
+  - jsonschema: 4.4.0 -> 3.2.0
+  - pymongo: 4.1.0 -> 4.1.1
+  - pyopenssl: 19.0.0 -> 22.0.0
+  - setuptools: 62.0.0 -> 62.1.0
+
+### Version 5.0.3
+- DATAUP-641
+  - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+  - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+  - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
+- PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
+- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+- SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
+- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+- DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
+- DATAUP-737 - Overhaul of GitHub Actions to move to using official Docker actions for building, tagging, and uploading images. Move python module installation out of Dockerfile and into the requirements.txt.
+
+Dependency Changes
+- Python dependency updates
+  - coverage: 5.5 -> 6.2
+  - cryptography: 2.7 -> 3.3.2
   - decorator: 5.0.9 -> 5.1.1
-  - jinja2: 3.0.1 -> 3.0.3
+  - jinja2: 3.0.1 -> 3.1.1
   - jsonschema: 3.2.0 -> 4.4.0
-  - markupsafe: 2.0.1 -> 2.1.0
-  - pillow: 8.3.2 -> 9.0.1
+  - markupsafe: 2.0.1 -> 2.1.1
+  - pillow: 8.3.2 -> 8.4.0
   - plotly: 5.3.1 -> 5.6.0
   - pygments: 2.10.0 -> 2.11.2
-  - pymongo: 3.12.0 -> 4.0.1
+  - pymongo: 3.12.0 -> 4.1.0
   - pytest-cov: 2.12.1 -> 3.0.0
-  - pytest: 6.2.5 -> 7.0.1
   - pyyaml: 5.4.1 -> 6.0
   - requests: 2.26.0 -> 2.27.1
   - rsa: 4.7.2 -> 4.8
   - semantic_version: 2.8.5 -> 2.9.0
-  - setuptools: 57.4.0 -> 60.9.3
-  - sympy: 1.8 -> 1.9
-  - terminado: 0.11.1 -> 0.13.1
+  - setuptools: 57.4.0 -> 62.0.0
+  - sympy: 1.8 -> 1.10.1
+  - terminado: 0.11.1 -> 0.13.3
 
 ### Version 5.0.2
 - SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.

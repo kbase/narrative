@@ -1,10 +1,11 @@
-define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/js/namespace'], (
-    Runtime,
-    Events,
-    UI,
-    html,
-    Jupyter
-) => {
+define([
+    'common/runtime',
+    'common/events',
+    'common/ui',
+    'common/html',
+    'common/jobCommMessages',
+    'base/js/namespace',
+], (Runtime, Events, UI, html, jcm, Jupyter) => {
     'use strict';
 
     const t = html.tag,
@@ -94,7 +95,7 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                         Jupyter.notebook.delete_cell(cellIndex);
                     }
 
-                    // send a message on the cell bus bus, parent should pick it up, remove the
+                    // send a message on the cell bus; parent should pick it up, remove the
                     // output from the model, and update us.
                     bus.bus().send(
                         {
@@ -102,7 +103,7 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                         },
                         {
                             channel: {
-                                cell: cellId,
+                                [jcm.CHANNEL.CELL]: cellId,
                             },
                             key: {
                                 type: 'output-cell-removed',

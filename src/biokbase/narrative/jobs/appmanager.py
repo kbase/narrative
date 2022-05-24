@@ -1,30 +1,32 @@
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
-import biokbase.auth as auth
-from .job import Job
-from .jobmanager import JobManager
-from .jobcomm import JobComm, exc_to_msg
-from . import specmanager
-import biokbase.narrative.clients as clients
-from biokbase.narrative.widgetmanager import WidgetManager
-from biokbase.narrative.app_util import (
-    system_variable,
-    strict_system_variable,
-    map_outputs_from_state,
-    validate_parameters,
-    resolve_ref_if_typed,
-    transform_param_value,
-    extract_ws_refs,
-)
-from biokbase.narrative.exception_util import transform_job_exception
-from biokbase.narrative.common import kblogging
-import re
 import datetime
-import traceback
-import random
 import functools
-from typing import Callable, Union, Dict
+import random
+import re
+import traceback
+from typing import Callable, Dict, Union
+
+import biokbase.auth as auth
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import (
+    extract_ws_refs,
+    map_outputs_from_state,
+    resolve_ref_if_typed,
+    strict_system_variable,
+    system_variable,
+    transform_param_value,
+    validate_parameters,
+)
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.widgetmanager import WidgetManager
+
+from . import specmanager
+from .job import Job
+from .jobcomm import MESSAGE_TYPE, JobComm
+from .jobmanager import JobManager
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -37,6 +39,10 @@ BATCH_APP = {
     "TAG": "dev",
     "VERSION": "dev",
 }
+
+
+def timestamp() -> str:
+    return datetime.datetime.utcnow().isoformat() + "Z"
 
 
 def _app_error_wrapper(app_func: Callable) -> any:
@@ -61,7 +67,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
             e_source = getattr(e, "source", "appmanager")
             msg_info = {
                 "event": "error",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "error_message": e_message,
                 "error_type": e_type,
                 "error_stacktrace": e_trace,
@@ -71,7 +77,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
             for key in ["cell_id", "run_id"]:
                 if key in kwargs:
                     msg_info[key] = kwargs[key]
-            self._send_comm_message("run_status", msg_info)
+            self._send_comm_message(MESSAGE_TYPE["RUN_STATUS"], msg_info)
             if "cell_id" not in kwargs:
                 print(
                     f"Error while trying to start your app ({app_func.__name__})!\n"
@@ -85,7 +91,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
     return wrapper
 
 
-class AppManager(object):
+class AppManager:
     """
     The main class for managing how KBase apps get run. This contains functions
     for showing app descriptions, their usage (how to invoke various
@@ -174,7 +180,7 @@ class AppManager(object):
         return self.spec_manager.available_apps(tag)
 
     @_app_error_wrapper
-    def run_app_batch(
+    def run_legacy_batch_app(
         self,
         app_id,
         params,
@@ -185,7 +191,7 @@ class AppManager(object):
         dry_run=False,
     ):
         if params is None:
-            params = list()
+            params = []
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -194,9 +200,9 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
 
         # A list of lists of UPAs, used for each subjob.
-        batch_ws_upas = list()
+        batch_ws_upas = []
         # The list of actual input values, post-mapping.
-        batch_run_inputs = list()
+        batch_run_inputs = []
 
         for param_set in params:
             spec_params_map = dict(
@@ -286,7 +292,7 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         new_job = Job.from_job_id(
             job_id,
@@ -299,16 +305,16 @@ class AppManager(object):
         )
 
         self._send_comm_message(
-            "run_status",
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "job_id": job_id,
             },
         )
-        self.register_new_job(new_job)
+        JobManager().register_new_job(new_job, refresh=False)
         if cell_id is None:
             return new_job
 
@@ -351,7 +357,7 @@ class AppManager(object):
         )
         """
         if params is None:
-            params = dict()
+            params = {}
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -383,28 +389,26 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         new_job = Job.from_job_id(job_id)
 
         self._send_comm_message(
-            "run_status",
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "job_id": job_id,
             },
         )
-        self.register_new_job(new_job)
-        if cell_id is not None:
-            return
-        else:
+        JobManager().register_new_job(new_job, refresh=False)
+        if cell_id is None:
             return new_job
 
     @_app_error_wrapper
-    def run_app_bulk(
+    def run_app_batch(
         self,
         app_info: list,
         cell_id: str = None,
@@ -425,6 +429,7 @@ class AppManager(object):
             tag: the app tag to run, one of release, beta, or dev
             version: (optional) the specified version to run, if not provided, this will be the most recent
                 for that particular tag
+            shared_params: (optional) any params to be shared by all runs of the app
             params: a list of at least one dictionary. Each dict contains the set of parameters to run the
                 app once.
         cell_id: if provided, this should be a unique id for the Narrative cell that's running the app.
@@ -439,21 +444,32 @@ class AppManager(object):
             "app_id": "Some_module/reads_to_contigset",
             "tag": "release",
             "version": "1.0.0",
-            "params": [{
-                "read_library_name" : "My_PE_Library",
-                "output_contigset_name" : "My_Contig_Assembly"
-            }, {
-                "read_library_name": "Another_reads_library",
-                "output_contigset_name": "Another_contig_assembly"
-            }]
+            "shared_params": {
+                "filter_len": 500
+            },
+            "params": [
+                {
+                    "read_library_name" : "My_PE_Library",
+                    "output_contigset_name" : "My_Contig_Assembly"
+                }, {
+                    "read_library_name": "Another_reads_library",
+                    "output_contigset_name": "Another_contig_assembly"
+                }
+            ]
         }, {
             "app_id": "Some_module/contigset_to_genome",
             "tag": "release",
             "version": "1.1.0",
-            "params": [{
-                "contigset": "My_contigset",
-                "genome_name": "My_genome"
-            }]
+            "shared_params": {
+                "filter_len": 1000,
+                "taxon_id": 121212
+            },
+            "params": [
+                {
+                    "contigset": "My_contigset",
+                    "genome_name": "My_genome"
+                }
+            ]
         }])
         """
 
@@ -461,12 +477,13 @@ class AppManager(object):
             raise ValueError(
                 "app_info must be a list with at least one set of app information"
             )
-        batch_run_inputs = list()
+        batch_run_inputs = []
         ws_id = strict_system_variable("workspace_id")
         batch_params = {"wsid": ws_id}  # for EE2.run_job_batch
-        log_app_info = list()
+        log_app_info = []
         for info in app_info:
             self._validate_bulk_app_info(info)
+            self._reconstitute_shared_params(info)
             app_id = info["app_id"]
             tag = info.get("tag", "release")
             version = info.get("version")
@@ -497,7 +514,7 @@ class AppManager(object):
             "username": system_variable("user_id"),
             "wsid": ws_id,
         }
-        kblogging.log_event(self._log, "run_app_bulk", log_info)
+        kblogging.log_event(self._log, "run_app_batch", log_info)
 
         # if we're doing a dry run, stop here and return the setup
         if dry_run:
@@ -520,16 +537,16 @@ class AppManager(object):
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_job_bulk_error", log_info)
-            raise transform_job_exception(e)
+            raise transform_job_exception(e) from e
 
         batch_id = batch_submission["batch_id"]
         child_ids = batch_submission["child_job_ids"]
 
         self._send_comm_message(
-            "run_status",
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "launched_job_batch",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
                 "batch_id": batch_id,
@@ -538,7 +555,6 @@ class AppManager(object):
         )
 
         child_jobs = Job.from_job_ids(child_ids, return_list=True)
-
         parent_job = Job.from_job_id(
             batch_id,
             children=child_jobs,
@@ -546,8 +562,8 @@ class AppManager(object):
 
         # TODO make a tighter design in the job manager for submitting a family of jobs
         for new_job in child_jobs:
-            self.register_new_job(new_job)
-        self.register_new_job(parent_job)
+            JobManager().register_new_job(new_job, refresh=False)
+        JobManager().register_new_job(parent_job, refresh=False)
 
         if cell_id is None:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
@@ -593,6 +609,34 @@ class AppManager(object):
             raise ValueError(
                 f"an app version must be a string, not {app_info['version']}"
             )
+
+    def _reconstitute_shared_params(self, app_info_el: dict) -> None:
+        """
+        Mutate each params dict to include any shared_params
+        app_info_el is structured like:
+        {
+            "app_id": "Some_module/reads_to_contigset",
+            "tag": "release",
+            "version": "1.0.0",
+            "shared_params": {
+                "filter_len": 500
+            },
+            "params": [
+                {
+                    "read_library_name" : "My_PE_Library",
+                    "output_contigset_name" : "My_Contig_Assembly"
+                }, {
+                    "read_library_name": "Another_reads_library",
+                    "output_contigset_name": "Another_contig_assembly"
+                }
+            ]
+        }
+        """
+        if "shared_params" in app_info_el:
+            shared_params = app_info_el.pop("shared_params")
+            for param_set in app_info_el["params"]:
+                for k, v in shared_params.items():
+                    param_set.setdefault(k, v)
 
     def _build_run_job_params(
         self,
@@ -744,10 +788,10 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_local_app", log_info)
 
         self._send_comm_message(
-            "run_status",
+            MESSAGE_TYPE["RUN_STATUS"],
             {
                 "event": "success",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "event_at": timestamp(),
                 "cell_id": cell_id,
                 "run_id": run_id,
             },
@@ -787,119 +831,6 @@ class AppManager(object):
             run_id=run_id,
         )
 
-    # def run_dynamic_service(
-    #     self, app_id, params, tag="release", version=None, cell_id=None, run_id=None
-    # ):
-    #     """
-    #     Attempts to run a local app. These do not return a Job object, but just
-    #     the result of the app. In most cases, this will be a Javascript display
-    #     of the result, but could be anything.
-    #
-    #     If the app_spec looks like it makes a service call, then this raises a ValueError.
-    #     Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
-    #     returns the result.
-    #
-    #     Parameters:
-    #     -----------
-    #     app_id - should be from the app spec, e.g. 'view_expression_profile'
-    #     params - the dictionary of parameters for the app. Should be key-value
-    #              pairs where they keys are strings. If any non-optional
-    #              parameters are missing, an informative string will be printed.
-    #     tag - optional, one of [release|beta|dev] (default=release)
-    #     version - optional, a semantic version string. Only released modules have
-    #               versions, so if the tag is not 'release', and a version is given,
-    #               a ValueError will be raised.
-    #     **kwargs - these are the set of parameters to be used with the app.
-    #                They can be found by using the app_usage function. If any
-    #                non-optional apps are missing, a ValueError will be raised.
-    #
-    #     Example:
-    #     run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1',
-    #                   input_expression_matrix="MyMatrix", input_gene_ids="1234")
-    #     """
-    #     try:
-    #         if params is None:
-    #             params = dict()
-    #         return self._run_dynamic_service_internal(
-    #             app_id, params, tag, version, cell_id, run_id, **kwargs
-    #         )
-    #     except Exception as e:
-    #         e_type = type(e).__name__
-    #         e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
-    #         e_trace = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
-    #
-    #         if cell_id:
-    #             self.send_cell_message(
-    #                 "result",
-    #                 cell_id,
-    #                 run_id,
-    #                 {
-    #                     "error": {
-    #                         "message": e_message,
-    #                         "type": e_type,
-    #                         "stacktrace": e_trace,
-    #                     }
-    #                 },
-    #             )
-    #         else:
-    #             print(
-    #                 "Error while trying to start your app (run_local_app)!"
-    #                 + "\n-------------------------------------\n"
-    #                 + str(e)
-    #             )
-    #
-    # def _run_dynamic_service_internal(
-    #     self, app_id, params, tag, version, cell_id, run_id
-    # ):
-    #     spec = self._get_validated_app_spec(app_id, tag, False, version=version)
-    #
-    #     # Log that we're trying to run a job...
-    #     log_info = {
-    #         "app_id": app_id,
-    #         "tag": tag,
-    #         "username": system_variable("user_id"),
-    #         "ws": system_variable("workspace"),
-    #     }
-    #     kblogging.log_event(self._log, "run_dynamic_service", log_info)
-    #
-    #     # Silly to keep this here, but we do not validate the incoming parameters.
-    #     # If they are provided by the UI (we have cell_id), they are constructed
-    #     # according to the spec, so are trusted;
-    #     # Otherwise, if they are the product of direct code cell entry, this is a mode we do not
-    #     # "support", so we can let it fail hard.
-    #     # In the future when code cell interaction is supported for users, we will need to provide
-    #     # robust validation and error reporting, but this may end up being (should be) provided by the
-    #     # sdk execution infrastructure anyway
-    #
-    #     input_vals = params
-    #     function_name = (
-    #         spec["behavior"]["kb_service_name"]
-    #         + "."
-    #         + spec["behavior"]["kb_service_method"]
-    #     )
-    #     try:
-    #         result = clients.get("service").sync_call(
-    #             function_name, input_vals, service_version=tag
-    #         )[0]
-    #         # if a ui call (a cell_id is defined) we send a result message, otherwise
-    #         # just the raw result for display in a code cell. This is how we "support"
-    #         # code cells for internal usage.
-    #         if cell_id:
-    #             self.send_cell_message("result", cell_id, run_id, {"result": result})
-    #         else:
-    #             return result
-    #     except BaseException:
-    #         raise
-
-    def send_cell_message(self, message_id, cell_id, run_id, message):
-        address = {
-            "cell_id": cell_id,
-            "run_id": run_id,
-            "event_at": datetime.datetime.utcnow().isoformat() + "Z",
-        }
-
-        self._send_comm_message(message_id, {"address": address, "message": message})
-
     def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
         if (
             version is not None
@@ -936,7 +867,7 @@ class AppManager(object):
         elif value is None:
             return None
         else:
-            mapped_value = dict()
+            mapped_value = {}
             id_map = spec_param.get("id_mapping", {})
             for param_id in id_map:
                 # ensure that the param referenced in the group param list
@@ -973,7 +904,7 @@ class AppManager(object):
         params is a dict of key-value-pairs, each key is the input_parameter
         field of some parameter.
         """
-        inputs_dict = dict()
+        inputs_dict = {}
         for p in input_mapping:
             # 2 steps - figure out the proper value, then figure out the
             # proper position. value first!
@@ -1007,7 +938,7 @@ class AppManager(object):
             arg_position = p.get("target_argument_position", 0)
             target_prop = p.get("target_property", None)
             if target_prop is not None:
-                final_input = inputs_dict.get(arg_position, dict())
+                final_input = inputs_dict.get(arg_position, {})
                 if "/" in target_prop:
                     # This is case when slashes in target_prop separate
                     # elements in nested maps. We ignore escaped slashes
@@ -1040,7 +971,7 @@ class AppManager(object):
             else:
                 inputs_dict[arg_position] = p_value
 
-        inputs_list = list()
+        inputs_list = []
         keys = sorted(inputs_dict.keys())
         for k in keys:
             inputs_list.append(inputs_dict[k])
@@ -1066,14 +997,14 @@ class AppManager(object):
                 raise ValueError(
                     'The "symbols" input to the generated value must be an '
                     + "integer > 0!"
-                )
+                ) from None
         if symbols < 1:
             raise ValueError("Must have at least 1 symbol to randomly generate!")
         ret = "".join([chr(random.randrange(0, 26) + ord("A")) for _ in range(symbols)])
         if "prefix" in generator:
             ret = str(generator["prefix"]) + ret
         if "suffix" in generator:
-            ret = ret + str(generator["suffix"])
+            return ret + str(generator["suffix"])
         return ret
 
     def _send_comm_message(self, msg_type, content):
@@ -1088,10 +1019,3 @@ class AppManager(object):
         token_name = f"KBApp_{name}"
         token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
         return auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
-
-    def register_new_job(self, job: Job) -> None:
-        JobManager().register_new_job(job, refresh=False)
-        self._send_comm_message("new_job", {"job_id": job.job_id})
-        with exc_to_msg("appmanager"):
-            JobComm().lookup_job_state(job.job_id)
-            JobComm().start_job_status_loop()

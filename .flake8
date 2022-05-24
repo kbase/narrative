@@ -1,10 +1,17 @@
 [flake8]
-# https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
-ignore = E203, E266, E501, W503, F403, F401, E402, C901
-select = B,C,E,F,W,T4,B9
-exclude =
-.git,
+max-line-length = 88
+# E203: whitespace before ‘,’, ‘;’, or ‘:’
+# E501: line length
+# W503: line break after binary operator
+ignore = E203, E501, W503, D, DAR
+extend-select = B902, B903, B904
+extend-exclude =
+*.pyc,
 .github,
+.husky,
 deployment,
 docs,
-node_modules
+node_modules,
+js-coverage,
+python-coverage,
+src/build

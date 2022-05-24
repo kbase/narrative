@@ -41,6 +41,7 @@ define([
         showConfirmDialog,
         showDialog,
         showErrorDialog,
+        showGenericDialog,
         showInfoDialog,
         cssClassName,
     };
@@ -418,6 +419,8 @@ define([
      *      {function}  doThisFirst - a function to perform after creating the promise;
      *                  this allows actions to be performed between creating the modal
      *                  and before the modal is dismissed by keyboard or mouse action
+     *      {function}  onConfirm - a function to perform after clicking the 'OK' button
+     *                  and before resolving the promise and closing the modal
      *
      * @returns {Promise} that resolves to false if the modal is dismissed using the
      * cancel button, the close button, by clicking on the modal backdrop, or by pressing
@@ -427,7 +430,10 @@ define([
     function showGenericDialog(args) {
         const dialog = _renderModal(args),
             confirmNode = _generateConfirmNode(dialog),
-            modalDialogNode = _setUpModalNodes(confirmNode);
+            modalDialogNode = _setUpModalNodes(confirmNode),
+            onConfirmFn = args.onConfirm;
+
+        args.modalDialogNode = modalDialogNode;
 
         // this shows the modal
         $(modalDialogNode).modal({ keyboard: false });
@@ -444,20 +450,28 @@ define([
             // 13 = enter, 27 = escape
             // the key is sometimes a string, hence == instead of ===
             if (e.key == 13 || e.key == 27) {
-                $(modalDialogNode).modal('hide');
                 if (e.key == 13 && args.type === 'confirm') {
                     resolution = true;
                 }
+                $(modalDialogNode).modal('hide');
             }
         });
 
         return new Promise((resolve) => {
+            if (args.type === 'confirm' && onConfirmFn) {
+                $(modalDialogNode).on('hide.bs.modal', () => {
+                    if (resolution) {
+                        resolution = onConfirmFn(resolution, modalDialogNode);
+                    }
+                });
+            }
+
             $(modalDialogNode).on('hidden.bs.modal', () => {
                 confirmNode.remove();
                 resolve(resolution);
             });
             if (args.doThisFirst) {
-                args.doThisFirst();
+                args.doThisFirst(modalDialogNode);
             }
         });
     }
@@ -1193,7 +1207,7 @@ define([
                     fontSize = jsonBlockWidgetConfig.fontSize || 0.8;
 
                 function render(obj) {
-                    const specText = JSON.stringify(obj, false, indent),
+                    const specText = JSON.stringify(obj, null, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre(
                         {

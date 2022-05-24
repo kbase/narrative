@@ -1,8 +1,8 @@
 define([
     'jquery',
     'bluebird',
-    'kb_common/html',
-    '../validation',
+    'common/html',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',

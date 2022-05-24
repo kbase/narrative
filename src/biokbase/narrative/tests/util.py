@@ -1,6 +1,3 @@
-"""
-Test utility functions
-"""
 import logging
 import pickle
 import struct
@@ -17,7 +14,7 @@ from biokbase.narrative.common import util
 from biokbase.workspace.client import Workspace
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 
-__author__ = "Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>"
+
 _log = logging.getLogger("kbtest")
 _hnd = logging.StreamHandler()
 _hnd.setFormatter(
@@ -37,7 +34,11 @@ def test_logger(name):
     return logging.getLogger("kbtest." + name)
 
 
-class ConfigTests(object):
+class ConfigTests:
+    """
+    Test utility functions
+    """
+
     def __init__(self):
         self._path_prefix = os.path.join(
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"
@@ -69,6 +70,12 @@ class ConfigTests(object):
             data = json.loads(f.read())
             f.close()
             return data
+
+    def write_json_file(self, filename, data):
+        json_file_path = self.file_path(filename)
+        with open(json_file_path, "w") as f:
+            f.write(json.dumps(data, indent=4, sort_keys=True))
+            f.close()
 
     def file_path(self, filename, from_root=False):
         """
@@ -198,26 +205,26 @@ def read_json_file(path):
 
 class MyTestCase(unittest.TestCase):
     def test_kvparse(self):
-        for input, text, kvp in (
+        for user_input, text, kvp in (
             ("foo", "foo", {}),
             ("name=val", "", {"name": "val"}),
             ("a name=val boy", "a boy", {"name": "val"}),
         ):
             rkvp = {}
-            rtext = util.parse_kvp(input, rkvp)
+            rtext = util.parse_kvp(user_input, rkvp)
             self.assertEqual(
                 text,
                 rtext,
                 "Text '{}' does not match "
                 "result '{}' "
-                "from input '{}'".format(text, rtext, input),
+                "from input '{}'".format(text, rtext, user_input),
             )
             self.assertEqual(
                 text,
                 rtext,
                 "Dict '{}' does not match "
                 "result '{}' "
-                "from input '{}'".format(kvp, rkvp, input),
+                "from input '{}'".format(kvp, rkvp, user_input),
             )
 
 
@@ -246,10 +253,8 @@ def recvall(socket, n, timeout=0):
         if b:
             buf += b
             m += len(b)
-            # print("@@ recv {}".format(len(b)))
         else:
             time.sleep(0.1)
-            # print("@@ recv 0/{}".format(n - m))
     return buf
 
 
@@ -264,11 +269,9 @@ class LogProxyMessageBufferer(socketserver.BaseRequestHandler):
             if not hdr:
                 return
             size = struct.unpack(">L", hdr)[0]
-            #  print("@@ body {}".format(size))
             if size < 65536:
                 chunk = recvall(self.request, size, timeout=1)
                 record = pickle.loads(chunk)
-                # print("@@ message <{}>".format(record['msg']))
                 self.server.buf += record["msg"]
 
 
@@ -277,8 +280,6 @@ class NarrativeMessageBufferer(socketserver.StreamRequestHandler):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         self.data = self.rfile.readline().strip()
-        # print("{} wrote:".format(self.client_address[0]))
-        # print(self.data)
         self.server.buf += self.data.decode("utf-8")
 
 
@@ -312,30 +313,30 @@ def validate_job_state(job_state: dict) -> None:
     If any keys are missing, or extra keys exist, or values are weird, then this
     raises an AssertionError.
     """
-    assert "state" in job_state, "state key missing"
-    assert isinstance(job_state["state"], dict), "state is not a dict"
-    assert "user" in job_state, "user key missing"
-    assert isinstance(job_state["user"], str), "user is not a string"
-    assert "cell_id" in job_state, "cell_id key missing"
-    state = job_state["state"]
+    NoneType = type(None)
+
+    assert "jobState" in job_state, "jobState key missing"
+    assert isinstance(job_state["jobState"], dict), "jobState is not a dict"
+    assert "outputWidgetInfo" in job_state, "outputWidgetInfo key missing"
+    assert isinstance(
+        job_state["outputWidgetInfo"], (dict, NoneType)
+    ), "outputWidgetInfo is not a dict or None"
+    state = job_state["jobState"]
     # list of tuples - first = key name, second = value type
     # details for other cases comes later. This is just the expected basic set of
     # keys for EVERY job, once it's been created in EE2.
 
-    NoneType = type(None)
     state_keys = {
         "required": {
             "job_id": str,
             "status": str,
             "created": int,
-            "updated": int,
-            "run_id": (NoneType, str),
-            "cell_id": (NoneType, str),
         },
         "optional": {
             "batch_id": (NoneType, str),
             "batch_job": bool,
             "child_jobs": list,
+            "cell_id": (NoneType, str),
             "error": dict,
             "errormsg": str,
             "error_code": int,
@@ -344,7 +345,7 @@ def validate_job_state(job_state: dict) -> None:
             "queued": int,
             "retry_count": int,
             "retry_ids": list,
-            "retry_saved_toggle": bool,
+            "run_id": (NoneType, str),
             "running": int,
             "terminated_code": int,
             "user": str,

@@ -81,6 +81,7 @@ define([
                         {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
+                            newDisplayValue: message.newDisplayValue,
                         },
                         {
                             key: {
@@ -93,6 +94,7 @@ define([
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: message.newValue,
+                        newDisplayValue: message.newDisplayValue,
                     });
                 });
 

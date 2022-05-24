@@ -1,4 +1,4 @@
-define(['bluebird', 'kb_common/html', 'bootstrap'], (Promise, html) => {
+define(['bluebird', 'common/html', 'bootstrap'], (Promise, html) => {
     'use strict';
 
     // Constants
@@ -6,14 +6,13 @@ define(['bluebird', 'kb_common/html', 'bootstrap'], (Promise, html) => {
         div = t('div');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            container,
-            bus = config.bus,
             model = {
                 value: undefined,
             };
 
+        let container;
         // Validate configuration.
         // Nothing to do...
 
@@ -34,18 +33,13 @@ define(['bluebird', 'kb_common/html', 'bootstrap'], (Promise, html) => {
 
         function attach(node) {
             return Promise.try(() => {
-                parent = node;
                 container = node.appendChild(document.createElement('div'));
             });
         }
 
         function start() {
             return Promise.try(() => {
-                //                bus.on('update', function (message) {
-                //                    model.value = message.value;
-                //                });
-                //                bus.emit('sync');
-                //                return null;
+                //
             });
         }
 

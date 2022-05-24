@@ -1,4 +1,10 @@
-define(['common/format'], (format) => {
+define([
+    'common/format',
+    'common/jobCommMessages',
+    '/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm',
+    'testUtil',
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (format, jcm, AppStates, TestUtil, ResponseData) => {
     'use strict';
     const t = {
         created: 1610065000000,
@@ -7,8 +13,15 @@ define(['common/format'], (format) => {
         finished: 1610065800000,
     };
 
+    const fsmStates = AppStates.STATE;
+
+    const TEST_JOB_ID = 'someJob',
+        SOME_VALUE = 'some unimportant value',
+        BATCH_ID = 'BATCH_PARENT';
+
     const jobStrings = {
         unknown: 'Awaiting job data...',
+        conn_error: 'Connection error',
         not_found: 'This job was not found, or may not have been registered with this narrative.',
         queued: 'In the queue since ' + format.niceTime(t.created),
         termination: 'Finished with cancellation at ' + format.niceTime(t.finished),
@@ -25,6 +38,20 @@ define(['common/format'], (format) => {
         },
     };
 
+    const JOB = {
+        CREATED: 'JOB_CREATED',
+        ESTIMATING: 'JOB_ESTIMATING',
+        QUEUED: 'JOB_QUEUED',
+        TERMINATED_WHILST_QUEUED: 'JOB_TERMINATED_WHILST_QUEUED',
+        DIED_WHILST_QUEUED: 'JOB_DIED_WHILST_QUEUED',
+        RUNNING: 'JOB_RUNNING',
+        TERMINATED_WHILST_RUNNING: 'JOB_TERMINATED_WHILST_RUNNING',
+        DIED_WHILST_RUNNING: 'JOB_DIED_WHILST_RUNNING',
+        COMPLETED: 'JOB_COMPLETED',
+        UNKNOWN: 'JOB_UNKNOWN',
+        BATCH_PARENT: BATCH_ID,
+    };
+
     /*
         The following are valid job state objects as would be received from ee2.
 
@@ -34,7 +61,7 @@ define(['common/format'], (format) => {
 
     const validJobs = [
         {
-            job_id: 'job-created',
+            job_id: JOB.CREATED,
             status: 'created',
             created: t.created,
             updated: t.created,
@@ -52,11 +79,11 @@ define(['common/format'], (format) => {
                     label: 'created',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
-            job_id: 'job-estimating',
+            job_id: JOB.ESTIMATING,
             status: 'estimating',
             created: t.created,
             updated: t.created,
@@ -74,15 +101,15 @@ define(['common/format'], (format) => {
                     label: 'estimating',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
-            job_id: 'job-in-the-queue',
+            job_id: JOB.QUEUED,
             status: 'queued',
             created: t.created,
             queued: t.queued,
-            updated: 12345678910,
+            updated: t.queued,
             meta: {
                 canCancel: true,
                 canRetry: true,
@@ -97,16 +124,16 @@ define(['common/format'], (format) => {
                     label: 'queued',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'queued' },
+                appCellFsm: fsmStates.PROCESSING_QUEUED,
             },
         },
         {
-            job_id: 'job-cancelled-whilst-in-the-queue',
+            job_id: JOB.TERMINATED_WHILST_QUEUED,
             status: 'terminated',
             created: t.created,
             finished: t.finished,
             queued: t.queued,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -121,16 +148,49 @@ define(['common/format'], (format) => {
                     label: 'cancellation',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'canceled' },
+                appCellFsm: fsmStates.TERMINATED,
             },
         },
         {
-            job_id: 'job-running',
+            job_id: JOB.DIED_WHILST_QUEUED,
+            status: 'error',
+            error: {
+                code: 666,
+                name: 'Queue error',
+                message: 'Job died in the queue',
+            },
+            error_code: 1,
+            errormsg: 'Job did not know how to queue!',
+            created: t.created,
+            queued: t.queued,
+            finished: t.finished,
+            updated: t.finished,
+            meta: {
+                canCancel: false,
+                canRetry: true,
+                createJobStatusLines: {
+                    line: jobStrings.error,
+                    history: [jobStrings.queueHistoryNoRun, jobStrings.error],
+                },
+                jobAction: jobStrings.action.retry,
+                jobLabelIncludeError: 'failed: Queue error',
+                jobLabel: 'failed',
+                niceState: {
+                    class: 'kb-job-status__summary--error',
+                    label: 'error',
+                },
+                terminal: true,
+                errorString: 'Queue error: Error code: 666',
+                appCellFsm: fsmStates.RUNTIME_ERROR,
+            },
+        },
+        {
+            job_id: JOB.RUNNING,
             status: 'running',
             created: t.created,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.running,
             meta: {
                 canCancel: true,
                 canRetry: true,
@@ -145,17 +205,17 @@ define(['common/format'], (format) => {
                     label: 'running',
                 },
                 terminal: false,
-                appCellFsm: { mode: 'processing', stage: 'running' },
+                appCellFsm: fsmStates.PROCESSING_RUNNING,
             },
         },
         {
-            job_id: 'job-cancelled-during-run',
+            job_id: JOB.TERMINATED_WHILST_RUNNING,
             status: 'terminated',
             created: t.created,
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -174,44 +234,11 @@ define(['common/format'], (format) => {
                     label: 'cancellation',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'canceled' },
+                appCellFsm: fsmStates.TERMINATED,
             },
         },
         {
-            job_id: 'job-died-whilst-queueing',
-            status: 'error',
-            error: {
-                code: 666,
-                name: 'Queue error',
-                message: 'Job died in the queue',
-            },
-            error_code: 1,
-            errormsg: 'Job did not know how to queue!',
-            created: t.created,
-            queued: t.queued,
-            finished: t.finished,
-            updated: 12345678910,
-            meta: {
-                canCancel: false,
-                canRetry: true,
-                createJobStatusLines: {
-                    line: jobStrings.error,
-                    history: [jobStrings.queueHistoryNoRun, jobStrings.error],
-                },
-                jobAction: jobStrings.action.retry,
-                jobLabelIncludeError: 'failed: Queue error',
-                jobLabel: 'failed',
-                niceState: {
-                    class: 'kb-job-status__summary--error',
-                    label: 'error',
-                },
-                terminal: true,
-                errorString: 'Queue error: Error code: 666',
-                appCellFsm: { mode: 'error', stage: 'queued' },
-            },
-        },
-        {
-            job_id: 'job-died-with-error',
+            job_id: JOB.DIED_WHILST_RUNNING,
             status: 'error',
             error: {
                 code: -32000,
@@ -224,7 +251,7 @@ define(['common/format'], (format) => {
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: true,
@@ -241,17 +268,17 @@ define(['common/format'], (format) => {
                 },
                 terminal: true,
                 errorString: 'Server error: Error code: -32000',
-                appCellFsm: { mode: 'error', stage: 'running' },
+                appCellFsm: fsmStates.RUNTIME_ERROR,
             },
         },
         {
-            job_id: 'job-finished-with-success',
+            job_id: JOB.COMPLETED,
             status: 'completed',
             created: t.created,
             finished: t.finished,
             queued: t.queued,
             running: t.running,
-            updated: 12345678910,
+            updated: t.finished,
             meta: {
                 canCancel: false,
                 canRetry: false,
@@ -266,21 +293,23 @@ define(['common/format'], (format) => {
                     label: 'success',
                 },
                 terminal: true,
-                appCellFsm: { mode: 'success' },
+                appCellFsm: fsmStates.COMPLETED,
             },
             job_output: {
+                id: 'JOB_COMPLETED',
                 result: [
                     {
                         report_name: 'kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e',
                         report_ref: '57373/16/1',
                     },
                 ],
+                version: '1.1',
             },
         },
     ];
 
     const unknownJob = {
-        job_id: 'unknown-job',
+        job_id: JOB.UNKNOWN,
         status: 'does_not_exist',
         other: 'key',
         another: 'key',
@@ -288,6 +317,7 @@ define(['common/format'], (format) => {
             canCancel: false,
             canRetry: false,
             createJobStatusLines: {
+                summary: 'Job not found',
                 line: jobStrings.not_found,
                 history: [jobStrings.not_found],
             },
@@ -298,14 +328,15 @@ define(['common/format'], (format) => {
                 label: 'does not exist',
             },
             terminal: true,
+            appCellFsm: fsmStates.RUNTIME_ERROR,
         },
     };
 
     const batchParentJob = {
-        job_id: 'batch-parent-job',
-        batch_id: 'batch-parent-job',
+        job_id: BATCH_ID,
+        batch_id: BATCH_ID,
         batch_job: true,
-        child_jobs: ['unknown-job'].concat(
+        child_jobs: [unknownJob.job_id].concat(
             validJobs.map((job) => {
                 return job.job_id;
             })
@@ -333,19 +364,39 @@ define(['common/format'], (format) => {
         if (job.meta.canRetry) {
             job.meta.retryTarget = job.job_id;
         }
-        job.batch_id = 'batch-parent-job';
+        job.batch_id = BATCH_ID;
         job.batch_job = false;
     });
 
     const allJobs = JSON.parse(JSON.stringify([...validJobs, unknownJob]));
     const allJobsWithBatchParent = JSON.parse(JSON.stringify([batchParentJob].concat(allJobs)));
 
-    const invalidJobs = [
-        1,
-        'foo',
-        ['a', 'list'],
+    function generateMissingKeys(dataStructure) {
+        return Object.keys(dataStructure).map((key) => {
+            const newStructure = TestUtil.JSONcopy(dataStructure);
+            delete newStructure[key];
+            return newStructure;
+        });
+    }
+
+    const invalidTypes = [null, undefined, 1, 'foo', [], ['a', 'list'], {}];
+
+    const validJobStates = allJobsWithBatchParent.concat([
         {
-            job_id: 'somejob',
+            job_id: 'zero_created',
+            created: 0,
+            status: 'created',
+        },
+        {
+            job_id: 'does_not_exist',
+            status: 'does_not_exist',
+        },
+    ]);
+
+    const invalidJobStates = [
+        ...invalidTypes,
+        {
+            job_id: TEST_JOB_ID,
             other: 'key',
         },
         {
@@ -353,50 +404,157 @@ define(['common/format'], (format) => {
             other: 'key',
         },
         {
-            job_id: 'baz',
+            job_id: TEST_JOB_ID,
             create: 12345,
         },
         {
-            job_id: 'whatever',
+            job_id: TEST_JOB_ID,
             status: 'running',
         },
         {
-            job_id: 'no job status',
+            job_id: TEST_JOB_ID,
             created: 12345678,
             status: 'who cares?',
         },
-        null,
-        undefined,
     ];
 
-    const validInfo = [
+    const validBackendJobStates = Object.values(ResponseData[jcm.MESSAGE_TYPE.STATUS]);
+
+    const invalidBackendJobStates = [
+        ...invalidJobStates,
+        ...invalidJobStates.map((item) => {
+            return { jobState: item };
+        }),
         {
-            job_params: [{ this: 'that' }],
-            job_id: 'job_with_single_param',
-            app_id: 'NarrativeTest/app_sleep',
-            app_name: 'App Sleep',
-            batch_id: 'batch-parent-job',
+            jobState: validJobStates[0],
         },
         {
-            job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
-            job_id: 'job_with_multiple_params',
-            batch_id: 'batch-parent-job',
+            jobState: validJobStates[1],
+            outputWidgetInfo: null,
         },
     ];
+
+    const validInfo = Object.values(ResponseData[jcm.MESSAGE_TYPE.INFO]);
 
     const invalidInfo = [
-        null,
-        undefined,
-        {},
-        ['job_id'],
-        { job_id: 12345, params: [{ hello: 'world' }] },
-        { job_id: 12345, job_params: {} },
-        { job_id: 12345, job_params: [] },
-        { job_id: 12345, job_params: ['hello world'] },
-        { job_id: 12345, job_params: [['hello world']] },
-        { job_id: 12345, job_params: [{}] },
-        { job_params: [{ this: 'that' }] },
+        ...invalidTypes,
+        ...generateMissingKeys(validInfo[0]),
+        { job_params: [] },
+        { job_params: [{ ping: 'pong' }] },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            params: [{ hello: 'world' }],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: {},
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: ['hello world'],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: [['hello world']],
+        },
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch-parent-job',
+            app_name: 'some app',
+            app_id: 'some/app',
+            job_params: 12345,
+        },
     ];
+
+    const validLogs = Object.values(ResponseData[jcm.MESSAGE_TYPE.LOGS]);
+
+    const invalidLogs = [
+        ...invalidTypes,
+        ...generateMissingKeys(validLogs[0]),
+        {
+            job_id: TEST_JOB_ID,
+            batch_id: 'batch_parent_job',
+            first: 500,
+            latest: true,
+            max_lines: 500,
+            lines: {},
+        },
+    ];
+
+    const validRetry = Object.values(ResponseData[jcm.MESSAGE_TYPE.RETRY]);
+
+    const invalidRetry = [
+        ...invalidTypes,
+        // no jobState
+        { job: validJobStates[3], retry: validJobStates[4] },
+        // no jobState for the retry
+        { job: { jobState: validJobStates[5] }, retry: validJobStates[6] },
+        { job: { jobState: validJobStates[7] } },
+    ];
+
+    const runStatusCore = { event_at: SOME_VALUE, cell_id: SOME_VALUE, run_id: SOME_VALUE };
+    const extraKeys = {
+        error: ['code', 'message', 'source', 'stacktrace', 'type'].map((key) => {
+            return `error_${key}`;
+        }),
+        launched_job: ['cell_id', 'run_id', 'job_id'],
+        launched_job_batch: ['cell_id', 'run_id', 'batch_id', 'child_job_ids'],
+        success: ['cell_id', 'run_id'],
+    };
+
+    const runStatusMessages = {
+        success: { ...runStatusCore, event: 'success' },
+        launched_job: {
+            ...runStatusCore,
+            event: 'launched_job',
+            job_id: SOME_VALUE,
+        },
+        launched_job_batch: {
+            ...runStatusCore,
+            event: 'launched_job_batch',
+            batch_id: SOME_VALUE,
+            child_job_ids: [SOME_VALUE],
+        },
+        error: {
+            ...runStatusCore,
+            event: 'error',
+            error_code: SOME_VALUE,
+            error_message: SOME_VALUE,
+            error_source: SOME_VALUE,
+            error_stacktrace: SOME_VALUE,
+            error_type: SOME_VALUE,
+        },
+    };
+    const validRunStatus = Object.values(runStatusMessages);
+    const invalidRunStatus = [
+        ...invalidTypes,
+        // no event
+        { job_id: TEST_JOB_ID },
+        // invalid event
+        { event: '', event_at: 'string' },
+        { event: 'launch_job', ...runStatusCore, job_id: SOME_VALUE },
+    ];
+
+    // add invalid run status messages with one key missing
+    for (const eventType in extraKeys) {
+        for (const key of extraKeys[eventType]) {
+            const dupe = TestUtil.JSONcopy(runStatusMessages[eventType]);
+            delete dupe[key];
+            invalidRunStatus.push(dupe);
+        }
+    }
 
     const jobsByStatus = allJobs.reduce((acc, curr) => {
         if (!acc[curr.status]) {
@@ -406,7 +564,7 @@ define(['common/format'], (format) => {
         return acc;
     }, {});
 
-    const jobsById = allJobs.reduce((acc, curr) => {
+    const jobsById = allJobsWithBatchParent.reduce((acc, curr) => {
         acc[curr.job_id] = curr;
         return acc;
     }, {});
@@ -445,24 +603,25 @@ define(['common/format'], (format) => {
     /**
      * output of createBatchJob:
      *
-     * batch parent: 'job-created'
+     * batch parent:
      *
      * initial children:
-     * 'job-cancelled-whilst-in-the-queue'
-     * 'job-cancelled-during-run'
-     * 'job-died-whilst-queueing'
-     * 'job-in-the-queue' --> can cancel, can retry
+     * JOB.CREATED  --> can cancel, can retry
+     * JOB.QUEUED   --> can cancel, can retry
+     * JOB.DIED_WHILST_QUEUED
+     * JOB.TERMINATED_WHILST_QUEUED
+     * JOB.TERMINATED_WHILST_RUNNING
      *
      * job retries:
-     * 'job-cancelled-whilst-in-the-queue'
-     *  - retry 1: 'job-running' --> can cancel, can retry
+     * JOB.TERMINATED_WHILST_QUEUED
+     *  - retry 1: JOB.RUNNING --> can cancel, can retry
      *
-     * 'job-cancelled-during-run'
-     *  - retry 1: 'job-finished-with-success' --> cannot cancel or retry
+     * JOB.TERMINATED_WHILST_RUNNING
+     *  - retry 1: JOB.COMPLETED --> cannot cancel or retry
      *
-     * 'job-died-whilst-queueing'
-     *  - retry 1: 'job-died-with-error'
-     *  - retry 2: 'job-estimating' (most recent retry) --> can cancel, can retry
+     * JOB.DIED_WHILST_QUEUED
+     *  - retry 1: JOB.DIED_WHILST_RUNNING
+     *  - retry 2: JOB.ESTIMATING (most recent retry) --> can cancel, can retry
      *
      * Extra metadata for batch jobs:
      * meta.currentJob: true/false -- this is the most recent job (including retries)
@@ -470,9 +629,9 @@ define(['common/format'], (format) => {
      */
 
     function createBatchJob() {
-        const BATCH_ID = 'job-created';
-        const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));
+        const jobsWithRetries = TestUtil.JSONcopy(validJobs);
         const jobIdIndex = {};
+
         let thisJob, parentJob;
         jobsWithRetries.forEach((job) => {
             job.batch_id = BATCH_ID;
@@ -481,77 +640,225 @@ define(['common/format'], (format) => {
         });
 
         // batch parent
-        jobIdIndex[BATCH_ID].batch_job = true;
-        jobIdIndex[BATCH_ID].child_jobs = Object.keys(jobIdIndex).filter(
-            (job_id) => job_id !== BATCH_ID
-        );
-        jobIdIndex[BATCH_ID].meta.canRetry = false;
-        delete jobIdIndex[BATCH_ID].meta.retryTarget;
+        const batchParent = TestUtil.JSONcopy(batchParentJob);
+        batchParent.child_jobs = validJobs.map((job) => {
+            return job.job_id;
+        });
+        // add the batchParent under the index BATCH_ID and delete the old key
+        jobIdIndex[BATCH_ID] = batchParent;
 
-        // no retries of 'job-in-the-queue'
-        parentJob = 'job-in-the-queue';
-        convertToRetryParent(jobIdIndex[parentJob]);
-        jobIdIndex[parentJob].meta.currentJob = true;
+        // no retries of JOB.QUEUED or JOB.CREATED
+        [JOB.QUEUED, JOB.CREATED].forEach((jobId) => {
+            convertToRetryParent(jobIdIndex[jobId]);
+            jobIdIndex[jobId].meta.currentJob = true;
+        });
 
         // these jobs have been retried
 
-        // retries of 'job-cancelled-whilst-in-the-queue'
-        parentJob = 'job-cancelled-whilst-in-the-queue';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-running']);
+        // retries of JOB.TERMINATED_WHILST_QUEUED
+        parentJob = JOB.TERMINATED_WHILST_QUEUED;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.RUNNING]);
 
-        thisJob = 'job-running';
+        thisJob = JOB.RUNNING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 15);
 
-        // retries of 'job-cancelled-during-run'
-        parentJob = 'job-cancelled-during-run';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-cancelled-during-run']);
+        // retries of JOB.TERMINATED_WHILST_RUNNING
+        parentJob = JOB.TERMINATED_WHILST_RUNNING;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.TERMINATED_WHILST_RUNNING]);
 
-        thisJob = 'job-finished-with-success';
+        thisJob = JOB.COMPLETED;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 20);
 
-        // two retries of 'job-died-whilst-queueing'
-        parentJob = 'job-died-whilst-queueing';
-        convertToRetryParent(jobIdIndex[parentJob], ['job-died-with-error', 'job-estimating']);
+        // two retries of JOB.DIED_WHILST_QUEUED
+        parentJob = JOB.DIED_WHILST_QUEUED;
+        convertToRetryParent(jobIdIndex[parentJob], [JOB.DIED_WHILST_RUNNING, JOB.ESTIMATING]);
 
-        thisJob = 'job-died-with-error';
+        thisJob = JOB.DIED_WHILST_RUNNING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         passTime(jobIdIndex[thisJob], 5);
 
-        thisJob = 'job-estimating';
+        thisJob = JOB.ESTIMATING;
         convertToRetry(jobIdIndex[thisJob], parentJob);
         jobIdIndex[thisJob].meta.currentJob = true;
         passTime(jobIdIndex[thisJob], 10);
+
+        const originalJobIds = [
+                JOB.CREATED,
+                JOB.QUEUED,
+                JOB.TERMINATED_WHILST_QUEUED,
+                JOB.TERMINATED_WHILST_RUNNING,
+                JOB.DIED_WHILST_QUEUED,
+            ],
+            currentJobIds = [JOB.CREATED, JOB.QUEUED, JOB.RUNNING, JOB.COMPLETED, JOB.ESTIMATING];
+
+        // the original jobs prior to any updates
+        const originalJobsNoRetryData = {
+            [BATCH_ID]: TestUtil.JSONcopy(batchParentJob),
+        };
+        // update the child jobs
+        originalJobsNoRetryData[BATCH_ID].child_jobs = originalJobIds;
+
+        // original jobs
+        const originalJobs = originalJobIds.reduce((acc, jobId) => {
+                originalJobsNoRetryData[jobId] = TestUtil.JSONcopy(jobsById[jobId]);
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {}),
+            // current jobs, minus batch parent
+            currentJobs = currentJobIds.reduce((acc, jobId) => {
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {});
+
+        function generateStatusMessage(childJobIds) {
+            const jobStates = {
+                [BATCH_ID]: {
+                    [jcm.PARAM.JOB_ID]: BATCH_ID,
+                    jobState: TestUtil.JSONcopy(batchParent),
+                },
+            };
+            // replace the existing child_jobs with the current array
+            jobStates[BATCH_ID].jobState.child_jobs = TestUtil.JSONcopy(childJobIds);
+            // add job states for the child jobs
+            childJobIds.forEach((jobId) => {
+                jobStates[jobId] = {
+                    [jcm.PARAM.JOB_ID]: jobId,
+                    jobState: jobIdIndex[jobId],
+                };
+            });
+            return {
+                type: jcm.MESSAGE_TYPE.STATUS,
+                msg: jobStates,
+                allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+            };
+        }
+
+        function generateRetryMessage(retryList, childJobIds) {
+            const msg = {};
+            retryList.forEach((item) => {
+                const { retry, retryParent } = item;
+                childJobIds.push(retry);
+                msg[retryParent] = {
+                    [jcm.PARAM.JOB_ID]: retryParent,
+                    job: {
+                        [jcm.PARAM.JOB_ID]: retryParent,
+                        jobState: jobIdIndex[retryParent],
+                    },
+                    retry_id: retry,
+                    retry: {
+                        [jcm.PARAM.JOB_ID]: retry,
+                        jobState: jobIdIndex[retry],
+                    },
+                };
+            });
+            return {
+                type: jcm.MESSAGE_TYPE.RETRY,
+                msg,
+                allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+            };
+        }
+
+        function generateUpdateSeries() {
+            // this maintains an array containing all the child IDs
+            const childJobIds = [...originalJobIds];
+
+            // create a series of job messages that mimic running a batch job and
+            // retrying some of the jobs in the batch
+            const jobUpdateSeries = [
+                // start with run status for the original jobs
+                {
+                    type: jcm.MESSAGE_TYPE.RUN_STATUS,
+                    msg: {
+                        ...runStatusCore,
+                        event: 'launched_job_batch',
+                        batch_id: BATCH_ID,
+                        child_job_ids: TestUtil.JSONcopy(childJobIds),
+                    },
+                    allJobIds: [BATCH_ID].concat(TestUtil.JSONcopy(childJobIds)),
+                },
+            ];
+
+            // status update for the current jobs
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // retry of 'JOB_CANCELLED-WHILST-IN-THE-QUEUE'
+            let retry = JOB.RUNNING,
+                retryParent = JOB.TERMINATED_WHILST_QUEUED;
+            jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // retry 1 of JOB.DIED_WHILST_QUEUED
+            retry = JOB.DIED_WHILST_RUNNING;
+            retryParent = JOB.DIED_WHILST_QUEUED;
+            jobUpdateSeries.push(generateRetryMessage([{ retry, retryParent }], childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // two retries at once
+            // retry of JOB.TERMINATED_WHILST_RUNNING
+            // retry 2 of JOB.DIED_WHILST_QUEUED
+            jobUpdateSeries.push(
+                generateRetryMessage(
+                    [
+                        {
+                            retry: JOB.COMPLETED,
+                            retryParent: JOB.TERMINATED_WHILST_RUNNING,
+                        },
+                        { retry: JOB.ESTIMATING, retryParent: JOB.DIED_WHILST_QUEUED },
+                    ],
+                    childJobIds
+                )
+            );
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            // status message
+            jobUpdateSeries.push(generateStatusMessage(childJobIds));
+
+            return jobUpdateSeries;
+        }
+
+        const retryMessages = generateRetryMessage(
+            [
+                {
+                    retry: JOB.RUNNING,
+                    retryParent: JOB.TERMINATED_WHILST_QUEUED,
+                },
+                {
+                    retry: JOB.COMPLETED,
+                    retryParent: JOB.TERMINATED_WHILST_RUNNING,
+                },
+                {
+                    retry: JOB.ESTIMATING,
+                    retryParent: JOB.DIED_WHILST_QUEUED,
+                },
+            ],
+            []
+        );
 
         return {
             jobArray: Object.values(jobIdIndex),
             jobsById: jobIdIndex,
             jobsWithRetries: [
-                'job-cancelled-whilst-in-the-queue',
-                'job-cancelled-during-run',
-                'job-died-whilst-queueing',
+                JOB.TERMINATED_WHILST_QUEUED,
+                JOB.TERMINATED_WHILST_RUNNING,
+                JOB.DIED_WHILST_QUEUED,
             ],
-            originalJobs: [
-                'job-in-the-queue',
-                'job-cancelled-whilst-in-the-queue',
-                'job-cancelled-during-run',
-                'job-died-whilst-queueing',
-            ].reduce((acc, jobId) => {
-                acc[jobId] = jobIdIndex[jobId];
-                return acc;
-            }, {}),
-            currentJobs: [
-                'job-in-the-queue',
-                'job-running',
-                'job-finished-with-success',
-                'job-estimating',
-            ].reduce((acc, jobId) => {
-                acc[jobId] = jobIdIndex[jobId];
-                return acc;
-            }, {}),
+            originalJobIds,
+            currentJobIds,
+            originalJobs,
+            currentJobs,
+            originalJobsNoRetryData,
+            jobUpdateSeries: generateUpdateSeries(),
+            retryMessages: retryMessages.msg,
             batchId: BATCH_ID,
             expectedButtonState: [
                 ['.dropdown [data-action="cancel"]', false],
@@ -560,9 +867,68 @@ define(['common/format'], (format) => {
         };
     }
 
+    const example = {
+        BackendJobState: {
+            valid: validBackendJobStates,
+            invalid: invalidBackendJobStates,
+        },
+        Info: {
+            valid: validInfo,
+            invalid: invalidInfo,
+        },
+        JobState: {
+            valid: validJobStates,
+            invalid: invalidJobStates,
+        },
+        Logs: {
+            valid: validLogs,
+            invalid: invalidLogs,
+        },
+        Retry: {
+            valid: validRetry,
+            invalid: invalidRetry,
+        },
+        RunStatus: {
+            valid: validRunStatus,
+            invalid: invalidRunStatus,
+        },
+    };
+
+    example.STATUS = example.BackendJobState;
+    example.INFO = example.Info;
+    example.RETRY = example.Retry;
+    example.LOGS = example.Logs;
+    example.RUN_STATUS = example.RunStatus;
+
+    function makeJobProgression() {
+        return [
+            {
+                ...jobsById[JOB.CREATED],
+                job_id: JOB.CREATED,
+            },
+            {
+                ...jobsById[JOB.ESTIMATING],
+                job_id: JOB.CREATED,
+            },
+            {
+                ...jobsById[JOB.QUEUED],
+                job_id: JOB.CREATED,
+            },
+            {
+                ...jobsById[JOB.RUNNING],
+                job_id: JOB.CREATED,
+            },
+            {
+                ...jobsById[JOB.COMPLETED],
+                job_id: JOB.CREATED,
+            },
+        ];
+    }
+
     return {
+        TEST_JOB_ID,
+        JOB_NAMES: JOB,
         validJobs,
-        invalidJobs,
         unknownJob,
         batchParentJob,
         allJobs,
@@ -571,7 +937,7 @@ define(['common/format'], (format) => {
         jobsByStatus,
         jobsById,
         jobStrings,
-        validInfo,
-        invalidInfo,
+        jobProgression: makeJobProgression(),
+        example,
     };
 });

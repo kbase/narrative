@@ -1,8 +1,8 @@
 define([
     'jquery',
     'bluebird',
-    'kb_common/html',
-    '../validation',
+    'common/html',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/ui',
     'common/runtime',
@@ -11,7 +11,7 @@ define([
     'narrativeConfig',
     'Taxonomy-client-api',
     'kbase-generic-client-api',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
 
     'typeahead',
     'bootstrap',

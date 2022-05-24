@@ -852,6 +852,7 @@ define(['uuid', 'bluebird', 'underscore', 'util/util'], (Uuid, Promise, _, Util)
             set,
             plisten,
             when,
+            channels,
             makeChannelBus,
             makeChannel,
             removeChannel,

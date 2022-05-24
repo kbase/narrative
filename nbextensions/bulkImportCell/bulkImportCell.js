@@ -8,6 +8,7 @@ define([
     'common/html',
     'common/jobManager',
     'common/jobs',
+    'common/jobCommMessages',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -38,6 +39,7 @@ define([
     html,
     JobManagerModule,
     Jobs,
+    jcm,
     Props,
     Runtime,
     Spec,
@@ -61,7 +63,6 @@ define([
 ) => {
     'use strict';
     const { JobManager } = JobManagerModule;
-
     const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';
@@ -151,9 +152,13 @@ define([
                         label: 'Info',
                         widget: MultiAppInfoWidget,
                     },
+                    launching: {
+                        label: 'Job Status',
+                        widget: JobStatusTabWidget.launchMode,
+                    },
                     jobStatus: {
                         label: 'Job Status',
-                        widget: JobStatusTabWidget,
+                        widget: JobStatusTabWidget.runMode,
                     },
                     results: {
                         label: 'Result',
@@ -408,7 +413,8 @@ define([
                     typesToFiles[fileType].messages.push({
                         type: 'warning',
                         message:
-                            'Multiple parameters listed in the bulk import specification file. Import can proceed, but only the first line of parameters will be used.',
+                            'Rows in the import file use different parameter sets, which is currently not supported. Please note, parameters in the first input row will be applied to all rows and app runs.',
+                        link: 'https://docs.kbase.us/data/upload-download-guide/uploads/bulk-limitations',
                     });
                 }
 
@@ -531,7 +537,7 @@ define([
         function setupMessageBus() {
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(cell, 'attributes', 'id'),
+                    [jcm.CHANNEL.CELL]: Utils.getMeta(cell, 'attributes', 'id'),
                 },
                 description: 'parent bus for BulkImportCell',
             });
@@ -553,12 +559,13 @@ define([
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    updateState('inProgress');
+                    switchToTab('jobStatus');
+                    Jupyter.narrative.saveNarrative();
                     if (cancelBatch) {
                         cancelBatchJob();
                         break;
                     }
-                    updateState('inProgress');
-                    switchToTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -617,18 +624,19 @@ define([
              *   params: [{ set of params for individual run }]
              * }]
              */
-            Object.keys(inputs).forEach((fileType) => {
-                const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
-                const appInfo = {
-                    app_id: appSpecInfo.id,
-                    tag: appSpecInfo.tag || 'release',
-                    version: appSpecInfo.git_commit_hash,
-                    params: params[fileType].filePaths.map((filePathParams) => {
-                        return Object.assign({}, filePathParams, params[fileType].params);
-                    }),
-                };
-                appInfos.push(appInfo);
-            });
+            Object.keys(inputs)
+                .sort()
+                .forEach((fileType) => {
+                    const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
+                    const appInfo = {
+                        app_id: appSpecInfo.id,
+                        tag: appSpecInfo.tag || 'release',
+                        version: appSpecInfo.git_commit_hash,
+                        params: params[fileType].filePaths,
+                        shared_params: params[fileType].params,
+                    };
+                    appInfos.push(appInfo);
+                });
 
             const code = PythonInterop.buildBulkAppRunner(cellId, runId, appInfos);
             cell.set_text(code);
@@ -689,29 +697,42 @@ define([
             render()
                 .then(() => {
                     jobManager.addEventHandler('modelUpdate', {
-                        execMessage: (jobManagerContext) => {
+                        execMessage: () => {
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
-                                Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs')
-                                )
+                                Jobs.createCombinedJobState(jobManager.getIndexedJobs())
                             );
                         },
                         fsmState: () => {
-                            const fsmState = jobManager.getFsmStateFromJobs();
-                            if (fsmState) {
-                                updateState(fsmState);
+                            const newFsmState = jobManager.getFsmStateFromJobs();
+                            if (newFsmState) {
+                                updateState(newFsmState);
+                            }
+                        },
+                        titleBar: () => {
+                            const cellCollapsed =
+                                    Utils.getCellMeta(
+                                        cell,
+                                        'kbase.cellState.toggleMinMax',
+                                        'maximized'
+                                    ) !== 'maximized',
+                                jobStatusEl = cell.element[0].querySelector(
+                                    '[data-element="job-status"]'
+                                );
+
+                            if (cellCollapsed && jobStatusEl) {
+                                jobStatusEl.innerHTML = Jobs.createCombinedJobStateSummary(
+                                    jobManager.getIndexedJobs()
+                                );
                             }
                         },
                     });
-                    try {
-                        const fsmState = jobManager.restoreFromSaved();
-                        if (fsmState) {
-                            updateState(fsmState);
-                        }
-                    } catch (e) {
-                        console.error(e);
+
+                    const fsmState = jobManager.restoreFromSaved();
+                    if (fsmState) {
+                        updateState(fsmState);
                     }
+
                     const expectedFiles = new Set();
                     Object.values(model.getItem('inputs')).forEach((inputs) => {
                         for (const f of inputs.files) {
@@ -732,6 +753,8 @@ define([
                     BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
                 )
                 .then((readyState) => {
+                    jobManager.runHandler('modelUpdate');
+
                     const curState = model.getItem('state');
                     const curReadyState = curState.params;
                     const updatedReadyState = !_.isEqual(readyState, curReadyState);
@@ -890,12 +913,12 @@ define([
          * Then changes the global cell state to "launching".
          */
         function doRunCellAction() {
-            runStatusListener = cellBus.on('run-status', handleRunStatus);
+            updateState('launching');
+            switchToTab('launching');
+            runStatusListener = cellBus.on(jcm.MESSAGE_TYPE.RUN_STATUS, handleRunStatus);
             busEventManager.add(runStatusListener);
             clearCellMessages();
             cell.execute();
-            updateState('launching');
-            switchToTab('viewConfigure');
         }
 
         /**
@@ -946,6 +969,7 @@ define([
             cancelBatch = null;
             updateEditingState();
             switchToTab('configure');
+            model.deleteItem('appError');
             Jupyter.narrative.saveNarrative();
         }
 
@@ -1005,18 +1029,23 @@ define([
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
                 let newTab;
-                model.setItem('state.state', newUiState);
-                const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
-                stateDiff.selectedFileType = state.selectedFileType;
-                // update selections
-                if (stateDiff.tab.tabs[state.tab.selected].enabled) {
-                    stateDiff.tab.selected = state.tab.selected;
-                } else {
-                    newTab = stateDiff.defaultTab;
-                }
-                state = stateDiff;
-                if (newTab) {
-                    switchToTab(newTab);
+                const oldState = model.getItem('state.state');
+                if (oldState !== newUiState) {
+                    model.setItem('state.state', newUiState);
+                    const stateDiff = JSON.parse(JSON.stringify(States[newUiState].ui));
+                    stateDiff.selectedFileType = state.selectedFileType;
+                    // update selections
+                    if (state.tab.selected) {
+                        if (stateDiff.tab.tabs[state.tab.selected].enabled) {
+                            stateDiff.tab.selected = state.tab.selected;
+                        } else {
+                            newTab = stateDiff.defaultTab;
+                        }
+                    }
+                    state = stateDiff;
+                    if (newTab) {
+                        switchToTab(newTab);
+                    }
                 }
             }
             cellTabs.setState(state.tab);

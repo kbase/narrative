@@ -10,7 +10,7 @@ define([
     // EXTERNAL
     'bluebird',
     // CDN
-    'kb_common/html',
+    'common/html',
     'kb_sdk_clients/genericClient',
     'kb_sdk_clients/exceptions',
     'kb_service/utils',
@@ -45,36 +45,23 @@ define([
         input = t('input'),
         button = t('button');
 
-    function factory(config) {
-        let runtime = Runtime.make(),
-            workspaceInfo = config.workspaceInfo,
-            parent,
-            container,
-            ui,
-            // bus = runtime.bus().makeChannelBus({ description: 'object selector bus' }),
+    function factory() {
+        const runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channelName = bus.genName(),
             channel = bus.channel(channelName),
-            model = Props.make(),
-            availableReadsSets,
-            availableReadsSetsMap;
+            model = Props.make();
+
+        let parent, container, ui, availableReadsSets, availableReadsSetsMap;
 
         function doCreate(e) {
             e.preventDefault();
             e.stopPropagation();
             const name = ui.getElement('new-object-name').value;
-            // value = ui.getElement('new-object-type').value;
             channel.emit('create-new-set', {
                 name: name,
-                // type: value
             });
             return false;
-        }
-
-        function doNew(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            channel.emit('new-set-form');
         }
 
         function renderLayout() {
@@ -138,34 +125,12 @@ define([
                 option.selected = false;
             });
 
-            // var selected = control.querySelectorAll('[selected]');
-            // //console.log('autoselect', control, selected);
-            // if (selected.length > 1) {
-            //     for (var i = 0; i < selected.length; i += 1) {
-            //         selected.item(i).removeAttribute('selected');
-            //     }
-            // }
-
             for (let i = 0; i < control.options.length; i += 1) {
                 if (control.options.item(i).value === ref) {
                     control.options.item(i).selected = true;
                     break;
                 }
             }
-            // var options = Array.prototype.slice.call(control.options);
-            // options.forEach(function (option) {
-            //     if (option.value === ref) {
-            //         option.selected = true;
-            //     }
-            // })
-
-            // var newlySelected = control.querySelector('option[value="' + ref + '"]');
-
-            // //console.log('autoselect', newlySelected);
-            // if (newlySelected) {
-            //     newlySelected.setAttribute('selected', '');
-            // }
-
             // And we need to force the change for this
             emitChanged();
         }
@@ -189,7 +154,7 @@ define([
             emitChanged();
         }
 
-        function doDataUpdated(newData) {}
+        function doDataUpdated() {}
 
         function fetchData() {
             const types = ['KBaseSets.ReadsSet'];
@@ -199,32 +164,9 @@ define([
                 availableReadsSetsMap = {};
                 availableReadsSets = result.data;
                 result.data.forEach((resultItem) => {
-                    // var info = serviceUtils.objectInfoToObject(resultItem);
                     availableReadsSetsMap[resultItem.ref] = resultItem;
                 });
                 return result.data;
-            });
-        }
-
-        function fetchDatax() {
-            const setApiClient = new GenericClient({
-                    url: runtime.config('services.service_wizard.url'),
-                    token: runtime.authToken(),
-                    module: 'SetAPI',
-                    version: 'dev',
-                }),
-                params = {
-                    workspace: String(workspaceInfo.name),
-                    include_set_item_info: 1,
-                };
-
-            return setApiClient.callFunc('list_sets', [params]).then((result) => {
-                availableReadsSetsMap = {};
-                availableReadsSets = result[0].sets.map((resultItem) => {
-                    const info = serviceUtils.objectInfoToObject(resultItem.info);
-                    availableReadsSetsMap[info.ref] = info;
-                    return info;
-                });
             });
         }
 
@@ -291,38 +233,6 @@ define([
                 });
         }
 
-        // LIFECYCLE API
-
-        //        function start() {
-        //            return Promise.try(function () {
-        //                bus.on('run', function (message) {
-        //                    doAttach(message.node);
-        //                    renderAvailableObjects()
-        //                        .then(function (itemCount) {
-        //                            // TODO: fetch the selected item and send to the app.
-        //                            if (availableReadsSets.length) {
-        //                                // TODO: use the currently selected item, which may have
-        //                                // been restored from state.
-        //                                selectItem(availableReadsSets[selectedReadsSetItem].ref);
-        //                            }
-        //                        })
-        //                        .catch(function (err) {
-        //                            console.log('ERROR', err);
-        //                            bus.emit('fatal-error', {
-        //                                location: 'render-available-objects',
-        //                                error: err
-        //                            });
-        //                        });
-        //                    runtime.bus().on('workspace-changed', function () {
-        //                        renderAvailableObjects();
-        //                    });
-        //                    // do more stuff
-        //                });
-        //                // send parent the ready message
-        //                bus.emit('ready');
-        //            });
-        //        }
-
         /*
          * Now
          */
@@ -335,7 +245,7 @@ define([
                         selectCurrentItem();
                     })
                     .catch((err) => {
-                        console.log('ERROR', err);
+                        console.warn('ERROR', err);
                         channel.emit('fatal-error', {
                             location: 'render-available-objects',
                             error: err,
@@ -367,8 +277,8 @@ define([
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

@@ -1,63 +1,92 @@
 define([
+    'jquery',
     'common/runtime',
     'widgets/appWidgets2/input/selectInput',
     'testUtil',
     'widgets/appWidgets2/validators/constants',
-], (Runtime, SelectInput, TestUtil, Constants) => {
+], ($, Runtime, SelectInput, TestUtil, Constants) => {
     'use strict';
-    let bus, testConfig, runtime, container;
-    const required = false,
-        defaultValue = 'apple';
+    let bus, runtime;
 
-    function buildTestConfig(_required, _defaultValue, _bus) {
+    const dropdownOptions = [
+        {
+            value: 'apple',
+            display: 'Apple',
+        },
+        {
+            value: 'banana',
+            display: 'Banana',
+        },
+        {
+            value: 'carrot',
+            display: 'Carrot',
+        },
+    ];
+
+    const badOption = 'a very bad option';
+
+    function buildTestConfig(args) {
+        const singleConfig = {
+                multiselection: 0,
+                defaultValue: 'apple',
+                initialValue: 'apple',
+                nullValue: '',
+            },
+            multiConfig = {
+                multiselection: 1,
+                defaultValue: ['apple'],
+                initialValue: ['apple'],
+                nullValue: [],
+            },
+            baseConfig = args.multiselection ? multiConfig : singleConfig;
+
+        const config = {
+            ...baseConfig,
+            required: false,
+            ...args,
+        };
+
         return {
-            bus: _bus,
+            devMode: true,
+            bus: config.bus,
             parameterSpec: {
                 data: {
-                    defaultValue: _defaultValue,
-                    nullValue: '',
+                    defaultValue: config.defaultValue,
+                    nullValue: config.nullValue,
                     constraints: {
-                        required: _required,
-                        defaultValue: _defaultValue,
-                        options: [
-                            {
-                                value: 'apple',
-                                display: 'Apple',
-                            },
-                            {
-                                value: 'banana',
-                                display: 'Banana',
-                            },
-                            {
-                                value: 'carrot',
-                                display: 'Carrot',
-                            },
-                        ],
+                        required: config.required,
+                        options: dropdownOptions,
                     },
+                    type: 'string',
                 },
                 ui: {
                     label: 'A select input',
                 },
+                original: {
+                    dropdown_options: {
+                        multiselection: config.multiselection,
+                        options: dropdownOptions,
+                    },
+                },
             },
-            channelName: _bus.channelName,
-            initialValue: 'apple',
+            channelName: config.bus.channelName,
+            initialValue: config.initialValue,
         };
     }
 
-    describe('Select Input tests', () => {
-        beforeEach(() => {
+    describe('The Select input', () => {
+        beforeEach(function () {
             runtime = Runtime.make();
-            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
-            testConfig = buildTestConfig(required, defaultValue, bus);
+            this.container = document.createElement('div');
+            this.testConfig = buildTestConfig({ bus });
         });
 
         afterEach(() => {
             bus.stop();
             runtime.destroy();
-            container.remove();
             TestUtil.clearRuntime();
         });
 
@@ -65,115 +94,142 @@ define([
             expect(SelectInput).not.toBeNull();
         });
 
-        it('should be instantiable', () => {
-            const widget = SelectInput.make(testConfig);
+        it('should be instantiable', function () {
+            const widget = SelectInput.make(this.testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toEqual(jasmine.any(Function));
             });
         });
 
-        it('Should start and stop a widget', () => {
-            const widget = SelectInput.make(testConfig);
+        it('Should start and stop a widget', function () {
+            const widget = SelectInput.make(this.testConfig);
 
             return widget
-                .start({ node: container })
+                .start({ node: this.container })
                 .then(() => {
                     // verify it's there.
-                    const inputElem = container.querySelector('select[data-element="input"]');
+                    const inputElem = this.container.querySelector('select[data-element="input"]');
                     expect(inputElem).toBeDefined();
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(container.childElementCount).toBe(0);
+                    expect(this.container.childElementCount).toBe(0);
                 });
         });
 
-        it('Should update value via bus', () => {
-            // select one value then update it.
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
+        describe('bus updates', () => {
+            it('Should update value via bus', async function () {
+                // select one value then update it.
+                const widget = SelectInput.make(this.testConfig);
+                await widget.start({ node: this.container });
+                const inputElem = this.container.querySelector('select[data-element="input"]');
+                expect($(inputElem).val()).toEqual(this.testConfig.parameterSpec.data.defaultValue);
+
+                bus.emit('update', { value: 'banana' });
                 return new Promise((resolve) => {
-                    bus.on('validation', (message) => {
-                        expect(message.isValid).toBeTruthy();
+                    bus.on('set-value', (msg) => {
+                        expect(msg).toEqual('banana');
+                        expect($(inputElem).val()).toEqual('banana');
                         resolve();
                     });
-                    bus.emit('update', { value: 'banana' });
+                });
+            });
+
+            it('Should reset to default via bus', async function () {
+                const widget = SelectInput.make(this.testConfig, { initialValue: 'carrot' });
+                await widget.start({ node: this.container });
+                const inputElem = this.container.querySelector('select[data-element="input"]');
+
+                bus.emit('reset-to-defaults');
+                return new Promise((resolve) => {
+                    bus.on('set-value', (msg) => {
+                        expect(msg).toEqual(this.testConfig.parameterSpec.data.defaultValue);
+                        expect($(inputElem).val()).toEqual(
+                            this.testConfig.parameterSpec.data.defaultValue
+                        );
+                        resolve();
+                    });
                 });
             });
         });
 
-        it('Should reset to default via bus', () => {
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
+        describe('change events', () => {
+            it('Should respond to input change events with "changed" and "validation" messages, single select', async function () {
+                const widget = SelectInput.make(this.testConfig);
+                let startUpVal = false;
+                await widget.start({ node: this.container });
                 return new Promise((resolve) => {
-                    bus.on('validation', (message) => {
-                        expect(message.isValid).toBeTruthy();
+                    bus.on('validation', (msg) => {
+                        if (!startUpVal) {
+                            // start up validation
+                            const startUpExpected = {
+                                isValid: true,
+                                parsedValue: 'apple',
+                            };
+                            expect(msg).toEqual(jasmine.objectContaining(startUpExpected));
+                            startUpVal = true;
+                            return;
+                        }
+                        const expected = {
+                            isValid: true,
+                            diagnosis: 'valid',
+                            parsedValue: 'banana',
+                        };
+                        expect(msg).toEqual(jasmine.objectContaining(expected));
                         resolve();
                     });
-                    bus.emit('reset-to-defaults');
-                });
-            });
-        });
-
-        it('Should respond to input change events with "changed"', () => {
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
-                return new Promise((resolve) => {
                     bus.on('changed', (message) => {
                         expect(message.newValue).toEqual('banana');
-                        resolve();
                     });
-                    const inputElem = container.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = 1;
-                    inputElem.dispatchEvent(new Event('change'));
+                    const inputElem = this.container.querySelector('select[data-element="input"]');
+                    $(inputElem).val('banana').trigger('change');
                 });
             });
-        });
 
-        it('Should respond to input change events with "validation"', () => {
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
+            it('Should respond to input change events with "changed" and "validation" messages, multi select', async function () {
+                this.testConfig = buildTestConfig({ multiselection: 1, bus });
+                const widget = SelectInput.make(this.testConfig);
+                let startUpVal = false;
+                await widget.start({ node: this.container });
                 return new Promise((resolve) => {
-                    bus.on('validation', (message) => {
-                        expect(message.isValid).toBeTruthy();
-                        expect(message.errorMessage).toBeUndefined();
+                    bus.on('validation', (msg) => {
+                        if (!startUpVal) {
+                            // start up validation
+                            const startUpExpected = {
+                                isValid: true,
+                                parsedValue: ['apple'],
+                            };
+                            expect(msg).toEqual(jasmine.objectContaining(startUpExpected));
+                            startUpVal = true;
+                            return;
+                        }
+                        const expected = {
+                            isValid: true,
+                            diagnosis: 'valid',
+                            parsedValue: ['apple', 'carrot'],
+                        };
+                        expect(msg).toEqual(jasmine.objectContaining(expected));
                         resolve();
                     });
-                    const inputElem = container.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = 1;
-                    inputElem.dispatchEvent(new Event('change'));
+                    bus.on('changed', (message) => {
+                        expect(message.newValue).toEqual(['apple', 'carrot']);
+                    });
+                    const inputElem = this.container.querySelector('select[data-element="input"]');
+                    $(inputElem).val(['apple', 'carrot']).trigger('change');
                 });
             });
         });
 
-        it('Should show message when configured', () => {
-            testConfig.showOwnMessages = true;
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
-                return new Promise((resolve) => {
-                    bus.on('validation', (message) => {
-                        expect(message.isValid).toBeTruthy();
-                        // ...detect something?
-                        resolve();
-                    });
-                    const inputElem = container.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = 1;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
-            });
-        });
-
-        it('Should return a diagnosis of required-missing if so', () => {
-            bus = runtime.bus().makeChannelBus();
-            testConfig = buildTestConfig(true, '', bus);
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
+        describe('start up, selections required', () => {
+            async function runRequiredTest(ctx) {
+                const widget = SelectInput.make(ctx.testConfig);
+                await widget.start({ node: ctx.container });
                 return new Promise((resolve, reject) => {
                     let msgCount = 0,
                         okCount = 0;
-                    bus.on('validation', (message) => {
+                    ctx.bus.on('validation', (message) => {
                         msgCount++;
                         if (message.isValid) {
                             okCount++;
@@ -185,29 +241,54 @@ define([
                         }
                         if (!message.isValid) {
                             expect(message.diagnosis).toBe(Constants.DIAGNOSIS.REQUIRED_MISSING);
+                            expect(message.errorMessage).toBe('A value is required.');
                             resolve();
                         }
                     });
-                    const inputElem = container.querySelector('select[data-element="input"]');
+                    const inputElem = ctx.container.querySelector('select[data-element="input"]');
                     inputElem.selectedIndex = -1;
                     inputElem.dispatchEvent(new Event('change'));
                 });
+            }
+
+            it('Should return a diagnosis of required-missing if empty', function () {
+                this.bus = runtime.bus().makeChannelBus();
+                this.testConfig = buildTestConfig({
+                    required: true,
+                    defaultValue: '',
+                    bus: this.bus,
+                });
+                return runRequiredTest(this);
+            });
+
+            it('Should return a diagnosis of required-missing if empty, multiselect', function () {
+                this.bus = runtime.bus().makeChannelBus();
+                this.testConfig = buildTestConfig({
+                    required: true,
+                    initialValue: [],
+                    bus: this.bus,
+                    multiselection: 1,
+                });
+                return runRequiredTest(this);
             });
         });
 
-        it('Should show the user a specific error if the given option is not one of the allowed ones', () => {
-            const badOption = 'a very bad option';
+        it('Should show the user a specific error if the given option is not one of the allowed ones', function () {
             bus = runtime.bus().makeChannelBus();
-            testConfig = buildTestConfig(true, '', bus);
-            testConfig.initialValue = badOption;
-            const widget = SelectInput.make(testConfig);
-            return widget.start({ node: container }).then(() => {
+            this.testConfig = buildTestConfig({
+                required: true,
+                defaultValue: '',
+                initialValue: badOption,
+                bus,
+            });
+            const widget = SelectInput.make(this.testConfig);
+            return widget.start({ node: this.container }).then(() => {
                 return new Promise((resolve) => {
                     bus.on('validation', (message) => {
                         expect(message.isValid).toBeFalse();
                         expect(message.diagnosis).toBe(Constants.DIAGNOSIS.INVALID);
                         expect(message.errorMessage).toBe(
-                            `Invalid ${testConfig.parameterSpec.ui.label}: ${badOption}. Please select a value from the dropdown.`
+                            `Invalid ${this.testConfig.parameterSpec.ui.label}: ${badOption}. Please select a value from the dropdown.`
                         );
                         resolve();
                     });
@@ -215,13 +296,57 @@ define([
             });
         });
 
-        it('Should take a list of disabledValues on startup', () => {
-            const config = Object.assign({}, testConfig, { disabledValues: ['carrot'] });
+        it('Should show the user a specific error if the given option is the wrong format, multiselect', function () {
+            bus = runtime.bus().makeChannelBus();
+            this.testConfig = buildTestConfig({
+                required: true,
+                initialValue: badOption,
+                bus,
+                multiselection: 1,
+            });
+            const widget = SelectInput.make(this.testConfig);
+            return widget.start({ node: this.container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeFalse();
+                        expect(message.diagnosis).toBe(Constants.DIAGNOSIS.INVALID);
+                        expect(message.errorMessage).toBe('Invalid format: value must be an array');
+                        resolve();
+                    });
+                });
+            });
+        });
+
+        it('Should show the user a specific error if the given option is not one of the allowed ones, multiselect', function () {
+            bus = runtime.bus().makeChannelBus();
+            this.testConfig = buildTestConfig({
+                required: true,
+                initialValue: [badOption],
+                bus,
+                multiselection: 1,
+            });
+            const widget = SelectInput.make(this.testConfig);
+            return widget.start({ node: this.container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeFalse();
+                        expect(message.diagnosis).toBe(Constants.DIAGNOSIS.INVALID);
+                        expect(message.errorMessage).toBe(
+                            'Invalid value. Please select a value from the dropdown.'
+                        );
+                        resolve();
+                    });
+                });
+            });
+        });
+
+        it('Should take a list of disabledValues on startup', function () {
+            const config = Object.assign({}, this.testConfig, { disabledValues: ['carrot'] });
             const widget = SelectInput.make(config);
 
-            return widget.start({ node: container }).then(() => {
+            return widget.start({ node: this.container }).then(() => {
                 // verify it's there.
-                const inputElem = container.querySelector('select[data-element="input"]');
+                const inputElem = this.container.querySelector('select[data-element="input"]');
                 const carrotItem = inputElem.querySelector('option[value="carrot"]');
                 expect(carrotItem.hasAttribute('disabled')).toBeTrue();
                 const bananaItem = inputElem.querySelector('option[value="banana"]');
@@ -236,17 +361,17 @@ define([
             });
         }
 
-        it('Should obey a message to disable selection options', async () => {
-            const widget = SelectInput.make(testConfig);
+        it('Should obey a message to disable selection options', async function () {
+            const widget = SelectInput.make(this.testConfig);
 
-            await widget.start({ node: container });
+            await widget.start({ node: this.container });
             // verify it's there and the initial item states are all enabled (i.e. not disabled)
             const itemsDisabled = {
                 apple: false,
                 banana: false,
                 carrot: false,
             };
-            const inputElem = container.querySelector('select[data-element="input"]');
+            const inputElem = this.container.querySelector('select[data-element="input"]');
             checkItems(itemsDisabled, inputElem);
 
             const carrotItem = inputElem.querySelector('option[value="carrot"]');
@@ -259,7 +384,7 @@ define([
             checkItems(itemsDisabled, inputElem);
         });
 
-        it('Should take a set of options that override the options from the parameter spec', () => {
+        it('Should take a set of options that override the options from the parameter spec', function () {
             const values = [
                 {
                     display: 'Dirigible',
@@ -274,18 +399,86 @@ define([
                     value: 'frittata',
                 },
             ];
-            const config = Object.assign({}, testConfig, {
+            const config = Object.assign({}, this.testConfig, {
                 availableValues: values,
                 initialValue: 'elephant',
             });
             const widget = SelectInput.make(config);
-            return widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('select[data-element="input"]');
+            return widget.start({ node: this.container }).then(() => {
+                const inputElem = this.container.querySelector('select[data-element="input"]');
                 expect(inputElem.value).toEqual('elephant');
                 expect(inputElem.childElementCount).toBe(3);
                 for (const child of inputElem.children) {
                     expect(['dirigible', 'elephant', 'frittata'].includes(child.value)).toBeTrue();
                 }
+            });
+        });
+
+        describe('copying', () => {
+            [
+                {
+                    initialValue: 'apple',
+                    expected: 'Apple',
+                },
+                {
+                    initialValue: 'banana',
+                    expected: 'Banana',
+                },
+                {
+                    initialValue: 'nope',
+                    expected: '',
+                },
+                {
+                    initialValue: null,
+                    expected: '',
+                },
+            ].forEach((testCase) => {
+                it(`Should copy the display text of the currently selected option "${testCase.initialValue}"`, async function () {
+                    const widget = SelectInput.make({
+                        ...this.testConfig,
+                        initialValue: testCase.initialValue,
+                    });
+                    await widget.start({ node: this.container });
+
+                    const copyBtn = this.container.querySelector('button.kb-app-row-clip-btn');
+                    spyOn(navigator.clipboard, 'writeText');
+                    copyBtn.click();
+                    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testCase.expected);
+                });
+            });
+
+            [
+                {
+                    initialValue: ['apple'],
+                    expected: 'Apple',
+                },
+                {
+                    initialValue: ['apple', 'banana', 'carrot'],
+                    expected: 'Apple, Banana, Carrot',
+                },
+                {
+                    initialValue: ['yep', 'nope'],
+                    expected: '',
+                },
+                {
+                    initialValue: [null],
+                    expected: '',
+                },
+            ].forEach((testCase) => {
+                it(`Should copy the display text of the currently selected options "${testCase.initialValue}", multiselect`, async function () {
+                    this.testConfig = buildTestConfig({
+                        bus,
+                        multiselection: 1,
+                        initialValue: testCase.initialValue,
+                    });
+                    const widget = SelectInput.make(this.testConfig);
+                    await widget.start({ node: this.container });
+
+                    const copyBtn = this.container.querySelector('button.kb-app-row-clip-btn');
+                    spyOn(navigator.clipboard, 'writeText');
+                    copyBtn.click();
+                    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testCase.expected);
+                });
             });
         });
     });

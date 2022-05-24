@@ -10,37 +10,34 @@ from biokbase.narrative.common.util import kbase_env
 
 class NarrativeLoggerTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
-        self.log_host = "localhost"
-        # self.log_port = 34567
-        self.poll_interval = 0.5
-        self.real_log_host = URLS.log_host
-        self.real_log_port = URLS.log_port
-        URLS.log_host = self.log_host
-        # URLS.log_port = self.log_port
-        # self.logger = NarrativeLogger()
+    def setUpClass(cls):
+        cls.log_host = "localhost"
+        cls.poll_interval = 0.5
+        cls.real_log_host = URLS.log_host
+        cls.real_log_port = URLS.log_port
+        URLS.log_host = cls.log_host
 
     @classmethod
-    def tearDownClass(self):
-        URLS.log_host = self.real_log_host
-        URLS.log_port = self.real_log_port
+    def tearDownClass(cls):
+        URLS.log_host = cls.real_log_host
+        URLS.log_port = cls.real_log_port
 
     @classmethod
-    def start_log_stack(self):
+    def start_log_stack(cls):
         # start up a dummy listener on the (hopefully dev) host and port, etc.
         log_port = util.find_free_port()
         URLS.log_port = log_port
-        self.log_recv, self.log_recv_thread = util.start_tcp_server(
-            self.log_host,
+        cls.log_recv, cls.log_recv_thread = util.start_tcp_server(
+            cls.log_host,
             log_port,
-            self.poll_interval,
+            cls.poll_interval,
             bufferer=util.NarrativeMessageBufferer,
         )
 
     @classmethod
-    def stop_log_stack(self):
+    def stop_log_stack(cls):
         # shut down docker compose, etc.
-        util.stop_tcp_server(self.log_recv, self.log_recv_thread)
+        util.stop_tcp_server(cls.log_recv, cls.log_recv_thread)
 
     def test_logger_init(self):
         logger = NarrativeLogger()
@@ -97,7 +94,7 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         data = json.loads(msg)
         self.assertEqual(data["type"], "narrative")
         self.assertEqual(data["user"], "anonymous")
-        self.assertEqual(data["env"], "dev")
+        self.assertEqual(data["env"], "ci")
         self.assertEqual(data["narr_ver"], version)
         self.assertEqual(data["narrative"], narrative)
         self.assertEqual(data["operation"], event)

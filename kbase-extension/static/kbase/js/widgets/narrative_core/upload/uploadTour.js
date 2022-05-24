@@ -21,7 +21,7 @@ define([
                 placement: 'bottom',
                 orphan: true,
                 content:
-                    'This tour shows how to use the Import panel to upload data files and import them into your Narrative as KBase data objects.',
+                    '<p>This tour shows how to use the Import panel to upload data files and import them into your Narrative as KBase data objects.</p><p>For detailed documentation on uploading data, click <a href="https://docs.kbase.us/data/upload-download-guide/uploads" target="_new">here</a>.</p>',
                 backdrop: true,
             },
             {
@@ -71,7 +71,7 @@ define([
                 placement: 'top',
                 element: that.$elem.find('.kb-staging-table-header__file'),
                 content:
-                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click the folder show the files inside.',
+                    'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click the folder to show the files inside.',
             },
             {
                 title: 'Import As...',

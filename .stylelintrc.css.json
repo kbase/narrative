@@ -35,7 +35,6 @@
     "ignoreFiles": [
       "kbase-extension/static/ext_components/**/*.css",
       "kbase-extension/static/ext_packages/**/*.css",
-      "kbase-extension/static/kbase/js/patched-components/**/*.css",
       "docs/**/*.css"
     ]
 }

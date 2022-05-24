@@ -28,6 +28,14 @@ define(['/narrative/nbextensions/appCell2/widgets/appCellWidget-fsm', 'underscor
             });
         });
 
+        it('should have a set of unique state shorthands', () => {
+            const stateShorthands = Object.values(AppCellStates.STATE);
+            const appStates = states.map((state) => {
+                return state.state;
+            });
+            expect(appStates).toEqual(jasmine.arrayWithExactContents(stateShorthands));
+        });
+
         it('should have an array of unique state descriptors', () => {
             for (let i = 0; i < states.length; i++) {
                 for (let j = i + 1; j < states.length; j++) {

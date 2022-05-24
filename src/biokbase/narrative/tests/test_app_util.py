@@ -12,7 +12,7 @@ from biokbase.narrative.app_util import (
 )
 from .narrative_mock.mockclients import get_mock_client
 import os
-import mock
+from unittest import mock
 from . import util
 import time
 
@@ -26,20 +26,18 @@ class DummyWorkspace:
 
 class AppUtilTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         config = util.ConfigTests()
-        self.user_id = config.get("users", "test_user")
-        self.user_token = util.read_token_file(
+        cls.user_id = config.get("users", "test_user")
+        cls.user_token = util.read_token_file(
             config.get_path("token_files", "test_user", from_root=True)
         )
 
-        self.good_tag = "release"
-        self.bad_tag = "notATag"
+        cls.good_tag = "release"
+        cls.bad_tag = "notATag"
         # inject phony variables into the environment
-        # self.user_id = "KBaseTest"
-        # self.good_fake_token = "A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6"
-        self.bad_fake_token = "NotAGoodTokenLOL"
-        self.workspace = "valid_workspace"
+        cls.bad_fake_token = "NotAGoodTokenLOL"
+        cls.workspace = "valid_workspace"
 
     def test_check_tag_good(self):
         self.assertTrue(check_tag(self.good_tag))

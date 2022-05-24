@@ -4,10 +4,11 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
+    'common/ui',
     'testUtil',
     'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, Mocks, TestBulkImportObject) => {
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, UI, TestUtil, Mocks, TestBulkImportObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -19,6 +20,17 @@ define([
                 },
             },
             fileTypesDisplay = {
+                fastq_reads: {
+                    label: 'FASTQ Reads Interleaved',
+                },
+                dataType1: {
+                    label: 'Data Type One',
+                },
+                dataType2: {
+                    label: 'Data Type II',
+                },
+            },
+            fileTypeMapping = {
                 fastq_reads: 'FASTQ Reads Interleaved',
                 dataType1: 'Data Type One',
                 dataType2: 'Data Type II',
@@ -127,6 +139,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 return configure
@@ -141,6 +154,14 @@ define([
                             '[data-parameter="import_type"] select[data-element="input"]'
                         );
                         expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
+                        spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
+                        const xsvButton = container.querySelector(
+                            '.kb-bulk-import-configure__button--generate-template'
+                        );
+                        // click on the button to check it functions correctly
+                        xsvButton.click();
+                        expect(xsvButton.textContent).toContain('Create Import Template');
+                        expect(UI.showConfirmDialog).toHaveBeenCalled();
                         return configure.stop();
                     });
             });
@@ -159,6 +180,7 @@ define([
                 specs,
                 typesToFiles,
                 fileTypesDisplay,
+                fileTypeMapping,
             });
 
             return configure
@@ -200,6 +222,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
@@ -234,6 +257,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector =
@@ -303,6 +327,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -373,6 +398,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -399,6 +425,11 @@ define([
             const defError = {
                 type: 'error',
                 message: 'an error',
+            };
+            const warningWithLink = {
+                type: 'warning',
+                message: 'a warning',
+                link: 'https://docs.kbase.us',
             };
             [
                 {
@@ -430,6 +461,10 @@ define([
                     ],
                     label: 'a message with a missing type, defaulting to warning',
                 },
+                {
+                    msgs: [warningWithLink],
+                    label: 'a warning message with a URL',
+                },
             ].forEach((testCase) => {
                 it(`should show ${testCase.label}`, async () => {
                     const fileType = initialState.selectedFileType;
@@ -447,6 +482,7 @@ define([
                         specs,
                         typesToFiles: messageTypesToFiles,
                         fileTypesDisplay,
+                        fileTypeMapping,
                     });
 
                     await configure.start({ node: container });
@@ -473,6 +509,17 @@ define([
                         const titleElem = msgNode.querySelector(
                             `.kb-bulk-import-configure__message--${msgType}-title`
                         );
+                        // if there's a link on the message, expect it to be rendered
+                        const msgLinkNode = msgNode.querySelector('a');
+                        if (testMsg.link) {
+                            expect(msgLinkNode).not.toBeNull();
+                            expect(msgLinkNode.getAttribute('href')).toEqual(testMsg.link);
+                            expect(msgLinkNode.querySelector('i').classList).toContain(
+                                'fa-external-link'
+                            );
+                        } else {
+                            expect(msgLinkNode).toBeNull();
+                        }
                         // the title should have an icon
                         expect(titleElem.querySelector('i.fa.fa-exclamation-circle')).toBeDefined();
                         expect(titleElem.textContent.toLowerCase()).toContain(msgType);
@@ -502,6 +549,7 @@ define([
                     specs,
                     typesToFiles: messageTypesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });

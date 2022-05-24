@@ -1,0 +1,40 @@
+{
+    "params": {
+        "CELL_ID_LIST": "cell_id_list",
+        "JOB_ID_LIST": "job_id_list"
+    },
+    "message_types": {
+        "CANCEL": "cancel_job",
+        "CELL_JOB_STATUS": "cell_job_status",
+        "ERROR": "job_error",
+        "INFO": "job_info",
+        "LOGS": "job_logs",
+        "RETRY": "retry_job",
+        "RUN_STATUS": "run_status",
+        "START_UPDATE": "start_job_update",
+        "STATUS_ALL": "job_status_all",
+        "STATUS": "job_status",
+        "STOP_UPDATE": "stop_job_update"
+    },
+    "requests": [
+        "CANCEL",
+        "CELL_JOB_STATUS",
+        "INFO",
+        "LOGS",
+        "RETRY",
+        "START_UPDATE",
+        "STATUS",
+        "STATUS_ALL",
+        "STOP_UPDATE"
+    ],
+    "responses": [
+        "CELL_JOB_STATUS",
+        "ERROR",
+        "INFO",
+        "LOGS",
+        "RETRY",
+        "RUN STATUS",
+        "STATUS",
+        "STATUS_ALL"
+    ]
+}

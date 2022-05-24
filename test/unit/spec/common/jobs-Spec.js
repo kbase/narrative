@@ -1,9 +1,12 @@
-define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
-    Jobs,
-    JobsData,
-    Props,
-    TestUtil
-) => {
+define([
+    'common/jobs',
+    '/test/data/jobsData',
+    'common/props',
+    'common/jobCommMessages',
+    'util/util',
+    'testUtil',
+    'json!/src/biokbase/narrative/tests/data/response_data.json',
+], (Jobs, JobsData, Props, jcm, Utils, TestUtil, ResponseData) => {
     'use strict';
 
     function arrayToHTML(array) {
@@ -12,17 +15,25 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
 
     const jobsModuleExports = [
         'canCancel',
+        'canDo',
         'canRetry',
         'createCombinedJobState',
+        'createCombinedJobStateSummary',
         'createJobStatusFromFsm',
         'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
+        'createJobStatusSummary',
         'getCurrentJobCounts',
         'getCurrentJobs',
         'getFsmStateFromJobs',
         'isTerminalStatus',
+        'isValidBackendJobStateObject',
+        'isValidJobStatus',
         'isValidJobStateObject',
         'isValidJobInfoObject',
+        'isValidJobLogsObject',
+        'isValidJobRetryObject',
+        'isValidRunStatusObject',
         'jobAction',
         'jobArrayToIndexedObject',
         'jobLabel',
@@ -30,11 +41,24 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         'jobStatusUnknown',
         'jobStrings',
         'niceState',
+        'populateModelFromJobArray',
         'updateJobModel',
+        'validateMessage',
         'validJobStatuses',
         'validStatusesForAction',
     ];
 
+    const invalidTypes = [
+        null,
+        undefined,
+        1,
+        'foo',
+        [],
+        ['a', 'list'],
+        () => {
+            /* no op */
+        },
+    ];
     describe('Test Jobs module', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
@@ -54,17 +78,15 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         afterEach(() => {
             TestUtil.clearRuntime();
         });
+        const terminalStatuses = ['completed', 'does_not_exist', 'error', 'terminated'];
 
-        it('should return true if the job status is terminal', () => {
-            ['completed', 'terminated', 'error', 'does_not_exist'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeTrue();
+        Jobs.validJobStatuses.forEach((status) => {
+            const isTerminal = terminalStatuses.includes(status);
+            it(`should return ${isTerminal} for status ${status}`, () => {
+                expect(Jobs.isTerminalStatus(status)).toEqual(isTerminal);
             });
         });
-        it('should return false for jobs that are in progress', () => {
-            ['created', 'estimating', 'queued', 'running'].forEach((status) => {
-                expect(Jobs.isTerminalStatus(status)).toBeFalse();
-            });
-        });
+
         it('should return false for invalid job statuses', () => {
             badStates.forEach((status) => {
                 expect(Jobs.isTerminalStatus(status)).toBeFalse();
@@ -72,50 +94,101 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
     });
 
-    describe('The isValidJobStateObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
+    describe('Job data validation', () => {
+        ['BackendJobState', 'JobState', 'Info', 'Retry', 'Logs', 'RunStatus'].forEach((type) => {
+            let fn;
+            switch (type) {
+                case 'BackendJobState':
+                case 'JobState':
+                case 'RunStatus':
+                    fn = `isValid${type}Object`;
+                    break;
+                default:
+                    fn = `isValidJob${type}Object`;
+            }
 
-        it('Should know how to tell good job states', () => {
-            JobsData.allJobsWithBatchParent
-                .concat([
-                    {
-                        job_id: 'zero_created',
-                        created: 0,
-                        status: 'created',
-                    },
-                    {
-                        job_id: 'does_not_exist',
-                        status: 'does_not_exist',
-                    },
-                ])
-                .forEach((elem) => {
-                    expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
+            describe(`The ${fn} function`, () => {
+                JobsData.example[type].valid.forEach((elem) => {
+                    it(`passes ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeTrue();
+                    });
                 });
-        });
 
-        it('Should know how to tell bad job states', () => {
-            JobsData.invalidJobs.forEach((elem) => {
-                expect(Jobs.isValidJobStateObject(elem)).toBeFalse();
-            });
-        });
-    });
-
-    describe('The isValidJobInfoObject function', () => {
-        afterEach(() => {
-            TestUtil.clearRuntime();
-        });
-
-        JobsData.validInfo.forEach((elem) => {
-            it(`passes ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeTrue();
+                JobsData.example[type].invalid.forEach((elem) => {
+                    it(`fails ${JSON.stringify(elem)}`, () => {
+                        expect(Jobs[fn](elem)).toBeFalse();
+                    });
+                });
             });
         });
 
-        JobsData.invalidInfo.forEach((elem) => {
-            it(`fails ${JSON.stringify(elem)}`, () => {
-                expect(Jobs.isValidJobInfoObject(elem)).toBeFalse();
+        describe('the validateMessage function', () => {
+            Object.keys(ResponseData).forEach((respType) => {
+                it(`should validate a multi-job ${respType} message`, () => {
+                    expect(
+                        Jobs.validateMessage({
+                            message: ResponseData[respType],
+                            type: respType,
+                        })
+                    ).toEqual({
+                        valid: ResponseData[respType],
+                    });
+                });
+            });
+
+            ['job-status', 'greetings', 'error', 'NEW', jcm.MESSAGE_TYPE.CANCEL].forEach((type) => {
+                it(`should reject invalid message type ${type}`, () => {
+                    expect(Jobs.validateMessage({ message: null, type })).toEqual({
+                        invalid: null,
+                    });
+                });
+            });
+
+            invalidTypes.forEach((dataType) => {
+                it(`should reject message with an invalid data type ${Utils.objectToString(
+                    dataType
+                )}`, () => {
+                    expect(
+                        Jobs.validateMessage({ message: dataType, type: jcm.MESSAGE_TYPE.INFO })
+                    ).toEqual({ invalid: dataType });
+                });
+            });
+
+            const gotValidator = ['INFO', 'LOGS', 'RETRY', 'RUN_STATUS', 'STATUS', 'STATUS_ALL'];
+            Object.keys(jcm.RESPONSES).forEach((type) => {
+                if (!gotValidator.includes(type)) {
+                    it(`should validate ${type} messages (no validator)`, () => {
+                        expect(
+                            Jobs.validateMessage({
+                                message: {},
+                                type: jcm.RESPONSES[type],
+                            })
+                        ).toEqual({
+                            valid: {},
+                        });
+                    });
+                }
+            });
+
+            ['INFO', 'LOGS', 'RETRY', 'STATUS'].forEach((type) => {
+                // combine valid and invalid data type
+                it(`should separate out valid and invalid ${type} data`, () => {
+                    const dataBlob = {},
+                        expected = {};
+                    let i = 0;
+
+                    ['valid', 'invalid'].forEach((validity) => {
+                        expected[validity] = {};
+                        JobsData.example[type][validity].forEach((elem) => {
+                            dataBlob[`job_${i}`] = elem;
+                            expected[validity][`job_${i}`] = elem;
+                            i++;
+                        });
+                    });
+                    expect(
+                        Jobs.validateMessage({ message: dataBlob, type: jcm.MESSAGE_TYPE[type] })
+                    ).toEqual(expected);
+                });
             });
         });
     });
@@ -135,44 +208,50 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
     });
 
-    describe('createJobStatusLines', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+    describe('createJobStatusLines and createJobStatusSummary', () => {
+        beforeEach(function () {
+            this.container = document.createElement('div');
         });
 
         afterEach(() => {
             TestUtil.clearRuntime();
         });
 
-        afterAll(() => {
-            container.remove();
-        });
         const args = [false, true];
         JobsData.allJobs.forEach((state) => {
-            it(`should create an appropriate status string for ${state.job_id}`, () => {
+            it(`should create an appropriate status string for ${state.job_id}`, function () {
                 const statusLines = Jobs.createJobStatusLines(state);
-                container.innerHTML = arrayToHTML(statusLines);
-                expect(container.textContent).toContain(state.meta.createJobStatusLines.line);
+                this.container.innerHTML = arrayToHTML(statusLines);
+                expect(this.container.textContent).toContain(state.meta.createJobStatusLines.line);
+            });
+            it(`should create an appropriate summary string for ${state.job_id}`, function () {
+                this.container.innerHTML = Jobs.createJobStatusSummary(state);
+                const summary = state.meta.createJobStatusLines.summary
+                    ? state.meta.createJobStatusLines.summary
+                    : state.meta.createJobStatusLines.line;
+                // queued and running jobs have a spinner, which adds a space at the beginning
+                expect(this.container.textContent.trim()).toEqual(summary);
             });
         });
         JobsData.allJobs.forEach((state) => {
-            it(`should create an appropriate array in history mode for ${state.job_id}`, () => {
+            it(`should create an appropriate array in history mode for ${state.job_id}`, function () {
                 const statusLines = Jobs.createJobStatusLines(state, true);
-                container.innerHTML = arrayToHTML(statusLines);
+                this.container.innerHTML = arrayToHTML(statusLines);
                 state.meta.createJobStatusLines.history.forEach((historyLine) => {
-                    expect(container.textContent).toContain(historyLine);
+                    expect(this.container.textContent).toContain(historyLine);
                 });
             });
         });
 
-        it('should return an appropriate string for dodgy jobStates', () => {
-            JobsData.invalidJobs.forEach((state) => {
+        it('should return an appropriate string for dodgy jobStates', function () {
+            JobsData.example.JobState.invalid.forEach((state) => {
                 args.forEach((arg) => {
                     const statusLines = Jobs.createJobStatusLines(state, arg);
-                    container.innerHTML = arrayToHTML(statusLines);
-                    expect(container.textContent).toContain(JobsData.jobStrings.unknown);
+                    this.container.innerHTML = arrayToHTML(statusLines);
+                    expect(this.container.textContent).toContain(JobsData.jobStrings.unknown);
                 });
+                this.container.innerHTML = Jobs.createJobStatusSummary(state);
+                expect(this.container.textContent).toEqual(JobsData.jobStrings.unknown);
             });
         });
     });
@@ -236,30 +315,26 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
     });
 
     describe('niceState', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+        beforeAll(function () {
+            this.container = document.createElement('div');
         });
         afterEach(() => {
             TestUtil.clearRuntime();
         });
 
-        afterAll(() => {
-            container.remove();
-        });
         badStates.forEach((item) => {
-            it(`should generate a nice state for the input ${item}`, () => {
-                container.innerHTML = Jobs.niceState(item);
-                const span = container.querySelector('span');
+            it(`should generate a nice state for the input ${item}`, function () {
+                this.container.innerHTML = Jobs.niceState(item);
+                const span = this.container.querySelector('span');
                 expect(span).toHaveClass('kb-job-status__summary');
                 expect(span.textContent).toContain('invalid');
             });
         });
 
         JobsData.allJobs.forEach((state) => {
-            it(`should generate a nice state for ${state.status}`, () => {
-                container.innerHTML = Jobs.niceState(state.status);
-                const span = container.querySelector('span');
+            it(`should generate a nice state for ${state.status}`, function () {
+                this.container.innerHTML = Jobs.niceState(state.status);
+                const span = this.container.querySelector('span');
                 expect(span).toHaveClass(state.meta.niceState.class);
                 expect(span.textContent).toContain(state.meta.niceState.label);
             });
@@ -267,16 +342,11 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
     });
 
     describe('createJobStatusFromFsm', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+        beforeEach(function () {
+            this.container = document.createElement('div');
         });
         afterEach(() => {
             TestUtil.clearRuntime();
-        });
-
-        afterAll(() => {
-            container.remove();
         });
 
         const tests = [
@@ -326,14 +396,12 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                     expect(func(test)).toBe('');
                 });
             } else {
-                it(`should output "${test.text}" with ${testString}`, () => {
-                    container.innerHTML = func(test);
-                    expect(
-                        container.querySelector('[data-element="job-status"]').classList
-                    ).toContain(`kb-job-status__cell_summary--${test.cssClass}`);
-                    expect(container.querySelector('[data-element="job-status"]').textContent).toBe(
-                        test.text
+                it(`should output "${test.text}" with ${testString}`, function () {
+                    this.container.innerHTML = func(test);
+                    expect(this.container.querySelector('span').classList).toContain(
+                        `kb-job-status__cell_summary--${test.cssClass}`
                     );
+                    expect(this.container.querySelector('span').textContent).toBe(test.text);
                 });
             }
         });
@@ -349,7 +417,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 };
             });
         });
-        return { byId: outputJobs };
+        return outputJobs;
     }
 
     describe('createCombinedJobState', () => {
@@ -357,14 +425,23 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             TestUtil.clearRuntime();
         });
 
+        const summary = {
+            queued: 'queued',
+            running: 'running',
+            error: 'error',
+            success: 'success',
+            terminated: 'canceled',
+        };
+
         const batch = 'batch job';
         const retryBatchId = JobsData.batchJob.batchId;
         const tests = [
             {
                 desc: 'all jobs',
-                jobs: { byId: JobsData.jobsById },
+                jobs: JobsData.jobsById,
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: {
                     queued: 3,
                     running: 1,
@@ -376,28 +453,29 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
             },
             {
                 desc: 'jobs with retries',
-                jobs: { byId: JobsData.batchJob.jobsById },
-                expected: `${batch} in progress: 2 queued, 1 running, 1 success (3 jobs retried)`,
+                jobs: JobsData.batchJob.jobsById,
+                expected: `${batch} in progress: 3 queued, 1 running, 1 success (3 jobs retried)`,
                 fsmState: 'inProgressResultsAvailable',
-                statuses: { queued: 2, running: 1, completed: 1, retried: 3 },
+                statusBarSummary: summary.running,
+                statuses: { queued: 3, running: 1, completed: 1, retried: 3 },
             },
             {
                 desc: 'jobs with retries, original jobs only',
                 jobs: {
-                    byId: {
-                        ...JobsData.batchJob.originalJobs,
-                        retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
-                    },
+                    ...JobsData.batchJob.originalJobs,
+                    retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
                 },
-                expected: `${batch} in progress: 1 queued, 1 failed, 2 cancelled`,
+                expected: `${batch} in progress: 2 queued, 1 failed, 2 cancelled`,
                 fsmState: 'inProgress',
-                statuses: { queued: 1, error: 1, terminated: 2 },
+                statusBarSummary: summary.queued,
+                statuses: { queued: 2, error: 1, terminated: 2 },
             },
             {
                 desc: 'all jobs queued',
                 jobs: generateJobs({ created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } }),
                 expected: `${batch} in progress: 3 queued`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.queued,
                 statuses: { queued: 3 },
             },
             {
@@ -405,6 +483,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ estimating: { a: 1 }, running: { b: 1 } }),
                 expected: `${batch} in progress: 1 queued, 1 running`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1 },
             },
             {
@@ -412,6 +491,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ running: { a: 1 } }),
                 expected: `${batch} in progress: 1 running`,
                 fsmState: 'inProgress',
+                statusBarSummary: summary.running,
                 statuses: { running: 1 },
             },
             {
@@ -423,6 +503,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1, completed: 1 },
             },
             {
@@ -430,6 +511,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ completed: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with success: 3 successes`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.success,
                 statuses: { completed: 3 },
             },
             {
@@ -437,6 +519,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ error: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 failed`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
                 statuses: { error: 2 },
             },
             {
@@ -444,6 +527,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ terminated: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with cancellation: 3 cancelled`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.terminated,
                 statuses: { terminated: 3 },
             },
             {
@@ -455,7 +539,52 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} finished: 1 success, 3 failed, 1 cancelled`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
                 statuses: { terminated: 1, error: 3, completed: 1 },
+            },
+            {
+                desc: 'successful and cancelled jobs',
+                jobs: generateJobs({
+                    terminated: { a: 1, b: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 2 cancelled`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.success,
+                statuses: { terminated: 2, completed: 1 },
+            },
+            {
+                desc: 'success and error',
+                jobs: generateJobs({
+                    error: { b: 1, c: 1, d: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 3 failed`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
+                statuses: { error: 3, completed: 1 },
+            },
+            {
+                desc: 'success and not found',
+                jobs: generateJobs({
+                    does_not_exist: { b: 1, c: 1, d: 1 },
+                    completed: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 success, 3 not found`,
+                fsmState: 'jobsFinishedResultsAvailable',
+                statusBarSummary: summary.error,
+                statuses: { does_not_exist: 3, completed: 1 },
+            },
+            {
+                desc: 'error and cancelled jobs',
+                jobs: generateJobs({
+                    terminated: { a: 1, b: 1 },
+                    error: { e: 1 },
+                }),
+                expected: `${batch} finished: 1 failed, 2 cancelled`,
+                fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
+                statuses: { terminated: 2, error: 1 },
             },
             {
                 desc: 'in progress, finished, not found',
@@ -467,6 +596,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
+                statusBarSummary: summary.running,
                 statuses: { queued: 1, running: 1, completed: 1, does_not_exist: 1 },
             },
             {
@@ -474,6 +604,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: generateJobs({ does_not_exist: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 not found`,
                 fsmState: 'jobsFinished',
+                statusBarSummary: summary.error,
                 statuses: { does_not_exist: 2 },
             },
             {
@@ -481,6 +612,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: {},
                 expected: '',
                 fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
             {
@@ -488,20 +620,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 jobs: null,
                 expected: '',
                 fsmState: null,
-                statuses: {},
-            },
-            {
-                desc: 'byId is empty',
-                jobs: { byId: {} },
-                expected: '',
-                fsmState: null,
-                statuses: {},
-            },
-            {
-                desc: 'byId is null',
-                jobs: { byId: null },
-                expected: '',
-                fsmState: null,
+                statusBarSummary: '',
                 statuses: {},
             },
         ];
@@ -517,12 +636,20 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                     expect(div.childNodes.length).toBe(0);
                 }
             });
+
             it(`deduces FSM state: ${test.desc}`, () => {
                 expect(Jobs.getFsmStateFromJobs(test.jobs)).toEqual(test.fsmState);
             });
+
             it(`gets job counts, ${test.desc}`, () => {
                 const statuses = Jobs.getCurrentJobCounts(test.jobs, { withRetries: 1 });
                 expect(statuses).toEqual(test.statuses);
+            });
+
+            it(`creates a status bar summary, ${test.desc}`, () => {
+                const div = document.createElement('div');
+                div.innerHTML = Jobs.createCombinedJobStateSummary(test.jobs);
+                expect(div.textContent).toBe(test.statusBarSummary);
             });
         });
     });
@@ -533,8 +660,10 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
         });
 
         it('current jobs, no retries', () => {
-            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobs);
-            expect(jobsByOriginalId).toEqual(JobsData.jobsById);
+            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobsWithBatchParent);
+            const expectedJobsById = TestUtil.JSONcopy(JobsData.jobsById);
+            delete expectedJobsById[JobsData.batchParentJob.job_id];
+            expect(jobsByOriginalId).toEqual(expectedJobsById);
         });
 
         it('can retrieve current jobs, with retries', () => {
@@ -543,11 +672,11 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
                 JobsData.batchJob.jobArray,
                 jobsByRetryParent
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(JobsData.batchJob.originalJobs).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(JobsData.batchJob.originalJobs))
             );
-            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
-                Object.keys(jobsByRetryParent).sort()
+            expect(Object.keys(jobsByOriginalId)).toEqual(
+                jasmine.arrayWithExactContents(Object.keys(jobsByRetryParent))
             );
         });
     });
@@ -592,22 +721,18 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
 
         it('creates a model with jobs indexed by ID', () => {
             const model = Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent);
-            const idIndex = model.byId;
-            expect(Object.keys(idIndex).sort()).toEqual(
-                JobsData.allJobsWithBatchParent
-                    .map((jobState) => {
-                        return jobState.job_id;
+            expect(Object.keys(model)).toEqual(
+                jasmine.arrayWithExactContents(
+                    JobsData.allJobsWithBatchParent.map((job) => {
+                        return job.job_id;
                     })
-                    .sort()
+                )
             );
         });
 
         it('creates an empty model with an empty jobs array', () => {
             const model = Jobs.jobArrayToIndexedObject([]);
-            expect(model).toEqual({
-                byId: {},
-            });
-            expect(model.byId).toEqual({});
+            expect(model).toEqual({});
         });
     });
 });

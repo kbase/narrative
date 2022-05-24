@@ -1,8 +1,7 @@
 import unittest
-import mock
+from unittest import mock
 from .narrative_mock.mockclients import get_mock_client
 from biokbase.narrative.common.narrative_ref import NarrativeRef
-from tornado.web import HTTPError
 from biokbase.narrative.common.exceptions import WorkspaceError
 
 

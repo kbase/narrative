@@ -1,16 +1,19 @@
 module.exports = function (config) {
     'use strict';
 
+    const narrativeServer = 'http://localhost:32323';
+
     const alwaysExclude = [
         'kbase-extension/static/buildTools/*.js',
         'kbase-extension/static/ext_components/**/test/**/*.js',
         'kbase-extension/static/ext_modules/**/test/**/*.js',
-        'kbase-extension/static/kbase/js/patched-components/**/*',
     ];
     // the following tests should be run separately due to test runner issues
     const isolatedTests = [
+        'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
         'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
         'test/unit/spec/util/appCellUtil-spec.js',
+        'test/unit/spec/narrative_core/kbaseNarrativeAppPanel-spec.js',
     ];
 
     config.set({
@@ -63,6 +66,7 @@ module.exports = function (config) {
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false, nocache: true },
+            { pattern: 'src/biokbase/narrative/tests/data/*.json', included: false, nocache: true },
             // JS files
             { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
             { pattern: 'kbase-extension/static/**/*.js', included: false },
@@ -137,13 +141,14 @@ module.exports = function (config) {
             '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
             '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
-            '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
-            '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
-            '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
-            '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
-            '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
+            '/narrative/static/base': `${narrativeServer}/narrative/static/base`,
+            '/narrative/static/notebook': `${narrativeServer}/narrative/static/notebook`,
+            '/narrative/static/components': `${narrativeServer}/narrative/static/components`,
+            '/narrative/static/services': `${narrativeServer}/narrative/static/services`,
+            '/narrative/static/bidi': `${narrativeServer}/narrative/static/bidi`,
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
+            '/src/biokbase/narrative/tests/data/': '/base/src/biokbase/narrative/tests/data/',
             // This ensures that the msw api (msw.js) can find mockServerWorker.js service
             // worker library at the canonical location.
             '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',

@@ -20,8 +20,6 @@ define(['bluebird', './constants'], (Promise, Constants) => {
                 } else {
                     diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                 }
-            } else {
-                // for now assume it is valid...
             }
         }).then(() => {
             return {
@@ -34,8 +32,8 @@ define(['bluebird', './constants'], (Promise, Constants) => {
         });
     }
 
-    function validate(value, spec, options) {
-        return validateWorkspaceObjectRef(value, spec.data.constraints, options);
+    function validate(value, spec) {
+        return validateWorkspaceObjectRef(value, spec.data.constraints);
     }
 
     return {

@@ -1,0 +1,1245 @@
+{
+    "job_info": {
+        "BATCH_COMPLETED": {
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+            "app_name": "Import Interleaved FASTQ file as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_COMPLETED",
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "small.forward.fq",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_ERROR_RETRIED": {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "app_name": "Import SRA File as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_ERROR_RETRIED",
+            "job_params": [
+                {
+                    "import_type": "SRA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "jupyter_console_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "sra_staging_file_name": "jupyter_console_config.py",
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_PARENT": {
+            "app_id": "batch",
+            "app_name": "batch",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_PARENT",
+            "job_params": null
+        },
+        "BATCH_RETRY_COMPLETED": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "app_name": "Import NonInterleaved FASTQ Files as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_RETRY_COMPLETED",
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_RETRY_ERROR": {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "app_name": "Import SRA File as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_RETRY_ERROR",
+            "job_params": [
+                {
+                    "import_type": "SRA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "jupyter_console_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "sra_staging_file_name": "jupyter_console_config.py",
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_RETRY_RUNNING": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "app_name": "Import NonInterleaved FASTQ Files as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_RETRY_RUNNING",
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_TERMINATED": {
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+            "app_name": "Import Interleaved FASTQ file as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_TERMINATED",
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "small.reverse.fq",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "BATCH_TERMINATED_RETRIED": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "app_name": "Import NonInterleaved FASTQ Files as Reads from Staging Area",
+            "batch_id": "BATCH_PARENT",
+            "job_id": "BATCH_TERMINATED_RETRIED",
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ]
+        },
+        "JOB_COMPLETED": {
+            "app_id": "NarrativeTest/report_example",
+            "app_name": "Example HTML Report",
+            "batch_id": null,
+            "job_id": "JOB_COMPLETED",
+            "job_params": [
+                {
+                    "checkbox_input": 1,
+                    "text_input": "Some text",
+                    "workspace_name": "ialarmedalien:narrative_1638480919860"
+                }
+            ]
+        },
+        "JOB_CREATED": {
+            "app_id": "NarrativeTest/app_sleep",
+            "app_name": "App Sleep",
+            "batch_id": null,
+            "job_id": "JOB_CREATED",
+            "job_params": [
+                {
+                    "fail": 1,
+                    "naptime": 50000
+                }
+            ]
+        },
+        "JOB_ERROR": {
+            "app_id": "NarrativeTest/app_sleep",
+            "app_name": "App Sleep",
+            "batch_id": null,
+            "job_id": "JOB_ERROR",
+            "job_params": [
+                {
+                    "fail": 1,
+                    "naptime": 5
+                }
+            ]
+        },
+        "JOB_RUNNING": {
+            "app_id": "NarrativeTest/app_logs",
+            "app_name": "App Logs",
+            "batch_id": null,
+            "job_id": "JOB_RUNNING",
+            "job_params": [
+                {
+                    "num_lines": 10000
+                }
+            ]
+        },
+        "JOB_TERMINATED": {
+            "app_id": "NarrativeTest/app_logs",
+            "app_name": "App Logs",
+            "batch_id": null,
+            "job_id": "JOB_TERMINATED",
+            "job_params": [
+                {
+                    "num_lines": 100
+                }
+            ]
+        },
+        "a_bad_job_id": {
+            "error": "Cannot find job with ID a_bad_job_id",
+            "job_id": "a_bad_job_id"
+        },
+        "another_bad_job_id": {
+            "error": "Cannot find job with ID another_bad_job_id",
+            "job_id": "another_bad_job_id"
+        },
+        "job_not_found": {
+            "error": "Cannot find job with ID job_not_found",
+            "job_id": "job_not_found"
+        }
+    },
+    "job_logs": {
+        "BATCH_COMPLETED": {
+            "batch_id": "BATCH_PARENT",
+            "first": 0,
+            "job_id": "BATCH_COMPLETED",
+            "latest": false,
+            "lines": [
+                {
+                    "is_error": 0,
+                    "line": "This is line 1"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 2"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 3"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 4"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 5"
+                }
+            ],
+            "max_lines": 50
+        },
+        "BATCH_ERROR_RETRIED": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_ERROR_RETRIED",
+            "job_id": "BATCH_ERROR_RETRIED"
+        },
+        "BATCH_PARENT": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_PARENT",
+            "job_id": "BATCH_PARENT"
+        },
+        "BATCH_RETRY_COMPLETED": {
+            "batch_id": "BATCH_PARENT",
+            "first": 0,
+            "job_id": "BATCH_RETRY_COMPLETED",
+            "latest": false,
+            "lines": [
+                {
+                    "is_error": 0,
+                    "line": "This is line 1"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 2"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 3"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 4"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 5"
+                }
+            ],
+            "max_lines": 50
+        },
+        "BATCH_RETRY_ERROR": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_RETRY_ERROR",
+            "job_id": "BATCH_RETRY_ERROR"
+        },
+        "BATCH_RETRY_RUNNING": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_RETRY_RUNNING",
+            "job_id": "BATCH_RETRY_RUNNING"
+        },
+        "BATCH_TERMINATED": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_TERMINATED",
+            "job_id": "BATCH_TERMINATED"
+        },
+        "BATCH_TERMINATED_RETRIED": {
+            "batch_id": "BATCH_PARENT",
+            "error": "Cannot find job log with id: BATCH_TERMINATED_RETRIED",
+            "job_id": "BATCH_TERMINATED_RETRIED"
+        },
+        "JOB_COMPLETED": {
+            "batch_id": null,
+            "first": 0,
+            "job_id": "JOB_COMPLETED",
+            "latest": false,
+            "lines": [
+                {
+                    "is_error": 0,
+                    "line": "This is line 1"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 2"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 3"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 4"
+                },
+                {
+                    "is_error": 0,
+                    "line": "This is line 5"
+                }
+            ],
+            "max_lines": 50
+        },
+        "JOB_CREATED": {
+            "batch_id": null,
+            "error": "Cannot find job log with id: JOB_CREATED",
+            "job_id": "JOB_CREATED"
+        },
+        "JOB_ERROR": {
+            "batch_id": null,
+            "error": "Cannot find job log with id: JOB_ERROR",
+            "job_id": "JOB_ERROR"
+        },
+        "JOB_RUNNING": {
+            "batch_id": null,
+            "error": "Cannot find job log with id: JOB_RUNNING",
+            "job_id": "JOB_RUNNING"
+        },
+        "JOB_TERMINATED": {
+            "batch_id": null,
+            "error": "Cannot find job log with id: JOB_TERMINATED",
+            "job_id": "JOB_TERMINATED"
+        },
+        "a_bad_job_id": {
+            "error": "Cannot find job with ID a_bad_job_id",
+            "job_id": "a_bad_job_id"
+        },
+        "another_bad_job_id": {
+            "error": "Cannot find job with ID another_bad_job_id",
+            "job_id": "another_bad_job_id"
+        },
+        "job_not_found": {
+            "error": "Cannot find job with ID job_not_found",
+            "job_id": "job_not_found"
+        }
+    },
+    "job_status": {
+        "BATCH_COMPLETED": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625755944000,
+                "finished": 1625756074922,
+                "job_id": "BATCH_COMPLETED",
+                "job_output": {
+                    "id": "BATCH_COMPLETED",
+                    "result": [
+                        {
+                            "obj_ref": "62425/2/12",
+                            "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                            "report_ref": "62425/18/1"
+                        }
+                    ],
+                    "version": "1.1"
+                },
+                "queued": 1625755944353,
+                "retry_count": 0,
+                "retry_ids": [],
+                "running": 1625755954453,
+                "status": "completed",
+                "widget_info": {
+                    "name": "no-display",
+                    "params": {
+                        "obj_ref": "18836/5/1",
+                        "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                        "report_ref": "62425/18/1",
+                        "report_window_line_height": "16",
+                        "wsName": "wjriehl:1475006266615"
+                    },
+                    "tag": "release"
+                }
+            },
+            "job_id": "BATCH_COMPLETED",
+            "outputWidgetInfo": {
+                "name": "no-display",
+                "params": {
+                    "obj_ref": "18836/5/1",
+                    "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                    "report_ref": "62425/18/1",
+                    "report_window_line_height": "16",
+                    "wsName": "wjriehl:1475006266615"
+                },
+                "tag": "release"
+            }
+        },
+        "BATCH_ERROR_RETRIED": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625755944000,
+                "error": {
+                    "code": -32000,
+                    "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 184, in import_sra_from_staging\n    download_staging_file_params).get('copy_file_path')\n  File \"/kb/module/lib/installed_clients/DataFileUtilClient.py\", line 484, in download_staging_file\n    [params], self._service_ver, context)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 253, in run_job\n    job_state = self._check_job(mod, job_id)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 220, in _check_job\n    return self._call(self.url, service + '._check_job', [job_id])\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 187, in _call\n    raise ServerError(**err['error'])\ninstalled_clients.baseclient.ServerError: Server error: -32000. (2, 'No such file or directory')\nTraceback (most recent call last):\n  File \"/kb/module/bin/../lib/DataFileUtil/DataFileUtilServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/DataFileUtil/DataFileUtilImpl.py\", line 1488, in download_staging_file\n    shutil.copy2(staging_file_path, self.tmp)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 257, in copy2\n    copyfile(src, dst, follow_symlinks=follow_symlinks)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 120, in copyfile\n    with open(src, 'rb') as fsrc:\nFileNotFoundError: [Errno 2] No such file or directory: '/data/bulk/ialarmedalien/jupyter_console_config.py'\n\n",
+                    "message": "\"(2, 'No such file or directory')\"",
+                    "name": "Server error"
+                },
+                "error_code": 1,
+                "errormsg": "Job output contains an error",
+                "finished": 1625755962015,
+                "job_id": "BATCH_ERROR_RETRIED",
+                "job_output": {},
+                "queued": 1625755944590,
+                "retry_count": 1,
+                "retry_ids": [
+                    "BATCH_RETRY_ERROR"
+                ],
+                "running": 1625755952628,
+                "status": "error"
+            },
+            "job_id": "BATCH_ERROR_RETRIED",
+            "outputWidgetInfo": null
+        },
+        "BATCH_PARENT": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": true,
+                "child_jobs": [
+                    "BATCH_COMPLETED",
+                    "BATCH_TERMINATED",
+                    "BATCH_TERMINATED_RETRIED",
+                    "BATCH_ERROR_RETRIED",
+                    "BATCH_RETRY_COMPLETED",
+                    "BATCH_RETRY_RUNNING",
+                    "BATCH_RETRY_ERROR"
+                ],
+                "created": 1625755944000,
+                "job_id": "BATCH_PARENT",
+                "job_output": {},
+                "retry_count": 0,
+                "retry_ids": [],
+                "status": "created"
+            },
+            "job_id": "BATCH_PARENT",
+            "outputWidgetInfo": null
+        },
+        "BATCH_RETRY_COMPLETED": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625755993000,
+                "finished": 1625756123416,
+                "job_id": "BATCH_RETRY_COMPLETED",
+                "job_output": {
+                    "id": "BATCH_RETRY_COMPLETED",
+                    "result": [
+                        {
+                            "obj_ref": "62425/17/1",
+                            "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                            "report_ref": "62425/19/1"
+                        }
+                    ],
+                    "version": "1.1"
+                },
+                "queued": 1625755993355,
+                "retry_count": 0,
+                "retry_ids": [],
+                "retry_parent": "BATCH_TERMINATED_RETRIED",
+                "running": 1625756004391,
+                "status": "completed",
+                "widget_info": {
+                    "name": "no-display",
+                    "params": {
+                        "obj_ref": "18836/5/1",
+                        "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                        "report_ref": "62425/19/1",
+                        "report_window_line_height": "16",
+                        "wsName": "wjriehl:1475006266615"
+                    },
+                    "tag": "release"
+                }
+            },
+            "job_id": "BATCH_RETRY_COMPLETED",
+            "outputWidgetInfo": {
+                "name": "no-display",
+                "params": {
+                    "obj_ref": "18836/5/1",
+                    "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                    "report_ref": "62425/19/1",
+                    "report_window_line_height": "16",
+                    "wsName": "wjriehl:1475006266615"
+                },
+                "tag": "release"
+            }
+        },
+        "BATCH_RETRY_ERROR": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625757655000,
+                "error": {
+                    "code": -32000,
+                    "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 187, in import_sra_from_staging\n    fastq_file_path = self._sra_to_fastq(scratch_sra_file_path, params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 63, in _sra_to_fastq\n    self._run_command(command)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 44, in _run_command\n    raise ValueError(error_msg)\nValueError: Error running command:\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\nExit Code: 3\nOutput:\nb''\n",
+                    "message": "\"Error running command:\\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\\nExit Code: 3\\nOutput:\\nb''\"",
+                    "name": "Server error"
+                },
+                "error_code": 1,
+                "errormsg": "Job output contains an error",
+                "finished": 1625757676688,
+                "job_id": "BATCH_RETRY_ERROR",
+                "job_output": {},
+                "queued": 1625757655956,
+                "retry_count": 0,
+                "retry_ids": [],
+                "retry_parent": "BATCH_ERROR_RETRIED",
+                "running": 1625757662469,
+                "status": "error"
+            },
+            "job_id": "BATCH_RETRY_ERROR",
+            "outputWidgetInfo": null
+        },
+        "BATCH_RETRY_RUNNING": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625757279000,
+                "job_id": "BATCH_RETRY_RUNNING",
+                "job_output": {},
+                "queued": 1625757279744,
+                "retry_count": 0,
+                "retry_ids": [],
+                "retry_parent": "BATCH_TERMINATED_RETRIED",
+                "running": 1625757285899,
+                "status": "running"
+            },
+            "job_id": "BATCH_RETRY_RUNNING",
+            "outputWidgetInfo": null
+        },
+        "BATCH_TERMINATED": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625755944000,
+                "finished": 1625755985250,
+                "job_id": "BATCH_TERMINATED",
+                "job_output": {},
+                "queued": 1625755944442,
+                "retry_count": 0,
+                "retry_ids": [],
+                "running": 1625755952599,
+                "status": "terminated",
+                "terminated_code": 0
+            },
+            "job_id": "BATCH_TERMINATED",
+            "outputWidgetInfo": null
+        },
+        "BATCH_TERMINATED_RETRIED": {
+            "jobState": {
+                "batch_id": "BATCH_PARENT",
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1625755944000,
+                "finished": 1625755977130,
+                "job_id": "BATCH_TERMINATED_RETRIED",
+                "job_output": {},
+                "queued": 1625755944519,
+                "retry_count": 2,
+                "retry_ids": [
+                    "BATCH_RETRY_COMPLETED",
+                    "BATCH_RETRY_RUNNING"
+                ],
+                "running": 1625755952563,
+                "status": "terminated",
+                "terminated_code": 0
+            },
+            "job_id": "BATCH_TERMINATED_RETRIED",
+            "outputWidgetInfo": null
+        },
+        "JOB_COMPLETED": {
+            "jobState": {
+                "batch_id": null,
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1642431805000,
+                "finished": 1642431852079,
+                "job_id": "JOB_COMPLETED",
+                "job_output": {
+                    "id": "JOB_COMPLETED",
+                    "result": [
+                        {
+                            "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                            "report_ref": "54321/60/1"
+                        }
+                    ],
+                    "version": "1.1"
+                },
+                "queued": 1642431805791,
+                "retry_count": 0,
+                "retry_ids": [],
+                "running": 1642431816870,
+                "status": "completed",
+                "widget_info": {
+                    "name": "no-display",
+                    "params": {
+                        "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                        "report_ref": "54321/60/1",
+                        "report_window_line_height": "16"
+                    },
+                    "tag": "dev"
+                }
+            },
+            "job_id": "JOB_COMPLETED",
+            "outputWidgetInfo": {
+                "name": "no-display",
+                "params": {
+                    "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                    "report_ref": "54321/60/1",
+                    "report_window_line_height": "16"
+                },
+                "tag": "dev"
+            }
+        },
+        "JOB_CREATED": {
+            "jobState": {
+                "batch_id": null,
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1642522053000,
+                "job_id": "JOB_CREATED",
+                "job_output": {},
+                "retry_count": 0,
+                "retry_ids": [],
+                "status": "created"
+            },
+            "job_id": "JOB_CREATED",
+            "outputWidgetInfo": null
+        },
+        "JOB_ERROR": {
+            "jobState": {
+                "batch_id": null,
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1642431841000,
+                "error": {
+                    "code": -32000,
+                    "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/NarrativeTest/NarrativeTestServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/NarrativeTest/NarrativeTestImpl.py\", line 345, in app_sleep\n    raise RuntimeError('App woke up from its nap very cranky!')\nRuntimeError: App woke up from its nap very cranky!\n",
+                    "message": "'App woke up from its nap very cranky!'",
+                    "name": "Server error"
+                },
+                "error_code": 1,
+                "errormsg": "Job output contains an error",
+                "finished": 1642431856245,
+                "job_id": "JOB_ERROR",
+                "job_output": {},
+                "queued": 1642431841259,
+                "retry_count": 0,
+                "retry_ids": [],
+                "running": 1642431847689,
+                "status": "error"
+            },
+            "job_id": "JOB_ERROR",
+            "outputWidgetInfo": null
+        },
+        "JOB_RUNNING": {
+            "jobState": {
+                "batch_id": null,
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1642521765000,
+                "job_id": "JOB_RUNNING",
+                "job_output": {},
+                "queued": 1642521765842,
+                "retry_count": 0,
+                "retry_ids": [],
+                "running": 1642521775867,
+                "status": "running"
+            },
+            "job_id": "JOB_RUNNING",
+            "outputWidgetInfo": null
+        },
+        "JOB_TERMINATED": {
+            "jobState": {
+                "batch_id": null,
+                "batch_job": false,
+                "child_jobs": [],
+                "created": 1642521724000,
+                "finished": 1642521729372,
+                "job_id": "JOB_TERMINATED",
+                "job_output": {},
+                "queued": 1642521724208,
+                "retry_count": 0,
+                "retry_ids": [],
+                "status": "terminated",
+                "terminated_code": 0
+            },
+            "job_id": "JOB_TERMINATED",
+            "outputWidgetInfo": null
+        },
+        "a_bad_job_id": {
+            "error": "Cannot find job with ID a_bad_job_id",
+            "job_id": "a_bad_job_id"
+        },
+        "another_bad_job_id": {
+            "error": "Cannot find job with ID another_bad_job_id",
+            "job_id": "another_bad_job_id"
+        },
+        "job_not_found": {
+            "error": "Cannot find job with ID job_not_found",
+            "job_id": "job_not_found"
+        }
+    },
+    "retry_job": {
+        "BATCH_COMPLETED": {
+            "error": "Error retrying job BATCH_COMPLETED with status completed: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755944000,
+                    "finished": 1625756074922,
+                    "job_id": "BATCH_COMPLETED",
+                    "job_output": {
+                        "id": "BATCH_COMPLETED",
+                        "result": [
+                            {
+                                "obj_ref": "62425/2/12",
+                                "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                                "report_ref": "62425/18/1"
+                            }
+                        ],
+                        "version": "1.1"
+                    },
+                    "queued": 1625755944353,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "running": 1625755954453,
+                    "status": "completed",
+                    "widget_info": {
+                        "name": "no-display",
+                        "params": {
+                            "obj_ref": "18836/5/1",
+                            "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                            "report_ref": "62425/18/1",
+                            "report_window_line_height": "16",
+                            "wsName": "wjriehl:1475006266615"
+                        },
+                        "tag": "release"
+                    }
+                },
+                "job_id": "BATCH_COMPLETED",
+                "outputWidgetInfo": {
+                    "name": "no-display",
+                    "params": {
+                        "obj_ref": "18836/5/1",
+                        "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                        "report_ref": "62425/18/1",
+                        "report_window_line_height": "16",
+                        "wsName": "wjriehl:1475006266615"
+                    },
+                    "tag": "release"
+                }
+            },
+            "job_id": "BATCH_COMPLETED"
+        },
+        "BATCH_ERROR_RETRIED": {
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755944000,
+                    "error": {
+                        "code": -32000,
+                        "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 184, in import_sra_from_staging\n    download_staging_file_params).get('copy_file_path')\n  File \"/kb/module/lib/installed_clients/DataFileUtilClient.py\", line 484, in download_staging_file\n    [params], self._service_ver, context)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 253, in run_job\n    job_state = self._check_job(mod, job_id)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 220, in _check_job\n    return self._call(self.url, service + '._check_job', [job_id])\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 187, in _call\n    raise ServerError(**err['error'])\ninstalled_clients.baseclient.ServerError: Server error: -32000. (2, 'No such file or directory')\nTraceback (most recent call last):\n  File \"/kb/module/bin/../lib/DataFileUtil/DataFileUtilServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/DataFileUtil/DataFileUtilImpl.py\", line 1488, in download_staging_file\n    shutil.copy2(staging_file_path, self.tmp)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 257, in copy2\n    copyfile(src, dst, follow_symlinks=follow_symlinks)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 120, in copyfile\n    with open(src, 'rb') as fsrc:\nFileNotFoundError: [Errno 2] No such file or directory: '/data/bulk/ialarmedalien/jupyter_console_config.py'\n\n",
+                        "message": "\"(2, 'No such file or directory')\"",
+                        "name": "Server error"
+                    },
+                    "error_code": 1,
+                    "errormsg": "Job output contains an error",
+                    "finished": 1625755962015,
+                    "job_id": "BATCH_ERROR_RETRIED",
+                    "job_output": {},
+                    "queued": 1625755944590,
+                    "retry_count": 1,
+                    "retry_ids": [
+                        "BATCH_RETRY_ERROR"
+                    ],
+                    "running": 1625755952628,
+                    "status": "error"
+                },
+                "job_id": "BATCH_ERROR_RETRIED",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_ERROR_RETRIED",
+            "retry": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625757655000,
+                    "error": {
+                        "code": -32000,
+                        "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 187, in import_sra_from_staging\n    fastq_file_path = self._sra_to_fastq(scratch_sra_file_path, params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 63, in _sra_to_fastq\n    self._run_command(command)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 44, in _run_command\n    raise ValueError(error_msg)\nValueError: Error running command:\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\nExit Code: 3\nOutput:\nb''\n",
+                        "message": "\"Error running command:\\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\\nExit Code: 3\\nOutput:\\nb''\"",
+                        "name": "Server error"
+                    },
+                    "error_code": 1,
+                    "errormsg": "Job output contains an error",
+                    "finished": 1625757676688,
+                    "job_id": "BATCH_RETRY_ERROR",
+                    "job_output": {},
+                    "queued": 1625757655956,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "retry_parent": "BATCH_ERROR_RETRIED",
+                    "running": 1625757662469,
+                    "status": "error"
+                },
+                "job_id": "BATCH_RETRY_ERROR",
+                "outputWidgetInfo": null
+            },
+            "retry_id": "BATCH_RETRY_ERROR"
+        },
+        "BATCH_PARENT": {
+            "error": "Cannot retry batch job parents. Must retry individual jobs",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": true,
+                    "child_jobs": [
+                        "BATCH_COMPLETED",
+                        "BATCH_TERMINATED",
+                        "BATCH_TERMINATED_RETRIED",
+                        "BATCH_ERROR_RETRIED",
+                        "BATCH_RETRY_COMPLETED",
+                        "BATCH_RETRY_RUNNING",
+                        "BATCH_RETRY_ERROR"
+                    ],
+                    "created": 1625755944000,
+                    "job_id": "BATCH_PARENT",
+                    "job_output": {},
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "status": "created"
+                },
+                "job_id": "BATCH_PARENT",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_PARENT"
+        },
+        "BATCH_RETRY_COMPLETED": {
+            "error": "Error retrying job BATCH_RETRY_COMPLETED with status completed: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755993000,
+                    "finished": 1625756123416,
+                    "job_id": "BATCH_RETRY_COMPLETED",
+                    "job_output": {
+                        "id": "BATCH_RETRY_COMPLETED",
+                        "result": [
+                            {
+                                "obj_ref": "62425/17/1",
+                                "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                                "report_ref": "62425/19/1"
+                            }
+                        ],
+                        "version": "1.1"
+                    },
+                    "queued": 1625755993355,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "retry_parent": "BATCH_TERMINATED_RETRIED",
+                    "running": 1625756004391,
+                    "status": "completed",
+                    "widget_info": {
+                        "name": "no-display",
+                        "params": {
+                            "obj_ref": "18836/5/1",
+                            "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                            "report_ref": "62425/19/1",
+                            "report_window_line_height": "16",
+                            "wsName": "wjriehl:1475006266615"
+                        },
+                        "tag": "release"
+                    }
+                },
+                "job_id": "BATCH_RETRY_COMPLETED",
+                "outputWidgetInfo": {
+                    "name": "no-display",
+                    "params": {
+                        "obj_ref": "18836/5/1",
+                        "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                        "report_ref": "62425/19/1",
+                        "report_window_line_height": "16",
+                        "wsName": "wjriehl:1475006266615"
+                    },
+                    "tag": "release"
+                }
+            },
+            "job_id": "BATCH_RETRY_COMPLETED"
+        },
+        "BATCH_RETRY_ERROR": {
+            "error": "Error retrying job BATCH_RETRY_ERROR with status error: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625757655000,
+                    "error": {
+                        "code": -32000,
+                        "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 187, in import_sra_from_staging\n    fastq_file_path = self._sra_to_fastq(scratch_sra_file_path, params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 63, in _sra_to_fastq\n    self._run_command(command)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 44, in _run_command\n    raise ValueError(error_msg)\nValueError: Error running command:\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\nExit Code: 3\nOutput:\nb''\n",
+                        "message": "\"Error running command:\\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\\nExit Code: 3\\nOutput:\\nb''\"",
+                        "name": "Server error"
+                    },
+                    "error_code": 1,
+                    "errormsg": "Job output contains an error",
+                    "finished": 1625757676688,
+                    "job_id": "BATCH_RETRY_ERROR",
+                    "job_output": {},
+                    "queued": 1625757655956,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "retry_parent": "BATCH_ERROR_RETRIED",
+                    "running": 1625757662469,
+                    "status": "error"
+                },
+                "job_id": "BATCH_RETRY_ERROR",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_RETRY_ERROR"
+        },
+        "BATCH_RETRY_RUNNING": {
+            "error": "Error retrying job BATCH_RETRY_RUNNING with status running: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625757279000,
+                    "job_id": "BATCH_RETRY_RUNNING",
+                    "job_output": {},
+                    "queued": 1625757279744,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "retry_parent": "BATCH_TERMINATED_RETRIED",
+                    "running": 1625757285899,
+                    "status": "running"
+                },
+                "job_id": "BATCH_RETRY_RUNNING",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_RETRY_RUNNING"
+        },
+        "BATCH_TERMINATED": {
+            "error": "Error retrying job BATCH_TERMINATED with status terminated: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755944000,
+                    "finished": 1625755985250,
+                    "job_id": "BATCH_TERMINATED",
+                    "job_output": {},
+                    "queued": 1625755944442,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "running": 1625755952599,
+                    "status": "terminated",
+                    "terminated_code": 0
+                },
+                "job_id": "BATCH_TERMINATED",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_TERMINATED"
+        },
+        "BATCH_TERMINATED_RETRIED": {
+            "job": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755944000,
+                    "finished": 1625755977130,
+                    "job_id": "BATCH_TERMINATED_RETRIED",
+                    "job_output": {},
+                    "queued": 1625755944519,
+                    "retry_count": 2,
+                    "retry_ids": [
+                        "BATCH_RETRY_COMPLETED",
+                        "BATCH_RETRY_RUNNING"
+                    ],
+                    "running": 1625755952563,
+                    "status": "terminated",
+                    "terminated_code": 0
+                },
+                "job_id": "BATCH_TERMINATED_RETRIED",
+                "outputWidgetInfo": null
+            },
+            "job_id": "BATCH_TERMINATED_RETRIED",
+            "retry": {
+                "jobState": {
+                    "batch_id": "BATCH_PARENT",
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1625755993000,
+                    "finished": 1625756123416,
+                    "job_id": "BATCH_RETRY_COMPLETED",
+                    "job_output": {
+                        "id": "BATCH_RETRY_COMPLETED",
+                        "result": [
+                            {
+                                "obj_ref": "62425/17/1",
+                                "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                                "report_ref": "62425/19/1"
+                            }
+                        ],
+                        "version": "1.1"
+                    },
+                    "queued": 1625755993355,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "retry_parent": "BATCH_TERMINATED_RETRIED",
+                    "running": 1625756004391,
+                    "status": "completed",
+                    "widget_info": {
+                        "name": "no-display",
+                        "params": {
+                            "obj_ref": "18836/5/1",
+                            "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                            "report_ref": "62425/19/1",
+                            "report_window_line_height": "16",
+                            "wsName": "wjriehl:1475006266615"
+                        },
+                        "tag": "release"
+                    }
+                },
+                "job_id": "BATCH_RETRY_COMPLETED",
+                "outputWidgetInfo": {
+                    "name": "no-display",
+                    "params": {
+                        "obj_ref": "18836/5/1",
+                        "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                        "report_ref": "62425/19/1",
+                        "report_window_line_height": "16",
+                        "wsName": "wjriehl:1475006266615"
+                    },
+                    "tag": "release"
+                }
+            },
+            "retry_id": "BATCH_RETRY_COMPLETED"
+        },
+        "JOB_COMPLETED": {
+            "error": "Error retrying job JOB_COMPLETED with status completed: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": null,
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1642431805000,
+                    "finished": 1642431852079,
+                    "job_id": "JOB_COMPLETED",
+                    "job_output": {
+                        "id": "JOB_COMPLETED",
+                        "result": [
+                            {
+                                "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                                "report_ref": "54321/60/1"
+                            }
+                        ],
+                        "version": "1.1"
+                    },
+                    "queued": 1642431805791,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "running": 1642431816870,
+                    "status": "completed",
+                    "widget_info": {
+                        "name": "no-display",
+                        "params": {
+                            "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                            "report_ref": "54321/60/1",
+                            "report_window_line_height": "16"
+                        },
+                        "tag": "dev"
+                    }
+                },
+                "job_id": "JOB_COMPLETED",
+                "outputWidgetInfo": {
+                    "name": "no-display",
+                    "params": {
+                        "report_name": "NarrativeTest.example_reportfd0250fa-5ec0-4914-88e7-5922b3047092",
+                        "report_ref": "54321/60/1",
+                        "report_window_line_height": "16"
+                    },
+                    "tag": "dev"
+                }
+            },
+            "job_id": "JOB_COMPLETED"
+        },
+        "JOB_CREATED": {
+            "error": "Error retrying job JOB_CREATED with status created: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": null,
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1642522053000,
+                    "job_id": "JOB_CREATED",
+                    "job_output": {},
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "status": "created"
+                },
+                "job_id": "JOB_CREATED",
+                "outputWidgetInfo": null
+            },
+            "job_id": "JOB_CREATED"
+        },
+        "JOB_ERROR": {
+            "error": "Error retrying job JOB_ERROR with status error: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": null,
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1642431841000,
+                    "error": {
+                        "code": -32000,
+                        "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/NarrativeTest/NarrativeTestServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/NarrativeTest/NarrativeTestImpl.py\", line 345, in app_sleep\n    raise RuntimeError('App woke up from its nap very cranky!')\nRuntimeError: App woke up from its nap very cranky!\n",
+                        "message": "'App woke up from its nap very cranky!'",
+                        "name": "Server error"
+                    },
+                    "error_code": 1,
+                    "errormsg": "Job output contains an error",
+                    "finished": 1642431856245,
+                    "job_id": "JOB_ERROR",
+                    "job_output": {},
+                    "queued": 1642431841259,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "running": 1642431847689,
+                    "status": "error"
+                },
+                "job_id": "JOB_ERROR",
+                "outputWidgetInfo": null
+            },
+            "job_id": "JOB_ERROR"
+        },
+        "JOB_RUNNING": {
+            "error": "Error retrying job JOB_RUNNING with status running: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": null,
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1642521765000,
+                    "job_id": "JOB_RUNNING",
+                    "job_output": {},
+                    "queued": 1642521765842,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "running": 1642521775867,
+                    "status": "running"
+                },
+                "job_id": "JOB_RUNNING",
+                "outputWidgetInfo": null
+            },
+            "job_id": "JOB_RUNNING"
+        },
+        "JOB_TERMINATED": {
+            "error": "Error retrying job JOB_TERMINATED with status terminated: can only retry jobs with status 'error' or 'terminated'",
+            "job": {
+                "jobState": {
+                    "batch_id": null,
+                    "batch_job": false,
+                    "child_jobs": [],
+                    "created": 1642521724000,
+                    "finished": 1642521729372,
+                    "job_id": "JOB_TERMINATED",
+                    "job_output": {},
+                    "queued": 1642521724208,
+                    "retry_count": 0,
+                    "retry_ids": [],
+                    "status": "terminated",
+                    "terminated_code": 0
+                },
+                "job_id": "JOB_TERMINATED",
+                "outputWidgetInfo": null
+            },
+            "job_id": "JOB_TERMINATED"
+        },
+        "a_bad_job_id": {
+            "error": "Cannot find job with ID a_bad_job_id",
+            "job_id": "a_bad_job_id"
+        },
+        "another_bad_job_id": {
+            "error": "Cannot find job with ID another_bad_job_id",
+            "job_id": "another_bad_job_id"
+        },
+        "job_not_found": {
+            "error": "Cannot find job with ID job_not_found",
+            "job_id": "job_not_found"
+        }
+    }
+}

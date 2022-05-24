@@ -174,9 +174,10 @@ define([
                 } else {
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
-                        newValue: newValue,
+                        newValue,
+                        newDisplayValue: message.newDisplayValue,
                         isError: message.isError,
-                        rowId: rowId,
+                        rowId,
                         rowIndex: dataModel.rowIdToIndex[rowId],
                     });
                 }

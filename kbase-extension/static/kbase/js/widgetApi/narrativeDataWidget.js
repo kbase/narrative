@@ -56,7 +56,7 @@ define(['bluebird', 'runtimeManager', 'narrativeConfig'], (
                             // 'yaml!./config.yml',
                             'kb_common/props',
                             'kb_common/session',
-                            'kb_common/html',
+                            'common/html',
                         ],
                         (WidgetManager, Props, Session, Html) => {
                             // just a little synchronous auth token business for now

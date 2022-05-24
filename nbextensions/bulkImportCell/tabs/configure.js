@@ -1,14 +1,34 @@
 define([
     'bluebird',
+    'common/events',
     'common/runtime',
     'common/html',
     'common/ui',
     './fileTypePanel',
+    './xsvGenerator',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
     'util/appCellUtil',
-], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
+], (
+    Promise,
+    Events,
+    Runtime,
+    html,
+    UI,
+    FileTypePanel,
+    XsvGenerator,
+    ParamsWidget,
+    FilePathWidget,
+    Util
+) => {
     'use strict';
+
+    const div = html.tag('div'),
+        span = html.tag('span'),
+        iTag = html.tag('i'),
+        strong = html.tag('strong'),
+        aTag = html.tag('a'),
+        button = html.tag('button');
 
     /**
      * This widget is responsible for providing an interactive interface for setting the
@@ -36,11 +56,12 @@ define([
      */
     function ConfigureWidget(options) {
         const viewOnly = options.viewOnly || false;
-        const { model, specs, fileTypesDisplay, typesToFiles } = options;
+        const { model, specs, fileTypesDisplay, typesToFiles, fileTypeMapping } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params',
+            xsvGen = new XsvGenerator({ model, typesToFiles, fileTypeMapping }),
             cssBaseClass = 'kb-bulk-import-configure';
         let container = null,
             filePathWidget,
@@ -58,6 +79,8 @@ define([
          */
         function start(args) {
             const allFiles = new Set();
+            const events = Events.make();
+
             Object.values(typesToFiles).forEach((entry) => {
                 for (const file of entry.files) {
                     allFiles.add(file);
@@ -79,8 +102,9 @@ define([
                     container = args.node;
                     ui = UI.make({ node: container });
 
-                    const layout = renderLayout();
+                    const layout = renderLayout(events);
                     container.innerHTML = layout;
+                    events.attachEvents(container);
 
                     const fileTypeNode = ui.getElement('filetype-panel');
                     const initPromises = [
@@ -168,17 +192,15 @@ define([
          * an xSV file, but only one is used.
          */
         function showConfigMessage() {
-            const messages = typesToFiles[selectedFileType].messages;
-            if (messages) {
-                const messageNode = ui.getElement('input-container.config-message');
-                messages.forEach((msg) => {
-                    if (msg.message) {
-                        // ignore if the actual message is missing.
-                        const elem = renderConfigMessage(msg);
-                        messageNode.appendChild(ui.createNode(elem));
-                    }
-                });
-            }
+            const messages = typesToFiles[selectedFileType].messages || [];
+            const messageNode = ui.getElement('input-container.config-message');
+            messages.forEach((msg) => {
+                if (msg.message) {
+                    // ignore if the actual message is missing.
+                    const elem = renderConfigMessage(msg);
+                    messageNode.appendChild(ui.createNode(elem));
+                }
+            });
         }
 
         /**
@@ -188,10 +210,6 @@ define([
          *   message - string
          */
         function renderConfigMessage(msg) {
-            const div = html.tag('div'),
-                span = html.tag('span'),
-                iTag = html.tag('i'),
-                strong = html.tag('strong');
             const icon = 'fa fa-exclamation-circle';
             let msgType = msg.type;
             if (msgType !== 'warning' && msgType !== 'error') {
@@ -209,12 +227,18 @@ define([
                         [iTag({ class: icon }), strong(` ${msgType}:`)]
                     ),
                     span(msg.message),
+                    msg.link
+                        ? ' ' +
+                          aTag(
+                              { href: msg.link, target: '_blank' },
+                              iTag({ class: 'fa fa-external-link' })
+                          )
+                        : '',
                 ]
             );
         }
 
-        function renderLayout() {
-            const div = html.tag('div');
+        function renderLayout(events) {
             return div(
                 {
                     class: `${cssBaseClass}__container`,
@@ -234,6 +258,7 @@ define([
                                 class: `${cssBaseClass}__message_container`,
                                 dataElement: 'config-message',
                             }),
+                            buildXsvGeneratorButton(events),
                             div({
                                 class: `${cssBaseClass}__file_paths`,
                                 dataElement: 'file-paths',
@@ -244,6 +269,30 @@ define([
                             }),
                         ]
                     ),
+                ]
+            );
+        }
+
+        /**
+         * Creates the XSV Generator button, which conjures the XSV generator widget from the void.
+         */
+        function buildXsvGeneratorButton(events) {
+            return button(
+                {
+                    class: `${cssBaseClass}__button--generate-template`,
+                    type: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            xsvGen.run();
+                        },
+                    }),
+                },
+                [
+                    span({
+                        class: `${cssBaseClass}__button_icon--add_row fa fa-download`,
+                    }),
+                    'Create Import Template',
                 ]
             );
         }
@@ -283,6 +332,8 @@ define([
          *   - selected {String} the selected file type
          *   - completed {Object} keys = file type ids, values = booleans (true if all parameters
          *      are valid and ready)
+         *   - warnings {Set} a Set of file type ids that have parameters with warnings (e.g. built
+         *      from an xSV file with multiple different parameter sets)
          */
         function getFileTypeState(readyState) {
             const fileTypeCompleted = {};
@@ -290,9 +341,19 @@ define([
             for (const [fileType, status] of Object.entries(readyState)) {
                 fileTypeCompleted[fileType] = status === 'complete';
             }
+            const warningSet = new Set();
+            Object.keys(typesToFiles).forEach((fileType) => {
+                const messages = typesToFiles[fileType].messages || [];
+                messages.forEach((msg) => {
+                    if (msg.type === 'warning') {
+                        warningSet.add(fileType);
+                    }
+                });
+            });
             return {
                 selected: selectedFileType,
                 completed: fileTypeCompleted,
+                warnings: warningSet,
             };
         }
 
@@ -342,6 +403,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'otherParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                initialDisplay: model.getItem(['paramDisplay', selectedFileType, PARAM_TYPE]) || {},
                 viewOnly,
             });
 
@@ -584,6 +646,10 @@ define([
                 ] = message.newValue;
             } else {
                 model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
+                model.setItem(
+                    ['paramDisplay', fileType, paramType, message.parameter],
+                    message.newDisplayValue
+                );
             }
 
             return updateAppConfigState(message.isError);

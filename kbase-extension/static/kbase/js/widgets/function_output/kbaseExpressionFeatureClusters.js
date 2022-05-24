@@ -22,7 +22,7 @@ define([
     'bootstrap',
     'knhx',
     'kbaseTreechart',
-    'css!widgets/function_output/kbaseExpressionFeatureClusters.css'
+    'css!widgets/function_output/kbaseExpressionFeatureClusters.css',
 ], (
     $,
     Jupyter,
@@ -222,7 +222,9 @@ define([
             });
             const tableOver = $(
                 '<table class="table table-striped table-bordered OverviewTable" ' +
-                'id="' + pref + 'overview-table"/>'
+                    'id="' +
+                    pref +
+                    'overview-table"/>'
             );
             tabOverview.append(tableOver);
             tableOver
@@ -250,7 +252,7 @@ define([
                 show: false,
                 whenShown: () => {
                     $clustersTable.DataTable().columns.adjust().draw();
-                }
+                },
             });
 
             ///////////////////////////////////// Clusters table ////////////////////////////////////////////
@@ -267,8 +269,8 @@ define([
 
             const $clustersTable = $(
                 '<table id="' +
-                pref +
-                'clusters-table" \
+                    pref +
+                    'clusters-table" \
                 class="table table-bordered table-striped ClustersTable">\
                 </table>'
             );
@@ -337,7 +339,7 @@ define([
                 show: false,
                 whenShown: () => {
                     featureTabDiv.find('table').DataTable().columns.adjust().draw();
-                }
+                },
             });
             self.buildClusterFeaturesTable(featureTabDiv, null, () => {
                 updateClusterLinks('clusters2');
@@ -496,9 +498,7 @@ define([
                     clusterId: `<a class="show-clusters_${self.pref}" data-pos="${i}" style="cursor: pointer;">cluster_${i}</a>`,
                     size: Object.keys(cluster.id_to_pos).length,
                     meancor:
-                        cluster.meancor == null || typeof cluster.meancor === 'undefined'
-                            ? 'N/A'
-                            : cluster.meancor.toFixed(3),
+                        typeof cluster.meancor === 'number' ? cluster.meancor.toFixed(3) : 'N/A',
                     rowIndex: i,
                 });
             }
@@ -623,7 +623,7 @@ define([
                 sDom: 'lftip',
                 aaData: tableData,
                 aoColumns: columns,
-                fnDrawCallback: events
+                fnDrawCallback: events,
             });
 
             return tabDiv;

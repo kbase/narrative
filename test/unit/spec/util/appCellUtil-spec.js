@@ -85,9 +85,10 @@ define([
 
     describe('BulkImportCell Utility tests', () => {
         let spec;
+        const fakeToken = 'fakeToken';
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken',
+                getAuthToken: () => fakeToken,
             };
             spec = Spec.make({ appSpec: TestBulkImportObject.app.specs[testAppId] });
         });
@@ -467,8 +468,108 @@ define([
             });
         });
 
-        describe('getFilePathIds', () => {});
+        it('getFilePathIds should return just file path param ids', () => {
+            const fileType = 'fileType';
+            const model = buildModel({ [fileType]: ['file'] });
+            const filePathIds = Util.getFilePathIds(model, fileType);
+            expect(filePathIds).toEqual([
+                'fastq_fwd_staging_file_name',
+                'fastq_rev_staging_file_name',
+            ]);
+        });
 
-        describe('getFilePathValidationOptions', () => {});
+        describe('getFilePathValidationOptions', () => {
+            const fileType = 'fileType';
+            const model = buildModel({ [fileType]: ['file'] });
+            const fileIds = Util.getFilePathIds(model, fileType);
+
+            it('should return default options', () => {
+                const missingFiles = new Set();
+                const opts = Util.getFilePathValidationOptions(fileIds, filePathIds, missingFiles);
+                expect(opts).toEqual(jasmine.any(Object));
+                expect(Object.keys(opts)).toEqual(jasmine.arrayWithExactContents(filePathIds));
+                for (const paramId in opts) {
+                    if (fileIds.includes(paramId)) {
+                        expect(opts[paramId]).toEqual({
+                            invalidValues: missingFiles,
+                        });
+                    } else {
+                        expect(opts[paramId]).toEqual({
+                            shouldNotExist: true,
+                            authToken: fakeToken,
+                            workspaceId: null, // default unconfigured
+                            workspaceServiceUrl: Config.url('workspace'),
+                        });
+                    }
+                }
+            });
+
+            it('should include additional options', () => {
+                const missingFiles = new Set(['some_file', 'some_other_file']);
+                const extraFileOpts = {
+                    some: 'thing',
+                };
+                const extraParamOpts = {
+                    someOther: 'thing',
+                };
+                const opts = Util.getFilePathValidationOptions(
+                    fileIds,
+                    filePathIds,
+                    missingFiles,
+                    extraFileOpts,
+                    extraParamOpts
+                );
+                expect(opts).toEqual(jasmine.any(Object));
+                expect(Object.keys(opts)).toEqual(jasmine.arrayWithExactContents(filePathIds));
+                for (const paramId in opts) {
+                    if (fileIds.includes(paramId)) {
+                        expect(opts[paramId]).toEqual({
+                            invalidValues: missingFiles,
+                            some: 'thing',
+                        });
+                    } else {
+                        expect(opts[paramId]).toEqual({
+                            shouldNotExist: true,
+                            authToken: fakeToken,
+                            workspaceId: null, // default unconfigured
+                            workspaceServiceUrl: Config.url('workspace'),
+                            someOther: 'thing',
+                        });
+                    }
+                }
+            });
+
+            it('should override default options', () => {
+                const missingFiles = new Set(['some_file', 'some_other_file']);
+                const extraFileOpts = {};
+                const extraParamOpts = {
+                    workspaceId: 666,
+                    shouldNotExist: false,
+                };
+                const opts = Util.getFilePathValidationOptions(
+                    fileIds,
+                    filePathIds,
+                    missingFiles,
+                    extraFileOpts,
+                    extraParamOpts
+                );
+                expect(opts).toEqual(jasmine.any(Object));
+                expect(Object.keys(opts)).toEqual(jasmine.arrayWithExactContents(filePathIds));
+                for (const paramId in opts) {
+                    if (fileIds.includes(paramId)) {
+                        expect(opts[paramId]).toEqual({
+                            invalidValues: missingFiles,
+                        });
+                    } else {
+                        expect(opts[paramId]).toEqual({
+                            shouldNotExist: false,
+                            authToken: fakeToken,
+                            workspaceId: 666,
+                            workspaceServiceUrl: Config.url('workspace'),
+                        });
+                    }
+                }
+            });
+        });
     });
 });

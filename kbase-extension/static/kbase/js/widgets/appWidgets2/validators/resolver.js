@@ -8,6 +8,7 @@ define(['require', 'bluebird', 'widgets/appWidgets2/validation'], (require, Prom
         custom: 'validateCustomInput',
         customSubdata: 'validateCustomInput',
         subdata: 'validateCustomInput',
+        multiselection: 'validateTextSet',
     };
 
     const typeToValidatorModule = {
@@ -23,7 +24,18 @@ define(['require', 'bluebird', 'widgets/appWidgets2/validation'], (require, Prom
 
     function validate(fieldValue, fieldSpec, options) {
         return new Promise((resolve, reject) => {
-            const fieldType = fieldSpec.data.type;
+            let fieldType = fieldSpec.data.type;
+            // is this a select element with multiple selection enabled?
+            try {
+                if (
+                    fieldSpec.data.constraints.options.length > 0 &&
+                    fieldSpec.data.constraints.multiselection
+                ) {
+                    fieldType = 'multiselection';
+                }
+            } catch (err) {
+                // no op
+            }
             if (!(fieldType in typeToValidatorModule) && !(fieldType in typeToValidator)) {
                 reject(new Error(`No validator for type: ${fieldType}`));
             } else if (fieldType in typeToValidator) {

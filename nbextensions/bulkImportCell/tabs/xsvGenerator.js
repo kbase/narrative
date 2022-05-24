@@ -1,112 +1,99 @@
-define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'util/string'], (
-    StagingServiceClient,
-    html,
-    Runtime,
-    UI,
-    String
-) => {
+define([
+    'jquery',
+    'bluebird',
+    'StagingServiceClient',
+    'common/cellComponents/paramsWidget',
+    'common/html',
+    'common/runtime',
+    'common/props',
+    'common/spec',
+    'common/ui',
+    'util/string',
+], ($, Promise, StagingServiceClient, ParamsWidget, html, Runtime, Props, Spec, UI, String) => {
     'use strict';
     const div = html.tag('div'),
         p = html.tag('p'),
         aTag = html.tag('a'),
         ul = html.tag('ul'),
         li = html.tag('li'),
-        select = html.tag('select'),
-        option = html.tag('option'),
-        input = html.tag('input'),
-        label = html.tag('label'),
         fieldset = html.tag('fieldset'),
         cssBaseClass = 'kb-xsv-gen';
 
     const DOCS_LINK = 'https://docs.kbase.us/data/upload-download-guide/bulk';
 
-    const formConfig = {
-        layout: [
-            'types', // multiple choice
-            'output_file_type', // CSV / TSV / EXCEL
-            'output_directory', // file path
-        ],
-        specs: {
-            types: {
-                original: {
-                    advanced: 0,
-                    allow_multiple: 1,
-                    default_values: [
-                        '', // current type
+    const xsvAppSpec = {
+        parameters: [
+            {
+                advanced: 0,
+                allow_multiple: 0,
+                default_values: [
+                    '', // current type
+                ],
+                description: 'File types to generate templates for',
+                disabled: 0,
+                dropdown_options: {
+                    multiselection: 1,
+                    options: [
+                        // map file type to display name
                     ],
-                    description: 'File types to generate templates for',
-                    disabled: 0,
-                    dropdown_options: {
-                        multiselection: 1,
-                        options: [
-                            // map file type to display name
-                        ],
-                    },
-                    field_type: 'dropdown',
-                    id: 'types',
-                    optional: 0,
-                    short_hint: 'File types to generate templates for',
-                    ui_class: 'parameter',
-                    ui_name: 'Import types(s)',
                 },
-                _position: 1,
+                field_type: 'dropdown',
+                id: 'types',
+                optional: 0,
+                short_hint: 'File types to generate templates for',
+                ui_class: 'parameter',
+                ui_name: 'Import types(s)',
             },
-            output_file_type: {
-                original: {
-                    advanced: 0,
-                    allow_multiple: 0,
-                    default_values: ['CSV'],
-                    description: 'Format for the output file',
-                    disabled: 0,
-                    dropdown_options: {
-                        multiselection: 1,
-                        options: [
-                            {
-                                display: 'Comma-separated (CSV)',
-                                value: 'CSV',
-                            },
-                            {
-                                display: 'Tab-separated (TSV)',
-                                value: 'TSV',
-                            },
-                            {
-                                display: 'Excel (XLSX)',
-                                value: 'EXCEL',
-                            },
-                        ],
-                    },
-                    field_type: 'dropdown',
-                    id: 'output_file_type',
-                    optional: 0,
-                    short_hint: 'Format for the output file',
-                    ui_class: 'parameter',
-                    ui_name: 'Output file type',
+            {
+                advanced: 0,
+                allow_multiple: 0,
+                default_values: ['CSV'],
+                description: 'Format for the output file',
+                disabled: 0,
+                dropdown_options: {
+                    multiselection: 0,
+                    options: [
+                        {
+                            display: 'Comma-separated (CSV)',
+                            value: 'CSV',
+                        },
+                        {
+                            display: 'Tab-separated (TSV)',
+                            value: 'TSV',
+                        },
+                        {
+                            display: 'Excel (XLSX)',
+                            value: 'EXCEL',
+                        },
+                    ],
                 },
-                _position: 1,
+                field_type: 'dropdown',
+                id: 'output_file_type',
+                optional: 0,
+                short_hint: 'Format for the output file',
+                ui_class: 'parameter',
+                ui_name: 'Output file type',
             },
-            output_directory: {
-                original: {
-                    advanced: 0,
-                    allow_multiple: 0,
-                    default_values: [''],
-                    description: 'Directory where template files will be created',
-                    disabled: 0,
-                    field_type: 'text',
-                    id: 'output_directory',
-                    optional: 0,
-                    short_hint: 'Directory where template files will be created',
-                    text_options: {
-                        is_output_name: 1,
-                        placeholder: 'bulk_import_templates',
-                        regex_constraint: [],
-                        valid_ws_types: [],
-                    },
-                    ui_class: 'output',
-                    ui_name: 'Destination directory',
+            {
+                advanced: 0,
+                allow_multiple: 0,
+                default_values: ['bulk_import_templates'],
+                description: 'Directory where template files will be created',
+                disabled: 0,
+                field_type: 'text',
+                id: 'output_directory',
+                optional: 0,
+                short_hint: 'Directory where template files will be created',
+                text_options: {
+                    is_output_name: 1,
+                    placeholder: 'bulk_import_templates',
+                    regex_constraint: [],
+                    valid_ws_types: [],
                 },
-                _position: 3,
+                ui_class: 'output',
+                ui_name: 'Destination directory',
             },
-        },
+        ],
     };
 
     /**
@@ -140,38 +127,62 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             this.cssBaseClass = cssBaseClass;
         }
 
+        _setUpModel() {
+            // fill in the options for the types
+            const typeArray = Object.keys(this.model.getItem('params'));
+            xsvAppSpec.parameters[0].dropdown_options.options = typeArray.sort().map((opt) => {
+                return {
+                    display: this.fileTypeMapping[opt],
+                    value: opt,
+                };
+            });
+            xsvAppSpec.parameters[0].default_values = typeArray;
+            this.xsvAppSpec = xsvAppSpec;
+            this.spec = Spec.make({ appSpec: this.xsvAppSpec });
+
+            const internalModelContext = {
+                app: {
+                    spec: this.spec,
+                },
+                params: this.spec.makeDefaultedModel(),
+                inputs: {
+                    otherParamIds: this.xsvAppSpec.parameters.map((param) => {
+                        return param.id;
+                    }),
+                },
+            };
+
+            // this is the model for the xsv template generator "app",
+            // which will store the XSV form values and overall state
+            this.internalModel = Props.make({
+                data: internalModelContext,
+            });
+        }
+
         async run() {
+            this._setUpModel();
             const body = this.renderLayout();
-            const formValues = {};
+            this.startInputWidgets();
+            const doThisFirst = function (mdn) {
+                // attach the form widget to the UI modal
+                mdn.querySelector('#' + this.id).appendChild(this.paramsNode);
+                this.updateAppConfigState();
+            };
+
             const modalArgs = {
                 title: 'Create Import Specification Template',
                 body,
                 okLabel: 'Generate template!',
+                doThisFirst: doThisFirst.bind(this),
                 onConfirm: () => {
-                    // TODO: the form should monitor its state of validity and
-                    // only allow the query to be submitted when the form is valid
-                    const form = document.querySelector('#' + this.id);
-                    const params = ['output_directory', 'output_file_type', 'types'];
-
-                    // TODO: validate the form params
-                    params.forEach((param) => {
-                        const formEl = form.querySelector(`[name="${param}"]`);
-                        if (formEl) {
-                            if (param === 'types') {
-                                formValues[param] = Array.from(formEl.selectedOptions).map(
-                                    (x) => x.value
-                                );
-                            } else {
-                                formValues[param] = formEl.value;
-                            }
-                        }
-                    });
                     // generate the request params to send to the staging service
+                    const formValues = this.internalModel.getItem(['params']);
                     return this.generateRequest(formValues);
                 },
             };
 
             const resolution = await UI.showConfirmDialog(modalArgs);
+            this.stopInputWidgets();
             if (resolution) {
                 // if the "confirm" option was chosen, `resolution`
                 // will be a data structure containing the request params
@@ -213,6 +224,13 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
         renderLayout() {
             const state = this.model.getItem('state');
             let errorMessage;
+
+            const typeArray = Object.keys(state.params);
+            const multiFileInfo = p(
+                'Choosing Excel as output file type will create a single file with ' +
+                    'a page for each import type; CSV and TSV create one file per import type.'
+            );
+
             const hasErrors = Object.values(state.params).some((val) => val !== 'complete');
             if (hasErrors) {
                 errorMessage = div(
@@ -225,32 +243,14 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                     )
                 );
             }
+
+            this.id = html.genId();
             return div(
                 {
                     class: `${cssBaseClass}__container`,
                 },
-                [errorMessage, this.createForm()]
-            );
-        }
-
-        /**
-         * Generate the appropriate form for creating template downloads
-         *
-         * @returns {string} HTML string containing the form
-         */
-        createForm() {
-            this.id = html.genId();
-            const typeArray = Object.keys(this.model.getItem('params'));
-            const multiFileInfo = p(
-                'Choosing Excel as output file type will create a single file with ' +
-                    'a page for each import type; CSV and TSV create one file per import type.'
-            );
-
-            return div(
-                {
-                    id: this.id,
-                },
                 [
+                    errorMessage,
                     fieldset(
                         {
                             class: `${cssBaseClass}__paragraph--guide`,
@@ -274,105 +274,81 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
                             ),
                         ]
                     ),
-                    // input file types
-                    fieldset([
-                        p(
-                            label(
-                                {
-                                    for: formConfig.specs.types.original.id,
-                                },
-                                formConfig.specs.types.original.ui_name +
-                                    ' (select all appropriate)'
-                            )
-                        ),
-                        select(
-                            {
-                                id: formConfig.specs.types.original.id,
-                                name: formConfig.specs.types.original.id,
-                                // er...
-                                multiple: 'multiple',
-                                required: 'required',
-                            },
-                            typeArray.sort().map((opt) => {
-                                return option(
-                                    {
-                                        value: opt,
-                                        selected: 'selected',
-                                    },
-                                    this.fileTypeMapping[opt]
-                                );
-                            })
-                        ),
-                    ]),
-
-                    // output_file_types
-                    fieldset([
-                        p(
-                            label(
-                                {
-                                    for: formConfig.specs.output_file_type.original.id,
-                                },
-                                formConfig.specs.output_file_type.original.ui_name
-                            )
-                        ),
-                        select(
-                            {
-                                id: formConfig.specs.output_file_type.original.id,
-                                name: formConfig.specs.output_file_type.original.id,
-                            },
-                            formConfig.specs.output_file_type.original.dropdown_options.options.map(
-                                (opt) => {
-                                    if (
-                                        formConfig.specs.output_file_type.original
-                                            .default_values[0] === opt.value
-                                    ) {
-                                        return option(
-                                            {
-                                                value: opt.value,
-                                                selected: 'selected',
-                                            },
-                                            opt.display
-                                        );
-                                    }
-                                    return option(
-                                        {
-                                            value: opt.value,
-                                        },
-                                        opt.display
-                                    );
-                                }
-                            )
-                        ),
-                    ]),
-
-                    // output file directory
-                    fieldset([
-                        p(
-                            label(
-                                {
-                                    for: formConfig.specs.output_directory.original.id,
-                                },
-                                formConfig.specs.output_directory.original.ui_name
-                            )
-                        ),
-                        input(
-                            {
-                                id: formConfig.specs.output_directory.original.id,
-                                type: 'text',
-                                name: formConfig.specs.output_directory.original.id,
-                                placeholder:
-                                    formConfig.specs.output_directory.original.text_options
-                                        .placeholder,
-                                value: formConfig.specs.output_directory.original.text_options
-                                    .placeholder,
-                                minlength: 1,
-                                required: true,
-                            },
-                            ''
-                        ),
-                    ]),
+                    div({
+                        id: this.id,
+                    }),
                 ]
             );
+        }
+
+        /**
+         * This builds the parameters widget containing the inputs for the XSV form
+         */
+        startInputWidgets() {
+            this.paramsNode = document.createElement('div');
+            this.paramsBus = this.runtime
+                .bus()
+                .makeChannelBus({ description: 'Parent comm bus for parameters widget' });
+
+            this.paramsBus.on('parameter-changed', (message) => {
+                this.updateModelParameterValue(message);
+            });
+
+            this.paramsWidget = ParamsWidget.make({
+                bus: this.paramsBus,
+                workspaceId: this.runtime.workspaceId(),
+                paramIds: this.internalModel.getItem(['inputs', 'otherParamIds']),
+                initialParams: this.internalModel.getItem(['params']),
+                initialDisplay: {},
+            });
+
+            return this.paramsWidget.start({
+                node: this.paramsNode,
+                parameters: this.spec.getSpec().parameters,
+            });
+        }
+
+        stopInputWidgets() {
+            if (this.paramsWidget) {
+                return this.paramsWidget.stop();
+            }
+            return Promise.resolve();
+        }
+
+        /**
+         * Updates the stored parameter value using the bus message passed by the input widget.
+         *
+         * This is followed by evaluating the state of all inputs to see if the form is valid
+         * and ready for submission.
+         *
+         * @param {object} message - the bus message returned from the widget with a changed
+         *  parameter value
+         */
+        updateModelParameterValue(message) {
+            this.internalModel.setItem(['params', message.parameter], message.newValue);
+
+            if (message.isError) {
+                return;
+            }
+
+            return this.updateAppConfigState();
+        }
+
+        /**
+         * Validates the current form values, updates the state of the form to either 'complete'
+         * or 'incomplete', and sets the form submission button to disabled if the form is incomplete.
+         */
+
+        async updateAppConfigState() {
+            const paramIds = this.internalModel.getItem(['inputs', 'otherParamIds']),
+                paramValues = this.internalModel.getItem(['params']);
+            const results = await this.spec.validateParams(paramIds, paramValues, {});
+            const isValid = Object.values(results).every((param) => param.isValid);
+            this.internalModel.setItem(['state', 'params'], isValid ? 'complete' : 'incomplete');
+            const confirmButton = $(document.querySelector('#' + this.id)).nearest(
+                '[data-element="ok"]'
+            );
+            confirmButton[0].disabled = !isValid;
         }
 
         /**
@@ -389,6 +365,7 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
             const { output_file_type, output_directory, types } = formParams;
 
             const params = this.model.getItem('params'),
+                paramDisplay = this.model.getItem('paramDisplay'),
                 appSpecs = this.model.getItem('app.specs'),
                 output = {
                     output_directory,
@@ -398,15 +375,35 @@ define(['StagingServiceClient', 'common/html', 'common/runtime', 'common/ui', 'u
 
             types.forEach((fileType) => {
                 const appId = this.typesToFiles[fileType].appId;
+                const paramsToRemap = JSON.parse(JSON.stringify(params[fileType].params));
                 output.types[fileType] = {
                     order_and_display: appSpecs[appId].parameters.map((param) => {
+                        if (param.dropdown_options) {
+                            if (paramsToRemap[param.id]) {
+                                for (const opt of param.dropdown_options.options) {
+                                    if (opt.value === paramsToRemap[param.id]) {
+                                        paramsToRemap[param.id] = opt.display;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if (paramDisplay[fileType]) {
+                            // special display value from a dynamic dropdown
+                            try {
+                                const displayParam =
+                                    paramDisplay[fileType].params[param.id][param.id];
+                                paramsToRemap[param.id] = displayParam;
+                            } catch (err) {
+                                // ignore the error
+                            }
+                        }
                         return [param.id, param.ui_name];
                     }),
                     data: params[fileType].filePaths.map((element) => {
                         const datum = JSON.parse(JSON.stringify(element));
-                        Object.keys(params[fileType].params).forEach((param) => {
-                            datum[param] = params[fileType].params[param];
-                        });
+                        for (const param in paramsToRemap) {
+                            datum[param] = paramsToRemap[param];
+                        }
                         return datum;
                     }),
                 };

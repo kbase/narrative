@@ -620,8 +620,8 @@ define([
         /**
          * Validates that all values in the given "set" (an Array) are present in options.values.
          * If any are missing, this will not validate.
-         * @param {Array} value
-         * @param {*} options
+         * @param {Array} set - array of values to be checked
+         * @param {Object} options - validation constraints
          */
         function validateTextSet(set, options) {
             let errorMessage, messageId, diagnosis, parsedSet;
@@ -651,9 +651,15 @@ define([
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
-                } else if (options.values) {
+                } else if (options.values || options.options) {
+                    let targetSet;
+                    if (options.values) {
+                        targetSet = options.values;
+                    } else {
+                        targetSet = options.options.map((opt) => opt.value);
+                    }
                     const matchedSet = parsedSet.filter((setValue) => {
-                        return options.values.indexOf(setValue) >= 0;
+                        return targetSet.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
@@ -790,6 +796,19 @@ define([
         }
 
         /**
+         * Runs importTextString over an array
+         * @param {*} value -- array of values or null
+         * @returns {array} imported values
+         */
+
+        function importTextStringArray(value) {
+            if (value === null || value === undefined) {
+                return [];
+            }
+            return value.map((val) => importTextString(val));
+        }
+
+        /**
          * Basically casts undefined -> null, otherwise returns the given string.
          * @param {String} value the value to verify
          * @returns the imported string or null
@@ -882,6 +901,7 @@ define([
             validateCustomInput,
             validateTrue,
             validateFalse,
+            importTextStringArray,
             importTextString,
             importIntString,
             importFloatString,

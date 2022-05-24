@@ -1,0 +1,386 @@
+{
+    "behavior": {
+      "kb_service_input_mapping": [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        },
+        {
+          "input_parameter": "genome_name",
+          "target_property": "genome_name"
+        },
+        {
+          "input_parameter": "genome_type",
+          "target_property": "genome_type"
+        },
+        {
+          "input_parameter": "staging_file_subdir_path",
+          "target_property": "staging_file_subdir_path"
+        },
+        {
+          "input_parameter": "source",
+          "target_property": "source"
+        },
+        {
+          "input_parameter": "release",
+          "target_property": "release"
+        },
+        {
+          "input_parameter": "genetic_code",
+          "target_property": "genetic_code"
+        },
+        {
+          "input_parameter": "scientific_name",
+          "target_property": "taxon_id"
+        },
+        {
+          "input_parameter": "generate_ids_if_needed",
+          "target_property": "generate_ids_if_needed"
+        },
+        {
+          "input_parameter": "generate_missing_genes",
+          "target_property": "generate_missing_genes"
+        }
+      ],
+      "kb_service_method": "import_genbank_from_staging",
+      "kb_service_name": "kb_uploadmethods",
+      "kb_service_output_mapping": [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "ws"
+        },
+        {
+          "constant_value": "KBaseGenomes.Genome",
+          "target_property": "type"
+        },
+        {
+          "input_parameter": "genome_name",
+          "target_property": "id"
+        },
+        {
+          "constant_value": "16",
+          "target_property": "report_window_line_height"
+        },
+        {
+          "service_method_output_path": [
+            "0",
+            "report_name"
+          ],
+          "target_property": "report_name"
+        },
+        {
+          "service_method_output_path": [
+            "0",
+            "report_ref"
+          ],
+          "target_property": "report_ref"
+        }
+      ],
+      "kb_service_url": "",
+      "kb_service_version": "bcfe5e28883b83593893f5fe970b45fa4c0b5341"
+    },
+    "fixed_parameters": [],
+    "full_info": {
+      "app_type": "app",
+      "authors": [
+        "tgu2",
+        "qzhang"
+      ],
+      "categories": [
+        "inactive",
+        "assembly",
+        "upload"
+      ],
+      "contact": "http://kbase.us/contact-us/",
+      "description": "<p> Import a GenBank file from your staging area into your Narrative as a Genome data object.\n    Please see the <a href=\"http://kbase.us/data-upload-download-guide/\">Data Upload/Download Guide</a> for more information. </p>",
+      "git_commit_hash": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
+      "icon": {
+        "url": "img?method_id=kb_uploadmethods/import_genbank_as_genome_from_staging&image_name=data-red.png&tag=release"
+      },
+      "id": "kb_uploadmethods/import_genbank_as_genome_from_staging",
+      "module_name": "kb_uploadmethods",
+      "name": "Import GenBank File as Genome from Staging Area",
+      "namespace": "kb_uploadmethods",
+      "publications": [],
+      "screenshots": [],
+      "subtitle": "Import a GenBank file from your staging area into your Narrative as a Genome data object",
+      "suggestions": {
+        "next_apps": [],
+        "next_methods": [],
+        "related_apps": [],
+        "related_methods": []
+      },
+      "tag": "release",
+      "technical_description": "",
+      "tooltip": "Import a GenBank file from your staging area into your Narrative as a Genome data object",
+      "ver": "1.0.51"
+    },
+    "info": {
+      "app_type": "app",
+      "authors": [
+        "tgu2",
+        "qzhang"
+      ],
+      "categories": [
+        "inactive",
+        "assembly",
+        "upload"
+      ],
+      "git_commit_hash": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
+      "icon": {
+        "url": "img?method_id=kb_uploadmethods/import_genbank_as_genome_from_staging&image_name=data-red.png&tag=release"
+      },
+      "id": "kb_uploadmethods/import_genbank_as_genome_from_staging",
+      "input_types": [],
+      "module_name": "kb_uploadmethods",
+      "name": "Import GenBank File as Genome from Staging Area",
+      "namespace": "kb_uploadmethods",
+      "output_types": [
+        "KBaseGenomes.Genome"
+      ],
+      "subtitle": "Import a GenBank file from your staging area into your Narrative as a Genome data object",
+      "tooltip": "Import a GenBank file from your staging area into your Narrative as a Genome data object",
+      "ver": "1.0.51"
+    },
+    "job_id_output_field": "docker",
+    "parameters": [
+      {
+        "advanced": 0,
+        "allow_multiple": 0,
+        "default_values": [
+          ""
+        ],
+        "description": "File with genome sequence in GenBank format or zip-file with GenBank files.",
+        "disabled": 0,
+        "dynamic_dropdown_options": {
+          "data_source": "ftp_staging",
+          "multiselection": 0,
+          "query_on_empty_input": 1,
+          "result_array_index": 0,
+          "service_params": null
+        },
+        "field_type": "dynamic_dropdown",
+        "id": "staging_file_subdir_path",
+        "optional": 0,
+        "short_hint": "File with genome sequence in GenBank format or zip-file with GenBank files.",
+        "ui_class": "parameter",
+        "ui_name": "GenBank File Path"
+      },
+      {
+        "advanced": 0,
+        "allow_multiple": 0,
+        "default_values": [
+          ""
+        ],
+        "description": "Provide a name for the Genome that will be created by this importer",
+        "disabled": 0,
+        "field_type": "text",
+        "id": "genome_name",
+        "optional": 0,
+        "short_hint": "Provide a name for the Genome that will be created by this importer",
+        "text_options": {
+          "is_output_name": 1,
+          "placeholder": "",
+          "regex_constraint": [],
+          "valid_ws_types": [
+            "KBaseGenomes.Genome"
+          ]
+        },
+        "ui_class": "output",
+        "ui_name": "Genome Object Name"
+      },
+      {
+        "advanced": 0,
+        "allow_multiple": 0,
+        "default_values": [
+          "draft isolate"
+        ],
+        "description": "The type or source of this genome",
+        "disabled": 0,
+        "dropdown_options": {
+          "multiselection": 0,
+          "options": [
+            {
+              "display": "Draft Isolate",
+              "value": "draft isolate"
+            },
+            {
+              "display": "Finished Isolate",
+              "value": "finished isolate"
+            },
+            {
+              "display": "Metagenome-assembled genome (MAG)",
+              "value": "mag"
+            },
+            {
+              "display": "Single amplified genome (SAG)",
+              "value": "sag"
+            },
+            {
+              "display": "Virus",
+              "value": "virus"
+            },
+            {
+              "display": "Plasmid",
+              "value": "plasmid"
+            },
+            {
+              "display": "Construct",
+              "value": "construct"
+            }
+          ]
+        },
+        "field_type": "dropdown",
+        "id": "genome_type",
+        "optional": 0,
+        "short_hint": "The type or source of this genome",
+        "ui_class": "parameter",
+        "ui_name": "Genome Type"
+      },
+      {
+        "advanced": 0,
+        "allow_multiple": 0,
+        "default_values": [
+          "RefSeq user"
+        ],
+        "description": "Identify the source of the GenBank File. (If Ensembl, the \"gene\" feature types will use the \"gene\" field as the ID; otherwise the \"locus_tag\" field is used.)",
+        "disabled": 0,
+        "dropdown_options": {
+          "multiselection": 0,
+          "options": [
+            {
+              "display": "RefSeq",
+              "value": "RefSeq user"
+            },
+            {
+              "display": "Ensembl",
+              "value": "Ensembl user"
+            },
+            {
+              "display": "Other",
+              "value": "Other"
+            }
+          ]
+        },
+        "field_type": "dropdown",
+        "id": "source",
+        "optional": 0,
+        "short_hint": "Identify the source of the GenBank File.",
+        "ui_class": "parameter",
+        "ui_name": "Source of the GenBank File"
+      },
+      {
+        "advanced": 1,
+        "allow_multiple": 0,
+        "default_values": [
+          ""
+        ],
+        "description": "Release or version of the source data (for example: Release31, V4)",
+        "disabled": 0,
+        "field_type": "text",
+        "id": "release",
+        "optional": 1,
+        "short_hint": "Release or version of the source data (for example: Release31, V4)",
+        "ui_class": "parameter",
+        "ui_name": "Release or Version of the Source Data"
+      },
+      {
+        "advanced": 1,
+        "allow_multiple": 0,
+        "default_values": [
+          ""
+        ],
+        "description": "Valid genetic code integer for translation purposes (see http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi)",
+        "disabled": 0,
+        "field_type": "text",
+        "id": "genetic_code",
+        "optional": 1,
+        "short_hint": "Valid genetic code (see http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi)",
+        "text_options": {
+          "is_output_name": 0,
+          "placeholder": "",
+          "regex_constraint": [],
+          "validate_as": "int"
+        },
+        "ui_class": "parameter",
+        "ui_name": "Genetic Code for the Organism"
+      },
+      {
+        "advanced": 0,
+        "allow_multiple": 0,
+        "default_values": [
+          ""
+        ],
+        "description": "Provide the scientific name of the species, e.g., \"Escherichia coli\". This is important for taxonomy lookup.",
+        "disabled": 0,
+        "dynamic_dropdown_options": {
+          "data_source": "custom",
+          "description_template": "NCBI Tax ID {{ncbi_taxon_id}}:&nbsp<strong>{{scientific_name}}</strong>",
+          "multiselection": 0,
+          "path_to_selection_items": [
+            "results"
+          ],
+          "query_on_empty_input": 0,
+          "result_array_index": 0,
+          "selection_id": "ncbi_taxon_id",
+          "service_function": "taxonomy_re_api.search_species",
+          "service_params": [
+            {
+              "limit": 20,
+              "ns": "ncbi_taxonomy",
+              "search_text": "prefix:{{dynamic_dropdown_input}}"
+            }
+          ],
+          "service_version": "dev"
+        },
+        "field_type": "dynamic_dropdown",
+        "id": "scientific_name",
+        "optional": 1,
+        "short_hint": "Provide the scientific name of the species",
+        "ui_class": "parameter",
+        "ui_name": "Scientific Name"
+      },
+      {
+        "advanced": 1,
+        "allow_multiple": 0,
+        "checkbox_options": {
+          "checked_value": 1,
+          "unchecked_value": 0
+        },
+        "default_values": [
+          "1"
+        ],
+        "description": "Generate feature IDs if the fields normally used are not present. \nFor gene features the locus_tag field is used (unless the source is Ensembl; then the gene field is used).\nFor CDS features the protein_id field is used.\nAutogenerated IDs will have the format \"gene_1\" or \"CDS_3\"",
+        "disabled": 0,
+        "field_type": "checkbox",
+        "id": "generate_ids_if_needed",
+        "optional": 1,
+        "short_hint": "Generate feature IDs if the fields normally used are not present",
+        "ui_class": "parameter",
+        "ui_name": "Generate Feature IDs if Needed"
+      },
+      {
+        "advanced": 1,
+        "allow_multiple": 0,
+        "checkbox_options": {
+          "checked_value": 1,
+          "unchecked_value": 0
+        },
+        "default_values": [
+          "1"
+        ],
+        "description": "Some files may contain only codeing sequences but KBase genomes are\nexpected to contain a parent gene for these CDS. This option\ngenerates spoof genes based on the CDS location.",
+        "disabled": 0,
+        "field_type": "checkbox",
+        "id": "generate_missing_genes",
+        "optional": 1,
+        "short_hint": "Generate gene feature for CDSs that do not have a parent in file",
+        "ui_class": "parameter",
+        "ui_name": "Spoof Genes for parentless CDS"
+      }
+    ],
+    "widgets": {
+      "input": "null",
+      "output": "kbaseGenomeView"
+    }
+  }

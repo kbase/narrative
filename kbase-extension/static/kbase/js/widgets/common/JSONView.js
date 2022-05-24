@@ -1,28 +1,42 @@
-define(['jquery', 'widgets/common/RenderIn'], ($, RenderIn) => {
+define([
+    'jquery',
+    'widgets/common/RenderIn',
+
+    // for effect
+    'css!./JSONView.css',
+], ($, RenderIn) => {
     'use strict';
 
     const { $TextIn } = RenderIn;
 
     function $RenderJSONArray(data) {
         const $rows = data.map((value, index) => {
-            return $('<tr>').append(
-                $('<th>').css('color', 'rgba(150, 150, 150, 1)').text(String(index)),
-                $('<td>').addClass('fa fa-arrow-right'),
-                $('<td>').html($JSONView(value))
-            );
+            return $('<tr>')
+                .addClass('Element')
+                .append(
+                    $('<th>').addClass('Index').text(String(index)),
+                    $('<td>').addClass('fa fa-arrow-right'),
+                    $('<td>').html($JSONView(value))
+                );
         });
-        return $('<table>').addClass('table table-striped').html($('<tbody>').append($rows));
+        return $('<table>')
+            .addClass('table table-striped JSONArray')
+            .html($('<tbody>').append($rows));
     }
 
     function $RenderJSONObject(data) {
         const $rows = Object.entries(data).map(([key, value]) => {
-            return $('<tr>').append(
-                $('<th>').css('color', 'rgba(150, 150, 150, 1)').text(key),
-                $('<td>').addClass('fa fa-arrow-right'),
-                $('<td>').html($JSONView(value))
-            );
+            return $('<tr>')
+                .addClass('Property')
+                .append(
+                    $('<th>').addClass('Key').text(key),
+                    $('<td>').addClass('fa fa-arrow-right'),
+                    $('<td>').html($JSONView(value))
+                );
         });
-        return $('<table>').addClass('table table-striped').html($('<tbody>').append($rows));
+        return $('<table>')
+            .addClass('table table-striped JSONObject')
+            .html($('<tbody>').append($rows));
     }
 
     function $RenderNonJSON(data) {

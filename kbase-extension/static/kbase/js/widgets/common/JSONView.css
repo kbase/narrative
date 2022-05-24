@@ -1,0 +1,16 @@
+
+.JSONObject > tbody > .Property > .Key {
+    color: rgba(150, 150, 150, 1);
+}
+
+.JSONObject th {
+    text-align: left;
+}
+
+.JSONArray > tbody > .Element > .Index {
+    color: rgba(150, 150, 150, 1);
+}
+
+.JSONArray th {
+    text-align: left;
+}

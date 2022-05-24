@@ -4,7 +4,7 @@ specificity and to include the bootstrap ".table" class in
 order to override bootstrap.
 */
 table.table.ClusterFeaturesTable {
-  width: 100%;
+  width: 100% !important;
 }
 
 table.table.ClustersTable > tbody > tr > td {
@@ -21,5 +21,5 @@ table.table.ClusterFeaturesTable > tbody > tr > td:nth-child(4) {
 }
 
 table.table.ClustersTable {
-  width: 100%;
+  width: 100% !important;
 }

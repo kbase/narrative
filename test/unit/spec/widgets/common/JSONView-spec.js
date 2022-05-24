@@ -1,4 +1,4 @@
-define(['jquery', 'widgets/common/JSONView'], ($, $JSONView) => {
+define(['widgets/common/JSONView'], ($JSONView) => {
     'use strict';
     describe('The $JSONView widget', () => {
         it('should display instances of scalar JSON-compatible values', () => {

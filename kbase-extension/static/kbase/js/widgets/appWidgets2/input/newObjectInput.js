@@ -34,9 +34,7 @@ define([
 
         function setModelValue(value) {
             value = value || ''; // cast null/undefined -> empty string
-            if (model.value !== value) {
-                model.value = value;
-            }
+            model.value = value;
             ui.getElement('input-container.input').value = value;
         }
 

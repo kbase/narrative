@@ -29,6 +29,7 @@ Demo pages are available from an index page, e.g. `https://ci.kbase.us/narrative
             title
 
         -   In the title, replace `TEMPLATE` with the class or filename being demoed
+        
 -   body
 
     -   H1 title describing what is being demoed, replace `TEMPLATE` with the class or filename being demoed

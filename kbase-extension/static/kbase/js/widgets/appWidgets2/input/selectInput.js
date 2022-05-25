@@ -17,7 +17,8 @@ define([
     // Constants
     const t = html.tag,
         div = t('div'),
-        select = t('select');
+        select = t('select'),
+        MAX_OPTIONS = 20;
 
     /**
      *
@@ -206,6 +207,19 @@ define([
 
         // LIFECYCLE API
 
+        function buildAllOptions() {
+            return model.availableValues.map((item) => buildOption(item));
+        }
+
+        function buildOption(item) {
+            return {
+                value: item.value,
+                id: item.value,
+                text: item.display,
+                disabled: model.disabledValues.has(item.value),
+            };
+        }
+
         function start(arg) {
             return Promise.try(() => {
                 parent = arg.node;
@@ -224,22 +238,24 @@ define([
                 );
                 ui.setContent('input-container', content);
 
-                const selectData = [
-                    {
-                        value: model.value,
-                        id: model.value,
-                        disabled: false,
-                        text: model.value,
-                    },
-                ];
-                // const selectData = model.availableValues.map((item) => {
-                //     return {
-                //         value: item.value,
-                //         id: item.value,
-                //         disabled: model.disabledValues.has(item.value),
-                //         text: item.display
-                //     };
-                // });
+                const selectData = [];
+                if (model.availableValues.length <= MAX_OPTIONS) {
+                    selectData.push(...buildAllOptions());
+                } else {
+                    const displayItem = model.availableValues.find(
+                        (item) => item.value === model.value
+                    );
+                    selectData.push(buildOption(displayItem));
+                }
+
+                let ajaxCommand = undefined;
+                if (model.availableValues.length > MAX_OPTIONS) {
+                    ajaxCommand = {
+                        transport: function (_params, success) {
+                            success({ results: buildAllOptions() });
+                        },
+                    };
+                }
 
                 $(ui.getElement('input-container.input'))
                     .select2({
@@ -248,6 +264,7 @@ define([
                         width: '100%',
                         multiple: useMultiselect,
                         data: selectData,
+                        ajax: ajaxCommand,
                     })
                     .val(model.value)
                     .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages

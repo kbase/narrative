@@ -1,11 +1,9 @@
 define([
-    'bluebird',
     'kb_service/client/workspace',
-    'kb_service/utils',
     'util/util',
     'util/string',
     'widgets/appWidgets2/validators/constants',
-], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
+], (Workspace, Util, StringUtil, Constants) => {
     'use strict';
 
     function Validators() {

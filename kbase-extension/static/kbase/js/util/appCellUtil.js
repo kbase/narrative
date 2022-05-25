@@ -56,14 +56,14 @@ define(['narrativeConfig', 'util/stagingFileCache', 'common/runtime', 'util/util
             filePathIds.reduce((acc, curr) => ((acc[curr] = []), acc), {})
         );
 
-        const filePathValidations = spec.validateMultipleParamsArray(
+        const filePathValidationProms = spec.validateMultipleParamsArray(
             filePathIds,
             filePathValidationParams,
             filePathOptions
         );
 
         return Promise.all([
-            filePathValidations,
+            filePathValidationProms,
             spec.validateParams(paramIds, paramValues, paramOptions),
         ])
             .then(([filePathValidations, paramValidations]) => {

@@ -471,8 +471,7 @@ define([
         it('getFilePathIds should return just file path param ids', () => {
             const fileType = 'fileType';
             const model = buildModel({ [fileType]: ['file'] });
-            const filePathIds = Util.getFilePathIds(model, fileType);
-            expect(filePathIds).toEqual([
+            expect(Util.getFilePathIds(model, fileType)).toEqual([
                 'fastq_fwd_staging_file_name',
                 'fastq_rev_staging_file_name',
             ]);

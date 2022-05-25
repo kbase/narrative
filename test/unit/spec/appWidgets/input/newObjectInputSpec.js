@@ -270,8 +270,7 @@ define([
 
         it('Should respond to duplicate parameter change events with "validation"', () => {
             const inputStr = 'banana';
-            const testConfig = buildTestConfig(false, bus, inputStr);
-            const widget = NewObjectInput.make(testConfig);
+            const widget = NewObjectInput.make(buildTestConfig(false, bus, inputStr));
             mockGetObjectInfo();
             bus.respond({
                 key: {
@@ -302,8 +301,7 @@ define([
 
         it('Should validate against workspace with non-unique parameter change events with "validation"', () => {
             const inputStr = wsObjName;
-            const testConfig = buildTestConfig(false, bus, inputStr);
-            const widget = NewObjectInput.make(testConfig);
+            const widget = NewObjectInput.make(buildTestConfig(false, bus, inputStr));
             bus.respond({
                 key: {
                     type: 'get-parameters',
@@ -336,9 +334,9 @@ define([
                 setDefaultBusResponse(bus);
                 mockGetObjectInfo();
                 const changedStr = 'new_str';
-                const testConfig = buildTestConfig(false, bus);
-                testConfig.skipAutoValidate = true;
-                const widget = NewObjectInput.make(testConfig);
+                const skipTestConfig = buildTestConfig(false, bus);
+                skipTestConfig.skipAutoValidate = true;
+                const widget = NewObjectInput.make(skipTestConfig);
 
                 return new Promise((resolve) => {
                     let gotValidationMsg = false,
@@ -346,7 +344,7 @@ define([
                     bus.on('validation', (message) => {
                         checkValidValidationMessage(changedStr, message);
                         gotValidationMsg = true;
-                        if (gotValidationMsg && gotChangedMsg) {
+                        if (gotChangedMsg) {
                             resolve();
                         }
                     });
@@ -356,7 +354,7 @@ define([
                             newValue: changedStr,
                         });
                         gotChangedMsg = true;
-                        if (gotValidationMsg && gotChangedMsg) {
+                        if (gotValidationMsg) {
                             resolve();
                         }
                     });

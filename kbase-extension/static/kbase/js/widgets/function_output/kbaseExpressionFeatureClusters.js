@@ -22,7 +22,6 @@ define([
     'bootstrap',
     'knhx',
     'kbaseTreechart',
-    'css!widgets/function_output/kbaseExpressionFeatureClusters.css',
 ], (
     $,
     Jupyter,
@@ -65,6 +64,7 @@ define([
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
+            this.$elem.addClass('KBaseExpressionFeatureClusters');
             return this;
         },
 

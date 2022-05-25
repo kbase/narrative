@@ -891,7 +891,7 @@ define([
                         error_message: 'Something went terribly wrong',
                         error_code: 'throw new Error("ZOMG! NOOO!")',
                     };
-                    runLaunchErrorTest(this);
+                    return runLaunchErrorTest(this);
                 });
 
                 it('responds to crazy messages', function () {
@@ -900,7 +900,7 @@ define([
                         cell_id: this.cell_id,
                         when: 'Any day now',
                     };
-                    runLaunchErrorTest(this);
+                    return runLaunchErrorTest(this);
                 });
             });
         });

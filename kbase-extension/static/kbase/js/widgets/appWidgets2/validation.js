@@ -1,11 +1,9 @@
 define([
-    'bluebird',
     'kb_service/client/workspace',
-    'kb_service/utils',
     'util/util',
     'util/string',
     'widgets/appWidgets2/validators/constants',
-], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
+], (Workspace, Util, StringUtil, Constants) => {
     'use strict';
 
     function Validators() {
@@ -150,85 +148,123 @@ define([
             };
         }
 
-        function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
+        /**
+         *
+         * @param {number} workspaceId
+         * @param {Array<string>} objectNames
+         * @param {string} authToken
+         * @param {string} serviceUrl
+         * @returns Promise resolving into an Array of strings, in the same order as the given objectNames
+         */
+        function getObjectTypes(workspaceId, objectNames, authToken, serviceUrl) {
             const workspace = new Workspace(serviceUrl, {
                 token: authToken,
             });
 
             return workspace
                 .get_object_info_new({
-                    objects: [{ wsid: workspaceId, name: objectName }],
+                    objects: objectNames.map((name) => ({ wsid: workspaceId, name })),
                     ignoreErrors: 1,
                 })
                 .then((data) => {
-                    if (data[0]) {
-                        return serviceUtils.objectInfoToObject(data[0]);
-                    } else {
-                        return null;
-                    }
+                    return data.map((objectInfo) => {
+                        if (!objectInfo) {
+                            return null;
+                        }
+                        return objectInfo[2].split('-')[0];
+                    });
                 });
         }
 
         /**
-         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
-         * object.
-         * @param {string} value
+         * Validates that every element of an array of workspace object names is valid. Optionally,
+         * validate that it does not already exist as a workspace object.
+         * If an empty array is given, then a single, resolved, empty Promise is given.
+         * @param {Array<string>} values
+         * @param {object} constraints
+         * - types - Array<string> workspace object type string
          * @param {object} options
          * - required - boolean
          * - shouldNotExist - boolean
          * - workspaceId - int
          * - workspaceServiceUrl - string(url),
-         * - types - Array
+         * - authToken - string - valid auth token
+         * @returns Promise that resolves into a validation structure
          */
-        function validateWorkspaceObjectName(value, options) {
-            let parsedValue,
-                messageId,
-                shortMessage,
-                errorMessage,
-                diagnosis = Constants.DIAGNOSIS.VALID;
-
-            return Promise.try(() => {
-                ({ errorMessage, shortMessage, messageId, diagnosis, parsedValue } =
-                    validateWorkspaceObjectNameString(value, options));
-                if (errorMessage) {
-                    return;
+        async function validateWorkspaceObjectNameArray(values, constraints = {}, options = {}) {
+            let hasError = false;
+            values = values || []; // if null/undefined, cast to an empty array
+            const validations = values.map((value) => {
+                const validation = validateWorkspaceObjectNameString(value, constraints, options);
+                if (validation.errorMessage) {
+                    hasError = true;
                 }
-                if (options.shouldNotExist) {
-                    return getObjectInfo(
+                return validation;
+            });
+            if (!hasError && options.shouldNotExist && constraints.types) {
+                try {
+                    const objectTypes = await getObjectTypes(
                         options.workspaceId,
-                        parsedValue,
+                        validations.map((v) => v.parsedValue),
                         options.authToken,
                         options.workspaceServiceUrl
-                    ).then((objectInfo) => {
-                        if (objectInfo) {
-                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                matchingType = options.types.some((typeId) => {
-                                    return typeId === type;
-                                });
+                    );
+                    objectTypes.forEach((objType, index) => {
+                        if (objType) {
+                            const matchingType = constraints.types.some(
+                                (typeId) => typeId === objType
+                            );
                             if (!matchingType) {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
-                                errorMessage =
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
+                                validations[index].errorMessage =
                                     'an object already exists with this name and is not of the same type';
-                                diagnosis = Constants.DIAGNOSIS.INVALID;
+                                validations[index].diagnosis = Constants.DIAGNOSIS.INVALID;
                             } else {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
-                                shortMessage = 'an object already exists with this name';
-                                diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
+                                validations[index].shortMessage =
+                                    'an object already exists with this name';
+                                validations[index].diagnosis = Constants.DIAGNOSIS.SUSPECT;
                             }
                         }
                     });
+                } catch (error) {
+                    console.error('error while validating workspace object name');
+                    console.error(error);
+                    return [
+                        {
+                            messageId: Constants.MESSAGE_IDS.ERROR,
+                            diagnosis: Constants.DIAGNOSIS.ERROR,
+                            errorMessage: 'an error occurred while validating',
+                        },
+                    ];
                 }
-            }).then(() => {
-                return {
-                    isValid: errorMessage ? false : true,
-                    messageId,
-                    errorMessage,
-                    shortMessage,
-                    diagnosis,
-                    value,
-                    parsedValue,
-                };
+            }
+            validations.forEach((v) => {
+                v.isValid = v.errorMessage ? false : true;
             });
+            return validations;
+        }
+
+        /**
+         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
+         * object, when appropriate.
+         * @param {string} value
+         * @param {object} constraints
+         * - types - Array
+         * @param {object} options
+         * - required - boolean
+         * - shouldNotExist - boolean
+         * - workspaceId - int
+         * - workspaceServiceUrl - string(url),
+         */
+        function validateWorkspaceObjectName(value, constraints = {}, options = {}) {
+            return validateWorkspaceObjectNameArray([value], constraints, options).then(
+                (validations) => {
+                    return validations[0];
+                }
+            );
         }
 
         /**
@@ -420,7 +456,10 @@ define([
             };
         }
 
-        function validateWorkspaceObjectNameString(value, options) {
+        function validateWorkspaceObjectNameString(value, constraints = {}, options = {}) {
+            if (options.nullToEmptyString && value === null) {
+                value = '';
+            }
             let parsedValue,
                 messageId,
                 shortMessage,
@@ -433,7 +472,7 @@ define([
             } else {
                 parsedValue = value.trim();
                 if (!parsedValue) {
-                    if (options.required) {
+                    if (constraints.required) {
                         messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
@@ -503,7 +542,7 @@ define([
                 maxLength = constraints.max_length;
 
             if (constraints.type && constraints.type === 'WorkspaceObjectName') {
-                return validateWorkspaceObjectNameString(value, constraints);
+                return validateWorkspaceObjectNameString(value, constraints, options);
             }
 
             if (StringUtil.isEmptyString(value)) {
@@ -864,6 +903,8 @@ define([
             importTextString,
             importIntString,
             importFloatString,
+
+            validateWorkspaceObjectNameArray,
         };
     }
 

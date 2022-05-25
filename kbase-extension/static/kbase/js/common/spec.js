@@ -101,11 +101,51 @@ define(['bluebird', 'util/util', 'common/sdk', 'widgets/appWidgets2/validators/r
             return Promise.props(validationMap);
         }
 
+        /**
+         * This validates parameter sets by using a bulk form of validator for each parameter type.
+         * If options are available for the parameter validation, they're expected to apply to all
+         * parameters of that type.
+         * This returns a batch of promises that resolves to a arrays of validations, keyed on
+         * parameter id, matching the order of arrays in the paramValues structure.
+         * NOTE: This expects that paramValues is normalized - each array is present and the same
+         * length - otherwise unexpected behavior may occur.
+         * @param {Array} paramIds parameter ids to validate.
+         * @param {Object} paramValues keys = parameter ids, values = list of parameter values
+         * @param {Object} options keys = parameter ids, values = set of options for that parameter
+         */
+        function validateMultipleParamsArray(paramIds, paramValues, options = {}) {
+            const validationMap = {};
+            for (const paramId of paramIds) {
+                validationMap[paramId] = validateParamsArray(
+                    paramId,
+                    paramValues[paramId],
+                    options[paramId]
+                );
+            }
+            return Promise.props(validationMap);
+        }
+
+        /**
+         * This validates an array of parameters. It returns a Promise that resolves into an array
+         * of Validations from the validation resolver.
+         * @param {string} paramId
+         * @param {Array} paramValues
+         */
+        function validateParamsArray(paramId, paramValues, options = {}) {
+            return ValidationResolver.validateArray(
+                paramValues,
+                spec.parameters.specs[paramId],
+                options
+            );
+        }
+
         return Object.freeze({
             getSpec,
             makeDefaultedModel,
             validateModel,
             validateParams,
+            validateParamsArray,
+            validateMultipleParamsArray,
         });
     }
 

@@ -3,7 +3,8 @@ define([
     'widgets/appWidgets2/validation',
     'widgets/appWidgets2/validators/constants',
     'testUtil',
-], (Promise, Validation, Constants, TestUtil) => {
+    'narrativeMocks',
+], (Promise, Validation, Constants, TestUtil, Mocks) => {
     'use strict';
 
     const aLoadOfInputs = [
@@ -22,14 +23,8 @@ define([
     ];
 
     describe('Validator functions', () => {
-        it('Is alive', () => {
-            let alive;
-            if (Validation) {
-                alive = true;
-            } else {
-                alive = false;
-            }
-            expect(alive).toBeTruthy();
+        it('loads successfully', () => {
+            expect(Validation).toEqual(jasmine.any(Object));
         });
 
         /* map from wsid to objects that match the name
@@ -43,13 +38,14 @@ define([
          */
         const wsObjName = 'SomeObject',
             wsObjType = 'SomeModule.SomeType',
+            fullType = `${wsObjType}-1.0`,
             wsObjMapping = {
                 1: [null],
                 2: [
                     [
                         1,
                         wsObjName,
-                        wsObjType,
+                        fullType,
                         '2019-07-23T22:42:44+0000',
                         1,
                         'someuser',
@@ -64,7 +60,7 @@ define([
                     [
                         1,
                         wsObjName,
-                        'SomeOtherModule.SomeOtherType',
+                        'SomeOtherModule.SomeOtherType-2.0',
                         '2019-07-23T22:42:44+0000',
                         1,
                         'someotheruser',
@@ -80,29 +76,6 @@ define([
 
         beforeEach(() => {
             jasmine.Ajax.install();
-
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*1\s*,/).andReturn(
-                (function () {
-                    return {
-                        status: 200,
-                        statusText: 'HTTP/1.1 200 OK',
-                        contentType: 'application/json',
-                        responseText: JSON.stringify({ result: [wsObjMapping['1']] }),
-                    };
-                })()
-            );
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*2\s*,/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({ result: [wsObjMapping['2']] }),
-            });
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*3\s*,/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({ result: [wsObjMapping['3']] }),
-            });
         });
 
         afterEach(() => {
@@ -111,13 +84,22 @@ define([
         });
 
         describe('validateWorkspaceObjectName', () => {
-            it('returns valid when they should not exist', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 1,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+            it('returns valid when they should not exist', () => {
+                Mocks.mockJsonRpc1Call({
+                    url: fakeWsUrl,
+                    body: /wsid.\s*:\s*1\s*,/,
+                    response: wsObjMapping['1'],
+                });
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 1,
+                        workspaceServiceUrl: fakeWsUrl,
+                        types: [wsObjType],
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: undefined,
@@ -127,17 +109,24 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
 
-            it('returns valid-ish when type exists of same type', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 2,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+            it('returns valid-ish when type exists of same type', () => {
+                Mocks.mockJsonRpc1Call({
+                    url: fakeWsUrl,
+                    body: /wsid.\s*:\s*2\s*,/,
+                    response: wsObjMapping['2'],
+                });
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 2,
+                        workspaceServiceUrl: fakeWsUrl,
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN,
@@ -147,17 +136,24 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
 
-            it('returns invalid when type exists of different type', (done) => {
-                Validation.validateWorkspaceObjectName(wsObjName, {
-                    shouldNotExist: true,
-                    workspaceId: 3,
-                    workspaceServiceUrl: fakeWsUrl,
-                    types: [wsObjType],
-                }).then((result) => {
+            it('returns invalid when type exists of different type', () => {
+                Mocks.mockJsonRpc1Call({
+                    url: fakeWsUrl,
+                    body: /wsid.\s*:\s*3\s*,/,
+                    response: wsObjMapping['3'],
+                });
+                return Validation.validateWorkspaceObjectName(
+                    wsObjName,
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 3,
+                        workspaceServiceUrl: fakeWsUrl,
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: false,
                         messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE,
@@ -168,19 +164,172 @@ define([
                         value: wsObjName,
                         parsedValue: wsObjName,
                     });
-                    done();
                 });
             });
         });
 
+        describe('validateWorkspaceObjectNameArray', () => {
+            /**
+             * These tests all use a short array of workspace object names. It iterates over which
+             * name would fail validation for each test case, and ensures that the order of
+             * validations returned is correct. Validations themselves are then checked for
+             * accuracy.
+             */
+            const numNames = 3;
+            let names;
+            let wsResponse; // set up default to return nulls, i.e. no object exists
+            beforeEach(() => {
+                names = Array.from({ length: numNames }, (_v, x) => `some_name_${x}`);
+                wsResponse = new Array(numNames).fill(null);
+            });
+
+            const validResult = (val) => ({
+                isValid: true,
+                parsedValue: val,
+                value: val,
+                messageId: undefined,
+                errorMessage: undefined,
+                shortMessage: undefined,
+                diagnosis: Constants.DIAGNOSIS.VALID,
+            });
+
+            it('returns validations when names should not exist, and do not', async () => {
+                Mocks.mockJsonRpc1Call({
+                    url: fakeWsUrl,
+                    body: /get_object_info_new/,
+                    response: wsResponse,
+                });
+                const validations = await Validation.validateWorkspaceObjectNameArray(
+                    names,
+                    {
+                        types: [wsObjType],
+                    },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 666,
+                        workspaceServiceUrl: fakeWsUrl,
+                    }
+                );
+                validations.forEach((v, idx) => {
+                    expect(v).toEqual(validResult(names[idx]));
+                });
+            });
+
+            for (let invalidIdx = 0; invalidIdx < numNames; invalidIdx++) {
+                it(`returns valid if the names are well-formatted (invalid: ${invalidIdx})`, async () => {
+                    names[invalidIdx] = 'badly?formatted!name';
+                    const validations = await Validation.validateWorkspaceObjectNameArray(names);
+                    validations.forEach((v, idx) => {
+                        if (idx === invalidIdx) {
+                            expect(v).toEqual({
+                                isValid: false,
+                                messageId: Constants.MESSAGE_IDS.OBJ_INVALID,
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
+                                errorMessage:
+                                    'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"',
+                                shortMessage: undefined,
+                                value: names[idx],
+                                parsedValue: names[idx],
+                            });
+                        } else {
+                            expect(v).toEqual(validResult(names[idx]));
+                        }
+                    });
+                });
+
+                it('returns invalid when names exist of a different type', async () => {
+                    names[invalidIdx] = wsObjName;
+                    wsResponse[invalidIdx] = wsObjMapping[3][0];
+                    Mocks.mockJsonRpc1Call({
+                        url: fakeWsUrl,
+                        body: /get_object_info_new/,
+                        response: wsResponse,
+                    });
+                    const validations = await Validation.validateWorkspaceObjectNameArray(
+                        names,
+                        {
+                            types: [wsObjType],
+                        },
+                        {
+                            shouldNotExist: true,
+                            workspaceId: 3,
+                            workspaceServiceUrl: fakeWsUrl,
+                        }
+                    );
+                    validations.forEach((v, idx) => {
+                        if (idx === invalidIdx) {
+                            expect(v).toEqual({
+                                isValid: false,
+                                messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE,
+                                errorMessage:
+                                    'an object already exists with this name and is not of the same type',
+                                diagnosis: Constants.DIAGNOSIS.INVALID,
+                                shortMessage: undefined,
+                                value: wsObjName,
+                                parsedValue: wsObjName,
+                            });
+                        } else {
+                            expect(v).toEqual(validResult(names[idx]));
+                        }
+                    });
+                });
+
+                it('returns warnings when names exist of the same type', async () => {
+                    names[invalidIdx] = wsObjName;
+                    wsResponse[invalidIdx] = wsObjMapping[2][0];
+                    Mocks.mockJsonRpc1Call({
+                        url: fakeWsUrl,
+                        body: /get_object_info_new/,
+                        response: wsResponse,
+                    });
+                    const validations = await Validation.validateWorkspaceObjectNameArray(
+                        names,
+                        {
+                            types: [wsObjType],
+                        },
+                        {
+                            shouldNotExist: true,
+                            workspaceId: 2,
+                            workspaceServiceUrl: fakeWsUrl,
+                        }
+                    );
+                    validations.forEach((v, idx) => {
+                        if (idx === invalidIdx) {
+                            expect(v).toEqual({
+                                isValid: true,
+                                messageId: Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN,
+                                shortMessage: 'an object already exists with this name',
+                                diagnosis: Constants.DIAGNOSIS.SUSPECT,
+                                errorMessage: undefined,
+                                value: wsObjName,
+                                parsedValue: wsObjName,
+                            });
+                        } else {
+                            expect(v).toEqual(validResult(names[idx]));
+                        }
+                    });
+                });
+            }
+        });
+
         describe('workspace lookup', () => {
-            it('Can look up workspace names', (done) => {
-                Validation.validateWorkspaceObjectName('somename', {
-                    shouldNotExist: true,
-                    workspaceId: 1,
-                    workspaceServiceUrl: 'https://test.kbase.us/services/ws',
-                    types: [wsObjType],
-                }).then((result) => {
+            it('Can look up workspace names', () => {
+                Mocks.mockJsonRpc1Call({
+                    url: fakeWsUrl,
+                    body: /get_object_info_new/,
+                    response: wsObjMapping['1'],
+                });
+
+                return Validation.validateWorkspaceObjectName(
+                    'somename',
+                    { types: [wsObjType] },
+                    {
+                        shouldNotExist: true,
+                        workspaceId: 1,
+                        workspaceServiceUrl: 'https://test.kbase.us/services/ws',
+                        types: [wsObjType],
+                    }
+                ).then((result) => {
                     expect(result).toEqual({
                         isValid: true,
                         messageId: undefined,
@@ -190,7 +339,6 @@ define([
                         value: 'somename',
                         parsedValue: 'somename',
                     });
-                    done();
                 });
             });
         });

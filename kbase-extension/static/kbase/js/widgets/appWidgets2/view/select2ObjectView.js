@@ -185,6 +185,7 @@ define([
                     default:
                         return Validation.validateWorkspaceObjectName(
                             processedValue,
+                            spec.data.constraints,
                             validationOptions
                         );
                 }

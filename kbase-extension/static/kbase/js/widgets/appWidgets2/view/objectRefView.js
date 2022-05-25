@@ -173,7 +173,11 @@ define([
                         return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(
+                            rawValue,
+                            constraints,
+                            validationOptions
+                        );
                 }
             }).then((validationResult) => {
                 return {

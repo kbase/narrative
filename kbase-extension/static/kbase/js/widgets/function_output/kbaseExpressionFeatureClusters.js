@@ -213,7 +213,7 @@ define([
 
             const tabWidget = new kbaseTabs(tabPane, { canDelete: true, tabs: [] });
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            const tabOverview = $('<div style="margin-top: 10px;"/>');
+            const tabOverview = $('<div/>');
             tabWidget.addTab({
                 tab: 'Overview',
                 content: tabOverview,
@@ -244,7 +244,7 @@ define([
 
             ///////////////////////////////////// Clusters tab ////////////////////////////////////////////
 
-            const $tabClusters = $('<div style="margin-top: 10px;"/>');
+            const $tabClusters = $('<div />');
             tabWidget.addTab({
                 tab: 'Clusters',
                 content: $tabClusters,
@@ -315,7 +315,7 @@ define([
                         tabWidget.showTab(tabName);
                         return;
                     }
-                    const tabDiv = $('<div style="margin-top: 10px;"/>');
+                    const tabDiv = $('<div />');
                     tabWidget.addTab({
                         tab: tabName,
                         content: tabDiv,
@@ -331,7 +331,7 @@ define([
             }
 
             ///////////////////////////////////// Features tab ////////////////////////////////////////////
-            const featureTabDiv = $('<div style="margin-top: 10px;"/>');
+            const featureTabDiv = $('<div />');
             tabWidget.addTab({
                 tab: 'Features',
                 content: featureTabDiv,
@@ -448,7 +448,7 @@ define([
 
                             const geneIds = self.getClusterGeneIds(rowIndex);
 
-                            const $contentDiv = $('<div style="margin-top: 10px;" />');
+                            const $contentDiv = $('<div />');
 
                             tabWidget.addTab({
                                 tab: tabName,
@@ -495,7 +495,7 @@ define([
                 cluster = feature_clusters[i];
                 tableData.push({
                     pos: i,
-                    clusterId: `<a class="show-clusters_${self.pref}" data-pos="${i}" style="cursor: pointer;">cluster_${i}</a>`,
+                    clusterId: `<a class="show-clusters_${self.pref}" data-pos="${i}">cluster_${i}</a>`,
                     size: Object.keys(cluster.id_to_pos).length,
                     meancor:
                         typeof cluster.meancor === 'number' ? cluster.meancor.toFixed(3) : 'N/A',
@@ -507,17 +507,15 @@ define([
         },
 
         buildActionMenu: function ($container) {
-            const $menu = $(
-                ' \
-                <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0; padding-left: 0;" > \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
-                    <li class="divider"></li> \
-                    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
-                </ul> \
-            '
-            );
+            const $menu = $(`
+                <ul id="contextMenu" class="dropdown-menu KBaseExpressionFeatureClusters__ExploreClusterDropdown" role="menu"  >
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li>
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li>
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li>
+                    <li class="divider"></li>
+                    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li>
+                </ul>
+            `);
 
             /* XXX
 
@@ -593,7 +591,7 @@ define([
                     }
                     tableData.push({
                         fid,
-                        cid: `<a class="show-clusters2_${self.pref}" data-pos="${cluster_pos}" style="cursor: pointer;">cluster_${cluster_pos}</a>`,
+                        cid: `<a class="show-clusters2_${self.pref}" data-pos="${cluster_pos}">cluster_${cluster_pos}</a>`,
                         gid,
                         ali: aliases,
                         type,

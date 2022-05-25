@@ -15,7 +15,7 @@ define([
                 .addClass('Element')
                 .append(
                     $('<th>').addClass('Index').text(String(index)),
-                    $('<td>').addClass('fa fa-arrow-right'),
+                    $('<td>').html($('<span />').addClass('fa fa-arrow-right')),
                     $('<td>').html($JSONView(value))
                 );
         });
@@ -30,7 +30,7 @@ define([
                 .addClass('Property')
                 .append(
                     $('<th>').addClass('Key').text(key),
-                    $('<td>').addClass('fa fa-arrow-right'),
+                    $('<td>').html($('<span />').addClass('fa fa-arrow-right')),
                     $('<td>').html($JSONView(value))
                 );
         });

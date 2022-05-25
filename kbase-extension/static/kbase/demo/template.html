@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html >
+    <head>
+        <script src="/narrative/static/components/requirejs/require.js"></script>
+        <script src="/narrative/static/kbase/demo/common.js"></script>
+        <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/demo/common.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+        <meta charset="utf-8">
+        <title>KBase Demo - TEMPLATE</title>
+    </head>
+    <body class="Demo">
+       <h1>TEMPLATE Demo</h1>
+
+       <p><a href="./index.html">Index</a></p>
+
+        <!-- Add a section per demo -->
+        <h2>SOME VIEW</h2>
+                    
+        <p>Briefly describe the view</p>
+
+        <!-- Wrap in this class to provide a consistent framing for demod components -->
+        <div class="Example">
+          <!-- Note that SOMEID1 matches $("#SOMEID1") below -->
+          <div id="SOMEID1"></div>
+        </div>
+
+        <div class="Example">
+          <!-- Note that SOMEID2 matches $("#SOMEID2") below -->
+          <div id="SOMEID2"></div>
+        </div>
+
+
+        <script>
+            // Wrap in narrative_paths in order to get the AMD configuration used by KBase
+            require(['narrative_paths'], () => {
+                // Your demo code will require whatever it needs, as per the usual narrative module patterms
+                // defined in narrative_paths.
+                // You may also include local files for additional support, e.g. data to supply to
+                // your component.
+                // jquery is required here to be complete.
+                require(['jquery', 'widgets/common/AlertMessage', 'json!kbase/demo/template.json'], ($, $AlertMessage, demoData) => {
+                    // This example is quite simply, but most usages should follow this pattern.
+                    $('#SOMEID1').html($AlertMessage("Hello, this is a template for future demos"));
+
+                    $('#SOMEID2').html($AlertMessage(demoData.template));
+                });
+            });
+        </script>
+    </body>
+</html>

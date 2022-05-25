@@ -1,0 +1,26 @@
+{
+  "token": {
+    "user": "someuser",
+    "file": "test/someuser.tok"
+  },
+  "currentNarrative": "bar",
+  "data": [
+    {
+      "file": "/test/data/blah.xyz",
+      "type": "Module.type-1.0",
+      "name": "obj_name"
+    }
+  ],
+  "An Array": [
+    1,
+    2.3,
+    0.4,
+    5e3,
+    "hello",
+    true,
+    false,
+    null, 
+    {"bar": "fly"},
+    ["another", "array"]
+  ]
+}

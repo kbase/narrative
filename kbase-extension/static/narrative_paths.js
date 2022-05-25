@@ -383,14 +383,18 @@ require.config({
         kbaseTable: 'kbase/js/widgets/kbaseTable',
         kbasePanel: 'kbase/js/widgets/kbasePanel',
         kbaseDeletePrompt: 'kbase/js/widgets/kbaseDeletePrompt',
+
+        /***
+         * Support for component demonstrations
+         ***/
+        demo: 'kbase/demo',
     },
     excludeShallow: ['common/jobCommChannel'],
     map: {
         '*': {
             css: 'ext_components/require-css/css',
-            'jquery-dataTables': 'datatables.net-bs'
+            'jquery-dataTables': 'datatables.net-bs',
         },
-
     },
 
     shim: {
@@ -411,10 +415,10 @@ require.config({
             deps: ['jquery'],
         },
         'datatables.net-bs': {
-            deps: ['jquery', 'datatables.net', 'bootstrap']
+            deps: ['jquery', 'datatables.net', 'bootstrap'],
         },
         'datatables.net': {
-            deps: ['jquery']
+            deps: ['jquery'],
         },
         kbaseNarrativeMethodCell: {
             deps: ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu'],
@@ -511,7 +515,7 @@ require.config({
             deps: ['jquery', 'jqueryui'],
         },
         'bootstrap-slider': {
-            deps: ['jquery', 'css!bootstrap-slider-css']
-        }
+            deps: ['jquery', 'css!bootstrap-slider-css'],
+        },
     },
 });

@@ -1,10 +1,4 @@
-define([
-    'jquery',
-    'widgets/common/RenderIn',
-
-    // for effect
-    'css!./JSONView.css',
-], ($, RenderIn) => {
+define(['jquery', 'widgets/common/RenderIn'], ($, RenderIn) => {
     'use strict';
 
     const { $TextIn } = RenderIn;

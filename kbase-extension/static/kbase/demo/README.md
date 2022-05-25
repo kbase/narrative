@@ -19,11 +19,15 @@ Demo pages are available from an index page, e.g. `https://ci.kbase.us/narrative
     -   javascript
         -   `require.js` for AMD
         -   `common.js` for bootstrap AMD configuration
+
     -   stylesheets
         -   `style.min.css` for the Jupyter notebook styles (e.g. bootstrap)
+
         -   `common.css` for some styles used in demo pages
+
         -   `all_concat.css` to include the bulk of the KBase Narrative styles
             title
+
         -   In the title, replace `TEMPLATE` with the class or filename being demoed
 -   body
 
@@ -37,6 +41,8 @@ Demo pages are available from an index page, e.g. `https://ci.kbase.us/narrative
 
     -   script section to invoke the demo
         -   code must be wrapped in a require of `narrative_paths`
+
         -   mode must also be wrapped in a require of your component and, optionally, a local data file (or data may be simply included in the script)
+        
         -   each demo will render the component into the div already in the page, by id.
             -   more complex components which require setup will not be as "simple", of course.

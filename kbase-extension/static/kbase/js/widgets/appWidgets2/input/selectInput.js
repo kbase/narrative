@@ -17,8 +17,7 @@ define([
     // Constants
     const t = html.tag,
         div = t('div'),
-        select = t('select'),
-        option = t('option');
+        select = t('select');
 
     /**
      *
@@ -134,24 +133,10 @@ define([
         }
 
         function makeInputControl() {
-            const selectOptions = model.availableValues.map((item) => {
-                const attribs = {
-                    value: item.value,
-                };
-                if (model.disabledValues.has(item.value)) {
-                    attribs.disabled = true;
-                }
-                return option(attribs, item.display);
+            return select({
+                class: 'form-control',
+                dataElement: 'input',
             });
-
-            // CONTROL
-            return select(
-                {
-                    class: 'form-control',
-                    dataElement: 'input',
-                },
-                selectOptions
-            );
         }
 
         function layout() {
@@ -239,12 +224,30 @@ define([
                 );
                 ui.setContent('input-container', content);
 
+                const selectData = [
+                    {
+                        value: model.value,
+                        id: model.value,
+                        disabled: false,
+                        text: model.value,
+                    },
+                ];
+                // const selectData = model.availableValues.map((item) => {
+                //     return {
+                //         value: item.value,
+                //         id: item.value,
+                //         disabled: model.disabledValues.has(item.value),
+                //         text: item.display
+                //     };
+                // });
+
                 $(ui.getElement('input-container.input'))
                     .select2({
                         allowClear: true,
                         placeholder: 'select an option',
                         width: '100%',
                         multiple: useMultiselect,
+                        data: selectData,
                     })
                     .val(model.value)
                     .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages

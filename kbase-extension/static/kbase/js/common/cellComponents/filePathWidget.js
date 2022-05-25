@@ -667,7 +667,7 @@ define([
                     // options / constraints. Feed this info into the validateArray command, then dole
                     // out individual validation results to each widget for rendering errors, etc.
                     if (!config.viewOnly) {
-                        return doBulkValidation(parameterSpecs);
+                        return doBulkValidation();
                     } else {
                         return Promise.resolve();
                     }

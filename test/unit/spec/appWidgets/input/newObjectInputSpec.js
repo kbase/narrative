@@ -346,7 +346,7 @@ define([
                     bus.on('validation', (message) => {
                         checkValidValidationMessage(changedStr, message);
                         gotValidationMsg = true;
-                        if (gotValidationMsg && gotChangedMsg) {
+                        if (gotChangedMsg) {
                             resolve();
                         }
                     });
@@ -356,7 +356,7 @@ define([
                             newValue: changedStr,
                         });
                         gotChangedMsg = true;
-                        if (gotValidationMsg && gotChangedMsg) {
+                        if (gotValidationMsg) {
                             resolve();
                         }
                     });

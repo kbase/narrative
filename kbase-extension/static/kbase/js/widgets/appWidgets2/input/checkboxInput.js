@@ -217,7 +217,8 @@ define([
 
                 // initialize based on config.initialValue. If it's not 0 or 1, then
                 // note that we have an initial value error, and set to the default.
-                const initValue = config.initialValue || spec.data.defaultValue;
+                const initValue =
+                    'initialValue' in config ? config.initialValue : spec.data.defaultValue;
                 if (initValue !== 0 && initValue !== 1) {
                     model.hasInitialValueError = true;
                 }

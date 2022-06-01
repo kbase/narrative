@@ -32,4 +32,4 @@ sympy==1.10.1
 terminado==0.13.3
 # ensure pip installs all deps
 jupyter-console==6.4.3
-pytest==7.0.1
+pytest==7.1.2

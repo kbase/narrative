@@ -15,7 +15,7 @@ ndg-httpsclient==0.5.1
 pexpect==4.8.0
 pickleshare==0.7.5
 pillow==8.4.0
-plotly==5.7.0
+plotly==5.8.0
 pyasn1==0.4.8
 pycrypto>=2.6
 pygments==2.12.0

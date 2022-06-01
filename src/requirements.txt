@@ -3,7 +3,7 @@ black>=20.8b1
 bokeh==2.3.3
 chart_studio==1.1.0
 coverage==6.2
-cryptography==36.0.2
+cryptography==37.0.2
 decorator==5.1.1
 flake8>=3.8.4
 html5lib==1.1

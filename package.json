@@ -54,7 +54,7 @@
         "msw": "0.35.0",
         "postcss": "^8.3.2",
         "postcss-cli": "^9.1.0",
-        "postcss-discard-comments": "^5.0.1",
+        "postcss-discard-comments": "^5.1.2",
         "postcss-remove-prefixes": "^1.2.0",
         "postcss-scss": "^3.0.5",
         "postcss-unprefix": "^2.1.4",

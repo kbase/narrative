@@ -2,7 +2,7 @@ beautifulsoup4==4.11.1
 black>=20.8b1
 bokeh==2.3.3
 chart_studio==1.1.0
-coverage==6.2
+coverage==6.4
 cryptography==36.0.2
 decorator==5.1.1
 flake8>=3.8.4

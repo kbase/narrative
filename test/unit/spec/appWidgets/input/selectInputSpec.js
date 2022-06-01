@@ -55,7 +55,7 @@ define([
                     nullValue: config.nullValue,
                     constraints: {
                         required: config.required,
-                        options: dropdownOptions,
+                        options: args.options || dropdownOptions,
                     },
                     type: 'string',
                 },
@@ -65,7 +65,7 @@ define([
                 original: {
                     dropdown_options: {
                         multiselection: config.multiselection,
-                        options: dropdownOptions,
+                        options: args.options || dropdownOptions,
                     },
                 },
             },
@@ -478,6 +478,66 @@ define([
                     spyOn(navigator.clipboard, 'writeText');
                     copyBtn.click();
                     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testCase.expected);
+                });
+            });
+        });
+
+        describe('handling a ton of options', () => {
+            const NUM_OPTIONS = 30;
+            const manyDropdownOptions = Array.from(Array(30), (_v, k) => ({
+                value: `val_${k}`,
+                display: `Display ${k}`,
+            }));
+            const initialSelected = manyDropdownOptions[0];
+
+            beforeEach(function () {
+                this.testConfig.availableValues = manyDropdownOptions;
+                this.testConfig.initialValue = initialSelected.value;
+            });
+
+            async function verifyOptions(container) {
+                const inputElem = container.querySelector('select[data-element="input"]');
+                const select2Elem = container.querySelector('.select2');
+                await TestUtil.waitForElementChange(select2Elem, () =>
+                    $(inputElem).select2('open')
+                );
+                // verify that the dropdown gets populated with results
+                const options = document.querySelector('.select2-results__options').children;
+                expect(options.length).toBe(NUM_OPTIONS);
+                for (let i = 0; i < options.length; i++) {
+                    expect(options[i].innerText).toContain(manyDropdownOptions[i].display);
+                }
+            }
+
+            it('should start with a single, selected option in the DOM', async function () {
+                const widget = SelectInput.make(this.testConfig);
+                await widget.start({ node: this.container });
+                const inputElem = this.container.querySelector('select[data-element="input"]');
+                expect(inputElem.childElementCount).toBe(1);
+                const option = inputElem.children[0];
+                expect(option.value).toEqual(initialSelected.value);
+                expect(option.innerText).toEqual(initialSelected.display);
+                expect(inputElem.value).toEqual(initialSelected.value);
+                await verifyOptions(this.container);
+                await widget.stop();
+            });
+
+            it(`should show ${NUM_OPTIONS} available in the dropdown`, async function () {
+                const widget = SelectInput.make(this.testConfig);
+                await widget.start({ node: this.container });
+                await verifyOptions(this.container);
+                await widget.stop();
+            });
+
+            [null, undefined].forEach((initVal) => {
+                it(`can start with an empty initial value and see all possibilities`, async function () {
+                    this.testConfig.initialValue = initVal;
+                    const widget = SelectInput.make(this.testConfig);
+                    await widget.start({ node: this.container });
+                    const inputElem = this.container.querySelector('select[data-element="input"]');
+                    expect(inputElem.childElementCount).toBe(0);
+                    await verifyOptions(this.container);
+                    await widget.stop();
                 });
             });
         });

@@ -150,7 +150,16 @@ define([
         }
 
         function setModelValue(value) {
+            // This might be a bit of a cheat. I'm not sure what'll happen if we just
+            // remove the current value from disabled values before updating.
+            // WE'LL SEE!
+            if (model.disabledValues.has(model.value)) {
+                model.disabledValues.delete(model.value);
+            }
             model.value = value;
+            if (value) {
+                model.disabledValues.add(value);
+            }
             setDisabledValuesFromModel();
             $(ui.getElement('input-container.input')).val(value);
             if (devMode) {
@@ -212,6 +221,9 @@ define([
         }
 
         function buildOption(item) {
+            if (!item) {
+                return;
+            }
             return {
                 value: item.value,
                 id: item.value,
@@ -245,7 +257,9 @@ define([
                     const displayItem = model.availableValues.find(
                         (item) => item.value === model.value
                     );
-                    selectData.push(buildOption(displayItem));
+                    if (displayItem) {
+                        selectData.push(buildOption(displayItem));
+                    }
                 }
 
                 let ajaxCommand = undefined;
@@ -300,6 +314,10 @@ define([
 
         function stop() {
             return Promise.try(() => {
+                const control = ui.getElement('input-container.input');
+                if (control) {
+                    $(control).select2('destroy').html('');
+                }
                 if (container) {
                     parent.removeChild(container);
                 }

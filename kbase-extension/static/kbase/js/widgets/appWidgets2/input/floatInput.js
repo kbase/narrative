@@ -227,23 +227,21 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(() => {
-                parent = arg.node;
-                container = parent.appendChild(document.createElement('div'));
-                ui = UI.make({ node: container });
+            parent = arg.node;
+            container = parent.appendChild(document.createElement('div'));
+            ui = UI.make({ node: container });
 
-                container.innerHTML = layout();
+            container.innerHTML = layout();
 
-                channel.on('reset-to-defaults', () => {
-                    resetModelValue();
-                });
-                channel.on('update', (message) => {
-                    model.setItem('value', message.value);
-                });
+            channel.on('reset-to-defaults', () => {
+                resetModelValue();
+            });
+            channel.on('update', (message) => {
+                model.setItem('value', message.value);
+            });
 
-                return render().then(() => {
-                    return autoValidate();
-                });
+            return render().then(() => {
+                return autoValidate();
             });
         }
 

@@ -513,11 +513,10 @@ define([
 
             places.parameterFields.innerHTML = filteredParams.content;
 
-            return Promise.all(
-                filteredParams.layout.map(async (parameterId) => {
-                    await createParameterWidget(appSpec, filteredParams, parameterId);
-                })
-            ).then(() => {
+            const parameterPromises = filteredParams.layout.map((parameterId) =>
+                createParameterWidget(appSpec, filteredParams, parameterId)
+            );
+            return Promise.all(parameterPromises).then(() => {
                 renderAdvanced();
             });
         }
@@ -559,7 +558,6 @@ define([
 
             return renderParameters()
                 .then(() => {
-                    // do something after success
                     attachEvents();
                 })
                 .catch((error) => {
@@ -568,7 +566,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(() => {
+            return Promise.all(widgets.map((widget) => widget.stop())).then(() => {
                 if (container) {
                     container.innerHTML = '';
                 }

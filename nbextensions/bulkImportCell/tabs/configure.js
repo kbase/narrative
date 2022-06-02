@@ -86,6 +86,16 @@ define([
                     allFiles.add(file);
                 }
             });
+            container = args.node;
+            const spinnerNode = document.createElement('div');
+            spinnerNode.classList.add('kb-loading-spinner');
+            spinnerNode.innerHTML = UI.loading({ size: '2x' });
+            container.appendChild(spinnerNode);
+
+            const configNode = document.createElement('div');
+            configNode.classList.add('hidden');
+            container.appendChild(configNode);
+
             return Util.getMissingFiles(Array.from(allFiles))
                 .catch((error) => {
                     // if the missing files call fails, just continue and let the cell render.
@@ -99,11 +109,10 @@ define([
                     return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
                 })
                 .then((readyState) => {
-                    container = args.node;
                     ui = UI.make({ node: container });
 
                     const layout = renderLayout(events);
-                    container.innerHTML = layout;
+                    configNode.innerHTML = layout;
                     events.attachEvents(container);
 
                     const fileTypeNode = ui.getElement('filetype-panel');
@@ -113,6 +122,10 @@ define([
                     ];
                     running = true;
                     return Promise.all(initPromises);
+                })
+                .finally(() => {
+                    spinnerNode.remove();
+                    configNode.classList.remove('hidden');
                 });
         }
 

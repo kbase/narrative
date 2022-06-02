@@ -101,12 +101,11 @@ define([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             container.remove();
-            runtime.destroy();
-            TestUtil.clearRuntime();
         });
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         [
@@ -167,6 +166,40 @@ define([
             });
         });
 
+        it('starts with a disappearing loading spinner', () => {
+            const model = Props.make({
+                data: Object.assign({}, TestBulkImportObject, { state: initialState }),
+                onUpdate: () => {
+                    /* intentionally left blank */
+                },
+            });
+            spyOn(UI, 'loading').and.callThrough();
+            const configure = ConfigureTab.make({
+                bus,
+                model,
+                specs,
+                typesToFiles,
+                fileTypesDisplay,
+                fileTypeMapping,
+            });
+
+            return configure
+                .start({
+                    node: container,
+                })
+                .then(() => {
+                    // it's hard to trap when this appears / disappears when run in tests.
+                    // just make sure it's been called, and the .kb-loading-spinner node
+                    // no longer exists.
+                    expect(UI.loading).toHaveBeenCalled();
+                    expect(container.querySelector('.kb-loading-spinner')).toBeNull();
+                    return configure.stop();
+                })
+                .then(() => {
+                    expect(container.innerHTML).toEqual('');
+                });
+        });
+
         it('should stop itself and empty the node it was in', () => {
             const model = Props.make({
                 data: Object.assign({}, TestBulkImportObject, { state: initialState }),
@@ -188,7 +221,7 @@ define([
                     node: container,
                 })
                 .then(() => {
-                    // just make sure it renders the "File Paths" and "Parameters" headers
+                    // just make sure it renders the "Parameters" header
                     expect(container.innerHTML).toContain('Parameters');
                     return configure.stop();
                 })

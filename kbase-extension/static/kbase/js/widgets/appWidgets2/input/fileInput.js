@@ -336,7 +336,7 @@ define([
         function render() {
             Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(model.value, events);
+                    inputControl = makeInputControl(events);
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);

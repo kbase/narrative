@@ -220,10 +220,7 @@ define([
             return model.availableValues.map((item) => buildOption(item));
         }
 
-        function buildOption(item) {
-            if (!item) {
-                return;
-            }
+        function buildOption(item = {}) {
             return {
                 value: item.value,
                 id: item.value,

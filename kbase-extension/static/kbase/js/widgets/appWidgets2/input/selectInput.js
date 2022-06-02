@@ -18,7 +18,7 @@ define([
     const t = html.tag,
         div = t('div'),
         select = t('select'),
-        option = t('option');
+        MAX_OPTIONS = 20;
 
     /**
      *
@@ -134,24 +134,10 @@ define([
         }
 
         function makeInputControl() {
-            const selectOptions = model.availableValues.map((item) => {
-                const attribs = {
-                    value: item.value,
-                };
-                if (model.disabledValues.has(item.value)) {
-                    attribs.disabled = true;
-                }
-                return option(attribs, item.display);
+            return select({
+                class: 'form-control',
+                dataElement: 'input',
             });
-
-            // CONTROL
-            return select(
-                {
-                    class: 'form-control',
-                    dataElement: 'input',
-                },
-                selectOptions
-            );
         }
 
         function layout() {
@@ -164,7 +150,16 @@ define([
         }
 
         function setModelValue(value) {
+            // This might be a bit of a cheat. I'm not sure what'll happen if we just
+            // remove the current value from disabled values before updating.
+            // WE'LL SEE!
+            if (model.disabledValues.has(model.value)) {
+                model.disabledValues.delete(model.value);
+            }
             model.value = value;
+            if (value) {
+                model.disabledValues.add(value);
+            }
             setDisabledValuesFromModel();
             $(ui.getElement('input-container.input')).val(value);
             if (devMode) {
@@ -221,6 +216,19 @@ define([
 
         // LIFECYCLE API
 
+        function buildAllOptions() {
+            return model.availableValues.map((item) => buildOption(item));
+        }
+
+        function buildOption(item = {}) {
+            return {
+                value: item.value,
+                id: item.value,
+                text: item.display,
+                disabled: model.disabledValues.has(item.value),
+            };
+        }
+
         function start(arg) {
             return Promise.try(() => {
                 parent = arg.node;
@@ -239,12 +247,35 @@ define([
                 );
                 ui.setContent('input-container', content);
 
+                const selectData = [];
+                if (model.availableValues.length <= MAX_OPTIONS) {
+                    selectData.push(...buildAllOptions());
+                } else {
+                    const displayItem = model.availableValues.find(
+                        (item) => item.value === model.value
+                    );
+                    if (displayItem) {
+                        selectData.push(buildOption(displayItem));
+                    }
+                }
+
+                let ajaxCommand = undefined;
+                if (model.availableValues.length > MAX_OPTIONS) {
+                    ajaxCommand = {
+                        transport: function (_params, success) {
+                            success({ results: buildAllOptions() });
+                        },
+                    };
+                }
+
                 $(ui.getElement('input-container.input'))
                     .select2({
                         allowClear: true,
                         placeholder: 'select an option',
                         width: '100%',
                         multiple: useMultiselect,
+                        data: selectData,
+                        ajax: ajaxCommand,
                     })
                     .val(model.value)
                     .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
@@ -280,6 +311,10 @@ define([
 
         function stop() {
             return Promise.try(() => {
+                const control = ui.getElement('input-container.input');
+                if (control) {
+                    $(control).select2('destroy').html('');
+                }
                 if (container) {
                     parent.removeChild(container);
                 }

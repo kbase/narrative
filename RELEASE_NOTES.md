@@ -21,31 +21,39 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 Dependency Changes
 - Javascript dependency updates
-  - @wdio/browserstack-service: 7.16.16 -> 7.19.5
+  - @wdio/browserstack-service: 7.16.16 -> 7.19.7
   - @wdio/cli: 7.16.16 -> 7.19.6
   - @wdio/local-runner: 7.16.6 -> 7.19.3
   - @wdio/mocha-framework: 7.16.15 -> 7.19.3
   - @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
   - @wdio/spec-reporter: 7.16.14 -> 7.19.1
   - autoprefixer: 10.2.6 -> 10.4.5
-  - commander: 9.0.0 -> 9.1.0
-  - ejs: 3.1.6 -> 3.1.7
-  - grunt: 1.4.1 -> 1.5.2
-  - grunt-contrib-concat: 1.0.1 -> 2.1.0
-  - jasmine-core: 4.0.0 -> 4.1.0
-  - postcss-cli: 8.3.1 -> 9.1.0
-  - sass: 1.34.1 -> 1.51.0
-  - selenium-standalone: 8.0.9 -> 8.0.10
-  - selenium-webdriver: 4.1.1 -> 4.1.2
-  - webdriverio: 7.16.16 -> 7.19.5
+  - commander: 9.0.0 -> 9.3.0
+  - chromedriver: 100.0.0 -> 101.0.0
   - corejs-typeahead: 1.6.1 -> 1.3.1
-  - datatables.net: 1.11.3 -> 1.11.5
+  - datatables.net: 1.11.3 -> 1.12.1
+  - datatables.net-buttons-bs: 1.4.2 -> 2.2.2
+  - ejs: 3.1.6 -> 3.1.7
+  - grunt: 1.4.1 -> 1.5.3
+  - grunt-contrib-concat: 1.0.1 -> 2.1.0
   - handlebars: 4.0.5 -> 4.7.7
+  - jasmine-core: 4.0.0 -> 4.1.0
   - jquery-nearest: 1.3.1 -> 1.4.0
   - jquery-ui: 1.12.1 -> 1.13.1
   - js-yaml: 3.3.1 -> 3.14.1
+  - karma-jasmine: 4.0.1 -> 5.0.1
+  - karma-jasmine-matchers: 4.0.2 -> 5.0.0
+  - msw: 0.35.0 -> 0.42.0
+  - postcss-remove-comments: 5.0.1 -> 5.1.2
+  - postcss-cli: 8.3.1 -> 9.1.0
+  - postcss-scss: 3.0.5 -> 4.0.4
   - pure-uuid: 1.4.2 -> 1.6.2
+  - sass: 1.34.1 -> 1.51.0
+  - selenium-standalone: 8.0.9 -> 8.0.10
+  - selenium-webdriver: 4.1.1 -> 4.1.2
+  - spark-md5: 3.0.0 -> 3.0.2
   - underscore: 1.8.3 -> 1.13.3
+  - webdriverio: 7.16.16 -> 7.19.7
 
 - Python dependency updates
   - beautifulsoup4: 4.8.1 -> 4.11.1

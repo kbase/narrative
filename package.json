@@ -56,7 +56,7 @@
         "postcss-cli": "^9.1.0",
         "postcss-discard-comments": "^5.1.2",
         "postcss-remove-prefixes": "^1.2.0",
-        "postcss-scss": "^3.0.5",
+        "postcss-scss": "^4.0.4",
         "postcss-unprefix": "^2.1.4",
         "prettier": "2.4.1",
         "puppeteer": "^13.5.1",

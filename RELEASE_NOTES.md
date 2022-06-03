@@ -43,7 +43,6 @@ Dependency Changes
   - js-yaml: 3.3.1 -> 3.14.1
   - karma-jasmine: 4.0.1 -> 5.0.1
   - karma-jasmine-matchers: 4.0.2 -> 5.0.0
-  - msw: 0.35.0 -> 0.42.0
   - postcss-remove-comments: 5.0.1 -> 5.1.2
   - postcss-cli: 8.3.1 -> 9.1.0
   - postcss-scss: 3.0.5 -> 4.0.4

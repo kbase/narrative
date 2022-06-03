@@ -140,7 +140,7 @@
         "font-awesome": "4.7.0",
         "google-code-prettify": "1.0.5",
         "handlebars": "^4.7.7",
-        "jquery": "2.2.4",
+        "jquery": "3.6.0",
         "jquery-nearest": "1.4.0",
         "jquery-ui": "^1.13.1",
         "jquery.tipsy": "1.0.3",

@@ -4,7 +4,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
+### Version 5.1.0
 - PTV-1783 - fixed issue where the previous object revert option was unavailable
 - DATAUP-639 - fix problems with dynamic dropdown app cell input
   - selected value wasn't being displayed properly after a page reload or cell refresh

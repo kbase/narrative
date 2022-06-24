@@ -56,6 +56,17 @@ $panel-separator-color: use_color('mid-blue');
       display: flex;
     }
 
+    // kb-bulk-import-configure__button--generate-template
+    &__button--generate-template {
+      @extend %kbase-button;
+
+      @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+
+      position: absolute;
+      right: 15px; // panel-body padding
+      margin: 1rem 0;
+    }
+
     // kb-bulk-import-configure__message
     &__message {
       padding: 0.5rem;
@@ -63,9 +74,7 @@ $panel-separator-color: use_color('mid-blue');
       color: use-color('ink');
 
       // kb-bulk-import-configure__message_container
-      &_container {
-
-      }
+      &_container {}
 
       // kb-bulk-import-configure__message--error
       &--error {
@@ -121,8 +130,26 @@ $panel-separator-color: use_color('mid-blue');
   }
 
   // kb-field-cell__input_control
-  &__input_control select {
-    margin-left: 0;
+  &__input_control {
+
+    // kb-field-cell__input_control select
+    & select {
+      margin-left: 0;
+    }
+
+    // kb-field-cell__input_control select2-selection--single
+    & .select2-selection--single {
+      border-radius: 2px;
+      height: inherit;
+
+      & .select2-selection__rendered {
+        line-height: 30px;
+      }
+    }
+
+    & .select2-dropdown {
+      border-radius: 2px;
+    }
   }
 
   // kb-field-cell__cell_label

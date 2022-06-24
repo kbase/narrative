@@ -69,6 +69,22 @@ define([
         });
 
         beforeEach(function () {
+            jasmine.Ajax.install();
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /(?=.*get_object_info_new)(?=.*bar)(?=.*bar2)/,
+                response: [null, null],
+            });
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /(?=.*get_object_info_new)(?=.*bar)/,
+                response: [null],
+            });
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /(?=.*get_object_info_new)(?=.*bar2)/,
+                response: [null],
+            });
             this.bus = Bus.make();
             container = document.createElement('div');
             this.node = document.createElement('div');
@@ -80,6 +96,7 @@ define([
         afterEach(() => {
             container.remove();
             TestUtil.clearRuntime();
+            jasmine.Ajax.uninstall();
         });
 
         [
@@ -128,7 +145,6 @@ define([
 
         describe('the started widget', () => {
             beforeEach(async function () {
-                jasmine.Ajax.install();
                 this.filePathWidgetInstance = makeFilePathWidget(this.fpwArgs);
                 await this.filePathWidgetInstance.start({
                     node: this.node,
@@ -139,7 +155,6 @@ define([
 
             afterEach(async function () {
                 await this.filePathWidgetInstance.stop();
-                jasmine.Ajax.uninstall();
             });
 
             it('should start and render itself', function () {
@@ -218,13 +233,11 @@ define([
 
                 // We're testing duplicate values of output objects. The validator calls out
                 // to the workspace to see if there's already an object of this name - crashes
-                // seem to occur when it can't get there.
+                // occur when it can't get there.
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('workspace'),
                     body: /get_object_info_new/,
-                    response: {
-                        data: [[null]],
-                    },
+                    response: [null, null],
                 });
                 const row1 = this.node.querySelector('li.kb-file-path__list_item:first-child');
                 const row2 = this.node.querySelector('li.kb-file-path__list_item:nth-child(2)');
@@ -252,7 +265,7 @@ define([
                         );
                     },
                     () => {
-                        input2.setAttribute('value', input1.getAttribute('value'));
+                        input2.value = input1.value;
                         input2.dispatchEvent(new Event('change'));
                     }
                 );
@@ -284,14 +297,6 @@ define([
             // We're testing duplicate values of output objects. The validator calls out
             // to the workspace to see if there's already an object of this name - crashes
             // seem to occur when it can't get there.
-            jasmine.Ajax.install();
-            Mocks.mockJsonRpc1Call({
-                url: Config.url('workspace'),
-                body: /get_object_info_new/,
-                response: {
-                    data: [[null]],
-                },
-            });
             const row1 = this.node.querySelector('li.kb-file-path__list_item:first-child');
             const widgetSelector = 'div[data-parameter="actual_output_object"]';
             const rowCellSelector = `${widgetSelector} .kb-field-cell__rowCell`;
@@ -316,7 +321,6 @@ define([
             );
             expect(row1.querySelector(dupMsgSelector).classList).not.toContain('hidden');
             await fpw.stop();
-            jasmine.Ajax.uninstall();
         });
     });
 });

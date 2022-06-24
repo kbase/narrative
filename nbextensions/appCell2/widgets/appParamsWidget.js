@@ -39,6 +39,7 @@ define([
         const runtime = Runtime.make(),
             paramsBus = config.bus,
             initialParams = config.initialParams,
+            initialDisplay = config.initialDisplay,
             bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
@@ -93,13 +94,14 @@ define([
             field, this would be the list of all parameters meant to be output objects, so their names can
             be cross-validated for uniqueness (optional)
         */
-        function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
+        function makeFieldWidget(appSpec, parameterSpec, value, display, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec).then((inputWidget) => {
                 const fieldWidget = FieldWidget.make({
                     inputControlFactory: inputWidget,
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
+                    initialDisplayValue: display,
                     appSpec,
                     parameterSpec,
                     workspaceId: runtime.workspaceId(),
@@ -114,6 +116,7 @@ define([
                         {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
+                            newDisplayValue: message.newDisplayValue,
                             isError: message.isError,
                         },
                         {
@@ -127,6 +130,7 @@ define([
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: message.newValue,
+                        newDisplayValue: message.newDisplayValue,
                         isError: message.isError,
                     });
                 });
@@ -554,7 +558,8 @@ define([
                                         return makeFieldWidget(
                                             appSpec,
                                             spec,
-                                            initialParams[spec.id]
+                                            initialParams[spec.id],
+                                            initialDisplay[spec.id]
                                         ).then((widget) => {
                                             widgets.push(widget);
 
@@ -595,6 +600,7 @@ define([
                                             appSpec,
                                             spec,
                                             initialParams[spec.id],
+                                            initialDisplay[spec.id],
                                             outputParams.layout
                                         ).then((widget) => {
                                             widgets.push(widget);
@@ -633,7 +639,8 @@ define([
                                         return makeFieldWidget(
                                             appSpec,
                                             spec,
-                                            initialParams[spec.id]
+                                            initialParams[spec.id],
+                                            initialDisplay[spec.id]
                                         ).then((widget) => {
                                             widgets.push(widget);
 

@@ -10,10 +10,10 @@ define(['bluebird'], (Promise) => {
     }
 
     /*
-    The sempahores mechanism has a functional interface.
+    The semaphores mechanism has a functional interface.
     */
 
-    function factory(config) {
+    function factory() {
         function add(name, initialValue) {
             window.__kbase_semaphores__[name] = initialValue || null;
         }
@@ -64,16 +64,16 @@ define(['bluebird'], (Promise) => {
         }
 
         return Object.freeze({
-            add: add,
-            set: set,
-            remove: remove,
-            when: when,
+            add,
+            set,
+            remove,
+            when,
         });
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

@@ -24,7 +24,7 @@ jobs:
         if [ ${{ github.base_ref }} == 'main' ]; then
             branch=''
         else
-            branch="-""${{ github.base_ref }}"
+            branch=`"-""${{ github.base_ref }}" | awk '{print tolower($0)}'`
         fi
         narrative_version=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
         narrative_git_hash=`grep '\"git_commit_hash\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g' | sed 's/,//'`

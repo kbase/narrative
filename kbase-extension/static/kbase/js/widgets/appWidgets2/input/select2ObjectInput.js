@@ -7,10 +7,10 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'util/timeFormat',
     'widgets/appWidgets2/common',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
 
     'select2',
     'bootstrap',
@@ -164,7 +164,6 @@ define([
             return Promise.try(() => {
                 const objInfo = model.availableValues[getControlValue()],
                     validationOptions = {
-                        required: spec.data.constraints.required,
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
@@ -191,6 +190,7 @@ define([
                     default:
                         return Validation.validateWorkspaceObjectName(
                             processedValue,
+                            spec.data.constraints,
                             validationOptions
                         );
                 }

@@ -698,6 +698,10 @@ define(
 
                         bus.on('parameter-changed', (message) => {
                             model.setItem(['params', message.parameter], message.newValue);
+                            model.setItem(
+                                ['paramDisplay', message.parameter],
+                                message.newDisplayValue
+                            );
                             evaluateAppState();
                         });
 

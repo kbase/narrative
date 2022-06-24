@@ -1,11 +1,9 @@
 define([
-    'bluebird',
     'kb_service/client/workspace',
-    'kb_service/utils',
     'util/util',
     'util/string',
-    './validators/constants',
-], (Promise, Workspace, serviceUtils, Util, StringUtil, Constants) => {
+    'widgets/appWidgets2/validators/constants',
+], (Workspace, Util, StringUtil, Constants) => {
     'use strict';
 
     function Validators() {
@@ -134,7 +132,7 @@ define([
                     }
                 } else if (!/^\d+\/\d+\/\d+$/.test(value)) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                    messageId = Constants.DIAGNOSIS.INVALID;
+                    messageId = Constants.MESSAGE_IDS.INVALID;
                     errorMessage = 'Invalid object reference format, should be #/#/#';
                 } else {
                     diagnosis = Constants.DIAGNOSIS.VALID;
@@ -150,88 +148,123 @@ define([
             };
         }
 
-        function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
+        /**
+         *
+         * @param {number} workspaceId
+         * @param {Array<string>} objectNames
+         * @param {string} authToken
+         * @param {string} serviceUrl
+         * @returns Promise resolving into an Array of strings, in the same order as the given objectNames
+         */
+        function getObjectTypes(workspaceId, objectNames, authToken, serviceUrl) {
             const workspace = new Workspace(serviceUrl, {
                 token: authToken,
             });
 
             return workspace
                 .get_object_info_new({
-                    objects: [{ wsid: workspaceId, name: objectName }],
+                    objects: objectNames.map((name) => ({ wsid: workspaceId, name })),
                     ignoreErrors: 1,
                 })
                 .then((data) => {
-                    if (data[0]) {
-                        return serviceUtils.objectInfoToObject(data[0]);
-                    } else {
-                        return null;
-                    }
+                    return data.map((objectInfo) => {
+                        if (!objectInfo) {
+                            return null;
+                        }
+                        return objectInfo[2].split('-')[0];
+                    });
                 });
         }
 
         /**
-         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
-         * object.
-         * @param {string} value
+         * Validates that every element of an array of workspace object names is valid. Optionally,
+         * validate that it does not already exist as a workspace object.
+         * If an empty array is given, then a single, resolved, empty Promise is given.
+         * @param {Array<string>} values
+         * @param {object} constraints
+         * - types - Array<string> workspace object type string
          * @param {object} options
          * - required - boolean
          * - shouldNotExist - boolean
          * - workspaceId - int
          * - workspaceServiceUrl - string(url),
-         * - types - Array
+         * - authToken - string - valid auth token
+         * @returns Promise that resolves into a validation structure
          */
-        function validateWorkspaceObjectName(value, options) {
-            let parsedValue,
-                messageId,
-                shortMessage,
-                errorMessage,
-                diagnosis = Constants.DIAGNOSIS.VALID;
-
-            return Promise.try(() => {
-                ({ errorMessage, shortMessage, messageId, diagnosis, parsedValue } =
-                    validateWorkspaceObjectNameString(value, options));
-                if (errorMessage) {
-                    return;
+        async function validateWorkspaceObjectNameArray(values, constraints = {}, options = {}) {
+            let hasError = false;
+            values = values || []; // if null/undefined, cast to an empty array
+            const validations = values.map((value) => {
+                const validation = validateWorkspaceObjectNameString(value, constraints, options);
+                if (validation.errorMessage) {
+                    hasError = true;
                 }
-                if (options.shouldNotExist) {
-                    return getObjectInfo(
+                return validation;
+            });
+            if (!hasError && options.shouldNotExist && constraints.types) {
+                try {
+                    const objectTypes = await getObjectTypes(
                         options.workspaceId,
-                        parsedValue,
+                        validations.map((v) => v.parsedValue),
                         options.authToken,
                         options.workspaceServiceUrl
-                    ).then((objectInfo) => {
-                        if (objectInfo) {
-                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                matchingType = options.types.some((typeId) => {
-                                    if (typeId === type) {
-                                        return true;
-                                    }
-                                    return false;
-                                });
+                    );
+                    objectTypes.forEach((objType, index) => {
+                        if (objType) {
+                            const matchingType = constraints.types.some(
+                                (typeId) => typeId === objType
+                            );
                             if (!matchingType) {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
-                                errorMessage =
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_DIFF_TYPE;
+                                validations[index].errorMessage =
                                     'an object already exists with this name and is not of the same type';
-                                diagnosis = Constants.DIAGNOSIS.INVALID;
+                                validations[index].diagnosis = Constants.DIAGNOSIS.INVALID;
                             } else {
-                                messageId = Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
-                                shortMessage = 'an object already exists with this name';
-                                diagnosis = Constants.DIAGNOSIS.SUSPECT;
+                                validations[index].messageId =
+                                    Constants.MESSAGE_IDS.OBJ_OVERWRITE_WARN;
+                                validations[index].shortMessage =
+                                    'an object already exists with this name';
+                                validations[index].diagnosis = Constants.DIAGNOSIS.SUSPECT;
                             }
                         }
                     });
+                } catch (error) {
+                    console.error('error while validating workspace object name');
+                    console.error(error);
+                    return [
+                        {
+                            messageId: Constants.MESSAGE_IDS.ERROR,
+                            diagnosis: Constants.DIAGNOSIS.ERROR,
+                            errorMessage: 'an error occurred while validating',
+                        },
+                    ];
                 }
-            }).then(() => {
-                return {
-                    isValid: errorMessage ? false : true,
-                    messageId,
-                    errorMessage,
-                    shortMessage,
-                    diagnosis,
-                    value,
-                    parsedValue,
-                };
+            }
+            validations.forEach((v) => {
+                v.isValid = v.errorMessage ? false : true;
             });
+            return validations;
+        }
+
+        /**
+         * Validate that a workspace object name is syntactically valid, and exists as a real workspace
+         * object, when appropriate.
+         * @param {string} value
+         * @param {object} constraints
+         * - types - Array
+         * @param {object} options
+         * - required - boolean
+         * - shouldNotExist - boolean
+         * - workspaceId - int
+         * - workspaceServiceUrl - string(url),
+         */
+        function validateWorkspaceObjectName(value, constraints = {}, options = {}) {
+            return validateWorkspaceObjectNameArray([value], constraints, options).then(
+                (validations) => {
+                    return validations[0];
+                }
+            );
         }
 
         /**
@@ -334,8 +367,6 @@ define([
                 }
                 if (errorMessage) {
                     diagnosis = Constants.DIAGNOSIS.INVALID;
-                } else {
-                    diagnosis = Constants.DIAGNOSIS.VALID;
                 }
             }
 
@@ -425,7 +456,10 @@ define([
             };
         }
 
-        function validateWorkspaceObjectNameString(value, options) {
+        function validateWorkspaceObjectNameString(value, constraints = {}, options = {}) {
+            if (options.nullToEmptyString && value === null) {
+                value = '';
+            }
             let parsedValue,
                 messageId,
                 shortMessage,
@@ -438,7 +472,7 @@ define([
             } else {
                 parsedValue = value.trim();
                 if (!parsedValue) {
-                    if (options.required) {
+                    if (constraints.required) {
                         messageId = Constants.MESSAGE_IDS.REQUIRED_MISSING;
                         diagnosis = Constants.DIAGNOSIS.REQUIRED_MISSING;
                         errorMessage = 'value is required';
@@ -453,7 +487,7 @@ define([
                     messageId = Constants.MESSAGE_IDS.OBJ_NO_INT;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage = 'an object name may not be in the form of an integer';
-                } else if (!/^[A-Za-z0-9|.|_-]+$/.test(parsedValue)) {
+                } else if (!/^[A-Za-z0-9.|_-]+$/.test(parsedValue)) {
                     messageId = Constants.MESSAGE_IDS.OBJ_INVALID;
                     diagnosis = Constants.DIAGNOSIS.INVALID;
                     errorMessage =
@@ -507,11 +541,8 @@ define([
             const minLength = constraints.min_length,
                 maxLength = constraints.max_length;
 
-            if (constraints.type) {
-                switch (constraints.type) {
-                    case 'WorkspaceObjectName':
-                        return validateWorkspaceObjectNameString(value, constraints);
-                }
+            if (constraints.type && constraints.type === 'WorkspaceObjectName') {
+                return validateWorkspaceObjectNameString(value, constraints, options);
             }
 
             if (StringUtil.isEmptyString(value)) {
@@ -587,8 +618,8 @@ define([
         /**
          * Validates that all values in the given "set" (an Array) are present in options.values.
          * If any are missing, this will not validate.
-         * @param {Array} value
-         * @param {*} options
+         * @param {Array} set - array of values to be checked
+         * @param {Object} options - validation constraints
          */
         function validateTextSet(set, options) {
             let errorMessage, messageId, diagnosis, parsedSet;
@@ -618,9 +649,15 @@ define([
                     } else {
                         diagnosis = Constants.DIAGNOSIS.OPTIONAL_EMPTY;
                     }
-                } else if (options.values) {
+                } else if (options.values || options.options) {
+                    let targetSet;
+                    if (options.values) {
+                        targetSet = options.values;
+                    } else {
+                        targetSet = options.options.map((opt) => opt.value);
+                    }
                     const matchedSet = parsedSet.filter((setValue) => {
-                        return options.values.indexOf(setValue) >= 0;
+                        return targetSet.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = Constants.DIAGNOSIS.INVALID;
@@ -646,7 +683,7 @@ define([
         }
 
         function stringToBoolean(value) {
-            switch (value.toLowerCase(value)) {
+            switch (value.toLowerCase()) {
                 case 'true':
                 case 't':
                 case 'yes':
@@ -710,6 +747,14 @@ define([
             };
         }
 
+        function validateCustomInput() {
+            return {
+                isValid: true,
+                errorMessage: null,
+                diagnosis: Constants.DIAGNOSIS.VALID,
+            };
+        }
+
         function validateTrue(value) {
             return {
                 isValid: true,
@@ -718,6 +763,47 @@ define([
                 value,
                 parsedValue: value,
             };
+        }
+
+        /**
+         * Return the correct structure for a result that's always invalid.
+         * For use with widgets that need to trigger validation errors, but the value
+         * might be technically valid. E.g. a dynamic dropdown search result was not
+         * found with an existing value. Technically, the value would pass validation,
+         * but it's not really a valid result.
+         *
+         * The diagnosis is optional, if given, it should be in the Constants.DIAGNOSIS
+         * structure. Otherwise, this will default to Constants.DIAGNOSIS.INVALID.
+         * @param {any} value
+         * @param {string} diagnosis (optional) - should be one of Constants.DIAGNOSIS
+         * @returns an invalid validation structure.
+         */
+        function validateFalse(value, diagnosis) {
+            const defaultDiagnosis = Constants.DIAGNOSIS.INVALID;
+
+            if (!Object.values(Constants.DIAGNOSIS).includes(diagnosis)) {
+                diagnosis = defaultDiagnosis;
+            }
+
+            return {
+                isValid: false,
+                errorMessage: 'error',
+                diagnosis,
+                value,
+            };
+        }
+
+        /**
+         * Runs importTextString over an array
+         * @param {*} value -- array of values or null
+         * @returns {array} imported values
+         */
+
+        function importTextStringArray(value) {
+            if (value === null || value === undefined) {
+                return [];
+            }
+            return value.map((val) => importTextString(val));
         }
 
         /**
@@ -810,10 +896,15 @@ define([
             validateTextSet,
             validateStringSet: validateTextSet,
             validateBoolean,
+            validateCustomInput,
             validateTrue,
+            validateFalse,
+            importTextStringArray,
             importTextString,
             importIntString,
             importFloatString,
+
+            validateWorkspaceObjectNameArray,
         };
     }
 

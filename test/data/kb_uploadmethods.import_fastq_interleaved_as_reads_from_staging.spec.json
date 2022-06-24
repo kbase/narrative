@@ -1,287 +1,321 @@
 {
-    "info": {
-        "id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
-        "module_name": "kb_uploadmethods",
-        "git_commit_hash": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
-        "name": "Import Interleaved FASTQ file as Reads from Staging Area",
-        "ver": "1.0.51",
-        "subtitle": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
-        "tooltip": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
-        "icon": {
-            "url": "img?method_id=kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging&image_name=data-pink.png&tag=release"
-        },
-        "categories": [
-            "inactive",
-            "reads",
-            "upload"
-        ],
-        "authors": [
-            "tgu2"
-        ],
-        "input_types": [],
-        "output_types": [
-            "KBaseFile.PairedEndLibrary",
-            "KBaseFile.SingleEndLibrary"
-        ],
-        "app_type": "app",
-        "namespace": "kb_uploadmethods"
-    },
-    "widgets": {
-        "input": "null",
-        "output": "no-display"
-    },
-    "parameters": [
-        {
-            "id": "fastq_fwd_staging_file_name",
-            "ui_name": "Forward/Left FASTQ File Path",
-            "short_hint": "Short read file containing a paired end library in FASTQ format",
-            "description": "Valid file extensions for FASTQ: .fastq, .fnq, .fq;",
-            "field_type": "dynamic_dropdown",
-            "allow_multiple": 0,
-            "optional": 0,
-            "advanced": 0,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                ""
-            ],
-            "dynamic_dropdown_options": {
-                "data_source": "ftp_staging",
-                "service_params": null,
-                "multiselection": 0,
-                "query_on_empty_input": 1,
-                "result_array_index": 0
-            }
-        },
-        {
-            "id": "sequencing_tech",
-            "ui_name": "Sequencing Technology",
-            "short_hint": "The name of the sequencing technology used to create the reads file",
-            "description": "The name of the sequencing technology used to create the reads file",
-            "field_type": "dropdown",
-            "allow_multiple": 0,
-            "optional": 0,
-            "advanced": 0,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                "Illumina"
-            ],
-            "dropdown_options": {
-                "options": [
-                    {
-                        "value": "Illumina",
-                        "display": "Illumina"
-                    },
-                    {
-                        "value": "PacBio CLR",
-                        "display": "PacBio CLR"
-                    },
-                    {
-                        "value": "PacBio CCS",
-                        "display": "PacBio CCS"
-                    },
-                    {
-                        "value": "IonTorrent",
-                        "display": "IonTorrent"
-                    },
-                    {
-                        "value": "NanoPore",
-                        "display": "NanoPore"
-                    },
-                    {
-                        "value": "Unknown",
-                        "display": "Unknown"
-                    }
-                ],
-                "multiselection": 0
-            }
-        },
-        {
-            "id": "name",
-            "ui_name": "Reads Object Name",
-            "short_hint": "Provide a name for the Reads object that will be created by this importer",
-            "description": "Provide a name for the Reads object that will be created by this importer",
-            "field_type": "text",
-            "allow_multiple": 0,
-            "optional": 0,
-            "advanced": 0,
-            "disabled": 0,
-            "ui_class": "output",
-            "default_values": [
-                ""
-            ],
-            "text_options": {
-                "valid_ws_types": [
-                    "KBaseFile.SingleEndLibrary",
-                    "KBaseFile.PairedEndLibrary"
-                ],
-                "is_output_name": 1,
-                "placeholder": "",
-                "regex_constraint": []
-            }
-        },
-        {
-            "id": "single_genome",
-            "ui_name": "Single Genome",
-            "short_hint": "Select if the reads are from a single genome, leave blank if from a metagenome",
-            "description": "Select if the reads are from a single genome, leave blank if from a metagenome",
-            "field_type": "checkbox",
-            "allow_multiple": 0,
-            "optional": 0,
-            "advanced": 0,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                "1"
-            ],
-            "checkbox_options": {
-                "checked_value": 1,
-                "unchecked_value": 0
-            }
-        },
-        {
-            "id": "read_orientation_outward",
-            "ui_name": "Reads Orientation Outward",
-            "short_hint": "Select if reads in a pair point outward",
-            "description": "Select if reads in a pair point outward",
-            "field_type": "checkbox",
-            "allow_multiple": 0,
-            "optional": 1,
-            "advanced": 1,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                "0"
-            ],
-            "checkbox_options": {
-                "checked_value": 1,
-                "unchecked_value": 0
-            }
-        },
-        {
-            "id": "insert_size_std_dev",
-            "ui_name": "St. Dev. of Insert Size",
-            "short_hint": "The standard deviation of insert lengths",
-            "description": "The standard deviation of insert lengths",
-            "field_type": "text",
-            "allow_multiple": 0,
-            "optional": 1,
-            "advanced": 1,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                ""
-            ],
-            "text_options": {
-                "validate_as": "float",
-                "is_output_name": 0,
-                "placeholder": "",
-                "regex_constraint": []
-            }
-        },
-        {
-            "id": "insert_size_mean",
-            "ui_name": "Mean Insert Size",
-            "short_hint": "The mean (average) insert length",
-            "description": "The mean (average) insert length",
-            "field_type": "text",
-            "allow_multiple": 0,
-            "optional": 1,
-            "advanced": 1,
-            "disabled": 0,
-            "ui_class": "parameter",
-            "default_values": [
-                ""
-            ],
-            "text_options": {
-                "validate_as": "float",
-                "is_output_name": 0,
-                "placeholder": "",
-                "regex_constraint": []
-            }
-        }
+  "behavior": {
+    "kb_service_input_mapping": [
+      {
+        "narrative_system_variable": "workspace",
+        "target_property": "workspace_name"
+      },
+      {
+        "constant_value": "FASTQ/FASTA",
+        "target_property": "import_type"
+      },
+      {
+        "input_parameter": "fastq_fwd_staging_file_name",
+        "target_property": "fastq_fwd_staging_file_name"
+      },
+      {
+        "input_parameter": "sequencing_tech",
+        "target_property": "sequencing_tech"
+      },
+      {
+        "input_parameter": "name",
+        "target_property": "name"
+      },
+      {
+        "input_parameter": "single_genome",
+        "target_property": "single_genome"
+      },
+      {
+        "constant_value": "1",
+        "target_property": "interleaved"
+      },
+      {
+        "input_parameter": "insert_size_mean",
+        "target_property": "insert_size_mean"
+      },
+      {
+        "input_parameter": "insert_size_std_dev",
+        "target_property": "insert_size_std_dev"
+      },
+      {
+        "input_parameter": "read_orientation_outward",
+        "target_property": "read_orientation_outward"
+      }
     ],
-    "fixed_parameters": [],
-    "behavior": {
-        "kb_service_url": "",
-        "kb_service_name": "kb_uploadmethods",
-        "kb_service_version": "bcfe5e28883b83593893f5fe970b45fa4c0b5341",
-        "kb_service_method": "import_reads_from_staging",
-        "kb_service_input_mapping": [
-            {
-                "narrative_system_variable": "workspace",
-                "target_property": "workspace_name"
-            },
-            {
-                "constant_value": "FASTQ/FASTA",
-                "target_property": "import_type"
-            },
-            {
-                "input_parameter": "fastq_fwd_staging_file_name",
-                "target_property": "fastq_fwd_staging_file_name"
-            },
-            {
-                "input_parameter": "sequencing_tech",
-                "target_property": "sequencing_tech"
-            },
-            {
-                "input_parameter": "name",
-                "target_property": "name"
-            },
-            {
-                "input_parameter": "single_genome",
-                "target_property": "single_genome"
-            },
-            {
-                "constant_value": "1",
-                "target_property": "interleaved"
-            },
-            {
-                "input_parameter": "insert_size_mean",
-                "target_property": "insert_size_mean"
-            },
-            {
-                "input_parameter": "insert_size_std_dev",
-                "target_property": "insert_size_std_dev"
-            },
-            {
-                "input_parameter": "read_orientation_outward",
-                "target_property": "read_orientation_outward"
-            }
+    "kb_service_method": "import_reads_from_staging",
+    "kb_service_name": "kb_uploadmethods",
+    "kb_service_output_mapping": [
+      {
+        "narrative_system_variable": "workspace",
+        "target_property": "wsName"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "obj_ref"
         ],
-        "kb_service_output_mapping": [
-            {
-                "narrative_system_variable": "workspace",
-                "target_property": "wsName"
-            },
-            {
-                "service_method_output_path": [
-                    "0",
-                    "obj_ref"
-                ],
-                "target_property": "obj_ref",
-                "target_type_transform": "resolved-ref"
-            },
-            {
-                "service_method_output_path": [
-                    "0",
-                    "report_name"
-                ],
-                "target_property": "report_name"
-            },
-            {
-                "service_method_output_path": [
-                    "0",
-                    "report_ref"
-                ],
-                "target_property": "report_ref"
-            },
-            {
-                "constant_value": "16",
-                "target_property": "report_window_line_height"
-            }
-        ]
+        "target_property": "obj_ref",
+        "target_type_transform": "resolved-ref"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "report_name"
+        ],
+        "target_property": "report_name"
+      },
+      {
+        "service_method_output_path": [
+          "0",
+          "report_ref"
+        ],
+        "target_property": "report_ref"
+      },
+      {
+        "constant_value": "16",
+        "target_property": "report_window_line_height"
+      }
+    ],
+    "kb_service_url": "",
+    "kb_service_version": "d67ff71a675aed5566d257c267689ea0d2a4a8b0"
+  },
+  "fixed_parameters": [],
+  "full_info": {
+    "app_type": "app",
+    "authors": [
+      "tgu2"
+    ],
+    "categories": [
+      "inactive",
+      "reads",
+      "upload"
+    ],
+    "contact": "http://kbase.us/contact-us/",
+    "description": "<p> Import a Interleaved FASTQ file from your staging area into your Narrative as an Assembly data object.\nPlease see the <a href=\"https://docs.kbase.us/data/upload-download-guide/\">Data Upload/Download Guide</a> for more information. </p>",
+    "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
+    "icon": {
+      "url": "img?method_id=kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging&image_name=data-pink.png&tag=release"
     },
-    "job_id_output_field": "docker"
+    "id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+    "module_name": "kb_uploadmethods",
+    "name": "Import Interleaved FASTQ file as Reads from Staging Area",
+    "namespace": "kb_uploadmethods",
+    "publications": [],
+    "screenshots": [],
+    "subtitle": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "suggestions": {
+      "next_apps": [],
+      "next_methods": [],
+      "related_apps": [],
+      "related_methods": []
+    },
+    "tag": "release",
+    "technical_description": "none",
+    "tooltip": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "ver": "1.0.55"
+  },
+  "info": {
+    "app_type": "app",
+    "authors": [
+      "tgu2"
+    ],
+    "categories": [
+      "inactive",
+      "reads",
+      "upload"
+    ],
+    "git_commit_hash": "d67ff71a675aed5566d257c267689ea0d2a4a8b0",
+    "icon": {
+      "url": "img?method_id=kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging&image_name=data-pink.png&tag=release"
+    },
+    "id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+    "input_types": [],
+    "module_name": "kb_uploadmethods",
+    "name": "Import Interleaved FASTQ file as Reads from Staging Area",
+    "namespace": "kb_uploadmethods",
+    "output_types": [
+      "KBaseFile.PairedEndLibrary",
+      "KBaseFile.SingleEndLibrary"
+    ],
+    "subtitle": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "tooltip": "Import a interleaved FASTQ file into your Narrative as a Reads data object",
+    "ver": "1.0.55"
+  },
+  "job_id_output_field": "docker",
+  "parameters": [
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "Valid file extensions for FASTQ: .fastq, .fnq, .fq;",
+      "disabled": 0,
+      "dynamic_dropdown_options": {
+        "data_source": "ftp_staging",
+        "multiselection": 0,
+        "query_on_empty_input": 1,
+        "result_array_index": 0,
+        "service_params": null
+      },
+      "field_type": "dynamic_dropdown",
+      "id": "fastq_fwd_staging_file_name",
+      "optional": 0,
+      "short_hint": "Short read file containing a paired end library in FASTQ format",
+      "ui_class": "parameter",
+      "ui_name": "Forward/left FASTQ file path"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        "Illumina"
+      ],
+      "description": "The name of the sequencing technology used to create the reads file",
+      "disabled": 0,
+      "dropdown_options": {
+        "multiselection": 0,
+        "options": [
+          {
+            "display": "Illumina",
+            "value": "Illumina"
+          },
+          {
+            "display": "PacBio CLR",
+            "value": "PacBio CLR"
+          },
+          {
+            "display": "PacBio CCS",
+            "value": "PacBio CCS"
+          },
+          {
+            "display": "IonTorrent",
+            "value": "IonTorrent"
+          },
+          {
+            "display": "NanoPore",
+            "value": "NanoPore"
+          },
+          {
+            "display": "Unknown",
+            "value": "Unknown"
+          }
+        ]
+      },
+      "field_type": "dropdown",
+      "id": "sequencing_tech",
+      "optional": 0,
+      "short_hint": "The name of the sequencing technology used to create the reads file",
+      "ui_class": "parameter",
+      "ui_name": "Sequencing technology"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "Provide a name for the Reads object that will be created by this importer",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "name",
+      "optional": 0,
+      "short_hint": "Provide a name for the Reads object that will be created by this importer",
+      "text_options": {
+        "is_output_name": 1,
+        "placeholder": "",
+        "regex_constraint": [],
+        "valid_ws_types": [
+          "KBaseFile.SingleEndLibrary",
+          "KBaseFile.PairedEndLibrary"
+        ]
+      },
+      "ui_class": "output",
+      "ui_name": "Reads object name"
+    },
+    {
+      "advanced": 0,
+      "allow_multiple": 0,
+      "checkbox_options": {
+        "checked_value": 1,
+        "unchecked_value": 0
+      },
+      "default_values": [
+        "1"
+      ],
+      "description": "Select if the reads are from a single genome, leave blank if from a metagenome",
+      "disabled": 0,
+      "field_type": "checkbox",
+      "id": "single_genome",
+      "optional": 0,
+      "short_hint": "Select if the reads are from a single genome, leave blank if from a metagenome",
+      "ui_class": "parameter",
+      "ui_name": "Single genome"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "checkbox_options": {
+        "checked_value": 1,
+        "unchecked_value": 0
+      },
+      "default_values": [
+        "0"
+      ],
+      "description": "Select if reads in a pair point outward",
+      "disabled": 0,
+      "field_type": "checkbox",
+      "id": "read_orientation_outward",
+      "optional": 1,
+      "short_hint": "Select if reads in a pair point outward",
+      "ui_class": "parameter",
+      "ui_name": "Reads orientation outward"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "The standard deviation of insert lengths",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "insert_size_std_dev",
+      "optional": 1,
+      "short_hint": "The standard deviation of insert lengths",
+      "text_options": {
+        "is_output_name": 0,
+        "placeholder": "",
+        "regex_constraint": [],
+        "validate_as": "float"
+      },
+      "ui_class": "parameter",
+      "ui_name": "St. dev. of insert size"
+    },
+    {
+      "advanced": 1,
+      "allow_multiple": 0,
+      "default_values": [
+        ""
+      ],
+      "description": "The mean (average) insert length",
+      "disabled": 0,
+      "field_type": "text",
+      "id": "insert_size_mean",
+      "optional": 1,
+      "short_hint": "The mean (average) insert length",
+      "text_options": {
+        "is_output_name": 0,
+        "placeholder": "",
+        "regex_constraint": [],
+        "validate_as": "float"
+      },
+      "ui_class": "parameter",
+      "ui_name": "Mean insert size"
+    }
+  ],
+  "widgets": {
+    "input": "null",
+    "output": "no-display"
+  }
 }

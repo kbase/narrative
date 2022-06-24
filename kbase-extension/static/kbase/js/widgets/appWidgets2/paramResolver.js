@@ -173,16 +173,27 @@ define([
 
         /**
          *
-         * @param {string} module - the widget module, as returned by getWidgetModule
+         * @param {object} parameterSpec - the spec for the parameter
          * @param {string} typeString - module type, either 'input' or 'view'
          * @param {boolean} includeMetadata - whether to return the loaded module or the loaded
          *                                    module and some metadata
          */
-        function _loadModule(module, typeString, includeMetadata = false) {
-            const type = typeString.toLowerCase();
+        function _loadModule(parameterSpec, typeString, includeMetadata = false) {
+            let type;
+            try {
+                type = typeString.toLowerCase();
+            } catch (err) {
+                // do nothing
+            }
+            if (!type || (type !== 'input' && type !== 'view')) {
+                return Promise.reject(new Error(`invalid input to ParamResolver: "${typeString}"`));
+            }
 
-            if (type !== 'input' && type !== 'view') {
-                throw new Error(`invalid input to ParamResolver: ${typeString}`);
+            let module;
+            try {
+                module = getWidgetModule(parameterSpec);
+            } catch (err) {
+                return Promise.reject(err);
             }
 
             const typeTitle = type.charAt(0).toUpperCase() + type.substr(1).toLowerCase(),
@@ -219,19 +230,24 @@ define([
             );
         }
 
+        function loadControl(parameterSpec, type) {
+            return _loadModule(parameterSpec, type);
+        }
+
         function loadInputControl(parameterSpec) {
-            return _loadModule(getWidgetModule(parameterSpec), 'input');
+            return _loadModule(parameterSpec, 'input');
         }
 
         function loadViewControl(parameterSpec) {
-            return _loadModule(getWidgetModule(parameterSpec), 'view');
+            return _loadModule(parameterSpec, 'view');
         }
 
         function getControlData(parameterSpec, type) {
-            return _loadModule(getWidgetModule(parameterSpec), type, true);
+            return _loadModule(parameterSpec, type, true);
         }
 
         return {
+            loadControl,
             loadInputControl,
             loadViewControl,
             getControlData,

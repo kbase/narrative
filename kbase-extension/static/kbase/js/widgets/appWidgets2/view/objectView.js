@@ -6,7 +6,7 @@ define([
     'kb_service/client/workspace',
     'kb_service/utils',
     'kb_sdk_clients/genericClient',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',

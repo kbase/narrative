@@ -4,7 +4,7 @@ define(
         'uuid',
         'base/js/namespace',
         'common/cellUtils',
-        'kb_common/html',
+        'common/html',
         './widgets/codeCell',
         'custom/custom',
     ],

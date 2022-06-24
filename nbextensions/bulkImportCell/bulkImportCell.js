@@ -969,6 +969,7 @@ define([
             cancelBatch = null;
             updateEditingState();
             switchToTab('configure');
+            model.deleteItem('appError');
             Jupyter.narrative.saveNarrative();
         }
 

@@ -7,7 +7,6 @@ define([
     'narrativeConfig',
     'common/runtime',
     'common/html',
-    'common/ui',
     'base/js/namespace',
     'handlebars',
     'util/string',
@@ -31,7 +30,6 @@ define([
     Config,
     Runtime,
     html,
-    UI,
     Jupyter,
     Handlebars,
     StringUtil,
@@ -133,7 +131,7 @@ define([
                 .then((data) => {
                     const files = JSON.parse(data).map((f) => {
                         f.path = f.path.substring(f.path.indexOf('/') + 1);
-                        f.subdir = '/' + f.path.substring(0, f.path.lastIndexOf('/')) || '/';
+                        f.subdir = '/' + f.path.substring(0, f.path.lastIndexOf('/'));
                         return f;
                     });
                     return this.identifyImporterMappings(files);

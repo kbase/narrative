@@ -684,6 +684,21 @@ define([
     }
 
     /**
+     * createJobStatusSummary
+     * This is designed for use in the appCell's `execMessage` element.
+     *
+     * @param {object} jobState object representing the current job state
+     *
+     * @returns {string} a single line summary of the current state
+     */
+    function createJobStatusSummary(jobState) {
+        if (jobState && jobState.status === JOB.does_not_exist) {
+            return 'Job not found';
+        }
+        return createJobStatusLines(jobState)[0];
+    }
+
+    /**
      * createJobStatusLines
      * Record the current state of the job and its previous states, including time
      * spent in those states.
@@ -1078,6 +1093,7 @@ define([
         createJobStatusFromFsm,
         createJobStatusFromBulkCellFsm,
         createJobStatusLines,
+        createJobStatusSummary,
         getCurrentJobCounts,
         getCurrentJobs,
         getFsmStateFromJobs,

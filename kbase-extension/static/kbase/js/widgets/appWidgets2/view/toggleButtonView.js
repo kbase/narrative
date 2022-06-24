@@ -2,12 +2,12 @@ define([
     'bluebird',
     'jquery',
     'base/js/namespace',
-    'kb_common/html',
-    '../validation',
+    'common/html',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/ui',
     'common/props',
-    '../validators/constants',
+    'widgets/appWidgets2/validators/constants',
 
     'bootstrap',
 ], (Promise, $, Jupyter, html, Validation, Events, UI, Props, Constants) => {

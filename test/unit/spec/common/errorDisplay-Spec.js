@@ -248,6 +248,26 @@ define(['common/errorDisplay', 'common/props', 'testUtil'], (ErrorDisplay, Props
                     },
                 },
                 {
+                    desc: 'fatal error',
+                    in: Props.make({
+                        data: {
+                            fatalError: {
+                                title: 'Error loading main widgets',
+                                message: 'SAY SOMETHING!',
+                                advice: [],
+                                info: undefined,
+                                detail: 'no additional details',
+                            },
+                        },
+                    }),
+                    out: {
+                        type: 'Error loading main widgets',
+                        message: 'SAY SOMETHING!',
+                        advice: [],
+                        detail: 'no additional details',
+                    },
+                },
+                {
                     desc: 'default error',
                     in: Props.make({
                         data: {

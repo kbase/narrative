@@ -5,7 +5,7 @@ define([
     'common/ui',
     'common/runtime',
     'common/props',
-    '../validation',
+    'widgets/appWidgets2/validation',
 
     'bootstrap',
 ], (Promise, html, Events, UI, Runtime, Props, Validation) => {

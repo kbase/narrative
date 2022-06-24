@@ -22,6 +22,7 @@ define([
         'createJobStatusFromFsm',
         'createJobStatusFromBulkCellFsm',
         'createJobStatusLines',
+        'createJobStatusSummary',
         'getCurrentJobCounts',
         'getCurrentJobs',
         'getFsmStateFromJobs',
@@ -207,44 +208,50 @@ define([
         });
     });
 
-    describe('createJobStatusLines', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+    describe('createJobStatusLines and createJobStatusSummary', () => {
+        beforeEach(function () {
+            this.container = document.createElement('div');
         });
 
         afterEach(() => {
             TestUtil.clearRuntime();
         });
 
-        afterAll(() => {
-            container.remove();
-        });
         const args = [false, true];
         JobsData.allJobs.forEach((state) => {
-            it(`should create an appropriate status string for ${state.job_id}`, () => {
+            it(`should create an appropriate status string for ${state.job_id}`, function () {
                 const statusLines = Jobs.createJobStatusLines(state);
-                container.innerHTML = arrayToHTML(statusLines);
-                expect(container.textContent).toContain(state.meta.createJobStatusLines.line);
+                this.container.innerHTML = arrayToHTML(statusLines);
+                expect(this.container.textContent).toContain(state.meta.createJobStatusLines.line);
+            });
+            it(`should create an appropriate summary string for ${state.job_id}`, function () {
+                this.container.innerHTML = Jobs.createJobStatusSummary(state);
+                const summary = state.meta.createJobStatusLines.summary
+                    ? state.meta.createJobStatusLines.summary
+                    : state.meta.createJobStatusLines.line;
+                // queued and running jobs have a spinner, which adds a space at the beginning
+                expect(this.container.textContent.trim()).toEqual(summary);
             });
         });
         JobsData.allJobs.forEach((state) => {
-            it(`should create an appropriate array in history mode for ${state.job_id}`, () => {
+            it(`should create an appropriate array in history mode for ${state.job_id}`, function () {
                 const statusLines = Jobs.createJobStatusLines(state, true);
-                container.innerHTML = arrayToHTML(statusLines);
+                this.container.innerHTML = arrayToHTML(statusLines);
                 state.meta.createJobStatusLines.history.forEach((historyLine) => {
-                    expect(container.textContent).toContain(historyLine);
+                    expect(this.container.textContent).toContain(historyLine);
                 });
             });
         });
 
-        it('should return an appropriate string for dodgy jobStates', () => {
+        it('should return an appropriate string for dodgy jobStates', function () {
             JobsData.example.JobState.invalid.forEach((state) => {
                 args.forEach((arg) => {
                     const statusLines = Jobs.createJobStatusLines(state, arg);
-                    container.innerHTML = arrayToHTML(statusLines);
-                    expect(container.textContent).toContain(JobsData.jobStrings.unknown);
+                    this.container.innerHTML = arrayToHTML(statusLines);
+                    expect(this.container.textContent).toContain(JobsData.jobStrings.unknown);
                 });
+                this.container.innerHTML = Jobs.createJobStatusSummary(state);
+                expect(this.container.textContent).toEqual(JobsData.jobStrings.unknown);
             });
         });
     });
@@ -308,30 +315,26 @@ define([
     });
 
     describe('niceState', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+        beforeAll(function () {
+            this.container = document.createElement('div');
         });
         afterEach(() => {
             TestUtil.clearRuntime();
         });
 
-        afterAll(() => {
-            container.remove();
-        });
         badStates.forEach((item) => {
-            it(`should generate a nice state for the input ${item}`, () => {
-                container.innerHTML = Jobs.niceState(item);
-                const span = container.querySelector('span');
+            it(`should generate a nice state for the input ${item}`, function () {
+                this.container.innerHTML = Jobs.niceState(item);
+                const span = this.container.querySelector('span');
                 expect(span).toHaveClass('kb-job-status__summary');
                 expect(span.textContent).toContain('invalid');
             });
         });
 
         JobsData.allJobs.forEach((state) => {
-            it(`should generate a nice state for ${state.status}`, () => {
-                container.innerHTML = Jobs.niceState(state.status);
-                const span = container.querySelector('span');
+            it(`should generate a nice state for ${state.status}`, function () {
+                this.container.innerHTML = Jobs.niceState(state.status);
+                const span = this.container.querySelector('span');
                 expect(span).toHaveClass(state.meta.niceState.class);
                 expect(span.textContent).toContain(state.meta.niceState.label);
             });
@@ -339,16 +342,11 @@ define([
     });
 
     describe('createJobStatusFromFsm', () => {
-        let container;
-        beforeAll(() => {
-            container = document.createElement('div');
+        beforeEach(function () {
+            this.container = document.createElement('div');
         });
         afterEach(() => {
             TestUtil.clearRuntime();
-        });
-
-        afterAll(() => {
-            container.remove();
         });
 
         const tests = [
@@ -398,12 +396,12 @@ define([
                     expect(func(test)).toBe('');
                 });
             } else {
-                it(`should output "${test.text}" with ${testString}`, () => {
-                    container.innerHTML = func(test);
-                    expect(container.querySelector('span').classList).toContain(
+                it(`should output "${test.text}" with ${testString}`, function () {
+                    this.container.innerHTML = func(test);
+                    expect(this.container.querySelector('span').classList).toContain(
                         `kb-job-status__cell_summary--${test.cssClass}`
                     );
-                    expect(container.querySelector('span').textContent).toBe(test.text);
+                    expect(this.container.querySelector('span').textContent).toBe(test.text);
                 });
             }
         });

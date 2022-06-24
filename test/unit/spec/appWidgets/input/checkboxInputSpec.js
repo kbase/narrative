@@ -6,7 +6,7 @@ define([
 ], (CheckboxInput, Runtime, TestUtil, Constants) => {
     'use strict';
 
-    describe('Test checkbox data input widget', () => {
+    describe('The checkbox input widget', () => {
         let testConfig = {},
             runtime,
             bus,
@@ -82,6 +82,18 @@ define([
             const input = container.querySelector('input[type="checkbox"]');
             expect(input).toBeDefined();
             expect(input.checked).toBeTrue();
+            await widget.stop();
+            expect(container.childElementCount).toBe(0);
+        });
+
+        it('should start and stop properly with initial value', async () => {
+            testConfig.initialValue = 0;
+            const widget = CheckboxInput.make(testConfig);
+            await widget.start({ node: container });
+            expect(container.childElementCount).toBeGreaterThan(0);
+            const input = container.querySelector('input[type="checkbox"]');
+            expect(input).toBeDefined();
+            expect(input.checked).toBeFalse();
             await widget.stop();
             expect(container.childElementCount).toBe(0);
         });

@@ -21,9 +21,8 @@ define(
         'base/js/namespace',
         'bluebird',
         'uuid',
-        'kb_common/html',
+        'common/html',
         'common/runtime',
-        'common/parameterSpec',
         'common/cellUtils',
         'common/clock',
         'common/ui',
@@ -42,7 +41,6 @@ define(
         Uuid,
         html,
         Runtime,
-        ParameterSpec,
         utils,
         Clock,
         Ui,
@@ -52,19 +50,10 @@ define(
         Workspace
     ) => {
         'use strict';
-        let t = html.tag,
+        const t = html.tag,
             div = t('div'),
-            workspaceInfo,
-            env,
             runtime = Runtime.make();
-
-        // This is copied out of jupyter code.
-        function activateToolbar() {
-            const toolbarName = 'KBase';
-            Jupyter.CellToolbar.global_show();
-            Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
-            Jupyter.notebook.metadata.celltoolbar = toolbarName;
-        }
+        let workspaceInfo;
 
         /*
          * Should only be called when a cell is first inserted into a narrative.
@@ -173,6 +162,7 @@ define(
                         true
                     );
                     // NB purely for side effect - toolbar refresh
+                    // eslint-disable-next-line no-self-assign
                     cell.metadata = cell.metadata;
                 }
             };
@@ -306,7 +296,6 @@ define(
                             authToken: runtime.authToken(),
                         })
                         .then(() => {
-                            // AppCellController.start();
                             cell.renderMinMax();
                             return {
                                 widget: editor,
@@ -328,7 +317,6 @@ define(
                         );
                         // delete cell.
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
-                        //  $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
                         alert(
                             'Could not load cell due to errors.\nThis cell will be deleted from your Narrative. It will not be permanently deleted until you save your Narrative.\n\nThe error is: ' +
                                 err.message
@@ -370,12 +358,12 @@ define(
 
             // Set the notebook environment.
             // For instance, we don't want to override the toolbar in the Narrative, but we need to supply our on in a plain notebook.
-            env = 'narrative';
+            // env = 'narrative';
 
             // And make a toolbar preset composed of the extensions, and activate it for this notebook.
-            if (env !== 'narrative') {
-                activateToolbar();
-            }
+            // if (env !== 'narrative') {
+            //     activateToolbar();
+            // }
 
             // TODO: get the kbase specific info out of the notebook, specifically
             // the workspace name, ...
@@ -394,7 +382,7 @@ define(
                     // Primary hook for new cell creation.
                     // If the cell has been set with the metadata key kbase.type === 'app'
                     // we have a app cell.
-                    $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+                    $([Jupyter.events]).on('insertedAtIndex.Cell', (_event, payload) => {
                         const cell = payload.cell;
                         const setupData = payload.data;
                         const jupyterCellType = payload.type;
@@ -455,6 +443,6 @@ define(
     },
     (err) => {
         'use strict';
-        console.log('ERROR loading editorCell main', err);
+        console.warn('ERROR loading editorCell main', err);
     }
 );

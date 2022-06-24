@@ -1,10 +1,13 @@
 define([
     '/narrative/nbextensions/appCell2/widgets/tabs/resultsTab',
     '/narrative/nbextensions/appCell2/widgets/tabs/resultsViewer',
+    'common/jobManager',
     'common/props',
     '/test/data/jobsData',
-], (ResultsTab, ResultsViewer, Props, JobsData) => {
+], (ResultsTab, ResultsViewer, JobManagerModule, Props, JobsData) => {
     'use strict';
+
+    const { SingleJobManager } = JobManagerModule;
 
     function buildModel() {
         const testJob = JobsData.jobsByStatus.completed[0];
@@ -15,6 +18,8 @@ define([
     }
 
     const model = buildModel();
+    const jobManager = new SingleJobManager({ model, bus: {} });
+
     const ResView = {
         start: () => Promise.resolve(),
         stop: () => Promise.resolve(),
@@ -29,7 +34,7 @@ define([
 
     describe('The app cell results tab instance', () => {
         it('can be instantiated', () => {
-            const resultsTabInstance = ResultsTab.make({ model });
+            const resultsTabInstance = ResultsTab.make({ model, jobManager });
             ['start', 'stop'].forEach((fn) => {
                 expect(resultsTabInstance[fn]).toEqual(jasmine.any(Function));
             });
@@ -38,7 +43,7 @@ define([
         describe('starts', () => {
             it('in single job mode', async () => {
                 const node = document.createElement('div');
-                const resultsTabInstance = ResultsTab.make({ model });
+                const resultsTabInstance = ResultsTab.make({ model, jobManager });
                 spyOn(ResultsViewer, 'make').and.returnValue(ResView);
                 spyOn(ResView, 'start').and.callThrough();
                 spyOn(ResView, 'stop').and.callThrough();
@@ -51,7 +56,7 @@ define([
         describe('stop', () => {
             it('can stop the widget', async () => {
                 const node = document.createElement('div');
-                const resultsTabInstance = ResultsTab.make({ model });
+                const resultsTabInstance = ResultsTab.make({ model, jobManager });
                 spyOn(ResultsViewer, 'make').and.returnValue(ResView);
                 spyOn(ResView, 'start').and.callThrough();
                 spyOn(ResView, 'stop').and.callThrough();
@@ -63,7 +68,7 @@ define([
                 expect(ResView.stop).toHaveBeenCalledTimes(1);
             });
             it('can stop the widget without it being started', async () => {
-                const resultsTabInstance = ResultsTab.make({ model });
+                const resultsTabInstance = ResultsTab.make({ model, jobManager });
                 spyOn(ResultsViewer, 'make').and.returnValue(ResView);
                 spyOn(ResView, 'start').and.callThrough();
                 spyOn(ResView, 'stop').and.callThrough();

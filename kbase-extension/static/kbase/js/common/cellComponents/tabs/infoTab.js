@@ -42,7 +42,19 @@ define(['common/format', 'common/html', 'util/string'], (format, html, string) =
                 {
                     class: `${cssBaseClass}__list_item--params`,
                 },
-                span({}, param.ui_name) + (types ? ': ' + types : '')
+                span(
+                    {
+                        class: `${cssBaseClass}__param--id`,
+                    },
+                    param.id
+                ) +
+                    span(
+                        {
+                            class: `${cssBaseClass}__param--ui-name`,
+                        },
+                        param.ui_name
+                    ) +
+                    (types ? ': ' + types : '')
             );
         });
 

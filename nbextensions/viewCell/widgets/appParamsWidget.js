@@ -104,6 +104,7 @@ define([
                         {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
+                            newDisplayValue: message.newDisplayValue,
                         },
                         {
                             key: {

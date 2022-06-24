@@ -1,4 +1,4 @@
-define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap'], (Promise, html, Props) => {
+define(['bluebird', 'common/html', 'common/props', 'bootstrap'], (Promise, html, Props) => {
     'use strict';
 
     // Constants
@@ -7,11 +7,16 @@ define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap'], (Promise, ht
         span = t('span');
 
     function factory(config) {
-        let options = {},
+        let container;
+
+        const options = {},
             spec = config.parameterSpec,
-            container,
             bus = config.bus,
-            model;
+            model = Props.make({
+                onUpdate: function () {
+                    render();
+                },
+            });
 
         // Validate configuration.
         // Nothing to do...
@@ -19,8 +24,8 @@ define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap'], (Promise, ht
         options.required = spec.required();
 
         function render() {
-            let values = model.getItem('values'),
-                displayValue;
+            const values = model.getItem('values');
+            let displayValue;
             if (values === null) {
                 displayValue = span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
             } else {
@@ -55,12 +60,6 @@ define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap'], (Promise, ht
                 });
             });
         }
-
-        model = Props.make({
-            onUpdate: function (props) {
-                render();
-            },
-        });
 
         return {
             start: start,

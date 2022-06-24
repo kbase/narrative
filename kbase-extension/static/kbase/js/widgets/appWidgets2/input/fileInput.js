@@ -2,15 +2,15 @@ define([
     'bluebird',
     'jquery',
     'base/js/namespace',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     'common/props',
     'kb_service/client/userAndJobState',
     'kb_service/client/shock',
-    '../validation',
-    '../validators/constants',
+    'widgets/appWidgets2/validation',
+    'widgets/appWidgets2/validators/constants',
     '../inputUtils',
 
     'bootstrap',
@@ -336,7 +336,7 @@ define([
         function render() {
             Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(model.value, events);
+                    inputControl = makeInputControl(events);
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);

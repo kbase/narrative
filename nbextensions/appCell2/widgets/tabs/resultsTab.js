@@ -2,17 +2,13 @@ define(['bluebird', './resultsViewer'], (Promise, JobResult) => {
     'use strict';
 
     function factory(config) {
-        let container,
-            model = config.model,
-            resultsViewer;
+        let container, resultsViewer;
+        const { model, jobManager } = config;
 
         function start(arg) {
             container = arg.node;
-            if (arg.model) {
-                model = arg.model;
-            }
+            const jobState = jobManager.getJob();
 
-            const jobState = model.getItem('exec.jobState');
             return Promise.try(() => {
                 resultsViewer = JobResult.make({ model });
                 return resultsViewer.start({

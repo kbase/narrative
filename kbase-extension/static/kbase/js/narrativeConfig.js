@@ -1,16 +1,4 @@
-/**
- * Loads the required narrative configuration files.
- * This returns a Promise that will eventually hold the results.
- * This should mainly be invoked by the starting app, then
- * that result should be injected where necessary.
- *
- * @author Bill Riehl <wjriehl@lbl.gov>
- * @class narrativeConfig
- * @module Narrative
- * @static
- */
 define([
-    'narrative_paths',
     'jquery',
     'bluebird',
     'json!kbase/config/config.json',
@@ -18,26 +6,23 @@ define([
     'json!kbase/config/cdn-service-config.json',
     'json!kbase/config/feature-config.json',
     'json!kbase/config/staging_upload.json',
-    'require',
-], (
-    paths,
-    $,
-    Promise,
-    ConfigSet,
-    IconsSet,
-    ServiceSet,
-    FeatureSet,
-    StagingUpload,
-    localRequire
-) => {
+], ($, Promise, ConfigSet, IconsSet, ServiceSet, FeatureSet, StagingUpload) => {
     'use strict';
 
-    let config, debug;
+    /**
+     * Loads the required narrative configuration files.
+     * This returns a Promise that will eventually hold the results.
+     * This should mainly be invoked by the starting app, then
+     * that result should be injected where necessary.
+     *
+     * @author Bill Riehl <wjriehl@lbl.gov>
+     * @class narrativeConfig
+     * @module Narrative
+     * @static
+     */
 
     // Get the workspace id from the URL
-    let workspaceId = null,
-        objectId = null,
-        narrativeRef = null;
+    let workspaceId = null;
     // m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
     // 2 = wsid
     // 5 = objid
@@ -69,10 +54,11 @@ define([
     // <wsid>
     const narrativeIDRegex = /.*\/(?:(?:ws.(\d+).obj.(\d+)(?:.ver.(\d+))?)|(\d*))$/;
     const pathMatchResults = path.match(narrativeIDRegex);
+
     if (pathMatchResults) {
         // Note that wsid1 will be populated for the legacy form, and
         // wsid2 for the modern form.
-        const [, workspaceId1, _objectId, _objectVersion, workspaceId2] = pathMatchResults;
+        const [, workspaceId1, , , workspaceId2] = pathMatchResults;
         workspaceId = parseInt(workspaceId1 || workspaceId2);
         // Note that "narrativeRef" is not being constructed here.
         // I think this is a remnant which should be removed from the codebase, but is
@@ -84,13 +70,12 @@ define([
         // field to discover the object id for the narrative object.
         // Note also that the back end code ALSO checks this stuff, and will choke if the
         // objectId is not a valid narrative, even though we don't care here,
-    } else {
         // TODO: There doesn't appear to be a way to trigger an error on a bad url?
         //       Not addressing this now.
     }
 
     // Build the config up from the configSet (from config.json)
-    config = {
+    const config = {
         environment: ConfigSet.config,
         urls: ConfigSet[ConfigSet.config],
         version: ConfigSet.version,
@@ -102,9 +87,9 @@ define([
         dev_mode: ConfigSet.dev_mode,
         tooltip: ConfigSet.tooltip,
         icons: IconsSet,
-        workspaceId: workspaceId,
-        objectId: objectId,
-        narrativeRef: narrativeRef,
+        workspaceId,
+        objectId: null,
+        narrativeRef: null,
         loading_gif: ConfigSet.loading_gif,
         use_local_widgets: ConfigSet.use_local_widgets,
         features: FeatureSet,
@@ -116,7 +101,7 @@ define([
         upload: ConfigSet.upload,
     };
 
-    debug = config.mode === 'debug';
+    const debug = config.mode === 'debug';
     config.debug = debug;
 
     // Add a remote UI-common to the Require.js config
@@ -136,12 +121,6 @@ define([
         config.services[key] = { url: config.urls[key], name: key };
     });
 
-    function assertConfig() {
-        if (config === undefined) {
-            throw new Error('Config has not yet been loaded');
-        }
-    }
-
     /**
      * Updates the RequireJS config with additional locations from
      * a config given by the ui-common repo. This file is expected to be
@@ -153,14 +132,13 @@ define([
      * and just run the callback.
      */
     function updateConfig() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (window.kbconfig) {
                 resolve(window.kbconfig);
             }
+            // eslint-disable-next-line no-console
             console.log('Config: checking remote widgets');
-            assertConfig();
             if (!config.use_local_widgets) {
-                // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
                 require(['uiCommonPaths'], (pathConfig) => {
                     for (const name in pathConfig.paths) {
                         pathConfig.paths[name] =
@@ -179,17 +157,19 @@ define([
                 resolve(config);
             }
         })
-            .then((config) => {
+            .then((cfg) => {
+                // eslint-disable-next-line no-console
                 console.log('Config: fetching remote data configuration.');
                 return Promise.resolve(
                     $.ajax({
                         dataType: 'json',
                         cache: false,
-                        url: config.urls.data_panel_sources,
+                        url: cfg.urls.data_panel_sources,
                     })
                 );
             })
             .then((dataCategories) => {
+                // eslint-disable-next-line no-console
                 console.log('Config: processing remote data configuration.');
                 let env = config.environment;
                 // little bit of a hack, but dev should => ci for all things data.
@@ -209,16 +189,17 @@ define([
                 );
                 // hate embedding this stuff, but it seems the only good way.
                 // the filename is the last step of that url path (after the last /)
-                const path = config.urls.data_panel_sources.split('/');
+                const dataPath = config.urls.data_panel_sources.split('/');
 
                 return Promise.resolve(
                     $.ajax({
                         dataType: 'json',
                         cache: false,
-                        url: 'static/kbase/config/' + path[path.length - 1],
+                        url: 'static/kbase/config/' + dataPath[dataPath.length - 1],
                     })
                 )
                     .then((dataCategories) => {
+                        // eslint-disable-next-line no-console
                         console.log('Config: processing local data configuration.');
                         let env = config.environment;
                         if (env === 'dev') {
@@ -241,7 +222,6 @@ define([
      * Simple wrapper to return a URL by its key. If not present, just returns undefined.
      */
     function url(key) {
-        assertConfig();
         return config.urls[key];
     }
 
@@ -249,7 +229,6 @@ define([
      * Simple wrapper to return some value by its key. If not present, just returns undefined.
      */
     function get(key) {
-        assertConfig();
         return config[key];
     }
 
@@ -262,11 +241,11 @@ define([
     }
 
     return {
-        updateConfig: updateConfig,
-        config: config,
-        getConfig: getConfig,
-        url: url,
-        get: get,
-        debug: debug,
+        updateConfig,
+        config,
+        getConfig,
+        url,
+        get,
+        debug,
     };
 });

@@ -1,6 +1,3 @@
-"""
-Test utility functions
-"""
 import logging
 import pickle
 import struct
@@ -17,7 +14,7 @@ from biokbase.narrative.common import util
 from biokbase.workspace.client import Workspace
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 
-__author__ = "Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>"
+
 _log = logging.getLogger("kbtest")
 _hnd = logging.StreamHandler()
 _hnd.setFormatter(
@@ -37,7 +34,11 @@ def test_logger(name):
     return logging.getLogger("kbtest." + name)
 
 
-class ConfigTests(object):
+class ConfigTests:
+    """
+    Test utility functions
+    """
+
     def __init__(self):
         self._path_prefix = os.path.join(
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"
@@ -204,26 +205,26 @@ def read_json_file(path):
 
 class MyTestCase(unittest.TestCase):
     def test_kvparse(self):
-        for input, text, kvp in (
+        for user_input, text, kvp in (
             ("foo", "foo", {}),
             ("name=val", "", {"name": "val"}),
             ("a name=val boy", "a boy", {"name": "val"}),
         ):
             rkvp = {}
-            rtext = util.parse_kvp(input, rkvp)
+            rtext = util.parse_kvp(user_input, rkvp)
             self.assertEqual(
                 text,
                 rtext,
                 "Text '{}' does not match "
                 "result '{}' "
-                "from input '{}'".format(text, rtext, input),
+                "from input '{}'".format(text, rtext, user_input),
             )
             self.assertEqual(
                 text,
                 rtext,
                 "Dict '{}' does not match "
                 "result '{}' "
-                "from input '{}'".format(kvp, rkvp, input),
+                "from input '{}'".format(kvp, rkvp, user_input),
             )
 
 
@@ -252,10 +253,8 @@ def recvall(socket, n, timeout=0):
         if b:
             buf += b
             m += len(b)
-            # print("@@ recv {}".format(len(b)))
         else:
             time.sleep(0.1)
-            # print("@@ recv 0/{}".format(n - m))
     return buf
 
 
@@ -270,11 +269,9 @@ class LogProxyMessageBufferer(socketserver.BaseRequestHandler):
             if not hdr:
                 return
             size = struct.unpack(">L", hdr)[0]
-            #  print("@@ body {}".format(size))
             if size < 65536:
                 chunk = recvall(self.request, size, timeout=1)
                 record = pickle.loads(chunk)
-                # print("@@ message <{}>".format(record['msg']))
                 self.server.buf += record["msg"]
 
 
@@ -334,7 +331,6 @@ def validate_job_state(job_state: dict) -> None:
             "job_id": str,
             "status": str,
             "created": int,
-            "updated": int,
         },
         "optional": {
             "batch_id": (NoneType, str),

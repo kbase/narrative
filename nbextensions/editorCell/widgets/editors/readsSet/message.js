@@ -1,4 +1,4 @@
-define(['bluebird', 'kb_common/html'], (Promise, html) => {
+define(['bluebird'], (Promise) => {
     'use strict';
 
     function factory() {
@@ -27,8 +27,8 @@ define(['bluebird', 'kb_common/html'], (Promise, html) => {
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

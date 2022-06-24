@@ -413,7 +413,7 @@ define([
                 };
                 const lastLine = this.model.getItem('lastLine');
                 if (lastLine) {
-                    requestParams.first_line = lastLine;
+                    requestParams[jcm.PARAM.FIRST_LINE] = lastLine;
                 }
                 this.bus.emit(jcm.MESSAGE_TYPE.LOGS, requestParams);
             }
@@ -704,17 +704,16 @@ define([
                     const jobState = this.jobManager.getJob(this.jobId) || { job_id: this.jobId };
 
                     // initial render
-                    if (jobState && jobState.status) {
+                    if (jobState.status) {
                         this.handleJobStatus({ jobState });
                     } else {
                         // some kind of 'await job info' message
                         this.ui.setContent(LOG_PANEL, p(this.messages.JOB_STATUS_UNKNOWN));
                         this._renderButtonState('default');
+                        this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                            [jcm.PARAM.JOB_ID]: this.jobId,
+                        });
                     }
-
-                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
-                        [jcm.PARAM.JOB_ID]: this.jobId,
-                    });
                 }).catch((err) => {
                     throw err;
                 });

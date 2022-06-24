@@ -1,4 +1,4 @@
-define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
+define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html'], (
     Promise,
     Runtime,
     UI,

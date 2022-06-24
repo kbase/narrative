@@ -13,6 +13,7 @@ module.exports = function (config) {
         'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
         'test/unit/spec/nbextensions/bulkImportCell/main-spec.js',
         'test/unit/spec/util/appCellUtil-spec.js',
+        'test/unit/spec/narrative_core/kbaseNarrativeAppPanel-spec.js',
     ];
 
     config.set({

@@ -53,6 +53,15 @@ define([
     };
     const batchId = JobsData.batchParentJob.job_id;
 
+    const jobLaunchError = {
+        message: 'app startup error',
+        stacktrace: 'doom\nDoom\nDOOOM',
+        code: '-1',
+        source: 'app manager',
+        method: 'AppManager.run_job_batch',
+        exceptionType: 'ValueError',
+    };
+
     /**
      * Initialise a fake bulk import cell
      * @param {object} args with keys
@@ -137,11 +146,10 @@ define([
                 saveNarrative: () => {},
             };
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: '',
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: '/get_object_info_new/',
+                response: [null],
             });
         });
 
@@ -427,14 +435,7 @@ define([
             [
                 {
                     msgEvent: 'error',
-                    msgData: {
-                        message: 'app startup error',
-                        stacktrace: 'doom\nDoom\nDOOOM',
-                        code: '-1',
-                        source: 'app manager',
-                        method: 'AppManager.run_job_bulk',
-                        exceptionType: 'ValueError',
-                    },
+                    msgData: jobLaunchError,
                     updatedState: 'error',
                     testSelector: selectors.reset,
                     testState: (elem) => !elem.classList.contains('hidden'),
@@ -653,6 +654,10 @@ define([
                     spyOn(Date, 'now').and.returnValue(1234567890);
                     testCase.cellId = `${testCase.state}-${testCase.action}`;
                     const { cell, bulkImportCellInstance } = initCell(testCase);
+                    if (testCase.state === 'error') {
+                        // add an appError to the model
+                        bulkImportCellInstance.jobManager.model.setItem('appError', jobLaunchError);
+                    }
 
                     // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.
                     // I'm guessing it's a jquery fadeIn event thing.
@@ -704,6 +709,9 @@ define([
                             expect(bulkImportCellInstance.jobManager.model.getItem('exec')).toEqual(
                                 undefined
                             );
+                            expect(
+                                bulkImportCellInstance.jobManager.model.getItem('appError')
+                            ).toEqual(undefined);
                             expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {

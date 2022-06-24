@@ -1,14 +1,34 @@
 define([
     'bluebird',
+    'common/events',
     'common/runtime',
     'common/html',
     'common/ui',
     './fileTypePanel',
+    './xsvGenerator',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
     'util/appCellUtil',
-], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
+], (
+    Promise,
+    Events,
+    Runtime,
+    html,
+    UI,
+    FileTypePanel,
+    XsvGenerator,
+    ParamsWidget,
+    FilePathWidget,
+    Util
+) => {
     'use strict';
+
+    const div = html.tag('div'),
+        span = html.tag('span'),
+        iTag = html.tag('i'),
+        strong = html.tag('strong'),
+        aTag = html.tag('a'),
+        button = html.tag('button');
 
     /**
      * This widget is responsible for providing an interactive interface for setting the
@@ -36,11 +56,12 @@ define([
      */
     function ConfigureWidget(options) {
         const viewOnly = options.viewOnly || false;
-        const { model, specs, fileTypesDisplay, typesToFiles } = options;
+        const { model, specs, fileTypesDisplay, typesToFiles, fileTypeMapping } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params',
+            xsvGen = new XsvGenerator({ model, typesToFiles, fileTypeMapping }),
             cssBaseClass = 'kb-bulk-import-configure';
         let container = null,
             filePathWidget,
@@ -58,11 +79,23 @@ define([
          */
         function start(args) {
             const allFiles = new Set();
+            const events = Events.make();
+
             Object.values(typesToFiles).forEach((entry) => {
                 for (const file of entry.files) {
                     allFiles.add(file);
                 }
             });
+            container = args.node;
+            const spinnerNode = document.createElement('div');
+            spinnerNode.classList.add('kb-loading-spinner');
+            spinnerNode.innerHTML = UI.loading({ size: '2x' });
+            container.appendChild(spinnerNode);
+
+            const configNode = document.createElement('div');
+            configNode.classList.add('hidden');
+            container.appendChild(configNode);
+
             return Util.getMissingFiles(Array.from(allFiles))
                 .catch((error) => {
                     // if the missing files call fails, just continue and let the cell render.
@@ -76,11 +109,11 @@ define([
                     return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
                 })
                 .then((readyState) => {
-                    container = args.node;
                     ui = UI.make({ node: container });
 
-                    const layout = renderLayout();
-                    container.innerHTML = layout;
+                    const layout = renderLayout(events);
+                    configNode.innerHTML = layout;
+                    events.attachEvents(container);
 
                     const fileTypeNode = ui.getElement('filetype-panel');
                     const initPromises = [
@@ -89,6 +122,10 @@ define([
                     ];
                     running = true;
                     return Promise.all(initPromises);
+                })
+                .finally(() => {
+                    spinnerNode.remove();
+                    configNode.classList.remove('hidden');
                 });
         }
 
@@ -186,11 +223,6 @@ define([
          *   message - string
          */
         function renderConfigMessage(msg) {
-            const div = html.tag('div'),
-                span = html.tag('span'),
-                iTag = html.tag('i'),
-                strong = html.tag('strong'),
-                aTag = html.tag('a');
             const icon = 'fa fa-exclamation-circle';
             let msgType = msg.type;
             if (msgType !== 'warning' && msgType !== 'error') {
@@ -219,8 +251,7 @@ define([
             );
         }
 
-        function renderLayout() {
-            const div = html.tag('div');
+        function renderLayout(events) {
             return div(
                 {
                     class: `${cssBaseClass}__container`,
@@ -240,6 +271,7 @@ define([
                                 class: `${cssBaseClass}__message_container`,
                                 dataElement: 'config-message',
                             }),
+                            buildXsvGeneratorButton(events),
                             div({
                                 class: `${cssBaseClass}__file_paths`,
                                 dataElement: 'file-paths',
@@ -250,6 +282,30 @@ define([
                             }),
                         ]
                     ),
+                ]
+            );
+        }
+
+        /**
+         * Creates the XSV Generator button, which conjures the XSV generator widget from the void.
+         */
+        function buildXsvGeneratorButton(events) {
+            return button(
+                {
+                    class: `${cssBaseClass}__button--generate-template`,
+                    type: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            xsvGen.run();
+                        },
+                    }),
+                },
+                [
+                    span({
+                        class: `${cssBaseClass}__button_icon--add_row fa fa-download`,
+                    }),
+                    'Create Import Template',
                 ]
             );
         }
@@ -360,6 +416,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'otherParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                initialDisplay: model.getItem(['paramDisplay', selectedFileType, PARAM_TYPE]) || {},
                 viewOnly,
             });
 
@@ -424,7 +481,7 @@ define([
             return widget
                 .start({
                     node: node,
-                    appSpec: model.getItem('app.spec'),
+                    appSpec: specs[typesToFiles[selectedFileType].appId],
                     parameters: spec.getSpec().parameters,
                 })
                 .then(() => {
@@ -513,37 +570,6 @@ define([
         }
 
         /**
-         * Gets the collection of file path parameter validation options. This is returned as
-         * an Array of objects, one for each file path row. Each object has a key for each
-         * file path id, and value is the options for that input.
-         *
-         * Currently this only sets the invalidValues option for text validation. I.e., the
-         * files that are not available.
-         * @returns a list of file path options for each file input row.
-         */
-        function getFilePathOptionsForValidation() {
-            let fpIds = model.getItem(['app', 'fileParamIds', selectedFileType]);
-            const outIds = model.getItem(['app', 'outputParamIds', selectedFileType]);
-            fpIds = fpIds.filter((id) => !outIds.includes(id));
-            const fpVals = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]);
-
-            // fpIds = file input ids
-            // outIds = file output ids
-            // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
-
-            return fpVals.map((filePath) => {
-                const fpOptions = {};
-                for (const id of Object.keys(filePath)) {
-                    fpOptions[id] = {};
-                    if (fpIds.includes(id)) {
-                        fpOptions[id].invalidValues = unavailableFiles;
-                    }
-                }
-                return fpOptions;
-            });
-        }
-
-        /**
          * Updates the configuration state for the currently loaded app. If the state has
          * changed from what's in the current model, this updates it and sends a message
          * up the cellBus.
@@ -559,16 +585,22 @@ define([
                 }
                 const paramIds = model.getItem(['app', 'otherParamIds', selectedFileType]),
                     paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
-                    filePathIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
+                    fileParamIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
                     filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                     spec = specs[typesToFiles[selectedFileType].appId];
                 return Util.evaluateAppConfig(
                     paramIds,
                     paramValues,
                     {},
-                    filePathIds,
+                    fileParamIds,
                     filePathValues,
-                    getFilePathOptionsForValidation(),
+                    Util.getFilePathValidationOptions(
+                        Util.getFilePathIds(model, selectedFileType),
+                        fileParamIds,
+                        unavailableFiles,
+                        {},
+                        { shouldNotExist: false }
+                    ),
                     spec
                 );
             }).then((state) => {
@@ -602,6 +634,10 @@ define([
                 ] = message.newValue;
             } else {
                 model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
+                model.setItem(
+                    ['paramDisplay', fileType, paramType, message.parameter],
+                    message.newDisplayValue
+                );
             }
 
             return updateAppConfigState(message.isError);

@@ -487,6 +487,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                     sequencing_tech: 'Illumina',
                     single_genome: 1,
                 },
+                paramDisplay: {},
             },
         },
         'user-settings': {

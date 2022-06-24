@@ -2,8 +2,9 @@ define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
     'base/js/namespace',
+    'narrativeConfig',
     'narrativeMocks',
-], ($, KBaseDefaultObjectView, Jupyter, Mocks) => {
+], ($, KBaseDefaultObjectView, Jupyter, Config, Mocks) => {
     'use strict';
     describe('The kbaseDefaultObjectView widget', () => {
         let $div = null;
@@ -57,34 +58,26 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
-                status: 200,
-                statusText: 'success',
-                contentType: 'application/json',
-                responseHeaders: '',
-                responseText: JSON.stringify({
-                    version: '1.1',
-                    result: [
-                        {
-                            infos: [
-                                [
-                                    oid,
-                                    name,
-                                    objType,
-                                    saveDate,
-                                    ver,
-                                    userId,
-                                    ws,
-                                    wsName,
-                                    checksum,
-                                    size,
-                                    meta,
-                                ],
-                            ],
-                            paths: [[upa]],
-                        },
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                response: {
+                    infos: [
+                        [
+                            oid,
+                            name,
+                            objType,
+                            saveDate,
+                            ver,
+                            userId,
+                            ws,
+                            wsName,
+                            checksum,
+                            size,
+                            meta,
+                        ],
                     ],
-                }),
+                    paths: [[upa]],
+                },
             });
 
             const w = new KBaseDefaultObjectView($div, { upas: { upas: [upa] } });
@@ -139,34 +132,26 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
-                status: 200,
-                statusText: 'success',
-                contentType: 'application/json',
-                responseHeaders: '',
-                responseText: JSON.stringify({
-                    version: '1.1',
-                    result: [
-                        {
-                            infos: [
-                                [
-                                    oid,
-                                    name,
-                                    objType,
-                                    saveDate,
-                                    ver,
-                                    userId,
-                                    ws,
-                                    wsName,
-                                    checksum,
-                                    size,
-                                    meta,
-                                ],
-                            ],
-                            paths: [[upa]],
-                        },
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                response: {
+                    infos: [
+                        [
+                            oid,
+                            name,
+                            objType,
+                            saveDate,
+                            ver,
+                            userId,
+                            ws,
+                            wsName,
+                            checksum,
+                            size,
+                            meta,
+                        ],
                     ],
-                }),
+                    paths: [[upa]],
+                },
             });
 
             const w = new KBaseDefaultObjectView($div, { upas: { upas: [upa] } });
@@ -210,14 +195,13 @@ define([
         });
 
         it("Should fail to load with an error message if there's a problem", (done) => {
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
-                status: 500,
-                statusText: 'success',
-                contentType: 'application/json',
-                responseHeaders: '',
-                responseText: JSON.stringify({
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                statusCode: 500,
+                statusText: '500 Internal Service Error',
+                response: {
                     error: 'ERROR! OMG!',
-                }),
+                },
             });
 
             const w = new KBaseDefaultObjectView($div, { upas: { upas: ['nope'] } });

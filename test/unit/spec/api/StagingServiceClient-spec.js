@@ -17,6 +17,7 @@ define(['StagingServiceClient'], (StagingServiceClient) => {
         decompress: { method: 'patch', path: 'decompress/' },
         importer_mappings: { method: 'get', path: 'importer_mappings/?' },
         bulkSpecification: { method: 'get', path: 'bulk_specification/?files=' },
+        write_bulk_specification: { method: 'post', path: 'write_bulk_specification/' },
     };
 
     describe('the staging service client', () => {

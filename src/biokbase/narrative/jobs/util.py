@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 JOB_CONFIG_FILE_PATH_PARTS = [
     "kbase-extension",
@@ -15,8 +15,8 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
     Load the job-related terms that are shared by front- and back ends.
     """
     full_path = [os.environ["NARRATIVE_DIR"]] + relative_path_to_file
-    config_json = open(os.path.join(*full_path)).read()
-    config = json.loads(config_json)
+    with open(os.path.join(*full_path)) as fh:
+        config = json.load(fh)
     REQUIRED = {
         "message_types": [
             "CANCEL",
@@ -31,7 +31,16 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
             "ERROR",
             "RUN_STATUS",
         ],
-        "params": ["BATCH_ID", "CELL_ID_LIST", "JOB_ID", "JOB_ID_LIST"],
+        "params": [
+            "BATCH_ID",
+            "CELL_ID_LIST",
+            "FIRST_LINE",
+            "JOB_ID_LIST",
+            "JOB_ID",
+            "LATEST",
+            "NUM_LINES",
+            "TS"
+        ],
     }
 
     # ensure we have all the required message type and param names
@@ -42,7 +51,7 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
                 f"job_config.json is missing the '{datatype}' config section"
             )
         missing = [item for item in example_list if item not in config[datatype]]
-        if len(missing):
+        if missing:
             raise ValueError(
                 f"job_config.json is missing the following values for {datatype}: "
                 + ", ".join(missing)

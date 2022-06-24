@@ -432,8 +432,7 @@ define([
                 bulkImportType = 'sra_reads',
                 bulkOutputSuffix = '_reads',
                 nonBulkAppId = 'kb_uploadmethods/import_tsv_as_expression_matrix_from_staging',
-                nonBulkType = 'expression_matrix',
-                nonBulkSuffix = '_matrix';
+                nonBulkType = 'expression_matrix';
             let tag;
 
             beforeEach(() => {
@@ -533,7 +532,7 @@ define([
                         expectedInputs[dataType] = {
                             appId: bulkAppId,
                             files: [filePath],
-                            outputSuffix: isBulk ? bulkOutputSuffix : nonBulkSuffix,
+                            outputSuffix: bulkOutputSuffix,
                         };
                         expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(
                             expectedInputs

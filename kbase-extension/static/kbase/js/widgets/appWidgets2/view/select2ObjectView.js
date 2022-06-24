@@ -3,7 +3,7 @@ define([
     'jquery',
     'underscore',
     'common/html',
-    '../validation',
+    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',
@@ -185,6 +185,7 @@ define([
                     default:
                         return Validation.validateWorkspaceObjectName(
                             processedValue,
+                            spec.data.constraints,
                             validationOptions
                         );
                 }

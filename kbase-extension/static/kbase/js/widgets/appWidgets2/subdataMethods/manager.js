@@ -2,7 +2,7 @@ define([
     'handlebars',
     'common/runtime',
     'common/props',
-    'kb_common/html',
+    'common/html',
     'kb_service/client/workspace',
     'kbase-generic-client-api',
     './growthCurves',
@@ -79,21 +79,19 @@ define([
         }
 
         function standardFetchData(arg) {
-            let subdata_path;
-            let referenceObjectRef = arg.referenceObjectRef,
+            let subdata_path, dataCall;
+            const referenceObjectRef = arg.referenceObjectRef,
                 subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
                     included: subdataSelection.subdata_included,
-                },
-                dataCall;
+                };
 
             const parseData = function (results) {
-                let values = [],
+                const values = [],
                     selectionId = subdataSelection.selection_id,
-                    descriptionFields = subdataSelection.selection_description || [],
-                    descriptionTemplateText = subdataSelection.description_template,
-                    descriptionTemplate;
+                    descriptionFields = subdataSelection.selection_description || [];
+                let descriptionTemplateText = subdataSelection.description_template;
 
                 if (!descriptionTemplateText) {
                     descriptionTemplateText = descriptionFields
@@ -103,7 +101,7 @@ define([
                         .join(' - ');
                 }
 
-                descriptionTemplate = Handlebars.compile(descriptionTemplateText);
+                const descriptionTemplate = Handlebars.compile(descriptionTemplateText);
                 results.forEach((result) => {
                     if (!result) {
                         return;

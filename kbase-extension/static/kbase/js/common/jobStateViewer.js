@@ -101,9 +101,11 @@ define([
                 this.lastJobState = this.jobManager.getJob(this.jobId);
                 this.renderJobState(this.lastJobState || { job_id: this.jobId });
 
-                this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
-                    [jcm.PARAM.JOB_ID]: this.jobId,
-                });
+                if (!this.lastJobState || !this.lastJobState.status) {
+                    this.bus.emit(jcm.MESSAGE_TYPE.STATUS, {
+                        [jcm.PARAM.JOB_ID]: this.jobId,
+                    });
+                }
             });
         }
 

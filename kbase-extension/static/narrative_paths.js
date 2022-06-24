@@ -128,7 +128,6 @@ require.config({
             'kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab',
         kbaseNarrativeStagingDataTab:
             'kbase/js/widgets/narrative_core/kbaseNarrativeStagingDataTab',
-        kbaseNarrativeSideImportTab: 'kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab',
         kbaseNarrativeSidePublicTab: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
         kbaseNarrativeCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
         kbaseNarrativeDataCell: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',

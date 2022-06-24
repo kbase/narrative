@@ -4,10 +4,11 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
+    'common/ui',
     'testUtil',
     'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, Mocks, TestBulkImportObject) => {
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, UI, TestUtil, Mocks, TestBulkImportObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -19,6 +20,17 @@ define([
                 },
             },
             fileTypesDisplay = {
+                fastq_reads: {
+                    label: 'FASTQ Reads Interleaved',
+                },
+                dataType1: {
+                    label: 'Data Type One',
+                },
+                dataType2: {
+                    label: 'Data Type II',
+                },
+            },
+            fileTypeMapping = {
                 fastq_reads: 'FASTQ Reads Interleaved',
                 dataType1: 'Data Type One',
                 dataType2: 'Data Type II',
@@ -39,6 +51,7 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            bus = runtime.bus();
             const stagingServiceUrl = runtime.config('services.staging_api_url.url');
             jasmine.Ajax.install();
             // lifted from the used files in this test spec
@@ -75,7 +88,6 @@ define([
                 response: [null],
             });
 
-            bus = runtime.bus();
             container = document.createElement('div');
             initialState = {
                 state: 'editingIncomplete',
@@ -89,12 +101,11 @@ define([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             container.remove();
-            runtime.destroy();
-            TestUtil.clearRuntime();
         });
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         [
@@ -127,6 +138,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 return configure
@@ -141,9 +153,51 @@ define([
                             '[data-parameter="import_type"] select[data-element="input"]'
                         );
                         expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
+                        spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
+                        const xsvButton = container.querySelector(
+                            '.kb-bulk-import-configure__button--generate-template'
+                        );
+                        // click on the button to check it functions correctly
+                        xsvButton.click();
+                        expect(xsvButton.textContent).toContain('Create Import Template');
+                        expect(UI.showConfirmDialog).toHaveBeenCalled();
                         return configure.stop();
                     });
             });
+        });
+
+        it('starts with a disappearing loading spinner', () => {
+            const model = Props.make({
+                data: Object.assign({}, TestBulkImportObject, { state: initialState }),
+                onUpdate: () => {
+                    /* intentionally left blank */
+                },
+            });
+            spyOn(UI, 'loading').and.callThrough();
+            const configure = ConfigureTab.make({
+                bus,
+                model,
+                specs,
+                typesToFiles,
+                fileTypesDisplay,
+                fileTypeMapping,
+            });
+
+            return configure
+                .start({
+                    node: container,
+                })
+                .then(() => {
+                    // it's hard to trap when this appears / disappears when run in tests.
+                    // just make sure it's been called, and the .kb-loading-spinner node
+                    // no longer exists.
+                    expect(UI.loading).toHaveBeenCalled();
+                    expect(container.querySelector('.kb-loading-spinner')).toBeNull();
+                    return configure.stop();
+                })
+                .then(() => {
+                    expect(container.innerHTML).toEqual('');
+                });
         });
 
         it('should stop itself and empty the node it was in', () => {
@@ -159,6 +213,7 @@ define([
                 specs,
                 typesToFiles,
                 fileTypesDisplay,
+                fileTypeMapping,
             });
 
             return configure
@@ -166,7 +221,7 @@ define([
                     node: container,
                 })
                 .then(() => {
-                    // just make sure it renders the "File Paths" and "Parameters" headers
+                    // just make sure it renders the "Parameters" header
                     expect(container.innerHTML).toContain('Parameters');
                     return configure.stop();
                 })
@@ -200,6 +255,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
@@ -234,6 +290,7 @@ define([
                     specs,
                     typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 const paramErrorSelector =
@@ -303,6 +360,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -373,6 +431,7 @@ define([
                     specs,
                     typesToFiles: this._typesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });
@@ -456,6 +515,7 @@ define([
                         specs,
                         typesToFiles: messageTypesToFiles,
                         fileTypesDisplay,
+                        fileTypeMapping,
                     });
 
                     await configure.start({ node: container });
@@ -522,6 +582,7 @@ define([
                     specs,
                     typesToFiles: messageTypesToFiles,
                     fileTypesDisplay,
+                    fileTypeMapping,
                 });
 
                 await configure.start({ node: container });

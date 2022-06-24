@@ -495,7 +495,7 @@ define(
 
             function showAppSpec() {
                 const appSpec = model.getItem('app.spec');
-                const specText = JSON.stringify(appSpec, false, 3),
+                const specText = JSON.stringify(appSpec, null, 3),
                     fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                     content = pre(
                         { class: 'prettyprint lang-json', style: { fontSize: '80%' } },

@@ -310,6 +310,7 @@ define([
             bus,
             setDuplicateValue,
             clearDuplicateValue,
+            validateField,
         };
     }
 

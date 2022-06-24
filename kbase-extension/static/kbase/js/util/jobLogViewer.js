@@ -475,7 +475,7 @@ define([
             this.state.awaitingLog = true;
             this.bus.emit(jcm.MESSAGE_TYPE.LOGS, {
                 [jcm.PARAM.JOB_ID]: this.jobId,
-                first_line: firstLine,
+                [jcm.PARAM.FIRST_LINE]: firstLine,
             });
         }
 

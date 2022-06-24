@@ -10,14 +10,13 @@
 define([
     'bluebird',
     'google-code-prettify/prettify',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
-    'common/props',
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify',
-], (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) => {
+], (Promise, PR, html, Events, UI, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -56,6 +55,7 @@ define([
                 paramsChannelName: config.paramsChannelName,
                 channelName: bus.channelName,
                 initialValue: config.initialValue,
+                initialDisplayValue: config.initialDisplayValue,
                 appSpec: config.appSpec,
                 parameterSpec: config.parameterSpec,
                 workspaceInfo: config.workspaceInfo,
@@ -189,50 +189,50 @@ define([
             places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
-        function rawSpec(_spec) {
-            const specText = JSON.stringify(_spec, false, 3),
+        function rawSpec() {
+            const specText = JSON.stringify(spec, null, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
-        function parameterInfoContent(_spec) {
+        function parameterInfoContent() {
             return div({ style: { padding: '0px' } }, [
-                div({ style: { fontWeight: 'bold' } }, _spec.ui.label),
-                div({ style: { fontStyle: 'italic' } }, _spec.id),
-                div({ style: { fontSize: '80%' } }, _spec.ui.description),
+                div({ style: { fontWeight: 'bold' } }, spec.ui.label),
+                div({ style: { fontStyle: 'italic' } }, spec.id),
+                div({ style: { fontSize: '80%' } }, spec.ui.description),
             ]);
         }
 
-        function parameterInfoTypeRules(_spec) {
-            switch (_spec.data.type) {
+        function parameterInfoTypeRules() {
+            switch (spec.data.type) {
                 case 'float':
                 case 'int':
                     return [
-                        tr([th('Min'), td(_spec.data.constraints.min)]),
-                        tr([th('Max'), td(_spec.data.constraints.max)]),
+                        tr([th('Min'), td(spec.data.constraints.min)]),
+                        tr([th('Max'), td(spec.data.constraints.max)]),
                     ];
             }
         }
 
-        function parameterInfoRules(_spec) {
+        function parameterInfoRules() {
             return table(
                 { class: 'table table-striped' },
                 [
-                    tr([th('Required'), td(_spec.data.constraints.required ? 'yes' : 'no')]),
-                    tr([th('Data type'), td(_spec.data.type)]),
-                    tr([th('Multiple values?'), td(_spec.multipleItems ? 'yes' : 'no')]),
+                    tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
+                    tr([th('Data type'), td(spec.data.type)]),
+                    tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                     (function () {
-                        return tr([th('Default value'), td(_spec.data.defaultValue)]);
+                        return tr([th('Default value'), td(spec.data.defaultValue)]);
                     })(),
                     (function () {
-                        if (_spec.data.constraints.types) {
+                        if (spec.data.constraints.types) {
                             return tr([
                                 th('Valid types'),
-                                td(_spec.data.constraints.types.join('<br>')),
+                                td(spec.data.constraints.types.join('<br>')),
                             ]);
                         }
                     })(),
-                ].concat(parameterInfoTypeRules(_spec))
+                ].concat(parameterInfoTypeRules())
             );
         }
 
@@ -258,17 +258,17 @@ define([
                             {
                                 label: 'About',
                                 name: 'about',
-                                content: parameterInfoContent(spec),
+                                content: parameterInfoContent(),
                             },
                             {
                                 label: 'Rules',
                                 name: 'rules',
-                                content: parameterInfoRules(spec),
+                                content: parameterInfoRules(),
                             },
                             {
                                 label: 'Spec',
                                 name: 'spec',
-                                content: rawSpec(spec),
+                                content: rawSpec(),
                             },
                         ],
                     })

@@ -1,30 +1,17 @@
 define([
-    'require',
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     'util/util',
     'common/props',
     '../paramResolver',
-    '../validators/sequence',
+    'widgets/appWidgets2/validators/sequence',
     '../fieldWidgetMicro',
 
     'bootstrap',
-], (
-    require,
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Util,
-    Props,
-    Resolver,
-    Validation,
-    FieldWidget
-) => {
+], (Promise, html, Events, UI, Runtime, Util, Props, ParamResolver, Validation, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -39,9 +26,6 @@ define([
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            model = {
-                value: [],
-            },
             viewModel = Props.make({
                 data: {
                     items: [],
@@ -50,58 +34,25 @@ define([
                     doModelUpdated();
                 },
             }),
-            resolver = Resolver.make();
-
-        function normalizeModel() {
-            const newModel = model.value.filter((item) => {
-                return item ? true : false;
-            });
-            model.value = newModel;
-        }
+            resolver = ParamResolver.make();
 
         function doModelUpdated() {
+            const exported = exportModel();
             channel.emit('changed', {
-                newValue: exportModel(),
+                newValue: exported.values,
+                newDisplayValue: exported.displays,
             });
-        }
-
-        function setModelValue(value, index) {
-            return Promise.try(() => {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
-                    } else {
-                        model.value.splice(index, 1);
-                    }
-                } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
-                }
-                normalizeModel();
-            }).then(() => {
-                return render();
-            });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(() => {
-                model.value = [];
-            }).then(() => {
-                return render();
-            });
-        }
-
-        function resetModelValue() {
-            return;
         }
 
         function exportModel() {
-            return viewModel.getItem('items').map((value) => {
-                return value.value;
-            });
+            return viewModel.getItem('items').reduce(
+                (prev, item) => {
+                    prev.values.push(item.value);
+                    prev.displays.push(item.display);
+                    return prev;
+                },
+                { values: [], displays: [] }
+            );
         }
 
         function validate(rawValue) {
@@ -140,9 +91,10 @@ define([
             });
         }
 
-        function doChanged(index, value) {
+        function doChanged(index, value, display) {
             viewModel.setItem(['items', index, 'value'], value);
-            return validate(exportModel()).then((result) => {
+            viewModel.setItem(['items', index, 'display'], display);
+            return validate(exportModel().values).then((result) => {
                 channel.emit('validation', result);
             });
         }
@@ -163,6 +115,7 @@ define([
                         showInfo: false,
                         useRowHighight: true,
                         initialValue: control.value,
+                        initialDisplayValue: control.displayValue,
                         parameterSpec: itemSpec,
                         referenceType: 'ref',
                         paramsChannelName: config.paramsChannelName,
@@ -171,14 +124,16 @@ define([
                 // set up listeners for the input
                 fieldWidget.bus.on('sync', () => {
                     const value = viewModel.getItem(['items', control.index, 'value']);
+                    const displayValue = viewModel.getItem(['items', control.index, 'display']);
                     if (value) {
                         inputBus.emit('update', {
-                            value: value,
+                            value,
+                            displayValue,
                         });
                     }
                 });
                 fieldWidget.bus.on('changed', (message) => {
-                    doChanged(control.index, message.newValue);
+                    doChanged(control.index, message.newValue, message.newDisplayValue);
                 });
 
                 fieldWidget.bus.on('touched', () => {
@@ -322,7 +277,7 @@ define([
             );
         }
 
-        function addNewControl(initialValue) {
+        function addNewControl(initialValue, initialDisplayValue) {
             if (initialValue === undefined) {
                 initialValue = Util.copy(itemSpec.data.defaultValue);
             }
@@ -331,6 +286,7 @@ define([
                 const control = {
                     // current native value.
                     value: initialValue,
+                    displayValue: initialDisplayValue,
                     // the actual input control (or field wrapper around such)
                     inputControl: null,
                     // the actual dome node (used?) to which the input control is attached
@@ -368,7 +324,7 @@ define([
             });
         }
 
-        function render(initialValue) {
+        function render(initialValue, initialDisplayValue) {
             return Promise.try(() => {
                 // render now just builds the initial view
                 const events = Events.make({ node: container });
@@ -379,9 +335,12 @@ define([
                 if (!initialValue) {
                     return;
                 }
+                if (!initialDisplayValue) {
+                    initialDisplayValue = Array(initialValue.length);
+                }
                 return Promise.all(
-                    initialValue.map((value) => {
-                        return addNewControl(value);
+                    initialValue.map((value, index) => {
+                        return addNewControl(value, initialDisplayValue[index]);
                     })
                 ).then(() => {
                     return autoValidate();
@@ -406,7 +365,8 @@ define([
         }
 
         function autoValidate() {
-            return validate(exportModel()).then((result) => {
+            const data = exportModel();
+            return validate(data.values).then((result) => {
                 channel.emit('validation', result);
             });
         }
@@ -419,35 +379,25 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                return render(config.initialValue).then(() => {
-                    channel.on('reset-to-defaults', () => {
-                        resetModelValue();
-                    });
-                    channel.on('update', (message) => {
-                        setModelValue(message.value);
-                    });
-                    channel.on('refresh', () => {});
-
+                return render(config.initialValue, config.initialDisplayValue).then(() => {
                     return autoValidate();
                 });
             });
         }
 
         function stop() {
-            return Promise.try(() => {
-                return Promise.all(
-                    viewModel.getItem('items').map((item) => {
-                        return item.inputControl.instance.stop();
-                    })
-                ).then(() => {
-                    busConnection.stop();
-                });
+            return Promise.all(
+                viewModel.getItem('items').map((item) => {
+                    return item.inputControl.instance.stop();
+                })
+            ).then(() => {
+                busConnection.stop();
             });
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

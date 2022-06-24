@@ -348,14 +348,12 @@ define([
                     channel: jcm.MESSAGE_TYPE.LOGS,
                     message: {
                         [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
-                        first_line: 2000,
-                        latest: true,
+                        [jcm.PARAM.FIRST_LINE]: 2000,
                     },
                     expected: {
                         request_type: jcm.MESSAGE_TYPE.LOGS,
                         [jcm.PARAM.JOB_ID]: TEST_JOB_ID,
-                        first_line: 2000,
-                        latest: true,
+                        [jcm.PARAM.FIRST_LINE]: 2000,
                     },
                 },
                 {

@@ -4,7 +4,7 @@ define([], () => {
     /*
      * A clipboard button for copying data from select boxes.
      */
-    function clipboardButton(div, button, events, ui, node) {
+    function clipboardButton(div, button, events, ui, node, copyFn) {
         return div(
             {
                 class: 'input-group-addon kb-app-row-clip-btn-addon',
@@ -16,7 +16,9 @@ define([], () => {
                     id: events.addEvent({
                         type: 'click',
                         handler: async function () {
-                            const text = node.querySelectorAll('[role=textbox]')[0].innerText;
+                            const text = copyFn
+                                ? copyFn()
+                                : node.querySelectorAll('[role=textbox]')[0].innerText;
                             await navigator.clipboard.writeText(text);
                         },
                     }),
@@ -28,8 +30,8 @@ define([], () => {
         );
     }
 
-    function containerContent(div, button, events, ui, container, input) {
-        const clipboard = clipboardButton(div, button, events, ui, container);
+    function containerContent(div, button, events, ui, container, input, copyFn) {
+        const clipboard = clipboardButton(div, button, events, ui, container, copyFn);
         const content = div(
             {
                 dataElement: 'input-row',

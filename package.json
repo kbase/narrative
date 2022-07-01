@@ -12,7 +12,7 @@
         "@wdio/local-runner": "^7.19.3",
         "@wdio/mocha-framework": "^7.20.0",
         "@wdio/selenium-standalone-service": "^7.19.1",
-        "@wdio/spec-reporter": "^7.19.1",
+        "@wdio/spec-reporter": "^7.20.3",
         "autoprefixer": "^10.4.5",
         "bootstrap-sass": "^3.4.1",
         "chrome-launcher": "^0.14.0",

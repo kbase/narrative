@@ -152,7 +152,7 @@
         "numeral": "1.5.0",
         "plotly.js-dist-min": "1.50.0",
         "pure-uuid": "1.6.2",
-        "require-css": "0.1.8",
+        "require-css": "0.1.10",
         "require-yaml": "github:m90/require-yaml",
         "requirejs-domready": "2.0.1",
         "requirejs-json": "0.0.3",

@@ -58,7 +58,7 @@
         "postcss-remove-prefixes": "^1.2.0",
         "postcss-scss": "^4.0.4",
         "postcss-unprefix": "^2.1.4",
-        "prettier": "2.4.1",
+        "prettier": "2.7.1",
         "puppeteer": "^13.5.1",
         "requirejs": "2.3.6",
         "sass": "^1.51.0",

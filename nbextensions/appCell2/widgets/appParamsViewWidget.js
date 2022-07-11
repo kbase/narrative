@@ -39,7 +39,7 @@ define([
         const runtime = Runtime.make(),
             paramsBus = config.bus,
             initialParams = config.initialParams,
-            initialDisplay = config.initialDisplay,
+            initialDisplay = config.initialDisplay || {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
@@ -584,51 +584,52 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(() => {
-                // send parent the ready message
+            // send parent the ready message
 
-                paramsBus.request({}, { key: { type: 'get-batch-mode' } }).then((batchMode) => {
-                    doAttach(arg.node, batchMode);
+            return paramsBus.request({}, { key: { type: 'get-batch-mode' } }).then((batchMode) => {
+                doAttach(arg.node, batchMode);
 
-                    model.setItem('appSpec', arg.appSpec);
-                    model.setItem('parameters', arg.parameters);
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
 
-                    paramsBus.on('parameter-changed', (message) => {
-                        // Also, tell each of our inputs that a param has changed.
-                        // TODO: use the new key address and subscription
-                        // mechanism to make this more efficient.
-                        widgets.forEach((widget) => {
-                            widget.bus.send(message, {
-                                key: {
-                                    type: 'parameter-changed',
-                                    parameter: message.parameter,
-                                },
-                            });
+                paramsBus.on('parameter-changed', (message) => {
+                    // Also, tell each of our inputs that a param has changed.
+                    // TODO: use the new key address and subscription
+                    // mechanism to make this more efficient.
+                    widgets.forEach((widget) => {
+                        widget.bus.send(message, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: message.parameter,
+                            },
                         });
                     });
-                    // we then create our widgets
-                    let retPromise;
-                    if (batchMode) {
-                        retPromise = Promise.resolve();
-                    } else {
-                        retPromise = renderParameters();
-                    }
-                    return retPromise
-                        .then(() => {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch((err) => {
-                            // do somethig with the error.
-                            console.error('ERROR in start', err);
-                        });
                 });
+                // we then create our widgets
+                let retPromise;
+                if (batchMode) {
+                    retPromise = Promise.resolve();
+                } else {
+                    retPromise = renderParameters();
+                }
+                return retPromise
+                    .then(() => {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch((err) => {
+                        // do something with the error.
+                        console.error('ERROR in start', err);
+                    });
             });
         }
 
         function stop() {
-            return Promise.try(() => {
-                // really unhook things here.
+            const stopPromises = widgets.map((widget) => widget.stop());
+            return Promise.all(stopPromises).then(() => {
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 

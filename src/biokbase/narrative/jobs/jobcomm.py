@@ -7,7 +7,7 @@ from ipykernel.comm import Comm
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.jobmanager import JobManager
-from biokbase.narrative.jobs.util import load_job_constants
+from biokbase.narrative.jobs.util import load_job_constants, time_ns
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 
@@ -116,7 +116,11 @@ class JobRequest:
 
     @property
     def ts(self):
-        """This param is completely optional"""
+        """
+        Optional field sent with STATUS requests indicating to filter out
+        job states in the STATUS response that have not been updated since
+        this epoch time (in ns)
+        """
         return self.rq_data.get(PARAM["TS"])
 
 
@@ -199,10 +203,7 @@ class JobComm:
         if req.has_batch_id():
             return self._jm.update_batch_job(req.batch_id)
 
-        try:
-            return req.job_id_list
-        except Exception as ex:
-            raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR) from ex
+        return req.job_id_list
 
     def start_job_status_loop(
         self,
@@ -514,6 +515,14 @@ class JobComm:
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
+        # For STATUS responses, add a last_checked field
+        # to each output_state. Note: error states will have
+        # the last_checked field too
+        if msg_type == MESSAGE_TYPE["STATUS"]:
+            now = time_ns()
+            for output_state in content.values():
+                output_state["last_checked"] = now
+
         msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 

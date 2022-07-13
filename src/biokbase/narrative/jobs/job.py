@@ -9,6 +9,7 @@ from jinja2 import Template
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.jobs.util import time_ns
 
 from .specmanager import SpecManager
 
@@ -103,7 +104,7 @@ class Job:
         if ee2_state.get("job_id") is None:
             raise ValueError("Cannot create a job without a job ID!")
 
-        self._update_state(ee2_state)
+        self.update_state(ee2_state)
         self.extra_data = extra_data
 
         # verify parent-children relationship
@@ -129,9 +130,9 @@ class Job:
             return jobs
 
     @staticmethod
-    def _trim_ee2_state(state: dict, exclude: list) -> None:
-        if exclude:
-            for field in exclude:
+    def _trim_ee2_state(state: dict, exclude_fields: list) -> None:
+        if exclude_fields:
+            for field in exclude_fields:
                 if field in state:
                     del state[field]
 
@@ -199,7 +200,7 @@ class Job:
                 # and need the state refresh.
                 # But KBParallel/KB Batch App jobs may not have the
                 # batch_job field
-                self.state(force_refresh=True).get(
+                self.refresh_state(force_refresh=True).get(
                     "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
                 )
                 if self.batch_job
@@ -216,7 +217,7 @@ class Job:
                 # retry_ids field so skip the state refresh
                 self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
                 if self.batch_job or self.retry_parent
-                else self.state(force_refresh=True).get(
+                else self.refresh_state(force_refresh=True).get(
                     "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
                 )
             ),
@@ -239,17 +240,8 @@ class Job:
         return attr[name]()
 
     def __setattr__(self, name, value):
-        if name in STATE_ATTRS:
-            self._acc_state[name] = value
-        elif name in JOB_INPUT_ATTRS:
-            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
-            self._acc_state["job_input"][name] = value
-        elif name in NARR_CELL_INFO_ATTRS:
-            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
-            self._acc_state["job_input"]["narrative_cell_info"] = self._acc_state[
-                "job_input"
-            ].get("narrative_cell_info", {})
-            self._acc_state["job_input"]["narrative_cell_info"][name] = value
+        if name in STATE_ATTRS:  # TODO are/should these assignments be used?
+            self.update_state({name: value})
         else:
             object.__setattr__(self, name, value)
 
@@ -272,14 +264,6 @@ class Job:
 
         else:
             return self._acc_state.get("status") in TERMINAL_STATUSES
-
-    def is_terminal(self):
-        self.state()
-        if self._acc_state.get("batch_job"):
-            for child_job in self.children:
-                if child_job._acc_state.get("status") != COMPLETED_STATUS:
-                    child_job.state(force_refresh=True)
-        return self.was_terminal()
 
     def in_cells(self, cell_ids: List[str]) -> bool:
         """
@@ -324,9 +308,10 @@ class Job:
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def _update_state(self, state: dict) -> None:
+    def update_state(self, state: dict, ts: int = None) -> None:
         """
-        given a state data structure (as emitted by ee2), update the stored state in the job object
+        Given a state data structure (as emitted by ee2), update the stored state in the job object
+        All updates to the job state should go through here to keep the last_updated field accurate
         """
         if not isinstance(state, dict):
             raise TypeError("state must be a dict")
@@ -335,7 +320,7 @@ class Job:
         if self._acc_state:
             if "job_id" in state and state["job_id"] != self.job_id:
                 raise ValueError(
-                    f"Job ID mismatch in _update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+                    f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
                 )
 
         # Check if there would be no change in updating
@@ -348,30 +333,32 @@ class Job:
         if self._acc_state is None:
             self._acc_state = state
         else:
-            self._acc_state.update(state)
+            self._acc_state = {**self._acc_state, **state}
 
-    def state(self, force_refresh=False, exclude=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
+        self.last_updated = time_ns() if ts is None else ts
+
+    def refresh_state(self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
         """
         Queries the job service to see the state of the current job.
         """
 
         if force_refresh or not self.was_terminal():
             state = self.query_ee2_state(self.job_id, init=False)
-            self._update_state(state)
+            self.update_state(state)
 
-        return self._internal_state(exclude)
+        return self.cached_state(exclude_fields)
 
-    def _internal_state(self, exclude=None):
+    def cached_state(self, exclude_fields=None):
         """Wrapper for self._acc_state"""
         state = copy.deepcopy(self._acc_state)
-        self._trim_ee2_state(state, exclude)
+        self._trim_ee2_state(state, exclude_fields)
         return state
 
     def output_state(self, state=None, no_refresh=False) -> dict:
         """
         :param state:   Supplied when the state is queried beforehand from EE2 in bulk,
                         or when it is retrieved from a cache. If not supplied, must be
-                        queried with self.state() or self._internal_state()
+                        queried with self.refresh_state() or self.cached_state()
         :return:        dict, with structure
 
         {
@@ -424,10 +411,10 @@ class Job:
         :rtype: dict
         """
         if not state:
-            state = self._internal_state() if no_refresh else self.state()
+            state = self.cached_state() if no_refresh else self.refresh_state()
         else:
-            self._update_state(state)
-            state = self._internal_state()
+            self.update_state(state)
+            state = self.cached_state()
 
         if state is None:
             return self._create_error_state(
@@ -475,10 +462,10 @@ class Job:
         from biokbase.narrative.widgetmanager import WidgetManager
 
         if not state:
-            state = self.state()
+            state = self.refresh_state()
         else:
-            self._update_state(state)
-            state = self._internal_state()
+            self.update_state(state)
+            state = self.cached_state()
 
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
@@ -541,7 +528,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line : first_line + num_lines],
+            self._job_logs[first_line: first_line + num_lines],
         )
 
     def _update_log(self):
@@ -611,7 +598,7 @@ class Job:
         print(f"Version: {spec['info']['ver']}")
 
         try:
-            state = self.state()
+            state = self.refresh_state()
             print(f"Status: {state['status']}")
             print("Inputs:\n------")
             pprint(self.params)
@@ -631,7 +618,7 @@ class Job:
         """
         output_widget_info = None
         try:
-            state = self.state()
+            state = self.refresh_state()
             spec = self.app_spec()
             if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)

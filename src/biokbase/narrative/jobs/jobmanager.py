@@ -14,6 +14,7 @@ from biokbase.narrative.exception_util import (
 )
 
 from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
+from .util import time_ns
 
 """
 KBase Job Manager
@@ -29,13 +30,15 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 JOB_NOT_REG_ERR = "Job ID is not registered"
+JOB_NOT_REG_2_ERR = "Cannot find job with ID %s"  # TODO unify these
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-DOES_NOT_EXIST = "does_not_exist"
+
+NO_UPDATED_JOBS_ERR = "No updated jobs"
 
 
 class JobManager:
@@ -307,10 +310,16 @@ class JobManager:
             # fill in the output states for the missing jobs
             # if the job fetch failed, add an error message to the output
             # and return the cached job state
+            now = time_ns()
             for job_id in jobs_to_lookup:
                 job = self.get_job(job_id)
                 if job_id in fetched_states:
-                    output_states[job_id] = job.output_state(fetched_states[job_id])
+                    fetched_state = fetched_states[job_id]
+                    # pre-emptively try a job state update
+                    # so can mark the set of fetched (but also changed) states
+                    # with a simultaneous timestamp
+                    job.update_state(fetched_state, now)
+                    output_states[job_id] = job.output_state(fetched_state)
                 else:
                     # fetch the current state without updating it
                     output_states[job_id] = job.output_state({})
@@ -322,7 +331,7 @@ class JobManager:
     def get_job_states(self, job_ids: List[str], ts: int = None) -> dict:
         """
         Retrieves the job states for the supplied job_ids, with the option to
-        replace any jobs that have not been updated since ts with a short stub
+        remove any jobs that have not been updated since ts
 
         Jobs that cannot be found in the `_running_jobs` index will return
         {
@@ -340,7 +349,22 @@ class JobManager:
         """
         job_ids, error_ids = self._check_job_list(job_ids)
         output_states = self._construct_job_output_state_set(job_ids)
-        return self.add_errors_to_results(output_states, error_ids)
+
+        if ts is not None:
+            for job_id in job_ids:
+                if self.get_job(job_id).last_updated < ts:
+                    del output_states[job_id]
+        no_updated_jobs = ts is not None and job_ids and not output_states
+
+        # add error_ids first in the unlikely case one of the error_ids
+        # is "error" which is a reserved key which is prioritized
+        # for indicating an actual error event
+        self.add_errors_to_results(output_states, error_ids)
+
+        if no_updated_jobs:
+            output_states["error"] = {"error": NO_UPDATED_JOBS_ERR}
+
+        return output_states
 
     def get_all_job_states(self, ignore_refresh_flag=False) -> dict:
         """
@@ -719,7 +743,7 @@ class JobManager:
         for error_id in error_ids:
             results[error_id] = {
                 "job_id": error_id,
-                "error": f"Cannot find job with ID {error_id}",
+                "error": JOB_NOT_REG_2_ERR % error_id,
             }
         return results
 

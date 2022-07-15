@@ -161,9 +161,9 @@ job = AppManager().run_app(
 import time
 import pprint
 import json
-while job.state()['job_state'] not in ['completed', 'suspend']:
+while job.refresh_state()['job_state'] not in ['completed', 'suspend']:
     time.sleep(5)
-job_result = job.state()
+job_result = job.refresh_state()
 if job_result['job_state'] != 'completed':
     print "Failed - job did not complete: " + ",".join(job_result['status'][0:3])
 else:

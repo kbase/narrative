@@ -13,6 +13,7 @@ from biokbase.narrative.jobs.job import (
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTR_DEFAULTS,
     JOB_ATTRS,
+    ALL_ATTRS,
     Job,
 )
 from biokbase.narrative.jobs.jobmanager import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
@@ -212,7 +213,9 @@ class JobTest(unittest.TestCase):
                 with mock.patch(CLIENTS, get_mock_client):
                     self.assertEqual(value, getattr(job, name))
             else:
-                with assert_obj_method_called(MockClients, "check_job", call_status=False):
+                with assert_obj_method_called(
+                    MockClients, "check_job", call_status=False
+                ):
                     self.assertEqual(value, getattr(job, name))
 
     def test_job_init__error_no_job_id(self):
@@ -316,8 +319,27 @@ class JobTest(unittest.TestCase):
         job = Job(test_job)
         self.check_job_attrs_custom(job, expected)
 
+    def test_set_job_attrs(self):
+        """
+        test that job attributes cannot be set directly
+        """
+        job = create_job_from_ee2(JOB_COMPLETED)
+        expected = create_state_from_ee2(JOB_COMPLETED)
+        # job is completed so refresh_state will do nothing
+        self.assertEqual(job.refresh_state(), expected)
+
+        for attr in ALL_ATTRS:
+            with self.assertRaisesRegex(
+                AttributeError,
+                "Job attributes must be updated using the `update_state` method",
+            ):
+                setattr(job, attr, "BLAM!")
+
+        # ensure nothing has changed
+        self.assertEqual(job.refresh_state(), expected)
+
     @mock.patch(CLIENTS, get_mock_client)
-    def test_state__non_terminal(self):
+    def test_refresh_state__non_terminal(self):
         """
         test that a job outputs the correct state
         """
@@ -331,7 +353,7 @@ class JobTest(unittest.TestCase):
         expected_state = create_state_from_ee2(JOB_CREATED)
         self.assertEqual(state, expected_state)
 
-    def test_state__terminal(self):
+    def test_refresh_state__terminal(self):
         """
         test that a completed job emits its state without calling check_job
         """
@@ -345,7 +367,7 @@ class JobTest(unittest.TestCase):
             self.assertEqual(state, expected)
 
     @mock.patch(CLIENTS, get_failing_mock_client)
-    def test_state__raise_exception(self):
+    def test_refresh_state__raise_exception(self):
         """
         test that the correct exception is thrown if check_job cannot be called
         """
@@ -354,7 +376,7 @@ class JobTest(unittest.TestCase):
         with self.assertRaisesRegex(ServerError, "check_job failed"):
             job.refresh_state()
 
-    def test_state__returns_none(self):
+    def test_refresh_state__returns_none(self):
         def mock_state(self, state=None):
             return None
 

@@ -206,14 +206,16 @@ class JobTest(unittest.TestCase):
         attrs = create_attrs_from_ee2(job_id)
         attrs.update(exp_attrs)
 
-        # Mock here because job.child_jobs and job.retry_ids can
-        # cause EE2 query
-        with mock.patch(CLIENTS, get_mock_client):
-            for name, value in attrs.items():
-                self.assertEqual(value, getattr(job, name))
+        for name, value in attrs.items():
+            if name in ["child_jobs", "retry_ids"]:
+                # job.child_jobs and job.retry_ids may query EE2
+                with mock.patch(CLIENTS, get_mock_client):
+                    self.assertEqual(value, getattr(job, name))
+            else:
+                with assert_obj_method_called(MockClients, "check_job", call_status=False):
+                    self.assertEqual(value, getattr(job, name))
 
     def test_job_init__error_no_job_id(self):
-
         with self.assertRaisesRegex(
             ValueError, "Cannot create a job without a job ID!"
         ):
@@ -506,7 +508,7 @@ class JobTest(unittest.TestCase):
         job = Job(job_state)
         self.assertIsNotNone(job.params)
 
-        with assert_obj_method_called(MockClients, "get_job_params", call_status=False):
+        with assert_obj_method_called(MockClients, "check_job", call_status=False):
             params = job.parameters()
             self.assertIsNotNone(params)
             self.assertEqual(params, job_params)
@@ -526,8 +528,9 @@ class JobTest(unittest.TestCase):
         job = Job(job_state)
         self.assertEqual(job.params, JOB_ATTR_DEFAULTS["params"])
 
-        params = job.parameters()
-        self.assertEqual(params, job_params)
+        with assert_obj_method_called(MockClients, "check_job", call_status=True):
+            params = job.parameters()
+            self.assertEqual(params, job_params)
 
     @mock.patch(CLIENTS, get_failing_mock_client)
     def test_parameters__param_fetch_fail(self):

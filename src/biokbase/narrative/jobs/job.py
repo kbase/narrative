@@ -79,6 +79,7 @@ JOB_INPUT_ATTRS = [
     "app_version",
     "params",
 ]
+ALL_ATTRS = list(set(JOB_ATTRS + JOB_INPUT_ATTRS + NARR_CELL_INFO_ATTRS))
 STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_ATTRS))
 
 
@@ -239,10 +240,10 @@ class Job:
         return attr[name]()
 
     def __setattr__(self, name, value):
-        if name in STATE_ATTRS:
-            self.update_state({name: value})
-        else:
-            object.__setattr__(self, name, value)
+        if name in ALL_ATTRS:
+            raise AttributeError("Job attributes must be updated using the `update_state` method")
+
+        object.__setattr__(self, name, value)
 
     @property
     def app_name(self):
@@ -292,15 +293,14 @@ class Job:
         if that's None, then it makes a call to EE2.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
-        object fetched from ee2.get_job_params
+        object fetched from ee2.check_job
         """
         if self.params is not None:
             return self.params
         else:
             try:
-                self.params = clients.get("execution_engine2").get_job_params(
-                    self.job_id
-                )["params"]
+                state = self.query_ee2_state(self.job_id, init=True)
+                self.update_state(state)
                 return self.params
             except Exception as e:
                 raise Exception(

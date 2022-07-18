@@ -142,7 +142,7 @@
         "handlebars": "^4.7.7",
         "jquery": "2.2.4",
         "jquery-nearest": "1.4.0",
-        "jquery-ui": "^1.13.1",
+        "jquery-ui": "^1.13.2",
         "jquery.tipsy": "1.0.3",
         "js-yaml": "3.14.1",
         "kbase-common-js": "https://github.com/kbase/kbase-common-js/archive/refs/tags/v2.16.0.tar.gz",

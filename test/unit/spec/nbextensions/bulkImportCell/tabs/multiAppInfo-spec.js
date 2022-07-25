@@ -5,7 +5,7 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/multiAppInfo', 'common/prop
 ) => {
     'use strict';
 
-    fdescribe('The multi-app info tab', () => {
+    describe('The multi-app info tab', () => {
         describe('module', () => {
             it('exposes a constructor', () => {
                 expect(MultiAppInfoWidget.make).toEqual(jasmine.any(Function));

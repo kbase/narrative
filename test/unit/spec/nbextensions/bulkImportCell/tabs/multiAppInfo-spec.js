@@ -5,7 +5,7 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/multiAppInfo', 'common/prop
 ) => {
     'use strict';
 
-    describe('The multi-app info tab', () => {
+    fdescribe('The multi-app info tab', () => {
         describe('module', () => {
             it('exposes a constructor', () => {
                 expect(MultiAppInfoWidget.make).toEqual(jasmine.any(Function));
@@ -147,6 +147,94 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/multiAppInfo', 'common/prop
                     ['toggled-active-filetype', { fileType: 'FILE_TYPE_TWO' }],
                     ['toggled-active-filetype', { fileType: 'FILE_TYPE_THREE' }],
                 ]);
+            });
+        });
+
+        describe('Mode icon display', () => {
+            function buildOptions(cellState) {
+                const bus = {
+                    emit: () => {
+                        /* do nowt */
+                    },
+                };
+                const fileTypesDisplay = {
+                    FILE_TYPE_ONE: { label: 'file type one' },
+                };
+
+                const model = Props.make({
+                    data: {
+                        state: {
+                            selectedFileType: 'FILE_TYPE_ONE',
+                            params: {
+                                FILE_TYPE_ONE: 'complete',
+                            },
+                            state: cellState,
+                        },
+                        inputs: {
+                            FILE_TYPE_ONE: {
+                                appId: 'APP_ONE_ID',
+                            },
+                        },
+                        app: {
+                            specs: {
+                                APP_ONE_ID: {
+                                    full_info: {},
+                                    parameters: [],
+                                },
+                            },
+                        },
+                    },
+                });
+
+                return {
+                    bus,
+                    fileTypesDisplay,
+                    model,
+                };
+            }
+
+            // const iconCases = ['editingComplete', 'editingIncomplete'];
+            // const noIconCases = ['launching', 'inProgress', 'inProgressResultsAvailable', 'jobsFinishedResultsAvailable', 'jobsFinished', 'error'];
+            const iconTestCases = {
+                editingComplete: true,
+                editingIncomplete: true,
+                launching: false,
+                inProgress: false,
+                inProgressResultsAvailable: false,
+                jobsFinishedResultsAvailable: false,
+                jobsFinished: false,
+                error: false,
+            };
+
+            let container;
+
+            beforeEach(() => {
+                container = document.createElement('div');
+            });
+
+            afterEach(() => {
+                container.remove();
+            });
+
+            Object.keys(iconTestCases).forEach((testCase) => {
+                const withIcon = iconTestCases[testCase];
+                it(`${withIcon ? 'shows' : 'does not show'} a file type icon when ${
+                    !withIcon ? 'not' : ''
+                } in editing states`, async () => {
+                    const widgetInstance = MultiAppInfoWidget.make(buildOptions(testCase));
+                    await widgetInstance.start({ node: container });
+                    const filePanelButtons = container.querySelectorAll(
+                        '.kb-bulk-import-info__panel--filetype button'
+                    );
+                    for (const fpButton of filePanelButtons) {
+                        const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
+                        const hasCheck = icon.classList.contains('fa-check');
+                        const hasExclamation = icon.classList.contains('fa-exclamation');
+                        // if withIcon, should have one of fa-exclamation, fa-check
+                        // otherwise, should have neither
+                        expect(hasCheck || hasExclamation).toBe(withIcon);
+                    }
+                });
             });
         });
     });

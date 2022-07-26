@@ -860,7 +860,7 @@ define([
         for (const [state, expectEval] of Object.entries(iconTestCases)) {
             it(`Should ${
                 iconTestCases[state] ? '' : 'not '
-            } evaluate params when starting in ${state} state`, async () => {
+            }evaluate params when starting in ${state} state`, async () => {
                 // if the cell is starting in a state where we don't expect params to
                 // be evaluated, then the call to initCell will set up these spies.
                 if (!expectEval) {

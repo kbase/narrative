@@ -195,9 +195,7 @@ define([
                     testCase.viewOnly ? 'not ' : ''
                 }validate parameters on startup`, async () => {
                     // set up spy. we hope.
-                    spyOn(AppCellUtil, 'evaluateConfigReadyState').and.returnValue(
-                        Promise.resolve({})
-                    );
+                    spyOn(AppCellUtil, 'evaluateConfigReadyState').and.resolveTo({});
                     await configureWidget.start({ node: container });
                     if (testCase.viewOnly) {
                         expect(AppCellUtil.evaluateConfigReadyState).not.toHaveBeenCalled();

@@ -138,7 +138,7 @@ define([
         });
     }
 
-    describe('The bulk import cell module', () => {
+    fdescribe('The bulk import cell module', () => {
         let runtime;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -846,5 +846,49 @@ define([
                 });
             });
         });
+
+        const iconTestCases = {
+            editingComplete: true,
+            editingIncomplete: true,
+            launching: false,
+            inProgress: false,
+            inProgressResultsAvailable: false,
+            jobsFinishedResultsAvailable: false,
+            jobsFinished: false,
+            error: false,
+        };
+        for (const [state, expectEval] of Object.entries(iconTestCases)) {
+            it(`Should ${
+                iconTestCases[state] ? '' : 'not '
+            }evaluate params when starting in ${state} state`, async () => {
+                // if the cell is starting in a state where we don't expect params to
+                // be evaluated, then the call to initCell will set up these spies.
+                if (!expectEval) {
+                    spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
+                    spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({});
+                }
+                const { cell } = initCell({
+                    state,
+                    selectedTab: expectEval ? 'configure' : 'viewConfigure',
+                    deleteJobData: expectEval,
+                });
+
+                await TestUtil.waitForElementState(cell.element[0], () => {
+                    // just make sure that the configure tab has rendered, in either its normal or view only
+                    // forms.
+                    return !!cell.element[0].querySelector(
+                        '.kb-bulk-import-configure__panel--configure'
+                    );
+                });
+
+                if (expectEval) {
+                    expect(BulkImportUtil.getMissingFiles).toHaveBeenCalled();
+                    expect(BulkImportUtil.evaluateConfigReadyState).toHaveBeenCalled();
+                } else {
+                    expect(BulkImportUtil.getMissingFiles).not.toHaveBeenCalled();
+                    expect(BulkImportUtil.evaluateConfigReadyState).not.toHaveBeenCalled();
+                }
+            });
+        }
     });
 });

@@ -162,46 +162,34 @@ define([
                 });
         });
 
-        it('should show icons when not in view only mode', async () => {
-            const panel = FileTypePanel.make({
-                bus: Runtime.make().bus(),
-                fileTypes,
-                header,
-                toggleAction: () => {},
-                viewOnly: false,
-            });
-            await panel.start({
-                node: container,
-                state: {},
-            });
-            for (const fpButton of container.querySelectorAll(
-                '.kb-filetype-panel__filetype_button'
-            )) {
-                const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
-                expect(icon.classList.contains('fa-exclamation')).toBeTrue();
-            }
-        });
-
-        it('should not show icons while in view only mode', async () => {
-            const panel = FileTypePanel.make({
-                bus: Runtime.make().bus(),
-                fileTypes,
-                header,
-                toggleAction: () => {},
-                viewOnly: true,
-            });
-            await panel.start({
-                node: container,
-                state: {},
-            });
-            for (const fpButton of container.querySelectorAll(
-                '.kb-filetype-panel__filetype_button'
-            )) {
-                const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
-                ['exclamation', 'check'].forEach((iconType) => {
-                    expect(icon.classList.contains(`fa-${iconType}`)).toBeFalse();
+        [true, false].forEach((viewOnly) => {
+            it(`should${viewOnly ? ' not' : ''} show icons when${
+                viewOnly ? '' : ' not'
+            } in view only mode`, async () => {
+                const panel = FileTypePanel.make({
+                    bus: Runtime.make().bus(),
+                    fileTypes,
+                    header,
+                    toggleAction: () => {},
+                    viewOnly,
                 });
-            }
+                await panel.start({
+                    node: container,
+                    state: {},
+                });
+                for (const fpButton of container.querySelectorAll(
+                    '.kb-filetype-panel__filetype_button'
+                )) {
+                    const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
+                    if (viewOnly) {
+                        ['exclamation', 'check'].forEach((iconType) => {
+                            expect(icon.classList.contains(`fa-${iconType}`)).toBeFalse();
+                        });
+                    } else {
+                        expect(icon.classList.contains('fa-exclamation')).toBeTrue();
+                    }
+                }
+            });
         });
     });
 });

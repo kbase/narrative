@@ -29,13 +29,13 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 JOB_NOT_REG_ERR = "Job ID is not registered"
+JOB_NOT_REG_2_ERR = "Cannot find job with ID %s"  # TODO unify these
 JOB_NOT_BATCH_ERR = "Job ID is not for a batch job"
 
 JOBS_TYPE_ERR = "List expected for job_id_list"
 JOBS_MISSING_ERR = "No valid job IDs provided"
 
 CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
-DOES_NOT_EXIST = "does_not_exist"
 
 
 class JobManager:
@@ -321,8 +321,7 @@ class JobManager:
 
     def get_job_states(self, job_ids: List[str], ts: int = None) -> dict:
         """
-        Retrieves the job states for the supplied job_ids, with the option to
-        replace any jobs that have not been updated since ts with a short stub
+        Retrieves the job states for the supplied job_ids.
 
         Jobs that cannot be found in the `_running_jobs` index will return
         {
@@ -719,7 +718,7 @@ class JobManager:
         for error_id in error_ids:
             results[error_id] = {
                 "job_id": error_id,
-                "error": f"Cannot find job with ID {error_id}",
+                "error": JOB_NOT_REG_2_ERR % error_id,
             }
         return results
 

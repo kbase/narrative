@@ -193,8 +193,6 @@ define(['/narrative/nbextensions/bulkImportCell/tabs/multiAppInfo', 'common/prop
                 };
             }
 
-            // const iconCases = ['editingComplete', 'editingIncomplete'];
-            // const noIconCases = ['launching', 'inProgress', 'inProgressResultsAvailable', 'jobsFinishedResultsAvailable', 'jobsFinished', 'error'];
             const iconTestCases = {
                 editingComplete: true,
                 editingIncomplete: true,

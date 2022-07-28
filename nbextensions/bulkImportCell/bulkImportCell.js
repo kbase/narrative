@@ -777,10 +777,11 @@ define([
                     if (updatedReadyState) {
                         model.setItem(['state', 'params'], readyState);
                     }
-                    if (curState.state === 'launching') {
+                    if (curState.state === 'launching' && !developerMode) {
                         // TODO: if the cell has got stuck in 'launching' mode,
                         // we should get jobs by cell_id
                         // for now, reset the cell to 'editingComplete'
+                        // if we're in devMode, leave it as is for debugging.
                         newState = 'editingComplete';
                     }
 

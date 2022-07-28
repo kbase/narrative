@@ -12,7 +12,6 @@ define([
     'util/string',
     'util/display',
     'util/timeFormat',
-    'util/icon',
     'kbase-client-api',
     'kb_service/client/workspace',
     'kb_common/jsonRpc/genericClient',
@@ -39,7 +38,6 @@ define([
     StringUtil,
     DisplayUtil,
     TimeFormat,
-    Icon,
     kbase_client_api,
     Workspace,
     GenericClient,
@@ -80,7 +78,6 @@ define([
         maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
-        $searchInput: null,
         $filterTypeSelect: null,
         availableTypes: {},
         $searchDiv: null,
@@ -479,10 +476,6 @@ define([
                 .then(() => {
                     this.showLoading('Rendering data...');
                     const numObj = Object.keys(this.dataObjects).length;
-                    if (numObj > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
-                        this.$searchInput.off('input');
-                    }
-
                     if (numObj <= this.options.max_objs_to_prevent_initial_sort) {
                         this.viewOrder.sort((a, b) => {
                             const idA = a.objId,
@@ -2009,7 +2002,7 @@ define([
         },
 
         pluralize(word, count) {
-            if (count > 0) {
+            if (count !== 1) {
                 return `${word}s`;
             }
             return word;

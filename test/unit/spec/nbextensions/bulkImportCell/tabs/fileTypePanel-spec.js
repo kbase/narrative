@@ -161,5 +161,35 @@ define([
                     // so it doesn't dangle.
                 });
         });
+
+        [true, false].forEach((viewOnly) => {
+            it(`should${viewOnly ? ' not' : ''} show icons when${
+                viewOnly ? '' : ' not'
+            } in view only mode`, async () => {
+                const panel = FileTypePanel.make({
+                    bus: Runtime.make().bus(),
+                    fileTypes,
+                    header,
+                    toggleAction: () => {},
+                    viewOnly,
+                });
+                await panel.start({
+                    node: container,
+                    state: {},
+                });
+                for (const fpButton of container.querySelectorAll(
+                    '.kb-filetype-panel__filetype_button'
+                )) {
+                    const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
+                    if (viewOnly) {
+                        ['exclamation', 'check'].forEach((iconType) => {
+                            expect(icon.classList.contains(`fa-${iconType}`)).toBeFalse();
+                        });
+                    } else {
+                        expect(icon.classList.contains('fa-exclamation')).toBeTrue();
+                    }
+                }
+            });
+        });
     });
 });

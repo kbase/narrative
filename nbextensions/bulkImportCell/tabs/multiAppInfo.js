@@ -44,11 +44,16 @@ define([
             for (const [fileType, status] of Object.entries(readyState)) {
                 fileTypeCompleted[fileType] = status === 'complete';
             }
-
+            const viewOnlyFileType = !['editingComplete', 'editingIncomplete'].includes(
+                model.getItem('state.state')
+            );
             const layout = renderLayout();
             container.innerHTML = layout;
             const fileTypeNode = ui.getElement('filetype-panel');
-            const initPromises = [buildFileTypePanel(fileTypeNode), startInfoTab()];
+            const initPromises = [
+                buildFileTypePanel(fileTypeNode, viewOnlyFileType),
+                startInfoTab(),
+            ];
             return Promise.all(initPromises);
         }
 
@@ -90,8 +95,10 @@ define([
          * Builds the file type panel (the left column); the right column will be app info
          *
          * @param {DOMElement} node - the node that should be used for the left column
+         * @param {boolean} viewOnly - if true, should start the left column in view only mode, with
+         *  no ready state icons.
          */
-        function buildFileTypePanel(node) {
+        function buildFileTypePanel(node, viewOnly) {
             fileTypePanel = FileTypePanel.make({
                 bus,
                 header: {
@@ -100,6 +107,7 @@ define([
                 },
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
+                viewOnly,
             });
 
             return fileTypePanel.start({

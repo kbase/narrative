@@ -328,11 +328,13 @@ define([
         }
 
         function syncDataModel() {
-            // map structure of data into an array of parameter objects
-            const dataValues = dataModel.rowOrder.map((rowId) => dataModel.rows[rowId].values);
-            paramsBus.emit('sync-data-model', {
-                values: dataValues,
-            });
+            if (!viewOnly) {
+                // map structure of data into an array of parameter objects
+                const dataValues = dataModel.rowOrder.map((rowId) => dataModel.rows[rowId].values);
+                paramsBus.emit('sync-data-model', {
+                    values: dataValues,
+                });
+            }
         }
 
         /**

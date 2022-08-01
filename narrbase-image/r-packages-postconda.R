@@ -1,7 +1,6 @@
 options(repos = c(CRAN = "http://cran.r-project.org/"))
 
 install.packages("devtools")
-install.packages(c("clValid","RXKCD"), type="source", dependencies=TRUE)
 
 install.packages("Rglpk", type="source")  # powerful solver for mixed integer linear programming
 install.packages("goalprog", type="source")  # goal programming

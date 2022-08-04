@@ -9,6 +9,14 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 - DATAUP-762 - fixed bug where previously run cells were showing errors in the View Configure tab
 - DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
 
+Dependency Changes
+- Python dependency updates
+  - cryptography: 36.0.2 -> 37.0.4
+  - markupsafe: 2.1.1 -> 2.0.1
+  - plotly: 5.7.0 -> 5.9.0
+  - rsa: 4.8 -> 4.9
+  - semantic_version: 2.9.0 -> 2.10.0
+
 ### Version 5.1.0
 - PTV-1783 - fixed issue where the previous object revert option was unavailable
 - DATAUP-639 - fix problems with dynamic dropdown app cell input

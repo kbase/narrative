@@ -118,7 +118,7 @@ then
     # ------------------------------
     log "Installing biokbase requirements from src/requirements.txt"
     cd "$NARRATIVE_ROOT_DIR/src"
-    pip --no-cache-dir install -r requirements.txt 2>&1 | tee -a "${logfile}"
+    cat requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1

@@ -4,8 +4,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
+### Version 5.1.1
 - PTV-1798 - fixed issue where invalid component ID was causing data list not to load properly
+- DATAUP-762 - fixed bug where previously run cells were showing errors in the View Configure tab
+- DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
 
 Dependency Changes
 - Python dependency updates
@@ -29,7 +31,6 @@ Dependency Changes
 - DATAUP-751 - add link to staging area docs in the upload tour
 - DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
 - DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
-- DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
 
 Dependency Changes
 - Javascript dependency updates

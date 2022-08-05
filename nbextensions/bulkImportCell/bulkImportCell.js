@@ -739,19 +739,33 @@ define([
                             expectedFiles.add(f);
                         }
                     });
-                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles)).catch(
-                        (error) => {
-                            // if the missing files call fails, just continue.
-                            console.error(
-                                'Unable to fetch missing files from the Staging Service',
-                                error
-                            );
-                        }
-                    );
+                    return expectedFiles;
                 })
-                .then((missingFiles = []) =>
-                    BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
-                )
+                .then((expectedFiles) => {
+                    if (
+                        ['editingIncomplete', 'editingComplete'].includes(
+                            model.getItem('state.state')
+                        )
+                    ) {
+                        return BulkImportUtil.getMissingFiles(Array.from(expectedFiles))
+                            .catch((error) => {
+                                // if the missing files call fails, just continue.
+                                console.error(
+                                    'Unable to fetch missing files from the Staging Service',
+                                    error
+                                );
+                            })
+                            .then((missingFiles = []) =>
+                                BulkImportUtil.evaluateConfigReadyState(
+                                    model,
+                                    specs,
+                                    new Set(missingFiles)
+                                )
+                            );
+                    } else {
+                        return Promise.resolve(model.getItem('state.params'));
+                    }
+                })
                 .then((readyState) => {
                     jobManager.runHandler('modelUpdate');
 
@@ -763,10 +777,11 @@ define([
                     if (updatedReadyState) {
                         model.setItem(['state', 'params'], readyState);
                     }
-                    if (curState.state === 'launching') {
+                    if (curState.state === 'launching' && !developerMode) {
                         // TODO: if the cell has got stuck in 'launching' mode,
                         // we should get jobs by cell_id
                         // for now, reset the cell to 'editingComplete'
+                        // if we're in devMode, leave it as is for debugging.
                         newState = 'editingComplete';
                     }
 

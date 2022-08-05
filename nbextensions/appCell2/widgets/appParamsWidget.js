@@ -39,7 +39,7 @@ define([
         const runtime = Runtime.make(),
             paramsBus = config.bus,
             initialParams = config.initialParams,
-            initialDisplay = config.initialDisplay,
+            initialDisplay = config.initialDisplay || {},
             bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),

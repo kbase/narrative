@@ -7,7 +7,7 @@ DS=$( date +%Y%m%d%H%M )
 NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="6.2"
+NAR_BASE_VER="7.0"
 
 # Get the current branch, so that we can tag images to branch
 BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}

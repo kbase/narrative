@@ -32,12 +32,12 @@ RUN pip install -r /root/image_files/base-pip-requirements.txt
 # KBase scientific computing packages
 RUN pip install -r /root/image_files/kbase-pip-requirements.txt
 
-RUN pip install \
-    ipython==${IPYTHON_VERSION} \
-    notebook==${NOTEBOOK_VERSION} \
-    ipywidgets==${IPYWIDGETS_VERSION}
+# Install Jupyter, Notebook, Ipywidgets
+RUN pip install -r /root/image_files/jupyter-pip-requirements.txt
 
+# Enable the widgets extension
 RUN jupyter nbextension enable --py widgetsnbextension
+RUN jupyter nbextension enable --py --sys-prefix clustergrammer_widget
 
 # JavaScript needs
 RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \

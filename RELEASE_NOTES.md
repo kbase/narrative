@@ -4,7 +4,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
+### Version 5.1.1
+- PTV-1798 - fixed issue where invalid component ID was causing data list not to load properly
+- DATAUP-762 - fixed bug where previously run cells were showing errors in the View Configure tab
+- DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
+
+Dependency Changes
+- Python dependency updates
+  - cryptography: 36.0.2 -> 37.0.4
+  - markupsafe: 2.1.1 -> 2.0.1
+  - plotly: 5.7.0 -> 5.9.0
+  - rsa: 4.8 -> 4.9
+  - semantic_version: 2.9.0 -> 2.10.0
+
+### Version 5.1.0
 - PTV-1783 - fixed issue where the previous object revert option was unavailable
 - DATAUP-639 - fix problems with dynamic dropdown app cell input
   - selected value wasn't being displayed properly after a page reload or cell refresh
@@ -24,7 +37,7 @@ Dependency Changes
   - @wdio/browserstack-service: 7.16.16 -> 7.19.7
   - @wdio/cli: 7.16.16 -> 7.19.6
   - @wdio/local-runner: 7.16.6 -> 7.19.3
-  - @wdio/mocha-framework: 7.16.15 -> 7.19.3
+  - @wdio/mocha-framework: 7.16.15 -> 7.20.0
   - @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
   - @wdio/spec-reporter: 7.16.14 -> 7.19.1
   - autoprefixer: 10.2.6 -> 10.4.5
@@ -32,8 +45,10 @@ Dependency Changes
   - chromedriver: 100.0.0 -> 101.0.0
   - corejs-typeahead: 1.6.1 -> 1.3.1
   - datatables.net: 1.11.3 -> 1.12.1
-  - datatables.net-buttons-bs: 1.4.2 -> 2.2.2
+  - datatables.net-bs 1.11.5 -> 1.12.1
+  - datatables.net-buttons-bs: 1.4.2 -> 2.2.3
   - ejs: 3.1.6 -> 3.1.7
+  - eslint: 8.14.0 -> 8.16.0
   - grunt: 1.4.1 -> 1.5.3
   - grunt-contrib-concat: 1.0.1 -> 2.1.0
   - handlebars: 4.0.5 -> 4.7.7

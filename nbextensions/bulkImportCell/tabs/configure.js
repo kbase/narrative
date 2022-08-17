@@ -96,18 +96,27 @@ define([
             configNode.classList.add('hidden');
             container.appendChild(configNode);
 
-            return Util.getMissingFiles(Array.from(allFiles))
-                .catch((error) => {
-                    // if the missing files call fails, just continue and let the cell render.
-                    console.error('Unable to get missing files from the Staging Service', error);
-                })
-                .then((missingFiles = []) => {
-                    unavailableFiles = new Set(missingFiles);
-                    // Do a validation for all input parameters on all file types
-                    // This is then sent to the fileTypePanel to initialize properly with
-                    // pass or fail for each side, to properly render pass or fail icons.
-                    return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
-                })
+            let startupPromise;
+            if (!viewOnly) {
+                startupPromise = Util.getMissingFiles(Array.from(allFiles))
+                    .catch((error) => {
+                        // if the missing files call fails, just continue and let the cell render.
+                        console.error(
+                            'Unable to get missing files from the Staging Service',
+                            error
+                        );
+                    })
+                    .then((missingFiles = []) => {
+                        unavailableFiles = new Set(missingFiles);
+                        // Do a validation for all input parameters on all file types
+                        // This is then sent to the fileTypePanel to initialize properly with
+                        // pass or fail for each side, to properly render pass or fail icons.
+                        return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
+                    });
+            } else {
+                startupPromise = Promise.resolve({});
+            }
+            return startupPromise
                 .then((readyState) => {
                     ui = UI.make({ node: container });
 
@@ -326,6 +335,7 @@ define([
                 },
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
+                viewOnly,
             });
             const state = getFileTypeState(readyState);
 
@@ -407,9 +417,11 @@ define([
                 selectedFileType,
                 'Parent comm bus for parameters widget'
             );
-            paramBus.on('parameter-changed', (message) => {
-                updateModelParameterValue(selectedFileType, PARAM_TYPE, message);
-            });
+            if (!viewOnly) {
+                paramBus.on('parameter-changed', (message) => {
+                    updateModelParameterValue(selectedFileType, PARAM_TYPE, message);
+                });
+            }
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
@@ -449,9 +461,11 @@ define([
                 selectedFileType,
                 'Parent comm bus for filePath widget'
             );
-            paramBus.on('parameter-changed', (message) => {
-                updateModelParameterValue(selectedFileType, FILE_PATH_TYPE, message);
-            });
+            if (!viewOnly) {
+                paramBus.on('parameter-changed', (message) => {
+                    updateModelParameterValue(selectedFileType, FILE_PATH_TYPE, message);
+                });
+            }
 
             paramBus.on('sync-data-model', (message) => {
                 if (message.values) {

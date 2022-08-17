@@ -24,8 +24,12 @@ function console () {
 
 # Install Narrative requirements
 # ------------------------------
-# console "Installing biokbase requirements from src/requirements.txt"
-# pip install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
+# install deps one at a time so that pip gets all the dependencies correctly
+console "Installing biokbase requirements from src/requirements.txt"
+cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
+
+# overwrite existing pyyaml installation (from distutils, so pip cannot uninstall it)
+pip install --ignore-installed -r $NARRATIVE_ROOT_DIR/src/requirements-ignore-installed.txt
 
 # Install sklearn and clustergrammer
 # ------------------------------
@@ -41,6 +45,9 @@ cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"
 ${PYTHON} setup.py install
 console "Done installing biokbase."
+
+pip list --local
+
 cd $NARRATIVE_ROOT_DIR
 
 # Setup jupyter_narrative script

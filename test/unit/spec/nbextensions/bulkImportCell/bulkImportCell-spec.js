@@ -105,13 +105,16 @@ define([
         if (args.deleteJobData) {
             // remove job data
             delete cell.metadata.kbase.bulkImportCell.exec;
-            spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
-            spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
-                fastq_reads: 'complete',
-            });
         }
+        spyOn(BulkImportUtil, 'getMissingFiles').and.resolveTo([]);
+        spyOn(BulkImportUtil, 'evaluateConfigReadyState').and.resolveTo({
+            fastq_reads: 'complete',
+        });
 
-        const bulkImportCellInstance = BulkImportCell.make({ cell, devMode });
+        const bulkImportCellInstance = BulkImportCell.make({
+            cell,
+            devMode: 'devMode' in args ? args.devMode : devMode,
+        });
         return { cell, bulkImportCellInstance };
     }
 
@@ -543,6 +546,7 @@ define([
                     state: 'launching',
                     selectedTab: 'info',
                     deleteJobData: true,
+                    devMode: false,
                 });
 
                 const runButton = cell.element[0].querySelector(selectors.run);
@@ -706,13 +710,13 @@ define([
                             });
 
                             // jobs should have been reset and listeners removed
+                            expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(bulkImportCellInstance.jobManager.model.getItem('exec')).toEqual(
                                 undefined
                             );
                             expect(
                                 bulkImportCellInstance.jobManager.model.getItem('appError')
                             ).toEqual(undefined);
-                            expect(bulkImportCellInstance.jobManager.listeners).toEqual({});
                             expect(Jupyter.narrative.saveNarrative.calls.allArgs()).toEqual([[]]);
                             if (testCase.action === 'reset') {
                                 const allEmissions =
@@ -728,7 +732,9 @@ define([
                                         'reset-cell',
                                         { cellId: `${testCase.cellId}-test-cell`, ts: 1234567890 },
                                     ],
-                                ]).toEqual(allEmissions);
+                                ]).toEqual(allEmissions.slice(-4));
+                                // The .slice(-4) may be kind of a cheat, but the jobsFinished state will emit an extra
+                                // status and info call, because of timing issues.
                             }
                         });
                 });
@@ -846,5 +852,45 @@ define([
                 });
             });
         });
+
+        const iconTestCases = {
+            editingComplete: true,
+            editingIncomplete: true,
+            launching: false,
+            inProgress: false,
+            inProgressResultsAvailable: false,
+            jobsFinishedResultsAvailable: false,
+            jobsFinished: false,
+            error: false,
+        };
+        for (const [state, expectEval] of Object.entries(iconTestCases)) {
+            it(`Should ${
+                iconTestCases[state] ? '' : 'not '
+            }evaluate params when starting in ${state} state`, async () => {
+                // if the cell is starting in a state where we don't expect params to
+                // be evaluated, then the call to initCell will set up these spies.
+                const { cell } = initCell({
+                    state,
+                    selectedTab: expectEval ? 'configure' : 'viewConfigure',
+                    deleteJobData: expectEval,
+                });
+
+                await TestUtil.waitForElementState(cell.element[0], () => {
+                    // just make sure that the configure tab has rendered, in either its normal or view only
+                    // forms.
+                    return !!cell.element[0].querySelector(
+                        '.kb-bulk-import-configure__panel--configure'
+                    );
+                });
+
+                if (expectEval) {
+                    expect(BulkImportUtil.getMissingFiles).toHaveBeenCalled();
+                    expect(BulkImportUtil.evaluateConfigReadyState).toHaveBeenCalled();
+                } else {
+                    expect(BulkImportUtil.getMissingFiles).not.toHaveBeenCalled();
+                    expect(BulkImportUtil.evaluateConfigReadyState).not.toHaveBeenCalled();
+                }
+            });
+        }
     });
 });

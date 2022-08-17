@@ -5,10 +5,22 @@ define([
     'common/props',
     'common/spec',
     'common/ui',
+    'util/appCellUtil',
     'testUtil',
     'narrativeMocks',
     '/test/data/testBulkImportObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, UI, TestUtil, Mocks, TestBulkImportObject) => {
+], (
+    ConfigureTab,
+    Jupyter,
+    Runtime,
+    Props,
+    Spec,
+    UI,
+    AppCellUtil,
+    TestUtil,
+    Mocks,
+    TestBulkImportObject
+) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -125,44 +137,72 @@ define([
                 label: 'view',
             },
         ].forEach((testCase) => {
-            it(`should start in ${testCase.label} mode`, () => {
-                const model = Props.make({
-                    data: Object.assign({}, TestBulkImportObject, { state: initialState }),
-                    onUpdate: () => {
-                        /* intentionally left blank */
-                    },
-                });
-                const configure = testCase.widget.make({
-                    bus,
-                    model,
-                    specs,
-                    typesToFiles,
-                    fileTypesDisplay,
-                    fileTypeMapping,
+            describe(`${testCase.label} mode`, () => {
+                let configureWidget;
+                beforeEach(() => {
+                    const model = Props.make({
+                        data: Object.assign({}, TestBulkImportObject, { state: initialState }),
+                        onUpdate: () => {
+                            /* intentionally left blank */
+                        },
+                    });
+                    configureWidget = testCase.widget.make({
+                        bus,
+                        model,
+                        specs,
+                        typesToFiles,
+                        fileTypesDisplay,
+                        fileTypeMapping,
+                    });
                 });
 
-                return configure
-                    .start({
-                        node: container,
-                    })
-                    .then(() => {
-                        // just make sure it renders the "File Paths" and "Parameters" headers
-                        expect(container.innerHTML).toContain('Parameters');
-                        expect(container.innerHTML).toContain('File Paths');
-                        const inputForm = container.querySelector(
-                            '[data-parameter="import_type"] select[data-element="input"]'
-                        );
-                        expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
-                        spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
-                        const xsvButton = container.querySelector(
-                            '.kb-bulk-import-configure__button--generate-template'
-                        );
-                        // click on the button to check it functions correctly
-                        xsvButton.click();
-                        expect(xsvButton.textContent).toContain('Create Import Template');
-                        expect(UI.showConfirmDialog).toHaveBeenCalled();
-                        return configure.stop();
-                    });
+                it(`should start in ${testCase.label} mode`, async () => {
+                    await configureWidget.start({ node: container });
+                    // just make sure it renders the "File Paths" and "Parameters" headers
+                    expect(container.innerHTML).toContain('Parameters');
+                    expect(container.innerHTML).toContain('File Paths');
+                    const inputForm = container.querySelector(
+                        '[data-parameter="import_type"] select[data-element="input"]'
+                    );
+                    expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
+                    spyOn(UI, 'showConfirmDialog').and.resolveTo(false);
+                    const xsvButton = container.querySelector(
+                        '.kb-bulk-import-configure__button--generate-template'
+                    );
+                    // click on the button to check it functions correctly
+                    xsvButton.click();
+                    expect(xsvButton.textContent).toContain('Create Import Template');
+                    expect(UI.showConfirmDialog).toHaveBeenCalled();
+                    await configureWidget.stop();
+                });
+
+                it(`should ${testCase.viewOnly ? 'not ' : ''}show file type icons`, async () => {
+                    await configureWidget.start({ node: container });
+                    const filePanelButtons = container.querySelectorAll(
+                        '.kb-bulk-import-configure__panel--filetype button'
+                    );
+                    for (const fpButton of filePanelButtons) {
+                        const icon = fpButton.querySelector('.kb-filetype-panel__filetype_icon');
+                        const hasCheck = icon.classList.contains('fa-check');
+                        const hasExclamation = icon.classList.contains('fa-exclamation');
+                        // if withIcon, should have one of fa-exclamation, fa-check
+                        // otherwise, should have neither
+                        expect(hasCheck || hasExclamation).toBe(!testCase.viewOnly);
+                    }
+                });
+
+                it(`should ${
+                    testCase.viewOnly ? 'not ' : ''
+                }validate parameters on startup`, async () => {
+                    // set up spy. we hope.
+                    spyOn(AppCellUtil, 'evaluateConfigReadyState').and.resolveTo({});
+                    await configureWidget.start({ node: container });
+                    if (testCase.viewOnly) {
+                        expect(AppCellUtil.evaluateConfigReadyState).not.toHaveBeenCalled();
+                    } else {
+                        expect(AppCellUtil.evaluateConfigReadyState).toHaveBeenCalled();
+                    }
+                });
             });
         });
 

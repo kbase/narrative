@@ -10,6 +10,7 @@ ENV TAR /bin/tar
 # Install Base libraries, Node, R and Jupyter Notebook and ipywidgets from distinct channels
 ADD ./conda-requirements /root/conda
 ADD ./ /root/image_files
+RUN mkdir -p /kb/deployment/bin
 
 # A gamut of basic requirements in Debian
 RUN apt-get update && \
@@ -20,6 +21,7 @@ RUN apt-get update && \
     curl \
     libcurl4-openssl-dev \
     libssl-dev \
+    git \
     # for ete3 / etetoolkit
     python3-pyqt5 \
     # for R and CRAN installations
@@ -45,6 +47,11 @@ RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
 
 # R requirements
 
+# Install Dockerize
+RUN	curl -LJO https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && \
+    tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && \
+    mv dockerize /kb/deployment/bin && \
+    rm dockerize-linux-amd64-v0.6.1.tar.gz
 
 # RUN mkdir -p /kb/installers && \
 #     # run conda installs

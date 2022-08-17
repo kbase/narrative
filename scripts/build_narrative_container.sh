@@ -88,6 +88,7 @@ docker build -t $NAR_NAME:$NARRATIVE_VER \
                 --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
                 --build-arg BRANCH=$BRANCH \
                 --build-arg SKIP_MINIFY=$SKIP_MINIFY \
+                --progress plain \
                 .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
 

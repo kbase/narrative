@@ -387,7 +387,7 @@ define([
                                     }
                                 }
                             }
-                        } else if (paramDisplay[fileType]) {
+                        } else if (paramDisplay && paramDisplay[fileType]) {
                             // special display value from a dynamic dropdown
                             try {
                                 const displayParam =

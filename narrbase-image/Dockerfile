@@ -17,7 +17,7 @@ RUN apt-get update && \
     apt-get install -y \
     gfortran \
     gnupg \
-    # for pycurl
+    # for pycurl, r-curl
     curl \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -25,6 +25,19 @@ RUN apt-get update && \
     # for ete3 / etetoolkit
     python3-pyqt5 \
     # for R and CRAN installations
+    libxml2 \
+    libxml2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    glpk-utils \
+    libglpk-dev \
+    glpk-doc \
+    cmake \
     r-base r-base-dev
 
 # Python dependencies
@@ -46,6 +59,7 @@ RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
     apt-get install -y nodejs
 
 # R requirements
+RUN R --vanilla < /root/image_files/install-r-packages.R
 
 # Install Dockerize
 RUN	curl -LJO https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && \

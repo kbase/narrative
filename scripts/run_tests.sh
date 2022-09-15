@@ -66,7 +66,7 @@ while :; do
         kill $bg_pid
         exit 127
     fi
-    if grep -q "The Jupyter Notebook is running at:" $OUTPUT_FILE; then
+    if grep -q "Jupyter Notebook.*is running at:" $OUTPUT_FILE; then
         # exit the loop once the string has been found
         echo "narrative started"
         break;

@@ -1,3 +1,0 @@
-ipython==8.4.0
-notebook==6.4.11
-ipywidgets==7.6.3

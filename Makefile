@@ -70,9 +70,6 @@ build-docs:
 	-mkdir docs
 	cp -R src/biokbase-doc/_build/html/* docs/
 
-docker-base:
-	docker build -t kbase/narrbase:3.0 base/
-
 docker-narrative:
 	docker build -t kbase/narrative:1.0.3 .
 

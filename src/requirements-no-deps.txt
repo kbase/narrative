@@ -1,2 +1,1 @@
 sklearn
-clustergrammer_widget

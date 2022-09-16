@@ -45,7 +45,7 @@ if [ "$run_docker" == 1 ]; then
         "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json" \
         --template \
         "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json" \
-        kbase-narrative --no-browser --NotebookApp.allow_origin="*" --ip=$IP_ADDRESS --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
+        kbase-narrative --no-browser --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
     bg_pid=$!
 else
     echo "starting local narrative"
@@ -66,7 +66,7 @@ while :; do
         kill $bg_pid
         exit 127
     fi
-    if grep -q "The Jupyter Notebook is running at:" $OUTPUT_FILE; then
+    if grep -q "Jupyter Notebook.*is running at:" $OUTPUT_FILE; then
         # exit the loop once the string has been found
         echo "narrative started"
         break;

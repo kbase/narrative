@@ -21,6 +21,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
                     },
                 },
             },
+            initialValue: _defaultValue,
             channelName: _bus.channelName,
         };
     }
@@ -71,6 +72,17 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
             expect(inputElem).toBeDefined();
             await widget.stop();
             expect(container.childElementCount).toBe(0);
+        });
+
+        it('Should start with a predefined value', async () => {
+            const expectedVal = 'some expected value';
+            const config = TestUtil.JSONcopy(testConfig);
+            config.initialValue = expectedVal;
+            const widget = TextInput.make(config);
+            await widget.start({ node: container });
+            expect(container.querySelector('input[data-element="input"]').value).toEqual(
+                expectedVal
+            );
         });
 
         it('Should update value via bus', async () => {

@@ -4,33 +4,30 @@ define([
     'widgets/appWidgets2/validation',
     'common/events',
     'common/ui',
-    'common/props',
     'common/runtime',
     '../inputUtils',
     'widgets/appWidgets2/validators/constants',
     'bootstrap',
-], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils, Constants) => {
+], (Promise, html, Validation, Events, UI, Runtime, inputUtils, Constants) => {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        input = t('input'),
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {
-                //syncModelToControl();
-                //autoValidate();
-            },
-        });
+        input = t('input');
 
     function factory(config) {
         const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
-            channel = busConnection.channel(config.channelName);
+            channel = busConnection.channel(config.channelName),
+            model = {
+                value: null,
+            };
         let parent, container, ui;
+
+        // INIT
+
+        setModelValue(config.initialValue);
 
         // CONTROL
 
@@ -48,19 +45,17 @@ define([
             if (value === undefined) {
                 return;
             }
-            if (model.getItem('value') === value) {
-                return;
-            }
-            model.setItem('value', value);
+            model.value = value;
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
         }
 
-        // sync the dom to the model.
+        // sync the dom to the model and validate
         function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
+            setControlValue(model.value);
+            autoValidate();
         }
 
         // VALIDATION
@@ -78,7 +73,7 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value')).then((result) => {
+            return validate(model.value).then((result) => {
                 channel.emit('validation', result);
             });
         }
@@ -118,7 +113,7 @@ define([
                     cancelTouched();
                     importControlValue()
                         .then((value) => {
-                            model.setItem('value', value);
+                            setModelValue(value);
                             channel.emit('changed', {
                                 newValue: value,
                             });
@@ -199,9 +194,7 @@ define([
                 const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
                 syncModelToControl();
-                autoValidate();
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -209,12 +202,10 @@ define([
                 channel.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
-                    autoValidate();
                 });
                 channel.on('focus', () => {
                     doFocus();
                 });
-                // channel.emit('sync');
             });
         }
 
@@ -226,10 +217,6 @@ define([
                 busConnection.stop();
             });
         }
-
-        // INIT
-
-        setModelValue(config.initialValue);
 
         return {
             start,

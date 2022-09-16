@@ -124,16 +124,16 @@ define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) =>
                 iconType: 'data-stack',
                 iconTypeClassList: ['fa'].concat(iconSpec.data['FeatureClusters']),
                 // precalculated
-                style: 'color: rgb(194,254,20)',
+                style: 'color: rgb(230,55,62)',
             },
         },
         {
             desc: 'can use a custom kbase icon',
-            args: ['GenomeAnnotation', false],
+            args: ['Genome', false],
             result: {
                 iconType: 'data',
                 iconTypeClassList: ['fa', 'icon-genome'],
-                style: 'color: ' + iconSpec.color_mapping['GenomeAnnotation'],
+                style: 'color: ' + iconSpec.color_mapping['Genome'],
             },
         },
     ];

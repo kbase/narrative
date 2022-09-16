@@ -6,6 +6,9 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 - PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload
+- DATAUP-778 - fixed bug where xsvGenerator would not run if the paramDisplay value was not present
+- updated data icon coloring scheme
+- refactored narrative Docker image management (see new [narrative-base-image](https://github.com/kbase/narrative-base-image) repo)
 
 ### Version 5.1.1
 - PTV-1798 - fixed issue where invalid component ID was causing data list not to load properly

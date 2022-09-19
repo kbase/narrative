@@ -4,7 +4,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Unreleased
+### Version 5.1.2
 - PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload
 - DATAUP-778 - fixed bug where xsvGenerator would not run if the paramDisplay value was not present
 - updated data icon coloring scheme

@@ -277,6 +277,8 @@ define([
         },
     });
 
+    const OUTPUT_FOLDER = 'your_name_here/new folder';
+
     function createXsvGen() {
         return new XSVGenerator({ model: defaultModel, typesToFiles, fileTypeMapping });
     }
@@ -334,6 +336,7 @@ define([
                             ...modelData,
                         },
                     });
+
                     const xsvGen = new XSVGenerator({ model, typesToFiles, fileTypeMapping });
                     const container = document.createElement('div');
                     container.innerHTML = xsvGen.renderLayout();
@@ -425,6 +428,35 @@ define([
                     output_directory = 'new_folder';
 
                 it('generates params with a single input', function () {
+                    const output = this.xsvGen.generateRequest({
+                        output_file_type,
+                        output_directory,
+                        types: ['sra_reads'],
+                    });
+                    expect(output).toEqual({
+                        output_file_type,
+                        output_directory,
+                        types: {
+                            sra_reads: expectedOutput.sra_reads,
+                        },
+                    });
+                });
+
+                it('generates params with a single input, no paramDisplay data', function () {
+                    const modelWithoutParamDisplay = Props.make({
+                        data: {
+                            state,
+                            params,
+                            app: {
+                                specs: miniSpec,
+                            },
+                        },
+                    });
+                    this.xsvGen = new XSVGenerator({
+                        model: modelWithoutParamDisplay,
+                        typesToFiles,
+                        fileTypeMapping,
+                    });
                     const output = this.xsvGen.generateRequest({
                         output_file_type,
                         output_directory,
@@ -589,7 +621,7 @@ define([
                     const result = {
                         output_file_type: 'CSV',
                         files_created: {
-                            assembly: 'your_name_here/new folder/assembly.csv',
+                            assembly: `${OUTPUT_FOLDER}/assembly.csv`,
                         },
                     };
                     this.xsvGen.displayResult(result);
@@ -602,20 +634,18 @@ define([
                     ).toEqual(Object.keys(result.files_created).length);
                     expect(
                         this.container.querySelector(`.${cssBaseClass}__file_list_item`).textContent
-                    ).toEqual('your_name_here/new folder/assembly.csv');
+                    ).toEqual(`${OUTPUT_FOLDER}/assembly.csv`);
                 });
 
                 it('displays a success message, multiple types, single output file', function () {
                     const result = {
                         output_file_type: 'EXCEL',
                         files_created: {
-                            assembly: 'your_name_here/new folder/import_specification.xlsx',
-                            fastq_reads_interleaved:
-                                'your_name_here/new folder/import_specification.xlsx',
-                            fastq_reads_noninterleaved:
-                                'your_name_here/new folder/import_specification.xlsx',
-                            genbank_genome: 'your_name_here/new folder/import_specification.xlsx',
-                            sra_reads: 'your_name_here/new folder/import_specification.xlsx',
+                            assembly: `${OUTPUT_FOLDER}/import_specification.xlsx`,
+                            fastq_reads_interleaved: `${OUTPUT_FOLDER}/import_specification.xlsx`,
+                            fastq_reads_noninterleaved: `${OUTPUT_FOLDER}/import_specification.xlsx`,
+                            genbank_genome: `${OUTPUT_FOLDER}/import_specification.xlsx`,
+                            sra_reads: `${OUTPUT_FOLDER}/import_specification.xlsx`,
                         },
                     };
                     this.xsvGen.displayResult(result);
@@ -631,19 +661,17 @@ define([
                         fileList.map((liElement) => {
                             return liElement.textContent;
                         })
-                    ).toEqual(['your_name_here/new folder/import_specification.xlsx']);
+                    ).toEqual([`${OUTPUT_FOLDER}/import_specification.xlsx`]);
                 });
                 it('displays a success message, multiple files', function () {
                     const result = {
                         output_file_type: 'CSV',
                         files_created: {
-                            assembly: 'your_name_here/new folder/assembly.csv',
-                            fastq_reads_interleaved:
-                                'your_name_here/new folder/fastq_reads_interleaved.csv',
-                            fastq_reads_noninterleaved:
-                                'your_name_here/new folder/fastq_reads_noninterleaved.csv',
-                            genbank_genome: 'your_name_here/new folder/genbank_genome.csv',
-                            sra_reads: 'your_name_here/new folder/sra_reads.csv',
+                            assembly: `${OUTPUT_FOLDER}/assembly.csv`,
+                            fastq_reads_interleaved: `${OUTPUT_FOLDER}/fastq_reads_interleaved.csv`,
+                            fastq_reads_noninterleaved: `${OUTPUT_FOLDER}/fastq_reads_noninterleaved.csv`,
+                            genbank_genome: `${OUTPUT_FOLDER}/genbank_genome.csv`,
+                            sra_reads: `${OUTPUT_FOLDER}/sra_reads.csv`,
                         },
                     };
                     this.xsvGen.displayResult(result);

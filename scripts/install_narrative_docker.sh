@@ -20,7 +20,7 @@ function console () {
     echo "$now [install_narrative] $1"
 }
 
-source activate base
+# source activate base
 
 # Install Narrative requirements
 # ------------------------------
@@ -30,13 +30,6 @@ cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d
 
 # overwrite existing pyyaml installation (from distutils, so pip cannot uninstall it)
 pip install --ignore-installed -r $NARRATIVE_ROOT_DIR/src/requirements-ignore-installed.txt
-
-# Install sklearn and clustergrammer
-# ------------------------------
-# We install clustergrammer_widget and sklearn specially here so that it does not
-# clobber dependencies in the base conda image
-console "installing sklearn & clustergrammer_widget'"
-pip install --no-dependencies -r $NARRATIVE_ROOT_DIR/src/requirements-no-deps.txt
 
 # Install Narrative code
 # ----------------------

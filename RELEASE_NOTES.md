@@ -2,16 +2,26 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
+This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
 ## Unreleased
 
 Dependency Changes
 - Python dependency updates
   - black >=20.8b1 -> 22.8.0
+  - coverage 6.2 -> 6.4.4
+  - cryptography 37.0.4 -> 38.0.1
   - flake8 3.8.4 -> 5.0.4
-  - cryptography
+  - jinja2 3.0.3 -> 3.1.2
+  - jupyter-console 6.4.3 -> 6.4.4
+  - requests 2.27.1 -> 2.28.1
+
+Removed dependencies  
+**note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
+  - plotly - not necessary for core narrative function, moved to narrative base image
   - semantic_version -- removed, wasn't used effectively, and removed the need for it
+  - sklearn - still included, installed manually alongside clustergrammer in the install script, so the requirements.txt was removed
+  - sympy - not necessary for core narrative funciton, moved to narrative base image
 
 ### Version 5.1.2
 - PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload

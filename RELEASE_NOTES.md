@@ -15,6 +15,26 @@ Dependency Changes
   - jinja2 3.0.3 -> 3.1.2
   - jupyter-console 6.4.3 -> 6.4.4
   - requests 2.27.1 -> 2.28.1
+- Javascript dependency updates
+  - @wdio/cli 7.19.6 -> 7.24.0
+  - @wdio/local-runner 7.19.5 -> 7.24.0
+  - @wdio/spec-reporter 7.19.5 -> 7.24.0
+  - bootstrap 3.3.7 -> 3.4.1
+  - bootstrap-slider 10.6.2 -> 11.0.2
+  - chrome-launcher 0.14.2 -> 0.15.1
+  - cssnano 5.1.7 -> 5.1.13
+  - jasmine-core 4.1.0 -> 4.3.0
+  - jquery-ui 1.13.1 -> 1.13.2
+  - karma-jasmine-html-reporter 1.7.0 -> 2.0.0
+  - postcss-cli 9.1.0 -> 10.0.0
+  - prettier 2.4.1 -> 2.7.1
+  - puppeteer 13.7.0 -> 17.0.0
+  - require-css 0.1.8 -> 0.1.10
+  - sass 1.51.0 -> 1.54.8
+  - selenium-standalone 8.1.1 -> 8.2.0
+  - selenium-webdriver 4.1.2 -> 4.4.0
+  - terser 5.13.1 -> 5.15.0
+  - underscore 1.13.3 -> 1.13.4
 
 Removed dependencies  
 **note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.

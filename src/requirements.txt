@@ -1,3 +1,7 @@
+# Other Python modules installed locally by the local installation script:
+# pandas
+# sklearn
+# clustergrammer_widget
 beautifulsoup4==4.11.1
 black==22.8.0
 coverage==6.4.4

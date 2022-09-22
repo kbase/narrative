@@ -18,10 +18,10 @@ Dependency Changes
 
 Removed dependencies  
 **note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
-  - plotly - not necessary for core narrative function, moved to narrative base image
+  - plotly - not necessary for core narrative functionality, moved to narrative base image
   - semantic_version -- removed, wasn't used effectively, and removed the need for it
   - sklearn - still included, installed manually alongside clustergrammer in the install script, so the requirements.txt was removed
-  - sympy - not necessary for core narrative funciton, moved to narrative base image
+  - sympy - not necessary for core narrative functionality, moved to narrative base image
 
 ### Version 5.1.2
 - PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload

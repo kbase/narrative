@@ -22,6 +22,7 @@ Dependency Changes
   - bootstrap 3.3.7 -> 3.4.1
   - bootstrap-slider 10.6.2 -> 11.0.2
   - chrome-launcher 0.14.2 -> 0.15.1
+  - chromedriver ^101.0.0 -> ^105.0.0
   - cssnano 5.1.7 -> 5.1.13
   - jasmine-core 4.1.0 -> 4.3.0
   - jquery-ui 1.13.1 -> 1.13.2

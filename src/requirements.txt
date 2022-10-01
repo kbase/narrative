@@ -18,7 +18,7 @@ pygments==2.13.0
 pymongo==4.1.0
 pyopenssl==22.0.0
 pytest==7.0.1
-pytest-cov==3.0.0
+pytest-cov==4.0.0
 requests==2.28.1
 rsa==4.9
 terminado==0.12.1

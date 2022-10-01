@@ -105,7 +105,7 @@
         "pure-uuid": "1.6.2",
         "require-css": "0.1.10",
         "require-yaml": "github:m90/require-yaml",
-        "requirejs-domready": "2.0.1",
+        "requirejs-domready": "2.0.3",
         "requirejs-json": "0.0.3",
         "requirejs-plugins": "1.0.2",
         "select2": "4.0.13",

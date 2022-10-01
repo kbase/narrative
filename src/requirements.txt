@@ -4,7 +4,7 @@
 # clustergrammer_widget
 beautifulsoup4==4.11.1
 black==22.8.0
-coverage==6.4.4
+coverage==6.5.0
 cryptography==38.0.1
 decorator==5.1.1
 flake8==3.8.4

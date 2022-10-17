@@ -20,7 +20,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
         version: '1.0.0',
 
         // To be overriden to specify additional parameters
-        getSubmtrixParams: function () {
+        getSubmatrixParams: function () {
             const self = this;
 
             let features = [];

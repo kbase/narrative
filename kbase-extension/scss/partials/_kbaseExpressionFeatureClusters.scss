@@ -1,0 +1,45 @@
+.KBaseExpressionFeatureClusters {
+    table.table.ClusterFeaturesTable {
+        width: 100% !important;
+        tbody {
+            tr {
+                td {
+                    vertical-align: middle;
+                }
+                td:nth-child(4) {
+                    min-width: 15em;
+                    max-width: 25em;
+                }
+            }
+        }
+    }
+    table.table.ClustersTable {
+        width: 100% !important;
+        tbody {
+            tr {
+                td {
+                    vertical-align: middle;
+                }
+            }
+        }
+    }
+    // Provide consistent top margin within tab panes.
+    .tab-content {
+        margin-top: 10px;
+    }
+    // For some reason, the cursor for links is unset, needs to
+    // be restored.
+    a {
+        cursor: pointer;
+    }
+
+    // Tweaks to the dropdown menu within the table cell.
+    // .KBaseExpressionFeatureClusters___ExploreClusterDropdown.dropdown-menu
+    &__ExploreClusterDropdown.dropdown-menu {
+        // !important is required to override styles set by
+        // Jupyter for .rendered_html.
+        list-style: none !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+    }
+}

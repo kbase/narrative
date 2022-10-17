@@ -6,31 +6,30 @@
 
 define([
     'jquery',
-    'knhx',
     'base/js/namespace',
     'kbwidget',
     'narrativeConfig',
     'util/string',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'kbaseTreechart',
     'kbaseExpressionSparkline',
     'kbaseExpressionHeatmap',
     'kbaseExpressionPairwiseCorrelation',
     'kb_common/jsonRpc/genericClient',
+
     // For effect
     'jquery-dataTables',
     'bootstrap',
+    'knhx',
+    'kbaseTreechart',
 ], (
     $,
-    knhx,
     Jupyter,
     KBWidget,
     Config,
     StringUtil,
     kbaseAuthenticatedWidget,
     kbaseTabs,
-    kbaseTreechart,
     kbaseExpressionSparkline,
     kbaseExpressionHeatmap,
     kbaseExpressionPairwiseCorrelation,
@@ -48,7 +47,7 @@ define([
             loadingImage: Config.get('loading_gif'),
         },
 
-        // Extracted data for vizualization
+        // Extracted data for visualization
         clusterSet: null,
         expMatrixRef: null,
         expMatrixName: null,
@@ -65,6 +64,7 @@ define([
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
+            this.$elem.addClass('KBaseExpressionFeatureClusters');
             return this;
         },
 
@@ -99,74 +99,94 @@ define([
 
             self.loading(true);
 
-            const clusterSetRef = self.buildObjectIdentity(
-                this.options.workspaceID,
-                this.options.clusterSetID
-            );
+            const clusterSetRef = this.options.upas.clusterSetID;
 
             // Note order of calls is important here; state is stored in the object.
-            // TODO
             this.ws
-                .callFunc('get_objects', [[clusterSetRef]])
-                .spread((data) => {
-                    self.clusterSet = data[0].data;
+                .callFunc('get_objects2', [
+                    {
+                        objects: [
+                            {
+                                ref: clusterSetRef,
+                            },
+                        ],
+                    },
+                ])
+                .then(([result]) => {
+                    // get_objects2 returns a list of ObjectData
+                    // https://github.com/kbase/workspace_deluxe/blob/0964b09a95f9c617547d40c413d57598cd12d04c/workspace.spec#L1043
+                    self.clusterSet = result.data[0].data;
                     self.expMatrixRef = self.clusterSet.original_data;
 
                     return self.ws
-                        .callFunc('get_object_subset', [
-                            [
-                                {
-                                    ref: self.expMatrixRef,
-                                    included: [
-                                        '/genome_ref',
-                                        '/feature_mapping',
-                                        '/data/row_ids',
-                                        '/data/col_ids',
-                                    ],
-                                },
-                            ],
+                        .callFunc('get_objects2', [
+                            {
+                                objects: [
+                                    {
+                                        ref: self.expMatrixRef,
+                                        included: [
+                                            '/genome_ref',
+                                            '/feature_mapping',
+                                            '/data/row_ids',
+                                            '/data/col_ids',
+                                        ],
+                                    },
+                                ],
+                            },
                         ])
-                        .spread((result) => {
-                            const data = result[0];
-                            self.expMatrixName = data.info[1];
-                            self.genomeRef = data.data.genome_ref;
-                            self.featureMapping = data.data.feature_mapping;
-                            self.matrixRowIds = data.data.data.row_ids;
-                            self.matrixColIds = data.data.data.col_ids;
+                        .then(
+                            ([
+                                {
+                                    data: [matrixObj],
+                                },
+                            ]) => {
+                                self.expMatrixName = matrixObj.info[1];
+                                self.genomeRef = matrixObj.data.genome_ref;
+                                self.featureMapping = matrixObj.data.feature_mapping;
+                                self.matrixRowIds = matrixObj.data.data.row_ids;
+                                self.matrixColIds = matrixObj.data.data.col_ids;
 
-                            if (self.genomeRef) {
-                                return self.ws
-                                    .callFunc('get_object_subset', [
-                                        [
+                                if (self.genomeRef) {
+                                    return self.ws
+                                        .callFunc('get_objects2', [
                                             {
-                                                ref: self.genomeRef,
-                                                included: [
-                                                    '/id',
-                                                    '/scientific_name',
-                                                    '/features/[*]/id',
-                                                    'features/[*]/type',
-                                                    'features/[*]/function',
-                                                    'features/[*]/functions',
-                                                    'features/[*]/aliases',
+                                                objects: [
+                                                    {
+                                                        ref: self.genomeRef,
+                                                        included: [
+                                                            '/id',
+                                                            '/scientific_name',
+                                                            '/features/[*]/id',
+                                                            'features/[*]/type',
+                                                            'features/[*]/function',
+                                                            'features/[*]/functions',
+                                                            'features/[*]/aliases',
+                                                        ],
+                                                    },
                                                 ],
                                             },
-                                        ],
-                                    ])
-                                    .spread((result) => {
-                                        const data = result[0];
-                                        self.genomeID = data.info[1];
-                                        self.genomeName = data.data.scientific_name;
-                                        self.features = data.data.features;
-                                        self.render();
-                                    })
-                                    .catch((error) => {
-                                        console.error(error);
-                                        self.render();
-                                    });
-                            } else {
-                                self.render();
+                                        ])
+                                        .then(
+                                            ([
+                                                {
+                                                    data: [genomeObj],
+                                                },
+                                            ]) => {
+                                                self.genomeID = genomeObj.info[1];
+                                                self.genomeName = genomeObj.data.scientific_name;
+                                                self.features = genomeObj.data.features;
+                                                self.render();
+                                            }
+                                        )
+                                        .catch((error) => {
+                                            console.error(error);
+                                            self.render();
+                                        });
+                                } else {
+                                    self.render();
+                                }
                             }
-                        })
+                        )
                         .catch((error) => {
                             console.error('ERROR', error);
                             self.clientError(error);
@@ -201,8 +221,8 @@ define([
                 show: true,
             });
             const tableOver = $(
-                '<table class="table table-striped table-bordered" ' +
-                    'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' +
+                '<table class="table table-striped table-bordered OverviewTable" ' +
+                    'id="' +
                     pref +
                     'overview-table"/>'
             );
@@ -219,17 +239,20 @@ define([
                     )
                 )
                 .append(self.makeRow('Expression matrix', self.expMatrixName))
-                .append(self.makeRow('Expression matrix: #conditions', self.matrixColIds.length))
-                .append(self.makeRow('Expression matrix: #genes', self.matrixRowIds.length));
+                .append(self.makeRow('Expression matrix: # conditions', self.matrixColIds.length))
+                .append(self.makeRow('Expression matrix: # genes', self.matrixRowIds.length));
 
             ///////////////////////////////////// Clusters tab ////////////////////////////////////////////
 
-            const $tabClusters = $('<div/>');
+            const $tabClusters = $('<div />');
             tabWidget.addTab({
                 tab: 'Clusters',
                 content: $tabClusters,
                 canDelete: false,
                 show: false,
+                whenShown: () => {
+                    $clustersTable.DataTable().columns.adjust().draw();
+                },
             });
 
             ///////////////////////////////////// Clusters table ////////////////////////////////////////////
@@ -242,41 +265,44 @@ define([
                 }
             });
 
-            $(
+            const clusterTableData = self.buildClustersTableData();
+
+            const $clustersTable = $(
                 '<table id="' +
                     pref +
                     'clusters-table" \
-                class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
+                class="table table-bordered table-striped ClustersTable">\
                 </table>'
-            )
-                .appendTo($tabClusters)
-                .dataTable({
-                    sDom: 'lftip',
-                    aaData: self.buildClustersTableData(),
-                    aoColumns: [
-                        { sTitle: 'Pos.', mData: 'pos' },
-                        { sTitle: 'Cluster', mData: 'clusterId' },
-                        { sTitle: 'Number of genes', mData: 'size' },
-                        { sTitle: 'Mean correlation', mData: 'meancor' },
-                        {
-                            sTitle: '',
-                            mData: 'rowIndex',
-                            mRender: function (rowIndex) {
-                                return (
-                                    '<button class="btn btn-default ' +
-                                    pref +
-                                    'action_button" rowIndex="' +
-                                    rowIndex +
-                                    '" >Explore Cluster  <span class="caret"></span></button>'
-                                );
-                            },
-                        },
-                    ],
-                    fnDrawCallback: events,
-                });
+            );
 
-            function events() {
+            $clustersTable.appendTo($tabClusters);
+
+            $clustersTable.dataTable({
+                sDom: 'lftip',
+                aaData: clusterTableData,
+                aoColumns: [
+                    { sTitle: 'Pos.', mData: 'pos', width: '2em' },
+                    { sTitle: 'Cluster', mData: 'clusterId' },
+                    { sTitle: 'Number of genes', mData: 'size' },
+                    { sTitle: 'Mean correlation', mData: 'meancor' },
+                    {
+                        sTitle: '',
+                        mData: 'rowIndex',
+                        mRender: function (rowIndex) {
+                            return `<button class="btn btn-default ${pref}action_button" 
+                                            data-rowindex="${rowIndex}">
+                                        Explore Cluster  <span class="caret" />
+                                    </button>`;
+                        },
+                        width: '15.5em',
+                    },
+                ],
+                fnDrawCallback: onDraw,
+            });
+
+            function onDraw() {
                 self.registerActionButtonClick(tabWidget);
+                $clustersTable.find('[data-toggle="tooltip"]').tooltip();
                 updateClusterLinks('clusters');
             }
 
@@ -289,7 +315,7 @@ define([
                         tabWidget.showTab(tabName);
                         return;
                     }
-                    const tabDiv = $('<div/>');
+                    const tabDiv = $('<div />');
                     tabWidget.addTab({
                         tab: tabName,
                         content: tabDiv,
@@ -305,12 +331,15 @@ define([
             }
 
             ///////////////////////////////////// Features tab ////////////////////////////////////////////
-            const featureTabDiv = $('<div/>');
+            const featureTabDiv = $('<div />');
             tabWidget.addTab({
                 tab: 'Features',
                 content: featureTabDiv,
                 canDelete: false,
                 show: false,
+                whenShown: () => {
+                    featureTabDiv.find('table').DataTable().columns.adjust().draw();
+                },
             });
             self.buildClusterFeaturesTable(featureTabDiv, null, () => {
                 updateClusterLinks('clusters2');
@@ -374,7 +403,7 @@ define([
 
                         const $invokedOn = self.$menu.data('invokedOn');
                         const $selectedMenu = $(e.target);
-                        const rowIndex = $invokedOn[0].getAttribute('rowIndex');
+                        const rowIndex = $invokedOn.data('rowindex');
                         const methodInput = $selectedMenu[0].getAttribute('methodInput');
 
                         if (methodInput === 'build_feature_set') {
@@ -419,7 +448,7 @@ define([
 
                             const geneIds = self.getClusterGeneIds(rowIndex);
 
-                            const $contentDiv = $('<div></div>');
+                            const $contentDiv = $('<div />');
 
                             tabWidget.addTab({
                                 tab: tabName,
@@ -466,16 +495,10 @@ define([
                 cluster = feature_clusters[i];
                 tableData.push({
                     pos: i,
-                    clusterId:
-                        "<a class='show-clusters_" +
-                        self.pref +
-                        "' data-pos='" +
-                        i +
-                        "'>cluster_" +
-                        i +
-                        '</a>',
+                    clusterId: `<a class="show-clusters_${self.pref}" data-pos="${i}">cluster_${i}</a>`,
                     size: Object.keys(cluster.id_to_pos).length,
-                    meancor: cluster.meancor != null ? cluster.meancor.toFixed(3) : 'N/A',
+                    meancor:
+                        typeof cluster.meancor === 'number' ? cluster.meancor.toFixed(3) : 'N/A',
                     rowIndex: i,
                 });
             }
@@ -484,17 +507,15 @@ define([
         },
 
         buildActionMenu: function ($container) {
-            const $menu = $(
-                ' \
-                <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0" > \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
-                    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
-                    <li class="divider"></li> \
-                    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
-                </ul> \
-            '
-            );
+            const $menu = $(`
+                <ul id="contextMenu" class="dropdown-menu KBaseExpressionFeatureClusters__ExploreClusterDropdown" role="menu"  >
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li>
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li>
+                    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li>
+                    <li class="divider"></li>
+                    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li>
+                </ul>
+            `);
 
             /* XXX
 
@@ -518,8 +539,7 @@ define([
             const self = this;
             const tableData = [];
             const table = $(
-                '<table class="table table-bordered table-striped" ' +
-                    'style="width: 100%; margin-left: 0px; margin-right: 0px;"></table>'
+                '<table class="table table-bordered table-striped ClusterFeaturesTable"></table>'
             );
             tabDiv.append(table);
 
@@ -553,9 +573,12 @@ define([
                     let func = '-';
                     const feature = id2features[fid];
                     if (feature) {
-                        if (feature.aliases && feature.aliases.length > 0)
+                        if (feature.aliases && feature.aliases.length > 0) {
                             aliases = feature.aliases.join(', ');
-                        type = feature.type;
+                        }
+                        if (feature.type) {
+                            type = feature.type;
+                        }
                         if (feature.function) {
                             func = feature.function;
                         }
@@ -564,36 +587,34 @@ define([
                         }
                     }
                     if (genomeRef) {
-                        fid =
-                            '<a href="/#dataview/' +
-                            genomeRef +
-                            '?sub=Feature&subid=' +
-                            fid +
-                            '" target="_blank">' +
-                            fid +
-                            '</a>';
+                        fid = `<a href="/#dataview/${genomeRef}?sub=Feature&subid=${fid}" target="_blank">${fid}</a>`;
                     }
                     tableData.push({
-                        fid: fid,
-                        cid:
-                            "<a class='show-clusters2_" +
-                            self.pref +
-                            "' data-pos='" +
-                            cluster_pos +
-                            "'>cluster_" +
-                            cluster_pos +
-                            '</a>',
-                        gid: gid,
+                        fid,
+                        cid: `<a class="show-clusters2_${self.pref}" data-pos="${cluster_pos}">cluster_${cluster_pos}</a>`,
+                        gid,
                         ali: aliases,
-                        type: type,
-                        func: func,
+                        type,
+                        func,
                     });
                 }
+
             const columns = [];
-            columns.push({ sTitle: 'Feature ID', mData: 'fid' });
-            if (pos == null) columns.push({ sTitle: 'Cluster', mData: 'cid' });
+            columns.push({ sTitle: 'Feature ID', mData: 'fid', width: '7em' });
+            if (pos === null) {
+                columns.push({ sTitle: 'Cluster', mData: 'cid', width: '7em' });
+            }
             columns.push({ sTitle: 'Aliases', mData: 'ali' });
             columns.push({ sTitle: 'Genome', mData: 'gid' });
+            // Leave this disabled approach to controlling width of this column
+            // for now, while sorting out the best solution.
+            // ,render: (data, type, row, meta) => {
+            //     return $('<div>')
+            //         .css('min-width', '15em')
+            //         .html(data)
+            //         .get(0)
+            //         .outerHTML;
+            // }});
             columns.push({ sTitle: 'Type', mData: 'type' });
             columns.push({ sTitle: 'Function', mData: 'func' });
             table.dataTable({
@@ -607,18 +628,16 @@ define([
         },
 
         buildFeatureId2FeatureHash: function () {
-            const self = this;
-            const features = self.features;
-            const id2features = {};
-            if (features) for (const i in features) id2features[features[i].id] = features[i];
-            return id2features;
+            return this.features.reduce((id2features, feature) => {
+                id2features[feature.id] = feature;
+                return id2features;
+            }, {});
         },
 
         makeRow: function (name, value) {
-            const $row = $('<tr/>')
-                .append($('<th />').css('width', '20%').append(name))
-                .append($('<td />').append(value));
-            return $row;
+            return $('<tr>')
+                .append($('<th>').css('width', '16em').css('text-align', 'left').append(name))
+                .append($('<td>').append(value));
         },
 
         getData: function () {

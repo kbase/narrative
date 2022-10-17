@@ -24,7 +24,7 @@ define([
         colorGenerator: null,
 
         // To be overriden to specify additional parameters
-        getSubmtrixParams: function () {
+        getSubmatrixParams: function () {
             const self = this;
             // self.setTestParameters();
 

@@ -470,8 +470,7 @@ define([
                         xId = $hm.xIDMap()[xId];
                     }
 
-                    const scaled = xIdScale(xId) + 1;
-                    return scaled; //$hm.xScale()(xId) + 1
+                    return xIdScale(xId) + 1;
                 })
                     .attr('y', (d) => {
                         let yId = d.y;
@@ -479,22 +478,13 @@ define([
                             yId = $hm.yIDMap()[yId];
                         }
 
-                        const scaled = yIdScale(yId) + 1;
-                        return scaled; //$hm.yScale()(yId) + 1
+                        return yIdScale(yId) + 1;
                     })
-                    //.attr('y', function (d) { return $hm.yScale()(d.y) })
-                    //.attr('opacity', function (d) { return d.value })
                     .attr('width', $hm.xScale().rangeBand() - $hm.options.cellPadding * 2)
                     .attr('height', $hm.cellHeight())
                     .attr('rx', $hm.options.rx)
                     .attr('ry', $hm.options.ry)
                     .attr('fill', (d) => {
-                        /*var colorScale = d3.scale.linear()
-                            .domain([0,1])
-                            .range(['white', d.color]);
-
-                        return colorScale(d.value);*/
-
                         return d.color;
                     });
                 return this;

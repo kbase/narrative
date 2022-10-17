@@ -2,11 +2,8 @@
  * Base class for viewers visualizaing expression of a set of genes from various aspects
  *
  * The descendant classes should override:
- * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
+ * 1. getSubmatrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
  * 2. buildWidget - to create a custom visuzualization
- *
- *
- *
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
@@ -14,25 +11,30 @@
 
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
+    'uuid',
     'kbaseAuthenticatedWidget',
-    'kbaseTabs',
     'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
+    'widgets/common/ErrorView',
+    'widgets/common/LoadingMessage',
+
     // Loaded for effect
     'jquery-dataTables',
     'kbaseFeatureValues-client-api',
+    'bootstrap',
+    'kbaseTabs',
 ], (
     KBWidget,
-    bootstrap,
     $,
+    Uuid,
     kbaseAuthenticatedWidget,
-    kbaseTabs,
     Config,
     DynamicServiceClient,
-    ServiceClient
+    ServiceClient,
+    $ErrorView,
+    $LoadingMessage
 ) => {
     'use strict';
 
@@ -45,17 +47,14 @@ define([
             expressionMatrixID: null,
             geneIds: null,
             input_featureset: null,
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
         },
         // Prefix for all div ids
         pref: null,
-        // KBaseFeatureValue client
-        featureValueClient: null,
         // Matrix set stat
         submatrixStat: null,
         init: function (options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.pref = new Uuid(4).format();
 
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
@@ -89,8 +88,8 @@ define([
             this.options.geneIds =
                 'VNG0001H,VNG0002G,VNG0003C,VNG0006G,VNG0013C,VNG0014C,VNG0361C,VNG0518H,VNG0868H,VNG0289H,VNG0852C';
         },
-        // To be overriden to specify additional parameters
-        getSubmtrixParams: function () {
+        // To be overridden to specify additional parameters
+        getSubmatrixParams: function () {
             const self = this;
             self.setTestParameters();
             let features = [];
@@ -107,31 +106,32 @@ define([
             const self = this;
             self.loading(true);
 
-            function getSubmatrixStatsAndRender() {
-                const smParams = self.getSubmtrixParams();
+            async function getSubmatrixStatsAndRender() {
+                const smParams = self.getSubmatrixParams();
 
                 // some parameter checking
                 if (!smParams.row_ids || smParams.row_ids.length === 0) {
-                    self.clientError(
+                    self.renderError(
                         'No Features or FeatureSet selected.  Please include at least one Feature from the data.'
                     );
                     return;
                 }
-                self.featureValues
-                    .callFunc('get_submatrix_stat', [smParams])
-                    .spread((data) => {
-                        self.submatrixStat = data;
-                        self.render();
-                        self.loading(false);
-                    })
-                    .catch((error) => {
-                        self.clientError(error);
-                    });
+
+                try {
+                    const [data] = await self.featureValues.callFunc('get_submatrix_stat', [
+                        smParams,
+                    ]);
+                    self.submatrixStat = data;
+                    self.render();
+                    self.loading(false);
+                } catch (ex) {
+                    self.renderError(ex);
+                }
             }
 
             // if a feature set is defined, use it.
             if (self.options.featureset) {
-                self.ws
+                return self.ws
                     .callFunc('get_objects', [
                         [
                             {
@@ -146,109 +146,127 @@ define([
                         }
 
                         for (const fid in fs.elements) {
-                            if (fs.elements.hasOwnProperty(fid)) {
+                            // this always comes from an rpc call, which is
+                            // always a plain object ({}.constructor).
+                            if (Object.prototype.hasOwnPrototype.call(fs.elements, fid)) {
                                 if (self.options.geneIds) {
                                     self.options.geneIds += ',';
                                 }
                                 self.options.geneIds += fid;
-                                //        for now we ignore which genome it came from, just use the ids
-                                //        for (var k=0; k<fs.elements[fid].length; k++) {
-                                //            var gid = fs.elements[fid][k];
-                                //        }
                             }
                         }
                         getSubmatrixStatsAndRender();
                     })
                     .catch((error) => {
-                        self.clientError(error);
+                        console.error('got it not xx!!', error);
+                        self.renderError(error);
                     });
             } else {
-                getSubmatrixStatsAndRender();
+                return getSubmatrixStatsAndRender();
             }
         },
         render: function () {
-            const $overviewContainer = $('<div/>');
+            const $overviewContainer = $('<div>');
             this.$elem.append($overviewContainer);
-            this.buildOverviewDiv($overviewContainer);
+            this.renderOverview($overviewContainer);
 
             // Separator
             this.$elem.append($('<div style="margin-top:1em"></div>'));
 
-            const $vizContainer = $('<div/>');
+            const $vizContainer = $('<div>');
             this.$elem.append($vizContainer);
             this.buildWidget($vizContainer);
         },
-        buildOverviewDiv: function ($containerDiv) {
-            const self = this;
-            const pref = this.pref;
+        renderOverview: function ($container) {
+            const $overviewSwitch = $('<button>')
+                .addClass('btn btn-default')
+                .attr('data-testid', 'overview-toggle')
+                .css('cursor', 'pointer');
+            $container.append($overviewSwitch);
 
-            const $overviewSwitch = $('<a/>').html('[Show/Hide Selected Features]');
-            $containerDiv.append($overviewSwitch);
+            const $overviewContainer = $('<div>').hide().css('margin', '1em 0 4em 0');
 
-            const $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
-            $containerDiv.append($overvewContainer);
+            $container.append($overviewContainer);
 
-            const geneData = self.buildGenesTableData();
-            const iDisplayLength = 10;
-            let style = 'lftip';
-            if (geneData.length <= iDisplayLength) {
-                style = 'fti';
+            const geneData = this.buildGenesTableData();
+            const pageLength = 10;
+            let dom = 'lftip';
+            if (geneData.length <= pageLength) {
+                dom = 'fti';
             }
 
-            $overvewContainer.append(
-                $(
-                    '<table id="' +
-                        pref +
-                        'genes-table"  \
-                class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
-                </table>'
-                ).dataTable({
-                    sDom: style,
-                    iDisplayLength: iDisplayLength,
-                    aaData: geneData,
-                    aoColumns: [
-                        { sTitle: 'Name', mData: 'id' },
-                        { sTitle: 'Function', mData: 'function' },
-                        { sTitle: 'Min', mData: 'min' },
-                        { sTitle: 'Max', mData: 'max' },
-                        { sTitle: 'Avg', mData: 'avg' },
-                        { sTitle: 'Std', mData: 'std' },
-                        { sTitle: 'Missing', mData: 'missing_values' },
-                    ],
-                    oLanguage: {
-                        sEmptyTable: 'No genes found!',
-                        sSearch: 'Search: ',
-                    },
-                })
-            );
+            const $overviewTable = $('<table>')
+                .attr('id', this.pref + 'genes-table')
+                .addClass('table table-bordered table-striped')
+                .css('width', '100%')
+                .css('margin-left', '0')
+                .css('margin-right', '0');
+
+            $overviewContainer.html($overviewTable);
+
+            $overviewTable.dataTable({
+                dom,
+                pageLength,
+                data: geneData,
+                columns: [
+                    { sTitle: 'Name', mData: 'id', width: '10em' },
+                    { sTitle: 'Function', mData: 'function' },
+                    { sTitle: 'Min', mData: 'min' },
+                    { sTitle: 'Max', mData: 'max' },
+                    { sTitle: 'Avg', mData: 'avg' },
+                    { sTitle: 'Std', mData: 'std' },
+                    { sTitle: 'Missing', mData: 'missing_values' },
+                ],
+                oLanguage: {
+                    sEmptyTable: 'No genes found!',
+                    sSearch: 'Search: ',
+                },
+            });
+
+            let showing = false;
+
+            function renderSwitchButtonLabel() {
+                if (showing) {
+                    $overviewSwitch.text('Hide Selected Features');
+                } else {
+                    $overviewSwitch.text('Show Selected Features');
+                }
+            }
+
+            renderSwitchButtonLabel();
 
             $overviewSwitch.click(() => {
-                $overvewContainer.toggle();
+                showing = !showing;
+                renderSwitchButtonLabel();
+                if (showing) {
+                    $overviewContainer.fadeIn();
+                } else {
+                    $overviewContainer.fadeOut();
+                }
             });
         },
         buildGenesTableData: function () {
             const submatrixStat = this.submatrixStat;
             const tableData = [];
-            const stat = submatrixStat.row_set_stats;
+            const stats = submatrixStat.row_set_stats;
             for (let i = 0; i < submatrixStat.row_descriptors.length; i++) {
                 const desc = submatrixStat.row_descriptors[i];
-
                 const gene_function = desc.properties['function'];
                 tableData.push({
                     index: desc.index,
                     id: desc.id,
-                    name: desc.name ? desc.name : ' ',
-                    function: gene_function ? gene_function : ' ',
-                    min: stat.mins[i] ? stat.mins[i].toFixed(2) : null,
-                    max: stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
-                    avg: stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
-                    std: stat.stds[i] ? stat.stds[i].toFixed(2) : null,
-                    missing_values: stat.missing_values[i],
+                    name: desc.name || '-',
+                    function: gene_function || '-',
+                    min: stats.mins[i] ? stats.mins[i].toFixed(2) : null,
+                    max: stats.maxs[i] ? stats.maxs[i].toFixed(2) : null,
+                    avg: stats.avgs[i] ? stats.avgs[i].toFixed(2) : null,
+                    std: stats.stds[i] ? stats.stds[i].toFixed(2) : null,
+                    missing_values: stats.missing_values[i],
                 });
             }
             return tableData;
         },
-        // To be overriden
+        // To be overridden
         buildWidget: null,
 
         makeRow: function (name, value) {
@@ -258,54 +276,24 @@ define([
             return $row;
         },
         loading: function (isLoading) {
-            if (isLoading) this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else this.hideMessage();
+            if (isLoading) {
+                this.showMessage($LoadingMessage('Loading...'));
+            } else {
+                this.hideMessage();
+            }
         },
-        showMessage: function (message) {
-            const span = $('<span/>').append(message);
-
-            this.$messagePane.append(span);
+        showMessage: function ($message) {
+            this.$messagePane.html($message);
             this.$messagePane.show();
         },
         hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
-        clientError: function (error) {
+        renderError: function (error) {
             this.loading(false);
-            let errString = 'Unknown error.';
-            console.error(error);
-            if (typeof error === 'string') errString = error;
-            else if (error.error && error.error.message) errString = error.error.message;
-            else if (error.error && error.error.error && typeof error.error.error === 'string') {
-                errString = error.error.error;
-                if (
-                    errString.indexOf('java.lang.NullPointerException') > -1 &&
-                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
-                ) {
-                    // this is a null pointer due to an unknown feature ID.  TODO: handle this gracefully
-                    errString = 'Feature IDs not found.<br><br>';
-                    errString +=
-                        'Currently all Features included in a FeatureSet must be present' +
-                        ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
-                        'so that it only includes these features.  This is a known issue ' +
-                        'and will be fixed shortly.';
-                }
-            }
-
-            const $errorDiv = $('<div>')
-                .addClass('alert alert-danger')
-                .append('<b>Error:</b>')
-                .append('<br>' + errString);
             this.$elem.empty();
-            this.$elem.append($errorDiv);
-        },
-        uuid: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-                const r = (Math.random() * 16) | 0,
-                    v = c == 'x' ? r : (r & 0x3) | 0x8;
-                return v.toString(16);
-            });
+            this.$elem.html($ErrorView(error));
         },
         buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
             const obj = {};

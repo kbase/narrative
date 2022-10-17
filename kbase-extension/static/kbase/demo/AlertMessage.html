@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html >
+    <head>
+        <script src="/narrative/static/components/requirejs/require.js"></script>
+        <script src="/narrative/static/kbase/demo/common.js"></script>
+        <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/demo/common.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+        <meta charset="utf-8">
+        <title>KBase Demo - AlertMessage.js</title>
+    </head>
+    <body class="Demo">
+       <h1>AlertMessage Demo</h1>
+
+        <p><a href="./index.html">Index</a></p>
+
+        <h2>Default Alert</h2>
+                    
+        <p>By default, the Alert will use the "info" styling</p>
+
+        <div class="Example">
+          <div id="alertmessage1"></div>
+        </div>
+
+        <h2>Info Alert</h2>
+                    
+        <p>Here we explicitly use the "info" message styling</p>
+
+        <div class="Example">
+          <div id="alertmessage2"></div>
+        </div>
+
+        <h2>Warning Alert</h2>
+                    
+        <p>Here we explicitly use the "warning" message styling</p>
+
+        <div class="Example">
+          <div id="alertmessage3"></div>
+        </div>
+
+        <h2>Danger Alert</h2>
+                    
+        <p>Here we explicitly use the "danger", or error, message styling</p>
+
+        <div class="Example">
+          <div id="alertmessage4"></div>
+        </div>
+
+        <h2>Success Alert</h2>
+                    
+        <p>Here we explicitly use the "success" message styling</p>
+
+        <div class="Example">
+          <div id="alertmessage5"></div>
+        </div>
+
+        <script>
+            require(['narrative_paths'], () => {
+                require(['jquery', 'widgets/common/AlertMessage'], ($, $AlertMessage) => {
+                    $('#alertmessage1').html($AlertMessage("This is a default alert"));
+
+                    $('#alertmessage2').html($AlertMessage("This is an info alert", {type: 'info'}));
+
+                    $('#alertmessage3').html($AlertMessage("This is a warning alert", {type: 'warning'}));
+
+                    $('#alertmessage4').html($AlertMessage("This is a danger alert", {type: 'danger'}));
+
+                    $('#alertmessage5').html($AlertMessage("This is a success alert", {type: 'success'}));
+                });
+            });
+        </script>
+    </body>
+</html>

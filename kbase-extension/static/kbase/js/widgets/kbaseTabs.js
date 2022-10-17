@@ -32,13 +32,13 @@
 
 */
 
-define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
+define(['kbwidget', 'jquery', 'kbaseDeletePrompt', 'bootstrap'], (
     KBWidget,
-    bootstrap,
     $,
     kbaseDeletePrompt
 ) => {
     'use strict';
+
     return KBWidget({
         name: 'kbaseTabs',
 
@@ -57,6 +57,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
 
             this.data('tabs', {});
             this.data('nav', {});
+
+            this.tabHistory = [];
 
             this.appendUI($(this.$elem));
 
@@ -77,22 +79,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                 .addClass('nav nav-tabs')
                 .attr('id', 'tabs-nav');
             $block.append($nav).append($tabs);
-            /*if (this.options.tabPosition == 'top') {
-                $block.addClass('tabs-above');
-                $block.append($nav).append($tabs);
-            }
-            else if (this.options.tabPosition == 'bottom') {
-                $block.addClass('tabs-below');
-                $block.append($tabs).append($nav);
-            }
-            else if (this.options.tabPosition == 'left') {
-                $block.addClass('tabs-left');
-                $block.append($nav).append($tabs);
-            }
-            else if (this.options.tabPosition == 'right') {
-                $block.addClass('tabs-right');
-                $block.append($tabs).append($nav);
-            }*/
 
             this._rewireIds($block, this);
 
@@ -127,7 +113,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                 $tab.css('padding', '3px');
             }
 
-            const $that = this; //thanks bootstrap! You suck!
+            const $that = this;
 
             const $nav = $('<li role="tab"></li>')
                 .css('white-space', 'nowrap')
@@ -140,33 +126,42 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                             e.preventDefault();
                             e.stopPropagation();
 
+                            // NB this function mimics bootstrap tab's "show" method.
+
                             const previous = $that.data('tabs-nav').find('.active:last a')[0];
 
-                            //we can't just call 'show' directly, since it requires an href or data-target attribute
-                            //on the link which MUST be an idref to something else in the dom. We don't have those,
-                            //so we just do what show does and call activate directly.
-                            //
-                            //oh, but we can't just say $(this).tab('activate',...) because bootstrap is specifically
-                            //wired up not to pass along any arguments to methods invoked in this manner.
-                            //
-                            //Because bootstrap -sucks-.
+                            // Danger: this calls the internal api for bootstrap tabs; that is
+                            // where the mysterious "activate" lives.
+
+                            // Deactivates the currently active tab
                             $.fn.tab.Constructor.prototype.activate.call(
                                 $(this),
                                 $(this).parent('li'),
                                 $that.data('tabs-nav')
                             );
 
+                            // Activate this tab, and emit events.
                             $.fn.tab.Constructor.prototype.activate.call(
                                 $(this),
                                 $tab,
                                 $tab.parent(),
-                                function () {
-                                    $(this).trigger({
+                                () => {
+                                    $that.tabHistory.push(tab);
+                                    $tab.trigger({
                                         type: 'shown',
                                         relatedTarget: previous,
                                     });
+                                    if (tab.whenShown) {
+                                        try {
+                                            tab.whenShown($tab);
+                                        } catch (ex) {
+                                            console.error('Error in onSelect for tab', ex);
+                                        }
+                                    }
                                 }
                             );
+
+                            // This is our stuff.
                             if (!$tab.hasContent) {
                                 if (tab.showContentCallback) {
                                     $tab.append(tab.showContentCallback($tab));
@@ -186,7 +181,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                         .append(
                             $('<button></button>')
                                 .addClass('btn btn-default btn-xs')
-                                //.append($('<i></i>').addClass(this.closeIcon()))
                                 .append($('<span>').append('&#x2716;'))
                                 .css('padding', '0px')
                                 .css('width', '12px')
@@ -194,15 +188,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                                 .css('margin-left', '10px')
                                 .css('font-size', '10px')
                                 .css('margin-bottom', '3px')
+                                .css('outline', 'none')
                                 .css('border', '0')
-                                //.attr('title', this.deleteTabToolTip(tab.tab))
-                                .tooltip()
                                 .bind(
                                     'click',
                                     $.proxy(function (e) {
                                         e.preventDefault();
                                         e.stopPropagation();
-
                                         if (tab.deleteCallback != undefined) {
                                             tab.deleteCallback(tab.tab);
                                         } else {
@@ -212,6 +204,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                                 )
                         )
                 );
+
             if (!tab.canDelete) {
                 $nav.find('button').remove();
             }
@@ -223,14 +216,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             this.data('tabs-nav').append($nav);
 
             const tabCount = this.data('tabs').length;
-
             if (tab.show || tabCount == 1) {
                 this.showTab(tab.tab);
             }
-        },
-
-        closeIcon: function () {
-            return 'icon-remove';
         },
 
         deleteTabToolTip: function (tabName) {
@@ -249,19 +237,34 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             const $tab = this.data('tabs')[tabName];
             const $nav = this.data('nav')[tabName];
 
+            // Remove this tab from all of history.
+            this.tabHistory = this.tabHistory.filter((tab) => {
+                return tab.tab !== tabName;
+            });
+
+            const deleteTab = () => {
+                $tab.remove();
+                $nav.remove();
+
+                delete this.data('tabs')[tabName];
+                delete this.data('nav')[tabName];
+            };
+
             if ($nav.hasClass('active')) {
-                if ($nav.next('li').length) {
-                    $nav.next().find('a').trigger('click');
+                if (this.tabHistory.length > 0) {
+                    const nextTab = this.tabHistory.pop();
+                    const $nextNav = this.data('nav')[nextTab.tab];
+                    const $nextTab = this.data('tabs')[nextTab.tab];
+                    $nextTab.one('shown', () => {
+                        deleteTab();
+                    });
+                    $nextNav.find('a').trigger('click');
                 } else {
-                    $nav.prev('li').find('a').trigger('click');
+                    deleteTab();
                 }
+            } else {
+                deleteTab();
             }
-
-            $tab.remove();
-            $nav.remove();
-
-            this.data('tabs')[tabName] = undefined;
-            this.data('nav')[tabName] = undefined;
         },
 
         deletePrompt: function (tabName) {

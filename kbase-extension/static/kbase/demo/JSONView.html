@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html >
+    <head>
+        <script src="/narrative/static/components/requirejs/require.js"></script>
+        <script src="/narrative/static/kbase/demo/common.js"></script>
+        <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/demo/common.css">
+        <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+        <meta charset="utf-8">
+        <title>KBase Demo - JSONView.js</title>
+    </head>
+    <body class="Demo">
+       <h1>JSONView.js Demo</h1>
+
+        <p><a href="./index.html">Index</a></p>
+
+        <h2>Object View</h2>
+                    
+        <p>This is just a view of a simple one-property object.</p>
+
+        <div class="Example">
+          <div class="jsonviewObject"></div>
+        </div>
+
+        <h2>Object View (shrink to fit)</h2>
+                    
+        <p>This also a view of a simple one-property object, but overrides the bootstrap 100% table width.</p>
+        <p>This may be a better default behavior, but I don't know. Further demoing could help. This control
+          is only used, at the moment, within the ErrorView, to display the optional "info" associated with 
+          a JSONRPC error.
+        </p>
+
+        <div class="Example">
+          <div class="jsonviewObject fit-content"></div>
+        </div>
+
+        <h2>Array View</h2>
+                    
+        <p>This is just a simple one-element array.</p>
+
+        <div class="Example">
+          <div class="jsonviewArray"></div>
+        </div>
+
+        <h2>Array View (shrink to fit)</h2>
+                    
+        <p>Same as above, but with width set to <code>fit-content</code></p>
+
+        <div class="Example">
+          <div class="jsonviewArray fit-content"></div>
+        </div>
+
+        <h2>String View</h2>
+
+        <p>Here we present a simple string.</p>
+
+        <div class="Example">
+          <div id="jsonviewString"></div>
+        </div>
+        
+        <h2>Number View</h2>
+
+        <p>Here we view a simple number.</p>
+
+        <div class="Example">
+          <div id="jsonviewNumber"></div>
+        </div>
+
+        <h2>Boolean View</h2>
+
+        <p>Here we render a simple boolean true value.</p>
+
+        <div class="Example">
+          <div id="jsonviewBooleanTrue"></div>
+        </div>
+
+        <p>Here we render a simple boolean false value.</p>
+
+        <div class="Example">
+          <div id="jsonviewBooleanFalse"></div>
+        </div>
+
+        <h2>Null View</h2>
+
+        <p>Here we render a simple null.</p>
+
+        <div class="Example">
+          <div id="jsonviewNull"></div>
+        </div>
+
+        <h2>Complex Object</h2>
+                    
+        <p>Here we display an object which is populated with values of all JSON types.</p>
+
+        <div class="Example">
+          <div class="jsonviewComplex"></div>
+        </div>
+
+        <h2>Complex Object (shrink to fit)</h2>
+                    
+        <p>The same view as above, but with <code>fit-content</code> for the table width.</p>
+
+        <div class="Example">
+          <div class="jsonviewComplex fit-content"></div>
+        </div>
+
+        <script>
+            require(['narrative_paths'], () => {
+                require([
+                  'jquery', 
+                  'widgets/common/JSONView', 
+                  'json!kbase/demo/JSONView.json',
+                  // For effect
+                  'css!kbase/demo/JSONView.css'
+                ], ($, $JSONView, demoData) => {
+                    $('.jsonviewObject').html($JSONView({"greetings": "Earthling"}));
+
+                    $('.jsonviewArray').html($JSONView(["hello", "Martian"]));
+
+                    $('#jsonviewString').html($JSONView("I am a string"));
+
+                    $('#jsonviewNumber').html($JSONView(1234.5678));
+
+                    $('#jsonviewBooleanTrue').html($JSONView(true));
+
+                    $('#jsonviewBooleanFalse').html($JSONView(false));
+
+                    $('#jsonviewNull').html($JSONView(null));
+
+                    $('.jsonviewComplex').html($JSONView(demoData));
+                });
+            });
+        </script>
+    </body>
+</html>

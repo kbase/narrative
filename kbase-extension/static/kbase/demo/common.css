@@ -1,0 +1,16 @@
+.Demo .Example {
+    border: 3px solid rgb(200, 200, 200);
+    padding: 1em;
+    border-radius: 1em;
+    background: repeating-linear-gradient(
+    45deg,
+    rgba(200, 200, 200, 0.2),
+    rgba(200, 200, 200, 0.2) 10px,
+    rgba(150, 150, 150, 0.2) 10px,
+    rgba(150, 150, 150, 0.2) 20px
+    );
+}
+
+.Demo .Example + .Example {
+    margin-top: 1em;
+}

@@ -78,6 +78,7 @@ Dependency Changes
 - DATAUP-751 - add link to staging area docs in the upload tour
 - DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
 - DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
+- SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
 
 Dependency Changes
 - Javascript dependency updates
@@ -252,39 +253,41 @@ Dependency Changes
   - expect-webdriverio 3.1.4
 
 ### Version 4.5.0
-- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
-- SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
-- SCT-3084 - Fixed broken (non-functional) search in the data panel
-- SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
-- No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
-- Python dependency updates
-  - bokeh 2.3.2 -> 2.3.3
-  - pillow 8.2.0 -> 8.3.1
-  - plotly 4.14.3 -> 5.1.0
-  - pymongo 3.11.4 -> 3.12.0
-  - pytest 6.2.3. -> 6.2.4
-  - pytest-cov 2.11.1 -> 2.12.1
-  - requests 2.25.1 -> 2.26.0
-  - setuptools 57.0.0 -> 57.4.0
-- Javascript dependency updates
-  - @types/puppeteer 5.0.0 -> 5.4.4
-  - @wdio/browserstack-service 7.7.3 -> 7.9.0
-  - @wdio/cli 7.7.3 -> 7.9.0
-  - @wdio/local-runner 7.7.3 -> 7.9.0
-  - @wdio/mocha-framework 7.7.3 -> 7.9.0
-  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
-  - @wdio/spec-reporter 7.7.7 -> 7.9.0
-  - chromedriver 91.0.0 -> 91.0.1
-  - eslint 7.28.0 -> 7.32.0
-  - husky 6.0.0 -> 7.0.1
-  - karma 6.3.3. -> 6.3.4
-  - puppeteer 10.0.0 -> 10.1.0
-  - selenium-standalone 6.23.0 -> 7.1.0
-  - terser 5.7.0 -> 5.7.1
-  - wdio-chromedriver-service 7.1.0 -> 7.1.1
-  - webdriverio 7.7.3 -> 7.9.1
+
+-   PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+-   SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
+-   SCT-3084 - Fixed broken (non-functional) search in the data panel
+-   SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
+-   No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+-   Python dependency updates
+    -   bokeh 2.3.2 -> 2.3.3
+    -   pillow 8.2.0 -> 8.3.1
+    -   plotly 4.14.3 -> 5.1.0
+    -   pymongo 3.11.4 -> 3.12.0
+    -   pytest 6.2.3. -> 6.2.4
+    -   pytest-cov 2.11.1 -> 2.12.1
+    -   requests 2.25.1 -> 2.26.0
+    -   setuptools 57.0.0 -> 57.4.0
+-   Javascript dependency updates
+    -   @types/puppeteer 5.0.0 -> 5.4.4
+    -   @wdio/browserstack-service 7.7.3 -> 7.9.0
+    -   @wdio/cli 7.7.3 -> 7.9.0
+    -   @wdio/local-runner 7.7.3 -> 7.9.0
+    -   @wdio/mocha-framework 7.7.3 -> 7.9.0
+    -   @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+    -   @wdio/spec-reporter 7.7.7 -> 7.9.0
+    -   chromedriver 91.0.0 -> 91.0.1
+    -   eslint 7.28.0 -> 7.32.0
+    -   husky 6.0.0 -> 7.0.1
+    -   karma 6.3.3. -> 6.3.4
+    -   puppeteer 10.0.0 -> 10.1.0
+    -   selenium-standalone 6.23.0 -> 7.1.0
+    -   terser 5.7.0 -> 5.7.1
+    -   wdio-chromedriver-service 7.1.0 -> 7.1.1
+    -   webdriverio 7.7.3 -> 7.9.1
 
 ### Version 4.4.0
+
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
@@ -293,11 +296,13 @@ Dependency Changes
 -   SCT-3038 - refseq public data search now includes genome_id and source_id
 
 ### Version 4.3.2
+
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
 ### Version 4.3.1
+
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.
@@ -316,11 +321,12 @@ Dependency Changes
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
 ### Version 4.3.0
-- SCT-2664 - Show the app cell status when in a collapsed state.
-- Added an "Info" tab to all app cells with app information.
-- Updated links to new KBase home page and docs site.
-- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
-- (Trigger release via labels)
+
+-   SCT-2664 - Show the app cell status when in a collapsed state.
+-   Added an "Info" tab to all app cells with app information.
+-   Updated links to new KBase home page and docs site.
+-   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+-   (Trigger release via labels)
 
 ### Version 4.2.1
 

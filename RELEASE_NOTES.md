@@ -6,6 +6,8 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Unreleased
 
+- PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
+
 Dependency Changes
 - Python dependency updates
   - black >=20.8b1 -> 22.8.0

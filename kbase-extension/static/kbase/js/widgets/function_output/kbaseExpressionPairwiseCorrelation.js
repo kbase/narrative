@@ -174,7 +174,10 @@ define([
             if (rowIds.length > MAX_GENES_FOR_HEATMAP) {
                 const message = [
                     `The selected cluster has ${rowIds.length} genes.`,
-                    `Heatmaps cannot be generated for clusters with more than ${MAX_GENES_FOR_HEATMAP} genes, for performance reasons.`,
+                    [
+                        `Heatmaps cannot be generated for clusters with more than ${MAX_GENES_FOR_HEATMAP} genes, `,
+                        'for performance reasons.',
+                    ].join(''),
                 ].join(' ');
                 $container.append($renderWarningAlert(message));
                 return;
@@ -217,8 +220,10 @@ define([
                     .append(' ')
                     .append(
                         $('<span>').text(
-                            `Heatmaps for clusters with more than ${MAX_GENES_FOR_INLINE_HEATMAP} genes are not 
-                            displayed inline, for performance reasons.`
+                            [
+                                `Heatmaps for clusters with more than ${MAX_GENES_FOR_INLINE_HEATMAP} genes are not `,
+                                'displayed inline, for performance reasons.',
+                            ].join('')
                         )
                     )
                     .append(' ')

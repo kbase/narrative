@@ -275,9 +275,7 @@ define([
             const $deleteModal = new kbaseDeletePrompt($('<div>'), {
                 name: tabName,
                 callback: () => {
-                    if ($deleteModal) {
-                        $deleteModal.closePrompt();
-                    }
+                    $deleteModal.closePrompt();
                     this.removeTab(tabName);
                 },
             });

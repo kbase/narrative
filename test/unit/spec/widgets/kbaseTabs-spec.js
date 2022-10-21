@@ -132,7 +132,7 @@ define(['jquery', 'kbaseTabs', '../util/asyncTools'], ($, KBaseTabs, asyncTools)
 
         it('a deletable tab which is last should show the prior one when it is closed', async () => {
             const $host = $(document.createElement('div'));
-            new KBaseTabs($host, {
+            KBaseTabs($host, {
                 confirmDelete: false,
                 tabs: [
                     {

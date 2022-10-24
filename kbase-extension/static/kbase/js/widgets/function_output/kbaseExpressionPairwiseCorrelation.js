@@ -111,9 +111,13 @@ define([
                 link.click();
 
                 // Theoretically this ensures that the link and url are not needed any more.
-                // I don't know of documentation for this behavior, but it does seem to work.
                 // Note that there is nothing really to "download", as the heatmap content is
                 // already loaded in the browser.
+                // I didn't find documentation for this, but I figure that, the click is
+                // not handled until the next turn of the wheel in the JS event loop. So the
+                // timeout just lets the event loop handle the click, and timers are executed
+                // after any pending events, so this should ensure that the link being clicked
+                // is not removed until the link 'click' is handled.
                 setTimeout(() => {
                     document.body.removeChild(link);
                     window.URL.revokeObjectURL(url);

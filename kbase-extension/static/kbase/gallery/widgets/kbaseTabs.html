@@ -260,14 +260,13 @@
             new $KBaseTabs($('#demo4'), tabs4);
 
             let tabNumber = 0;
-            const tabAdder = () => {
+            const tabAdder = (show, canDelete) => {
                 tabNumber += 1;
-                const canDelete = tabNumber > 2;
                 const confirmDelete = tabNumber > 4;
                 $tabset5.addTab({
                     tab: `Dynamic Tab ${tabNumber}`,
                     content: $tabContent(`<p>This is dynamic tab ${tabNumber}.</p>`),
-                    canDelete, confirmDelete
+                    canDelete, confirmDelete, show
                 })
             };
 
@@ -278,16 +277,32 @@
                         tab: 'Tab Adder',
                         content: $tabContent(
                             $('<div>')
-                                .append($('<p>Hi, click the link!</p>'))
+                                .append($('<p>Hi, click the links!</p>'))
                                 .append($('<p>').append(
                                     $('<a>')
                                         .attr('href', '#')
                                         .text('Add Tab!')
                                         .click((e) => {
                                             e.preventDefault();
-                                            tabAdder();
-                                        }))
-                                ))
+                                            tabAdder(false, false);
+                                        })))
+                                .append($('<p>').append(
+                                    $('<a>')
+                                        .attr('href', '#')
+                                        .text('Add Tab and show!')
+                                        .click((e) => {
+                                            e.preventDefault();
+                                            tabAdder(true, false);
+                                        })))
+                                .append($('<p>').append(
+                                    $('<a>')
+                                        .attr('href', '#')
+                                        .text('Add Tab and show and deletable!')
+                                        .click((e) => {
+                                            e.preventDefault();
+                                            tabAdder(true, true);
+                                        })))
+                                )
                     }, {
 
                         tab: 'Tab Two',

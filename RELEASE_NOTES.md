@@ -7,6 +7,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 ## Unreleased
 
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
+- PTV-1620 - fix problem with kbaseTabs showing no tab when a dynamically added tab is closed 
 
 Dependency Changes
 - Python dependency updates

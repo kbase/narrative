@@ -1,14 +1,27 @@
 root=$(git rev-parse --show-toplevel)
-kbase_dir=kbase-extension
+# Most of KBase javascript source; directory structure does not allow
+# mounting all of it because npm dependencies are installed within static.
+# Best would be one parent directory for KBase JS, one for all installed.
+# Note that if you want to fiddle with dependencies locally w/in the image
+# you can add a --mount of the entirety of kbase-extension
+kbase_dir=kbase-extension/static/kbase
 src_dir=src
 test_dir=test
 ext_components_dir=kbase-extension/static/ext_components
 nbextension_dir=nbextensions
 container_root=/kb/dev_container/narrative/
+
+#
+# We need the ENV to pass in to the Narrative for selecting the config.
+#
 if [ -z "$ENV" ]; then
 	echo "The 'ENV' environment variable is required, set to either ci, next, appdev, or prod"
 	exit 1
 fi
+
+#
+# This port is exposed on the host.
+#
 if [ -z "$PORT" ]; then
 	PORT=8888
 fi

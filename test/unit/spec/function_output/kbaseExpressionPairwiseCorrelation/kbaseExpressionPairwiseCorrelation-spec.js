@@ -5,7 +5,7 @@ define([
     'narrativeConfig',
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
-    '../../util/asyncTools',
+    'testUtil',
 
     'json!./data/case1/constructorParams.json',
     'json!./data/case1/KBaseFeatureValues.get_submatrix_stat.request.json',
@@ -23,7 +23,7 @@ define([
     Config,
     Jupyter,
     DynamicServiceClient,
-    asyncTools,
+    testUtil,
     case1ConstructorParams,
     case1Request1Data,
     case1ResponseData,
@@ -34,7 +34,7 @@ define([
 ) => {
     'use strict';
 
-    const { tryFor } = asyncTools;
+    const { tryFor } = testUtil;
 
     const KBASE_FEATURE_VALUES_URL = 'https://ci.kbase.us/dynserv/xyz.KBaseFeatureValues';
     const AUTH_TOKEN = 'fakeAuthToken';

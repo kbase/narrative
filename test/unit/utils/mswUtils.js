@@ -1,52 +1,11 @@
-define(['msw'], (msw) => {
+define(['msw', 'testUtil'], (msw, testutil) => {
     'use strict';
 
     const { setupWorker, rest } = msw;
 
+    const { wait, tryFor } = testutil;
+
     const MSW_FUDGE_FACTOR = 100;
-    const TRY_LOOP_INTERVAL = 100;
-    const DEFAULT_TRY_LOOP_TIMEOUT = 5000;
-
-    /**
-     * Returns a promise which resolves when the given duration, in milliseconds,
-     * elapses.
-     *
-     * @param {int} duration
-     * @returns {Promise<void>}
-     */
-    function waitFor(duration) {
-        return new Promise((resolve) => {
-            window.setTimeout(() => {
-                resolve();
-            }, duration);
-        });
-    }
-
-    /**
-     * Returns a promise which will resolve when the provided function returns true,
-     * and reject if it exceeds the provided timeout or default of 5s, or if the
-     * function throws an exception.
-     *
-     * @param {Function} fun - A function to "try"; returns [true, value] if the "try" succeeds, [false] otherwise
-     * @param {number} duration - The timeout, in milliseconds, after which trying without success will fail
-     * @returns {Promise} - A promise resolved
-     */
-    async function tryFor(fun, duration = DEFAULT_TRY_LOOP_TIMEOUT) {
-        const interval = TRY_LOOP_INTERVAL;
-        const started = Date.now();
-
-        for (;;) {
-            const elapsed = Date.now() - started;
-            if (elapsed > duration) {
-                throw new Error(`waitFor expired without success after ${elapsed}ms`);
-            }
-            const [gotIt, result] = await fun();
-            if (gotIt) {
-                return result;
-            }
-            await waitFor(interval);
-        }
-    }
 
     class MockWorker {
         constructor(options = {}) {
@@ -54,7 +13,7 @@ define(['msw'], (msw) => {
             this.onUnhandledRequest = options.onUnhandledRequest || 'bypass';
         }
 
-        // The "use" methods will be add responders at "runtime", and must be used after the
+        // The "use" methods will add responders at "runtime", and must be used after the
         // worker has started. They can be removed using resetHandlers. These are the preferred
         // way to use msw in tests.
 
@@ -98,7 +57,7 @@ define(['msw'], (msw) => {
             });
             // Workaround to ensure that the worker is fully started before we
             // proceed.
-            await waitFor(MSW_FUDGE_FACTOR);
+            await wait(MSW_FUDGE_FACTOR);
             return this;
         }
 
@@ -168,8 +127,6 @@ define(['msw'], (msw) => {
     }
 
     return {
-        waitFor,
-        tryFor,
         MockWorker,
         findTab,
         expectCell,

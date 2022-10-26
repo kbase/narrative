@@ -1,7 +1,7 @@
 module.exports = function (config) {
     'use strict';
 
-    const narrativeServer = 'http://localhost:32323';
+    const narrativeServer = process.env.NARRATIVE_SERVER_URL || 'http://localhost:32323';
 
     const alwaysExclude = [
         'kbase-extension/static/buildTools/*.js',

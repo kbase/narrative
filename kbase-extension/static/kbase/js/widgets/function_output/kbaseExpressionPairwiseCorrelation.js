@@ -1,3 +1,4 @@
+/* eslint-disable strict */
 /**
  * Pairwise correlation of gene expression profiles.
  *
@@ -7,15 +8,13 @@
 define([
     'kbwidget',
     'jquery',
-    'uuid',
+    'widgets/common/jQueryUtils',
     'kbaseExpressionGenesetBaseWidget',
     'kbaseHeatmap',
 
     /* for effect */
     'bootstrap',
-], (KBWidget, $, Uuid, kbaseExpressionGenesetBaseWidget, kbaseHeatmap) => {
-    'use strict';
-
+], (KBWidget, $, { $el }, kbaseExpressionGenesetBaseWidget, kbaseHeatmap) => {
     // The "MAX_GENES_*" constants are utilized to control performance of using a
     // matrix, which has N² character, generally.
 
@@ -39,20 +38,20 @@ define([
     const HEATMAP_X_PADDING = 150;
 
     function $renderWarningAlert(warningContent) {
-        const $warningElement = $('<div>')
+        const $warningElement = $el('div')
             .addClass('alert alert-warning')
             .css('display', 'flex')
             .css('flex-direction', 'row')
             .css('align-items', 'center');
 
         $warningElement.append(
-            $('<span>')
+            $el('span')
                 .addClass('fa fa-exclamation-triangle')
                 .css('margin-right', '0.5em')
                 .css('font-size', '130%')
         );
         if (typeof warningContent === 'string') {
-            $warningElement.append($('<span>').text(warningContent));
+            $warningElement.append($el('span').text(warningContent));
         } else {
             $warningElement.append(warningContent);
         }
@@ -125,7 +124,7 @@ define([
             };
 
             if (controlType === 'button') {
-                return $.jqElem('button')
+                return $el('button')
                     .attr('data-testid', 'download-button')
                     .append('Download the SVG image file for this pairwise correlation')
                     .addClass('btn btn-primary')
@@ -133,7 +132,7 @@ define([
                         downloadHeatmap();
                     });
             }
-            return $('<a>')
+            return $el('a')
                 .attr('href', '#')
                 .click((event) => {
                     event.preventDefault();
@@ -172,7 +171,7 @@ define([
                 data,
             };
 
-            const $container = $('<div>').css('margin-top', '5px');
+            const $container = $el('div').css('margin-top', '5px');
             $hostDiv.html($container);
 
             if (rowIds.length > MAX_GENES_FOR_HEATMAP) {
@@ -205,7 +204,7 @@ define([
                 return [width, height];
             })();
 
-            const $heatmapContainer = $('<div>')
+            const $heatmapContainer = $el('div')
                 .css('width', `${heatmapWidth}px`)
                 .css('height', `${heatmapHeight}px`)
                 .attr('data-testid', 'heatmap');
@@ -219,11 +218,11 @@ define([
             });
 
             if (rowIds.length > MAX_GENES_FOR_INLINE_HEATMAP) {
-                const $message = $('<span>')
-                    .append($('<span>').text(`The selected cluster has ${rowIds.length} genes.`))
+                const $message = $el('span')
+                    .append($el('span').text(`The selected cluster has ${rowIds.length} genes.`))
                     .append(' ')
                     .append(
-                        $('<span>').text(
+                        $el('span').text(
                             [
                                 `Heatmaps for clusters with more than ${MAX_GENES_FOR_INLINE_HEATMAP} genes are not `,
                                 'displayed inline, for performance reasons.',
@@ -232,7 +231,7 @@ define([
                     )
                     .append(' ')
                     .append(
-                        $('<p>')
+                        $el('p')
                             .append('However you may')
                             .append(' ')
                             .append(
@@ -249,7 +248,7 @@ define([
                 $container.append($renderWarningAlert($message));
 
                 $container.append(
-                    $.jqElem('p').append(
+                    $el('p').append(
                         this.$renderDownloadControl($heatmapContainer, 'download', 'button')
                     )
                 );

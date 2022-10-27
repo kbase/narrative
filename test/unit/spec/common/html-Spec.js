@@ -166,6 +166,17 @@ define(['common/html', 'testUtil'], (html, TestUtil) => {
             );
         });
 
+        it('Creates a tag with properly escaped attribute values', () => {
+            const div = html.tag('div');
+            const value =
+                '"This is a very "strange" value with <lots> of <tag> thingies <=> <= => in it';
+            const escapedValue =
+                '&quot;This is a very &quot;strange&quot; value with &lt;lots&gt; of &lt;tag&gt; thingies &lt;=&gt; &lt;= =&gt; in it';
+            expect(div({ attribute: value }, 'hello')).toEqual(
+                `<div attribute="${escapedValue}">hello</div>`
+            );
+        });
+
         it('Creates a tag with empty attributes', () => {
             const div = html.tag('div');
             expect(div({}, 'hello')).toEqual('<div>hello</div>');

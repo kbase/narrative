@@ -1,48 +1,88 @@
+/* eslint-disable strict */
 /**
  * Pairwise correlation of gene expression profiles.
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
  */
+define([
+    'kbwidget',
+    'jquery',
+    'widgets/common/jQueryUtils',
+    'kbaseExpressionGenesetBaseWidget',
+    'kbaseHeatmap',
 
-const MAGIC_DOWNLOAD_NUMBER = 50;
+    /* for effect */
+    'bootstrap',
+], (KBWidget, $, { $el }, kbaseExpressionGenesetBaseWidget, kbaseHeatmap) => {
+    // The "MAX_GENES_*" constants are utilized to control performance of using a
+    // matrix, which has N² character, generally.
 
-define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', 'kbaseHeatmap'], (
-    KBWidget,
-    bootstrap,
-    $,
-    kbaseExpressionGenesetBaseWidget,
-    kbaseHeatmap
-) => {
-    'use strict';
+    // Controls the max genes for which a heatmap will be inserted into the DOM.
+    const MAX_GENES_FOR_INLINE_HEATMAP = 50;
+
+    // Controls the max genes for which a heatmap will be generated (and queried for), period.
+    const MAX_GENES_FOR_HEATMAP = 200;
+
+    // Heatmap display controls.
+    const HEATMAP_COLORS = ['#FFA500', '#FFFFFF', '#0066AA'];
+    const HEATMAP_MIN_VALUE = -1.0;
+    const HEATMAP_MAX_VALUE = 1.0;
+    const HEATMAP_ROW_HEIGHT = 15;
+    const HEATMAP_MIN_HEIGHT = 210;
+
+    // See base-extension/static/kbase/js/widgets/vis/kbaseHeatmap.js
+    const HEATMAP_Y_GUTTER = 80;
+    const HEATMAP_Y_PADDING = 20;
+    const HEATMAP_X_GUTTER = 110;
+    const HEATMAP_X_PADDING = 150;
+
+    function $renderWarningAlert(warningContent) {
+        const $warningElement = $el('div')
+            .addClass('alert alert-warning')
+            .css('display', 'flex')
+            .css('flex-direction', 'row')
+            .css('align-items', 'center');
+
+        $warningElement.append(
+            $el('span')
+                .addClass('fa fa-exclamation-triangle')
+                .css('margin-right', '0.5em')
+                .css('font-size', '130%')
+        );
+        if (typeof warningContent === 'string') {
+            $warningElement.append($el('span').text(warningContent));
+        } else {
+            $warningElement.append(warningContent);
+        }
+        return $warningElement;
+    }
+
+    /**
+     * kbaseExpressionPairwiseCorrelation object viewer widget
+     *
+     * constructor params:
+     * - geneIds {}
+     * - workspaceID {}
+     * - expressionMatrixID {}
+     *
+     * from kbaseExpressionGenesetBaseWidget
+     * - featureset {}
+     * - loadingImage {}
+     */
 
     return KBWidget({
         name: 'kbaseExpressionPairwiseCorrelation',
         parent: kbaseExpressionGenesetBaseWidget,
         version: '1.0.0',
 
-        maxRange: null,
-        minRange: null,
-
-        // To be overriden to specify additional parameters
+        // To be overridden to specify additional parameters
         getSubmtrixParams: function () {
             const self = this;
 
             let features = [];
             if (self.options.geneIds) {
                 features = $.map(self.options.geneIds.split(','), $.trim);
-            }
-
-            self.minRange = -1;
-            self.maxRange = 1;
-            if (self.options.minRange) {
-                self.minRange = self.options.minRange;
-            }
-            if (self.options.maxRange) {
-                self.maxRange = self.options.maxRange;
-            }
-            if (self.minRange > self.maxRange) {
-                self.minRange = self.maxRange;
             }
 
             return {
@@ -53,86 +93,169 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
             };
         },
 
-        buildWidget: function ($containerDiv) {
-            const self = this;
+        $renderDownloadControl: function ($heatmapContainer, label, controlType = 'button') {
+            const downloadHeatmap = () => {
+                // Extract the heatmap svg content
+                const file = new Blob([$heatmapContainer.find('svg')[0].outerHTML], {
+                    type: 'text',
+                });
+
+                // Create a donor link element which will be "clicked" to download the content
+                // extracted above.
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(file);
+                link.href = url;
+                link.download = 'pairwise.svg';
+                document.body.appendChild(link);
+                link.click();
+
+                // Theoretically this ensures that the link and url are not needed any more.
+                // Note that there is nothing really to "download", as the heatmap content is
+                // already loaded in the browser.
+                // I didn't find documentation for this, but I figure that, the click is
+                // not handled until the next turn of the wheel in the JS event loop. So the
+                // timeout just lets the event loop handle the click, and timers are executed
+                // after any pending events, so this should ensure that the link being clicked
+                // is not removed until the link 'click' is handled.
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            };
+
+            if (controlType === 'button') {
+                return $el('button')
+                    .attr('data-testid', 'download-button')
+                    .append('Download the SVG image file for this pairwise correlation')
+                    .addClass('btn btn-primary')
+                    .click(() => {
+                        downloadHeatmap();
+                    });
+            }
+            return $el('a')
+                .attr('href', '#')
+                .click((event) => {
+                    event.preventDefault();
+                    downloadHeatmap();
+                })
+                .text(label);
+        },
+
+        buildWidget: function ($hostDiv) {
             const submatrixStat = this.submatrixStat;
             const rowDescriptors = submatrixStat.row_descriptors;
             const values = submatrixStat.row_pairwise_correlation.comparison_values;
 
             //Build row ids
             const rowIds = [];
-            let i;
-            for (i = 0; i < rowDescriptors.length; i++) {
-                rowIds.push(rowDescriptors[i].id);
+
+            for (const { id } of rowDescriptors) {
+                rowIds.push(id);
             }
 
             // Build data
             const data = [];
-            for (i = 0; i < rowDescriptors.length; i++) {
+
+            for (let i = 0; i < rowDescriptors.length; i++) {
                 const row = [];
                 for (let j = 0; j < rowDescriptors.length; j++) {
-                    row.push(values[i][j].toFixed(3));
+                    row.push(values[i][j]);
                 }
                 data.push(row);
             }
-            const heatmap = {
+            const dataset = {
                 row_ids: rowIds,
                 row_labels: rowIds,
                 column_ids: rowIds,
                 column_labels: rowIds,
-                data: data,
+                data,
             };
 
-            const size = rowIds.length;
-            let rowH = 15;
-            let hmH = 80 + 20 + size * rowH;
+            const $container = $el('div').css('margin-top', '5px');
+            $hostDiv.html($container);
 
-            if (hmH < 210) {
-                hmH = 210;
-                rowH = Math.round((hmH - 100) / size);
+            if (rowIds.length > MAX_GENES_FOR_HEATMAP) {
+                const message = [
+                    `The selected cluster has ${rowIds.length} genes.`,
+                    [
+                        `Heatmaps cannot be generated for clusters with more than ${MAX_GENES_FOR_HEATMAP} genes, `,
+                        'for performance reasons.',
+                    ].join(''),
+                ].join(' ');
+                $container.append($renderWarningAlert(message));
+                return;
             }
-            const colW = rowH;
-            const hmW = 150 + 110 + size * colW;
 
-            const $heatmapDiv = $(
-                "<div style = 'width : " + hmW + 'px; height : ' + hmH + "px'></div>"
-            );
-            //            $containerDiv.append($heatmapDiv);
-            $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
+            const [heatmapWidth, heatmapHeight] = (() => {
+                const size = rowIds.length;
+                let rowHeight = HEATMAP_ROW_HEIGHT;
+                let height = HEATMAP_Y_GUTTER + HEATMAP_Y_PADDING + size * rowHeight;
+
+                // Under HEATMAP_MIN_HEIGHT pixels, we set the height to the min height.
+                if (height < HEATMAP_MIN_HEIGHT) {
+                    height = HEATMAP_MIN_HEIGHT;
+                    rowHeight = Math.round(
+                        (height - (HEATMAP_Y_GUTTER + HEATMAP_Y_PADDING)) / size
+                    );
+                }
+                const columnWidth = rowHeight;
+                const width = HEATMAP_X_GUTTER + HEATMAP_X_PADDING + size * columnWidth;
+
+                return [width, height];
+            })();
+
+            const $heatmapContainer = $el('div')
+                .css('width', `${heatmapWidth}px`)
+                .css('height', `${heatmapHeight}px`)
+                .attr('data-testid', 'heatmap');
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
-            new kbaseHeatmap($heatmapDiv, {
-                dataset: heatmap,
-                colors: ['#FFA500', '#FFFFFF', '#0066AA'],
-                minValue: self.minRange,
-                maxValue: self.maxRange,
+            new kbaseHeatmap($heatmapContainer, {
+                dataset,
+                colors: HEATMAP_COLORS,
+                minValue: HEATMAP_MIN_VALUE,
+                maxValue: HEATMAP_MAX_VALUE,
             });
 
-            if (rowIds.length < MAGIC_DOWNLOAD_NUMBER) {
-                $containerDiv.append($heatmapDiv);
-            } else {
-                const $svg = $heatmapDiv.find('svg');
-                const $dummy = $.jqElem('div').append($svg);
+            if (rowIds.length > MAX_GENES_FOR_INLINE_HEATMAP) {
+                const $message = $el('span')
+                    .append($el('span').text(`The selected cluster has ${rowIds.length} genes.`))
+                    .append(' ')
+                    .append(
+                        $el('span').text(
+                            [
+                                `Heatmaps for clusters with more than ${MAX_GENES_FOR_INLINE_HEATMAP} genes are not `,
+                                'displayed inline, for performance reasons.',
+                            ].join('')
+                        )
+                    )
+                    .append(' ')
+                    .append(
+                        $el('p')
+                            .append('However you may')
+                            .append(' ')
+                            .append(
+                                this.$renderDownloadControl(
+                                    $heatmapContainer,
+                                    'download the heatmap',
+                                    'link'
+                                )
+                            )
+                            .append(
+                                ' as an SVG image file and view it with your favorite graphics program.'
+                            )
+                    );
+                $container.append($renderWarningAlert($message));
 
-                $containerDiv.append(
-                    $.jqElem('button')
-                        .append('Please download the svg of this pairwise correlation')
-                        .addClass('btn btn-primary')
-                        .on('click', (e) => {
-                            const file = new Blob([$dummy.html()], { type: 'text' });
-                            const a = document.createElement('a'),
-                                url = URL.createObjectURL(file);
-                            a.href = url;
-                            a.download = 'pairwise.svg';
-                            document.body.appendChild(a);
-                            a.click();
-                            setTimeout(() => {
-                                document.body.removeChild(a);
-                                window.URL.revokeObjectURL(url);
-                            }, 0);
-                        })
+                $container.append(
+                    $el('p').append(
+                        this.$renderDownloadControl($heatmapContainer, 'download', 'button')
+                    )
                 );
+                return;
             }
+
+            $container.append($heatmapContainer);
         },
     });
 });

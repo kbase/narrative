@@ -1,8 +1,5 @@
 __all__ = ["magics", "common", "handlers", "contents", "services", "widgetmanager"]
-
-from semantic_version import Version
-
-__version__ = Version("5.1.2")
+__version__ = "5.1.3"
 
 
 def version():

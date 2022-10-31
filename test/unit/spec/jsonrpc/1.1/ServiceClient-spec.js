@@ -1,12 +1,14 @@
-define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
+define(['unitTestUtils/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers', 'testUtil'], (
     mswUtils,
     ServiceClient,
-    helpers
+    helpers,
+    testUtil
 ) => {
     'use strict';
 
-    const { MockWorker, waitFor } = mswUtils;
+    const { MockWorker } = mswUtils;
     const { makeErrorResponse, URL } = helpers;
+    const { wait } = testUtil;
 
     function makeSDKResponse(rpc, result) {
         const defaultResult = [
@@ -174,7 +176,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('a timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, async (_req, _res, rpc) => {
-                await waitFor(2000);
+                await wait(2000);
                 return makeSDKResponse(rpc);
             });
 
@@ -196,7 +198,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('aborting before timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, async (_req, _res, rpc) => {
-                await waitFor(2000);
+                await wait(2000);
                 return makeSDKResponse(rpc);
             });
 

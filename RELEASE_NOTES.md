@@ -2,7 +2,51 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
+This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
+
+## Version 5.1.3
+
+- PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
+- PTV-1514 - sanitized HTML being used for app input tooltips
+
+Dependency Changes
+- Python dependency updates
+  - black >=20.8b1 -> 22.8.0
+  - coverage 6.2 -> 6.4.4
+  - cryptography 37.0.4 -> 38.0.1
+  - flake8 3.8.4 -> 5.0.4
+  - jinja2 3.0.3 -> 3.1.2
+  - jupyter-console 6.4.3 -> 6.4.4
+  - pygments 2.12.0 -> 2.13.0
+  - requests 2.27.1 -> 2.28.1
+- Javascript dependency updates
+  - @wdio/cli 7.19.6 -> 7.25.0
+  - @wdio/local-runner 7.19.5 -> 7.25.0
+  - @wdio/spec-reporter 7.19.5 -> 7.25.0
+  - bootstrap 3.3.7 -> 3.4.1
+  - bootstrap-slider 10.6.2 -> 11.0.2
+  - chrome-launcher 0.14.2 -> 0.15.1
+  - chromedriver ^101.0.0 -> ^105.0.0
+  - cssnano 5.1.7 -> 5.1.13
+  - jasmine-core 4.1.0 -> 4.3.0
+  - jquery-ui 1.13.1 -> 1.13.2
+  - karma-jasmine-html-reporter 1.7.0 -> 2.0.0
+  - postcss-cli 9.1.0 -> 10.0.0
+  - prettier 2.4.1 -> 2.7.1
+  - puppeteer 13.7.0 -> 18.0.5
+  - require-css 0.1.8 -> 0.1.10
+  - sass 1.51.0 -> 1.55.0
+  - selenium-standalone 8.1.1 -> 8.2.0
+  - selenium-webdriver 4.1.2 -> 4.4.0
+  - terser 5.13.1 -> 5.15.0
+  - underscore 1.13.3 -> 1.13.6
+
+Removed dependencies  
+**note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
+  - plotly - not necessary for core narrative functionality, moved to narrative base image
+  - semantic_version -- removed, wasn't used effectively, and removed the need for it
+  - sklearn - still included, installed manually alongside clustergrammer in the install script, so the requirements.txt was removed
+  - sympy - not necessary for core narrative functionality, moved to narrative base image
 
 ### Version 5.1.2
 - PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload

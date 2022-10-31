@@ -37,8 +37,8 @@
 #
 # 8. Done!
 
-IPYTHON_VERSION=8.4.0
-NOTEBOOK_VERSION=6.4.11
+IPYTHON_VERSION=8.5.0
+NOTEBOOK_VERSION=6.4.12
 IPYWIDGETS_VERSION=7.6.3
 
 SCRIPT_TGT="kbase-narrative"
@@ -87,10 +87,6 @@ done
 
 console "Install: complete log in: $logfile"
 
-# TODO -
-# Test for conda, fail otherwise
-# Test for Python >= 3.5 or so (not sure which)
-
 if [ ! $update_only -eq 1 ]
 then
     # Install external JavaScript code
@@ -125,7 +121,7 @@ then
     fi
 
     # Install sklearn and clustergrammer
-    # ------------------------------
+    # ----------------------------------
     pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"

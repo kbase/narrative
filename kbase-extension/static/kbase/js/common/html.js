@@ -1,4 +1,4 @@
-define(['uuid'], (Uuid) => {
+define(['uuid', 'util/string'], (Uuid, StringUtil) => {
     'use strict';
 
     const TAGS = {};
@@ -102,10 +102,7 @@ define(['uuid'], (Uuid) => {
                 })();
                 switch (typeof attribValue) {
                     case 'string': {
-                        const escapedValue = attribValue.replace(
-                            new RegExp('\\' + quoteChar, 'g'),
-                            '\\' + quoteChar
-                        );
+                        const escapedValue = StringUtil.escape(attribValue);
                         return `${attribName}=${quoteChar}${escapedValue}${quoteChar}`;
                     }
                     case 'boolean':

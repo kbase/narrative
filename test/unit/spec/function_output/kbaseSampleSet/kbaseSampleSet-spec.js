@@ -1,15 +1,17 @@
 define([
     'jquery',
     'kbaseSampleSetView',
-    '../../util/mswUtils',
+    'unitTestUtils/mswUtils',
+    'testUtil',
     'require',
     'jsonrpc/1.1/ServiceClient',
     'narrativeConfig',
     'json!./data/index.json',
-], ($, KBaseSampleSetView, mswUtils, localRequire, ServiceClient, Config, testData) => {
+], ($, KBaseSampleSetView, mswUtils, testUtil, localRequire, ServiceClient, Config, testData) => {
     'use strict';
 
-    const { tryFor, MockWorker, findTabContent, expectCell, findTab, getProp } = mswUtils;
+    const { MockWorker, findTabContent, expectCell, findTab, getProp } = mswUtils;
+    const { tryFor } = testUtil;
 
     const WORKSPACE_URL = Config.url('workspace'); // 'https://ci.kbase.us/services/ws';
     const SAMPLE_SERVICE_URL = Config.url('sample_service'); // 'https://ci.kbase.us/services/sampleservice';

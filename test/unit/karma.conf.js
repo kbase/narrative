@@ -1,7 +1,7 @@
 module.exports = function (config) {
     'use strict';
 
-    const narrativeServer = 'http://localhost:32323';
+    const narrativeServer = process.env.NARRATIVE_SERVER_URL || 'http://localhost:32323';
 
     const alwaysExclude = [
         'kbase-extension/static/buildTools/*.js',
@@ -60,6 +60,7 @@ module.exports = function (config) {
             // tests and test resources
             { pattern: 'test/unit/testUtil.js', nocache: true },
             { pattern: 'test/unit/mocks.js', nocache: true },
+            { pattern: 'test/unit/utils/*.js', included: false, nocache: true },
             { pattern: 'test/unit/test-main.js', nocache: true },
             { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
             { pattern: 'test/unit/spec/**/*.json', included: false, nocache: true },
@@ -135,6 +136,11 @@ module.exports = function (config) {
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['ChromeHeadless'],
+        // enable the following setting to prevent source code log entries from cluttering up
+        // test output.
+        // browserConsoleLogOptions: {
+        //     level: 'disable'
+        // },
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
@@ -143,6 +149,8 @@ module.exports = function (config) {
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': `${narrativeServer}/narrative/static/base`,
             '/narrative/static/notebook': `${narrativeServer}/narrative/static/notebook`,
+            '/narrative/static/ext_modules': `${narrativeServer}/narrative/static/ext_modules`,
+            '/narrative/static/ext_components': `${narrativeServer}/narrative/static/ext_components`,
             '/narrative/static/components': `${narrativeServer}/narrative/static/components`,
             '/narrative/static/services': `${narrativeServer}/narrative/static/services`,
             '/narrative/static/bidi': `${narrativeServer}/narrative/static/bidi`,

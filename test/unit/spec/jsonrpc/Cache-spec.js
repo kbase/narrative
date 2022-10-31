@@ -1,13 +1,7 @@
-define(['jsonrpc/Cache'], (Cache) => {
+define(['jsonrpc/Cache', 'testUtil'], (Cache, testUtil) => {
     'use strict';
 
-    function waitFor(duration) {
-        return new Promise((resolve) => {
-            window.setTimeout(() => {
-                resolve();
-            }, duration);
-        });
-    }
+    const { wait } = testUtil;
 
     describe('The Cache class', () => {
         it('should be defined', () => {
@@ -42,7 +36,7 @@ define(['jsonrpc/Cache'], (Cache) => {
                 waiterFrequency: 100,
             });
             cache.waitForItem('foo', async () => {
-                await waitFor(200);
+                await wait(200);
                 return 'bar';
             });
             const shouldFetch = () => {
@@ -65,7 +59,7 @@ define(['jsonrpc/Cache'], (Cache) => {
 
             await expectAsync(firstFetch()).toBeResolvedTo('bar');
 
-            await waitFor(100);
+            await wait(100);
 
             const secondFetch = () => {
                 return cache.waitForItem('foo', () => {
@@ -96,7 +90,7 @@ define(['jsonrpc/Cache'], (Cache) => {
             await expectAsync(fetchItem2()).toBeResolvedTo(42);
             expect(cache.cache.size).toEqual(2);
 
-            await waitFor(100);
+            await wait(100);
 
             expect(cache.cache.size).toEqual(0);
         });
@@ -115,7 +109,7 @@ define(['jsonrpc/Cache'], (Cache) => {
             await expectAsync(fetchItem()).toBeResolvedTo('bar');
             expect(cache.cache.size).toEqual(1);
 
-            await waitFor(50);
+            await wait(50);
 
             const fetchItem2 = () => {
                 return cache.waitForItem('meaning', () => {
@@ -125,11 +119,11 @@ define(['jsonrpc/Cache'], (Cache) => {
             await expectAsync(fetchItem2()).toBeResolvedTo(42);
             expect(cache.cache.size).toEqual(2);
 
-            await waitFor(75);
+            await wait(75);
 
             expect(cache.cache.size).toEqual(1);
 
-            await waitFor(75);
+            await wait(75);
 
             expect(cache.cache.size).toEqual(0);
         });
@@ -146,7 +140,7 @@ define(['jsonrpc/Cache'], (Cache) => {
 
             await expectAsync(firstFetch()).toBeResolvedTo('bar');
 
-            await waitFor(50);
+            await wait(50);
 
             const secondFetch = () => {
                 return cache.waitForItem('foo', () => {
@@ -160,7 +154,7 @@ define(['jsonrpc/Cache'], (Cache) => {
             const cache = new Cache();
             const firstFetch = () => {
                 return cache.waitForItem('foo', async () => {
-                    await waitFor(100);
+                    await wait(100);
                     return 'bar';
                 });
             };
@@ -187,7 +181,7 @@ define(['jsonrpc/Cache'], (Cache) => {
             const cache = new Cache();
             const firstFetch = () => {
                 return cache.waitForItem('foo', async () => {
-                    await waitFor(200);
+                    await wait(200);
                     return 'bar';
                 });
             };

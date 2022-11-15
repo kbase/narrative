@@ -2342,6 +2342,11 @@ button.kb-data-obj {
 }
 
 /* data list */
+.kb-data-list-main {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 5rem;
+}
 
 .kb-data-list-obj-row,
 .narrative-card-row {
@@ -2388,6 +2393,7 @@ button.kb-data-obj {
 }
 
 .kb-data-list-add-data-button {
+  position: absolute;
   background-color: rgb(67 121 177);
   border: 0;
   border-radius: 50%;
@@ -2397,6 +2403,9 @@ button.kb-data-obj {
   height: 40px;
   text-align: center;
   width: 40px;
+  bottom: 10px;
+  right: 15px;
+  z-index: 5;
 }
 
 /* specialize buttons that hover over narrative */

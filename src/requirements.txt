@@ -15,7 +15,7 @@ jupyter-console==6.4.3
 markupsafe==2.0.1
 ndg-httpsclient==0.5.1
 pygments==2.13.0
-pymongo==4.1.0
+pymongo==4.3.3
 pyopenssl==22.0.0
 pytest==7.0.1
 pytest-cov==3.0.0

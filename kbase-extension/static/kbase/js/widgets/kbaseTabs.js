@@ -10,16 +10,16 @@
             tabs : [
                 {
                     tab : 'T1',                                     // name of the tab
-                    content : $('<div>').html("I am a tab"),        // jquery object to stuff into the content
+                    content : $('<div></div>').html("I am a tab"),        // jquery object to stuff into the content
                     canDelete : false,                              // override the canDelete param on a per tab basis
                 },
                 {
                     tab : 'T2',
-                    content : $('<div>').html("I am a tab 2"),
+                    content : $('<div></div>').html("I am a tab 2"),
                 },
                 {
                     tab : 'T3',
-                    content : $('<div>').html("I am a tab 3"),
+                    content : $('<div></div>').html("I am a tab 3"),
                     show : true,                                    // boolean. This tab gets shown by default. If not specified, the first tab is shown
                     showContentCallback: function                   // if you don't want to show the content right away, add a callback method that returns the content...
                 },
@@ -349,7 +349,7 @@ define([
         },
 
         deletePrompt: function (tabName) {
-            const $deleteModal = new $DeletePrompt($('<div>'), {
+            const $deleteModal = new $DeletePrompt($el('div'), {
                 name: tabName,
                 callback: (e, $prompt) => {
                     $prompt.closePrompt();

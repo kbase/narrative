@@ -54,40 +54,49 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
     describe('The KBaseTabs widget', () => {
         // Expectations
 
-        async function expectSelectNthTab(kbaseTabs, n, content) {
+        function expectNthTab(kbaseTabs, n, { nav, panel }) {
             // First find, validate, and click the requested tab.
             const $tab = $(kbaseTabs.$elem.find(`[role="tab"]:nth-child(${n})`));
-            expect($tab.text()).toContain(content.nav);
+            expect($tab.text()).toContain(nav);
+
+            const $tabPanel = $(kbaseTabs.$elem.find(`[role="tabpanel"]:nth-child(${n})`));
+            expect($tabPanel.text()).toEqual(panel);
+        }
+
+        async function expectSelectNthTab(kbaseTabs, n, { nav, panel }) {
+            // First find, validate, and click the requested tab.
+            const $tab = $(kbaseTabs.$elem.find(`[role="tab"]:nth-child(${n})`));
+            expect($tab.text()).toContain(nav);
             $tab.find('a').click();
 
             // Then wait for the panel to appear
             return await tryFor(() => {
                 const { panelText } = getVisiblePanelText(kbaseTabs);
-                const foundIt = panelText.includes(content.panel);
+                const foundIt = panelText.includes(panel);
                 return [foundIt, null];
             }, TIMEOUT);
         }
 
-        async function expectCloseNthTab(kbaseTabs, n, content) {
+        async function expectCloseNthTab(kbaseTabs, n, { closedTab, nextTab }) {
             const $tab = $(kbaseTabs.$elem.find(`[role="tab"]:nth-child(${n})`));
-            expect($tab.text()).toContain(content.closedTab);
+            expect($tab.text()).toContain(closedTab);
             $tab.find('button').click();
 
             // We only check for success if content was passed in, otherwise
             // we are just clicking it.
-            if (content.nextTab) {
+            if (nextTab) {
                 return await tryFor(() => {
                     const { panelText } = getVisiblePanelText(kbaseTabs);
-                    const fooGone = !panelText.includes(content.closedTab);
-                    const fuzzHere = panelText.includes(content.nextTab);
+                    const fooGone = !panelText.includes(closedTab);
+                    const fuzzHere = panelText.includes(nextTab);
                     return [fooGone && fuzzHere, null];
                 }, TIMEOUT);
             }
         }
 
-        async function expectCloseNthTabWithDialog(kbaseTabs, n, content) {
+        async function expectCloseNthTabWithDialog(kbaseTabs, n, { closedTab, nextTab }) {
             const $tab = $(kbaseTabs.$elem.find(`[role="tab"]:nth-child(${n})`));
-            expect($tab.text()).toContain(content.closedTab);
+            expect($tab.text()).toContain(closedTab);
             $tab.find('button').click();
 
             // First we look for the modal and confirm the deletion.
@@ -102,8 +111,8 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             }, TIMEOUT);
 
             return await tryFor(() => {
-                const closedTabPaneGone = !kbaseTabs.$elem.text().includes(content.closedTab);
-                const nextTabPanePresent = kbaseTabs.$elem.text().includes(content.nextTab);
+                const closedTabPaneGone = !kbaseTabs.$elem.text().includes(closedTab);
+                const nextTabPanePresent = kbaseTabs.$elem.text().includes(nextTab);
                 return [closedTabPaneGone && nextTabPanePresent, null];
             }, TIMEOUT);
         }
@@ -257,15 +266,11 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             // Should start out as normal behavior
             expectNormalTabs(kbaseTabs);
 
-            // Initially, the second tab should not have the eventually expected content,
-            // nor any text for that matter
-            const $secondTabPanel = $(kbaseTabs.$elem.find(`[role="tabpanel"]:nth-child(2)`));
-            expect($secondTabPanel.text()).not.toContain('Fuzz');
-            expect($secondTabPanel.text()).toEqual('');
+            // Initially, the second tab should be empty.
+            await expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
-            // Ensure that the
-            const foundIt = await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
-            expect(foundIt).toBeNull();
+            // Ensure that when we open the 2nd tab, the content has changed to that set by `showContentCallback`
+            await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
         });
 
         it('should render tab with a render functions each time if it is dynamic', async () => {
@@ -289,19 +294,15 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             // Should start out as normal behavior
             expectNormalTabs(kbaseTabs);
 
-            // Initially, the second tab should not have the eventually expected content,
-            // nor any text for that matter
-            const $secondTabPanel = $(kbaseTabs.$elem.find(`[role="tabpanel"]:nth-child(2)`));
-            expect($secondTabPanel.text()).not.toContain('Fuzz');
-            expect($secondTabPanel.text()).toBeGreaterThanOrEqual('');
+            // Initially, the second tab should be empty.
+            await expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
+            // After selecting the 2nd tab, the content should be that determined by `showContentCallback`.
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz 1' });
             await expectSelectNthTab(kbaseTabs, 1, { nav: 'Foo', panel: 'BAR' });
-            const foundIt = await expectSelectNthTab(kbaseTabs, 2, {
-                nav: 'Baz',
-                panel: 'Fuzz 2',
-            });
-            expect(foundIt).toBeNull();
+
+            // After selecting the 2nd tab again, the content should be that determined by `showContentCallback`.
+            await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz 2' });
         });
 
         it('a deletable tab with an deleteCallback will invoke the callback and not delete', async () => {
@@ -330,14 +331,15 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             // When opened, the second tab should contain the content.
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
 
-            // And we should now have the next expected condition.
-            (() => {
+            const expectNextTabCondition = (kbaseTabs) => {
                 const { navText, panelText } = getVisiblePanelText(kbaseTabs);
                 expect(navText).toContain('Foo');
                 expect(panelText).not.toContain('BAR');
                 expect(navText).toContain('Baz');
                 expect(panelText).toContain('Fuzz');
-            })();
+            };
+
+            expectNextTabCondition(kbaseTabs);
 
             // We are omitting the nextTab content in the third parameter, so this does
             // not confirm success (because it won't succeed in that way!)
@@ -349,13 +351,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             }, TIMEOUT);
 
             // And the tabset should be in the same state.
-            (() => {
-                const { navText, panelText } = getVisiblePanelText(kbaseTabs);
-                expect(navText).toContain('Foo');
-                expect(panelText).not.toContain('BAR');
-                expect(navText).toContain('Baz');
-                expect(panelText).toContain('Fuzz');
-            })();
+            expectNextTabCondition(kbaseTabs);
         });
     });
 });

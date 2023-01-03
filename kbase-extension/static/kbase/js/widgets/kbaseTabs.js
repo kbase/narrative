@@ -5,13 +5,17 @@
     It is an extension of the Bootstrap 3 tab (https://getbootstrap.com/docs/3.4/javascript/#tabs).
 
     var $tabs =  new kbaseTabs($('#tabs'), {
-            canDelete : true,       // whether the any tab which does not otherwise specify this option
-                                    // will have a close button and can be closed. Defaults to false.
+            canDelete : true,       // boolean; whether a tab which does not otherwise specify this option
+                                    //   will have a close button and can be removed. Defaults to false, overridden
+                                    //   if set on a tab.
             tabs : [
                 {
-                    tab : 'T1',                                     // name of the tab
-                    content : $('<div></div>').html("I am a tab"),        // jquery object to stuff into the content
-                    canDelete : false,                              // override the canDelete param on a per tab basis
+                    tab : 'T1',                                     // string; label of the tab
+                    content : $('<div></div>').html("I am a tab"),  // jquery "content" (string markup, string text, element, jquery object);
+                                                                    //   displayed as the tab pane content; note will be displayed "eagerly",
+                                                                    //   i.e. when tab is created (not on first render)
+                    canDelete : false,                              // boolean; if true, the tab will have a close button, the clicking of which will 
+                                                                    //   cause the tab navigation and tab pane to be removed.
                 },
                 {
                     tab : 'T2',
@@ -19,9 +23,9 @@
                 },
                 {
                     tab : 'T3',
-                    content : $('<div></div>').html("I am a tab 3"),
-                    show : true,                                    // boolean. This tab gets shown by default. If not specified, the first tab is shown
-                    showContentCallback: function                   // if you don't want to show the content right away, add a callback method that returns the content...
+                    show : true,                                    // boolean; If true the tab is shown by default. If not specified, the first tab is shown.
+                    showContentCallback: function                   // function returning jquery "content" (see above); renders tab pane content to enable
+                                                                    //   "lazy" rendering of a tab pane when the corresponding tab is
                 },
             ],
         }

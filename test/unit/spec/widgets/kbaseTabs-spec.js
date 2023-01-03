@@ -2,12 +2,21 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
     'use strict';
 
     /**
-     * TODO: need to incorporate the main Narrative stylesheet
+     * FUTURE WORK: should incorporate the main Narrative stylesheet
      * <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
-     * as it contains the bootstrap styles. These styles are important for tabs, since each tab
-     * may be pre-rendered, and as such they will appear to "appear" before they appear.
-     * In other words, they are in the dom, but hidden by default and only shown if the "active"
-     * class is added.
+     * (or wherever the bootstrap styles appear) as it contains the bootstrap styles.
+     *
+     * The reliance upon the 'bootstrap' dependency above does not incorporate bootstratp styles.
+     *
+     * This could be utilized to test for visibility of elements vs their existence in the DOM.
+     * In behavior-oriented testing one wants to test what the user can see and experience,
+     * rather than internal attributes such as style.
+     *
+     * One example is eagerly-rendered tab panes. Such panes construct and insert their
+     * pane content, hidden, as the tabset is built.
+     *
+     * We would like to be able to test when such content is visible to the user, but without
+     * the bootstrap styles being present we simulate this by using the "active" class.
      */
 
     const { tryFor } = testUtil;
@@ -19,7 +28,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
 
     /**
      * Gets the text for the "active" (aka visible) tab within the given DOM node tree.
-     * 
+     *
      * @param {JQuery} $host - an ancestor node containing the tabset; expects there to be only one tabset.
      * @returns {{navText: string, panelText: string}} - an object containing the tab navigation (aka "tab") text and the tab pane text.
      */

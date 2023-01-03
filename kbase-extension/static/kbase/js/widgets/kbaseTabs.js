@@ -122,13 +122,13 @@ define([
                         if (typeof tab.deleteCallback !== 'undefined') {
                             tab.deleteCallback(tab.tab);
                         } else {
-                            const confirmDelete = (() => { 
+                            const confirmDelete = (() => {
                                 if (typeof tab.confirmDelete === 'undefined') {
                                     return this.options.confirmDelete;
                                 }
-                                return this.tab.confirmDelete
+                                return this.tab.confirmDelete;
                             })();
-                      
+
                             if (confirmDelete) {
                                 this.deletePrompt(tab.tab);
                             } else {
@@ -169,20 +169,22 @@ define([
 
             $tabPanel.hasContent = false;
 
-            // TODO: this is a hack, remove it!
-            // NOTE: So, I was wondering why this code is here? It is not necessary for the
-            // kbaseTabs logic. However,  there are tab usages which presume that after the tab
+            // Note - this code implements eager tab rendering if the "content" for a tab is
+            // already set. The "content" property essentially implements static tab content.
+            //
+            // So, I was wondering why have such eager insertion of tab pane content into the DOM?
+            // It does not seem necessary for kbaseTabs logic, as there are callbacks for tab display.
+            //
+            // However, there are tab usages in the codebase which presume that after the tab
             // is created, that all tab content is rendered and inserted into the DOM.
+            //
             // E.g. in kbaseExpressionFeatureClusters the content contains links which are treated as buttons,
-            // whose event handlers are added as the tabset is rendered.
-            // Any post-tab-render, per-tab logic should be handled by the onShown or whenShown callbacks.
-            // Note that this approach will fail if a tab uses "showContentCallback".
-            // However, if we use this.showTabPanel() here to possibly invoke showContentCallback, it obviates
-            // the whole lazy nature of showContentCallback!
-            // In other words, we need to keep this here as it is, until we can fix code which relies upon
-            // this behavior.
-            // Probably better is to fork this widget and it can incrementally spread throughout the codebase
-            // until there are no usages of the old one left, then remove it.
+            // whose event handlers are added as the tabset is constructed.
+            //
+            // There may be reasons for this, but it does seem that, given the onShown or whenShown callbacks,
+            // per-tab setup logic could (should) be implemented lazily through these callbacks, even for
+            // otherwise static content.
+            //
             if (tab.content) {
                 $tabPanel.append(tab.content);
                 $tabPanel.hasContent = true;
@@ -257,6 +259,7 @@ define([
             this.data('tabs-nav').append($nav);
 
             // A tab requests that it be shown.
+            //
             // Note that the use case for this is more complicated than it may appear at first glance.
             //
             // Primary use cases:

@@ -5,186 +5,201 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
 ## Unreleased
-- PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
+
+-   PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
+-   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed; previously it showed an empty space.
 
 ## Version 5.1.3
 
-- PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
-- PTV-1514 - sanitized HTML being used for app input tooltips
+-   PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
+-   PTV-1514 - sanitized HTML being used for app input tooltips
 
 Dependency Changes
-- Python dependency updates
-  - black >=20.8b1 -> 22.8.0
-  - coverage 6.2 -> 6.4.4
-  - cryptography 37.0.4 -> 38.0.1
-  - flake8 3.8.4 -> 5.0.4
-  - jinja2 3.0.3 -> 3.1.2
-  - jupyter-console 6.4.3 -> 6.4.4
-  - pygments 2.12.0 -> 2.13.0
-  - requests 2.27.1 -> 2.28.1
-- Javascript dependency updates
-  - @wdio/cli 7.19.6 -> 7.25.0
-  - @wdio/local-runner 7.19.5 -> 7.25.0
-  - @wdio/spec-reporter 7.19.5 -> 7.25.0
-  - bootstrap 3.3.7 -> 3.4.1
-  - bootstrap-slider 10.6.2 -> 11.0.2
-  - chrome-launcher 0.14.2 -> 0.15.1
-  - chromedriver ^101.0.0 -> ^105.0.0
-  - cssnano 5.1.7 -> 5.1.13
-  - jasmine-core 4.1.0 -> 4.3.0
-  - jquery-ui 1.13.1 -> 1.13.2
-  - karma-jasmine-html-reporter 1.7.0 -> 2.0.0
-  - postcss-cli 9.1.0 -> 10.0.0
-  - prettier 2.4.1 -> 2.7.1
-  - puppeteer 13.7.0 -> 18.0.5
-  - require-css 0.1.8 -> 0.1.10
-  - sass 1.51.0 -> 1.55.0
-  - selenium-standalone 8.1.1 -> 8.2.0
-  - selenium-webdriver 4.1.2 -> 4.4.0
-  - terser 5.13.1 -> 5.15.0
-  - underscore 1.13.3 -> 1.13.6
+
+-   Python dependency updates
+    -   black >=20.8b1 -> 22.8.0
+    -   coverage 6.2 -> 6.4.4
+    -   cryptography 37.0.4 -> 38.0.1
+    -   flake8 3.8.4 -> 5.0.4
+    -   jinja2 3.0.3 -> 3.1.2
+    -   jupyter-console 6.4.3 -> 6.4.4
+    -   pygments 2.12.0 -> 2.13.0
+    -   requests 2.27.1 -> 2.28.1
+-   Javascript dependency updates
+    -   @wdio/cli 7.19.6 -> 7.25.0
+    -   @wdio/local-runner 7.19.5 -> 7.25.0
+    -   @wdio/spec-reporter 7.19.5 -> 7.25.0
+    -   bootstrap 3.3.7 -> 3.4.1
+    -   bootstrap-slider 10.6.2 -> 11.0.2
+    -   chrome-launcher 0.14.2 -> 0.15.1
+    -   chromedriver ^101.0.0 -> ^105.0.0
+    -   cssnano 5.1.7 -> 5.1.13
+    -   jasmine-core 4.1.0 -> 4.3.0
+    -   jquery-ui 1.13.1 -> 1.13.2
+    -   karma-jasmine-html-reporter 1.7.0 -> 2.0.0
+    -   postcss-cli 9.1.0 -> 10.0.0
+    -   prettier 2.4.1 -> 2.7.1
+    -   puppeteer 13.7.0 -> 18.0.5
+    -   require-css 0.1.8 -> 0.1.10
+    -   sass 1.51.0 -> 1.55.0
+    -   selenium-standalone 8.1.1 -> 8.2.0
+    -   selenium-webdriver 4.1.2 -> 4.4.0
+    -   terser 5.13.1 -> 5.15.0
+    -   underscore 1.13.3 -> 1.13.6
 
 Removed dependencies  
 **note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
-  - plotly - not necessary for core narrative functionality, moved to narrative base image
-  - semantic_version -- removed, wasn't used effectively, and removed the need for it
-  - sklearn - still included, installed manually alongside clustergrammer in the install script, so the requirements.txt was removed
-  - sympy - not necessary for core narrative functionality, moved to narrative base image
+
+-   plotly - not necessary for core narrative functionality, moved to narrative base image
+-   semantic_version -- removed, wasn't used effectively, and removed the need for it
+-   sklearn - still included, installed manually alongside clustergrammer in the install script, so the requirements.txt was removed
+-   sympy - not necessary for core narrative functionality, moved to narrative base image
 
 ### Version 5.1.2
-- PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload
-- DATAUP-778 - fixed bug where xsvGenerator would not run if the paramDisplay value was not present
-- updated data icon coloring scheme
-- refactored narrative Docker image management (see new [narrative-base-image](https://github.com/kbase/narrative-base-image) repo)
+
+-   PTV-1823 - fixed problem where text input fields for apps were displaying incorrect data on reload
+-   DATAUP-778 - fixed bug where xsvGenerator would not run if the paramDisplay value was not present
+-   updated data icon coloring scheme
+-   refactored narrative Docker image management (see new [narrative-base-image](https://github.com/kbase/narrative-base-image) repo)
 
 ### Version 5.1.1
-- PTV-1798 - fixed issue where invalid component ID was causing data list not to load properly
-- DATAUP-762 - fixed bug where previously run cells were showing errors in the View Configure tab
-- DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
+
+-   PTV-1798 - fixed issue where invalid component ID was causing data list not to load properly
+-   DATAUP-762 - fixed bug where previously run cells were showing errors in the View Configure tab
+-   DATAUP-763 - fixed an issue where data type icons in the bulk import cell during a run would always show an error, saying that the cell is not ready to run, when it is clearly running.
 
 Dependency Changes
-- Python dependency updates
-  - cryptography: 36.0.2 -> 37.0.4
-  - markupsafe: 2.1.1 -> 2.0.1
-  - plotly: 5.7.0 -> 5.9.0
-  - rsa: 4.8 -> 4.9
-  - semantic_version: 2.9.0 -> 2.10.0
+
+-   Python dependency updates
+    -   cryptography: 36.0.2 -> 37.0.4
+    -   markupsafe: 2.1.1 -> 2.0.1
+    -   plotly: 5.7.0 -> 5.9.0
+    -   rsa: 4.8 -> 4.9
+    -   semantic_version: 2.9.0 -> 2.10.0
 
 ### Version 5.1.0
-- PTV-1783 - fixed issue where the previous object revert option was unavailable
-- DATAUP-639 - fix problems with dynamic dropdown app cell input
-  - selected value wasn't being displayed properly after a page reload or cell refresh
-  - selected value wasn't being displayed in view-only version
-  - "Loading..." message wasn't displayed while fetching data from a service.
-  - Update the dynamic dropdown to support the `exact_match_on` field in app specs.
-  - Add a copy button to the dynamic dropdown - this will copy the most relevant text from the dropdown to the clipboard.
-    - For dropdowns with an `exact_match_on` field, this will copy the contents of that field (e.g. for those that present taxonomy ids for a species, this copies just the scientific name)
-    - For dropdowns that go against the FTP staging area, this copies the file name and path.
-    - For other dropdowns, this copies the formatted text
-- DATAUP-751 - add link to staging area docs in the upload tour
-- DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
-- DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
+
+-   PTV-1783 - fixed issue where the previous object revert option was unavailable
+-   DATAUP-639 - fix problems with dynamic dropdown app cell input
+    -   selected value wasn't being displayed properly after a page reload or cell refresh
+    -   selected value wasn't being displayed in view-only version
+    -   "Loading..." message wasn't displayed while fetching data from a service.
+    -   Update the dynamic dropdown to support the `exact_match_on` field in app specs.
+    -   Add a copy button to the dynamic dropdown - this will copy the most relevant text from the dropdown to the clipboard.
+        -   For dropdowns with an `exact_match_on` field, this will copy the contents of that field (e.g. for those that present taxonomy ids for a species, this copies just the scientific name)
+        -   For dropdowns that go against the FTP staging area, this copies the file name and path.
+        -   For other dropdowns, this copies the formatted text
+-   DATAUP-751 - add link to staging area docs in the upload tour
+-   DATAUP-753 - alter the error text for Select input boxes in app cells to be a bit more generalized.
+-   DATAUP-756 - add a copy button for other, non-dynamic dropdowns. This copies the displayed text to the clipboard.
 
 Dependency Changes
-- Javascript dependency updates
-  - @wdio/browserstack-service: 7.16.16 -> 7.19.7
-  - @wdio/cli: 7.16.16 -> 7.19.6
-  - @wdio/local-runner: 7.16.6 -> 7.19.3
-  - @wdio/mocha-framework: 7.16.15 -> 7.20.0
-  - @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
-  - @wdio/spec-reporter: 7.16.14 -> 7.19.1
-  - autoprefixer: 10.2.6 -> 10.4.5
-  - commander: 9.0.0 -> 9.3.0
-  - chromedriver: 100.0.0 -> 101.0.0
-  - corejs-typeahead: 1.6.1 -> 1.3.1
-  - datatables.net: 1.11.3 -> 1.12.1
-  - datatables.net-bs 1.11.5 -> 1.12.1
-  - datatables.net-buttons-bs: 1.4.2 -> 2.2.3
-  - ejs: 3.1.6 -> 3.1.7
-  - eslint: 8.14.0 -> 8.16.0
-  - grunt: 1.4.1 -> 1.5.3
-  - grunt-contrib-concat: 1.0.1 -> 2.1.0
-  - handlebars: 4.0.5 -> 4.7.7
-  - jasmine-core: 4.0.0 -> 4.1.0
-  - jquery-nearest: 1.3.1 -> 1.4.0
-  - jquery-ui: 1.12.1 -> 1.13.1
-  - js-yaml: 3.3.1 -> 3.14.1
-  - karma-jasmine: 4.0.1 -> 5.0.1
-  - karma-jasmine-matchers: 4.0.2 -> 5.0.0
-  - postcss-remove-comments: 5.0.1 -> 5.1.2
-  - postcss-cli: 8.3.1 -> 9.1.0
-  - postcss-scss: 3.0.5 -> 4.0.4
-  - pure-uuid: 1.4.2 -> 1.6.2
-  - sass: 1.34.1 -> 1.51.0
-  - selenium-standalone: 8.0.9 -> 8.0.10
-  - selenium-webdriver: 4.1.1 -> 4.1.2
-  - spark-md5: 3.0.0 -> 3.0.2
-  - underscore: 1.8.3 -> 1.13.3
-  - webdriverio: 7.16.16 -> 7.19.7
 
-- Python dependency updates
-  - beautifulsoup4: 4.8.1 -> 4.11.1
-  - cryptography: 3.3.2 -> 36.0.2
-  - html5lib: 1.0.1 -> 1.1
-  - idna: 2.8 -> 3.3
-  - jinja2: 3.1.1 -> 3.0.3
-  - plotly: 5.6.0 -> 5.7.0
-  - pygments: 2.11.2 -> 2.12.0
-  - jupyter-console: 6.0.0 -> 6.4.3
-  - jsonschema: 4.4.0 -> 3.2.0
-  - pymongo: 4.1.0 -> 4.1.1
-  - pyopenssl: 19.0.0 -> 22.0.0
-  - setuptools: 62.0.0 -> 62.1.0
+-   Javascript dependency updates
+
+    -   @wdio/browserstack-service: 7.16.16 -> 7.19.7
+    -   @wdio/cli: 7.16.16 -> 7.19.6
+    -   @wdio/local-runner: 7.16.6 -> 7.19.3
+    -   @wdio/mocha-framework: 7.16.15 -> 7.20.0
+    -   @wdio/selenium-standalone-service: 7.16.16 -> 7.19.1
+    -   @wdio/spec-reporter: 7.16.14 -> 7.19.1
+    -   autoprefixer: 10.2.6 -> 10.4.5
+    -   commander: 9.0.0 -> 9.3.0
+    -   chromedriver: 100.0.0 -> 101.0.0
+    -   corejs-typeahead: 1.6.1 -> 1.3.1
+    -   datatables.net: 1.11.3 -> 1.12.1
+    -   datatables.net-bs 1.11.5 -> 1.12.1
+    -   datatables.net-buttons-bs: 1.4.2 -> 2.2.3
+    -   ejs: 3.1.6 -> 3.1.7
+    -   eslint: 8.14.0 -> 8.16.0
+    -   grunt: 1.4.1 -> 1.5.3
+    -   grunt-contrib-concat: 1.0.1 -> 2.1.0
+    -   handlebars: 4.0.5 -> 4.7.7
+    -   jasmine-core: 4.0.0 -> 4.1.0
+    -   jquery-nearest: 1.3.1 -> 1.4.0
+    -   jquery-ui: 1.12.1 -> 1.13.1
+    -   js-yaml: 3.3.1 -> 3.14.1
+    -   karma-jasmine: 4.0.1 -> 5.0.1
+    -   karma-jasmine-matchers: 4.0.2 -> 5.0.0
+    -   postcss-remove-comments: 5.0.1 -> 5.1.2
+    -   postcss-cli: 8.3.1 -> 9.1.0
+    -   postcss-scss: 3.0.5 -> 4.0.4
+    -   pure-uuid: 1.4.2 -> 1.6.2
+    -   sass: 1.34.1 -> 1.51.0
+    -   selenium-standalone: 8.0.9 -> 8.0.10
+    -   selenium-webdriver: 4.1.1 -> 4.1.2
+    -   spark-md5: 3.0.0 -> 3.0.2
+    -   underscore: 1.8.3 -> 1.13.3
+    -   webdriverio: 7.16.16 -> 7.19.7
+
+-   Python dependency updates
+    -   beautifulsoup4: 4.8.1 -> 4.11.1
+    -   cryptography: 3.3.2 -> 36.0.2
+    -   html5lib: 1.0.1 -> 1.1
+    -   idna: 2.8 -> 3.3
+    -   jinja2: 3.1.1 -> 3.0.3
+    -   plotly: 5.6.0 -> 5.7.0
+    -   pygments: 2.11.2 -> 2.12.0
+    -   jupyter-console: 6.0.0 -> 6.4.3
+    -   jsonschema: 4.4.0 -> 3.2.0
+    -   pymongo: 4.1.0 -> 4.1.1
+    -   pyopenssl: 19.0.0 -> 22.0.0
+    -   setuptools: 62.0.0 -> 62.1.0
 
 ### Version 5.0.3
-- DATAUP-641
-  - Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
-  - Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
-  - Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
-- PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
-- DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
-- SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
-- DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
-- DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
-- DATAUP-737 - Overhaul of GitHub Actions to move to using official Docker actions for building, tagging, and uploading images. Move python module installation out of Dockerfile and into the requirements.txt.
+
+-   DATAUP-641
+    -   Adds custom error messages when app cell dropdown menu inputs are incorrect in various different ways.
+    -   Adds custom error messages when app cell checkboxes are initialized with non binary data (should only happen with a bulk import cell from a spreadsheet file)
+    -   Adds custom error messages when app cell numeric inputs are initialized with non-numeric data.
+-   PTV-1765 - Fix Pangenome viewer; wasn't able to get an object ref
+-   DATAUP-643 - Adds a warning to the top of a bulk import cell when attempting to use multiple distinct non-file and non-output parameter values. E.g. different assembly types for multiple rows of an assembly uploader spreadsheet.
+-   SCT-3162 - Fix download buttons in Data panel widget so that full UPA (with object version) is sent to the downloader app.
+-   DATAUP-525 - Fix the "show advanced" button in bulk import cells to properly toggle its label when clicked.
+-   DATAUP-642 - Adds an error message to the bulk import advanced parameters header when closed.
+-   DATAUP-737 - Overhaul of GitHub Actions to move to using official Docker actions for building, tagging, and uploading images. Move python module installation out of Dockerfile and into the requirements.txt.
 
 Dependency Changes
-- Python dependency updates
-  - coverage: 5.5 -> 6.2
-  - cryptography: 2.7 -> 3.3.2
-  - decorator: 5.0.9 -> 5.1.1
-  - jinja2: 3.0.1 -> 3.1.1
-  - jsonschema: 3.2.0 -> 4.4.0
-  - markupsafe: 2.0.1 -> 2.1.1
-  - pillow: 8.3.2 -> 8.4.0
-  - plotly: 5.3.1 -> 5.6.0
-  - pygments: 2.10.0 -> 2.11.2
-  - pymongo: 3.12.0 -> 4.1.0
-  - pytest-cov: 2.12.1 -> 3.0.0
-  - pyyaml: 5.4.1 -> 6.0
-  - requests: 2.26.0 -> 2.27.1
-  - rsa: 4.7.2 -> 4.8
-  - semantic_version: 2.8.5 -> 2.9.0
-  - setuptools: 57.4.0 -> 62.0.0
-  - sympy: 1.8 -> 1.10.1
-  - terminado: 0.11.1 -> 0.13.3
+
+-   Python dependency updates
+    -   coverage: 5.5 -> 6.2
+    -   cryptography: 2.7 -> 3.3.2
+    -   decorator: 5.0.9 -> 5.1.1
+    -   jinja2: 3.0.1 -> 3.1.1
+    -   jsonschema: 3.2.0 -> 4.4.0
+    -   markupsafe: 2.0.1 -> 2.1.1
+    -   pillow: 8.3.2 -> 8.4.0
+    -   plotly: 5.3.1 -> 5.6.0
+    -   pygments: 2.10.0 -> 2.11.2
+    -   pymongo: 3.12.0 -> 4.1.0
+    -   pytest-cov: 2.12.1 -> 3.0.0
+    -   pyyaml: 5.4.1 -> 6.0
+    -   requests: 2.26.0 -> 2.27.1
+    -   rsa: 4.7.2 -> 4.8
+    -   semantic_version: 2.8.5 -> 2.9.0
+    -   setuptools: 57.4.0 -> 62.0.0
+    -   sympy: 1.8 -> 1.10.1
+    -   terminado: 0.11.1 -> 0.13.3
 
 ### Version 5.0.2
-- SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
-- DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
-- DATAUP-715 - Adds scrollbars to the configure and results tab of the bulk import cell.
-- Fixed an error where Narrative names didn't always render properly in the Narratives panel.
-- Fixed an error where Narrative names didn't always render properly in the data slideout.
+
+-   SAM-73 - Extends the ability to use app params as arguments for dynamic dropdown calls to inputs that are part of a struct or sequence.
+-   DATAUP-696 - Prevent import specifications from being imported with either unknown data types, or data types not currently registered as using the bulk import cell.
+-   DATAUP-715 - Adds scrollbars to the configure and results tab of the bulk import cell.
+-   Fixed an error where Narrative names didn't always render properly in the Narratives panel.
+-   Fixed an error where Narrative names didn't always render properly in the data slideout.
 
 ### Version 5.0.1
-- SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.
-- Updated AppParamsWidget to return all current values from `get-parameters` if no specific value was specified, allowing to see all current parameter values without having to know their names.
-- DATAUP-570 - Only use the Narrative configuration to set available import types in the Import area dropdowns
-- DATAUP-577 - Sanitize suggested output object names for bulk import jobs so they follow the rules
-- PTV-1717 - fix landing page links for modeling widgets
-- PTV-1726 - address issue where the "Narrative updated in another session" would appear with no other session open
+
+-   SAM-73 - Updated DynamicDropdownInput to have access to full list of other app parameters when user selects dropdown. If an app developer specified to use a certain value from a different field, the field as it currently exists will be used as a parameter.
+-   Updated AppParamsWidget to return all current values from `get-parameters` if no specific value was specified, allowing to see all current parameter values without having to know their names.
+-   DATAUP-570 - Only use the Narrative configuration to set available import types in the Import area dropdowns
+-   DATAUP-577 - Sanitize suggested output object names for bulk import jobs so they follow the rules
+-   PTV-1717 - fix landing page links for modeling widgets
+-   PTV-1726 - address issue where the "Narrative updated in another session" would appear with no other session open
 
 ### Version 5.0.0
+
 This new major version of the KBase Narrative Interface introduces a way to import data from your data staging area in large batches using a single Bulk Import cell. See more details about the new workflows here: [Bulk Import Guide](https://docs.kbase.us/data/upload-download-guide/bulk-import-guide)
 
 There are also a ton of other updates and changes to both the Narrative interface (in various small and not-so-small ways) and to how the Narrative software will be developed going forward.
@@ -192,105 +207,109 @@ There are also a ton of other updates and changes to both the Narrative interfac
 The following is a high level list of changes, with matching JIRA tickets where appropriate. As always, all Narrative work is done on Github and is available for view and discussion there.
 
 Code Changes
-- Built an entirely new Bulk Import cell type that runs a batch of Import jobs all at once.
-- Objects that can be imported in bulk are:
-  - SRA reads
-  - Interleaved FASTQ reads
-  - Non-interleaved FASTQ reads
-  - Read Assemblies
-  - GFF metagenomes
-  - Genbank genomes
-- Redesigned the Data Import Tab
-  - It now suggests object upload type based on file suffix.
-  - Files are now selected for import by clicking a checkbox (or selecting a type), then clicking “Import Selected”
-  - The Import Tab file browser has been improved and remembers selections more consistently
-  - The Import Tab styling has been made more internally consistent.
-- DATAUP-225 - Styles and color usage have been normalized in many places in the app cell and bulk import cell
-- DATAUP-329 - Standardized the use of select boxes in various inputs for the app cell and bulk import cell
-- Remove app info dialog option - superseded by the “Info” tab on all app cells
-- DATAUP-263 - Fix bug where app cells can get stuck in the “Sending…” phase
-- SAM-40 - Add Name/ID column to SampleSet viewer
-- DATAUP-651 - Update Data Import tab help tour to include new features.
+
+-   Built an entirely new Bulk Import cell type that runs a batch of Import jobs all at once.
+-   Objects that can be imported in bulk are:
+    -   SRA reads
+    -   Interleaved FASTQ reads
+    -   Non-interleaved FASTQ reads
+    -   Read Assemblies
+    -   GFF metagenomes
+    -   Genbank genomes
+-   Redesigned the Data Import Tab
+    -   It now suggests object upload type based on file suffix.
+    -   Files are now selected for import by clicking a checkbox (or selecting a type), then clicking “Import Selected”
+    -   The Import Tab file browser has been improved and remembers selections more consistently
+    -   The Import Tab styling has been made more internally consistent.
+-   DATAUP-225 - Styles and color usage have been normalized in many places in the app cell and bulk import cell
+-   DATAUP-329 - Standardized the use of select boxes in various inputs for the app cell and bulk import cell
+-   Remove app info dialog option - superseded by the “Info” tab on all app cells
+-   DATAUP-263 - Fix bug where app cells can get stuck in the “Sending…” phase
+-   SAM-40 - Add Name/ID column to SampleSet viewer
+-   DATAUP-651 - Update Data Import tab help tour to include new features.
 
 Development Changes
-- UIP-3 - Made the migration away from Bower to using only NPM for Javascript package management. Mostly, the same versions were kept, though some were unavoidably changed
-  - seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
-  - plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
-  - requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
-  - requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
-  - kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
-  - Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's:
-    - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3
-    - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
-DATAUP-246 - migrate from CSS to using SASS throughout the Narrative, making use of [BEM notation](http://getbem.com/introduction/) for element styling
-DATAUP-62 - designed and implemented simple coding standards and git workflow for the Narrative repo
-DATAUP-71 - added automated linting and code quality tools to the Narrative repo
 
+-   UIP-3 - Made the migration away from Bower to using only NPM for Javascript package management. Mostly, the same versions were kept, though some were unavoidably changed
+    -   seiyria-bootstrap-slider 10.6.2 -> bootstrap-slider 10.6.2 (renamed on npm)
+    -   plotly.js v1.5.1 -> plotly.js-dist-min v1.50.0 (1.5.1 unavailable)
+    -   requirejs-plugins 1.0.3 -> 1.0.2 (which is on npm)
+    -   requirejs-text 2.0.14 -> requirejs/text 2.0.16 (renamed on npm)
+    -   kbase-ui-plugin-catalog 1.2.14 -> kbase-ui-plugin-catalog 2.2.5 (requires a package.json)
+    -   Datatables got modified as it was out of date, and there were multiple versions being assembled at once. Now, there's: - `datatables` as a package is obsolete, and supplanted by `datatables.net` (i.e., we shouldn't have both). Updated from 1.10.9 -> 1.11.3 - supporting modules (`datatables.net-bs`, `datatables.net-buttons-bs`) are the same
+        DATAUP-246 - migrate from CSS to using SASS throughout the Narrative, making use of [BEM notation](http://getbem.com/introduction/) for element styling
+        DATAUP-62 - designed and implemented simple coding standards and git workflow for the Narrative repo
+        DATAUP-71 - added automated linting and code quality tools to the Narrative repo
 
 ### Version 4.6.0
+
 Code changes
-- DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
-- PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
-- SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly.
+
+-   DATAUP-599 - Adjusted the kernel code and tests to account for a Workspace service update.
+-   PTV-1703 - Fix DifferentialExpressionSet and DifferentialExpressionMatrixSet viewers
+-   SCT-3088 - Add Narrative Outline View. Allows scrolling through a minimal view of Narrative cells more quickly.
 
 Dependency Changes
-- Python dependency updates
-  - pillow 8.3.1 -> 8.3.2
-  - plotly 5.1.0 -> 5.3.1
-  - pygments 2.9.0 -> 2.10.0
-  - pytest 6.2.4 -> 6.2.5
-  - terminado 0.10.1 -> 0.11.1
-- Javascript dependency updates
-  - @wdio/browserstack-service 7.9.1 -> 7.11.1
-  - @wdio/cli 7.9.1 -> 7.11.1
-  - @wdio/local-runner 7.9.1 -> 7.11.1
-  - @wdio/mocha-framework 7.9.1 -> 7.11.1
-  - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
-  - @wdio/spec-reporter 7.9.0 -> 7.10.1
-  - chromedriver 92.0.1 -> 93.0.1
-  - husky 7.0.1 -> 7.0.2
-  - jasmine-core 3.8.0 -> 3.9.0
-  - msw 0.34.0 -> 0.35.0
-  - puppeteer 10.1.0 -> 10.4.0
-  - terser 5.7.1 -> 5.7.2
-  - webdriverio 7.9.1 -> 7.11.1
-- Javascript dependency additions
-  - expect-webdriverio 3.1.4
+
+-   Python dependency updates
+    -   pillow 8.3.1 -> 8.3.2
+    -   plotly 5.1.0 -> 5.3.1
+    -   pygments 2.9.0 -> 2.10.0
+    -   pytest 6.2.4 -> 6.2.5
+    -   terminado 0.10.1 -> 0.11.1
+-   Javascript dependency updates
+    -   @wdio/browserstack-service 7.9.1 -> 7.11.1
+    -   @wdio/cli 7.9.1 -> 7.11.1
+    -   @wdio/local-runner 7.9.1 -> 7.11.1
+    -   @wdio/mocha-framework 7.9.1 -> 7.11.1
+    -   @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
+    -   @wdio/spec-reporter 7.9.0 -> 7.10.1
+    -   chromedriver 92.0.1 -> 93.0.1
+    -   husky 7.0.1 -> 7.0.2
+    -   jasmine-core 3.8.0 -> 3.9.0
+    -   msw 0.34.0 -> 0.35.0
+    -   puppeteer 10.1.0 -> 10.4.0
+    -   terser 5.7.1 -> 5.7.2
+    -   webdriverio 7.9.1 -> 7.11.1
+-   Javascript dependency additions
+    -   expect-webdriverio 3.1.4
 
 ### Version 4.5.0
-- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
-- SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
-- SCT-3084 - Fixed broken (non-functional) search in the data panel
-- SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
-- No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
-- Python dependency updates
-  - bokeh 2.3.2 -> 2.3.3
-  - pillow 8.2.0 -> 8.3.1
-  - plotly 4.14.3 -> 5.1.0
-  - pymongo 3.11.4 -> 3.12.0
-  - pytest 6.2.3. -> 6.2.4
-  - pytest-cov 2.11.1 -> 2.12.1
-  - requests 2.25.1 -> 2.26.0
-  - setuptools 57.0.0 -> 57.4.0
-- Javascript dependency updates
-  - @types/puppeteer 5.0.0 -> 5.4.4
-  - @wdio/browserstack-service 7.7.3 -> 7.9.0
-  - @wdio/cli 7.7.3 -> 7.9.0
-  - @wdio/local-runner 7.7.3 -> 7.9.0
-  - @wdio/mocha-framework 7.7.3 -> 7.9.0
-  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
-  - @wdio/spec-reporter 7.7.7 -> 7.9.0
-  - chromedriver 91.0.0 -> 91.0.1
-  - eslint 7.28.0 -> 7.32.0
-  - husky 6.0.0 -> 7.0.1
-  - karma 6.3.3. -> 6.3.4
-  - puppeteer 10.0.0 -> 10.1.0
-  - selenium-standalone 6.23.0 -> 7.1.0
-  - terser 5.7.0 -> 5.7.1
-  - wdio-chromedriver-service 7.1.0 -> 7.1.1
-  - webdriverio 7.7.3 -> 7.9.1
+
+-   PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+-   SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
+-   SCT-3084 - Fixed broken (non-functional) search in the data panel
+-   SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
+-   No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+-   Python dependency updates
+    -   bokeh 2.3.2 -> 2.3.3
+    -   pillow 8.2.0 -> 8.3.1
+    -   plotly 4.14.3 -> 5.1.0
+    -   pymongo 3.11.4 -> 3.12.0
+    -   pytest 6.2.3. -> 6.2.4
+    -   pytest-cov 2.11.1 -> 2.12.1
+    -   requests 2.25.1 -> 2.26.0
+    -   setuptools 57.0.0 -> 57.4.0
+-   Javascript dependency updates
+    -   @types/puppeteer 5.0.0 -> 5.4.4
+    -   @wdio/browserstack-service 7.7.3 -> 7.9.0
+    -   @wdio/cli 7.7.3 -> 7.9.0
+    -   @wdio/local-runner 7.7.3 -> 7.9.0
+    -   @wdio/mocha-framework 7.7.3 -> 7.9.0
+    -   @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+    -   @wdio/spec-reporter 7.7.7 -> 7.9.0
+    -   chromedriver 91.0.0 -> 91.0.1
+    -   eslint 7.28.0 -> 7.32.0
+    -   husky 6.0.0 -> 7.0.1
+    -   karma 6.3.3. -> 6.3.4
+    -   puppeteer 10.0.0 -> 10.1.0
+    -   selenium-standalone 6.23.0 -> 7.1.0
+    -   terser 5.7.0 -> 5.7.1
+    -   wdio-chromedriver-service 7.1.0 -> 7.1.1
+    -   webdriverio 7.7.3 -> 7.9.1
 
 ### Version 4.4.0
+
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
@@ -299,11 +318,13 @@ Dependency Changes
 -   SCT-3038 - refseq public data search now includes genome_id and source_id
 
 ### Version 4.3.2
+
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
 ### Version 4.3.1
+
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.
@@ -322,11 +343,12 @@ Dependency Changes
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
 ### Version 4.3.0
-- SCT-2664 - Show the app cell status when in a collapsed state.
-- Added an "Info" tab to all app cells with app information.
-- Updated links to new KBase home page and docs site.
-- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
-- (Trigger release via labels)
+
+-   SCT-2664 - Show the app cell status when in a collapsed state.
+-   Added an "Info" tab to all app cells with app information.
+-   Updated links to new KBase home page and docs site.
+-   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+-   (Trigger release via labels)
 
 ### Version 4.2.1
 

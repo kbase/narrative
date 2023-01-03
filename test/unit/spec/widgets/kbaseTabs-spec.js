@@ -267,7 +267,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             expectNormalTabs(kbaseTabs);
 
             // Initially, the second tab should be empty.
-            await expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
+            expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
             // Ensure that when we open the 2nd tab, the content has changed to that set by `showContentCallback`
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
@@ -295,7 +295,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             expectNormalTabs(kbaseTabs);
 
             // Initially, the second tab should be empty.
-            await expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
+            expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
             // After selecting the 2nd tab, the content should be that determined by `showContentCallback`.
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz 1' });

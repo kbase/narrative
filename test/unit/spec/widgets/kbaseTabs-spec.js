@@ -29,6 +29,10 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
     /**
      * Gets the text for the "active" (aka visible) tab within the given DOM node tree.
      *
+     *  Note on this technique: It isn't very good test methodology,
+     *  which should focus on what the user sees and experiences.
+     *  Here we assume that the "active" class makes a panel visible.
+     *
      * @param {JQuery} $host - an ancestor node containing the tabset; expects there to be only one tabset.
      * @returns {{navText: string, panelText: string}} - an object containing the tab navigation (aka "tab") text and the tab pane text.
      */
@@ -105,6 +109,15 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             }, TIMEOUT);
         }
 
+        function expectNormalTabs($kbaseTabs) {
+            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
+
+            expect(navText).toContain('Foo');
+            expect(panelText).toContain('BAR');
+            expect(navText).toContain('Baz');
+            expect(panelText).not.toContain('Fuzz');
+        }
+
         // Tests
 
         it('module should load', () => {
@@ -125,16 +138,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
                 ],
             });
 
-            // Note on this technique: It isn't very good test methodology,
-            // which should focus on what the user sees and experiences.
-            // Here we assume that the "active" class makes a panel visible.
-
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
         });
 
         it('should render a tab pane when the tab button is clicked', async () => {
@@ -150,11 +154,8 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
                     },
                 ],
             });
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+
+            expectNormalTabs($kbaseTabs);
 
             await expectSelectNthTab($kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
         });
@@ -176,11 +177,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // But then we should be able to remove the first tab, and now see the second one.
             await expectCloseNthTab($kbaseTabs, 1, {
@@ -206,11 +203,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // Navigate to second tab.
             await expectSelectNthTab($kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
@@ -236,11 +229,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // But then we should be able to remove the first tab, and now see the second one.
             const foundIt = await expectCloseNthTabWithDialog($kbaseTabs, 1, {
@@ -267,11 +256,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // Initially, the second tab should not have the eventually expected content,
             // nor any text for that matter
@@ -303,11 +288,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // Initially, the second tab should not have the eventually expected content,
             // nor any text for that matter
@@ -345,11 +326,7 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             });
 
             // Should start out as normal behavior
-            const { navText, panelText } = getVisiblePanelText($kbaseTabs);
-            expect(navText).toContain('Foo');
-            expect(panelText).toContain('BAR');
-            expect(navText).toContain('Baz');
-            expect(panelText).not.toContain('Fuzz');
+            expectNormalTabs($kbaseTabs);
 
             // When opened, the second tab should contain the content.
             await expectSelectNthTab($kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });

@@ -284,6 +284,8 @@ def log_ui_event(event: str, data: dict, level: str):
     ui_log = get_logger("narrative_ui_json")
     log_id = str(uuid.uuid4())
     if not _has_handler_type(ui_log, logging.FileHandler):
+        # Here we may change the logging handler to something like HTTP, syslog, io stream, 
+        # see https://docs.python.org/3/library/logging.handlers.html
         handler = logging.FileHandler(KBASE_UI_LOGFILE)
         formatter = logging.Formatter("%(message)s")
         handler.setFormatter(formatter)
@@ -298,7 +300,7 @@ def log_ui_event(event: str, data: dict, level: str):
 
     
     message = json.dumps({
-        "log_id": log_id,
+        "id": log_id,
         "event": event,
         "timestamp": epoch_time_millis(),
         "username": kbase_env.user,

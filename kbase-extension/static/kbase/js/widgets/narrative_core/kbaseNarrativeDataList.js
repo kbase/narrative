@@ -602,6 +602,9 @@ define([
                         if (obj.set_items) {
                             updateSetInfo(obj);
                         }
+                        const term = this.bsSearch.val();
+                        const type = this.$filterTypeSelect.find('option:selected').val();
+                        this.search(term, type);
                     });
                 })
                 .catch((error) => {

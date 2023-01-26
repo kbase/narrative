@@ -300,19 +300,45 @@ def log_ui_event(event: str, data: dict, level: str):
 
     
     message = json.dumps({
-        "id": log_id,
-        "event": event,
-        "timestamp": epoch_time_millis(),
-        "username": kbase_env.user,
-        "client_ip": kbase_env.client_ip,
+        # If logs are combined, we need to tie log entries to 
+        # a specific version of a service in a specific environment.
+        "service": "narrative",
+        "version": biokbase.narrative.version(),
         "environment": kbase_env.env,
-        "narrative": {
-            "workspace_id": int(workspace_id),
-            "object_id": int(object_id),
-            "ref": kbase_env.narrative_ref,
-            "version": biokbase.narrative.version()
-        },
-        "data": data
+        # General log entry; information that any log entry
+        # will need. 
+        # id helps create a unique reference to a log entry; perhaps
+        # should be uuid, service + uuid, or omitted and only created
+        # by a logging repository service. 
+        "id": log_id,
+        "timestamp": epoch_time_millis(),
+        # The actual, specific event. The event name is a simple
+        # string, the data is a dict or serializable class whose
+        # definition is implied by the event name.
+        "event": {
+            "name": event,
+            # the event context captures information common to instances 
+            # of this kind of event. As a narrative ui event, part of the context
+            # is the narrative object, the current user, and the current user's
+            # browser. Clearly more could be captured here, e.g. the browser model,
+            # narrative session id, etc.
+            "context": {
+                # I tried to update kbase_env to reflect the current narrative ref,
+                # but no no avail so far. The kbase_env here is not the same as the 
+                # one used when saving a narrative and getting the new version, so it does
+                # not reflect an updated narrative object version.
+                # If that isn't possible, we can store the ws and object id instead.
+                "narrative_ref": kbase_env.narrative_ref,
+                # Log entries for authenticated contexts should identify the user
+                "username": kbase_env.user,
+                # Log entries resulting from a network call can/should identify
+                # the ip address of the caller
+                "client_ip": kbase_env.client_ip
+                # could be more context, like the jupyter / ipython / etc. versions
+            },
+            # This is the specific data sent in this logging event
+            "data": data
+        }
     })
 
     if level == 'debug':

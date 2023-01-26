@@ -11,10 +11,13 @@ define([
     'kbase-client-api',
     'kbase-generic-client-api',
     'base/js/namespace',
-], (Promise, KBWidget, $, Config, kbase_client_api, GenericClient, Jupyter) => {
+    'kbaseAuthenticatedWidget',
+    'util/Logging'
+], (Promise, KBWidget, $, Config, kbase_client_api, GenericClient, Jupyter, kbaseAuthenticatedWidget, Logging) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeDownloadPanel',
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             token: null,
@@ -126,16 +129,8 @@ define([
                     .addClass('kb-data-list-btn')
                     .append('JSON')
                     .click(() => {
-                        const urlSuffix =
-                            '/download?' +
-                            'ref=' +
-                            encodeURIComponent(self.ref) +
-                            '&url=' +
-                            encodeURIComponent(self.wsUrl) +
-                            '&wszip=1' +
-                            '&name=' +
-                            encodeURIComponent(self.objName + '.JSON.zip');
-                        self.downloadFile(urlSuffix);
+                        
+                        self.downloadObject()
                     })
             );
             $btnTd.append(
@@ -152,6 +147,22 @@ define([
             self.$statusDivContent = $('<div>');
             self.$statusDiv.append(self.$statusDivContent);
             downloadPanel.append(self.$statusDiv.hide());
+        },
+        
+        downloadObject: async function () {
+            // First start the download
+            const name = `${this.objName}.JSON.zip`;
+
+            const params = {
+                ref: this.ref, url: this.wsUrl, wszip: 1, name
+            }
+            this.downloadFile2(params);
+
+            // Then log the download. This is asynchronous as the logger waits for the kernel to respond with the
+            // result, which should be a log id (uuid).
+            const data = {ref: this.ref, format: "json"}
+            const result = await new Logging().info('download-object', data);
+            console.log(`Logged download ${result}`);
         },
 
         prepareDownloaders: function (type) {
@@ -330,30 +341,18 @@ define([
         },
 
         downloadFile: function (urlSuffix) {
-            const self = this;
-            if (self.useDynamicDownloadSupport) {
-                const genericClient = new GenericClient(
-                    self.srvWizURL,
-                    { token: self.token },
-                    null,
-                    false
-                );
-                genericClient.sync_call(
-                    'ServiceWizard.get_service_status',
-                    [{ module_name: 'NarrativeDownloadSupport', version: 'dev' }],
-                    (data) => {
-                        const urlPrefix = data[0]['url'];
-                        self.downloadFileInner(urlPrefix + urlSuffix);
-                    },
-                    (error) => {
-                        console.error(error);
-                        self.showError(error);
-                    }
-                );
-            } else {
-                self.downloadFileInner(self.exportURL + urlSuffix);
-            }
+            this.downloadFileInner(this.exportURL + urlSuffix);
         },
+
+        downloadFile2: function (params) {
+            const url = new URL(`${this.exportURL}/download`);
+            for (const [key, value] of Object.entries(params)) {
+                url.searchParams.set(key, value);
+            }
+
+            this.downloadFileInner(url.toString());
+        },
+
 
         downloadFileInner: function (url) {
             console.log('Downloading url=' + url);

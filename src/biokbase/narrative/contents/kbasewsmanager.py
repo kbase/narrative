@@ -243,6 +243,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     util.kbase_env.narrative = "ws.{}.obj.{}".format(
                         ref.wsid, ref.objid
                     )
+                    util.kbase_env.narrative_ref = f"{ref.wsid}/{ref.objid}/{nar_obj['info'][4]}"
                     util.kbase_env.workspace = model["content"].metadata.ws_name
                     self.narrative_logger.narrative_open(
                         "{}/{}".format(ref.wsid, ref.objid), nar_obj["info"][4]
@@ -289,12 +290,13 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         try:
             ref = self._parse_path(path)
-            result = self.write_narrative(ref, nb, self.get_userid())
+            nb, workspace_id, object_id, object_version = self.write_narrative(ref, nb, self.get_userid())
 
-            new_id = "ws.%s.obj.%s" % (result[1], result[2])
+            new_id = "ws.%s.obj.%s" % (workspace_id, object_id)
             util.kbase_env.narrative = new_id
+            new_ref = f"{workspace_id}/{object_id}/{object_version}"
+            util.kbase_env.narrative_ref = new_ref
 
-            nb = result[0]
             self.validate_notebook_model(model)
             validation_message = model.get("message", None)
 
@@ -302,7 +304,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if validation_message:
                 model["message"] = validation_message
             self.narrative_logger.narrative_save(
-                "{}/{}".format(result[1], result[2]), result[3]
+                "{}/{}".format(workspace_id, object_id), object_version
             )
             return model
         except WorkspaceError as err:

@@ -9,17 +9,22 @@ most upstream consumers.
 
 """
 import collections
+import json
 import logging
-from logging import handlers
 import os
 import threading
 import time
+import uuid
+from datetime import datetime, timezone
+from logging import handlers
 
-# Local
-from .util import kbase_env
+import biokbase
+
 from . import log_proxy
 from .log_common import format_event
 from .narrative_logger import NarrativeLogger
+# Local
+from .util import kbase_env
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "2014-07-31"
@@ -28,6 +33,8 @@ __date__ = "2014-07-31"
 
 KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
+
+KBASE_UI_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative-ui.json")
 
 # env var with location of proxy config file
 KBASE_PROXY_ENV = "KBASE_PROXY_CONFIG"
@@ -200,6 +207,7 @@ def init_handlers():
 
     if not _has_handler_type(g_log, logging.FileHandler):
         hndlr = logging.FileHandler(KBASE_TMP_LOGFILE)
+        #  hndlr = logging.StreamHandler(sys.stdout)
         fmtr = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
         hndlr.setFormatter(fmtr)
         g_log.addHandler(hndlr)
@@ -252,3 +260,97 @@ class NarrativeUIError(object):
         msg = format_event("ui.error", info)
         log_method = (self.ui_log.error, self.ui_log.critical)[is_fatal]
         log_method(msg)
+
+def epoch_time_millis():
+    epoch_time = datetime.now(tz=timezone.utc).timestamp()
+    return int(epoch_time * 1000)
+
+def get_username():
+    token = biokbase.auth.get_auth_token()
+    if token is None:
+        return None
+    try:
+        user_info = biokbase.auth.get_user_info(token)
+        return user_info.get("user", None)
+    except BaseException:
+        return None
+        
+def log_ui_event(event: str, data: dict, level: str):
+    # We use a separate logger, configured to save the 
+    # entire message as a simple string ... and that string
+    # is a JSON-encoded message object.
+    # The resulting log file, then, is y it is a JSON stream format, since it
+    # contains multiple objects in sequence.
+    ui_log = get_logger("narrative_ui_json")
+    log_id = str(uuid.uuid4())
+    if not _has_handler_type(ui_log, logging.FileHandler):
+        # Here we may change the logging handler to something like HTTP, syslog, io stream, 
+        # see https://docs.python.org/3/library/logging.handlers.html
+        handler = logging.FileHandler(KBASE_UI_LOGFILE)
+        formatter = logging.Formatter("%(message)s")
+        handler.setFormatter(formatter)
+        ui_log.addHandler(handler)
+
+   
+    #
+    # The logging message is simply what, when, who, where, and ... data
+    # There could be other interesting information such as 
+    #
+    [_, workspace_id, _, object_id] = kbase_env.narrative.split(".")
+
+    
+    message = json.dumps({
+        # If logs are combined, we need to tie log entries to 
+        # a specific version of a service in a specific environment.
+        "service": "narrative",
+        "version": biokbase.narrative.version(),
+        "environment": kbase_env.env,
+        # General log entry; information that any log entry
+        # will need. 
+        # id helps create a unique reference to a log entry; perhaps
+        # should be uuid, service + uuid, or omitted and only created
+        # by a logging repository service. 
+        "id": log_id,
+        "timestamp": epoch_time_millis(),
+        # The actual, specific event. The event name is a simple
+        # string, the data is a dict or serializable class whose
+        # definition is implied by the event name.
+        "event": {
+            "name": event,
+            # the event context captures information common to instances 
+            # of this kind of event. As a narrative ui event, part of the context
+            # is the narrative object, the current user, and the current user's
+            # browser. Clearly more could be captured here, e.g. the browser model,
+            # narrative session id, etc.
+            "context": {
+                # I tried to update kbase_env to reflect the current narrative ref,
+                # but no no avail so far. The kbase_env here is not the same as the 
+                # one used when saving a narrative and getting the new version, so it does
+                # not reflect an updated narrative object version.
+                # If that isn't possible, we can store the ws and object id instead.
+                "narrative_ref": kbase_env.narrative_ref,
+                # Log entries for authenticated contexts should identify the user
+                "username": kbase_env.user,
+                # Log entries resulting from a network call can/should identify
+                # the ip address of the caller
+                "client_ip": kbase_env.client_ip
+                # could be more context, like the jupyter / ipython / etc. versions
+            },
+            # This is the specific data sent in this logging event
+            "data": data
+        }
+    })
+
+    if level == 'debug':
+        ui_log.debug(message)
+    elif level == 'info':
+        ui_log.info(message)
+    elif level == 'warning':
+        ui_log.warning(message)
+    elif level == 'error':
+        ui_log.error(message)
+    elif level == 'critical':
+        ui_log.critical(message)
+    else:
+        raise ValueError(f"log level must be one of debug, info, warning, error, or critical; it is '{level}'")
+    return log_id

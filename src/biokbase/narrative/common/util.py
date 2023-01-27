@@ -6,11 +6,9 @@ __date__ = "1/6/14"
 
 import os
 import re
-import requests
+import uuid
+
 from setuptools import Command
-from .kvp import KVP_EXPR, parse_kvp
-from biokbase.workspace.client import Workspace as WS2
-from biokbase.workspace.baseclient import ServerError
 
 
 def kbase_debug_mode():
@@ -35,6 +33,7 @@ class _KBaseEnv(object):
     env_workspace = "KB_WORKSPACE_ID"
     env_user = "KB_USER_ID"
     env_env = "KB_ENVIRONMENT"
+    env_narrative_ref = "KB_NARRATIVE_REF"
 
     _defaults = {
         "auth_token": "none",
@@ -44,6 +43,7 @@ class _KBaseEnv(object):
         "user": "anonymous",
         "workspace": "none",
         "env": "none",
+        "narrative_ref": "none"
     }
 
     def __getattr__(self, name):

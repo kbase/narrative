@@ -74,7 +74,7 @@
         "stylelint-config-standard": "^22.0.0",
         "terser": "5.15.0",
         "wdio-chromedriver-service": "^7.3.2",
-        "webdriverio": "^7.19.7"
+        "webdriverio": "^7.30.0"
     },
     "dependencies": {
         "bluebird": "3.7.2",

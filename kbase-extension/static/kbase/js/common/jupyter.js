@@ -43,10 +43,7 @@ define(['jquery', 'base/js/namespace', 'base/js/dialog'], ($, Jupyter, dialog) =
     }
 
     function getCell(kbaseId) {
-        let cells = getCells(),
-            cell;
-        for (let i = 0; i < cells.length; i += 1) {
-            cell = cells[i];
+        for (const cell of getCells()) {
             if (
                 cell.metadata.kbase &&
                 cell.metadata.kbase.attributes &&

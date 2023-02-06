@@ -696,14 +696,6 @@ define([
                 bus: runtime.bus(),
             });
 
-            /*
-             * This is required for all KBase cells in order to disable the
-             * Jupyter keyboard management. Although a app startup code remaps
-             * some of the more dangerous Jupyter keys (change cell type, delete cel,
-             * etc.), there are keys that we need to keep enabled because
-             * they are part of the standard Jupyter functionality, such as
-             * shift-enter, ctrl-enter for code cells,
-             */
             JupyterUtil.disableKeyListenersForCell(cell);
 
             render()

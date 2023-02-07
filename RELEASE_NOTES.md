@@ -4,6 +4,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
+## Version 5.1.4
+
+Dependency Changes
+- Github Actions
+  - actions/checkout v2 -> v3
+  - actions/setup-node v2 -> v3
+  - codecov/codecov-action v2 -> v3
+  - docker/setup-qemu-action v1 -> v2
+  - docker/setup-buildx-action v1 -> v2
+  - docker/login-action v1 -> v2
+  - docker/build-push-action v2 -> v4
+
 ## Version 5.1.3
 
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser

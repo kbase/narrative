@@ -4,7 +4,8 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
-## Version 5.1.4
+## Unreleased
+- PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
 
 Dependency Changes
 - Github Actions
@@ -17,7 +18,6 @@ Dependency Changes
   - docker/build-push-action v2 -> v4
 
 ## Version 5.1.3
-
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
 - PTV-1514 - sanitized HTML being used for app input tooltips
 

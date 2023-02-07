@@ -36,9 +36,9 @@ jobs:
         echo "NARRATIVE_VERSION=${narrative_version}" >> $GITHUB_ENV
         echo "PR=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
         echo "VCS_REF=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c -7)" >> $GITHUB_ENV
-    -
-      name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+    # -
+    #   name: Set up QEMU
+    #   uses: docker/setup-qemu-action@v2
     -
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2

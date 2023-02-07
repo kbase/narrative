@@ -54,13 +54,16 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
+        file: ./Dockerfile
+        pull: true
         push: true
         tags: ${{ env.APP_IMAGE_TAG }}
         build-args: |
           BRANCH=${{ github.head_ref }}
           BUILD_DATE=${{ env.BUILD_DATE }}
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
-          VCS_REF=${{ env.VCS_REF }}
+          VCS_REF=${{ github.sha }}
+          TAG='${{ github.ref }}'
         labels: |
           us.kbase.vcs-pull-req=pr-${{ env.PR }}
     -
@@ -77,6 +80,7 @@ jobs:
           BUILD_DATE=${{ env.BUILD_DATE }}
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
           NARRATIVE_GIT_HASH=${{ env.NARRATIVE_GIT_HASH }}
-          VCS_REF=${{ env.VCS_REF }}
+          VCS_REF=${{ github.sha }}
+          TAG='${{ github.ref }}'
         labels: |
           us.kbase.vcs-pull-req=pr-${{ env.PR }}

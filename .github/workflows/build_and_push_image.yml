@@ -56,7 +56,7 @@ jobs:
         password: ${{ secrets.GHCR_TOKEN }}
     -
       name: Build narrative image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       with:
         context: .
         file: ./Dockerfile
@@ -73,7 +73,7 @@ jobs:
           us.kbase.vcs-pull-req=pr-${{ env.PR }}
     -
       name: Build version image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       if: ${{ github.base_ref }} == 'main' || ${{ github.base_ref }} == 'develop'
       with:
         context: .

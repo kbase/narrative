@@ -197,6 +197,7 @@ define([
             await dataListObj.refresh();
 
             expect($dataList.html()).toContain('This Narrative has no data yet.');
+            expect($dataList.find('kb-data-list-main')).toBeDefined();
         });
 
         it('Should render the add data text button w/o data, and hide the other add data button', async () => {

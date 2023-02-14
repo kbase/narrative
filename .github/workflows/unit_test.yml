@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.GHCR_TOKEN }}
     -
       name: Repo checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     -
       name: Set up environment
       run: |
@@ -55,10 +55,10 @@ jobs:
         docker run -v "${{ github.workspace }}/output:/tmp/output" --user nobody ${{ env.APP_IMAGE_TAG }} /bin/bash scripts/narrative_backend_tests.sh
       continue-on-error: true
     -
-      name: Use Node JS 16.x
+      name: Use Node JS 16
       uses: actions/setup-node@v2
       with:
-        node-version: 16.x
+        node-version: 16
     -
       name: Install JS dependencies
       run: |
@@ -74,10 +74,10 @@ jobs:
     -
       name: Send to Codecov
       id: send_to_codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       continue-on-error: true
       with:
-        files: ./output/coverage.xml, ./js-coverage/lcov/lcov.info
+        files: ./output/coverage.xml,./js-coverage/lcov/lcov.info
         fail_ci_if_error: true
     -
       name: outcome

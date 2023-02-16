@@ -65,8 +65,6 @@ jobs:
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
           VCS_REF=${{ github.sha }}
           TAG='${{ github.ref }}'
-        labels: |
-          us.kbase.vcs-pull-req=pr-${{ env.PR }}
     -
       name: Build version image
       uses: docker/build-push-action@v3
@@ -83,5 +81,3 @@ jobs:
           NARRATIVE_GIT_HASH=${{ env.NARRATIVE_GIT_HASH }}
           VCS_REF=${{ github.sha }}
           TAG='${{ github.ref }}'
-        labels: |
-          us.kbase.vcs-pull-req=pr-${{ env.PR }}

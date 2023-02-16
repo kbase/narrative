@@ -23,6 +23,7 @@ Dependency Changes
   - coverage 6.4.4 -> 7.1.0
   - cryptography 38.0.1 -> 39.0.1
   - flake8 3.8.4 -> 6.0.0
+  - idna 3.3 -> 3.4
   - markupsafe 2.0.1 -> 2.1.2
   - pygments 2.13.0 -> 2.14.0
   - pymongo 4.1.0 -> 4.3.3
@@ -31,6 +32,20 @@ Dependency Changes
   - pytest-cov 3.0.0 -> 4.0.0
   - requests 2.28.1 -> 2.28.2
   - terminado 0.12.1 -> 0.17.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.20.1 -> 8.3.2
+  - @wdio/cli 7.25.0 -> 7.30.0
+  - @wdio/local-runner 7.25.0 -> 8.3.2
+  - @wdio/mocha-framework 7.20.0 -> 8.3.0
+  - @wdio/selenium-standalone-service 7.19.5 -> 8.3.2
+  - @wdio/spec-reporter 7.25.0 -> 8.3.0
+  - commander 9.3.0 -> 10.0.0
+  - eslint 8.16.0 -> 8.33.0
+  - husky 7.0.4 -> 8.0.3
+  - plotly.js-dist-min 1.50.0 -> 2.18.0
+  - requirejs-domready 2.0.1 -> 2.0.3
+  - selenium-webdriver 4.4.0 -> 4.8.0
+  - webdriverio 7.20.1 -> 7.30.0
 
 ## Version 5.1.3
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser

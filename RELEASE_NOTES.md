@@ -18,6 +18,21 @@ Dependency Changes
   - docker/login-action v1 -> v2
   - docker/build-push-action v2 -> v3
 
+- Python dependency updates
+  - beautifulsoup4 4.11.1 -> 4.11.2
+  - black 22.8.0 -> 23.1.0
+  - coverage 6.4.4 -> 7.1.0
+  - cryptography 38.0.1 -> 39.0.1
+  - flake8 3.8.4 -> 6.0.0
+  - markupsafe 2.0.1 -> 2.1.2
+  - pygments 2.13.0 -> 2.14.0
+  - pymongo 4.1.0 -> 4.3.3
+  - pyopenssl 22.0.0 -> 23.0.0
+  - pytest 7.0.1 -> 7.2.1
+  - pytest-cov 3.0.0 -> 4.0.0
+  - requests 2.28.1 -> 2.28.2
+  - terminado 0.12.1 -> 0.17.1
+
 ## Version 5.1.3
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser
 - PTV-1514 - sanitized HTML being used for app input tooltips
@@ -54,7 +69,7 @@ Dependency Changes
   - terser 5.13.1 -> 5.15.0
   - underscore 1.13.3 -> 1.13.6
 
-Removed dependencies  
+Removed dependencies
 **note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
   - plotly - not necessary for core narrative functionality, moved to narrative base image
   - semantic_version -- removed, wasn't used effectively, and removed the need for it

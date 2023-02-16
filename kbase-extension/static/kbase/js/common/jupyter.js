@@ -127,17 +127,17 @@ define(['jquery', 'base/js/namespace', 'base/js/dialog'], ($, Jupyter, dialog) =
     }
 
     return {
-        deleteCell: deleteCell,
-        editNotebookMetadata: editNotebookMetadata,
-        editCellMetadata: editCellMetadata,
-        saveNotebook: saveNotebook,
-        findCellIndex: findCellIndex,
-        getCells: getCells,
-        getCell: getCell,
-        disableKeyListenersForCell: disableKeyListenersForCell,
-        onEvent: onEvent,
-        uiModeIs: uiModeIs,
-        canEdit: canEdit,
-        isKernelReady: isKernelReady,
+        deleteCell,
+        editNotebookMetadata,
+        editCellMetadata,
+        saveNotebook,
+        findCellIndex,
+        getCells,
+        getCell,
+        disableKeyListenersForCell,
+        onEvent,
+        uiModeIs,
+        canEdit,
+        isKernelReady,
     };
 });

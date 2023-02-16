@@ -37,11 +37,7 @@ jobs:
         echo "PR=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
         echo "VCS_REF=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c -7)" >> $GITHUB_ENV
     -
-      name: Log environment
-      run: |
-        echo "$GITHUB.CONTEXT"
-        echo '${{ toJSON(github) }}'
-    - name: Get current date
+      name: Get current date
       id: date
       run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
     -
@@ -69,8 +65,6 @@ jobs:
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
           VCS_REF=${{ github.sha }}
           TAG='${{ github.ref }}'
-        labels: |
-          us.kbase.vcs-pull-req=pr-${{ env.PR }}
     -
       name: Build version image
       uses: docker/build-push-action@v3
@@ -87,5 +81,3 @@ jobs:
           NARRATIVE_GIT_HASH=${{ env.NARRATIVE_GIT_HASH }}
           VCS_REF=${{ github.sha }}
           TAG='${{ github.ref }}'
-        labels: |
-          us.kbase.vcs-pull-req=pr-${{ env.PR }}

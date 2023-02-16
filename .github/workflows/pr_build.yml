@@ -1,16 +1,17 @@
 ---
 name: Pull Request Build, Tag, & Push
 on:
-  pull_request:
-    branches:
-      - develop
-      - main
-      - master
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - closed
+  workflow_dispatch:
+  # pull_request:
+  #   branches:
+  #     - develop
+  #     - main
+  #     - master
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - synchronize
+  #     - closed
 jobs:
   build-develop-open:
     if: github.base_ref == 'develop' && github.event.pull_request.merged == false

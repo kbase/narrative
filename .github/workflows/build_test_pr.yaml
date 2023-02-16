@@ -16,6 +16,11 @@ jobs:
       GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
+  trivy-scans:
+    if: (github.base_ref == 'develop' || github.base_ref == 'main' || github.base_ref == 'master' ) && github.event.pull_request.merged == false
+    uses: kbase/.github/.github/workflows/reusable_trivy-scans.yml@main
+    secrets: inherit
+
   run_unit_tests:
     uses: ./.github/workflows/unit_test.yml
     needs: run_build_and_push

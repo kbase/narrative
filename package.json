@@ -30,7 +30,7 @@
         "grunt-contrib-copy": "^1.0.0",
         "grunt-contrib-watch": "^1.1.0",
         "grunt-regex-replace": "^0.4.0",
-        "grunt-shell": "^3.0.1",
+        "grunt-shell": "^4.0.0",
         "grunt-stylelint": "^0.16.0",
         "husky": "8.0.3",
         "jasmine-ajax": "^4.0.0",

@@ -49,7 +49,7 @@ Dependency Changes
   - requirejs-domready 2.0.1 -> 2.0.3
   - selenium-webdriver 4.4.0 -> 4.8.0
   - wdio-chromedriver-service 7.3.2 -> 8.1.1
-  - webdriverio 7.20.1 -> 7.30.0
+  - webdriverio 7.20.1 -> 8.3.9
 
 ## Version 5.1.3
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser

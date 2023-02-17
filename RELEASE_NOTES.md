@@ -39,14 +39,16 @@ Dependency Changes
   - @wdio/mocha-framework 7.20.0 -> 8.3.0
   - @wdio/selenium-standalone-service 7.19.5 -> 8.3.2
   - @wdio/spec-reporter 7.25.0 -> 8.3.0
+  - chromedriver 105.0.0 -> 110.0.0
   - commander 9.3.0 -> 10.0.0
   - eslint 8.16.0 -> 8.33.0
   - husky 7.0.4 -> 8.0.3
   - plotly.js-dist-min 1.50.0 -> 2.18.0
+  - puppeteer 18.0.5 -> 19.6.3
   - requirejs-domready 2.0.1 -> 2.0.3
   - selenium-webdriver 4.4.0 -> 4.8.0
-  - webdriverio 7.20.1 -> 7.30.0
   - wdio-chromedriver-service 7.3.2 -> 8.1.1
+  - webdriverio 7.20.1 -> 7.30.0
 
 ## Version 5.1.3
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser

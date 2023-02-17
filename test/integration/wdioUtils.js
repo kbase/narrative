@@ -1,7 +1,7 @@
 'use strict';
 
-const TOKEN = browser.config.kbaseToken;
-const BASE_URL = browser.config.baseUrl;
+const TOKEN = browser.options.kbaseToken;
+const BASE_URL = browser.options.baseUrl;
 
 /**
  * Aids in constructing a url on the configured url base.

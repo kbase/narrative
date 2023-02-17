@@ -24,7 +24,7 @@ const allTestCases = {
 };
 
 function getTestCase(name) {
-    const envCases = allTestCases.envs[browser.config.testParams.ENV];
+    const envCases = allTestCases.envs[browser.options.testParams.ENV];
     return Object.assign({}, allTestCases.common, envCases[name]);
 }
 

@@ -59,7 +59,7 @@ class NarrativeTesting {
         if (this.caseData) {
             return this.caseData;
         }
-        const env = browser.config.testParams.ENV;
+        const env = browser.options.testParams.ENV;
 
         // Note, order is least specific to most specific, so that the more
         // specific can override the least.

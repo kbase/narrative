@@ -652,7 +652,7 @@ const allTestCases = {
     },
 };
 
-const testCases = allTestCases[browser.config.testParams.ENV];
+const testCases = allTestCases[browser.options.testParams.ENV];
 
 async function testField({ container, id, label, value }) {
     const lineageLabel = await container.$(

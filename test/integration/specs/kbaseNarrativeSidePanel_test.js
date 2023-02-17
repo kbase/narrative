@@ -1,6 +1,6 @@
 'use strict';
 
-const { login, openNarrative, clickWhenReady } = require('../wdioUtils.js');
+const { login, openNarrative, clickWhenReady, KBASE_ENV } = require('../wdioUtils.js');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -24,7 +24,7 @@ const allTestCases = {
 };
 
 function getTestCase(name) {
-    const envCases = allTestCases.envs[browser.config.testParams.ENV];
+    const envCases = allTestCases.envs[KBASE_ENV];
     return Object.assign({}, allTestCases.common, envCases[name]);
 }
 

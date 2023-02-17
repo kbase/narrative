@@ -2,6 +2,7 @@
 
 const TOKEN = browser.options.kbaseToken;
 const BASE_URL = browser.options.baseUrl;
+const KBASE_ENV = browser.options.testParams.ENV;
 
 /**
  * Aids in constructing a url on the configured url base.
@@ -142,4 +143,5 @@ module.exports = {
     waitForClass,
     waitForText,
     range,
+    KBASE_ENV,
 };

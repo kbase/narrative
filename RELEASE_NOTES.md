@@ -33,9 +33,9 @@ Dependency Changes
   - requests 2.28.1 -> 2.28.2
   - terminado 0.12.1 -> 0.17.1
 - Javascript dependency updates
-  - @wdio/browserstack-service 7.20.1 -> 8.3.2
-  - @wdio/cli 7.25.0 -> 7.30.0
-  - @wdio/local-runner 7.25.0 -> 8.3.2
+  - @wdio/browserstack-service 7.20.1 -> 8.3.9
+  - @wdio/cli 7.25.0 -> 8.3.9
+  - @wdio/local-runner 7.25.0 -> 8.3.9
   - @wdio/mocha-framework 7.20.0 -> 8.3.0
   - @wdio/selenium-standalone-service 7.19.5 -> 8.3.2
   - @wdio/spec-reporter 7.25.0 -> 8.3.0
@@ -46,6 +46,7 @@ Dependency Changes
   - requirejs-domready 2.0.1 -> 2.0.3
   - selenium-webdriver 4.4.0 -> 4.8.0
   - webdriverio 7.20.1 -> 7.30.0
+  - wdio-chromedriver-service 7.3.2 -> 8.1.1
 
 ## Version 5.1.3
 - PTV-1620 - fix problem with Expression Pairwise Correlation creating or displaying large heatmaps and freezing or crashing browser

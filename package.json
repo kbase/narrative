@@ -62,7 +62,7 @@
         "puppeteer": "19.6.3",
         "requirejs": "2.3.6",
         "sass": "1.55.0",
-        "selenium-standalone": "8.2.0",
+        "selenium-standalone": "8.3.0",
         "selenium-webdriver": "4.8.0",
         "string-template": "^1.0.0",
         "string.prototype.endswith": "1.0.0",

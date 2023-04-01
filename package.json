@@ -59,7 +59,7 @@
         "postcss-scss": "^4.0.4",
         "postcss-unprefix": "^2.1.4",
         "prettier": "2.7.1",
-        "puppeteer": "19.6.3",
+        "puppeteer": "19.8.2",
         "requirejs": "2.3.6",
         "sass": "1.55.0",
         "selenium-standalone": "8.2.0",

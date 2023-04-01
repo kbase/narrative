@@ -11,7 +11,7 @@ flake8==6.0.0
 html5lib==1.1
 idna==3.4
 jinja2==3.1.2
-jupyter-console==6.4.3
+jupyter-console==6.6.3
 markupsafe==2.1.2
 ndg-httpsclient==0.5.1
 pygments==2.14.0

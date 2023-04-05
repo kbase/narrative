@@ -124,8 +124,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseAuthenticatedWidget'], (
 
             this.$buttonPanel = $('<span>')
                 .addClass('btn-toolbar pull-right')
-                .attr('role', 'toolbar')
-                .css({ 'margin-top': '-2px' });
+                .attr('role', 'toolbar');
 
             const $titleSpan = $('<span>');
             if (this.options.showTitle) {

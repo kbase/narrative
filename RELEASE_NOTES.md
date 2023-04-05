@@ -18,20 +18,22 @@ Dependency Changes
   - docker/build-push-action v2 -> v4
 
 - Python dependency updates
-  - beautifulsoup4 4.11.1 -> 4.11.2
-  - black 22.8.0 -> 23.1.0
-  - coverage 6.4.4 -> 7.1.0
-  - cryptography 38.0.1 -> 39.0.1
+  - beautifulsoup4 4.11.1 -> 4.12.0
+  - black 22.8.0 -> 23.3.0
+  - coverage 6.4.4 -> 7.2.2
+  - cryptography 38.0.1 -> 40.0.1
   - flake8 3.8.4 -> 6.0.0
   - idna 3.3 -> 3.4
+  - jupyter-console 6.4.3 -> 6.6.3
   - markupsafe 2.0.1 -> 2.1.2
   - pygments 2.13.0 -> 2.14.0
   - pymongo 4.1.0 -> 4.3.3
-  - pyopenssl 22.0.0 -> 23.0.0
-  - pytest 7.0.1 -> 7.2.1
+  - pyopenssl 22.0.0 -> 23.1.1
+  - pytest 7.0.1 -> 7.2.2
   - pytest-cov 3.0.0 -> 4.0.0
   - requests 2.28.1 -> 2.28.2
   - terminado 0.12.1 -> 0.17.1
+
 - Javascript dependency updates
   - @wdio/browserstack-service 7.20.1 -> 8.3.9
   - @wdio/cli 7.25.0 -> 8.3.9

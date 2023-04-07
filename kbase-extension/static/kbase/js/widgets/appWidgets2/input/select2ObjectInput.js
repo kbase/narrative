@@ -41,7 +41,7 @@ define([
 
     function factory(config) {
         const spec = config.parameterSpec,
-            objectRefType = config.referenceType || 'name',
+            objectRefType = 'ref',
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
@@ -355,7 +355,8 @@ define([
                             if (!object.id) {
                                 return object.text;
                             }
-                            return model.availableValues[object.id].name;
+                            const objectInfo = model.availableValues[object.id];
+                            return `${objectInfo.name} (v${objectInfo.version})`;
                         },
                     })
                     .on('change', () => {

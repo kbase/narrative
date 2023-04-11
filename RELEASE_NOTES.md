@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Unreleased
 - PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
+- PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells
 
 Dependency Changes
 - Github Actions
@@ -15,7 +16,7 @@ Dependency Changes
   - docker/setup-qemu-action v1 -> v2
   - docker/setup-buildx-action v1 -> v2
   - docker/login-action v1 -> v2
-  - docker/build-push-action v2 -> v4
+  - docker/build-push-action v2 -> v3
 
 - Python dependency updates
   - beautifulsoup4 4.11.1 -> 4.12.0

@@ -26,3 +26,4 @@ Last updated 2/17/2016, 9:00pm PST
   * Method/app cells should be drag/droppable like data cells.
   * Name change doesn't seem to change temporary state (should actually use temporary state instead of "Untitled" name)
   * Extra copy of workspace client - needs to migrate to the right repo.
+  

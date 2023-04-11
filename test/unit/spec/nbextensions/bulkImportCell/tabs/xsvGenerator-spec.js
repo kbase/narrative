@@ -320,9 +320,9 @@ define([
                 );
             });
 
-            xdescribe('createForm', () => {
-                // TODO!
-            });
+            // TODO!
+            // describe('createForm', () => {
+            // });
 
             describe('renderLayout', () => {
                 function checkStartUpDialog(modelData, hasError, isMulti = false) {

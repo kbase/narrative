@@ -40,15 +40,21 @@ Dependency Changes
   - @wdio/local-runner 7.25.0 -> 8.3.9
   - @wdio/mocha-framework 7.20.0 -> 8.3.0
   - @wdio/selenium-standalone-service 7.19.5 -> 8.3.2
-  - @wdio/spec-reporter 7.25.0 -> 8.3.0
+  - @wdio/spec-reporter 7.25.0 -> 8.6.8
   - chromedriver 105.0.0 -> 110.0.0
   - commander 9.3.0 -> 10.0.0
+  - cssnano 5.1.13 -> 6.0.0
   - eslint 8.16.0 -> 8.34.0
   - grunt-shell 3.0.1 -> 4.0.0
   - husky 7.0.4 -> 8.0.3
+  - jasmine-core 4.4.0 -> 4.6.0
+  - karma-jasmine 5.0.1 -> 5.1.0
   - plotly.js-dist-min 1.50.0 -> 2.18.0
-  - puppeteer 18.0.5 -> 19.6.3
+  - postcss-scss 4.0.4 -> 4.0.6
+  - puppeteer 18.0.5 -> 19.8.2
   - requirejs-domready 2.0.1 -> 2.0.3
+  - sass 1.55.0 -> 1.60.0
+  - selenium-standalone 8.2.0 -> 8.3.0
   - selenium-webdriver 4.4.0 -> 4.8.0
   - wdio-chromedriver-service 7.3.2 -> 8.1.1
   - webdriverio 7.20.1 -> 8.3.9
@@ -546,7 +552,7 @@ Dependency Changes
 -   SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.
 -   Re-enable security measure that prevents Markdown cells from rendering JavaScript. We're about a year past the point when that was necessary.
 -   SCT-628 - adds a viewer for the CompoundSet object.
--   Bump Tornado dependency to 5.0.0
+-     - Tornado dependency to 5.0.0
 -   SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 -   SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
 -   SCT-590 - add cache busting to the public data mapping lookup. No more force-refreshing!

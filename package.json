@@ -99,7 +99,7 @@
         "kbase-sdk-clients-js": "https://github.com/eapearson/kbase-sdk-clients-js/archive/refs/tags/v0.5.1.tar.gz",
         "kbase-service-clients-js": "https://github.com/kbase/kbase-service-clients-js/archive/refs/tags/v3.3.4.tar.gz",
         "kbase-ui-plugin-catalog": "https://github.com/kbase/kbase-ui-plugin-catalog/archive/refs/tags/v2.2.5.tar.gz",
-        "numeral": "1.5.0",
+        "numeral": "2.0.6",
         "plotly.js-dist-min": "2.18.2",
         "pure-uuid": "1.6.2",
         "require-css": "0.1.10",

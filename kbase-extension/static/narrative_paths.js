@@ -23,6 +23,7 @@ require.config({
         d3: 'ext_components/d3/d3.min',
         md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs-domready/domReady',
+        domPurify: 'ext_components/dompurify/dist/purify.min',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',
         json: 'ext_components/requirejs-plugins/src/json',
@@ -388,9 +389,8 @@ require.config({
     map: {
         '*': {
             css: 'ext_components/require-css/css',
-            'jquery-dataTables': 'datatables.net-bs'
+            'jquery-dataTables': 'datatables.net-bs',
         },
-
     },
 
     shim: {
@@ -411,10 +411,10 @@ require.config({
             deps: ['jquery'],
         },
         'datatables.net-bs': {
-            deps: ['jquery', 'datatables.net', 'bootstrap']
+            deps: ['jquery', 'datatables.net', 'bootstrap'],
         },
         'datatables.net': {
-            deps: ['jquery']
+            deps: ['jquery'],
         },
         kbaseNarrativeMethodCell: {
             deps: ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu'],
@@ -511,7 +511,7 @@ require.config({
             deps: ['jquery', 'jqueryui'],
         },
         'bootstrap-slider': {
-            deps: ['jquery', 'css!bootstrap-slider-css']
-        }
+            deps: ['jquery', 'css!bootstrap-slider-css'],
+        },
     },
 });

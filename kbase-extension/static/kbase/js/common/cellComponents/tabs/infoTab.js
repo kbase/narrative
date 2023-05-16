@@ -158,9 +158,7 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
                             if (
                                 node
                                     .getAttribute('href')
-                                    .match(
-                                        new RegExp('https?://kbase.us/data-upload-download-guide')
-                                    )
+                                    .match(/http[:]\/\/kbase.us\/data-upload-download-guide/)
                             ) {
                                 node.setAttribute(
                                     'href',
@@ -168,9 +166,7 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
                                 );
                             }
                             // Ensure all docs links open into a new window (or tab).
-                            if (
-                                node.getAttribute('href').match(new RegExp('https://docs.kbase.us'))
-                            ) {
+                            if (node.getAttribute('href').match(/https:\/\/docs.kbase.us/)) {
                                 node.setAttribute('target', '_blank');
                             }
                         }

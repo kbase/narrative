@@ -131,7 +131,10 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
             app: {
                 spec: {
                     full_info: {
-                        // triggers error in domPurity.sanitize
+                        // triggers error in domPurity's sanitize, as a "toString" is expected to
+                        // be a method (returning a string) if the provided "string" is an object.
+                        // If there is no toString property, it is converted to a string, which would
+                        // fail the test for different reasons.
                         description: { toString: 123 },
                         name: APP.THREE.NAME,
                         authors: [],
@@ -389,7 +392,6 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                         'https://docs.kbase.us/data/upload-download-guide'
                     );
                     expect(description).toContain('target="_blank"');
-                    // toBe(appData[APP.TWO.ID].app.spec.full_info.description);
                 });
             }
 

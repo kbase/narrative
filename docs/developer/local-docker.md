@@ -144,6 +144,9 @@ it would be possible to run any node-based tool via a simple node container, but
 - Get the narrative running in one terminal window:
   - `make dev-image`
   - `ENV=ci make run-dev-image`
+
+- Ensure node testing dependencies are installed:
+  - `npm install`
   
 - In another terminal window:
   - `NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local` if running w/o kbase-ui

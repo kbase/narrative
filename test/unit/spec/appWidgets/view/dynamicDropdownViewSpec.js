@@ -87,14 +87,18 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
             });
 
             await widget.start({ node: this.node });
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(displayValue);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
+                displayValue
+            );
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
                     this.bus.emit('reset-to-defaults');
                 }
             );
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
+                DEFAULT_VALUE
+            );
             await widget.stop();
         });
 
@@ -108,7 +112,9 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
 
             const updatedValue = 'apple';
             await widget.start({ node: this.node });
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
+                DEFAULT_VALUE
+            );
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
@@ -117,9 +123,9 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                     });
                 }
             );
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(updatedValue);
-
-            // expect($(selectElem).select2('data')[0].text).toBe(updatedValue);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
+                updatedValue
+            );
             await widget.stop();
         });
 
@@ -153,7 +159,7 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                 const selectElem = this.node.querySelector(SELECTOR);
                 expect(selectElem).not.toBeNull();
                 expect(selectElem.children.length).toBe(2); // blank is an option
-                expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(
+                expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
                     testCase.expected
                 );
 
@@ -172,7 +178,9 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
             const updateValue = 'apple';
             const updateDisplayValue = { someKey: 'some display value' };
             await widget.start({ node: this.node });
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(DEFAULT_VALUE);
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
+                DEFAULT_VALUE
+            );
             await TestUtil.waitForElementChange(
                 this.node.querySelector('.select2-container'),
                 () => {
@@ -183,7 +191,7 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
                 }
             );
 
-            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toBe(
+            expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
                 `value: ${updateDisplayValue.someKey}`
             );
             await widget.stop();

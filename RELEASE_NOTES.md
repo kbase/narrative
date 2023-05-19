@@ -5,6 +5,8 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
 ## Unreleased
+
+- PTV-1875 - fix public data paging issue by removing paging from workspace data sources
 - PTV-1878 - fix some failing front end unit tests
 
 ## Version 5.1.4

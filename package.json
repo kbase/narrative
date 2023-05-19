@@ -60,7 +60,7 @@
         "prettier": "2.7.1",
         "puppeteer": "19.8.2",
         "requirejs": "2.3.6",
-        "sass": "1.60.0",
+        "sass": "1.62.1",
         "selenium-standalone": "8.3.0",
         "selenium-webdriver": "4.8.0",
         "string-template": "^1.0.0",

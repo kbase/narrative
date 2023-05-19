@@ -1,5 +1,13 @@
-define(['common/format', 'common/html', 'util/string'], (format, html, string) => {
+define(['domPurify', 'common/format', 'common/html', 'util/string'], (
+    DOMPurify,
+    format,
+    html,
+    string
+) => {
     'use strict';
+
+    // Note - would destructure in the arguments, but that would require a change to eslint rules.
+    const { sanitize } = DOMPurify;
 
     const cssBaseClass = 'kb-info-tab',
         div = html.tag('div'),
@@ -105,9 +113,9 @@ define(['common/format', 'common/html', 'util/string'], (format, html, string) =
 
             // run count and average runtime
             const execStats = model.getItem('executionStats');
-            let avgRuntime, runtimeInfo;
+            let runtimeInfo;
             if (execStats && execStats.total_exec_time && execStats.number_of_calls > 0) {
-                avgRuntime = format.niceDuration(
+                const avgRuntime = format.niceDuration(
                     1000 * (execStats.total_exec_time / execStats.number_of_calls)
                 );
                 runtimeInfo = div(
@@ -119,7 +127,75 @@ define(['common/format', 'common/html', 'util/string'], (format, html, string) =
                 );
             }
 
-            const infoContainer = div(
+            /**
+             * A self-executing function which, given a string which purports to be an app description, is
+             * sanitized and repaired, if necessary.
+             *
+             * @param {string} descriptionText The description value for an app.
+             *
+             * @returns {string} The sanitized and possibly fixed description
+             */
+            const description = ((descriptionText) => {
+                if (!descriptionText) {
+                    return 'No description specified';
+                }
+
+                /**
+                 * "Fixes" the given node by recursively visiting it and all its children and applying fixes.
+                 *
+                 * At present, the fixes include:
+                 * - for the app info description:
+                 *  - replace the old data upload/download guide link with the current one
+                 *  - ensure that all KBase doc links open in a new window/tab
+                 *
+                 * @param {Node} node A DOM node
+                 * @returns {string} the input node, with fixes applied.
+                 */
+                const fix = (node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName === 'A') {
+                            // Fix the broken link for the Upload/Download Guide
+                            if (
+                                node
+                                    .getAttribute('href')
+                                    .match(/http[:]\/\/kbase.us\/data-upload-download-guide/)
+                            ) {
+                                node.setAttribute(
+                                    'href',
+                                    'https://docs.kbase.us/data/upload-download-guide'
+                                );
+                            }
+                            // Ensure all docs links open into a new window (or tab).
+                            if (node.getAttribute('href').match(/https:\/\/docs.kbase.us/)) {
+                                node.setAttribute('target', '_blank');
+                            }
+                        }
+                    }
+
+                    if (node.hasChildNodes()) {
+                        for (const child of node.childNodes) {
+                            fix(child);
+                        }
+                    }
+                    return node;
+                };
+
+                try {
+                    const node = document.createElement('div');
+                    node.innerHTML = sanitize(descriptionText);
+                    // After sanitization and fixing, we want the raw html string back.
+                    return fix(node).innerHTML;
+                } catch (ex) {
+                    console.error(
+                        'Error in app description - probably invalid HTML',
+                        ex.message,
+                        ex
+                    );
+                    return '<div class="alert alert-danger">Error in app description</div>';
+                }
+            })(fullInfo.description);
+
+            containerNode.innerHTML = div(
                 {
                     class: `${cssBaseClass}__container`,
                 },
@@ -163,9 +239,7 @@ define(['common/format', 'common/html', 'util/string'], (format, html, string) =
                         {
                             class: `${cssBaseClass}__description`,
                         },
-                        fullInfo.description && fullInfo.description.length
-                            ? fullInfo.description
-                            : 'No description specified'
+                        description
                     ),
                     div(
                         {
@@ -189,7 +263,6 @@ define(['common/format', 'common/html', 'util/string'], (format, html, string) =
                     runtimeInfo,
                 ]
             );
-            containerNode.innerHTML = infoContainer;
             return Promise.resolve(containerNode);
         }
 

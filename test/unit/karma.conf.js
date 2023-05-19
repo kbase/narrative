@@ -144,6 +144,9 @@ module.exports = function (config) {
         // },
         browserNoActivityTimeout: 30000,
         singleRun: true,
+        // enable the following setting when using a local Narrative container
+        // behind an https proxy
+        // proxyValidateSSL: false,
         proxies: {
             '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
             '/narrative/nbextensions': '/base/nbextensions',

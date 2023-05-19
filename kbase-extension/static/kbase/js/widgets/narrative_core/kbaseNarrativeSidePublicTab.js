@@ -506,7 +506,7 @@ define([
             this.showResultFooter();
             this.currentPage = 1;
 
-            return this.renderFromDataSource(this.currentCategory, true);
+            return this.renderFromDataSource(true);
         },
 
         renderError: function () {
@@ -543,7 +543,7 @@ define([
 
             this.currentPage += 1;
 
-            return this.renderFromDataSource(this.currentCategory, false).finally(() => {
+            return this.renderFromDataSource(false).finally(() => {
                 this.renderingMore = false;
             });
         },
@@ -573,17 +573,16 @@ define([
                     {}
                 );
 
-                this.currentDataSource = Object.create(dataSourceType.baseObject).init({
+                return (this.currentDataSource = Object.create(dataSourceType.baseObject).init({
                     config: dataSourceConfig,
                     urls,
                     token: this.token,
                     pageSize: this.itemsPerPage,
-                });
-                return this.currentDataSource;
+                }));
             }
         },
 
-        renderFromDataSource: function (dataSourceID, initial) {
+        renderFromDataSource: function (initial) {
             const dataSource = this.currentDataSource;
             const message = (() => {
                 if (dataSource.paging) {

@@ -12,7 +12,6 @@ define([
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
-    'common/html',
     'util/icon',
     'widgets/narrative_core/publicDataSources/workspaceDataSource',
     'widgets/narrative_core/publicDataSources/search2DataSource',
@@ -28,7 +27,6 @@ define([
     Jupyter,
     DynamicServiceClient,
     ServiceClient,
-    html,
     Icon,
     WorkspaceDataSource,
     SearchDataSource,
@@ -99,44 +97,6 @@ define([
             $table.append($row);
         });
         return $table;
-    }
-
-    function renderTotals(found, total) {
-        const $totals = $('<span>').addClass('kb-data-list-type');
-        if (total === 0) {
-            $totals.append($('<span>None available</span>'));
-        } else if (found === 0) {
-            $totals
-                .append(
-                    $('<span data-test-id="found-count">').css('font-weight', 'bold').text('None')
-                )
-                .append($('<span>').text(' found out of '))
-                .append(
-                    $('<span data-test-id="total-count">')
-                        .css('font-weight', 'bold')
-                        .text(numeral(total).format('0,0'))
-                )
-                .append($('<span>').text(' available'));
-        } else if (total > found) {
-            $totals
-                .append(
-                    $('<span data-test-id="found-count">')
-                        .css('font-weight', 'bold')
-                        .text(numeral(found).format('0,0'))
-                )
-                .append($('<span>').text(' found out of '))
-                .append(
-                    $('<span data-test-id="total-count">')
-                        .css('font-weight', 'bold')
-                        .text(numeral(total).format('0,0'))
-                )
-                .append($('<span>').text(' available'));
-        } else {
-            $totals
-                .append($('<span>').text(numeral(total).format('0,0')))
-                .append($('<span>').text(' available'));
-        }
-        return $totals;
     }
 
     /*
@@ -412,8 +372,7 @@ define([
                 .css('justify-content', 'center');
 
             this.resultFooter = $('<div>')
-                .css('background-color', 'rgba(200,200,200,0.5')
-                .css('padding', '6px')
+                .addClass('alert alert-info')
                 .css('font-style', 'italic')
                 .css('text-align', 'center')
                 .append(this.resultsFooterMessage);
@@ -485,11 +444,54 @@ define([
             this.totalAvailable = null;
             this.currentFilteredResults = null;
 
+            this.getDataSource(category);
+
             return this.renderInitial();
         },
 
         renderTotalsPanel: function () {
-            const $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);
+            const found = this.currentFilteredResults;
+            const total = this.totalAvailable;
+            const $totals = $('<div>').addClass('kb-data-list-type');
+            if (total === 0) {
+                $totals.append(
+                    $(
+                        `<div class="alert alert-warning">Sorry, no ${this.currentDataSource.config.name} public data available</div>`
+                    )
+                );
+            } else if (found === 0) {
+                $totals
+                    .append(
+                        $('<span data-test-id="found-count">')
+                            .css('font-weight', 'bold')
+                            .text('None')
+                    )
+                    .append($('<span>').text(' found out of '))
+                    .append(
+                        $('<span data-test-id="total-count">')
+                            .css('font-weight', 'bold')
+                            .text(numeral(total).format('0,0'))
+                    )
+                    .append($('<span>').text(' available'));
+            } else if (total > found) {
+                $totals
+                    .append(
+                        $('<span data-test-id="found-count">')
+                            .css('font-weight', 'bold')
+                            .text(numeral(found).format('0,0'))
+                    )
+                    .append($('<span>').text(' found out of '))
+                    .append(
+                        $('<span data-test-id="total-count">')
+                            .css('font-weight', 'bold')
+                            .text(numeral(total).format('0,0'))
+                    )
+                    .append($('<span>').text(' available'));
+            } else {
+                $totals
+                    .append($('<span>').text(numeral(total).format('0,0')))
+                    .append($('<span>').text(' available'));
+            }
             this.totalPanel.html($totals);
         },
 
@@ -500,12 +502,6 @@ define([
             this.totalPanel.empty();
             this.resultPanel.empty();
             this.resultsFooterMessage.empty();
-            this.totalPanel.append(
-                $('<span>')
-                    .addClass('kb-data-list-type')
-                    .append('<img src="' + this.loadingImage + '"/> searching...')
-            );
-
             this.hideError();
             this.showResultFooter();
             this.currentPage = 1;
@@ -523,6 +519,10 @@ define([
         },
 
         renderMore: function () {
+            if (this.currentDataSource && !this.currentDataSource.paging) {
+                return;
+            }
+
             this.hideError();
 
             // suss out whether we really need more...
@@ -558,10 +558,9 @@ define([
         },
 
         getDataSource: function (dataSourceID) {
-            let dataSource;
             const dataSourceConfig = this.dataSourceConfigs[dataSourceID];
             if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
-                dataSource = this.currentDataSource;
+                return this.currentDataSource;
             } else {
                 const dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
 
@@ -573,21 +572,27 @@ define([
                     },
                     {}
                 );
-                dataSource = Object.create(dataSourceType.baseObject).init({
+
+                this.currentDataSource = Object.create(dataSourceType.baseObject).init({
                     config: dataSourceConfig,
                     urls,
                     token: this.token,
                     pageSize: this.itemsPerPage,
                 });
-                this.currentDataSource = dataSource;
+                return this.currentDataSource;
             }
-            return dataSource;
         },
 
         renderFromDataSource: function (dataSourceID, initial) {
-            const dataSource = this.getDataSource(dataSourceID);
+            const dataSource = this.currentDataSource;
+            const message = (() => {
+                if (dataSource.paging) {
+                    return `fetching another ${this.itemsPerPage} items`;
+                }
+                return `fetching all ${dataSource.config.name} public data`;
+            })();
             this.resultsFooterMessage.html(`
-                <span>fetching another ${this.itemsPerPage} items</span>
+                <span>${message}</span>
                 <span class='fa fa-spinner fa-spin' style='margin-left: 1ex'/>
             `);
 
@@ -611,14 +616,14 @@ define([
 
                         let message;
                         if (dataSource.filteredDataCount) {
-                            if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
-                                message = 'all ' + this.currentFilteredResults + ' fetched';
+                            if (dataSource.paging) {
+                                if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
+                                    message = 'all ' + this.currentFilteredResults + ' fetched';
+                                } else {
+                                    message = `fetched ${dataSource.fetchedDataCount} of ${this.currentFilteredResults}`;
+                                }
                             } else {
-                                message =
-                                    'fetched ' +
-                                    dataSource.fetchedDataCount +
-                                    ' of ' +
-                                    this.currentFilteredResults;
+                                message = `end of ${this.currentDataSource.config.name} public data`;
                             }
                             this.showResultFooter();
                         } else {
@@ -696,8 +701,10 @@ define([
             const btnClasses = 'btn btn-xs btn-default';
             const css = { color: '#888' };
             const $openLandingPage = $('<span>')
-                // tooltips showing behind pullout, need to fix!
-                //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                // tooltips not ideal w/BS 3 - they need to be attached
+                // to the body, but this means they don't scroll.
+                // Still, that is probably an edge case.
+                .tooltip({ title: 'Explore data', container: 'body' })
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-binoculars').css(css))
                 .click((e) => {
@@ -708,7 +715,7 @@ define([
             const $openProvenance = $('<span>')
                 .addClass(btnClasses)
                 .css(css)
-                //.tooltip({title:'View data provenance and relationships', 'container':'body'})
+                .tooltip({ title: 'View data provenance and relationships', container: 'body' })
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                 .click((e) => {
                     e.stopPropagation();
@@ -773,8 +780,8 @@ define([
                 .append($name);
 
             let $bodyElement;
-            if (object.metadata && object.metadata.length) {
-                $bodyElement = metadataToTable(object.metadata);
+            if (object.metadataList && object.metadataList.length) {
+                $bodyElement = metadataToTable(object.metadataList);
             } else {
                 $bodyElement = null;
             }

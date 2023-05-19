@@ -230,7 +230,10 @@ define([
             expect($addDataButton).toBeDefined();
             expect($addDataButton.length).toEqual(1);
             expect($addDataButton.is('button')).toBeTruthy();
-            expect($addDataButton.css('display')).toEqual('block');
+            // What we are testing is that the button has been displayed - it is controlled
+            // with jquery hide()/show(), which sets display to "none" to hide,
+            // and leaves alone or restores the display value to show.
+            expect($addDataButton.css('display')).not.toEqual('none');
         });
 
         it('Should render with data, conduct a search, and show a resulting data card', async () => {

@@ -4,6 +4,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
+## Unreleased
+- PTV-1878 - fix some failing front end unit tests
+
 ## Version 5.1.4
 - PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
 - PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells

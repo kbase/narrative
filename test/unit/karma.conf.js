@@ -139,7 +139,8 @@ module.exports = function (config) {
         // enable the following setting to prevent source code log entries from cluttering up
         // test output.
         // browserConsoleLogOptions: {
-        //     level: 'disable'
+        //     level: 'error',
+        //     terminal: false
         // },
         browserNoActivityTimeout: 30000,
         singleRun: true,

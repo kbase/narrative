@@ -20,7 +20,7 @@
         "commander": "10.0.0",
         "cssnano": "6.0.0",
         "ejs": "^3.1.7",
-        "eslint": "8.34.0",
+        "eslint": "8.41.0",
         "eslint-config-prettier": "^8.3.0",
         "expect-webdriverio": "3.1.4",
         "glob": "^7.1.7",

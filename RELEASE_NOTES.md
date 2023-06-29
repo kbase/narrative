@@ -1,4 +1,4 @@
-### OVERVIEW
+# OVERVIEW
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
@@ -6,6 +6,17 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Unreleased
 - PTV-1810 - address object name display issues in the View Configure tab of app cells.
+
+## Unreleased
+
+- UIP-28 - update Google Analytics tags to GA4 properties
+- PTV-1878 - fix some failing front end unit tests
+- PTV-1877 - "fix" app descriptions to replace the documentation link for the upload / download guide
+
+### Dependency Changes
+
+- Javascript dependency updates
+  - dompurify none -> 2.3.8
 
 ## Version 5.1.4
 - PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.

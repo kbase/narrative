@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Unreleased
 
+- UIP-28 - update Google Analytics tags to GA4 properties
 - PTV-1878 - fix some failing front end unit tests
 - PTV-1877 - "fix" app descriptions to replace the documentation link for the upload / download guide
 

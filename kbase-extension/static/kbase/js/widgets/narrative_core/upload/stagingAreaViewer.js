@@ -3,6 +3,7 @@ define([
     'kbaseTabs',
     'StagingServiceClient',
     'kbwidget',
+    'widgets/common/AlertMessage',
     'narrativeConfig',
     'common/runtime',
     'common/html',
@@ -25,6 +26,7 @@ define([
     KBaseTabs,
     StagingServiceClient,
     KBWidget,
+    $AlertMessage,
     Config,
     Runtime,
     html,
@@ -1015,7 +1017,21 @@ define([
                         }
                     );
 
-                    const notATextFile = data.head === 'not text file';
+                    const showSnippet = (snippet) => {
+                        // Older service used text "not text file" to indicate the file is
+                        // not text and it can't get the text snippets.
+                        const notATextFile = data.head === 'not text file' || data.head === null;
+                        if (notATextFile) {
+                            return $AlertMessage('Not a text file');
+                        }
+                        if (snippet.length === 0) {
+                            return $AlertMessage('File is empty');
+                        }
+
+                        return $.jqElem('div')
+                            .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                            .append(snippet);
+                    };
 
                     $tabs = new KBaseTabs($tabsContainer, {
                         tabs: [
@@ -1026,19 +1042,11 @@ define([
                             },
                             {
                                 tab: 'First 1024 chars',
-                                content: notATextFile
-                                    ? $.jqElem('div').append('Not a text file')
-                                    : $.jqElem('div')
-                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
-                                          .append(data.head),
+                                content: showSnippet(data.head),
                             },
                             {
                                 tab: 'Last 1024 chars',
-                                content: notATextFile
-                                    ? $.jqElem('div').append('Not a text file')
-                                    : $.jqElem('div')
-                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
-                                          .append(data.tail),
+                                content: showSnippet(data.tail),
                             },
                         ],
                     });

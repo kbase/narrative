@@ -85,6 +85,7 @@ define([
                     path: this.path,
                     userInfo: userInfo,
                     userId: Jupyter.narrative.userId,
+                    maxFileSize: Config.get('upload').max_file_size * 1000 * 1000, // max file size config is in MB, we want bytes
                 });
 
                 this.uploadWidget.dropzone.on('complete', () => {

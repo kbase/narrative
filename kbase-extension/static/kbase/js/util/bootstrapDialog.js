@@ -119,6 +119,10 @@ define(['jquery', 'bootstrap'], ($) => {
         this.$modal.modal('show');
     };
 
+    BootstrapDialog.prototype.onShown = function (handler) {
+        this.$modal.on('shown.bs.modal', handler);
+    };
+
     BootstrapDialog.prototype.hide = function () {
         this.$modal.modal('hide');
     };

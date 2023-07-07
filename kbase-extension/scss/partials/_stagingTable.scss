@@ -6,6 +6,7 @@
   }
 
   .kb-staging-table-header {
+
     // Overriding default datatables sort icons so they come
     // before the header title rather than after
     .sorting::before,
@@ -35,6 +36,7 @@
     }
 
     .kb-staging-table-header {
+
       // .kb-staging-table-header__checkbox
       &__checkbox {
         padding-right: 0;
@@ -70,9 +72,15 @@
 
   // .kb-staging-table-body
   &-body {
+
     // .kb-staging-table-body__cell--expander
     &__cell--expander {
       text-align: center;
+
+      &:hover {
+        background-color: use_color('base-lightest');
+        cursor: pointer;
+      }
     }
 
     // .kb-staging-table-body__cell--import
@@ -82,6 +90,7 @@
     }
 
     &__button {
+
       // .kb-staging-table-body__decompress
       &--decompress {
         @extend %kbase-button-sm;
@@ -158,6 +167,7 @@
 
       // style for Import As dropdown container text
       .select2-selection {
+
         // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered
         &__rendered {
           color: use_color('ink');
@@ -189,6 +199,7 @@
           border-color: use_color('grey') transparent transparent;
         }
       }
+
       // Import as dropdown placeholder text is red
       // Change placeholder color when user clicks in
       .select2-container--focus .select2-selection__placeholder,
@@ -201,6 +212,7 @@
         border: 1px solid use-color('silver');
       }
     }
+
     // When user clicks into the dropdown or chooses a selection box, change border color
     .select2-container--focus .kb-staging-table-body__import-dropdown,
     .select2-container--open .kb-staging-table-body__import-dropdown {

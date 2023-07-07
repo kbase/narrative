@@ -2,6 +2,7 @@
   @extend %kbase-button;
 
   @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+
 }
 
 .dz-file {
@@ -78,8 +79,8 @@
 
 .kb-dropzone {
   border: 2px dashed use_color('mid-blue') !important;
-  margin-bottom: 5px;
-  max-height: 150px;
+  // margin-bottom: 5px;
+  max-height: 300px;
   overflow-y: auto;
 
   &-progress__header {
@@ -91,14 +92,23 @@
   .dz-message {
     color: rgb(0 0 0);
     font: normal 400 24px/28px $typeface-page-text;
-    margin: 2em 4.5em;
+    // margin: 2em 4.5em;
     mix-blend-mode: normal;
     text-align: center;
+    margin: 0;
   }
 
   // .kb-dropzone__message--upload
   &__message--upload {
     font-family: $typeface-page-text;
     font-weight: 700;
+  }
+
+  &.dropzone.dz-clickable button {
+    cursor: pointer;
+  }
+
+  &.dropzone.dz-clickable a {
+    cursor: pointer;
   }
 }

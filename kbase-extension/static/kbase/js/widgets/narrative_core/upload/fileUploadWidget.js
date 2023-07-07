@@ -231,7 +231,7 @@ define([
                 .text('Clear Errors')
                 .addClass('dz-clear-all__button')
                 .attr('aria-label', 'clear all errored files from the dropzone')
-                .attr('id', 'clear-all-btn')
+                .attr('id', 'clear-all-button')
                 .click((e) => {
                     e.stopPropagation();
                     this.dropzone.removeAllFiles();
@@ -239,8 +239,8 @@ define([
                 });
 
             return $('<div>')
-                .attr('id', 'clear-all-btn-container')
-                .addClass('text-center kb-file-upload-widget__clear-all-btn-container')
+                .attr('id', 'clear-all-button-container')
+                .addClass('text-center kb-file-upload-widget__clear-all-button-container')
                 .append($clearAllBtn);
         },
 
@@ -248,8 +248,8 @@ define([
          * Simply removes the "clear all" button.
          */
         deleteClearAllButton: function () {
-            $('#clear-all-btn-container').remove();
-            $('#clear-all-btn').remove();
+            $('#clear-all-button-container').remove();
+            $('#clear-all-button').remove();
         },
 
         /**
@@ -387,7 +387,7 @@ define([
 
                     // If there is a button already in the area, it has to be removed,
                     // and appended to the new document when additional errored files are added.
-                    if ($dropzoneElem.find('#clear-all-btn').length) {
+                    if ($dropzoneElem.find('#clear-all-button').length) {
                         this.deleteClearAllButton();
                         $dropzoneElem.append(this.$renderClearAllButton());
                     }
@@ -422,9 +422,8 @@ define([
                             ''
                         );
                         data.append('destPath', [this.path, subPath].join('/'));
-                    }
-                    //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
-                    else {
+                    } else {
+                        //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
                         data.append('destPath', this.path);
                     }
                     $($dropzoneElem.find('#total-progress')).show();
@@ -432,8 +431,8 @@ define([
                     this.updateUploadWarning();
                 })
                 .on('reset', () => {
-                    $('#clear-all-btn-container').remove();
-                    $('#clear-all-btn').remove();
+                    $('#clear-all-button-container').remove();
+                    $('#clear-all-button').remove();
                     $dropzoneElem.find('#global-info').addClass('hide');
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                     $dropzoneElem.css('justify-content', 'center');
@@ -498,7 +497,7 @@ define([
                                     'Request size exceeds maximum allowed by the upload server';
                             }
                         } else {
-                            errorText = 'Request size exceeds maximum allowed by the uload server';
+                            errorText = 'Request size exceeds maximum allowed by the upload server';
                         }
 
                         const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
@@ -510,7 +509,7 @@ define([
                     }
 
                     // Check to see if there already a button in the dropzone area
-                    if (!$dropzoneElem.find('#clear-all-btn').length) {
+                    if (!$dropzoneElem.find('#clear-all-button').length) {
                         $dropzoneElem.append(this.$renderClearAllButton());
                     }
                 });

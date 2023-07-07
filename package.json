@@ -66,7 +66,7 @@
         "string-template": "^1.0.0",
         "string.prototype.endswith": "1.0.0",
         "string.prototype.startswith": "1.0.0",
-        "stylelint": "^13.13.1",
+        "stylelint": "^15.10.1",
         "stylelint-color-format": "^1.1.0",
         "stylelint-config-recommended": "^5.0.0",
         "stylelint-config-sass-guidelines": "^8.0.0",

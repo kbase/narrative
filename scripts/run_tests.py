@@ -8,12 +8,12 @@
 # (recipe here)
 # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
 
-import subprocess
-import sys
 import argparse
-import threading
 import os
 import signal
+import subprocess
+import sys
+import threading
 
 argparser = argparse.ArgumentParser(description="Run KBase Narrative tests")
 argparser.add_argument(
@@ -36,7 +36,6 @@ IP_ADDRESS = "0.0.0.0" if options.container else "127.0.0.1"
 
 
 def run_narrative():
-
     nb_command = [
         "kbase-narrative",
         "--no-browser",
@@ -77,7 +76,7 @@ def run_narrative():
         if not line:
             continue
         print(line)
-        if "The Jupyter Notebook is running at:" in line:
+        if "Jupyter Notebook" in line and "is running at" in line:
             break
         if "is already in use" in line or "port is already allocated" in line:
             os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)

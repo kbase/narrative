@@ -28,14 +28,7 @@ define([
                 showDataOverlay: () => {},
             };
             container = document.createElement('div');
-            this.fuWidget = new FileUploadWidget($(container), {
-                path: '/',
-                userInfo: {
-                    user: fakeUser,
-                    globusLinked: false,
-                },
-            });
-            this.mockFile = new File(['file contents'], filename, { type: 'text/html' });
+            this.mockFile = new File(['file contents'], filename, { type: 'text/plain' });
 
             jasmine.Ajax.stubRequest(stagingUrl).andReturn({
                 status: 200,
@@ -61,12 +54,14 @@ define([
         });
 
         it('Should be able to set and retrieve the path', () => {
-            const uploadWidget = new FileUploadWidget($('<div>'), {
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
                     globusLinked: true,
                 },
+                maxFileSize: 1, // doesn't matter
             });
             const newPath = 'newPath';
             uploadWidget.setPath(newPath);
@@ -76,13 +71,22 @@ define([
         it('Should start and succeed on an upload when a file is given', function (done) {
             const adderMock = jasmine.createSpy('adderMock');
             const successMock = jasmine.createSpy('successMock');
-            this.fuWidget.dropzone.on('addedfile', () => {
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false,
+                },
+                maxFileSize: 1000, // just as long as it is larger than the mock file
+            });
+            uploadWidget.dropzone.on('addedfile', () => {
                 adderMock();
             });
-            this.fuWidget.dropzone.on('success', () => {
+            uploadWidget.dropzone.on('success', () => {
                 successMock();
             });
-            this.fuWidget.dropzone.addFile(this.mockFile);
+            uploadWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
                 expect(successMock).toHaveBeenCalled();
@@ -91,28 +95,48 @@ define([
         });
 
         it('Should timeout an upload when configured', function (done) {
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true,
+                },
+                maxFileSize: 1000, // Just as long as bigger than mock file
+            });
             // The default config gives an infinite timeout. Hard to test.
-            expect(this.fuWidget.dropzone.options.timeout).toBe(0);
+            expect(uploadWidget.dropzone.options.timeout).toBe(0);
             // Let's set it shorter than disabled.
-            this.fuWidget.dropzone.options.timeout = 100; // ms
-            expect(this.fuWidget.dropzone.options.timeout).toBe(100);
+            uploadWidget.dropzone.options.timeout = 100; // ms
+            expect(uploadWidget.dropzone.options.timeout).toBe(100);
 
-            this.fuWidget.dropzone.on('error', (file, errorMessage) => {
+            uploadWidget.dropzone.on('error', (file, errorMessage) => {
                 expect(errorMessage).toBeDefined();
                 done();
             });
-            this.fuWidget.dropzone.on('success', () => {
+            uploadWidget.dropzone.on('success', () => {
                 const req = jasmine.Ajax.requests.mostRecent();
                 expect(req.url).toMatch(/\/upload/);
                 expect(req.method).toBe('POST');
                 done();
             });
-            this.fuWidget.dropzone.addFile(this.mockFile);
+            uploadWidget.dropzone.addFile(this.mockFile);
         });
 
         it('Should error when too large of a file is uploaded', function (done) {
             // Set the file max size to 0
-            this.fuWidget.dropzone.options.maxFilesize = 1;
+
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true,
+                },
+                maxFileSize: 1, // Just as long as smaller than the mock file
+            });
+
+            uploadWidget.dropzone.options.maxFilesize = 1;
 
             Object.defineProperty(this.mockFile, 'size', {
                 value: Math.pow(1024, 4),
@@ -122,13 +146,13 @@ define([
             // Create mock calls
             const adderMock = jasmine.createSpy('adderMock');
             const errorMock = jasmine.createSpy('errorMock');
-            this.fuWidget.dropzone.on('addedfile', () => {
+            uploadWidget.dropzone.on('addedfile', () => {
                 adderMock();
             });
-            this.fuWidget.dropzone.on('error', () => {
+            uploadWidget.dropzone.on('error', () => {
                 errorMock();
             });
-            this.fuWidget.dropzone.addFile(this.mockFile);
+            uploadWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
                 expect(errorMock).toHaveBeenCalled();
@@ -137,40 +161,16 @@ define([
         });
 
         it('Should render properly when a file upload error occurs', function (done) {
-            // Set the file max size to 0
-            this.fuWidget.dropzone.options.maxFilesize = 1;
-
-            Object.defineProperty(this.mockFile, 'size', {
-                value: Math.pow(1024, 4),
-                writable: false,
-            });
-
-            this.fuWidget.dropzone.addFile(this.mockFile);
-            setTimeout(() => {
-                const $fileTemplate = this.fuWidget.$elem;
-                expect(document.getElementById('clear_all_button')).toBeDefined();
-                expect($fileTemplate.find('#upload_progress_and_cancel').css('display')).toEqual(
-                    'none'
-                );
-                expect($fileTemplate.find('#error_icon').css('display')).toEqual('flex');
-                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
-                    'https://docs.kbase.us/data/globus'
-                );
-                done();
-            });
-        });
-
-        it('Should provide a link to a globus account when file upload maxfile size error occurs', function (done) {
-            const uploadWidget = new FileUploadWidget($('<div>'), {
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: true,
+                    globusLinked: false,
                 },
+                maxFileSize: 1, // Just as long as smaller than the mock file
             });
 
-            // Set the file max size to 0
-            uploadWidget.dropzone.options.maxFilesize = 1;
             Object.defineProperty(this.mockFile, 'size', {
                 value: Math.pow(1024, 4),
                 writable: false,
@@ -178,26 +178,76 @@ define([
 
             uploadWidget.dropzone.addFile(this.mockFile);
             setTimeout(() => {
+                const $uploadWidget = uploadWidget.$elem;
+                expect(document.getElementById('clear-all-button')).toBeDefined();
+                expect($uploadWidget.find('#upload_progress_and_cancel').css('display')).toEqual(
+                    'none'
+                );
+                expect($uploadWidget.find('#error_icon').css('display')).toEqual('flex');
+
+                expect($uploadWidget.find('#globus_error_link').attr('href')).toEqual(
+                    'https://docs.kbase.us/data/globus'
+                );
+                done();
+            });
+        });
+
+        it('Should provide a link to a globus account when file upload maxfile size error occurs', function (done) {
+            // use max file size of 1 megabyte.
+            const maxFileSize = Math.pow(1000, 2);
+
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true,
+                },
+                maxFileSize,
+            });
+
+            // Must set the property this way as this is a Blob object,
+            // whose 'size' property is read-only.
+            Object.defineProperty(this.mockFile, 'size', {
+                value: maxFileSize + 1,
+                writable: false,
+            });
+
+            uploadWidget.dropzone.addFile(this.mockFile);
+            setTimeout(() => {
                 const $fileTemplate = uploadWidget.$elem;
-                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
-                    'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
-                        fakeUser
+                expect($fileTemplate.find('#globus_error_link').text()).toContain(
+                    'upload large files with Globus'
+                );
+
+                expect($fileTemplate.text()).toContain(
+                    'File size exceeds maximum allowable of 1.0 MB'
                 );
                 done();
             });
         });
 
         it('Should contain a cancel warning button', function (done) {
-            this.fuWidget.dropzone.on('sending', () => {
-                const $cancelButton = this.fuWidget.$elem.find('.cancel');
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true,
+                },
+                maxFileSize: 1000,
+            });
+            uploadWidget.dropzone.on('sending', () => {
+                const $cancelButton = uploadWidget.$elem.find('.cancel');
                 expect($cancelButton).toBeDefined();
                 expect($cancelButton.attr('data-dz-remove')).toBeDefined();
                 // prevent the XHR from being submitted -- for some reason jasmine.ajax does not catch it
-                this.fuWidget.dropzone.disable();
+                // TODO: fix that; it may be that the mock endpoint is not catching multipart/form-data
+                uploadWidget.dropzone.disable();
                 done();
             });
 
-            this.fuWidget.dropzone.addFile(this.mockFile);
+            uploadWidget.dropzone.addFile(this.mockFile);
         });
     });
 });

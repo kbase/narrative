@@ -10,6 +10,55 @@ The general flow of data goes from an external data source, to files uploaded to
 
 The Staging Service acts as a first stop for importing data. This service provides an API to a KBase-hosted file system, where each user has a separate file storage directory under their username. The Narrative front end uses a [REST client](../../kbase-extension/static/kbase/js/api/StagingServiceClient.js) to access that service and manipulate files.
 
+## Staging Service Proxy
+
+We limit staging file uploads to 5GB.
+
+This limit is enforced in the `fileUploadWidget`, but we should also enforce it at the server level as well. To do so, we need to configure the `nginx` proxy server which runs in front of the `staging_service`.
+
+Unfortunately, due to the design of the file upload service, this is accomplished by a limit on the request body, not the file size. In the current implementation of the the fileUploadWidget and Staging Service, the file is transmitted as `multipart/form-data`. This implies that the http request body is larger than the file itself. Therefore, the technique illustrated below adds a small, 1k padding to accommodate the destPath form part as well as the headers for each part.
+
+This section provides an example of how nginx may be configured to support both the request body limit and a custom 413 response.
+
+
+### set the client max body size
+
+Within the server block which handles the reverse proxy or the specific location for the `staging_server` set the `client_max_body_size` to the desired limit.
+
+```nginx
+    client_max_body_size 5000001000;
+```
+
+Note that the body size is 5GB with a 1K bytes padding.
+
+### create a custom response for 413
+
+A custom 413 response can provide more detailed information to the front end to facilitate debugging and better error reports.
+
+For a custom 413 response, first define a location within the server block handling the `staging_server`.
+
+```nginx
+    location @request_entity_too_large {
+        default_type application/json;
+        return 413
+         "{\"message\": \"Request entity is too large\", \"responseCode\": 413, \"maxBodySize\": \"5GB\", \"contentLength\": ${content_length}}";
+    }
+```
+
+This causes a JSON response to be sent. The fileUploadWidget will correctly handle this response (as well as the standard nginx plain text response).
+
+Note that this allows the front end to accurately report the content length that violated the max body size. In addition, I could not find a variable
+holding the value of `client_max_body_size`, nor determine if it was possible to use a variable, so the `maxBodySize` property must be set manually 
+to match the value of `client_max_body_size`.
+
+### Use the custom error page in the correct place
+
+The custom error page is defined, now it must be indicated as the 413 handler within the location. This may be set at the server level, or the location level.
+
+```nginx
+    error_page 413 @request_entity_too_large;   
+```
+
 ## Staging Service Viewer
 
 Users can interact with the Staging Service through the Import tab of the data slideout. The top portion of this tab is controlled by the [FileUploadWidget](../../kbase-extension/static/kbase/js/widgets/narrative_core/upload/fileUploadWidget.js). This uses [Dropzone](https://www.dropzone.dev/js/) to provide a drag-and-drop interface for uploading files. If the user's account is linked to Globus, a link is also provided. Another option is to upload via URL. This requires running an app that imports data to the Staging Service from an external, public URL.

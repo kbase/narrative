@@ -5,7 +5,7 @@ define([
     'narrativeConfig',
     'testUtil',
 ], ($, FileUploadWidget, Jupyter, Config, TestUtil) => {
-    ('use strict');
+    'use strict';
 
     /**
      * Handles the case of the server emitting a 413 response which looks superficially
@@ -68,7 +68,7 @@ define([
 
             uploadWidget.dropzone.addFile(this.mockFile);
 
-            // TODO: realistically, this should poll until the condition is met, or
+            // Realistically, this should poll until the condition is met, or
             // timeout. Reason being that in real usage (or if using a real service mock),
             // the call that generates the error may take an indeterminate amount of time,
             // and certainly will not be on the next tick of the event loop.

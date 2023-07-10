@@ -60,7 +60,8 @@ define([
         it('Should fail to initialize if the maxFileSize is not provided', () => {
             expect(() => {
                 const $wrapper = $('<div>');
-                new FileUploadWidget($wrapper, {
+                // eslint-disable-next-line no-unused-vars
+                const _ignore = new FileUploadWidget($wrapper, {
                     path: '/',
                     userInfo: {
                         user: fakeUser,

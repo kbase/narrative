@@ -47,18 +47,19 @@ define([
 
         init: function (options) {
             this._super(options);
+
+            this.userInfo = options.userInfo;
+            this.path = options.path;
+            this.maxFileSizeBytes = options.maxFileSize;
+            this.maxFileSizeMiB = options.maxFileSize / Math.pow(1024, 2);
+
             this.dropzoneTmpl = Handlebars.compile(DropzoneAreaHtml);
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
-            this.path = options.path;
             this.stagingUrl = Config.url('staging_api_url');
-            this.userInfo = options.userInfo;
 
             if (typeof options.maxFileSize === 'undefined') {
                 throw new Error('The "maxFileSize" option is required');
             }
-
-            this.maxFileSizeBytes = options.maxFileSize;
-            this.maxFileSizeMiB = options.maxFileSize / Math.pow(1024, 2);
 
             const runtime = Runtime.make();
             this.stagingServiceClient = new StagingServiceClient({
@@ -67,6 +68,7 @@ define([
             });
 
             this.render();
+
             return this;
         },
 
@@ -479,7 +481,7 @@ define([
                             // In this case we have some other error. There really isn't anything useful to
                             // show the user in the small ui for the file row.
                             console.error('Unknown error uploading file', erroredFile);
-                            return 'Error uploading file';
+                            return ['Error uploading file', null];
                     }
                 } else {
                     // Here we handle errors emitted by dropzone itself, not encountered during the actual

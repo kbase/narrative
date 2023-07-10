@@ -69,10 +69,6 @@ define([
 
             setTimeout(() => {
                 const $uploadWidget = uploadWidget.$elem;
-                // expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
-                //     'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
-                //         fakeUser
-                // );
 
                 expect($uploadWidget.find('#globus_error_link').text()).toContain(
                     'upload large files with Globus'

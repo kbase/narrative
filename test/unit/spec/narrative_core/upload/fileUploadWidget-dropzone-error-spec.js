@@ -68,8 +68,7 @@ define([
             uploadWidget.dropzone.addFile(this.mockFile);
 
             setTimeout(() => {
-                const $uploadWidget = uploadWidget.$elem;
-                expect($uploadWidget.text()).toContain("You can't upload files of this type");
+                expect(uploadWidget.$elem.text()).toContain("You can't upload files of this type");
                 done();
             });
         });

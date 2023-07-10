@@ -32,7 +32,7 @@ define([
                 message: 'Request entity is too large',
                 responseCode: 413,
                 maxBodySize: '5GB',
-                contentLength: 6000000000,
+                contentLength: 6e9, // to avoid inaccurate numeric literal warning?
             };
 
             jasmine.Ajax.stubRequest(stagingUrl).andReturn({

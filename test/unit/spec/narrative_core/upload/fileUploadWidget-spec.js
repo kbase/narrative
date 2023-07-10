@@ -60,8 +60,7 @@ define([
         it('Should fail to initialize if the maxFileSize is not provided', () => {
             expect(() => {
                 const $wrapper = $('<div>');
-                // eslint-disable-next-line no-unused-vars
-                const _ignore = new FileUploadWidget($wrapper, {
+                new FileUploadWidget($wrapper, {
                     path: '/',
                     userInfo: {
                         user: fakeUser,
@@ -302,7 +301,6 @@ define([
                 expect($cancelButton).toBeDefined();
                 expect($cancelButton.attr('data-dz-remove')).toBeDefined();
                 // prevent the XHR from being submitted -- for some reason jasmine.ajax does not catch it
-                // TODO: fix that; it may be that the mock endpoint is not catching multipart/form-data
                 uploadWidget.dropzone.disable();
                 done();
             });

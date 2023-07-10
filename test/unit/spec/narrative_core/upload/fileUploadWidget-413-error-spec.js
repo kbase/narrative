@@ -11,9 +11,6 @@ define([
         filename = 'foo.txt',
         stagingUrl = Config.url('staging_api_url') + '/upload';
 
-    //  const default413Response = /413 Request Entity Too Large/;
-    //  const custom413Response = /File is too big/;
-
     describe('Test the fileUploadWidget', () => {
         beforeEach(function () {
             jasmine.Ajax.install();

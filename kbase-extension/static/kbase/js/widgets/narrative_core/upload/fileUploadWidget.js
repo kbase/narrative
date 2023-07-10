@@ -57,7 +57,8 @@ define([
                 throw new Error('The "maxFileSize" option is required');
             }
 
-            this.setMaxFileSize(options.maxFileSize);
+            this.maxFileSizeBytes = options.maxFileSize;
+            this.maxFileSizeMiB = options.maxFileSize / Math.pow(1024, 2);
 
             const runtime = Runtime.make();
             this.stagingServiceClient = new StagingServiceClient({
@@ -67,20 +68,6 @@ define([
 
             this.render();
             return this;
-        },
-
-        /**
-         * Give a file size in bytes, set the file size for the dropzone
-         *  widget in mibibytes (MiB).
-         *
-         * @param {number} maxFileSize Maximum file size in bytes
-         */
-        setMaxFileSize: function (maxFileSize) {
-            this.maxFileSizeBytes = maxFileSize;
-            this.maxFileSizeMiB = maxFileSize / Math.pow(1024, 2);
-            if (this.dropzone) {
-                this.dropzone.options.maxFilesize = this.maxFileSizeMiB;
-            }
         },
 
         /**
@@ -95,7 +82,10 @@ define([
          * @returns {JQuery} A jquery object continaing the error message ready for display
          */
         $renderError: function (message, $content) {
-            const $messageColumn = $el('div').addClass('-body').append($el('div').text(message));
+            const $messageColumn = $el('div')
+                .addClass('-body')
+                .append($el('div').text('Unable to upload file'))
+                .append($el('div').text(message));
 
             if ($content) {
                 $messageColumn.append($el('div').append($content));
@@ -235,7 +225,7 @@ define([
                 .click((e) => {
                     e.stopPropagation();
                     this.dropzone.removeAllFiles();
-                    this.deleteClearAllButton();
+                    this.removeClearAllButton();
                 });
 
             return $('<div>')
@@ -247,7 +237,7 @@ define([
         /**
          * Simply removes the "clear all" button.
          */
-        deleteClearAllButton: function () {
+        removeClearAllButton: function () {
             $('#clear-all-button-container').remove();
             $('#clear-all-button').remove();
         },
@@ -274,9 +264,6 @@ define([
          * @returns {boolean} True if files are uploading, false otherwise.
          */
         isUploading: function () {
-            if (!this.dropzone) {
-                return false;
-            }
             const numUploading = this.dropzone.getUploadingFiles().length;
             const numQueued = this.dropzone.getQueuedFiles().length;
             return numUploading + numQueued > 0;
@@ -338,11 +325,196 @@ define([
                 const numUploading = this.dropzone.getUploadingFiles().length;
                 const numQueued = this.dropzone.getQueuedFiles().length;
 
-                const queuedText = numQueued ? '(' + numQueued + ' queued)' : '';
+                const queuedText = numQueued ? `(${numQueued} queued)` : '';
                 const pluralFiles = numUploading > 1 ? 's' : '';
                 return `Uploading ${numUploading} file${pluralFiles} ${queuedText} to ${this.getPath()}`;
             };
             this.$dropzoneElem.find('#upload-message').text(uploadMessage);
+        },
+
+        handleTotalUploadProgress(progress) {
+            $(this.$dropzoneElem.find('#total-progress .progress-bar')).css({
+                width: `${progress}%`,
+            });
+        },
+
+        handleCanceled() {
+            // Note that this relies upon the version of the staging service which uses a
+            // temp file for the upload file as it is being sent, and therefore automatically
+            // removes the file if it is interrupted with a cancelation.
+            // In the previous version the cancelation code here would have to request the
+            // deletion of the partially uploaded file.
+            this.updateUploadMessage();
+            this.updateUploadWarning();
+        },
+
+        handleReset() {
+            $('#clear-all-button-container').remove();
+            $('#clear-all-button').remove();
+            this.$dropzoneElem.find('#global-info').addClass('hide');
+            $(this.$dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
+            this.$dropzoneElem.css('justify-content', 'center');
+            this.updateUploadWarning();
+        },
+
+        handleSending(file, _xhr, data) {
+            this.$dropzoneElem.find('#global-info').removeClass('hide');
+            //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
+            //tack it onto our set path, then set that as the destPath form param.
+            if (file.fullPath) {
+                const subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
+                data.append('destPath', [this.path, subPath].join('/'));
+            } else {
+                //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
+                data.append('destPath', this.path);
+            }
+            $(this.$dropzoneElem.find('#total-progress')).show();
+            this.updateUploadMessage();
+            this.updateUploadWarning();
+        },
+
+        handleAddedFile() {
+            this.$dropzoneElem.find('#global-info').removeClass('hide');
+            this.$dropzoneElem.css('justify-content', 'flex-start');
+
+            // If there is a button already in the area, it has to be removed,
+            // and appended to the new document when additional errored files are added.
+            if (this.$dropzoneElem.find('#clear-all-button').length) {
+                this.removeClearAllButton();
+                this.$dropzoneElem.append(this.$renderClearAllButton());
+            }
+
+            this.updateUploadMessage();
+            this.updateUploadWarning();
+        },
+
+        handleSuccess(file) {
+            const $successElem = $(file.previewElement);
+            $successElem.find('#upload_progress_and_cancel').hide();
+            $successElem.find('#dz_file_row_1').css({ display: 'flex', 'align-items': 'center' });
+            $successElem.find('#success_icon').css('display', 'flex');
+            $successElem.find('#success_message').css('display', 'inline');
+
+            this.maybeRemoveProgressBar();
+
+            $(file.previewElement).fadeOut(1000, () => {
+                $(file.previewElement.querySelector('.btn')).trigger('click');
+            });
+
+            this.updateUploadMessage();
+            this.updateUploadWarning();
+        },
+
+        /**
+         * Dropzone error event handler.
+         *
+         * The basic task is to improve the error message by providing some additional structure to
+         * it and to provide better error messages in cases in which we can.
+         *
+         * In addition, we ensure that there is a button present to allow the user to clear errors and
+         * remove the file's upload progress ui.
+         *
+         */
+        handleError: function (erroredFile) {
+            const $errorElem = $(erroredFile.previewElement);
+
+            // Hides the progress and cancellation button ui for this
+            // file, as it is now in an error state.
+            $errorElem.find('#upload_progress_and_cancel').hide();
+
+            // Improve rendering of error message in the row.
+            $errorElem.find('#dz_file_row_1').css({ display: 'flex', 'align-items': 'center' });
+            $errorElem.find('#error_icon').css('display', 'flex');
+
+            // Extract the error message within the dropzone widget, as
+            // located above. We keep a handle on the error message element
+            // as we will rewrite the error message below.
+            const $errorMessage = $errorElem.find('#error_message');
+
+            // This is constructed and placed into the DOM by the dropzone widget.
+            const dropzoneFileTooBigMessage = /File is too big.*Max filesize:/;
+
+            const [errorText, $errorContent] = (() => {
+                if (erroredFile.xhr) {
+                    const responseStatus = erroredFile.xhr.status;
+                    const contentType = erroredFile.xhr.getResponseHeader('Content-Type');
+                    switch (responseStatus) {
+                        case 413: {
+                            const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
+                            if (contentType === 'application/json') {
+                                // The custom error response is JSON. E.g:
+                                // {
+                                //     message: 'Request entity is too large',
+                                //     responseCode: 413,
+                                //     maxBodySize: '5GB',
+                                //     contentLength: 6000000000,
+                                // };
+                                try {
+                                    const serverError = JSON.parse(erroredFile.xhr.responseText);
+                                    return [
+                                        `Request size of ${formatFileSize(
+                                            serverError.contentLength
+                                        )} exceeds maximum allowed by the upload server (${
+                                            serverError.maxBodySize
+                                        })`,
+                                        $errorContent,
+                                    ];
+                                } catch (ex) {
+                                    // If for some reason the JSON is malformed, we still know it is
+                                    // a 413, we just don't have more specific information.
+                                    return [
+                                        'Request size exceeds maximum allowed by the upload server',
+                                        $errorContent,
+                                    ];
+                                }
+                            } else {
+                                // In this case, we do not have a custom error response.
+                                return [
+                                    'Request size exceeds maximum allowed by the upload server',
+                                    $errorContent,
+                                ];
+                            }
+                        }
+                        default:
+                            // In this case we have some other error. There really isn't anything useful to
+                            // show the user in the small ui for the file row.
+                            console.error('Unknown error uploading file', erroredFile);
+                            return 'Error uploading file';
+                    }
+                } else {
+                    // Here we handle errors emitted by dropzone itself, not encountered during the actual
+                    // http upload.
+                    const errorMessage = $errorMessage.text();
+                    if (dropzoneFileTooBigMessage.test(errorMessage)) {
+                        // Extract the size reported by the dropzone widget.
+
+                        // Convert the size reported from gibibtyes to gigabytes, since that is what
+                        // a user will see for the file size in their file system.
+
+                        // Note that dropzone shows the file size as an approximation - decimal and with rounding.
+                        // There fore it is not possible to accurately get the size of the file, so we
+                        // don't try to do so. The file size is already shown in the file list anyway.
+                        const errorText = `File size exceeds maximum allowable of ${formatFileSize(
+                            this.maxFileSizeBytes
+                        )}`;
+                        const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
+                        return [errorText, $errorContent];
+                    } else {
+                        return [errorMessage, null];
+                    }
+                }
+            })();
+
+            $errorMessage.html(this.$renderError(errorText, $errorContent));
+
+            // Check to see if there already a button in the dropzone area
+            if (!this.$dropzoneElem.find('#clear-all-button').length) {
+                this.$dropzoneElem.append(this.$renderClearAllButton());
+            }
+
+            // We tickle the progress bar rendering logic, which is hidden if there are no actively
+            // uploading files.
+            this.maybeRemoveProgressBar();
         },
 
         /**
@@ -377,141 +549,25 @@ define([
                 userInfo: this.userInfo,
             })
                 .on('totaluploadprogress', (progress) => {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({
-                        width: `${progress}%`,
-                    });
+                    this.handleTotalUploadProgress(progress);
                 })
                 .on('addedfile', () => {
-                    $dropzoneElem.find('#global-info').removeClass('hide');
-                    $dropzoneElem.css('justify-content', 'flex-start');
-
-                    // If there is a button already in the area, it has to be removed,
-                    // and appended to the new document when additional errored files are added.
-                    if ($dropzoneElem.find('#clear-all-button').length) {
-                        this.deleteClearAllButton();
-                        $dropzoneElem.append(this.$renderClearAllButton());
-                    }
-
-                    this.updateUploadMessage();
-                    this.updateUploadWarning();
+                    this.handleAddedFile();
                 })
                 .on('success', (file) => {
-                    const $successElem = $(file.previewElement);
-                    $successElem.find('#upload_progress_and_cancel').hide();
-                    $successElem
-                        .find('#dz_file_row_1')
-                        .css({ display: 'flex', 'align-items': 'center' });
-                    $successElem.find('#success_icon').css('display', 'flex');
-                    $successElem.find('#success_message').css('display', 'inline');
-
-                    this.maybeRemoveProgressBar();
-                    $(file.previewElement).fadeOut(1000, () => {
-                        $(file.previewElement.querySelector('.btn')).trigger('click');
-                    });
-
-                    this.updateUploadMessage();
-                    this.updateUploadWarning();
+                    this.handleSuccess(file);
                 })
                 .on('sending', (file, _xhr, data) => {
-                    $dropzoneElem.find('#global-info').removeClass('hide');
-                    //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
-                    //tack it onto our set path, then set that as the destPath form param.
-                    if (file.fullPath) {
-                        const subPath = file.fullPath.replace(
-                            new RegExp('/' + file.name + '$'),
-                            ''
-                        );
-                        data.append('destPath', [this.path, subPath].join('/'));
-                    } else {
-                        //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
-                        data.append('destPath', this.path);
-                    }
-                    $($dropzoneElem.find('#total-progress')).show();
-                    this.updateUploadMessage();
-                    this.updateUploadWarning();
+                    this.handleSending(file, _xhr, data);
                 })
                 .on('reset', () => {
-                    $('#clear-all-button-container').remove();
-                    $('#clear-all-button').remove();
-                    $dropzoneElem.find('#global-info').addClass('hide');
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
-                    $dropzoneElem.css('justify-content', 'center');
-                    this.updateUploadWarning();
+                    this.handleReset();
                 })
                 .on('canceled', () => {
-                    // Note that this relies upon the version of the staging service which uses a
-                    // temp file for the upload file as it is being sent, and therefore automatically
-                    // removes the file if it is interrupted with a cancelation.
-                    // In the previous version the cancelation code here would have to request the
-                    // deletion of the partially uploaded file.
-                    this.updateUploadMessage();
-                    this.updateUploadWarning();
+                    this.handleCanceled();
                 })
                 .on('error', (erroredFile) => {
-                    const $errorElem = $(erroredFile.previewElement);
-                    $errorElem.find('#upload_progress_and_cancel').hide();
-                    $errorElem
-                        .find('#dz_file_row_1')
-                        .css({ display: 'flex', 'align-items': 'center' });
-                    $errorElem.find('#error_icon').css('display', 'flex');
-                    this.maybeRemoveProgressBar();
-
-                    // Set error message
-                    const $errorMessage = $errorElem.find('#error_message');
-
-                    const default413Response = /413 Request Entity Too Large/;
-                    const custom413Response = /Request entity is too large/; // or whatever it is.
-                    const dropzoneFileTooBigMessage = /File is too big.*Max filesize:/;
-                    const errorMessage = $errorMessage.text();
-
-                    // I don't know how to determine if the file was too big other than looking at the preview message
-                    if (dropzoneFileTooBigMessage.test(errorMessage)) {
-                        // Extract the size reported by the dropzone widget.
-
-                        // Convert the size reported from gibibtyes to gigabytes, since that is what
-                        // a user will see for the file size in their file system.
-
-                        // Note that dropzone shows the file size as an approximation - decimal and with rounding.
-                        // There fore it is not possible to accurately get the size of the file, so we
-                        // don't try to do so. The file size is already shown in the file list anyway.
-                        const errorText = `File size exceeds maximum allowable of ${formatFileSize(
-                            this.maxFileSizeBytes
-                        )}`;
-                        const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
-                        $errorMessage.html(this.$renderError(errorText, $errorContent));
-                    } else if (
-                        default413Response.test(errorMessage) ||
-                        custom413Response.test(errorMessage)
-                    ) {
-                        let errorText;
-                        if (custom413Response.test(errorMessage)) {
-                            try {
-                                const serverError = JSON.parse(errorMessage);
-                                errorText = `Request size of ${formatFileSize(
-                                    serverError.contentLength
-                                )} exceeds maximum allowed by the upload server (${
-                                    serverError.maxBodySize
-                                })`;
-                            } catch (ex) {
-                                errorText =
-                                    'Request size exceeds maximum allowed by the upload server';
-                            }
-                        } else {
-                            errorText = 'Request size exceeds maximum allowed by the upload server';
-                        }
-
-                        const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
-                        $errorMessage.html(this.$renderError(errorText, $errorContent));
-                    } else if (erroredFile.xhr && erroredFile.xhr.responseText) {
-                        $errorMessage.html(this.$renderError(erroredFile.xhr.responseText));
-                    } else {
-                        $errorMessage.html(this.$renderError('unable to upload file!'));
-                    }
-
-                    // Check to see if there already a button in the dropzone area
-                    if (!$dropzoneElem.find('#clear-all-button').length) {
-                        $dropzoneElem.append(this.$renderClearAllButton());
-                    }
+                    this.handleError(erroredFile);
                 });
         },
     });

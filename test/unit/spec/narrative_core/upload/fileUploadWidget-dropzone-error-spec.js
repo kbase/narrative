@@ -11,9 +11,6 @@ define([
         filename = 'foo.txt',
         stagingUrl = Config.url('staging_api_url') + '/upload';
 
-    //  const default413Response = /413 Request Entity Too Large/;
-    //  const custom413Response = /File is too big/;
-
     describe('Test the fileUploadWidget', () => {
         beforeEach(function () {
             jasmine.Ajax.install();
@@ -29,13 +26,21 @@ define([
                 },
                 showDataOverlay: () => {},
             };
-            this.mockFile = new File(['0123456789'], filename, { type: 'text/plain' });
+            this.mockFile = new File(['01234567890'], filename, { type: 'foo' });
 
             jasmine.Ajax.stubRequest(stagingUrl).andReturn({
-                status: 413,
-                statusText: 'HTTP/1.1 413 OK',
-                contentType: 'text/html',
-                responseText: '413 Request Entity Too Large',
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify([
+                    {
+                        name: filename,
+                        path: `${fakeUser}/${filename}`,
+                        mtime: 1596747139855,
+                        size: 10,
+                        isFolder: false,
+                    },
+                ]),
             });
         });
 
@@ -45,11 +50,7 @@ define([
             TestUtil.clearRuntime();
         });
 
-        it('Should display an error message if the server reports the file is too big', function (done) {
-            // Dropzone size unit is one mebibyte (1024 * 1024); uploadWidget takes bytes.
-            // For this test, size doesn't matter, as long as the max file size is greater
-            // than the fake file we send, as we don't want to trigger the dropzones
-            // max file size.
+        it('Should display an error message emitted by dropzone', function (done) {
             const maxFileSize = Math.pow(1024, 2);
             const $wrapper = $('<div>');
             const uploadWidget = new FileUploadWidget($wrapper, {
@@ -61,22 +62,14 @@ define([
                 maxFileSize,
             });
 
+            // Override acceptedFiles, which is not set by default.
+            uploadWidget.dropzone.options.acceptedFiles = 'bar';
+
             uploadWidget.dropzone.addFile(this.mockFile);
 
             setTimeout(() => {
-                const $fileTemplate = uploadWidget.$elem;
-                // expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
-                //     'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
-                //         fakeUser
-                // );
-
-                expect($fileTemplate.find('#globus_error_link').text()).toContain(
-                    'upload large files with Globus'
-                );
-
-                expect($fileTemplate.text()).toContain(
-                    'Request size exceeds maximum allowed by the upload server'
-                );
+                const $uploadWidget = uploadWidget.$elem;
+                expect($uploadWidget.text()).toContain("You can't upload files of this type");
                 done();
             });
         });

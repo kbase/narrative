@@ -7,9 +7,9 @@ define([
 ], ($, FileUploadWidget, Jupyter, Config, TestUtil) => {
     'use strict';
 
-    const fakeUser = 'notAUser',
-        filename = 'foo.txt',
-        stagingUrl = Config.url('staging_api_url') + '/upload';
+    const fakeUser = 'notAUser';
+    const filename = 'foo.txt';
+    const stagingUrl = `${Config.url('staging_api_url')}/upload`;
 
     describe('Test the fileUploadWidget', () => {
         let container;
@@ -28,7 +28,11 @@ define([
                 showDataOverlay: () => {},
             };
             container = document.createElement('div');
+
             this.mockFile = new File(['file contents'], filename, { type: 'text/plain' });
+
+            this.mockFile2 = new File(['file contents'], filename, { type: 'text/plain' });
+            this.mockFile2.fullPath = 'baz/foo.txt';
 
             jasmine.Ajax.stubRequest(stagingUrl).andReturn({
                 status: 200,
@@ -51,6 +55,19 @@ define([
             jasmine.Ajax.uninstall();
             container.remove();
             TestUtil.clearRuntime();
+        });
+
+        it('Should fail to initialize if the maxFileSize is not provided', () => {
+            expect(() => {
+                const $wrapper = $('<div>');
+                new FileUploadWidget($wrapper, {
+                    path: '/',
+                    userInfo: {
+                        user: fakeUser,
+                        globusLinked: true,
+                    },
+                });
+            }).toThrow(new Error('The "maxFileSize" option is required'));
         });
 
         it('Should be able to set and retrieve the path', () => {
@@ -90,6 +107,48 @@ define([
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
                 expect(successMock).toHaveBeenCalled();
+                done();
+            });
+        });
+
+        /**
+         * Ensure that when fullPath is set when sending a directory, that the
+         * destPath is set.
+         *
+         * fullPath is for the file when a directory is sent via the drop handler.
+         *
+         * What we do need to do is inspect the multipart/form-data body that is sent,
+         * to ensure that that the destPath part is set correctly, which would be "baz"
+         * in this case.
+         * However, the jasmine ajax mock does not have this built-in.
+         * So, for now, this is more of a placeholder which at least ensures that the
+         * mechanism doesn't break in the presence of fullPath.
+         */
+        it('Should start and succeed on an upload when a file is given from directory', function (done) {
+            const successMock = jasmine.createSpy('successMock');
+            const $wrapper = $('<div>');
+            const uploadWidget = new FileUploadWidget($wrapper, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false,
+                },
+                maxFileSize: 1000, // just as long as it is larger than the mock file
+            });
+            let fullPathFound = false;
+            uploadWidget.dropzone.on('addedfile', (file) => {
+                fullPathFound = file.fullPath === 'baz/foo.txt';
+            });
+            uploadWidget.dropzone.on('success', () => {
+                successMock();
+            });
+            uploadWidget.dropzone.addFile(this.mockFile2);
+
+            // Same caveat that this only works because we are not really properly
+            // mocking the async call to the upload server.
+            setTimeout(() => {
+                expect(successMock).toHaveBeenCalled();
+                expect(fullPathFound).toBeTrue();
                 done();
             });
         });

@@ -26,7 +26,7 @@ KBase JavaScript widgets.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
-class WidgetManager(object):
+class WidgetManager:
     """
     Manages data (and other) visualization widgets for use in the KBase Narrative.
 
@@ -125,10 +125,7 @@ class WidgetManager(object):
         """
 
         for method in methods:
-            if "output" not in method["widgets"]:
-                widget_name = self._default_output_widget
-            else:
-                widget_name = method["widgets"]["output"]
+            widget_name = method["widgets"].get("output", self._default_output_widget)
             if widget_name == "null":
                 if verbose:
                     print(
@@ -137,7 +134,7 @@ class WidgetManager(object):
                 continue
             out_mapping = method["behavior"].get(
                 "kb_service_output_mapping",
-                method["behavior"].get("output_mapping", None),
+                method["behavior"].get("output_mapping"),
             )
             if out_mapping is not None:
                 params = {}
@@ -167,7 +164,7 @@ class WidgetManager(object):
                                     param_type = "string"
                                     if "text_options" in spec_param:
                                         validate_as = spec_param["text_options"].get(
-                                            "validate_as", None
+                                            "validate_as"
                                         )
                                         if validate_as == "int":
                                             param_type = "int"
@@ -698,7 +695,7 @@ class WidgetManager(object):
                 # it's not safe to use reference yet (until we switch to them all over the Apps)
                 # But in case we deal with ref-path we have to do it anyway:
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
-                upa_params = list()
+                upa_params = []
                 for param in spec_params:
                     if param.get("allowed_types") is None or any(
                         (t == bare_type or t == type_module)

@@ -127,7 +127,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
         return _json.JSONEncoder.default(self, obj)
 
 
-class NarrativeMethodStore(object):
+class NarrativeMethodStore:
     def __init__(
         self,
         url=None,

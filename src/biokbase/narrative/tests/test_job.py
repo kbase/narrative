@@ -145,14 +145,13 @@ def get_batch_family_jobs(return_list=False):
 
     if return_list:
         return [batch_job] + child_jobs
-    else:
-        return {
-            BATCH_PARENT: batch_job,
-            **{
-                child_id: child_job
-                for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
-            },
-        }
+    return {
+        BATCH_PARENT: batch_job,
+        **{
+            child_id: child_job
+            for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
+        },
+    }
 
 
 def get_all_jobs(return_list=False):
@@ -525,7 +524,7 @@ class JobTest(unittest.TestCase):
         test that a job returns the correct parameters
         """
         job_state = get_test_job(JOB_COMPLETED)
-        job_params = job_state.get("job_input", {}).get("params", None)
+        job_params = job_state.get("job_input", {}).get("params")
         self.assertIsNotNone(job_params)
         job = Job(job_state)
         self.assertIsNotNone(job.params)
@@ -542,7 +541,7 @@ class JobTest(unittest.TestCase):
         if they do not exist
         """
         job_state = get_test_job(JOB_CREATED)
-        job_params = job_state.get("job_input", {}).get("params", None)
+        job_params = job_state.get("job_input", {}).get("params")
         self.assertIsNotNone(job_params)
 
         # delete the job params from the input

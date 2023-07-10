@@ -111,7 +111,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
         return _json.JSONEncoder.default(self, obj)
 
 
-class BaseClient(object):
+class BaseClient:
     """
     The KBase base client.
     Required initialization arguments (positional):

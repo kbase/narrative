@@ -29,7 +29,7 @@ from notebook.services.contents.manager import ContentsManager
 
 # Third-party
 from tornado.web import HTTPError
-from traitlets.traitlets import Dict, List, Unicode
+from traitlets.traitlets import List, Unicode
 
 from biokbase.narrative.common import util
 from biokbase.narrative.common.exceptions import WorkspaceError
@@ -40,6 +40,7 @@ from biokbase.narrative.services.user import UserService
 
 from .kbasecheckpoints import KBaseCheckpoints
 
+# Local
 # Local
 from .manager_util import base_model
 from .narrativeio import KBaseWSManagerMixin

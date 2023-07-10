@@ -5,8 +5,6 @@ import urllib.parse
 import tornado.log
 from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
-from notebook.base.handlers import IPythonHandler
-from tornado.escape import url_escape
 from traitlets.config import Application
 
 from biokbase.auth import get_user_info, init_session_env, set_environ_token

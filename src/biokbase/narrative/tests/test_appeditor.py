@@ -2,6 +2,7 @@
 Some tests for the App Editor module.
 """
 import json
+import re
 import unittest
 
 from biokbase.narrative.appeditor import generate_app_cell
@@ -37,5 +38,8 @@ class AppEditorTestCase(unittest.TestCase):
         self.assertIn("A simple test spec with a single &apos;input&apos;.", js.data)
 
     def test_gen_app_cell_fail_validation(self):
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegexp(
+            Exception,
+            re.escape("Can't find sub-node [categories] within path [/] in spec.json"),
+        ):
             generate_app_cell(spec_tuple=("{}", self.display_yaml))

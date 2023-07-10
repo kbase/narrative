@@ -789,7 +789,7 @@ class JobManager:
                 state["user"] = job.user
                 state["app_id"] = job.app_id
                 state["batch_id"] = job.batch_id
-                exec_start = state.get("running", None)
+                exec_start = state.get("running")
 
                 if state.get("finished"):
                     finished_time = datetime.fromtimestamp(

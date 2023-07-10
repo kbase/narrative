@@ -127,7 +127,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
         return _json.JSONEncoder.default(self, obj)
 
 
-class UserProfile(object):
+class UserProfile:
     def __init__(
         self,
         url=None,

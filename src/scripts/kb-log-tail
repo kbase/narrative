@@ -13,6 +13,9 @@ import yaml
 #
 from bson import json_util
 
+#
+from bson import json_util
+
 logging.basicConfig()
 _log = logging.getLogger("kb-log-tail")
 

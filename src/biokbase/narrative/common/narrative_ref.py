@@ -7,7 +7,7 @@ from biokbase.workspace.baseclient import ServerError
 from .exceptions import WorkspaceError
 
 
-class NarrativeRef(object):
+class NarrativeRef:
     def __init__(self, ref):
         """
         :param ref: dict with keys wsid, objid, ver (either present or None)

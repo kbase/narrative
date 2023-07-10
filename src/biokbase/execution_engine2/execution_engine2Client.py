@@ -18,7 +18,7 @@ except ImportError:
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
-class execution_engine2(object):
+class execution_engine2:
     def __init__(
         self,
         url=None,

@@ -118,8 +118,7 @@ def make_comm_msg(
 
     if as_job_request:
         return JobRequest(msg)
-    else:
-        return msg
+    return msg
 
 
 class JobCommTestCase(unittest.TestCase):
@@ -1578,8 +1577,7 @@ class exc_to_msgTestCase(unittest.TestCase):
         def f(i=5):
             if i == 0:
                 raise ValueError(message)
-            else:
-                f(i - 1)
+            f(i - 1)
 
         with self.assertRaisesRegex(ValueError, message):
             self.foo(req_dict, f)

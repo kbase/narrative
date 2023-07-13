@@ -28,7 +28,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - numeral 1.5.0 -> 2.0.6
   - postcss ^8.3.2 -> 8.4.24
   - prettier 2.7.1 -> 2.8.8
-  - puppeteer 19.8.2 -> 20.7.4
+  - puppeteer 19.8.2 -> 20.8.2
   - sass 1.60.0 -> 1.63.6
   - selenium-webdriver 4.8.0 -> 4.10.0
   - stylelint ^13.13.1 -> 15.10.1

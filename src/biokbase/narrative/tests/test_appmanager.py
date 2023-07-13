@@ -1208,7 +1208,6 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(transformed_call_args_list, [expected_message])
 
     def _single_messages(self, cell_id=None, run_id=None):
-
         return [
             {
                 "msg_type": MESSAGE_TYPE["RUN_STATUS"],
@@ -1223,7 +1222,6 @@ class AppManagerTestCase(unittest.TestCase):
         ]
 
     def _bulk_messages(self, cell_id=None, run_id=None, num_jobs=1):
-
         child_ids = []
         n_child_jobs = num_jobs - 1
         for i in range(n_child_jobs):

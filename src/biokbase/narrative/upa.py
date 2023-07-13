@@ -5,6 +5,7 @@ documents.
 """
 
 import re
+
 from .app_util import system_variable
 
 external_tag = "&"

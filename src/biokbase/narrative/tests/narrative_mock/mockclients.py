@@ -1,24 +1,24 @@
-from ..util import ConfigTests
-from biokbase.workspace.baseclient import ServerError
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 import copy
 import functools
 from unittest.mock import call
 
-from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.narrative.jobs.job import COMPLETED_STATUS
-
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
 from biokbase.narrative.tests.job_test_constants import (
-    TEST_JOBS,
-    MAX_LOG_LINES,
-    JOB_COMPLETED,
-    BATCH_RETRY_RUNNING,
     BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
+    JOB_COMPLETED,
+    MAX_LOG_LINES,
     READS_OBJ_1,
     READS_OBJ_2,
+    TEST_JOBS,
     generate_error,
 )
-from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
+from biokbase.workspace.baseclient import ServerError
+
+from ..util import ConfigTests
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"

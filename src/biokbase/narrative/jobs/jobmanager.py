@@ -69,7 +69,9 @@ class JobManager:
                 ordering.insert(0, job_id)
         return {job_id: states[job_id] for job_id in ordering}
 
-    def _check_job_list(self, input_ids: List[str] = None) -> Tuple[List[str], List[str]]:
+    def _check_job_list(
+        self, input_ids: List[str] = None
+    ) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order.
         Any jobs not present in self._running_jobs are added to an error list
@@ -381,7 +383,9 @@ class JobManager:
             raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
-            cell_id: self._jobs_by_cell_id[cell_id] if cell_id in self._jobs_by_cell_id else set()
+            cell_id: self._jobs_by_cell_id[cell_id]
+            if cell_id in self._jobs_by_cell_id
+            else set()
             for cell_id in cell_id_list
         }
         # union of all the job_ids in the cell_to_job_mapping

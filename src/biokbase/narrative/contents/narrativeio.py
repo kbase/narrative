@@ -3,23 +3,25 @@ Utilities for doing IO operations on Narrative objects.
 Implements the KBaseWSManagerMixin class.
 """
 
+import json
+import re
+from collections import Counter
+
+from notebook.utils import to_api_path, to_os_path
+from tornado.web import HTTPError
+from traitlets import Bool, Dict, List, TraitError, Unicode
+
 import biokbase.auth
 import biokbase.narrative.clients
-from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common import util
 import biokbase.workspace
-from biokbase.workspace.baseclient import ServerError
-from tornado.web import HTTPError
-from notebook.utils import to_api_path, to_os_path
+from biokbase.narrative.common import util
 from biokbase.narrative.common.exceptions import WorkspaceError
-from traitlets import Unicode, Dict, Bool, List, TraitError
 from biokbase.narrative.common.kblogging import get_logger, log_event
-import re
-import json
-from collections import Counter
-from .updater import update_narrative
 from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.narrative.common.url_config import URLS
+from biokbase.workspace.baseclient import ServerError
 
+from .updater import update_narrative
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching

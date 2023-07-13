@@ -3,6 +3,7 @@ Describes a Narrative Ref and has utilities for dealing with it.
 """
 import biokbase.narrative.clients as clients
 from biokbase.workspace.baseclient import ServerError
+
 from .exceptions import WorkspaceError
 
 

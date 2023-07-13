@@ -13,12 +13,13 @@ except ImportError:
     sys.path.append("simplejson-2.3.3")
     import simplejson as _json
 
-import requests as _requests
-import urllib.parse as _urlparse
-import random as _random
 import base64 as _base64
-from configparser import ConfigParser as _ConfigParser
 import os as _os
+import random as _random
+import urllib.parse as _urlparse
+from configparser import ConfigParser as _ConfigParser
+
+import requests as _requests
 
 _CT = "content-type"
 _AJ = "application/json"

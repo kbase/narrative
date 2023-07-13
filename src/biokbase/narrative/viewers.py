@@ -1,7 +1,6 @@
 import clustergrammer_widget
-from clustergrammer_widget.clustergrammer import Network
-
 import pandas as pd
+from clustergrammer_widget.clustergrammer import Network
 
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import system_variable

@@ -13,8 +13,10 @@ import os
 import random
 import sys
 import time
+
 # Third-party
 import pymongo
+
 # App
 from biokbase.narrative.common import log_proxy
 

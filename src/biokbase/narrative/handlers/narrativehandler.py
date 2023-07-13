@@ -1,13 +1,15 @@
-from notebook.utils import url_path_join, url_escape
-from notebook.base.handlers import IPythonHandler, FilesRedirectHandler
-from tornado import web
-from biokbase.narrative.common.kblogging import get_logger, log_event
-from biokbase.narrative.common.util import kbase_env
 import urllib.parse
+
 import tornado.log
+from notebook.base.handlers import FilesRedirectHandler, IPythonHandler
+from notebook.utils import url_escape, url_path_join
+from tornado import web
 from traitlets.config import Application
+
 from biokbase.auth import get_user_info, init_session_env
+from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.util import kbase_env
 
 HTTPError = web.HTTPError
 

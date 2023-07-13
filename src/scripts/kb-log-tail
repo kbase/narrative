@@ -7,10 +7,11 @@ import json
 import logging
 import os
 import sys
-#
-from bson import json_util
+
 import pymongo
 import yaml
+#
+from bson import json_util
 
 logging.basicConfig()
 _log = logging.getLogger("kb-log-tail")

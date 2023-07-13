@@ -1,8 +1,10 @@
-import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import app_version_tags, check_tag, app_param
 import json
-from jinja2 import Template
+
 from IPython.display import HTML
+from jinja2 import Template
+
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import app_param, app_version_tags, check_tag
 
 
 class SpecManager(object):

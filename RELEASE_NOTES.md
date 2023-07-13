@@ -5,18 +5,38 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
 ## Unreleased
-- PTV-1810 - address object name display issues in the View Configure tab of app cells.
-
-## Unreleased
-
 - UIP-28 - update Google Analytics tags to GA4 properties
+- PTV-1810 - address object name display issues in the View Configure tab of app cells.
+- PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
 - PTV-1878 - fix some failing front end unit tests
-- PTV-1877 - "fix" app descriptions to replace the documentation link for the upload / download guide
 
 ### Dependency Changes
 
 - Javascript dependency updates
+  - @wdio/browserstack-service: 8.10.2 -> 8.12.2,
+  - @wdio/cli 8.10.2 -> 8.12.2
+  - @wdio/local-runner: 8.10.2 -> 8.12.1,
+  - @wdio/mocha-framework: 8.10.2 -> 8.12.1,
+  - @wdio/selenium-standalone-service: 8.10.2 -> 8.12.1,
+  - @wdio/spec-reporter: 8.10.2 -> 8.12.2,
+  - chromedriver ^112.0.0 -> ^114.0.0
+  - datatables.net-buttons-bs 2.2.3 -> 2.3.6
   - dompurify none -> 2.3.8
+  - eslint 8.34.0 -> 8.44.0
+  - grunt-stylelint ^0.16.0 -> ^0.19.0 
+  - karma ^6.3.16 -> 6.4.2
+  - numeral 1.5.0 -> 2.0.6
+  - postcss ^8.3.2 -> 8.4.24
+  - prettier 2.7.1 -> 2.8.8
+  - puppeteer 19.8.2 -> 20.8.2
+  - sass 1.60.0 -> 1.63.6
+  - selenium-webdriver 4.8.0 -> 4.10.0
+  - stylelint ^13.13.1 -> 15.10.1
+  - stylelint-config-recommended ^5.0.0 -> ^13.0.0
+  - stylelint-config-sass-guidelines ^8.0.0 -> ^10.0.0
+  - stylelint-config-standard ^22.0.0 -> ^34.0.0
+  - webdriverio 8.10.2 -> 8.12.1
+
 
 ## Version 5.1.4
 - PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.

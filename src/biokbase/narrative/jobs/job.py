@@ -243,9 +243,6 @@ class Job:
             raise AttributeError(
                 "Job attributes must be updated using the `update_state` method"
             )
-            raise AttributeError(
-                "Job attributes must be updated using the `update_state` method"
-            )
 
         object.__setattr__(self, name, value)
 

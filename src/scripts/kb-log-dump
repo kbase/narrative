@@ -55,7 +55,7 @@ def connect_mongo(conf):
               d=c.database.name, u=info.get('user', '<anonymous>')))
     return c
 
-class DB(object):
+class DB:
     DUPLICATES_MAX = 10
     COLUMNS = ['date', 'ts', 'event', 'narr', 'user', 'name', 'dur']
 

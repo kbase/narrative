@@ -32,13 +32,12 @@ def is_ref(ref):
     """
     if is_upa(ref):
         return True
-    else:
-        split_path = ref.split(";")
-        for sub_ref in split_path:
-            c = sub_ref.count("/")
-            if c < 1 or c > 2:
-                return False
-        return True
+    split_path = ref.split(";")
+    for sub_ref in split_path:
+        c = sub_ref.count("/")
+        if c < 1 or c > 2:
+            return False
+    return True
 
 
 def _prepare_upa_serialization(upa):

@@ -1,6 +1,7 @@
 """
 Tests for the app manager.
 """
+import contextlib
 import copy
 import io
 import os
@@ -58,7 +59,7 @@ def get_method(tag, app_id):
 
 
 def mock_agent_token(*args, **kwargs):
-    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+    return {"user": "testuser", "id": TOKEN_ID, "token": "abcde"}
 
 
 def get_timestamp():
@@ -186,10 +187,8 @@ class AppManagerTestCase(unittest.TestCase):
         self.jm._running_jobs = {}
 
     def tearDown(self):
-        try:
+        with contextlib.suppress(Exception):
             del os.environ["KB_WORKSPACE_ID"]
-        except Exception:
-            pass
 
     def run_app_expect_error(
         self, comm_mock, run_func, func_name, print_error, cell_id=None
@@ -253,7 +252,7 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.am.available_apps(self.bad_tag)
 
-    ############# Testing run_app #############
+    # Testing run_app
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -406,9 +405,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_app #############
+    # End tests for run_app
 
-    ############# Test run_legacy_batch_app #############
+    # Test run_legacy_batch_app
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -603,9 +602,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_legacy_batch_app #############
+    # End tests for run_legacy_batch_app
 
-    ############# Test run_local_app #############
+    # Test run_local_app
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
@@ -706,9 +705,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_local_app #############
+    # End tests for run_local_app
 
-    ############# Test run_app_batch #############
+    # Test run_app_batch
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -726,9 +725,7 @@ class AppManagerTestCase(unittest.TestCase):
         batch_run_params = dry_run_results["batch_run_params"]
         batch_params = dry_run_results["batch_params"]
 
-        expected_batch_run_keys = set(
-            ["method", "service_ver", "params", "app_id", "meta"]
-        )
+        expected_batch_run_keys = {"method", "service_ver", "params", "app_id", "meta"}
         # expect only the above keys in each batch run params (note the missing wsid key)
         for param_set in batch_run_params:
             self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
@@ -933,7 +930,7 @@ class AppManagerTestCase(unittest.TestCase):
             'Unable to retrieve system variable: "workspace_id"',
         )
 
-    ############# End tests for run_app_batch #############
+    # End tests for run_app_batch
 
     def test_reconstitute_shared_params(self):
         app_info_el = {
@@ -1044,9 +1041,9 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         spec = self.am.spec_manager.get_spec(app_id, tag=tag)
         spec_params = self.am.spec_manager.app_params(spec)
-        spec_params_map = dict(
-            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
+        spec_params_map = {
+            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+        }
         mapped_inputs = self.am._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], inputs, spec_params_map
         )
@@ -1164,7 +1161,7 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": {"one": 1}, "type": "string", "expected": "one=1"},
         ]
         for test in test_data:
-            spec = test.get("spec", None)
+            spec = test.get("spec")
             ret = app_util.transform_param_value(test["type"], test["value"], spec)
             self.assertEqual(ret, test["expected"])
 

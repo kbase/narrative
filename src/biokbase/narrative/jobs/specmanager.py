@@ -7,11 +7,11 @@ import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import app_param, app_version_tags, check_tag
 
 
-class SpecManager(object):
+class SpecManager:
     __instance = None
 
-    app_specs = dict()
-    type_specs = dict()
+    app_specs = {}
+    type_specs = {}
 
     def __new__(cls):
         if SpecManager.__instance is None:
@@ -38,7 +38,7 @@ class SpecManager(object):
         client = clients.get("narrative_method_store")
         for tag in app_version_tags:
             specs = client.list_methods_spec({"tag": tag})
-            spec_dict = dict()
+            spec_dict = {}
             for spec in specs:
                 spec_dict[spec["info"]["id"]] = spec
             self.app_specs[tag] = spec_dict
@@ -104,7 +104,7 @@ class SpecManager(object):
             Template(tmpl).render(
                 tag=tag,
                 apps=sorted(
-                    list(self.app_specs[tag].values()), key=lambda m: m["info"]["id"]
+                    self.app_specs[tag].values(), key=lambda m: m["info"]["id"]
                 ),
             )
         )
@@ -174,7 +174,7 @@ class SpecManager(object):
             allowed_values = list (optional),
         }
         """
-        params = list()
+        params = []
         for p in spec["parameters"]:
             p_info = app_param(p)
             params.append(p_info)
@@ -196,7 +196,7 @@ class SpecManager(object):
         )
 
 
-class AppUsage(object):
+class AppUsage:
     """
     A tiny class for representing app usage in HTML (or as a pretty string)
     """
@@ -254,8 +254,6 @@ class AppUsage(object):
         """
 
         return Template(tmpl).render(usage=self.usage)
-
-        # return "<h1>" + self.usage['name'] + "</h1>" + self.usage['id'] + "<br>"
 
     def __repr__(self):
         return self.__str__()

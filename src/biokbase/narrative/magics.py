@@ -9,13 +9,7 @@ import logging
 import sys
 
 # IPython
-from IPython.core.magic import (
-    Magics,
-    cell_magic,
-    line_cell_magic,
-    line_magic,
-    magics_class,
-)
+from IPython.core.magic import Magics, line_magic, magics_class
 
 # KBase
 import biokbase.auth

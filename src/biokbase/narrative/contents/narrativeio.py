@@ -7,9 +7,7 @@ import json
 import re
 from collections import Counter
 
-from notebook.utils import to_api_path, to_os_path
 from tornado.web import HTTPError
-from traitlets import Bool, Dict, List, TraitError, Unicode
 
 import biokbase.auth
 import biokbase.narrative.clients
@@ -52,7 +50,7 @@ NARRATIVE_TYPE = "KBaseNarrative.Narrative"
 g_log = get_logger("biokbase.narrative")
 
 
-class KBaseWSManagerMixin(object):
+class KBaseWSManagerMixin:
     """
     Manages the connection to the workspace for a user
     """

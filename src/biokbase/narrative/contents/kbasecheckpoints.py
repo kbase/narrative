@@ -3,8 +3,7 @@ A (currently stubby) class for managing Narrative checkpoints.
 """
 
 import notebook._tz as tz
-from notebook.services.contents.checkpoints import Checkpoints, GenericCheckpointsMixin
-from tornado.web import HTTPError
+from notebook.services.contents.checkpoints import Checkpoints
 
 from .narrativeio import KBaseWSManagerMixin
 

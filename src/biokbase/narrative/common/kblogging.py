@@ -243,7 +243,7 @@ if not g_log.handlers:
     init_handlers()
 
 
-class NarrativeUIError(object):
+class NarrativeUIError:
     """Created by Narrative UI javascript on an error."""
 
     ui_log = get_logger("narrative_ui")

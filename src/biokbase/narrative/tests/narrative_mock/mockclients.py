@@ -132,13 +132,13 @@ class MockClients:
                 "unlocked",
                 {},
             ]
-        elif wsid == 789:
+        if wsid == 789:
             raise ServerError(
                 "JSONRPCError", -32500, "User you may not read workspace 789"
             )
-        elif wsid == 890:
+        if wsid == 890:
             raise ServerError("JSONRPCError", -32500, "Workspace 890 is deleted")
-        elif name != "invalid_workspace":
+        if name != "invalid_workspace":
             return [
                 wsid,
                 name,
@@ -154,8 +154,7 @@ class MockClients:
                     "narrative_nice_name": "Fake",
                 },
             ]
-        else:
-            raise Exception("not found")
+        raise Exception("not found")
 
     def get_object_info_new(self, params):
         """
@@ -239,7 +238,7 @@ class MockClients:
 
     def list_objects(self, params):
         ws_ids = params["ids"]
-        return [get_nar_obj(int(id)) for id in ws_ids]
+        return [get_nar_obj(int(ws_id)) for ws_id in ws_ids]
 
     # ----- Execution Engine (EE2) functions -----
 
@@ -262,7 +261,7 @@ class MockClients:
 
     def retry_jobs(self, params):
         job_ids = params["job_ids"]
-        results = list()
+        results = []
         for job_id in job_ids:
             output = {"job_id": job_id}
             if job_id in RETRIED_JOBS:
@@ -293,7 +292,7 @@ class MockClients:
 
     def check_jobs(self, params):
         job_ids = params.get("job_ids")
-        job_states = dict()
+        job_states = {}
         for job in job_ids:
             job_states[job] = self.check_job(
                 {"job_id": job, "exclude_fields": params.get("exclude_fields", [])}
@@ -316,7 +315,7 @@ class MockClients:
 
         def log_gen(log_params, total_lines=MAX_LOG_LINES):
             skip = log_params.get("skip_lines", 0)
-            lines = list()
+            lines = []
             if skip < total_lines:
                 for i in range(total_lines - skip):
                     lines.append(
@@ -359,7 +358,7 @@ class MockClients:
         ws_name = "some_workspace"
         ws_id = 1
         types = params.get("types", [])
-        with_meta = True if params.get("includeMetadata") else False
+        with_meta = bool(params.get("includeMetadata"))
         if params.get("ws_name"):
             ws_name = params["ws_name"]
         if params.get("ws_id"):

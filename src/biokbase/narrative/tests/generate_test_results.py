@@ -53,9 +53,7 @@ def generate_mappings(all_jobs):
         if "retry_ids" in job and len(job["retry_ids"]) > 0:
             retried_jobs[job["job_id"]] = job["retry_ids"][0]
 
-        cell_id = (
-            job.get("job_input", {}).get("narrative_cell_info", {}).get("cell_id", None)
-        )
+        cell_id = job.get("job_input", {}).get("narrative_cell_info", {}).get("cell_id")
 
         # add the new job to the jobs_by_cell_id mapping if there is a cell_id present
         if cell_id:
@@ -71,7 +69,7 @@ def generate_mappings(all_jobs):
 
 def _generate_job_output(job_id):
     state = get_test_job(job_id)
-    widget_info = state.get("widget_info", None)
+    widget_info = state.get("widget_info")
 
     state.update(
         {
@@ -120,7 +118,7 @@ def generate_job_info(all_jobs):
     for job_id in all_jobs:
         test_job = get_test_job(job_id)
         job_id = test_job.get("job_id")
-        app_id = test_job.get("job_input", {}).get("app_id", None)
+        app_id = test_job.get("job_input", {}).get("app_id")
         tag = (
             test_job.get("job_input", {})
             .get("narrative_cell_info", {})
@@ -190,7 +188,7 @@ def generate_job_logs(all_jobs):
     for job_id in all_jobs:
         test_job = get_test_job(job_id)
         batch_job = test_job.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
-        batch_id = job_id if batch_job else get_test_job(job_id).get("batch_id", None)
+        batch_id = job_id if batch_job else get_test_job(job_id).get("batch_id")
         if all_jobs[job_id]["status"] == COMPLETED_STATUS:
             job_logs[job_id] = {
                 "job_id": job_id,

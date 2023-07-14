@@ -8,8 +8,6 @@ import unittest
 
 from biokbase.narrative.services.user import UserService
 
-from .util import ConfigTests
-
 
 class UserServiceTestCase(unittest.TestCase):
     def test_user_trust(self):

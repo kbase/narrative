@@ -120,7 +120,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
         return _json.JSONEncoder.default(self, obj)
 
 
-class Client(object):
+class Client:
     def __init__(
         self,
         url=None,

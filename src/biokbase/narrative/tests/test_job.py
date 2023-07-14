@@ -9,11 +9,11 @@ from unittest import mock
 from biokbase.execution_engine2.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
+    ALL_ATTRS,
     COMPLETED_STATUS,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTR_DEFAULTS,
     JOB_ATTRS,
-    ALL_ATTRS,
     Job,
 )
 from biokbase.narrative.jobs.jobmanager import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS

@@ -38,6 +38,19 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - webdriverio 8.10.2 -> 8.12.1
 
 
+- Python dependency updates
+  - beautifulsoup4: 4.12.1 -> 4.12.2
+  - coverage: 7.2.2 -> 7.2.7
+  - cryptography: 40.0.1 -> 41.0.1
+  - isort: none -> 5.18.0
+  - markupsafe: 2.1.2 -> 2.1.3
+  - pygments: 2.14.0 -> 2.15.1
+  - pymongo: 4.3.3 -> 4.4.0
+  - pyopenssl: 23.1.1 -> 23.2.0
+  - pytest-cov: 4.0.0 -> 4.1.0
+  - pytest: 7.2.2 -> 7.4.0
+  - requests: 2.28.2 -> 2.31.0
+
 ## Version 5.1.4
 - PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
 - PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells.

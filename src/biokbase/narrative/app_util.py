@@ -1,9 +1,10 @@
+import json
 import os
 import re
-import json
-import biokbase.narrative.clients as clients
-import biokbase.auth
 import time
+
+import biokbase.auth
+import biokbase.narrative.clients as clients
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.

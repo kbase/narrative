@@ -10,16 +10,17 @@ most upstream consumers.
 """
 import collections
 import logging
-from logging import handlers
 import os
 import threading
 import time
+from logging import handlers
 
-# Local
-from .util import kbase_env
 from . import log_proxy
 from .log_common import format_event
 from .narrative_logger import NarrativeLogger
+
+# Local
+from .util import kbase_env
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "2014-07-31"

@@ -11,17 +11,16 @@ import sys
 # IPython
 from IPython.core.magic import (
     Magics,
-    magics_class,
-    line_magic,
     cell_magic,
     line_cell_magic,
+    line_magic,
+    magics_class,
 )
 
 # KBase
 import biokbase.auth
-
-from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
+from biokbase.narrative.common.url_config import URLS
 
 # Logging
 g_log = logging.getLogger(__name__)

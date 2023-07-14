@@ -241,7 +241,9 @@ class Job:
 
     def __setattr__(self, name, value):
         if name in ALL_ATTRS:
-            raise AttributeError("Job attributes must be updated using the `update_state` method")
+            raise AttributeError(
+                "Job attributes must be updated using the `update_state` method"
+            )
 
         object.__setattr__(self, name, value)
 
@@ -334,7 +336,9 @@ class Job:
         else:
             self._acc_state = {**self._acc_state, **state}
 
-    def refresh_state(self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
+    def refresh_state(
+        self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+    ):
         """
         Queries the job service to see the state of the current job.
         """
@@ -525,7 +529,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line: first_line + num_lines],
+            self._job_logs[first_line : first_line + num_lines],
         )
 
     def _update_log(self):

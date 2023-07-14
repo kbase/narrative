@@ -215,7 +215,9 @@ def generate_job_logs(all_jobs):
 INVALID_CELL_ID = "invalid_cell_id"
 TEST_CELL_ID_LIST = list(JOBS_BY_CELL_ID.keys()) + [INVALID_CELL_ID]
 # mapping expected as output from get_job_states_by_cell_id
-TEST_CELL_IDs = {cell_id: list(JOBS_BY_CELL_ID[cell_id]) for cell_id in JOBS_BY_CELL_ID.keys()}
+TEST_CELL_IDs = {
+    cell_id: list(JOBS_BY_CELL_ID[cell_id]) for cell_id in JOBS_BY_CELL_ID.keys()
+}
 TEST_CELL_IDs[INVALID_CELL_ID] = []
 
 

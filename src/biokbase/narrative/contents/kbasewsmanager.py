@@ -14,32 +14,35 @@ Copyright (C) 2013 The KBase Project
 Distributed unspecified open source license as of 9/27/2013
 
 """
+import itertools
+import json
+
 # System
 import os
-import json
 import re
-import itertools
-
-# Third-party
-from tornado.web import HTTPError
 
 # IPython
 # from IPython import nbformat
 import nbformat
-from nbformat import validate, ValidationError
+from nbformat import ValidationError, validate
 from notebook.services.contents.manager import ContentsManager
-from traitlets.traitlets import Unicode, Dict, List
+
+# Third-party
+from tornado.web import HTTPError
+from traitlets.traitlets import Dict, List, Unicode
+
+from biokbase.narrative.common import util
+from biokbase.narrative.common.exceptions import WorkspaceError
+from biokbase.narrative.common.kblogging import get_narrative_logger
+from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.services.user import UserService
+
+from .kbasecheckpoints import KBaseCheckpoints
 
 # Local
 from .manager_util import base_model
 from .narrativeio import KBaseWSManagerMixin
-from .kbasecheckpoints import KBaseCheckpoints
-from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common.exceptions import WorkspaceError
-from biokbase.narrative.common import util
-from biokbase.narrative.common.kblogging import get_narrative_logger
-from biokbase.narrative.common.narrative_ref import NarrativeRef
-from biokbase.narrative.services.user import UserService
 
 # -----------------------------------------------------------------------------
 # Classes

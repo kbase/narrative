@@ -1,11 +1,11 @@
-import biokbase.auth as auth
-from biokbase.narrative.common.url_config import URLS
-
-import urllib.parse
-import urllib.request
-import urllib.error
 import json
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
+
+import biokbase.auth as auth
+from biokbase.narrative.common.url_config import URLS
 
 """
 KBase staging.helper class

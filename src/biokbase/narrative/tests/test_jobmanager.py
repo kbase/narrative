@@ -267,7 +267,6 @@ class JobManagerTest(unittest.TestCase):
         self.assertIsInstance(job, Job)
 
     def test__get_job_fail(self):
-
         inputs = [None, "", JOB_NOT_FOUND]
 
         for bad_input in inputs:

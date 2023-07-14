@@ -23,7 +23,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - datatables.net-buttons-bs 2.2.3 -> 2.3.6
   - dompurify none -> 2.3.8
   - eslint 8.34.0 -> 8.44.0
-  - grunt-stylelint ^0.16.0 -> ^0.19.0 
+  - grunt-stylelint ^0.16.0 -> ^0.19.0
   - karma ^6.3.16 -> 6.4.2
   - numeral 1.5.0 -> 2.0.6
   - postcss ^8.3.2 -> 8.4.24
@@ -35,13 +35,13 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - stylelint-config-recommended ^5.0.0 -> ^13.0.0
   - stylelint-config-sass-guidelines ^8.0.0 -> ^10.0.0
   - stylelint-config-standard ^22.0.0 -> ^34.0.0
-  - webdriverio 8.10.2 -> 8.12.1
+  - webdriverio 8.10.2 -> 8.12.3
 
 
 - Python dependency updates
   - beautifulsoup4: 4.12.1 -> 4.12.2
   - coverage: 7.2.2 -> 7.2.7
-  - cryptography: 40.0.1 -> 41.0.1
+  - cryptography: 40.0.1 -> 41.0.2
   - isort: none -> 5.18.0
   - markupsafe: 2.1.2 -> 2.1.3
   - pygments: 2.14.0 -> 2.15.1

@@ -60,8 +60,8 @@ define([
         it('Should fail to initialize if the maxFileSize is not provided', () => {
             expect(() => {
                 const $wrapper = $('<div>');
-                new FileUploadWidget($wrapper, {
-                    // NOSONAR
+                // prettier-ignore
+                new FileUploadWidget($wrapper, {  //NOSONAR
                     path: '/',
                     userInfo: {
                         user: fakeUser,

@@ -1,11 +1,12 @@
-import unittest
-from . import util
-import time
 import json
+import time
+import unittest
 
 from biokbase.narrative.common.narrative_logger import NarrativeLogger
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
+
+from . import util
 
 
 class NarrativeLoggerTestCase(unittest.TestCase):

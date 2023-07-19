@@ -2,17 +2,18 @@
 Hunts for Python 2 code in all Narratives in a Workspace environment.
 Needs an Administrator token.
 """
-import sys
 import argparse
 import json
-from biokbase.workspace.client import Workspace
-import biokbase.workspace.baseclient as baseclient
 import lib2to3
+import sys
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
-import nbformat
-from narr_info import NarrativeInfo
 from typing import List
 
+import nbformat
+from narr_info import NarrativeInfo
+
+import biokbase.workspace.baseclient as baseclient
+from biokbase.workspace.client import Workspace
 
 DEFAULT_OUTPUT_FILE = "code_search_results.json"
 

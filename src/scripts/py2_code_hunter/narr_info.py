@@ -1,7 +1,7 @@
 import json
 
 
-class NarrativeInfo(object):
+class NarrativeInfo:
     def __init__(self, narr_info: list, ws_owner: str):
         self.ws_id = narr_info[6]
         self.last_saved = narr_info[3]
@@ -34,7 +34,7 @@ class NarrativeInfo(object):
         return json.dumps(self.to_dict())
 
 
-class CellChange(object):
+class CellChange:
     def __init__(self, ws_id: int, idx: int, original: str, updated: str):
         self.ws_id = ws_id
         self.updated_lines = {}

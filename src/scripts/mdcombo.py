@@ -3,8 +3,8 @@
 Output single markdown doc from multimarkdown
 with internal links and includes.
 """
-import sys
 import re
+import sys
 
 
 def println(*s):

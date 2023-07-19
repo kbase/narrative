@@ -7,11 +7,12 @@ from the Workspace, BEFORE it gets transformed into a notebook model.
 
 It should be noted here that if an update occurs, job ids will no longer be available.
 """
-import uuid
-import json
-import re
-import os
 import datetime
+import json
+import os
+import re
+import uuid
+
 import biokbase.narrative.clients as clients
 from biokbase.narrative.jobs.specmanager import SpecManager
 

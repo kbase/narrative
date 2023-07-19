@@ -1,20 +1,22 @@
 """
 Tests for the app_util module
 """
+import os
+import time
 import unittest
+from unittest import mock
+
 import biokbase.auth
 from biokbase.narrative.app_util import (
     check_tag,
-    system_variable,
     get_result_sub_path,
     map_inputs_from_job,
     map_outputs_from_state,
+    system_variable,
 )
-from .narrative_mock.mockclients import get_mock_client
-import os
-from unittest import mock
+
 from . import util
-import time
+from .narrative_mock.mockclients import get_mock_client
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 

@@ -10,6 +10,7 @@ import re
 import signal
 import sys
 import time
+
 # Local
 from biokbase.narrative.common import log_proxy as lp
 

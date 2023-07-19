@@ -126,8 +126,7 @@ class Job:
 
         if return_list:
             return list(jobs.values())
-        else:
-            return jobs
+        return jobs
 
     @staticmethod
     def _trim_ee2_state(state: dict, exclude_fields: list) -> None:
@@ -241,7 +240,9 @@ class Job:
 
     def __setattr__(self, name, value):
         if name in ALL_ATTRS:
-            raise AttributeError("Job attributes must be updated using the `update_state` method")
+            raise AttributeError(
+                "Job attributes must be updated using the `update_state` method"
+            )
 
         object.__setattr__(self, name, value)
 
@@ -257,13 +258,12 @@ class Job:
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
         if self._acc_state.get("batch_job"):
-            for child_job in self.children:
-                if child_job._acc_state.get("status") != COMPLETED_STATUS:
-                    return False
-            return True
+            return all(
+                child_job._acc_state.get("status") == COMPLETED_STATUS
+                for child_job in self.children
+            )
 
-        else:
-            return self._acc_state.get("status") in TERMINAL_STATUSES
+        return self._acc_state.get("status") in TERMINAL_STATUSES
 
     def in_cells(self, cell_ids: List[str]) -> bool:
         """
@@ -277,12 +277,8 @@ class Job:
             raise ValueError("cell_ids cannot be None")
 
         if self.batch_job:
-            for child_job in self.children:
-                if child_job.cell_id in cell_ids:
-                    return True
-            return False
-        else:
-            return self.cell_id in cell_ids
+            return any(child_job.cell_id in cell_ids for child_job in self.children)
+        return self.cell_id in cell_ids
 
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
@@ -297,15 +293,13 @@ class Job:
         """
         if self.params is not None:
             return self.params
-        else:
-            try:
-                state = self.query_ee2_state(self.job_id, init=True)
-                self.update_state(state)
-                return self.params
-            except Exception as e:
-                raise Exception(
-                    f"Unable to fetch parameters for job {self.job_id} - {e}"
-                )
+
+        try:
+            state = self.query_ee2_state(self.job_id, init=True)
+            self.update_state(state)
+            return self.params
+        except Exception as e:
+            raise Exception(f"Unable to fetch parameters for job {self.job_id} - {e}")
 
     def update_state(self, state: dict) -> None:
         """
@@ -316,25 +310,20 @@ class Job:
             raise TypeError("state must be a dict")
 
         # Check job_id match
-        if self._acc_state:
-            if "job_id" in state and state["job_id"] != self.job_id:
-                raise ValueError(
-                    f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
-                )
+        if self._acc_state and "job_id" in state and state["job_id"] != self.job_id:
+            raise ValueError(
+                "Job ID mismatch in update_state: "
+                + f"job ID: {self.job_id}; state ID: {state['job_id']}"
+            )
 
-        # Check if there would be no change in updating
-        # i.e., if state <= self._acc_state
-        if self._acc_state is not None:
-            if {**self._acc_state, **state} == self._acc_state:
-                return
-
-        state = copy.deepcopy(state)
         if self._acc_state is None:
-            self._acc_state = state
-        else:
-            self._acc_state = {**self._acc_state, **state}
+            self._acc_state = {}
 
-    def refresh_state(self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS):
+        self._acc_state = {**self._acc_state, **state}
+
+    def refresh_state(
+        self, force_refresh=False, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+    ):
         """
         Queries the job service to see the state of the current job.
         """
@@ -469,8 +458,7 @@ class Job:
             return WidgetManager().show_output_widget(
                 output_widget, widget_params, tag=self.tag
             )
-        else:
-            return f"Job is incomplete! It has status '{state['status']}'"
+        return f"Job is incomplete! It has status '{state['status']}'"
 
     def get_viewer_params(self, state):
         """
@@ -525,7 +513,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line: first_line + num_lines],
+            self._job_logs[first_line : first_line + num_lines],
         )
 
     def _update_log(self):
@@ -623,7 +611,7 @@ class Job:
 
             info = {
                 "app_id": spec["info"]["id"],
-                "version": spec["info"].get("ver", None),
+                "version": spec["info"].get("ver"),
                 "name": spec["info"]["name"],
             }
         except Exception:

@@ -1,15 +1,15 @@
-from tornado.escape import url_escape
-from notebook.base.handlers import IPythonHandler
-from traitlets.config import Application
-from notebook.auth.login import LoginHandler
-from notebook.auth.logout import LogoutHandler
-from biokbase.narrative.common.kblogging import get_logger, log_event
-from biokbase.narrative.common.util import kbase_env
-import tornado.log
+import logging
 import os
 import urllib.parse
-import logging
+
+import tornado.log
+from notebook.auth.login import LoginHandler
+from notebook.auth.logout import LogoutHandler
+from traitlets.config import Application
+
 from biokbase.auth import get_user_info, init_session_env, set_environ_token
+from biokbase.narrative.common.kblogging import get_logger, log_event
+from biokbase.narrative.common.util import kbase_env
 
 """
 KBase handlers for authentication in the Jupyter notebook.

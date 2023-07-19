@@ -15,9 +15,10 @@ Bill Riehl <wjriehl@lbl.gov>
 """
 
 import argparse
-import requests
 import json
 import sys
+
+import requests
 
 DEFAULT_HOST = "narrative-dev"
 DEFAULT_USER = "kbasetest"

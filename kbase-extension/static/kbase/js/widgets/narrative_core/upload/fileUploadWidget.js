@@ -440,48 +440,46 @@ define([
                 if (erroredFile.xhr) {
                     const responseStatus = erroredFile.xhr.status;
                     const contentType = erroredFile.xhr.getResponseHeader('Content-Type');
-                    switch (responseStatus) {
-                        case 413: {
-                            const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
-                            if (contentType === 'application/json') {
-                                // The custom error response is JSON. E.g:
-                                // {
-                                //     message: 'Request entity is too large',
-                                //     responseCode: 413,
-                                //     maxBodySize: '5GB',
-                                //     contentLength: 6000000000,
-                                // };
-                                try {
-                                    const serverError = JSON.parse(erroredFile.xhr.responseText);
-                                    return [
-                                        `Request size of ${formatFileSize(
-                                            serverError.contentLength
-                                        )} exceeds maximum allowed by the upload server (${
-                                            serverError.maxBodySize
-                                        })`,
-                                        $errorContent,
-                                    ];
-                                } catch (ex) {
-                                    // If for some reason the JSON is malformed, we still know it is
-                                    // a 413, we just don't have more specific information.
-                                    return [
-                                        'Request size exceeds maximum allowed by the upload server',
-                                        $errorContent,
-                                    ];
-                                }
-                            } else {
-                                // In this case, we do not have a custom error response.
+                    if (responseStatus === 413) {
+                        const $errorContent = $el('div').append(this.$renderGlobusUploadLink());
+                        if (contentType === 'application/json') {
+                            // The custom error response is JSON. E.g:
+                            // {
+                            //     message: 'Request entity is too large',
+                            //     responseCode: 413,
+                            //     maxBodySize: '5GB',
+                            //     contentLength: 6000000000,
+                            // };
+                            try {
+                                const serverError = JSON.parse(erroredFile.xhr.responseText);
+                                return [
+                                    `Request size of ${formatFileSize(
+                                        serverError.contentLength
+                                    )} exceeds maximum allowed by the upload server (${
+                                        serverError.maxBodySize
+                                    })`,
+                                    $errorContent,
+                                ];
+                            } catch (ex) {
+                                // If for some reason the JSON is malformed, we still know it is
+                                // a 413, we just don't have more specific information.
                                 return [
                                     'Request size exceeds maximum allowed by the upload server',
                                     $errorContent,
                                 ];
                             }
+                        } else {
+                            // In this case, we do not have a custom error response.
+                            return [
+                                'Request size exceeds maximum allowed by the upload server',
+                                $errorContent,
+                            ];
                         }
-                        default:
-                            // In this case we have some other error. There really isn't anything useful to
-                            // show the user in the small ui for the file row.
-                            console.error('Unknown error uploading file', erroredFile);
-                            return ['Error uploading file', null];
+                    } else {
+                        // In this case we have some other error. There really isn't anything useful to
+                        // show the user in the small ui for the file row.
+                        console.error('Unknown error uploading file', erroredFile);
+                        return ['Error uploading file', null];
                     }
                 } else {
                     // Here we handle errors emitted by dropzone itself, not encountered during the actual

@@ -61,6 +61,7 @@ define([
             expect(() => {
                 const $wrapper = $('<div>');
                 new FileUploadWidget($wrapper, {
+                    // NOSONAR
                     path: '/',
                     userInfo: {
                         user: fakeUser,

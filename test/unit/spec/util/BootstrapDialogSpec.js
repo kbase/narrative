@@ -26,14 +26,7 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
              * Runs testFun,
              * @returns true if testing is complete; false otherwise
              */
-            const tester = () => {
-                if (testFun()) {
-                    resolve(true);
-                    return true;
-                }
-                return false;
-            };
-            const waiter = () => {
+            const loop = () => {
                 const elapsed = Date.now() - started;
                 if (elapsed > waitFor) {
                     resolve(false);
@@ -41,8 +34,10 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
                 }
                 setTimeout(() => {
                     try {
-                        if (!tester()) {
-                            waiter();
+                        if (testFun()) {
+                            resolve(true);
+                        } else {
+                            loop();
                         }
                     } catch (ex) {
                         reject(new Error(`Error running test function: ${ex.message}`));
@@ -50,8 +45,10 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
                 }, 100);
             };
             // can succeed immediately.
-            if (!tester()) {
-                waiter();
+            if (testFun()) {
+                resolve(true);
+            } else {
+                loop();
             }
         });
     }

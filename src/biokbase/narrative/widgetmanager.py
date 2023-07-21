@@ -1,18 +1,21 @@
-import os
 import json
-import uuid
+import os
 import time
+import uuid
+
 from IPython.display import Javascript
 from jinja2 import Template
-from biokbase.narrative.jobs.specmanager import SpecManager
+
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
-    map_outputs_from_state,
-    validate_parameters,
     check_tag,
+    map_outputs_from_state,
     system_variable,
+    validate_parameters,
 )
-from .upa import is_upa, is_ref
+from biokbase.narrative.jobs.specmanager import SpecManager
+
+from .upa import is_ref, is_upa
 
 """
 widgetmanager.py
@@ -23,7 +26,7 @@ KBase JavaScript widgets.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
-class WidgetManager(object):
+class WidgetManager:
     """
     Manages data (and other) visualization widgets for use in the KBase Narrative.
 
@@ -122,10 +125,7 @@ class WidgetManager(object):
         """
 
         for method in methods:
-            if "output" not in method["widgets"]:
-                widget_name = self._default_output_widget
-            else:
-                widget_name = method["widgets"]["output"]
+            widget_name = method["widgets"].get("output", self._default_output_widget)
             if widget_name == "null":
                 if verbose:
                     print(
@@ -134,7 +134,7 @@ class WidgetManager(object):
                 continue
             out_mapping = method["behavior"].get(
                 "kb_service_output_mapping",
-                method["behavior"].get("output_mapping", None),
+                method["behavior"].get("output_mapping"),
             )
             if out_mapping is not None:
                 params = {}
@@ -164,7 +164,7 @@ class WidgetManager(object):
                                     param_type = "string"
                                     if "text_options" in spec_param:
                                         validate_as = spec_param["text_options"].get(
-                                            "validate_as", None
+                                            "validate_as"
                                         )
                                         if validate_as == "int":
                                             param_type = "int"
@@ -489,7 +489,7 @@ class WidgetManager(object):
         lookup_params = list()
         info_params = list()
 
-        for (param, ref) in obj_refs:
+        for param, ref in obj_refs:
             if is_upa(str(ref)):
                 upas[param] = ref
             elif is_ref(str(ref)):
@@ -501,7 +501,7 @@ class WidgetManager(object):
                 )
 
         # params for get_object_info3
-        for (param, name) in obj_names:
+        for param, name in obj_names:
             # it's possible that these are misnamed and are actually upas already. test and add to
             # the upas dictionary if so.
             if is_upa(str(name)):
@@ -516,13 +516,13 @@ class WidgetManager(object):
         if len(lookup_params):
             ws_client = clients.get("workspace")
             ws_info = ws_client.get_object_info3({"objects": info_params})
-            for (idx, path) in enumerate(ws_info["paths"]):
+            for idx, path in enumerate(ws_info["paths"]):
                 upas[lookup_params[idx]] = ";".join(path)
 
         # obj_refs and obj_names are done. Do the list versions now.
         lookup_params = list()
         info_params = list()
-        for (param, ref_list) in obj_ref_list:
+        for param, ref_list in obj_ref_list:
             # error fast if any member of a list isn't actually a ref.
             # this might be me being lazy, but I suspect there's a problem if the inputs aren't
             # actually uniform.
@@ -534,7 +534,7 @@ class WidgetManager(object):
             lookup_params.append(param)
             info_params.append([{"ref": ref} for ref in ref_list])
 
-        for (param, name_list) in obj_name_list:
+        for param, name_list in obj_name_list:
             info_param = list()
             for name in name_list:
                 if is_ref(str(name)):
@@ -545,7 +545,7 @@ class WidgetManager(object):
             lookup_params.append(param)
 
         # This time we have a one->many mapping from params to each list. Run ws lookup in a loop
-        for (idx, param) in enumerate(lookup_params):
+        for idx, param in enumerate(lookup_params):
             ws_info = ws_client.get_object_info3({"objects": info_params[idx]})
             upas[param] = [";".join(path) for path in ws_info["paths"]]
         return upas
@@ -695,7 +695,7 @@ class WidgetManager(object):
                 # it's not safe to use reference yet (until we switch to them all over the Apps)
                 # But in case we deal with ref-path we have to do it anyway:
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
-                upa_params = list()
+                upa_params = []
                 for param in spec_params:
                     if param.get("allowed_types") is None or any(
                         (t == bare_type or t == type_module)

@@ -1,9 +1,10 @@
+import json
 import os
 import re
-import json
-import biokbase.narrative.clients as clients
-import biokbase.auth
 import time
+
+import biokbase.auth
+import biokbase.narrative.clients as clients
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
@@ -25,8 +26,7 @@ def check_tag(tag, raise_exception=False):
             "Can't find tag %s - allowed tags are %s"
             % (tag, ", ".join(app_version_tags))
         )
-    else:
-        return tag_exists
+    return tag_exists
 
 
 def strict_system_variable(var):
@@ -57,7 +57,8 @@ def system_variable(var):
     var = var.lower()
     if var == "workspace":
         return os.environ.get("KB_WORKSPACE_ID", None)
-    elif var == "workspace_id":
+
+    if var == "workspace_id":
         ws_name = os.environ.get("KB_WORKSPACE_ID", None)
         if ws_name is None:
             return None

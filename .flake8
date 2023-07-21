@@ -1,5 +1,5 @@
 [flake8]
-max-line-length = 88
+max-line-length = 100
 # E203: whitespace before ‘,’, ‘;’, or ‘:’
 # E501: line length
 # W503: line break after binary operator

@@ -3,8 +3,10 @@ Narrative authentication tools.
 This uses the KBase auth2 API to get and manage auth tokens.
 """
 
-import requests
 import json
+
+import requests
+
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
 

@@ -1,4 +1,5 @@
 import unittest
+
 from biokbase.narrative.contents.manager_util import base_model
 
 

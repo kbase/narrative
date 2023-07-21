@@ -1,10 +1,13 @@
-import unittest
-from biokbase.narrative.widgetmanager import WidgetManager
-import IPython
-from unittest import mock
 import os
-from .util import ConfigTests
+import unittest
+from unittest import mock
+
+import IPython
+
+from biokbase.narrative.widgetmanager import WidgetManager
+
 from .narrative_mock.mockclients import get_mock_client
+from .util import ConfigTests
 
 """
 Tests for the WidgetManager class

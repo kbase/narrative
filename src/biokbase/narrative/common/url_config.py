@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 from .util import kbase_env
 
 

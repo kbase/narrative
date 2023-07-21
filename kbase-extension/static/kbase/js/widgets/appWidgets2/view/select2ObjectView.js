@@ -1,90 +1,70 @@
+/**
+ * This creates a view-only widget for the View Configure mode of the App Cell.
+ * It resembles the interactive input widget in all its Select2 styling, but as it's
+ * not interactive, it only shows the single input given at widget startup.
+ *
+ * Display is done in the following steps, depending on what string is provided
+ * in the initialValue field of the config.
+ *
+ * 1. config.initialValue is stored as model.value
+ * 2. model.value is used to look up the object info
+ *      a. if model.value is a string, object info is fetched from either the data
+ *      panel or Workspace (if unavailable). This is done a little differently
+ *      depending on whether model.value is an UPA or just a string.
+ *      b. if model.value is null/undefined at this point, nothing is displayed
+ * 3. a listener to the 'data' channel's 'workspace-data-updated' message is set.
+ *    When triggered, this checks if the data object was updated and displays the
+ *    changed name if any.
+ * 4. Validation always succeeds. However, if the object no longer exists in the
+ *    Workspace (or the user doesn't have access to it), an error is displayed.
+ */
+
 define([
     'bluebird',
     'jquery',
-    'underscore',
     'common/html',
-    'widgets/appWidgets2/validation',
     'common/events',
     'common/runtime',
     'common/ui',
     'common/data',
-    'util/timeFormat',
     'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
-], (Promise, $, _, html, Validation, Events, Runtime, UI, Data, TimeFormat, WidgetCommon) => {
+], (Promise, $, html, Events, Runtime, UI, Data, WidgetCommon) => {
     'use strict';
 
     // Constants
     const t = html.tag,
         button = t('button'),
         div = t('div'),
-        span = t('span'),
-        b = t('b'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
         const spec = config.parameterSpec,
-            objectRefType = config.referenceType || 'name',
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
             model = {
-                blacklistValues: undefined,
-                availableValues: undefined,
-                availableValuesMap: {},
-                value: undefined,
-            },
-            eventListeners = [];
-        let parent, container, ui;
-
-        // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
-        model.blacklistValues = []; //config.blacklist || [];
-
-        function objectInfoHasRef(objectInfo, ref) {
-            if (objectInfo.dataPaletteRef) {
-                return objectInfo.dataPaletteRef === ref;
-            }
-            if (/\//.test(ref)) {
-                return objectInfo.ref;
-            }
-            return objectInfo.name;
-        }
+                value: undefined, // the given value on startup
+                objectInfo: undefined, // the object info structure from the Workspace
+            };
+        let parent, container, ui, workspaceListener;
 
         function makeInputControl() {
-            let selectOptions;
-            if (model.availableValues) {
-                const filteredOptions = [];
-                selectOptions = model.availableValues
-                    .filter((objectInfo, idx) => {
-                        if (model.blacklistValues) {
-                            return !model.blacklistValues.some((value) => {
-                                if (objectInfoHasRef(objectInfo, value)) {
-                                    filteredOptions.push(idx);
-                                    return true;
-                                }
-                                return false;
-                            });
-                        }
-                    })
-                    .map((objectInfo, idx) => {
-                        let selected = false;
-                        const ref = idx;
-                        if (objectInfoHasRef(objectInfo, model.value)) {
-                            selected = true;
-                        }
-                        return option(
-                            {
-                                value: ref,
-                                selected: selected,
-                                disabled: true,
-                            },
-                            objectInfo.name
-                        );
-                    });
+            const selectOptions = [];
+            if (model.objectInfo) {
+                selectOptions.push(
+                    option(
+                        {
+                            value: model.objectInfo.ref,
+                            selected: true,
+                            disabled: true,
+                        },
+                        model.objectInfo.name
+                    )
+                );
             }
-
             // CONTROL
 
             const selectElem = select(
@@ -105,139 +85,63 @@ define([
 
         // CONTROL
 
-        function getControlValue() {
-            const control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-            if (selected.length === 0) {
-                return;
-            }
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            return selected.item(0).value;
-        }
-
-        function setControlValue(value) {
-            let stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = value;
-            }
-
+        /**
+         * Updates the Select2 control value based on the model's current object info.
+         */
+        function updateControlValue() {
             const control = ui.getElement('input-container.input');
-
-            // NB id used as String since we are comparing it below to the actual dom
-            // element id
-            const currentSelectionId = String(model.availableValuesMap[stringValue]);
-
-            $(control).val(currentSelectionId).trigger('change.select2');
+            $(control).find('option:first').trigger('change');
         }
 
         // MODEL
-
         function setModelValue(value) {
-            if (model.value === undefined) {
-                return;
-            }
-            if (model.value !== value) {
+            return inputToObjectInfo(value).then((objInfo) => {
                 model.value = value;
-            }
+                model.objectInfo = objInfo;
+                updateControlValue();
+            });
         }
 
         function resetModelValue() {
-            setModelValue(spec.data.defaultValue);
-        }
-
-        function getModelValue() {
-            return model.value;
-        }
-
-        // VALIDATION
-
-        function validate() {
-            return Promise.try(() => {
-                let processedValue = '';
-                const objInfo = model.availableValues[getControlValue()],
-                    validationOptions = {
-                        required: spec.data.constraints.required,
-                        authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url'),
-                    };
-
-                if (objInfo && objInfo.dataPaletteRef) {
-                    return Validation.validateWorkspaceDataPaletteRef(
-                        objInfo.dataPaletteRef,
-                        validationOptions
-                    );
-                }
-
-                if (objInfo) {
-                    processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
-                }
-
-                switch (objectRefType) {
-                    case 'ref':
-                        return Validation.validateWorkspaceObjectRef(
-                            processedValue,
-                            validationOptions
-                        );
-                    case 'name':
-                    default:
-                        return Validation.validateWorkspaceObjectName(
-                            processedValue,
-                            spec.data.constraints,
-                            validationOptions
-                        );
-                }
-            });
-        }
-
-        function getObjectsByTypes_datalist(types) {
-            return Data.getObjectsByTypes(types, bus, (result) => {
-                doWorkspaceUpdated(result.data);
-            }).then((result) => {
-                return result.data;
-            });
-        }
-
-        function fetchData() {
-            const types = spec.data.constraints.types;
-            return getObjectsByTypes_datalist(types).then((objects) => {
-                objects.sort((a, b) => {
-                    if (a.saveDate < b.saveDate) {
-                        return 1;
-                    }
-                    if (a.saveDate === b.saveDate) {
-                        return 0;
-                    }
-                    return -1;
-                });
-                return objects;
-            });
+            return setModelValue(spec.data.defaultValue);
         }
 
         /**
-         * Formats the display of an object in the dropdown.
+         * Converts an input data string passed to this widget into an Object Info
+         * structure. Does this in one of a few ways.
+         * 1. If the string looks like an object ref (xx/yy/zz or xx/yy), this
+         *    calls out to the workspace to look it up.
+         * 2. If the string is just a plain string, we assume this is the object name
+         *    and attempt to look it up that way.
+         * 3. If the input string is empty/null, an empty object info structure is
+         *    returned
+         * @param {string} inputData
          */
-        function formatObjectDisplay(object) {
-            if (!object.id) {
-                return $('<div style="display:block; height:20px">').append(object.text);
+        function inputToObjectInfo(inputData) {
+            if (!inputData) {
+                return Promise.resolve({
+                    name: null,
+                    ref: null,
+                });
+            } else if (/\//.test(inputData)) {
+                // if there's at least one / then it's a reference we can look up
+                return Data.getObjectsByRef([inputData])
+                    .then((objInfos) => Object.values(objInfos)[0])
+                    .catch((error) => {
+                        console.error(error);
+                        return {
+                            name: `Error resolving ${inputData}`,
+                            ref: inputData,
+                        };
+                    });
+            } else {
+                // if there are no slashes, we can make no assumptions about the
+                // workspace it came from, and we just treat the object as a name
+                return Promise.resolve({
+                    name: inputData,
+                    ref: null,
+                });
             }
-            const objectInfo = model.availableValues[object.id];
-            return $(
-                div([
-                    span({ style: 'word-wrap: break-word' }, [b(objectInfo.name)]),
-                    ' (v' + objectInfo.version + ')<br>',
-                    div({ style: 'margin-left: 7px' }, [
-                        '<i>' + objectInfo.typeName + '</i><br>',
-                        'Narrative id: ' + objectInfo.wsid + '<br>',
-                        'updated ' +
-                            TimeFormat.getTimeStampStr(objectInfo.save_date) +
-                            ' by ' +
-                            objectInfo.saved_by,
-                    ]),
-                ])
-            );
         }
 
         /*
@@ -248,7 +152,7 @@ define([
         function render() {
             return Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(events);
+                    inputControl = makeInputControl();
 
                 ui.setContent('input-container', '');
                 const container = ui.getElement('input-container');
@@ -265,12 +169,15 @@ define([
                 $(ui.getElement('input-container.input'))
                     .select2({
                         readonly: true,
-                        templateResult: formatObjectDisplay,
                         templateSelection: function (object) {
-                            if (!object.id) {
-                                return object.text;
+                            let text = object.text;
+                            if (model.objectInfo) {
+                                text = model.objectInfo.name;
+                                if (model.objectInfo.version) {
+                                    text += ` (v${model.objectInfo.version})`;
+                                }
                             }
-                            return model.availableValues[object.id].name;
+                            return text;
                         },
                     })
                     .on('advanced-shown.kbase', (e) => {
@@ -285,111 +192,87 @@ define([
          * rows may be inserted.
          * For the objectInput, there is only ever one control.
          */
-        function layout(events) {
+        function layout() {
             const content = div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content: content,
-                events: events,
-            };
+            return content;
         }
 
-        function autoValidate() {
-            return validate().then((result) => {
-                channel.emit('validation', {
-                    errorMessage: result.errorMessage,
-                    diagnosis: result.diagnosis,
-                });
-            });
-        }
-
-        /*
-         * Handle the workspace being updated and reflecting that correctly
-         * in the ui.
-         * Re-fetch available values, if different than existing, then
-         * rebuild the control. If there is a current value and it is no longer
-         * available, issue a warning
+        /**
+         * Updates the displayed name string in the following situations:
+         * 1. We have a workspace UPA in the model.
+         * 2. That UPA shows up in the given data.
+         * 3. They have different names.
+         *
+         * In this case, we pass along the name field given here, assuming it's
+         * a new name.
+         * @param {Array} data
          */
-        function doWorkspaceUpdated(data) {
-            // compare to availableData.
-            if (!_.isEqual(data, model.availableValues)) {
-                model.availableValues = data;
-                model.availableValuesMap = {};
-                // our map is a little strange.
-                // we have dataPaletteRefs, which are always ref paths
-                // we have object ref or names otherwise.
-                // whether we are using refs or names depends on the
-                // config setting. This is because some apps don't yet accept
-                // names...
-                // So our key is either dataPaletteRef or (ref or name)
-                model.availableValues.forEach((objectInfo, index) => {
-                    let id;
-                    if (objectInfo.dataPaletteRef) {
-                        id = objectInfo.dataPaletteRef;
-                    } else if (objectRefType === 'ref') {
-                        id = objectInfo.ref;
-                    } else {
-                        id = objectInfo.name;
-                    }
-                    model.availableValuesMap[id] = index;
-                });
-                return render().then(() => {
-                    setControlValue(getModelValue());
-                    autoValidate();
-                });
+        function propagateWorkspaceUpdate(data) {
+            if (!model.objectInfo || !model.objectInfo.ref) {
+                return;
+            }
+            for (const objInfo of data) {
+                if (
+                    objInfo.ref === model.objectInfo.ref &&
+                    objInfo.name !== model.objectInfo.name
+                ) {
+                    model.objectInfo = objInfo;
+                    updateControlValue();
+                    return;
+                }
             }
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(() => {
-                parent = arg.node;
-                container = parent.appendChild(document.createElement('div'));
-                ui = UI.make({ node: container });
+            parent = arg.node;
+            container = parent.appendChild(document.createElement('div'));
+            ui = UI.make({ node: container });
 
-                const events = Events.make(),
-                    theLayout = layout(events);
+            container.innerHTML = layout();
 
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
+            if (config.initialValue !== undefined) {
+                model.value = config.initialValue;
+            }
 
-                if (config.initialValue !== undefined) {
-                    model.value = config.initialValue;
-                }
-
-                return fetchData()
-                    .then((data) => {
-                        doWorkspaceUpdated(data);
-                        return render();
-                    })
-                    .then(() => {
-                        channel.on('reset-to-defaults', () => {
-                            resetModelValue();
-                        });
-                        channel.on('update', (message) => {
-                            setModelValue(message.value);
-                        });
-
-                        setControlValue(getModelValue());
-                        autoValidate();
+            return inputToObjectInfo(config.initialValue)
+                .then((objInfo) => {
+                    model.objectInfo = objInfo;
+                    return render();
+                })
+                .then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
-            });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+
+                    workspaceListener = bus.channel('data').plisten({
+                        key: {
+                            type: 'workspace-data-updated',
+                        },
+                        handle: (message) => {
+                            propagateWorkspaceUpdate(message.objectInfo);
+                        },
+                    });
+                });
         }
 
         function stop() {
-            return Promise.try(() => {
-                if (container) {
-                    parent.removeChild(container);
-                }
-                bus.stop();
-                eventListeners.forEach((id) => {
-                    runtime.bus().removeListener(id);
-                });
-            });
+            if (container) {
+                parent.removeChild(container);
+            }
+            bus.stop();
+            if (workspaceListener) {
+                runtime.bus().removeListener(workspaceListener);
+            }
+            return Promise.resolve();
         }
 
         // INIT
@@ -401,8 +284,6 @@ define([
     }
 
     return {
-        make: function (config) {
-            return factory(config);
-        },
+        make: (config) => factory(config),
     };
 });

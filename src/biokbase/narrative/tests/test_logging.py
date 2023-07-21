@@ -5,8 +5,10 @@ import logging
 import os
 import time
 import unittest
-from . import util
+
 from biokbase.narrative.common import kblogging
+
+from . import util
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 
@@ -14,7 +16,6 @@ _log = util.test_logger("test_log_client")
 
 
 class TestClient(unittest.TestCase):
-
     poll_sec = 0.5
     recv, recv_thread = None, None
 

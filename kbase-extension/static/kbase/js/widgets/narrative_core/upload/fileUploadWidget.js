@@ -354,7 +354,7 @@ define([
             $('#clear-all-button-container').remove();
             $('#clear-all-button').remove();
             this.$dropzoneElem.find('#global-info').addClass('hide');
-            $(this.$dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
+            $(this.$dropzoneElem.find('#total-progress .progress-bar')).css({ width: '' });
             this.$dropzoneElem.css('justify-content', 'center');
             this.updateUploadWarning();
         },

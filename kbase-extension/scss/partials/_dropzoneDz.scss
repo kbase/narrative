@@ -79,7 +79,6 @@
 
 .kb-dropzone {
   border: 2px dashed use_color('mid-blue') !important;
-  // margin-bottom: 5px;
   max-height: 300px;
   overflow-y: auto;
 
@@ -89,13 +88,27 @@
     margin-bottom: 5px;
   }
 
+  // .kb-dropzone .dz-message 
   .dz-message {
     color: rgb(0 0 0);
     font: normal 400 24px/28px $typeface-page-text;
-    // margin: 2em 4.5em;
     mix-blend-mode: normal;
     text-align: center;
     margin: 0;
+
+    // .kb-dropzone .dz-message p
+    p {
+      font-size: 80%;
+      margin-top: 0.4rem;
+    }
+
+    // Augments bootstrap alert within the message area
+    // .kb-dropzone .dz-message alert
+    .alert {
+      font-size: 80%;
+      padding: 0.5rem;
+      margin: 0;
+    }
   }
 
   // .kb-dropzone__message--upload
@@ -111,24 +124,17 @@
     justify-content: center;
   }
 
-  &.dropzone.dz-clickable button {
-    cursor: pointer;
-  }
+  // .kb-dropzone.dropzone.dz-clickable
+  &.dropzone.dz-clickable {
 
-  &.dropzone.dz-clickable a {
-    cursor: pointer;
-  }
-
-  &.dropzone {
-    .dz-message p {
-      font-size: 80%;
-      margin-top: 0.4rem;
+     // .kb-dropzone.dropzone.dz-clickable button
+    button {
+      cursor: pointer;
     }
 
-    .dz-message .alert {
-      font-size: 80%;
-      padding: 0.5rem;
-      margin: 0;
+     // .kb-dropzone.dropzone.dz-clickable a
+    a {
+      cursor: pointer;
     }
   }
 }

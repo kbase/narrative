@@ -31,7 +31,10 @@
 
     // Bootstrap overrides
 
-    // necessary?
+    // Probably not necessary as bootstrap already sets the width to 0 in the class,
+    // and no other css in the Narrative codebase seems to override the progress-bar class.
+    // Still, there may have been (or still be) BS progress-bar quirkiness, so leave alone
+    // until someone has time to investigate.
     .progress-bar {
         width: 0;
     }

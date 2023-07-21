@@ -7,7 +7,7 @@ define([
 ], (Promise, Handlebars, Utils, DynamicServiceClient, common) => {
     'use strict';
 
-    const WorkspaceDataSource = Object.create(
+    return Object.create(
         {},
         {
             init: {
@@ -15,10 +15,8 @@ define([
                     common.requireArg(arg, 'config');
                     common.requireArg(arg, 'token');
                     common.requireArg(arg, 'urls.ServiceWizard');
-                    common.requireArg(arg, 'pageSize');
 
-                    this.pageSize = arg.pageSize;
-                    this.currentPage = null;
+                    this.paging = false;
                     this.config = arg.config;
                     this.queryExpression = null;
                     this.availableData = null;
@@ -59,17 +57,6 @@ define([
                     return newQueryInput.replace(/[*]/g, ' ').trim().toLowerCase();
                 },
             },
-            setPage: {
-                value: function (newPage) {
-                    let page;
-                    if (newPage) {
-                        page = newPage - 1;
-                    } else {
-                        page = 0;
-                    }
-                    this.page = page;
-                },
-            },
             search: {
                 value: function (query) {
                     return Promise.try(() => {
@@ -80,7 +67,6 @@ define([
                         const now = new Date().getTime();
                         const queryState = {
                             query: query,
-                            page: query.page,
                             started: now,
                             promise: null,
                             canceled: false,
@@ -90,19 +76,9 @@ define([
 
                         queryState.promise = this.loadData()
                             .then(() => {
-                                // Prepare page number
-                                this.setPage(query.page);
-
                                 // Prepare search input
                                 const searchExpression = this.parseQuery(query.input);
-
-                                this.applyQuery(searchExpression);
-
-                                const paged = this.applyPage();
-
-                                this.fetchedDataCount = this.page * this.pageSize + paged.length;
-
-                                return this.transform();
+                                return this.applyQuery(searchExpression);
                             })
                             .finally(() => {
                                 queryState.promise = null;
@@ -130,24 +106,12 @@ define([
                     this.filteredData = this.availableData.filter((item) => {
                         return this.config.searchFields.some((field) => {
                             const value = Utils.getProp(item, field);
-                            if (value && value.toLowerCase().indexOf(queryExpression) >= 0) {
-                                return true;
-                            }
-                            return false;
+                            return !!(value && value.toLowerCase().indexOf(queryExpression) >= 0);
                         });
                     });
+                    this.currentResultData = this.filteredData;
                     this.filteredDataCount = this.filteredData.length;
                     return this.filteredData;
-                },
-            },
-            applyPage: {
-                value: function () {
-                    // get page range.
-                    const start = this.pageSize * this.page;
-                    const end = start + this.pageSize;
-
-                    this.currentResultData = this.filteredData.slice(start, end);
-                    return this.currentResultData;
                 },
             },
             loadData: {
@@ -164,58 +128,56 @@ define([
                                 this.config.type
                             )
                             .then((data) => {
-                                this.availableData = data;
-                                this.availableDataCount = this.availableData.length;
-                                return this.availableData.sort((a, b) => {
-                                    const sortField = this.config.sort[0].field;
-                                    const direction = this.config.sort[0].ascending ? 1 : -1;
-                                    const aValue = Utils.getProp(a, sortField);
-                                    const bValue = Utils.getProp(b, sortField);
-                                    if (aValue < bValue) {
-                                        return direction * -1;
-                                    } else if (aValue === bValue) {
-                                        return 0;
-                                    } else {
-                                        return direction;
-                                    }
-                                });
+                                this.availableDataCount = data.length;
+                                this.fetchedDataCount = data.length;
+                                this.availableData = data
+                                    .sort((a, b) => {
+                                        const sortField = this.config.sort[0].field;
+                                        const direction = this.config.sort[0].ascending ? 1 : -1;
+                                        const aValue = Utils.getProp(a, sortField);
+                                        const bValue = Utils.getProp(b, sortField);
+                                        if (aValue < bValue) {
+                                            return direction * -1;
+                                        } else if (aValue === bValue) {
+                                            return 0;
+                                        } else {
+                                            return direction;
+                                        }
+                                    })
+                                    .map((item) => {
+                                        const name = this.titleTemplate(item);
+                                        const metadataList = common.applyMetadataTemplates(
+                                            this.metadataTemplates,
+                                            item
+                                        );
+                                        const ref = {
+                                            workspaceId: item.info[6],
+                                            objectId: item.info[0],
+                                            version: item.info[4],
+                                        };
+                                        ref.ref = [ref.workspaceId, ref.objectId, ref.version].join(
+                                            '/'
+                                        );
+                                        ref.dataviewId = ref.ref;
+                                        return {
+                                            info: item.info,
+                                            id: item.info[0],
+                                            objectId: item.info[0],
+                                            name: name,
+                                            objectName: item.info[1],
+                                            metadata: item.metadata,
+                                            metadataList,
+                                            ws: this.config.workspaceName,
+                                            type: this.config.type,
+                                            attached: false,
+                                            workspaceReference: ref,
+                                        };
+                                    });
+                                return this.availableData;
                             });
-                    });
-                },
-            },
-            // TODO: look at this structure, fold into above.
-            transform: {
-                value: function () {
-                    return this.currentResultData.map((item) => {
-                        const name = this.titleTemplate(item);
-                        const metadata = common.applyMetadataTemplates(
-                            this.metadataTemplates,
-                            item
-                        );
-                        const ref = {
-                            workspaceId: item.info[6],
-                            objectId: item.info[0],
-                            version: item.info[4],
-                        };
-                        ref.ref = [ref.workspaceId, ref.objectId, ref.version].join('/');
-                        ref.dataviewId = ref.ref;
-                        return {
-                            info: item.info,
-                            id: item.info[0],
-                            objectId: item.info[0],
-                            name: name,
-                            objectName: item.info[1],
-                            metadata: metadata,
-                            ws: this.config.workspaceName,
-                            type: this.config.type,
-                            attached: false,
-                            workspaceReference: ref,
-                        };
                     });
                 },
             },
         }
     );
-
-    return WorkspaceDataSource;
 });

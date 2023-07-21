@@ -5,12 +5,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
 ## Unreleased
-
-- UIP-28 - update Google Analytics tags to GA4 properties
-- PTV-1810 - address object name display issues in the View Configure tab of app cells.
-- PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
-- PTV-1878 - fix some failing front end unit tests
-- PTV-1886 - add file size limit for the import staging area
+-   PTV-1875 - fix public data paging issue by removing paging from workspace data sources
+-   UIP-28 - update Google Analytics tags to GA4 properties
+-   PTV-1810 - address object name display issues in the View Configure tab of app cells.
+-   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
+-   PTV-1878 - fix some failing front end unit tests
+-   PTV-1886 - add file size limit for the import staging area
 
 ### Dependency Changes
 
@@ -39,7 +39,6 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - stylelint-config-standard ^22.0.0 -> ^34.0.0
   - webdriverio 8.10.2 -> 8.12.3
 
-
 - Python dependency updates
   - beautifulsoup4: 4.12.1 -> 4.12.2
   - coverage: 7.2.2 -> 7.2.7
@@ -54,9 +53,8 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - requests: 2.28.2 -> 2.31.0
 
 ## Version 5.1.4
-
--   PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
--   PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells.
+-    PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
+-    PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells.
 
 Dependency Changes
 
@@ -627,7 +625,7 @@ Dependency Changes
 -   SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.
 -   Re-enable security measure that prevents Markdown cells from rendering JavaScript. We're about a year past the point when that was necessary.
 -   SCT-628 - adds a viewer for the CompoundSet object.
--         - Tornado dependency to 5.0.0
+-     - Tornado dependency to 5.0.0
 -   SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 -   SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
 -   SCT-590 - add cache busting to the public data mapping lookup. No more force-refreshing!

@@ -1,5 +1,4 @@
-<form class="kb-dropzone dropzone"
-    style="min-height:100px; display: flex; flex-direction: column; justify-content: center;">
+<form class="kb-dropzone dropzone">
     <div id="global-info" class="kb-dropzone-progress__container hide">
         <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0"
             aria-valuemax="100" aria-valuenow="0">
@@ -15,9 +14,7 @@
     </div>
     <div class="dz-message">
         <div>Drop files or folders here to upload them</div>
-        <div style="font-size: 80%; margin-top: 0.5rem">or click anywhere here to open a file selection dialog.</div>
-        <div style="font-size: 80%; padding: 0.4rem; margin: 0;" class="alert alert-info">Note: File size limited to {{
-            maxFilesize
-            }} </div>
+        <p>or click anywhere here to open a file selection dialog.</p>
+        <div class="alert alert-info">Note: File size limited to {{maxFilesize}} </div>
     </div>
 </form>

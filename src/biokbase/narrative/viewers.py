@@ -4,7 +4,7 @@ from clustergrammer_widget.clustergrammer import Network
 import pandas as pd
 
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.system import system_variable
 
 
 def view_as_clustergrammer(

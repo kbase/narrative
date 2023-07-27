@@ -14,13 +14,15 @@ from biokbase.narrative.app_util import (
     extract_ws_refs,
     map_outputs_from_state,
     resolve_ref_if_typed,
-    strict_system_variable,
-    system_variable,
     transform_param_value,
     validate_parameters,
 )
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.system import (
+    strict_system_variable,
+    system_variable
+)
 from biokbase.narrative.widgetmanager import WidgetManager
 
 from . import specmanager

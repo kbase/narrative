@@ -4,7 +4,7 @@ A collection of helpful utilities for running batches of jobs.
 from biokbase.narrative.staging.helper import Helper as StagingHelper
 from . import specmanager
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.system import system_variable
 import re
 from decimal import Decimal
 from itertools import product

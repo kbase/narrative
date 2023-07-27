@@ -2,19 +2,14 @@
 Tests for the app_util module
 """
 import unittest
-import biokbase.auth
 from biokbase.narrative.app_util import (
     check_tag,
-    system_variable,
     get_result_sub_path,
     map_inputs_from_job,
     map_outputs_from_state,
 )
-from .narrative_mock.mockclients import get_mock_client
 import os
-from unittest import mock
 from . import util
-import time
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
@@ -48,59 +43,6 @@ class AppUtilTestCase(unittest.TestCase):
     def test_check_tag_bad_except(self):
         with self.assertRaises(ValueError):
             check_tag(self.bad_tag, raise_exception=True)
-
-    def test_sys_var_user(self):
-        if self.user_token:
-            biokbase.auth.set_environ_token(self.user_token)
-            self.assertEqual(system_variable("user_id"), self.user_id)
-
-    def test_sys_var_no_ws(self):
-        if "KB_WORKSPACE_ID" in os.environ:
-            del os.environ["KB_WORKSPACE_ID"]
-        self.assertIsNone(system_variable("workspace"))
-
-    def test_sys_var_workspace(self):
-        os.environ["KB_WORKSPACE_ID"] = self.workspace
-        self.assertEqual(system_variable("workspace"), self.workspace)
-
-    def test_sys_var_no_ws_id(self):
-        if "KB_WORKSPACE_ID" in os.environ:
-            del os.environ["KB_WORKSPACE_ID"]
-        self.assertIsNone(system_variable("workspace_id"))
-
-    @mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
-    def test_sys_var_workspace_id(self):
-        os.environ["KB_WORKSPACE_ID"] = self.workspace
-        self.assertEqual(system_variable("workspace_id"), 12345)
-
-    @mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
-    def test_sys_var_workspace_id_except(self):
-        os.environ["KB_WORKSPACE_ID"] = "invalid_workspace"
-        self.assertIsNone(system_variable("workspace_id"))
-
-    def test_sys_var_user_bad(self):
-        biokbase.auth.set_environ_token(self.bad_fake_token)
-        self.assertIsNone(system_variable("user_id"))
-
-    def test_sys_var_user_none(self):
-        if "KB_AUTH_TOKEN" in os.environ:
-            del os.environ["KB_AUTH_TOKEN"]
-        self.assertIsNone(system_variable("user_id"))
-
-    def test_sys_var_time_ms(self):
-        cur_t = int(time.time() * 1000)
-        ts = system_variable("timestamp_epoch_ms")
-        self.assertTrue(cur_t <= ts)
-        self.assertTrue(ts - cur_t < 1000)
-
-    def test_sys_var_time_sec(self):
-        cur_t = int(time.time())
-        ts = system_variable("timestamp_epoch_sec")
-        self.assertTrue(cur_t <= ts)
-        self.assertTrue(ts - cur_t < 1)
-
-    def test_sys_var_bad(self):
-        self.assertIsNone(system_variable(self.bad_tag))
 
     def test_get_result_sub_path(self):
         result = [{"report": "this_is_a_report", "report_ref": "123/456/7"}]

@@ -9,9 +9,9 @@ import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     map_outputs_from_state,
     validate_parameters,
-    check_tag,
-    system_variable,
+    check_tag
 )
+from .system import system_variable
 from .upa import is_upa, is_ref
 
 """

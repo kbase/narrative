@@ -267,7 +267,6 @@ class JobManagerTest(unittest.TestCase):
         self.assertIsInstance(job, Job)
 
     def test__get_job_fail(self):
-
         inputs = [None, "", JOB_NOT_FOUND]
 
         for bad_input in inputs:
@@ -740,12 +739,11 @@ class JobManagerTest(unittest.TestCase):
             job_id = params["job_id"]
             if job_id == BATCH_PARENT:
                 return {"child_jobs": new_child_ids}
-            elif job_id in TEST_JOBS:
+            if job_id in TEST_JOBS:
                 return get_test_job(job_id)
-            elif job_id == JOB_NOT_FOUND:
+            if job_id == JOB_NOT_FOUND:
                 return {"job_id": job_id, "status": generate_error(job_id, "not_found")}
-            else:
-                raise Exception()
+            raise ValueError(f"Invalid job id: {job_id}")
 
         with mock.patch.object(
             MockClients, "check_job", side_effect=mock_check_job

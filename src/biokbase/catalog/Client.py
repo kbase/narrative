@@ -15,7 +15,7 @@ except BaseException:
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
-class Catalog(object):
+class Catalog:
     def __init__(
         self,
         url=None,

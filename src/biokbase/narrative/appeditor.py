@@ -1,7 +1,9 @@
+import json
+
 from IPython.display import Javascript
 from jinja2 import Template
+
 from biokbase.narrative import clients
-import json
 
 
 def generate_app_cell(validated_spec=None, spec_tuple=None):

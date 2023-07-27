@@ -1,7 +1,8 @@
-from biokbase.narrative.staging.helper import Helper
-import unittest
 import os
+import unittest
 from unittest.mock import patch
+
+from biokbase.narrative.staging.helper import Helper
 
 
 class StagingHelperTest(unittest.TestCase):

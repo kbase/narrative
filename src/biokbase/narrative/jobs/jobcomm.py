@@ -469,7 +469,7 @@ class JobComm:
         job_id_list = self._get_job_ids(req)
         log_output = self._jm.get_job_logs_for_list(
             job_id_list,
-            num_lines=req.rq_data.get(PARAM["NUM_LINES"], None),
+            num_lines=req.rq_data.get(PARAM["NUM_LINES"]),
             first_line=req.rq_data.get(PARAM["FIRST_LINE"], 0),
             latest=req.rq_data.get(PARAM["LATEST"], False),
         )

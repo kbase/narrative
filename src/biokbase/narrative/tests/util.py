@@ -1,19 +1,19 @@
+import configparser
+import json
 import logging
+import os
 import pickle
+import socket
+import socketserver
 import struct
 import threading
 import time
 import unittest
-import socketserver
-import socket
-import os
-import json
-import configparser
 from contextlib import closing
-from biokbase.narrative.common import util
-from biokbase.workspace.client import Workspace
-from biokbase.narrative.common.narrative_ref import NarrativeRef
 
+from biokbase.narrative.common import util
+from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.workspace.client import Workspace
 
 _log = logging.getLogger("kbtest")
 _hnd = logging.StreamHandler()
@@ -84,8 +84,7 @@ class ConfigTests:
         """
         if from_root:
             return os.path.join(self._path_root, filename)
-        else:
-            return os.path.join(self._path_prefix, filename)
+        return os.path.join(self._path_prefix, filename)
 
 
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
@@ -101,9 +100,9 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     if len(nar_data) > 0:
         nar_json = json.dumps(nar_data[0])
         if file_name is not None:
-            f = open(file_name, "w")
-            f.write(nar_json)
-            f.close()
+            with open(file_name, "w") as f:
+                f.write(nar_json)
+                f.close()
         return nar_json
     return {}
 
@@ -122,9 +121,9 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     """
 
     # read the file
-    f = open(nar_file, "r")
-    nar = json.loads(f.read())
-    f.close()
+    with open(nar_file, "r") as f:
+        nar = json.loads(f.read())
+        f.close()
 
     # do some setup.
     current_nar_metadata = ws_metadata
@@ -185,11 +184,11 @@ def read_token_file(path):
     """
     if not os.path.isfile(path):
         return None
-    else:
-        with open(path, "r") as f:
-            token = f.read().strip()
-            f.close()
-            return token
+
+    with open(path, "r") as f:
+        token = f.read().strip()
+        f.close()
+        return token
 
 
 def read_json_file(path):

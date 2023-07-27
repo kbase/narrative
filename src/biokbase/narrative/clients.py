@@ -1,9 +1,9 @@
-from biokbase.workspace.client import Workspace
-from biokbase.narrative_method_store.client import NarrativeMethodStore
 from biokbase.catalog.Client import Catalog
-from biokbase.service.Client import Client as ServiceClient
 from biokbase.execution_engine2.execution_engine2Client import execution_engine2
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative_method_store.client import NarrativeMethodStore
+from biokbase.service.Client import Client as ServiceClient
+from biokbase.workspace.client import Workspace
 
 
 def get(client_name, token=None):

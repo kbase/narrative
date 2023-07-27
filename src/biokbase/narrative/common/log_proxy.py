@@ -43,7 +43,7 @@ class DBAuthError(Exception):
         Exception.__init__(self, msg)
 
 
-class Configuration(object):
+class Configuration:
     def __init__(self, input_file):
         """
         Read and parse configuration from input file.
@@ -336,9 +336,10 @@ class LogForwarder(asyncore.dispatcher):
         """
         client = pymongo.MongoClient(host=config.db_host, port=config.db_port)
         database = client[config.db]
-        if config.user is not None:
-            if not database.authenticate(config.user, password=config.password):
-                raise DBAuthError(config.db_host, config.db_port, config.db)
+        if config.user is not None and not database.authenticate(
+            config.user, password=config.password
+        ):
+            raise DBAuthError(config.db_host, config.db_port, config.db)
         collection = database[config.collection]
         return collection
 
@@ -400,7 +401,7 @@ class LogStreamForwarder(asyncore.dispatcher):
 # Handlers
 
 
-class Handler(object):
+class Handler:
     # extract these from the incoming records,
     # incoming name is in key, outgoing name is in value
     EXTRACT_META = {
@@ -456,7 +457,7 @@ class SyslogHandler(Handler):
 # Log record
 
 
-class DBRecord(object):
+class DBRecord:
     """Convert logged record (dict) to object that we can store in a DB."""
 
     def __init__(self, record, strict=False):

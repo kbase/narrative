@@ -10,7 +10,7 @@ is on.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
-class UserService(object):
+class UserService:
     def __init__(self):
         pass
 

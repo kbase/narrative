@@ -1,15 +1,17 @@
 """
 A collection of helpful utilities for running batches of jobs.
 """
-from biokbase.narrative.staging.helper import Helper as StagingHelper
-from . import specmanager
-import biokbase.narrative.clients as clients
-from biokbase.narrative.system import system_variable
 import re
+from copy import deepcopy
 from decimal import Decimal
 from itertools import product
-from copy import deepcopy
 from string import Formatter, Template
+
+import biokbase.narrative.clients as clients
+from biokbase.narrative.staging.helper import Helper as StagingHelper
+from biokbase.narrative.system import system_variable
+
+from . import specmanager
 
 
 def get_input_scaffold(app, tag="release", use_defaults=False):
@@ -33,7 +35,7 @@ def get_input_scaffold(app, tag="release", use_defaults=False):
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
-    input_scaffold = dict()
+    input_scaffold = {}
     for p in spec_params:
         if p["id"] not in grouped_params:
             input_scaffold[p["id"]] = _make_scaffold_input(
@@ -49,8 +51,8 @@ def _index_spec_params(spec_params):
     used in groups.
     This gets returned as a tuple (indexed params, group param ids)
     """
-    spec_params_dict = dict()
-    grouped_parents = dict()
+    spec_params_dict = {}
+    grouped_parents = {}
     for p in spec_params:
         spec_params_dict[p["id"]] = p
         # groupify the parameters - identify params that are part of groups, and don't include
@@ -69,15 +71,14 @@ def _make_scaffold_input(param, params_dict, use_defaults):
     params_dict = dict of all params.
     """
     if param.get("is_group", False):
-        group_dict = dict()
+        group_dict = {}
         for group_param_id in param.get("parameter_ids", []):
             group_dict[group_param_id] = _make_scaffold_input(
                 params_dict[group_param_id], params_dict, use_defaults
             )
         if param.get("allow_multiple"):
             return [group_dict]
-        else:
-            return group_dict
+        return group_dict
     if use_defaults and param.get("default"):
         return param.get("default")
     return None
@@ -117,7 +118,7 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
     all_obj = service.sync_call(
         "NarrativeService.list_objects_with_sets", [service_params]
     )[0]
-    obj_list = list()
+    obj_list = []
     for obj in all_obj["data"]:
         # filtration!
         # 1. ignore narratives
@@ -129,7 +130,7 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
             # if we're not strict, just search for the string
             if fuzzy_name is True and name not in obj["object_info"][1].lower():
                 continue
-            elif fuzzy_name is False and name != obj["object_info"][1].lower():
+            if fuzzy_name is False and name != obj["object_info"][1].lower():
                 continue
         upa_prefix = ""  # gavin's gonna wreck me.
         if "dp_info" in obj:  # seriously.
@@ -159,10 +160,8 @@ def list_files(name=None):
     files = staging.list()
     if not name:
         return files
-    filter_files = list()
     name = name.lower()
-    filter_files = [f for f in files if name in f.lower()]
-    return filter_files
+    return [f for f in files if name in f.lower()]
 
 
 def generate_input_batch(app, tag="release", **kwargs):
@@ -266,12 +265,12 @@ def generate_input_batch(app, tag="release", **kwargs):
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
     # Initial checking, make sure all kwargs exist as params.
-    input_vals = dict()
-    output_vals = dict()
+    input_vals = {}
+    output_vals = {}
     for k, v in kwargs.items():
         if k not in spec_params_dict:
             raise ValueError("{} is not a parameter".format(k))
-        elif spec_params_dict[k].get("is_output"):
+        if spec_params_dict[k].get("is_output"):
             output_vals[k] = v
         elif isinstance(v, tuple):
             # if it's a tuple, unravel it to generate values.
@@ -285,7 +284,7 @@ def generate_input_batch(app, tag="release", **kwargs):
 
     # makes the scaffold that we're going to adjust for each iteration
     input_scaffold = get_input_scaffold(app, tag=tag, use_defaults=True)
-    batch_inputs = list()
+    batch_inputs = []
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
     batch_size = 1
@@ -329,7 +328,7 @@ def _flatten_params(d):
 
     Group params are only one level deep, right?
     """
-    flat = dict()
+    flat = {}
     for k, v in d.items():
         if isinstance(v, dict):
             flat.update(_flatten_params(v))
@@ -395,8 +394,7 @@ def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
                             p_id
                         )
                     )
-                else:
-                    parsed_out_vals[p_id] = p["default"] + "${run_number}"
+                parsed_out_vals[p_id] = p["default"] + "${run_number}"
     return parsed_out_vals
 
 
@@ -415,9 +413,9 @@ def _is_singleton(input_value, param_info):
     whether we have a list / dict / (int or str) where allow_multiple=True.
     """
     if input_value and isinstance(input_value, list):
-        if not param_info.get("allow_multiple", False):
-            return False
-        elif isinstance(input_value[0], list):
+        if not param_info.get("allow_multiple", False) or isinstance(
+            input_value[0], list
+        ):
             return False
     return True
 

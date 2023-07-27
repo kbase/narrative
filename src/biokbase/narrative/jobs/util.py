@@ -39,7 +39,7 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
             "JOB_ID",
             "LATEST",
             "NUM_LINES",
-            "TS"
+            "TS",
         ],
     }
 

@@ -6,6 +6,7 @@ import os
 import signal
 import time
 import unittest
+
 from biokbase.narrative.common import log_proxy as proxy
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"

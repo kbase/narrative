@@ -1,4 +1,4 @@
-class MockComm(object):
+class MockComm:
     """
     Mock class for ipython.kernel.Comm
     This keeps the last message that was sent, so it can be retrieved and

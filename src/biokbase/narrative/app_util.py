@@ -1,5 +1,6 @@
-import re
 import json
+import re
+
 import biokbase.narrative.clients as clients
 from biokbase.narrative.system import system_variable
 
@@ -21,8 +22,7 @@ def check_tag(tag, raise_exception=False):
             "Can't find tag %s - allowed tags are %s"
             % (tag, ", ".join(app_version_tags))
         )
-    else:
-        return tag_exists
+    return tag_exists
 
 
 

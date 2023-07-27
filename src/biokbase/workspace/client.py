@@ -16,7 +16,7 @@ except BaseException:
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
-class Workspace(object):
+class Workspace:
     def __init__(
         self,
         url=None,

@@ -1,14 +1,17 @@
 """
 Tests for the app_util module
 """
+import os
 import unittest
+from unittest import mock
+
 from biokbase.narrative.app_util import (
     check_tag,
     get_result_sub_path,
     map_inputs_from_job,
     map_outputs_from_state,
 )
-import os
+
 from . import util
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"

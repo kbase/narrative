@@ -2,18 +2,20 @@
 Tests for the app_util module
 """
 import unittest
-from .narrative_mock.mockclients import get_mock_client, MockStagingHelper
 from unittest import mock
+
+import biokbase.narrative.jobs.specmanager
 from biokbase.narrative.jobs.batch import (
-    list_objects,
-    list_files,
-    get_input_scaffold,
     _generate_vals,
     _is_singleton,
-    generate_input_batch,
     _prepare_output_vals,
+    generate_input_batch,
+    get_input_scaffold,
+    list_files,
+    list_objects,
 )
-import biokbase.narrative.jobs.specmanager
+
+from .narrative_mock.mockclients import MockStagingHelper, get_mock_client
 
 
 class BatchTestCase(unittest.TestCase):

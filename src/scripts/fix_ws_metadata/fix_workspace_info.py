@@ -7,12 +7,14 @@ Fixes workspace info to do the following.
 5. Does nothing at all if there's > 1 narrative in the workspace.
 Note that while this fetches the Narrative object, it doesn't modify it in any way.
 """
-import sys
-import requests
 import argparse
 import json
-from biokbase.workspace.client import Workspace
+import sys
+
+import requests
+
 import biokbase.workspace.baseclient as baseclient
+from biokbase.workspace.client import Workspace
 
 DEFAULT_OUTPUT_FILE = "update_results.json"
 

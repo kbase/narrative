@@ -6,7 +6,7 @@ import functools
 import random
 import re
 import traceback
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Optional
 
 import biokbase.auth as auth
 import biokbase.narrative.clients as clients
@@ -207,9 +207,9 @@ class AppManager:
         batch_run_inputs = []
 
         for param_set in params:
-            spec_params_map = dict(
-                (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-            )
+            spec_params_map = {
+                spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+            }
             batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, param_set))
             batch_run_inputs.append(
                 self._map_inputs(
@@ -221,7 +221,7 @@ class AppManager:
 
         service_method = spec["behavior"]["kb_service_method"]
         service_name = spec["behavior"]["kb_service_name"]
-        service_ver = spec["behavior"].get("kb_service_version", None)
+        service_ver = spec["behavior"].get("kb_service_version")
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -416,7 +416,7 @@ class AppManager:
         cell_id: str = None,
         run_id: str = None,
         dry_run: bool = False,
-    ) -> Union[dict, None]:
+    ) -> Optional[dict]:
         """
         Attempts to run a batch of apps in bulk using the Execution Engine's run_app_batch endpoint.
         If a cell_id is provided, this sends various job messages over the comm channel, and returns None.
@@ -685,9 +685,9 @@ class AppManager:
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        spec_params_map = dict(
-            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
+        spec_params_map = {
+            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+        }
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
         input_vals = self._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map
@@ -695,7 +695,7 @@ class AppManager:
 
         service_method = spec["behavior"]["kb_service_method"]
         service_name = spec["behavior"]["kb_service_name"]
-        service_ver = spec["behavior"].get("kb_service_version", None)
+        service_ver = spec["behavior"].get("kb_service_version")
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -808,10 +808,9 @@ class AppManager:
             return wm.show_advanced_viewer_widget(
                 output_widget, widget_params, widget_state, cell_id=cell_id, tag=tag
             )
-        else:
-            return wm.show_output_widget(
-                output_widget, widget_params, cell_id=cell_id, tag=tag
-            )
+        return wm.show_output_widget(
+            output_widget, widget_params, cell_id=cell_id, tag=tag
+        )
 
     def run_local_app_advanced(
         self,
@@ -866,32 +865,33 @@ class AppManager:
     def _map_group_inputs(self, value, spec_param, spec_params):
         if isinstance(value, list):
             return [self._map_group_inputs(v, spec_param, spec_params) for v in value]
-        elif value is None:
-            return None
-        else:
-            mapped_value = {}
-            id_map = spec_param.get("id_mapping", {})
-            for param_id in id_map:
-                # ensure that the param referenced in the group param list
-                # exists in the spec.
-                # NB: This should really never happen if the sdk registration
-                # process validates them.
-                if param_id not in spec_params:
-                    msg = "Unknown parameter id in group mapping: " + param_id
-                    raise ValueError(msg)
-            for param_id in value:
-                target_key = id_map.get(param_id, param_id)
-                # Sets either the raw value, or if the parameter is an object
-                # reference the full object refernce (see the method).
-                if value[param_id] is None:
-                    target_val = None
-                else:
-                    target_val = resolve_ref_if_typed(
-                        value[param_id], spec_params[param_id]
-                    )
 
-                mapped_value[target_key] = target_val
-            return mapped_value
+        if value is None:
+            return None
+
+        mapped_value = {}
+        id_map = spec_param.get("id_mapping", {})
+        for param_id in id_map:
+            # ensure that the param referenced in the group param list
+            # exists in the spec.
+            # NB: This should really never happen if the sdk registration
+            # process validates them.
+            if param_id not in spec_params:
+                msg = "Unknown parameter id in group mapping: " + param_id
+                raise ValueError(msg)
+        for param_id in value:
+            target_key = id_map.get(param_id, param_id)
+            # Sets either the raw value, or if the parameter is an object
+            # reference the full object refernce (see the method).
+            if value[param_id] is None:
+                target_val = None
+            else:
+                target_val = resolve_ref_if_typed(
+                    value[param_id], spec_params[param_id]
+                )
+
+            mapped_value[target_key] = target_val
+        return mapped_value
 
     def _map_inputs(self, input_mapping, params, spec_params):
         """
@@ -914,7 +914,7 @@ class AppManager:
             input_param_id = None
             if "input_parameter" in p:
                 input_param_id = p["input_parameter"]
-                p_value = params.get(input_param_id, None)
+                p_value = params.get(input_param_id)
                 if spec_params[input_param_id].get("type", "") == "group":
                     p_value = self._map_group_inputs(
                         p_value, spec_params[input_param_id], spec_params
@@ -938,7 +938,7 @@ class AppManager:
 
             # get position!
             arg_position = p.get("target_argument_position", 0)
-            target_prop = p.get("target_property", None)
+            target_prop = p.get("target_property")
             if target_prop is not None:
                 final_input = inputs_dict.get(arg_position, {})
                 if "/" in target_prop:

@@ -1,11 +1,13 @@
 """
 Tests for the app_util module
 """
+import copy
 import os
 import pytest
 from unittest import mock
 
 from biokbase.narrative.app_util import (
+    app_param,
     check_tag,
     get_result_sub_path,
     map_inputs_from_job,
@@ -177,7 +179,170 @@ def test_map_outputs_from_state_bad_spec(workspace_name):
     with pytest.raises(ValueError):
         map_outputs_from_state(state, params, app_spec)
 
+# app_param tests
+base_app_param = {
+    'id': 'my_param',
+    'ui_name': 'My Param',
+    'short_hint': 'Short Info',
+    'description': 'Longer description',
+    'allow_multiple': 0,
+    'optional': 0,
+    'ui_class': 'input',
+    'default_values': [''],
+}
+base_expect = {
+    "id": base_app_param["id"],
+    "optional": False,
+    "short_hint": base_app_param["short_hint"],
+    "description": base_app_param["description"],
+    "is_group": False,
+    "is_output": False,
+    "allow_multiple": False,
+    "default": None,
+}
+app_param_cases = [(
+    "text", {}, {}
+), (
+    "text",
+    {
+        "text_options": {
+            "is_output_name": 1
+        }
+    },
+    {
+        "is_output": True
+    }
+), (
+    "text",
+    {
+        "optional": 1,
+    },
+    {
+        "optional": True
+    }
+), (
+    "text",
+    {
+        "allow_multiple": 1,
+        "default_values": ["foo", "", "bar"]
+    },
+    {
+        "allow_multiple": True,
+        "default": ["foo", "bar"]
+    }
+), (
+    "text",
+    {
+        "text_options": {
+            "validate_as": "int",
+            "min_int": -1,
+            "max_int": 1000
+        }
+    },
+    {
+        "type": "int",
+        "min_val": -1,
+        "max_val": 1000
+    }
+), (
+    "text",
+    {
+        "text_options": {
+            "validate_as": "float",
+            "min_float": -1.2,
+            "max_float": 1000.4
+        }
+    },
+    {
+        "type": "float",
+        "min_val": -1.2,
+        "max_val": 1000.4
+    }
+), (
+    "dropdown",
+    {
+        "dropdown_options": {
+            "options": [
+                {"display": "a", "value": "b"},
+                {"display": "c", "value": "d"}
+            ]
+        }
+    },
+    {
+        "allowed_values": ["b", "d"]
+    }
+), (
+    "checkbox",
+    {
+        "checkbox_options": {
+            "checked_value": 1,
+            "unchecked_value": 0
+        }
+    },
+    {
+        "checkbox_map": [1, 0],
+        "allowed_values": [True, False]
+    }
+), (
+    "checkbox",
+    {},
+    {
+        "allowed_values": [True, False]
+    }
+), (
+    "checkbox",
+    {
+        "checkbox_options": {
+            "checked_value": 2,
+            "unchecked_value": 1,
+            "kinda_checked_value": 0
+        }
+    },
+    {
+        "allowed_values": [True, False]
+    }
+), (
+    "text",
+    {
+        "text_options": {
+            "valid_ws_types": []
+        }
+    },
+    {}
+), (
+    "text",
+    {
+        "text_options": {
+            "valid_ws_types": ["KBaseGenomes.Genome", "FooBar.Baz"]
+        }
+    },
+    {
+        "allowed_types": ["KBaseGenomes.Genome", "FooBar.Baz"]
+    }
+), (
+    "text",
+    {
+        "text_options": {
+            "regex_constraint": "/\\d+/"
+        }
+    },
+    {
+        "regex_constraint": "/\\d+/"
+    }
+)]
+@pytest.mark.parametrize("field_type,spec_add,expect_add", app_param_cases)
+def test_app_param(field_type, spec_add, expect_add):
+    spec_param = copy.deepcopy(base_app_param)
+    expected = copy.deepcopy(base_expect)
+    spec_param["field_type"] = field_type
+    expected["type"] = field_type
 
+    spec_param.update(spec_add)
+    expected.update(expect_add)
+    assert app_param(spec_param) == expected
+
+
+# transform_param_value tests
 transform_param_value_simple_cases = [
     ( "string", None, None, None ),
     ( "string", "foo", None, "foo" ),

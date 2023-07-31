@@ -392,13 +392,15 @@ ref_cases = [
     (None, None),
     ("foo/bar", "foo/bar"),
     ("1/2/3", "1/2/3"),
-    ("name", workspace + "/name")
+    ("Sbicolor2", "wjriehl:1490995018528/Sbicolor2")
 ]
+@mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
 @pytest.mark.parametrize("value,expected", ref_cases)
 def test_transform_param_value_simple_ref(value, expected, workspace_name):
     workspace_name(workspace)
     for tf_type in ["ref", "unresolved-ref"]:
-        assert transform_param_value(tf_type, value, None) == expected
+        tf_value = transform_param_value(tf_type, value, None)
+        assert tf_value == expected
 
 mock_upa = "18836/5/1"
 upa_cases = [

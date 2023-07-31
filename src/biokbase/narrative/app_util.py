@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Optional
+from typing import Any, Optional
 
 import biokbase.narrative.clients as clients
 from biokbase.narrative.system import system_variable
@@ -881,14 +881,15 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     is_ref = upa.is_ref(value)
     search_ref = value
     if not is_upa and not is_ref:
-        search_ref = f"{system_variable('workspace')/{value}}"
+        search_ref = f"{system_variable('workspace')}/{value}"
     try:
         obj_info = clients.get("workspace").get_object_info3({"objects": [{"ref": search_ref}]})
-    except Exception as e:
-        # TODO logging
+    except Exception as err:
+        print(err)
+        print(f"Error while searching for object ref '{search_ref}'")
         return value
 
-    if transform_type == "ref" or transform_type == "unresolved_ref":
+    if transform_type == "ref" or transform_type == "unresolved-ref":
         if is_ref:
             return value
         obj = obj_info["infos"][0]
@@ -896,5 +897,5 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     if transform_type == "resolved-ref" or transform_type == "upa":
         if is_upa:
             return value
-        return obj_info["paths"][0]
-    return obj_info[1]
+        return ";".join(obj_info["paths"][0])
+    return value

@@ -13,6 +13,7 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 
 app_version_tags = ["release", "beta", "dev"]
 
+
 def check_tag(tag, raise_exception=False):
     """
     Checks if the given tag is one of "release", "beta", or "dev".
@@ -26,7 +27,6 @@ def check_tag(tag, raise_exception=False):
             % (tag, ", ".join(app_version_tags))
         )
     return tag_exists
-
 
 
 def map_inputs_from_job(job_inputs, app_spec):
@@ -730,7 +730,9 @@ def resolve_ref_if_typed(value, spec_param):
     return value
 
 
-def transform_param_value(transform_type: Optional[str], value: Any, spec_param: Optional[dict]) -> Any:
+def transform_param_value(
+    transform_type: Optional[str], value: Any, spec_param: Optional[dict]
+) -> Any:
     """
     Transforms an input according to the rules given in
     NarrativeMethodStore.ServiceMethodInputMapping
@@ -801,10 +803,7 @@ def transform_param_value(transform_type: Optional[str], value: Any, spec_param:
     ):
         transform_type = "string"
 
-    if (
-        transform_type is None
-        or transform_type == "none"
-    ):
+    if transform_type is None or transform_type == "none":
         return value
 
     transform_type = transform_type.lower()
@@ -825,7 +824,10 @@ def transform_param_value(transform_type: Optional[str], value: Any, spec_param:
     #         value = resolve_ref(system_variable("workspace"), value)
     #     return value
 
-    if transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"] or is_input_object:
+    if (
+        transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"]
+        or is_input_object
+    ):
         if isinstance(value, list):
             return [transform_object_value(transform_type, v) for v in value]
         return transform_object_value(transform_type, value)
@@ -857,6 +859,7 @@ def transform_param_value(transform_type: Optional[str], value: Any, spec_param:
     else:
         raise ValueError("Unsupported Transformation type: " + transform_type)
 
+
 def transform_object_value(transform_type: Optional[str], value: Optional[str]) -> str:
     """
     Cases:
@@ -883,7 +886,9 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     if not is_upa and not is_ref:
         search_ref = f"{system_variable('workspace')}/{value}"
     try:
-        obj_info = clients.get("workspace").get_object_info3({"objects": [{"ref": search_ref}]})
+        obj_info = clients.get("workspace").get_object_info3(
+            {"objects": [{"ref": search_ref}]}
+        )
     except Exception as err:
         print(err)
         print(f"Error while searching for object ref '{search_ref}'")

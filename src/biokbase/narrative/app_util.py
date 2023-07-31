@@ -818,12 +818,6 @@ def transform_param_value(
     #         value = system_variable("workspace") + "/" + value
     #     return value
 
-    # if transform_type == "resolved-ref":
-    #     # make a workspace UPA
-    #     if value is not None:
-    #         value = resolve_ref(system_variable("workspace"), value)
-    #     return value
-
     if (
         transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"]
         or is_input_object

@@ -40,11 +40,13 @@ def test_check_tag_bad_except():
     with pytest.raises(ValueError):
         check_tag(bad_tag, raise_exception=True)
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def workspace_name():
-    os.environ["KB_WORKSPACE_ID"] = workspace
-    yield
+    def set_ws_name(ws_name):
+        os.environ["KB_WORKSPACE_ID"] = ws_name
+    yield set_ws_name
     del os.environ["KB_WORKSPACE_ID"]
+    print(f'workspace id: {os.environ.get("KB_WORKSPACE_ID", "key missing")}')
 
 get_result_sub_path_cases = [
     (
@@ -134,6 +136,7 @@ def test_map_inputs_from_job():
 
 
 def test_map_outputs_from_state_simple(workspace_name):
+    workspace_name(workspace)
     app_spec = {
         "parameters": [],
         "behavior": {
@@ -144,6 +147,7 @@ def test_map_outputs_from_state_simple(workspace_name):
     assert map_outputs_from_state(None, None, app_spec) == expected
 
 def test_map_outputs_from_state(workspace_name):
+    workspace_name(workspace)
     app_spec = {
         "widgets": {"input": None, "output": "testOutputWidget"},
         "parameters": [],
@@ -173,6 +177,7 @@ def test_map_outputs_from_state(workspace_name):
     assert map_outputs_from_state(state, params, app_spec) == expected
 
 def test_map_outputs_from_state_bad_spec(workspace_name):
+    workspace_name(workspace)
     app_spec = {"not": "really"}
     params = {"an_input": "input_val"}
     state = {}
@@ -390,6 +395,7 @@ ref_cases = [
 ]
 @pytest.mark.parametrize("value,expected", ref_cases)
 def test_transform_param_value_simple_ref(value, expected, workspace_name):
+    workspace_name(workspace)
     for tf_type in ["ref", "unresolved-ref"]:
         assert transform_param_value(tf_type, value, None) == expected
 
@@ -402,4 +408,5 @@ upa_cases = [
 @mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
 @pytest.mark.parametrize("value,expected", upa_cases)
 def test_transform_param_value_resolved_ref(value, expected, workspace_name):
+    workspace_name(workspace)
     assert transform_param_value("resolved-ref", value, None) == expected

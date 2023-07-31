@@ -46,7 +46,6 @@ def workspace_name():
         os.environ["KB_WORKSPACE_ID"] = ws_name
     yield set_ws_name
     del os.environ["KB_WORKSPACE_ID"]
-    print(f'workspace id: {os.environ.get("KB_WORKSPACE_ID", "key missing")}')
 
 get_result_sub_path_cases = [
     (
@@ -183,6 +182,8 @@ def test_map_outputs_from_state_bad_spec(workspace_name):
     state = {}
     with pytest.raises(ValueError):
         map_outputs_from_state(state, params, app_spec)
+
+
 
 # app_param tests
 base_app_param = {

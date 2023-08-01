@@ -102,7 +102,7 @@
         "kbase-ui-plugin-catalog": "https://github.com/kbase/kbase-ui-plugin-catalog/archive/refs/tags/v2.2.5.tar.gz",
         "numeral": "2.0.6",
         "plotly.js-dist-min": "2.18.2",
-        "pure-uuid": "1.6.2",
+        "pure-uuid": "1.6.4",
         "require-css": "0.1.10",
         "require-yaml": "github:m90/require-yaml",
         "requirejs-domready": "2.0.3",

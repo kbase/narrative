@@ -331,8 +331,8 @@ def test_transform_param_value_textsubdata(value, expected):
 
 ref_cases = [
     (None, None),
-    ("foo/bar", "foo/bar"),
-    ("1/2/3", "1/2/3"),
+    ("foo/bar", "wjriehl:1490995018528/Sbicolor2"),
+    ("1/2/3", "wjriehl:1490995018528/Sbicolor2"),
     ("Sbicolor2", "wjriehl:1490995018528/Sbicolor2"),
 ]
 

@@ -787,14 +787,17 @@ def transform_param_value(
             allowed_values = list (optional),
         }
     """
-    is_input_object = False
+    if transform_type is not None:
+        transform_type = transform_type.lower()
+
+    is_input_object_param = False
     if (
         spec_param is not None
         and spec_param["type"] == "text"
         and not spec_param["is_output"]
-        and len(spec_param["allowed_values"])
+        and len(spec_param.get("allowed_types", []))
     ):
-        is_input_object = True
+        is_input_object_param = True
 
     if (
         transform_type is None
@@ -803,10 +806,8 @@ def transform_param_value(
     ):
         transform_type = "string"
 
-    if transform_type is None or transform_type == "none":
+    if not is_input_object_param and (transform_type is None or transform_type == "none"):
         return value
-
-    transform_type = transform_type.lower()
 
     # Here's the issue.
     # We're getting values that can be either a string, a ref, or an UPA.
@@ -820,7 +821,7 @@ def transform_param_value(
 
     if (
         transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"]
-        or is_input_object
+        or (is_input_object_param and not transform_type.startswith("list"))
     ):
         if isinstance(value, list):
             return [transform_object_value(transform_type, v) for v in value]
@@ -835,20 +836,18 @@ def transform_param_value(
     if transform_type == "string":
         if value is None:
             return value
-        elif isinstance(value, list):
+        if isinstance(value, list):
             return ",".join(value)
-        elif isinstance(value, dict):
-            return ",".join([key + "=" + str(value[key]) for key in value])
-        else:
-            return str(value)
+        if isinstance(value, dict):
+            return ",".join([f"{key}={value[key]}" for key in value])
+        return str(value)
 
     if transform_type.startswith("list<") and transform_type.endswith(">"):
         # make it a list of transformed types.
         list_type = transform_type[5:-1]
         if isinstance(value, list):
             return [transform_param_value(list_type, v, None) for v in value]
-        else:
-            return [transform_param_value(list_type, value, None)]
+        return [transform_param_value(list_type, value, None)]
 
     else:
         raise ValueError("Unsupported Transformation type: " + transform_type)
@@ -889,12 +888,12 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
         return value
 
     if transform_type == "ref" or transform_type == "unresolved-ref":
-        if is_ref:
-            return value
         obj = obj_info["infos"][0]
         return f"{obj[7]}/{obj[1]}"
     if transform_type == "resolved-ref" or transform_type == "upa":
         if is_upa:
             return value
         return ";".join(obj_info["paths"][0])
+    if transform_type is None:
+        return obj_info["infos"][0][1]
     return value

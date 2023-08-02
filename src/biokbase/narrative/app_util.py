@@ -821,7 +821,7 @@ def transform_param_value(
 
     if (
         transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"]
-        or (is_input_object_param and not transform_type.startswith("list"))
+        or (is_input_object_param and transform_type is None)
     ):
         if isinstance(value, list):
             return [transform_object_value(transform_type, v) for v in value]

@@ -1,19 +1,21 @@
+import json
+import os
+
 import pytest
+from requests import HTTPError
+
 from biokbase.auth import (
     TokenInfo,
-    get_token_info,
-    set_environ_token,
-    init_session_env,
-    get_auth_token,
     get_agent_token,
-    validate_token,
+    get_auth_token,
     get_display_names,
+    get_token_info,
+    init_session_env,
+    set_environ_token,
+    validate_token,
 )
-import json
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
-from requests import HTTPError
-import os
 
 AUTH_URL = URLS.auth + "/api/V2/"
 

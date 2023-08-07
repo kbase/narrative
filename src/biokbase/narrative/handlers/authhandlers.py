@@ -7,7 +7,7 @@ from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
 from traitlets.config import Application
 
-from biokbase.auth import get_user_info, init_session_env, set_environ_token
+from biokbase.auth import get_token_info, init_session_env, set_environ_token
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env
 
@@ -51,9 +51,8 @@ class KBaseLoginHandler(LoginHandler):
         auth_cookie = self.cookies.get(auth_cookie_name, None)
         if auth_cookie:
             token = urllib.parse.unquote(auth_cookie.value)
-            auth_info = dict()
             try:
-                auth_info = get_user_info(token)
+                auth_info = get_token_info(token)
             except Exception:
                 app_log.error(
                     "Unable to get user information from authentication token!"

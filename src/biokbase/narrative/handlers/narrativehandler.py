@@ -6,7 +6,7 @@ from notebook.utils import url_escape, url_path_join
 from tornado import web
 from traitlets.config import Application
 
-from biokbase.auth import get_user_info, init_session_env
+from biokbase.auth import get_token_info, init_session_env
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
@@ -35,7 +35,7 @@ def _init_session(request, cookies):
             reason="Authorization required for Narrative access",
         )
     if token != kbase_env.auth_token:
-        init_session_env(get_user_info(token), client_ip)
+        init_session_env(get_token_info(token), client_ip)
         log_event(g_log, "session_start", {"user": kbase_env.user, "user_agent": ua})
 
 

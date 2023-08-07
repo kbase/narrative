@@ -743,9 +743,10 @@ def transform_param_value(
 
     Returns a transformed (or not) value.
 
-    New rules and logic, esp for objects being sent.
+    Rules and logic, esp for objects being sent.
     1. Test if current transform applies. (None is a valid transform)
-        A. Check if input is an object - valid transforms are ref, resolved-ref, list<ref>, list<resolved-ref>, None
+        A. Check if input is an object - valid transforms are ref, resolved-ref, list<ref>,
+            list<resolved-ref>, None
         B. If not object, int, list<int>, and None are allowed.
     2. If object and not output field, apply transform as follows:
         A. None -> returns only object name
@@ -753,17 +754,13 @@ def transform_param_value(
         C. resolved-ref -> returns UPA
         D. (not in docs yet) upa -> returns UPA
         E. any of the above can be applied in list<X>
-    3. Exception: if the input is an UPA path or reference path, it should only get transformed to an UPA path.
+    3. Exception: if the input is an UPA path or reference path, it should only get transformed
+        to an UPA path.
 
-    This function will attempt to transform value according to the above rules. If value looks like a ref (ws_name/obj_name)
-    and transform_type is None, then obj_name will be returned. Likewise, if resolved-ref is given, and value looks like
-    an UPA already, then the already resolved-ref will be returned.
-
-    Previously, if the param type was an input object, it was assumed that the value was the object name.
-    That, honestly, shouldn't have been the case.
-
-    There are also a few never-used transform types that aren't documented. This code comes from the Before Times,
-    before any kind of documentation and modern design strategies, so I guess that's expected.
+    This function will attempt to transform value according to the above rules. If value looks
+    like a ref (ws_name/obj_name) and transform_type is None, then obj_name will be returned.
+    Likewise, if resolved-ref is given, and value looks like an UPA already, then the already
+    resolved-ref will be returned.
 
     Parameters:
     transform_type - str/None - should be one of the following, if not None:
@@ -771,11 +768,13 @@ def transform_param_value(
         * int
         * ref
         * resolved-ref
+        * upa
         * list<X> where X is any of the above
-    value - anything or None. Parameter values are expected, by the KBase app stack, to generally be
-        either a singleton or a list of singletons. In practice, they're usually strings, ints, floats, None,
-        or a list of those.
-    spec_param - either None or a spec parameter dictionary as defined by SpecManager.app_params. That is:
+    value - anything or None. Parameter values are expected, by the KBase app stack, to
+        generally be either a singleton or a list of singletons. In practice, they're usually
+        strings, ints, floats, None, or a list of those.
+    spec_param - either None or a spec parameter dictionary as defined by
+        SpecManager.app_params. That is:
         {
             optional = boolean,
             is_constant = boolean,
@@ -810,16 +809,6 @@ def transform_param_value(
         transform_type is None or transform_type == "none"
     ):
         return value
-
-    # Here's the issue.
-    # We're getting values that can be either a string, a ref, or an UPA.
-    # Now, when we get transform_type = "ref"/"unresolved-ref", that
-    # should be transformed to a ws/obj ref
-    # if transform_type == "ref" or transform_type == "unresolved-ref":
-    #     # make unresolved workspace ref (like 'ws-name/obj-name')
-    #     if value is not None and "/" not in value:
-    #         value = system_variable("workspace") + "/" + value
-    #     return value
 
     if transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"] or (
         is_input_object_param and transform_type is None
@@ -863,6 +852,8 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
         - should return UPA
     transform = None:
         - should return object name
+    Note that if it is a reference path, it was always get returned as an UPA-path
+    for the best compatibility.
 
     value can be either object name, ref, upa, or ref-path
     can tell by testing with UPA api

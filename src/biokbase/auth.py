@@ -16,6 +16,7 @@ endpt_token_revoke = "/tokens/revoke"
 endpt_user_display = "/users/?list="
 endpt_me = "/me"
 
+
 class TokenInfo:
     """
     Converts an information dictionary from the Auth service to a
@@ -27,7 +28,8 @@ class TokenInfo:
     If token is provided as a kwarg, that overrides the "token" key of
     the info dict, if present.
     """
-    def __init__(self, info_dict: dict, token: str=None):
+
+    def __init__(self, info_dict: dict, token: str = None):
         self.token_type = info_dict.get("type")
         self.token_id = info_dict.get("id")
         self.expires = info_dict.get("expires", 0)
@@ -87,7 +89,7 @@ def init_session_env(auth_info: TokenInfo, ip: str) -> None:
     kbase_env.client_ip = ip
 
 
-def get_agent_token(login_token: str, token_name: str="NarrativeAgent") -> TokenInfo:
+def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> TokenInfo:
     """
     Uses the given login token (if it's valid) to get and return an agent token from
     the server. This returns generated token as a dict with keys (straight from the
@@ -105,6 +107,7 @@ def get_agent_token(login_token: str, token_name: str="NarrativeAgent") -> Token
         r.raise_for_status()
     agent_token_info = TokenInfo(r.json())
     return agent_token_info
+
 
 def get_display_names(auth_token: str, user_ids: list) -> dict:
     headers = {"Authorization": auth_token}

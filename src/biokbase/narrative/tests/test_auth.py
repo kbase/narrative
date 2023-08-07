@@ -7,7 +7,7 @@ from biokbase.auth import (
     get_auth_token,
     get_agent_token,
     validate_token,
-    get_display_names
+    get_display_names,
 )
 import json
 from biokbase.narrative.common.url_config import URLS
@@ -25,7 +25,7 @@ unauth_error = {
         "apperror": "Invalid token",
         "message": "10020 Invalid token",
         "callid": "7024216894157398",
-        "time": 1691184318526
+        "time": 1691184318526,
     }
 }
 
@@ -37,13 +37,16 @@ bad_request_error = {
         "apperror": "No authentication token",
         "message": "10010 No authentication token: No user token provided",
         "callid": "7036685833684377",
-        "time": 1691184644451
+        "time": 1691184644451,
     }
 }
 
+
 @pytest.fixture
 def mock_auth_call(requests_mock):
-    def run_mock_auth(verb: str, endpoint: str, token: str, return_data: dict, status_code=200):
+    def run_mock_auth(
+        verb: str, endpoint: str, token: str, return_data: dict, status_code=200
+    ):
         if status_code == 400:
             return_data = json.dumps(bad_request_error)
         elif status_code == 401:
@@ -55,28 +58,38 @@ def mock_auth_call(requests_mock):
             AUTH_URL + endpoint,
             text=return_data,
             headers={"Authorizaton": token},
-            status_code=status_code
+            status_code=status_code,
         )
+
     return run_mock_auth
+
 
 @pytest.fixture
 def mock_token_endpoint(mock_auth_call):
     def token_mocker(token, verb, return_info={}, status_code=200):
-        return mock_auth_call(verb, "token", token, return_info, status_code=status_code)
+        return mock_auth_call(
+            verb, "token", token, return_info, status_code=status_code
+        )
+
     return token_mocker
+
 
 @pytest.fixture
 def mock_display_names_call(mock_auth_call):
     def names_mocker(token, user_ids, return_info={}, status_code=200):
-        return mock_auth_call("GET", f"users/?list={','.join(user_ids)}", token, return_info, status_code=status_code)
+        return mock_auth_call(
+            "GET",
+            f"users/?list={','.join(user_ids)}",
+            token,
+            return_info,
+            status_code=status_code,
+        )
+
     return names_mocker
 
+
 def test_get_token_info(mock_token_endpoint):
-    real_info = {
-        "id": "some_id",
-        "name": "MyToken",
-        "user": "some_user"
-    }
+    real_info = {"id": "some_id", "name": "MyToken", "user": "some_user"}
     token = "not_a_token"
     mock_token_endpoint(token, "GET", return_info=real_info)
     token_info = get_token_info(token)
@@ -86,11 +99,13 @@ def test_get_token_info(mock_token_endpoint):
     assert token_info.name == real_info["name"]
     assert token_info.token == token
 
+
 def test_get_token_info_fail(mock_token_endpoint):
     token = "not a token"
     mock_token_endpoint(token, "GET", status_code=401)
     with pytest.raises(HTTPError):
         get_token_info("not a token")
+
 
 def test_set_environ_token():
     token = "some fake token"
@@ -98,11 +113,13 @@ def test_set_environ_token():
     assert os.environ["KB_AUTH_TOKEN"] == token
     del os.environ["KB_AUTH_TOKEN"]
 
+
 def test_validate_token_ok(mock_token_endpoint):
     token = "ok_token"
     set_environ_token(token)
     mock_token_endpoint(token, "GET", return_info={"id": "foo"})
     assert validate_token() == True
+
 
 def test_validate_token_fail(mock_token_endpoint):
     token = "bad_token"
@@ -117,10 +134,7 @@ def test_init_session_env():
     token_id = "some-token-id"
     user = "kbase_user"
 
-    token_info = TokenInfo({
-        "id": token_id,
-        "user": user
-    }, token=token)
+    token_info = TokenInfo({"id": token_id, "user": user}, token=token)
     init_session_env(token_info, ip)
     assert get_auth_token() == token
     assert kbase_env.session == token_info.token_id
@@ -138,7 +152,7 @@ def test_get_agent_token_ok(mock_token_endpoint):
         "user": "kbase_user",
         "custom": {},
         "cachefor": 300000,
-        "token": "shiny-new-agent-token"
+        "token": "shiny-new-agent-token",
     }
     login_token = "a_login_token"
     mock_token_endpoint(login_token, "POST", return_info=agent_response)
@@ -152,7 +166,7 @@ def test_get_agent_token_ok(mock_token_endpoint):
         "user": "user",
         "custom": "custom",
         "cachefor": "cachefor",
-        "token": "token"
+        "token": "token",
     }
     for key in keymap:
         assert getattr(agent_info, key) == agent_response[keymap[key]]
@@ -168,13 +182,10 @@ def test_get_agent_token_fail(mock_token_endpoint):
 def test_get_display_names_ok(mock_display_names_call):
     token = "display_names_token"
     user_ids = ["foo", "bar", "baz"]
-    expected = {
-        "foo": "Ms. Foo",
-        "bar": "Dr. Bar",
-        "baz": "Herr Doktor Baz IV, Esq."
-    }
+    expected = {"foo": "Ms. Foo", "bar": "Dr. Bar", "baz": "Herr Doktor Baz IV, Esq."}
     mock_display_names_call(token, user_ids, expected)
     assert get_display_names(token, user_ids) == expected
+
 
 def test_get_display_names_fail(mock_display_names_call):
     token = "display_names_fail"

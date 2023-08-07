@@ -3,9 +3,8 @@ import re
 from typing import Any, Optional
 
 import biokbase.narrative.clients as clients
-from biokbase.narrative.system import system_variable
-
 import biokbase.narrative.upa as upa
+from biokbase.narrative.system import system_variable
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
@@ -754,6 +753,7 @@ def transform_param_value(
         C. resolved-ref -> returns UPA
         D. (not in docs yet) upa -> returns UPA
         E. any of the above can be applied in list<X>
+    3. Exception: if the input is an UPA path or reference path, it should only get transformed to an UPA path.
 
     This function will attempt to transform value according to the above rules. If value looks like a ref (ws_name/obj_name)
     and transform_type is None, then obj_name will be returned. Likewise, if resolved-ref is given, and value looks like
@@ -806,7 +806,9 @@ def transform_param_value(
     ):
         transform_type = "string"
 
-    if not is_input_object_param and (transform_type is None or transform_type == "none"):
+    if not is_input_object_param and (
+        transform_type is None or transform_type == "none"
+    ):
         return value
 
     # Here's the issue.
@@ -819,9 +821,8 @@ def transform_param_value(
     #         value = system_variable("workspace") + "/" + value
     #     return value
 
-    if (
-        transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"]
-        or (is_input_object_param and transform_type is None)
+    if transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"] or (
+        is_input_object_param and transform_type is None
     ):
         if isinstance(value, list):
             return [transform_object_value(transform_type, v) for v in value]
@@ -868,13 +869,14 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
 
     If we can't find any object info on the value, just return the value as-is
     """
-
     if value is None:
         return None
 
     # 1. get object info
     is_upa = upa.is_upa(value)
     is_ref = upa.is_ref(value)
+    is_path = (is_upa or is_ref) and ";" in value
+
     search_ref = value
     if not is_upa and not is_ref:
         search_ref = f"{system_variable('workspace')}/{value}"
@@ -887,6 +889,8 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
         print(f"Error while searching for object ref '{search_ref}'")
         return value
 
+    if is_path:
+        return ";".join(obj_info["paths"][0])
     if transform_type == "ref" or transform_type == "unresolved-ref":
         obj = obj_info["infos"][0]
         return f"{obj[7]}/{obj[1]}"

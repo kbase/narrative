@@ -3,8 +3,9 @@ Tests for the app_util module
 """
 import copy
 import os
-import pytest
 from unittest import mock
+
+import pytest
 
 from biokbase.narrative.app_util import (
     app_param,
@@ -14,6 +15,7 @@ from biokbase.narrative.app_util import (
     map_outputs_from_state,
     transform_param_value,
 )
+from biokbase.narrative.upa import is_upa
 
 from . import util
 from .narrative_mock.mockclients import get_mock_client
@@ -329,11 +331,12 @@ def test_transform_param_value_textsubdata(value, expected):
     assert transform_param_value(None, value, spec) == expected
 
 
+mock_obj_ref = "wjriehl:1490995018528/Sbicolor2"
 ref_cases = [
     (None, None),
-    ("foo/bar", "wjriehl:1490995018528/Sbicolor2"),
-    ("1/2/3", "wjriehl:1490995018528/Sbicolor2"),
-    ("Sbicolor2", "wjriehl:1490995018528/Sbicolor2"),
+    ("foo/bar", mock_obj_ref),
+    ("1/2/3", mock_obj_ref),
+    ("Sbicolor2", mock_obj_ref),
 ]
 
 
@@ -359,3 +362,76 @@ upa_cases = [
 def test_transform_param_value_resolved_ref(value, expected, workspace_name):
     workspace_name(workspace)
     assert transform_param_value("resolved-ref", value, None) == expected
+
+
+class RefChainWorkspace:
+    def __init__(self):
+        pass
+
+    def get_object_info3(self, params):
+        """
+        Makes quite a few assumptions about input, as it's used for a specific test.
+        1. params = {"objects": [{"ref": ref}, {"ref": ref}, ...]}
+        2. ref is a ;-separated chain of either wsname/objid or upas, not a mix.
+        3. we don't really care about names or object info here in responses
+
+        # TODO something like this should go into the MockClient workspace call
+        """
+
+        def make_obj_info(wsid, objid, ver):
+            return [
+                objid,
+                "objname",
+                "Object.Type-1.0",
+                "date",
+                ver,
+                "user_name",
+                wsid,
+                "SomeWorkspace",
+                "checksum",
+                12345,
+                None,
+            ]
+
+        obj_infos = []
+        obj_paths = []
+        for obj_ident in params["objects"]:
+            ref_chain = obj_ident["ref"].split(";")
+            obj_path = []
+            cur_ws = 1
+            cur_obj = 1
+            cur_ver = 1
+            for ref in ref_chain:
+                if is_upa(ref):
+                    obj_path.append(ref)
+                else:
+                    obj_path.append(f"{cur_ws}/{cur_obj}/{cur_ver}")
+                cur_ws += 1
+                cur_obj += 1
+                cur_ver += 1
+            if is_upa(obj_ident["ref"]):
+                obj_info = make_obj_info(*(ref_chain[-1].split("/")))
+            else:
+                obj_info = make_obj_info(cur_ws, cur_obj, cur_ver)
+            obj_infos.append(obj_info)
+            obj_paths.append(obj_path)
+        return {"infos": obj_infos, "paths": obj_paths}
+
+
+def get_ref_path_mock_ws(name="workspace"):
+    return RefChainWorkspace()
+
+
+@mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
+def test_transform_param_value_upa_path():
+    upa_path = "123/456/789;234/345/456"
+    for tf_type in ["ref", "unresolved-ref", "upa", "resolved-ref"]:
+        assert transform_param_value(tf_type, upa_path, None) == upa_path
+
+
+@mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
+def test_transform_param_value_ref_path():
+    ref_path = "some_ws/some_obj;some_other_ws/some_other_obj"
+    expected_upa = "1/1/1;2/2/2"
+    for tf_type in ["ref", "unresolved-ref", "upa", "resolved-ref"]:
+        assert transform_param_value(tf_type, ref_path, None) == expected_upa

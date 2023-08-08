@@ -142,6 +142,7 @@ def test_init_session_env():
     assert kbase_env.session == token_info.token_id
     assert kbase_env.user == token_info.user
     assert kbase_env.client_ip == ip
+    init_session_env(TokenInfo({}), None)
 
 
 def test_get_agent_token_ok(mock_token_endpoint):

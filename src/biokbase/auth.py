@@ -41,6 +41,48 @@ class TokenInfo:
         self.token = token if token is not None else info_dict.get("token")
 
 
+class UserRole:
+    def __init__(self, role_info):
+        self.role_id = role_info.get("id")
+        self.description = role_info.get("desc")
+
+
+class PolicyId:
+    def __init__(self, policy_info):
+        self.policy_id = policy_info.get("id")
+        self.agree_date = policy_info.get("agreedon")
+
+
+class Identity:
+    def __init__(self, ident_info):
+        self.ident_id = ident_info.get("id")
+        self.provider = ident_info.get("provider")
+        self.provider_user = ident_info.get("provusername")
+
+
+class UserInfo:
+    """
+    A container for user information that comes from the Auth service. Does not
+    hold the token itself.
+    """
+
+    def __init__(self, user_dict: dict):
+        self.user = user_dict.get("user")
+        self.created = user_dict.get("created")
+        self.last_login = user_dict.get("lastlogin")
+        self.display_name = user_dict.get("display")
+        self.roles = [UserRole(role) for role in user_dict.get("roles", [])]
+        self.custom_roles = user_dict.get("customroles", [])
+        self.policy_ids = [
+            PolicyId(policy) for policy in user_dict.get("policyids", [])
+        ]
+        self.user = user_dict.get("user")
+        self.local_user = user_dict.get("local", False)
+        self.email = user_dict.get("email")
+        self.idents = [Identity(ident) for ident in user_dict.get("idents", [])]
+        self.anon_id = user_dict.get("anonid")
+
+
 def validate_token():
     """
     Validates the currently set auth token. Returns True if valid, False otherwise.
@@ -65,6 +107,20 @@ def get_auth_token() -> Optional[str]:
     Returns the current login token being used, or None if one isn't set.
     """
     return kbase_env.auth_token
+
+
+def get_user_info(token: str) -> UserInfo:
+    """
+    Returns the UserInfo object with information about the user who
+    owns the valid token. If the token is invalid (i.e. the status_code
+    of the request is not ok), an HTTPError exception is raised.
+    """
+    headers = {"Authorization": token}
+    r = requests.get(token_api_url + endpt_me, headers=headers)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    user_info = UserInfo(r.json())
+    return user_info
 
 
 def get_token_info(token: str) -> TokenInfo:

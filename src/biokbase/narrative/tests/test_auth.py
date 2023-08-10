@@ -10,6 +10,7 @@ from biokbase.auth import (
     get_auth_token,
     get_display_names,
     get_token_info,
+    get_user_info,
     init_session_env,
     set_environ_token,
     validate_token,
@@ -90,6 +91,14 @@ def mock_display_names_call(mock_auth_call):
     return names_mocker
 
 
+@pytest.fixture
+def mock_me_call(mock_auth_call):
+    def me_mocker(token, return_info, status_code=200):
+        return mock_auth_call("GET", "me", token, return_info, status_code=status_code)
+
+    return me_mocker
+
+
 def test_get_token_info(mock_token_endpoint):
     real_info = {"id": "some_id", "name": "MyToken", "user": "some_user"}
     token = "not_a_token"
@@ -120,14 +129,14 @@ def test_validate_token_ok(mock_token_endpoint):
     token = "ok_token"
     set_environ_token(token)
     mock_token_endpoint(token, "GET", return_info={"id": "foo"})
-    assert validate_token() == True
+    assert validate_token() is True
 
 
 def test_validate_token_fail(mock_token_endpoint):
     token = "bad_token"
     set_environ_token(token)
     mock_token_endpoint(token, "GET", status_code=401)
-    assert validate_token() == False
+    assert validate_token() is False
 
 
 def test_init_session_env():
@@ -196,3 +205,50 @@ def test_get_display_names_fail(mock_display_names_call):
     mock_display_names_call(token, user_ids, status_code=401)
     with pytest.raises(HTTPError):
         get_display_names(token, user_ids)
+
+
+def test_get_user_ok(mock_me_call):
+    token = "me_ok"
+    expected = {
+        "anonid": "some_anonymous_id",
+        "user": "a_kbase_user",
+        "display": "A KBase User",
+        "idents": [
+            {
+                "id": "12345",
+                "provider": "Globus",
+                "provusername": "a_kbase_user@globus.us",
+            }
+        ],
+        "policyids": [{"id": "data-policy", "agreedon": 1497637084128}],
+        "roles": [{"id": "SpecialRole", "desc": "Do special things"}],
+    }
+    mock_me_call(token, expected)
+    user = get_user_info(token)
+    assert user.anon_id == expected["anonid"]
+    assert user.user == expected["user"]
+    assert user.display_name == expected["display"]
+    assert len(user.idents) == 1
+    ident = user.idents[0]
+    assert ident.ident_id == expected["idents"][0]["id"]
+    assert ident.provider == expected["idents"][0]["provider"]
+    assert ident.provider_user == expected["idents"][0]["provusername"]
+    assert len(user.policy_ids) == 1
+    policy = user.policy_ids[0]
+    assert policy.policy_id == expected["policyids"][0]["id"]
+    assert policy.agree_date == expected["policyids"][0]["agreedon"]
+    assert len(user.roles) == 1
+    role = user.roles[0]
+    assert role.role_id == expected["roles"][0]["id"]
+    assert role.description == expected["roles"][0]["desc"]
+    for attr in ["created", "last_login", "email"]:
+        assert getattr(user, attr) is None
+    assert user.custom_roles == []
+    assert user.local_user is False
+
+
+def test_get_user_fail(mock_me_call):
+    token = "me_not_ok"
+    mock_me_call(token, {}, status_code=401)
+    with pytest.raises(HTTPError):
+        get_user_info(token)

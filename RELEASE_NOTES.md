@@ -40,15 +40,18 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 - Python dependency updates
   - beautifulsoup4: 4.12.1 -> 4.12.2
+  - black: 23.3.0 -> 23.7.0
   - coverage: 7.2.2 -> 7.2.7
   - cryptography: 40.0.1 -> 41.0.2
+  - flake8: 6.0.0 -> 6.1.0
   - isort: none -> 5.18.0
   - markupsafe: 2.1.2 -> 2.1.3
   - pygments: 2.14.0 -> 2.15.1
-  - pymongo: 4.3.3 -> 4.4.0
+  - pymongo: 4.3.3 -> 4.4.1
   - pyopenssl: 23.1.1 -> 23.2.0
   - pytest-cov: 4.0.0 -> 4.1.0
   - pytest: 7.2.2 -> 7.4.0
+  - pyyaml: 6.0.0 -> 6.0.1
   - requests: 2.28.2 -> 2.31.0
 
 ## Version 5.1.4

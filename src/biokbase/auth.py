@@ -126,8 +126,7 @@ def get_user_info(token: str) -> UserInfo:
 def get_token_info(token: str) -> TokenInfo:
     headers = {"Authorization": token}
     r = requests.get(token_api_url + endpt_token, headers=headers)
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
+    r.raise_for_status()
     auth_info = TokenInfo(r.json(), token=token)
     return auth_info
 
@@ -159,8 +158,7 @@ def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> Tok
     headers = {"Authorization": login_token, "Content-Type": "Application/json"}
     data = {"name": token_name}
     r = requests.post(token_api_url + endpt_token, headers=headers, json=data)
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
+    r.raise_for_status()
     agent_token_info = TokenInfo(r.json())
     return agent_token_info
 
@@ -170,6 +168,5 @@ def get_display_names(auth_token: str, user_ids: list) -> dict:
     r = requests.get(
         token_api_url + endpt_user_display + ",".join(user_ids), headers=headers
     )
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
+    r.raise_for_status()
     return r.json()

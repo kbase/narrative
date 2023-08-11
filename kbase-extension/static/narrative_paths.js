@@ -25,6 +25,7 @@ require.config({
         domReady: 'ext_components/requirejs-domready/domReady',
         domPurify: 'ext_components/dompurify/dist/purify.min',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
+        filesize: 'ext_components/filesize/dist/filesize',
         handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',

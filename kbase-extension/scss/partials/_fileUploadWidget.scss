@@ -1,0 +1,62 @@
+.kb-file-upload-widget {
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    margin-bottom: 0.5rem;
+
+    &__error-message {
+        display: flex;
+        flex-direction: row;
+
+        .-title {
+            flex: 0 0 4rem;
+            align-items: center;
+        }
+
+        .-body {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    &__clear-all-button-container {
+        margin-top: 0.5rem;
+    }
+
+    &__globus-upload-link-container {
+        display: inline-block;
+        vertical-align: baseline;
+    }
+
+    // Bootstrap overrides
+
+    // Probably not necessary as bootstrap already sets the width to 0 in the class,
+    // and no other css in the Narrative codebase seems to override the progress-bar class.
+    // Still, there may have been (or still be) BS progress-bar quirkiness, so leave alone
+    // until someone has time to investigate.
+    .progress-bar {
+        width: 0;
+    }
+
+    &__globus_error_link.btn.btn-link {
+        padding: 0;
+        margin: 0;
+        font-size: inherit;
+    }
+
+    // Not really sure what is going on here.
+    // "row" is bootstrap
+    // "file-row" is kbase, bespoke, not defined elsewhere
+    .row.file-row {
+      padding: 0.25rem;
+    }
+
+    // Dropzone override
+    
+    .row.file-row.dz-error {
+        border: 1px solid use_color('error-dark');
+        color: use_color('error-dark');
+    }
+
+}

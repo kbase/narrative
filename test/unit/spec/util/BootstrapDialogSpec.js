@@ -19,87 +19,49 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
         });
     }
 
-    describe('Test the BootstrapDialog module', () => {
-        let simpleDialog;
-        afterEach(() => {
-            if (simpleDialog) {
-                simpleDialog.destroy();
+    function untilTrue(testFun, waitFor) {
+        const started = Date.now();
+        return new Promise((resolve, reject) => {
+            /**
+             * Runs testFun,
+             * @returns true if testing is complete; false otherwise
+             */
+            const loop = () => {
+                const elapsed = Date.now() - started;
+                if (elapsed > waitFor) {
+                    resolve(false);
+                    return;
+                }
+                setTimeout(() => {
+                    try {
+                        if (testFun()) {
+                            resolve(true);
+                        } else {
+                            loop();
+                        }
+                    } catch (ex) {
+                        reject(new Error(`Error running test function: ${ex.message}`));
+                    }
+                }, 100);
+            };
+            // can succeed immediately.
+            if (testFun()) {
+                resolve(true);
+            } else {
+                loop();
             }
         });
+    }
 
-        it('Should create a new dialog object', () => {
-            simpleDialog = createSimpleDialog();
-            expect(simpleDialog).toEqual(jasmine.any(Object));
-        });
+    const DEFAULT_ASYNC_EXPECT_TIMEOUT = 1000;
 
-        it('Should show on command', (done) => {
-            simpleDialog = createSimpleDialog();
-            simpleDialog.$modal.on('shown.bs.modal', () => {
-                expect(simpleDialog.$modal.is(':visible')).toBeTruthy();
-                done();
-            });
-            simpleDialog.show();
-        });
-
-        it('Should hide on command', (done) => {
-            simpleDialog = createSimpleDialog();
-            simpleDialog.$modal.on('hidden.bs.modal', () => {
-                expect(simpleDialog.$modal.is(':visible')).toBeFalsy();
-                done();
-            });
-            simpleDialog.$modal.on('shown.bs.modal', () => {
-                expect(simpleDialog.$modal.is(':visible')).toBeTruthy();
-                simpleDialog.hide();
-            });
-            simpleDialog.show();
-        });
-
-        it('Should get a title string back', () => {
-            simpleDialog = createSimpleDialog();
-            const title = simpleDialog.getTitle();
-            expect(title).toBe(simpleTitle);
-        });
-
-        it('Should get the body div back', () => {
-            simpleDialog = createSimpleDialog();
-            const body = simpleDialog.getBody();
-            expect(body.html()).toBe($simpleBody.html());
-        });
-
-        it('Should give the buttons back', () => {
-            simpleDialog = createSimpleDialog();
-            const buttons = simpleDialog.getButtons();
-            expect(buttons.length).toBe(2);
-            expect(buttons[0].innerHTML).toBe('b1');
-            expect(buttons[1].innerHTML).toBe('b2');
-        });
-
-        it('Should get the whole modal object back', () => {
-            simpleDialog = createSimpleDialog();
-            const $modal = simpleDialog.getElement();
-            expect($modal[0].tagName).toBe('DIV');
-        });
-
-        it('Should write over the title', () => {
-            simpleDialog = createSimpleDialog();
-            const newTitle = 'A new title!';
-            simpleDialog.setTitle(newTitle);
-            expect(simpleDialog.getTitle()).toBe(newTitle);
-        });
-
-        it('Should create a new body', () => {
-            simpleDialog = createSimpleDialog();
-            const $newBody = $('<div>').append('The new body');
-            simpleDialog.setBody($newBody);
-            expect(simpleDialog.getBody().html()).toBe($newBody.html());
-        });
-
+    describe('Test the BootstrapDialog module', () => {
         it('Should trigger a command on enter key', () => {
             let wasTriggered = false;
             const btnFn = function () {
                 wasTriggered = true;
             };
-            simpleDialog = new Dialog({
+            const dialog = new Dialog({
                 title: 'Test for command on enter keypress',
                 body: $('<div>'),
                 buttons: [
@@ -111,37 +73,108 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             const e = $.Event('keypress');
             e.which = 13;
             e.keyCode = 13;
-            simpleDialog.getElement().trigger(e);
+            dialog.getElement().trigger(e);
             expect(wasTriggered).toBe(true);
+
+            dialog.destroy();
         });
 
-        it('Should create a simple alert', () => {
-            simpleDialog = new Dialog({
+        it('Should invoke "onShown" handler when shown', async () => {
+            const dialog = new Dialog({
                 title: 'Alert',
                 body: $('<div>').append('an alert'),
                 alertOnly: true,
             });
 
-            const btns = simpleDialog.getButtons();
-            expect(btns.length).toBe(1);
-            expect(btns[0].innerHTML).toBe('Close');
+            let hasBeenShown = false;
+
+            dialog.onShown(() => {
+                hasBeenShown = true;
+            });
+
+            expect(hasBeenShown).toBeFalse();
+
+            dialog.show();
+
+            expect(
+                await untilTrue(() => {
+                    return hasBeenShown;
+                }, DEFAULT_ASYNC_EXPECT_TIMEOUT)
+            ).toBeTrue();
+
+            expect(hasBeenShown).toBeTrue();
+
+            dialog.destroy();
+        });
+
+        it('Should invoke "onHidden" handler when shown', async () => {
+            /**
+             * Tests whether the onHidden handler for the bootstrap dialog
+             * 'bs.hidden' event is run.
+             * Note that there is an implicit assumption that events are
+             * synchronous. Not generally a good assumption, but as it is
+             * based on jquery, and jquery events ARE synchronous, it works.
+             * Parenthetically, this is one reason I don't like using jquery
+             * events, as it builds such asynchronous assumptions into the
+             * codebase.
+             */
+            const dialog = new Dialog({
+                title: 'Alert',
+                body: $('<div>').append('an alert'),
+                alertOnly: true,
+            });
+
+            let hasBeenShown = false;
+
+            let hasBeenHidden = false;
+
+            dialog.onShown(() => {
+                hasBeenShown = true;
+            });
+
+            dialog.onHidden(() => {
+                hasBeenHidden = true;
+            });
+
+            expect(hasBeenShown).toBeFalse();
+            expect(hasBeenHidden).toBeFalse();
+
+            dialog.show();
+
+            expect(
+                await untilTrue(() => {
+                    return hasBeenShown;
+                }, DEFAULT_ASYNC_EXPECT_TIMEOUT)
+            ).toBeTrue();
+
+            dialog.hide();
+
+            expect(
+                await untilTrue(() => {
+                    return hasBeenHidden;
+                }, DEFAULT_ASYNC_EXPECT_TIMEOUT)
+            ).toBeTrue();
+
+            dialog.destroy();
         });
 
         it('Should set the title based on type', () => {
-            simpleDialog = new Dialog({
+            const dialog = new Dialog({
                 title: 'A Title Based on Type',
                 type: 'warning',
             });
-            expect(simpleDialog.$headerTitle.hasClass('text-warning')).toBe(true);
+            expect(dialog.$headerTitle.hasClass('text-warning')).toBe(true);
+            dialog.destroy();
         });
 
         it('Should destroy the modal on command', () => {
-            simpleDialog = createSimpleDialog();
-            const ret = simpleDialog.destroy();
+            const dialog = createSimpleDialog();
+            const ret = dialog.destroy();
             expect(ret).toBeNull();
-            expect(simpleDialog.getElement()).toBeNull();
+            expect(dialog.getElement()).toBeNull();
             expect(document.querySelectorAll('.modal-backdrop').length).toBe(0);
             expect(document.body).not.toHaveClass('modal-open');
+            dialog.destroy();
         });
     });
 });

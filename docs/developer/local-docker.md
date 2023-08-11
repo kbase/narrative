@@ -152,6 +152,9 @@ it would be possible to run any node-based tool via a simple node container, but
   - `NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local` if running w/o kbase-ui
   - `NARRATIVE_SERVER_URL=https://ci.kbase.us/narrative npm run test_local`, optionally if running with kbase-ui proxying ci.
 
+> NOTE: this no longer works, due to changes in the test scripts. So just use `make test-frontend-unit`, making sure that ci.base.us is no longer
+> routed to `127.0.0.1` in `/etc/hosts`.
+
 Please note the volume mounts in `scripts/local-dev-run.sh`. Not all directories in kbase-extension/static local narrative repo are mounted, due to
 the fact that ext_components is installed.
 

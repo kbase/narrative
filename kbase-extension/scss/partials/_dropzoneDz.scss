@@ -2,6 +2,7 @@
   @extend %kbase-button;
 
   @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+
 }
 
 .dz-file {
@@ -78,8 +79,7 @@
 
 .kb-dropzone {
   border: 2px dashed use_color('mid-blue') !important;
-  margin-bottom: 5px;
-  max-height: 150px;
+  max-height: 300px;
   overflow-y: auto;
 
   &-progress__header {
@@ -88,17 +88,53 @@
     margin-bottom: 5px;
   }
 
+  // .kb-dropzone .dz-message 
   .dz-message {
     color: rgb(0 0 0);
     font: normal 400 24px/28px $typeface-page-text;
-    margin: 2em 4.5em;
     mix-blend-mode: normal;
     text-align: center;
+    margin: 0;
+
+    // .kb-dropzone .dz-message p
+    p {
+      font-size: 80%;
+      margin-top: 0.4rem;
+    }
+
+    // Augments bootstrap alert within the message area
+    // .kb-dropzone .dz-message alert
+    .alert {
+      font-size: 80%;
+      padding: 0.5rem;
+      margin: 0;
+    }
   }
 
   // .kb-dropzone__message--upload
   &__message--upload {
     font-family: $typeface-page-text;
     font-weight: 700;
+  }
+
+  &.dropzone {
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  // .kb-dropzone.dropzone.dz-clickable
+  &.dropzone.dz-clickable {
+
+     // .kb-dropzone.dropzone.dz-clickable button
+    button {
+      cursor: pointer;
+    }
+
+     // .kb-dropzone.dropzone.dz-clickable a
+    a {
+      cursor: pointer;
+    }
   }
 }

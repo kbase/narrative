@@ -1,3 +1,5 @@
+import os
+
 # Configuration file for ipython-notebook.
 
 c = get_config()  # noqa: F821
@@ -192,8 +194,6 @@ c.NotebookApp.cookie_secret_file = "/tmp/notebook_cookie"
 # If specified, load this config file in addition to any other IPython config.
 # c.NotebookApp.extra_config_file = u''
 
-
-import os
 
 try:
     myfile = __file__

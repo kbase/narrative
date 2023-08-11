@@ -10,6 +10,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 -   PTV-1810 - address object name display issues in the View Configure tab of app cells.
 -   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
 -   PTV-1878 - fix some failing front end unit tests
+-   PTV-1886 - add file size limit for the import staging area
 
 ### Dependency Changes
 
@@ -632,7 +633,7 @@ Dependency Changes
 -   SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.
 -   Re-enable security measure that prevents Markdown cells from rendering JavaScript. We're about a year past the point when that was necessary.
 -   SCT-628 - adds a viewer for the CompoundSet object.
--       - Tornado dependency to 5.0.0
+-     - Tornado dependency to 5.0.0
 -   SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 -   SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
 -   SCT-590 - add cache busting to the public data mapping lookup. No more force-refreshing!

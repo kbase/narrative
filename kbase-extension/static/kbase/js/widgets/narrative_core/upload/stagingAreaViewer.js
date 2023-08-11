@@ -2,8 +2,8 @@ define([
     'jquery',
     'kbaseTabs',
     'StagingServiceClient',
-    'bluebird',
     'kbwidget',
+    'widgets/common/AlertMessage',
     'narrativeConfig',
     'common/runtime',
     'common/html',
@@ -25,8 +25,8 @@ define([
     $,
     KBaseTabs,
     StagingServiceClient,
-    Promise,
     KBWidget,
+    $AlertMessage,
     Config,
     Runtime,
     html,
@@ -37,7 +37,7 @@ define([
     UploadTour,
     StagingFileCache,
     Import,
-    Error,
+    importErrors,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
@@ -858,8 +858,10 @@ define([
 
             // First, we find the expansion caret in the first cell.
             const $caret = $td.find('[data-caret]');
+            // The button itself is the container for the caret icon.
+            const $detailButton = $caret.parent();
 
-            $caret.off('click');
+            $detailButton.off('click');
 
             // now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
             if ($caret.length && this.openFileInfo[data.path]) {
@@ -873,8 +875,8 @@ define([
                 }, 0);
             }
 
-            $caret.on('click', (e) => {
-                const fileExpander = $(e.currentTarget);
+            $detailButton.on('click', (e) => {
+                const fileExpander = $(e.currentTarget).find('[data-caret]');
                 fileExpander.toggleClass('fa-caret-down fa-caret-right');
                 const $tr = fileExpander.parent().parent();
 
@@ -948,14 +950,17 @@ define([
 
                     const fileMetadata = {
                         Name: data.name,
-                        Created: TimeFormat.reformatDate(new Date(data.mtime)),
+                        Created: Intl.DateTimeFormat('en-US', {
+                            dateStyle: 'full',
+                            timeStyle: 'short',
+                        }).format(new Date(data.mtime)),
                         Size: StringUtil.readableBytes(Number(data.size)),
-                        MD5: data.md5 || 'Not provided',
+                        MD5: data.md5 || 'Not available',
                     };
 
                     const lineCount = parseInt(data.lineCount, 10);
                     if (Number.isNaN(lineCount)) {
-                        fileMetadata['Line count'] = 'Not provided';
+                        fileMetadata['Line count'] = '<i>Not applicable to binary file</i>';
                     } else {
                         fileMetadata['Line count'] = lineCount.toLocaleString();
                     }
@@ -1012,29 +1017,36 @@ define([
                         }
                     );
 
-                    const notATextFile = data.head === 'not text file';
+                    const showSnippet = (snippet) => {
+                        // Older service used text "not text file" to indicate the file is
+                        // not text and it can't get the text snippets.
+                        const notATextFile = data.head === 'not text file' || data.head === null;
+                        if (notATextFile) {
+                            return $AlertMessage('Not a text file');
+                        }
+                        if (snippet.length === 0) {
+                            return $AlertMessage('File is empty');
+                        }
+
+                        return $.jqElem('div')
+                            .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                            .append(snippet);
+                    };
 
                     $tabs = new KBaseTabs($tabsContainer, {
                         tabs: [
                             {
                                 tab: 'Info',
                                 content: $fileDataDl,
+                                show: true,
                             },
                             {
                                 tab: 'First 1024 chars',
-                                content: notATextFile
-                                    ? $.jqElem('div').append('Not a text file')
-                                    : $.jqElem('div')
-                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
-                                          .append(data.head),
+                                content: showSnippet(data.head),
                             },
                             {
                                 tab: 'Last 1024 chars',
-                                content: notATextFile
-                                    ? $.jqElem('div').append('Not a text file')
-                                    : $.jqElem('div')
-                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
-                                          .append(data.tail),
+                                content: showSnippet(data.tail),
                             },
                         ],
                     });
@@ -1153,7 +1165,7 @@ define([
                 .then(() => {
                     Jupyter.narrative.hideOverlay();
                 })
-                .catch(Error.ImportSetupError, (error) => {
+                .catch(importErrors.ImportSetupError, (error) => {
                     console.error(error.toString());
                     // make popup.
                     error.showErrorDialog();

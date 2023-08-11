@@ -75,7 +75,7 @@ def system_variable(var):
             return None
         try:
             token_info = biokbase.auth.get_token_info(token)
-            return token_info.user
+            return token_info.user_name
         except BaseException:
             return None
         # TODO: make this better with more exception handling.

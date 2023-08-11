@@ -105,9 +105,9 @@ def test_get_token_info(mock_token_endpoint):
     mock_token_endpoint(token, "GET", return_info=real_info)
     token_info = get_token_info(token)
     assert isinstance(token_info, TokenInfo)
-    assert token_info.token_id == real_info["id"]
-    assert token_info.user == real_info["user"]
-    assert token_info.name == real_info["name"]
+    assert token_info.id == real_info["id"]
+    assert token_info.user_name == real_info["user"]
+    assert token_info.token_name == real_info["name"]
     assert token_info.token == token
 
 
@@ -148,8 +148,8 @@ def test_init_session_env():
     token_info = TokenInfo({"id": token_id, "user": user}, token=token)
     init_session_env(token_info, ip)
     assert get_auth_token() == token
-    assert kbase_env.session == token_info.token_id
-    assert kbase_env.user == token_info.user
+    assert kbase_env.session == token_info.id
+    assert kbase_env.user == token_info.user_name
     assert kbase_env.client_ip == ip
     init_session_env(TokenInfo({}), None)
 
@@ -171,11 +171,11 @@ def test_get_agent_token_ok(mock_token_endpoint):
     agent_info = get_agent_token(login_token)
     keymap = {
         "token_type": "type",
-        "token_id": "id",
+        "id": "id",
         "expires": "expires",
         "created": "created",
-        "name": "name",
-        "user": "user",
+        "token_name": "name",
+        "user_name": "user",
         "custom": "custom",
         "cachefor": "cachefor",
         "token": "token",
@@ -225,21 +225,21 @@ def test_get_user_ok(mock_me_call):
     }
     mock_me_call(token, expected)
     user = get_user_info(token)
-    assert user.anon_id == expected["anonid"]
-    assert user.user == expected["user"]
+    assert user.anon_user_id == expected["anonid"]
+    assert user.user_name == expected["user"]
     assert user.display_name == expected["display"]
     assert len(user.idents) == 1
     ident = user.idents[0]
-    assert ident.ident_id == expected["idents"][0]["id"]
+    assert ident.id == expected["idents"][0]["id"]
     assert ident.provider == expected["idents"][0]["provider"]
-    assert ident.provider_user == expected["idents"][0]["provusername"]
+    assert ident.provider_user_name == expected["idents"][0]["provusername"]
     assert len(user.policy_ids) == 1
     policy = user.policy_ids[0]
-    assert policy.policy_id == expected["policyids"][0]["id"]
+    assert policy.id == expected["policyids"][0]["id"]
     assert policy.agree_date == expected["policyids"][0]["agreedon"]
     assert len(user.roles) == 1
     role = user.roles[0]
-    assert role.role_id == expected["roles"][0]["id"]
+    assert role.id == expected["roles"][0]["id"]
     assert role.description == expected["roles"][0]["desc"]
     for attr in ["created", "last_login", "email"]:
         assert getattr(user, attr) is None

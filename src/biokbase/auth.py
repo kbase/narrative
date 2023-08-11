@@ -30,31 +30,31 @@ class TokenInfo:
     """
 
     def __init__(self, info_dict: dict, token: str = None):
-        self.token_type = info_dict.get("type")
-        self.token_id = info_dict.get("id")
-        self.expires = info_dict.get("expires", 0)
-        self.created = info_dict.get("created", 0)
-        self.token_name = info_dict.get("name")
-        self.user_name = info_dict.get("user")
-        self.custom = info_dict.get("custom", {})
         self.cachefor = info_dict.get("cachefor", 0)
+        self.created = info_dict.get("created", 0)
+        self.custom = info_dict.get("custom", {})
+        self.expires = info_dict.get("expires", 0)
+        self.id = info_dict.get("id")
         self.token = token if token is not None else info_dict.get("token")
+        self.token_name = info_dict.get("name")
+        self.token_type = info_dict.get("type")
+        self.user_name = info_dict.get("user")
 
 
 class UserRole:
-    def __init__(self, role_info):
+    def __init__(self, role_info: dict):
         self.id = role_info.get("id")
         self.description = role_info.get("desc")
 
 
 class PolicyId:
-    def __init__(self, policy_info):
+    def __init__(self, policy_info: dict):
         self.id = policy_info.get("id")
         self.agree_date = policy_info.get("agreedon")
 
 
 class Identity:
-    def __init__(self, ident_info):
+    def __init__(self, ident_info: dict):
         self.id = ident_info.get("id")
         self.provider = ident_info.get("provider")
         self.provider_user_name = ident_info.get("provusername")
@@ -67,20 +67,19 @@ class UserInfo:
     """
 
     def __init__(self, user_dict: dict):
-        self.user_name = user_dict.get("user")
+        self.anon_user_id = user_dict.get("anonid")
         self.created = user_dict.get("created")
-        self.last_login = user_dict.get("lastlogin")
-        self.display_name = user_dict.get("display")
-        self.roles = [UserRole(role) for role in user_dict.get("roles", [])]
         self.custom_roles = user_dict.get("customroles", [])
+        self.display_name = user_dict.get("display")
+        self.email = user_dict.get("email")
+        self.idents = [Identity(ident) for ident in user_dict.get("idents", [])]
+        self.last_login = user_dict.get("lastlogin")
+        self.local_user = user_dict.get("local", False)
         self.policy_ids = [
             PolicyId(policy) for policy in user_dict.get("policyids", [])
         ]
-        self.user = user_dict.get("user")
-        self.local_user = user_dict.get("local", False)
-        self.email = user_dict.get("email")
-        self.idents = [Identity(ident) for ident in user_dict.get("idents", [])]
-        self.anon_user_id = user_dict.get("anonid")
+        self.roles = [UserRole(role) for role in user_dict.get("roles", [])]
+        self.user_name = user_dict.get("user")
 
 
 def validate_token():
@@ -117,8 +116,7 @@ def get_user_info(token: str) -> UserInfo:
     """
     headers = {"Authorization": token}
     r = requests.get(token_api_url + endpt_me, headers=headers)
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
+    r.raise_for_status()
     user_info = UserInfo(r.json())
     return user_info
 
@@ -127,20 +125,20 @@ def get_token_info(token: str) -> TokenInfo:
     headers = {"Authorization": token}
     r = requests.get(token_api_url + endpt_token, headers=headers)
     r.raise_for_status()
-    auth_info = TokenInfo(r.json(), token=token)
-    return auth_info
+    token_info = TokenInfo(r.json(), token=token)
+    return token_info
 
 
-def init_session_env(auth_info: TokenInfo, ip: str) -> None:
+def init_session_env(token_info: TokenInfo, ip: str) -> None:
     """
     Initializes the internal session environment.
     Parameters:
-      auth_info: TokenInfo object, uses token_id, token, and user attributes
+      token_info: TokenInfo object, uses id, token, and user attributes
       ip: the client IP address
     """
-    set_environ_token(auth_info.token)
-    kbase_env.session = auth_info.token_id
-    kbase_env.user = auth_info.user
+    set_environ_token(token_info.token)
+    kbase_env.session = token_info.id
+    kbase_env.user = token_info.user_name
     kbase_env.client_ip = ip
 
 

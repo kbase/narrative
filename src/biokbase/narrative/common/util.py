@@ -32,6 +32,7 @@ class _KBaseEnv:
     env_workspace = "KB_WORKSPACE_ID"
     env_user = "KB_USER_ID"
     env_env = "KB_ENVIRONMENT"
+    env_anon_user_id = "KB_ANON_USER_ID"
 
     _defaults = {
         "auth_token": "none",
@@ -41,6 +42,7 @@ class _KBaseEnv:
         "user": "anonymous",
         "workspace": "none",
         "env": "none",
+        "anon_user_id": "none",
     }
 
     def __getattr__(self, name):

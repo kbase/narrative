@@ -34,8 +34,8 @@ class TokenInfo:
         self.token_id = info_dict.get("id")
         self.expires = info_dict.get("expires", 0)
         self.created = info_dict.get("created", 0)
-        self.name = info_dict.get("name")
-        self.user = info_dict.get("user")
+        self.token_name = info_dict.get("name")
+        self.user_name = info_dict.get("user")
         self.custom = info_dict.get("custom", {})
         self.cachefor = info_dict.get("cachefor", 0)
         self.token = token if token is not None else info_dict.get("token")
@@ -43,21 +43,21 @@ class TokenInfo:
 
 class UserRole:
     def __init__(self, role_info):
-        self.role_id = role_info.get("id")
+        self.id = role_info.get("id")
         self.description = role_info.get("desc")
 
 
 class PolicyId:
     def __init__(self, policy_info):
-        self.policy_id = policy_info.get("id")
+        self.id = policy_info.get("id")
         self.agree_date = policy_info.get("agreedon")
 
 
 class Identity:
     def __init__(self, ident_info):
-        self.ident_id = ident_info.get("id")
+        self.id = ident_info.get("id")
         self.provider = ident_info.get("provider")
-        self.provider_user = ident_info.get("provusername")
+        self.provider_user_name = ident_info.get("provusername")
 
 
 class UserInfo:
@@ -67,7 +67,7 @@ class UserInfo:
     """
 
     def __init__(self, user_dict: dict):
-        self.user = user_dict.get("user")
+        self.user_name = user_dict.get("user")
         self.created = user_dict.get("created")
         self.last_login = user_dict.get("lastlogin")
         self.display_name = user_dict.get("display")
@@ -80,7 +80,7 @@ class UserInfo:
         self.local_user = user_dict.get("local", False)
         self.email = user_dict.get("email")
         self.idents = [Identity(ident) for ident in user_dict.get("idents", [])]
-        self.anon_id = user_dict.get("anonid")
+        self.anon_user_id = user_dict.get("anonid")
 
 
 def validate_token():

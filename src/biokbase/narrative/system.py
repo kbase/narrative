@@ -1,10 +1,12 @@
 import os
+import time
+from typing import Union
+
 import biokbase.auth
 import biokbase.narrative.clients as clients
-import time
 
 
-def strict_system_variable(var):
+def strict_system_variable(var: str) -> Union[str, int]:
     """
     Returns a system variable.
     If that variable isn't defined, or anything else happens, raises an exception.
@@ -15,25 +17,28 @@ def strict_system_variable(var):
     return result
 
 
-def system_variable(var):
+def system_variable(var: str) -> Union[str, int, None]:
     """
     Returns a KBase system variable. Just a little wrapper.
 
     Parameters
     ----------
-    var: string, one of "workspace", "workspace_id", "token", "user_id"
+    var: string, one of "workspace", "workspace_id", "token", "user_id",
+        "timestamp_epoch_ms", "timestamp_epoch_sec"
         workspace - returns the KBase workspace name
         workspace_id - returns the numerical id of the current workspace
         token - returns the current user's token credential
         user_id - returns the current user's id
+        timestamp_epoch_ms - the current epoch time in milliseconds
+        timestamp_epoch_sec - the current epoch time in seconds
 
     if anything is not found, returns None
     """
     var = var.lower()
     if var == "workspace":
-        return os.environ.get("KB_WORKSPACE_ID", None)
+        return os.environ.get("KB_WORKSPACE_ID")
     elif var == "workspace_id":
-        ws_name = os.environ.get("KB_WORKSPACE_ID", None)
+        ws_name = os.environ.get("KB_WORKSPACE_ID")
         if ws_name is None:
             return None
         try:
@@ -41,7 +46,7 @@ def system_variable(var):
                 {"workspace": ws_name}
             )
             return ws_info[0]
-        except BaseException:
+        except Exception:
             return None
     elif var == "user_id":
         token = biokbase.auth.get_auth_token()
@@ -49,8 +54,8 @@ def system_variable(var):
             return None
         try:
             user_info = biokbase.auth.get_user_info(token)
-            return user_info.get("user", None)
-        except BaseException:
+            return user_info.get("user")
+        except Exception:
             return None
         # TODO: make this better with more exception handling.
     elif var == "timestamp_epoch_ms":
@@ -59,6 +64,4 @@ def system_variable(var):
     elif var == "timestamp_epoch_sec":
         # get epoch time in seconds
         return int(time.time())
-    else:
-        return None
-
+    return None

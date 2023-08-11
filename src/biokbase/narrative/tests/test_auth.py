@@ -228,23 +228,7 @@ def test_get_user_ok(mock_me_call):
     assert user.anon_user_id == expected["anonid"]
     assert user.user_name == expected["user"]
     assert user.display_name == expected["display"]
-    assert len(user.idents) == 1
-    ident = user.idents[0]
-    assert ident.id == expected["idents"][0]["id"]
-    assert ident.provider == expected["idents"][0]["provider"]
-    assert ident.provider_user_name == expected["idents"][0]["provusername"]
-    assert len(user.policy_ids) == 1
-    policy = user.policy_ids[0]
-    assert policy.id == expected["policyids"][0]["id"]
-    assert policy.agree_date == expected["policyids"][0]["agreedon"]
-    assert len(user.roles) == 1
-    role = user.roles[0]
-    assert role.id == expected["roles"][0]["id"]
-    assert role.description == expected["roles"][0]["desc"]
-    for attr in ["created", "last_login", "email"]:
-        assert getattr(user, attr) is None
     assert user.custom_roles == []
-    assert user.local_user is False
 
 
 def test_get_user_fail(mock_me_call):

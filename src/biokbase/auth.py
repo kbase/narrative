@@ -41,25 +41,6 @@ class TokenInfo:
         self.user_name = info_dict.get("user")
 
 
-class UserRole:
-    def __init__(self, role_info: dict):
-        self.id = role_info.get("id")
-        self.description = role_info.get("desc")
-
-
-class PolicyId:
-    def __init__(self, policy_info: dict):
-        self.id = policy_info.get("id")
-        self.agree_date = policy_info.get("agreedon")
-
-
-class Identity:
-    def __init__(self, ident_info: dict):
-        self.id = ident_info.get("id")
-        self.provider = ident_info.get("provider")
-        self.provider_user_name = ident_info.get("provusername")
-
-
 class UserInfo:
     """
     A container for user information that comes from the Auth service. Does not
@@ -68,17 +49,8 @@ class UserInfo:
 
     def __init__(self, user_dict: dict):
         self.anon_user_id = user_dict.get("anonid")
-        self.created = user_dict.get("created")
         self.custom_roles = user_dict.get("customroles", [])
         self.display_name = user_dict.get("display")
-        self.email = user_dict.get("email")
-        self.idents = [Identity(ident) for ident in user_dict.get("idents", [])]
-        self.last_login = user_dict.get("lastlogin")
-        self.local_user = user_dict.get("local", False)
-        self.policy_ids = [
-            PolicyId(policy) for policy in user_dict.get("policyids", [])
-        ]
-        self.roles = [UserRole(role) for role in user_dict.get("roles", [])]
         self.user_name = user_dict.get("user")
 
 

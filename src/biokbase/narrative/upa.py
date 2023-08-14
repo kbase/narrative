@@ -5,20 +5,19 @@ documents.
 """
 
 import re
-
-from .app_util import system_variable
+from .system import system_variable
 
 external_tag = "&"
 
 
-def is_upa(upa):
+def is_upa(upa: str) -> bool:
     """
     Returns True if the given upa string is valid, False, otherwise.
     """
     return re.match(r"^\d+(\/\d+){2}(;\d+(\/\d+){2})*$", upa) is not None
 
 
-def is_ref(ref):
+def is_ref(ref: str) -> bool:
     """
     Returns True if the given string is a reference or upa, False otherwise.
     That is, if it has this structure:
@@ -40,7 +39,7 @@ def is_ref(ref):
     return True
 
 
-def _prepare_upa_serialization(upa):
+def _prepare_upa_serialization(upa: str) -> str:
     if isinstance(upa, list):
         upa = ";".join(upa)
     if not is_upa(upa):
@@ -50,7 +49,7 @@ def _prepare_upa_serialization(upa):
     return upa
 
 
-def serialize(upa):
+def serialize(upa: str) -> str:
     """
     Serializes an UPA - prepares it for storage as a part of Narrative cell metadata.
     This means a bit of a tweak to the UPA itself. Currently, we want to store it in a way
@@ -67,7 +66,7 @@ def serialize(upa):
     return re.sub(r"^(\d+)\/", r"[\1]/", upa)
 
 
-def serialize_external(upa):
+def serialize_external(upa: str) -> str:
     """
     In the case of UPAs representing objects that are located in a different workspace all
     together (e.g. set items that aren't copied into the Narrative with the set container
@@ -84,7 +83,7 @@ def serialize_external(upa):
     return external_tag + upa
 
 
-def deserialize(serial_upa):
+def deserialize(serial_upa: str) -> str:
     """
     Deserializes a serialized UPA to one that is valid for use with the Workspace (or other
     services that consume Workspace objects).
@@ -98,7 +97,7 @@ def deserialize(serial_upa):
     if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
-        deserial = serial_upa[len(external_tag) :]
+        deserial = serial_upa[len(external_tag):]
     else:
         ws_id = system_variable("workspace_id")
         if ws_id is None:

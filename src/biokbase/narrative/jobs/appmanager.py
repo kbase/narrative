@@ -260,7 +260,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_meta["token_id"] = agent_token["id"]
+        job_meta["token_id"] = agent_token.token_id
 
         # This is the input set for ee2.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
@@ -289,7 +289,7 @@ class AppManager:
 
         try:
             job_id = clients.get(
-                "execution_engine2", token=agent_token["token"]
+                "execution_engine2", token=agent_token.token
             ).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({"err": str(e)})
@@ -372,7 +372,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_runner_inputs["meta"]["token_id"] = agent_token["id"]
+        job_runner_inputs["meta"]["token_id"] = agent_token.token_id
 
         # Log that we're trying to run a job...
         log_info = {
@@ -386,7 +386,7 @@ class AppManager:
 
         try:
             job_id = clients.get(
-                "execution_engine2", token=agent_token["token"]
+                "execution_engine2", token=agent_token.token
             ).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({"err": str(e)})
@@ -529,12 +529,12 @@ class AppManager:
 
         # add the token id to the meta for all jobs
         for job_input in batch_run_inputs:
-            job_input["meta"]["token_id"] = agent_token["id"]
+            job_input["meta"]["token_id"] = agent_token.token_id
 
         # run the job batch and get a batch_submission record
         try:
             batch_submission = clients.get(
-                "execution_engine2", token=agent_token["token"]
+                "execution_engine2", token=agent_token.token
             ).run_job_batch(batch_run_inputs, batch_params)
         except Exception as e:
             log_info.update({"err": str(e)})
@@ -1012,7 +1012,7 @@ class AppManager:
     def _send_comm_message(self, msg_type, content):
         JobComm().send_comm_message(msg_type, content)
 
-    def _get_agent_token(self, name: str) -> Dict[str, str]:
+    def _get_agent_token(self, name: str) -> auth.TokenInfo:
         """
         Retrieves an agent token from the Auth service with a formatted name.
         This prepends "KBApp_" to the name for filtering, and trims to make sure the name

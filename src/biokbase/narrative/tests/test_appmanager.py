@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 
 from IPython.display import HTML, Javascript
 
+from biokbase.auth import TokenInfo
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.appmanager import BATCH_APP, AppManager
 from biokbase.narrative.jobs.job import Job
@@ -59,7 +60,7 @@ def get_method(tag, app_id):
 
 
 def mock_agent_token(*args, **kwargs):
-    return {"user": "testuser", "id": TOKEN_ID, "token": "abcde"}
+    return TokenInfo({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
 
 
 def get_timestamp():

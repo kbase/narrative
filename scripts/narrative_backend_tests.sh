@@ -11,6 +11,7 @@ fi
 
 pytest \
     --cov=biokbase.narrative \
+    --cov=biokbase.auth \
     --cov-config=.coveragerc \
     --cov-report=html \
     --cov-report=xml \

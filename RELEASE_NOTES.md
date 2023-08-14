@@ -15,40 +15,48 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 - Javascript dependency updates
   - @wdio/browserstack-service: 8.10.2 -> 8.12.2,
-  - @wdio/cli 8.10.2 -> 8.12.2
+  - @wdio/cli: 8.10.2 -> 8.12.2
   - @wdio/local-runner: 8.10.2 -> 8.12.1,
   - @wdio/mocha-framework: 8.10.2 -> 8.12.1,
-  - @wdio/selenium-standalone-service: 8.10.2 -> 8.12.1,
+  - @wdio/selenium-standalone-service: 8.10.2 -> 8.14.0,
   - @wdio/spec-reporter: 8.10.2 -> 8.12.2,
-  - chromedriver ^112.0.0 -> ^114.0.0
-  - datatables.net-buttons-bs 2.2.3 -> 2.3.6
-  - dompurify none -> 2.3.8
-  - eslint 8.34.0 -> 8.44.0
-  - grunt-stylelint ^0.16.0 -> ^0.19.0
-  - karma ^6.3.16 -> 6.4.2
-  - numeral 1.5.0 -> 2.0.6
-  - postcss ^8.3.2 -> 8.4.24
-  - prettier 2.7.1 -> 2.8.8
-  - puppeteer 19.8.2 -> 20.8.2
-  - sass 1.60.0 -> 1.63.6
-  - selenium-webdriver 4.8.0 -> 4.10.0
-  - stylelint ^13.13.1 -> 15.10.1
-  - stylelint-config-recommended ^5.0.0 -> ^13.0.0
-  - stylelint-config-sass-guidelines ^8.0.0 -> ^10.0.0
-  - stylelint-config-standard ^22.0.0 -> ^34.0.0
-  - webdriverio 8.10.2 -> 8.12.3
+  - chromedriver: ^112.0.0 -> ^114.0.0
+  - commander: 10.0.0 -> 11.0.0
+  - cssnano: 6.0.0 -> 6.0.1
+  - datatables.net-buttons-bs: 2.2.3 -> 2.4.1
+  - dompurify: none -> 2.3.8
+  - eslint: 8.34.0 -> 8.46.0
+  - grunt-stylelint: ^0.16.0 -> ^0.19.0
+  - karma: ^6.3.16 -> 6.4.2
+  - karma-jasmine-html-reporter: 2.0.0 -> 2.1.0
+  - numeral: 1.5.0 -> 2.0.6
+  - postcss: ^8.3.2 -> 8.4.27
+  - postcss-discard-comments: ^5.1.2 -> 6.0.0
+  - prettier: 2.7.1 -> 3.0.0
+  - puppeteer: 19.8.2 -> 20.8.2
+  - pure-uuid: 1.6.2 -> 1.6.4
+  - sass: 1.60.0 -> 1.63.6
+  - selenium-webdriver: 4.8.0 -> 4.10.0
+  - stylelint: ^13.13.1 -> 15.10.2
+  - stylelint-config-recommended: ^5.0.0 -> ^13.0.0
+  - stylelint-config-sass-guidelines: ^8.0.0 -> ^10.0.0
+  - stylelint-config-standard: ^22.0.0 -> ^34.0.0
+  - webdriverio: 8.10.2 -> 8.12.3
 
 - Python dependency updates
   - beautifulsoup4: 4.12.1 -> 4.12.2
+  - black: 23.3.0 -> 23.7.0
   - coverage: 7.2.2 -> 7.2.7
   - cryptography: 40.0.1 -> 41.0.2
+  - flake8: 6.0.0 -> 6.1.0
   - isort: none -> 5.18.0
   - markupsafe: 2.1.2 -> 2.1.3
   - pygments: 2.14.0 -> 2.15.1
-  - pymongo: 4.3.3 -> 4.4.0
+  - pymongo: 4.3.3 -> 4.4.1
   - pyopenssl: 23.1.1 -> 23.2.0
   - pytest-cov: 4.0.0 -> 4.1.0
   - pytest: 7.2.2 -> 7.4.0
+  - pyyaml: 6.0.0 -> 6.0.1
   - requests: 2.28.2 -> 2.31.0
   - requests-mock: none -> 1.11.0
 

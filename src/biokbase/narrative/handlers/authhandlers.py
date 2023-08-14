@@ -69,7 +69,7 @@ class KBaseLoginHandler(LoginHandler):
             # if app_log.isEnabledFor(logging.DEBUG):
             #     app_log.debug("kbase cookie = {}".format(cookie_val))
             #     app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-            #                   .format(uid=auth_info.get('user', 'none'),
+            #                   .format(uid=token_info.get('user', 'none'),
             #                           tok=token))
             init_session_env(auth_info, user_info, client_ip)
             self.current_user = kbase_env.user

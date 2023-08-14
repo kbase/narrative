@@ -10,10 +10,10 @@ import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     check_tag,
     map_outputs_from_state,
-    system_variable,
     validate_parameters,
 )
 from biokbase.narrative.jobs.specmanager import SpecManager
+from biokbase.narrative.system import system_variable
 
 from .upa import is_ref, is_upa
 

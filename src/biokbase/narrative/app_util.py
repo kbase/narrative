@@ -1,18 +1,14 @@
 import json
-import os
 import re
-import time
 
-import biokbase.auth
 import biokbase.narrative.clients as clients
+from biokbase.narrative.system import system_variable
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
 """
-__author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
 
 app_version_tags = ["release", "beta", "dev"]
-
 
 def check_tag(tag, raise_exception=False):
     """
@@ -28,65 +24,6 @@ def check_tag(tag, raise_exception=False):
         )
     return tag_exists
 
-
-def strict_system_variable(var):
-    """
-    Returns a system variable.
-    If that variable isn't defined, or anything else happens, raises an exception.
-    """
-    result = system_variable(var)
-    if result is None:
-        raise ValueError('Unable to retrieve system variable: "{}"'.format(var))
-    return result
-
-
-def system_variable(var):
-    """
-    Returns a KBase system variable. Just a little wrapper.
-
-    Parameters
-    ----------
-    var: string, one of "workspace", "workspace_id", "token", "user_id"
-        workspace - returns the KBase workspace name
-        workspace_id - returns the numerical id of the current workspace
-        token - returns the current user's token credential
-        user_id - returns the current user's id
-
-    if anything is not found, returns None
-    """
-    var = var.lower()
-    if var == "workspace":
-        return os.environ.get("KB_WORKSPACE_ID", None)
-
-    if var == "workspace_id":
-        ws_name = os.environ.get("KB_WORKSPACE_ID", None)
-        if ws_name is None:
-            return None
-        try:
-            ws_info = clients.get("workspace").get_workspace_info(
-                {"workspace": ws_name}
-            )
-            return ws_info[0]
-        except BaseException:
-            return None
-    elif var == "user_id":
-        token = biokbase.auth.get_auth_token()
-        if token is None:
-            return None
-        try:
-            user_info = biokbase.auth.get_user_info(token)
-            return user_info.get("user", None)
-        except BaseException:
-            return None
-        # TODO: make this better with more exception handling.
-    elif var == "timestamp_epoch_ms":
-        # get epoch time in milliseconds
-        return int(time.time() * 1000)
-    elif var == "timestamp_epoch_sec":
-        # get epoch time in seconds
-        return int(time.time())
-    else:
-        return None
 
 
 def map_inputs_from_job(job_inputs, app_spec):
@@ -162,6 +99,31 @@ def _untransform(transform_type, value):
 
 
 def app_param(p):
+    """
+    TODO: create an AppParam class to hold and validate this
+    TODO: create a Spec class to hold, validate, and process App Specs
+    Converts a param dictionary from a NarrativeMethodStore param spec into this structure with
+    a number of optional keys:
+    {
+        "id": string
+        "is_group": boolean
+        "optional: boolean
+        "short_hint": string
+        "description": string
+        "type": string
+        "is_output": boolean
+        "allow_multiple": boolean
+        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown values
+        "default": None, singleton, or list if "allow_multiple" is True
+        "checkbox_map": [checked_value, unchecked_value] if type == checkbox
+        The following only apply if the "text_options" field is present in the original spec
+        "is_output": 1, 0, True, or False
+        "allowed_types": list[str] - valid workspace object types
+        "min_val": either the "min_float" or "min_int" field, if present
+        "max_val": either the "max_float" or "max_int" field, if present
+        "regex_constraint": string
+    }
+    """
     p_info = {"id": p["id"], "is_group": False}
 
     if p["optional"] == 0:

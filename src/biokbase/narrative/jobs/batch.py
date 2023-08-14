@@ -8,8 +8,8 @@ from itertools import product
 from string import Formatter, Template
 
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.staging.helper import Helper as StagingHelper
+from biokbase.narrative.system import system_variable
 
 from . import specmanager
 

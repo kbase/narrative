@@ -1072,8 +1072,9 @@ class AppManagerTestCase(unittest.TestCase):
         ref_path = (
             ws_name + "/MyReadsSet; " + ws_name + "/rhodobacterium.art.q10.PE.reads"
         )
+        # ref_paths get mocked as 1/1/1;2/2/2;...N/N/N;18836/5/1
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
-        self.assertEqual(ret, ws_name + "/MyReadsSet;18836/5/1")
+        self.assertEqual(ret, "1/1/1;18836/5/1")
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_generate_input(self):
@@ -1096,19 +1097,19 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         test_data = [
             {
-                "value": "input_value",
+                "value": READS_OBJ_1,
                 "type": "ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
-                "value": ws_name + "/input_value",
+                "value": ws_name + "/" + READS_OBJ_1,
                 "type": "ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
-                "value": "input_value",
+                "value": READS_OBJ_1,
                 "type": "unresolved-ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
                 "value": READS_OBJ_1,
@@ -1123,9 +1124,9 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": None, "type": "int", "expected": None},
             {"value": "5", "type": "int", "expected": 5},
             {
-                "value": ["a", "b", "c"],
+                "value": [READS_OBJ_1, READS_OBJ_2],
                 "type": "list<ref>",
-                "expected": [ws_name + "/a", ws_name + "/b", ws_name + "/c"],
+                "expected": [ws_name + "/" + READS_OBJ_1, ws_name + "/" + READS_OBJ_2],
             },
             {
                 "value": [
@@ -1135,15 +1136,13 @@ class AppManagerTestCase(unittest.TestCase):
                 "type": "list<resolved-ref>",
                 "expected": ["11635/9/1", "11635/10/1"],
             },
-            {"value": "foo", "type": "list<ref>", "expected": [ws_name + "/foo"]},
-            {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
-            {"value": "bar", "type": None, "expected": "bar"},
             {
                 "value": READS_OBJ_1,
-                "type": "future-default",
-                "spec": {"is_output": 0, "allowed_types": ["Some.KnownType"]},
-                "expected": "11635/9/1",
+                "type": "list<ref>",
+                "expected": [ws_name + "/" + READS_OBJ_1],
             },
+            {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
+            {"value": "bar", "type": None, "expected": "bar"},
             {"value": [123, 456], "type": None, "expected": [123, 456]},
             {"value": 123, "type": "string", "expected": "123"},
             {

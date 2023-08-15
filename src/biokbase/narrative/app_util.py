@@ -95,7 +95,7 @@ def _untransform(transform_type, value):
         if slash == -1:
             return value
         else:
-            return value[slash + 1 :]
+            return value[slash + 1:]
     else:
         return value
 
@@ -115,7 +115,8 @@ def app_param(p):
         "type": string
         "is_output": boolean
         "allow_multiple": boolean
-        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown values
+        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown
+            values
         "default": None, singleton, or list if "allow_multiple" is True
         "checkbox_map": [checked_value, unchecked_value] if type == checkbox
         The following only apply if the "text_options" field is present in the original spec
@@ -261,7 +262,8 @@ def get_result_sub_path(result, path):
 
     So it recursively works through.
     look at path[pos] - that's a 0, so get the 0th element of result (the dict that's there.)
-    since result is a list (it almost always is, to start with, since that's what run_job returns), we get:
+    since result is a list (it almost always is, to start with, since that's what run_job
+    returns), we get:
     result[path[0]] = {'report': 'asdf', 'report_ref': 'xyz'}
     path = ['0', 'report_ref']
     pos = 1
@@ -687,12 +689,8 @@ def resolve_single_ref(workspace, value):
         for path_item in path_items:
             if len(path_item.split("/")) > 3:
                 raise ValueError(
-                    "Object reference {} has too many slashes  - should be workspace/object/version(optional)".format(
-                        value
-                    )
+                    f"Object reference {value} has too many slashes - should be ws/object/version"
                 )
-            # return (ws_ref, 'Data reference named {} does not have the right format
-            # - should be workspace/object/version(optional)')
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"ref": value}]}
         )[0]
@@ -870,6 +868,10 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
 
     search_ref = value
     if not is_upa and not is_ref:
+        if transform_type is None:
+            # it's already "transformed" - nothing to do, so don't waste time
+            # fetching it.
+            return value
         search_ref = f"{system_variable('workspace')}/{value}"
     try:
         obj_info = clients.get("workspace").get_object_info3(
@@ -877,8 +879,12 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
         )
     except Exception as err:
         print(err)
-        print(f"Error while searching for object ref '{search_ref}'")
-        return value
+        transform = transform_type
+        if transform is None:
+            transform = "object name"
+        raise ValueError(
+            f"Unable to find object reference '{search_ref}' to transform as {transform}"
+        )
 
     if is_path:
         return ";".join(obj_info["paths"][0])

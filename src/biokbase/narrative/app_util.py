@@ -858,6 +858,7 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
 
     If we can't find any object info on the value, just return the value as-is
     """
+    print(f"transform: {transform_type} value: {value}")
     if value is None:
         return None
 
@@ -866,12 +867,25 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     is_ref = upa.is_ref(value)
     is_path = (is_upa or is_ref) and ";" in value
 
+    # simple cases:
+    # 1. if is_upa and we want resolved-ref or upa, return the value
+    # 2. if is_ref and not is_upa and we want ref or unresolved-ref, return the value
+    # 3. if is neither upa or ref and transform is None, then we want the string, so return that
+    # 4. Otherwise, look up the object and return what's desired from there.
+
+    if is_upa and transform_type in ["upa", "resolved-ref"]:
+        print(f"returning {value}")
+        return value
+    if is_ref and not is_upa and transform_type in ["ref", "unresolved-ref"]:
+        print(f"returning {value}")
+        return value
+    if not is_upa and not is_ref and transform_type is None:
+        print(f"returning {value}")
+        return value
+
+
     search_ref = value
     if not is_upa and not is_ref:
-        if transform_type is None:
-            # it's already "transformed" - nothing to do, so don't waste time
-            # fetching it.
-            return value
         search_ref = f"{system_variable('workspace')}/{value}"
     try:
         obj_info = clients.get("workspace").get_object_info3(
@@ -891,9 +905,8 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     if transform_type == "ref" or transform_type == "unresolved-ref":
         obj = obj_info["infos"][0]
         return f"{obj[7]}/{obj[1]}"
-    if transform_type == "resolved-ref" or transform_type == "upa":
-        if is_upa:
-            return value
+    if transform_type in ["resolved-ref", "upa"]:
+        print(f"returning at end: {';'.join(obj_info['paths'][0])}")
         return ";".join(obj_info["paths"][0])
     if transform_type is None:
         return obj_info["infos"][0][1]

@@ -334,7 +334,7 @@ def test_transform_param_value_textsubdata(value, expected):
 mock_obj_ref = "wjriehl:1490995018528/Sbicolor2"
 ref_cases = [
     (None, None),
-    ("foo/bar", mock_obj_ref),
+    ("foo/bar", "foo/bar"),
     ("1/2/3", mock_obj_ref),
     ("Sbicolor2", mock_obj_ref),
 ]
@@ -432,6 +432,8 @@ def test_transform_param_value_upa_path():
 @mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
 def test_transform_param_value_ref_path():
     ref_path = "some_ws/some_obj;some_other_ws/some_other_obj"
+    for tf_type in ["ref", "unresolved-ref"]:
+        assert transform_param_value(tf_type, ref_path, None) == ref_path
     expected_upa = "1/1/1;2/2/2"
-    for tf_type in ["ref", "unresolved-ref", "upa", "resolved-ref"]:
+    for tf_type in ["upa", "resolved-ref"]:
         assert transform_param_value(tf_type, ref_path, None) == expected_upa

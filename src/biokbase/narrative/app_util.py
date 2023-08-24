@@ -858,7 +858,6 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
 
     If we can't find any object info on the value, just return the value as-is
     """
-    print(f"transform: {transform_type} value: {value}")
     if value is None:
         return None
 
@@ -874,13 +873,10 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
     # 4. Otherwise, look up the object and return what's desired from there.
 
     if is_upa and transform_type in ["upa", "resolved-ref"]:
-        print(f"returning {value}")
         return value
     if is_ref and not is_upa and transform_type in ["ref", "unresolved-ref"]:
-        print(f"returning {value}")
         return value
     if not is_upa and not is_ref and transform_type is None:
-        print(f"returning {value}")
         return value
 
 
@@ -891,8 +887,7 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
         obj_info = clients.get("workspace").get_object_info3(
             {"objects": [{"ref": search_ref}]}
         )
-    except Exception as err:
-        print(err)
+    except Exception:
         transform = transform_type
         if transform is None:
             transform = "object name"
@@ -902,11 +897,10 @@ def transform_object_value(transform_type: Optional[str], value: Optional[str]) 
 
     if is_path:
         return ";".join(obj_info["paths"][0])
-    if transform_type == "ref" or transform_type == "unresolved-ref":
+    if transform_type in ["ref", "unresolved-ref"]:
         obj = obj_info["infos"][0]
         return f"{obj[7]}/{obj[1]}"
     if transform_type in ["resolved-ref", "upa"]:
-        print(f"returning at end: {';'.join(obj_info['paths'][0])}")
         return ";".join(obj_info["paths"][0])
     if transform_type is None:
         return obj_info["infos"][0][1]

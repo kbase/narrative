@@ -260,7 +260,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_meta["token_id"] = agent_token.token_id
+        job_meta["token_id"] = agent_token.id
 
         # This is the input set for ee2.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
@@ -372,7 +372,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_runner_inputs["meta"]["token_id"] = agent_token.token_id
+        job_runner_inputs["meta"]["token_id"] = agent_token.id
 
         # Log that we're trying to run a job...
         log_info = {
@@ -529,7 +529,7 @@ class AppManager:
 
         # add the token id to the meta for all jobs
         for job_input in batch_run_inputs:
-            job_input["meta"]["token_id"] = agent_token.token_id
+            job_input["meta"]["token_id"] = agent_token.id
 
         # run the job batch and get a batch_submission record
         try:

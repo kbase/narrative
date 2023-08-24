@@ -52,7 +52,7 @@ class KBaseLoginHandler(LoginHandler):
         if auth_cookie:
             token = urllib.parse.unquote(auth_cookie.value)
             try:
-                auth_info = get_token_info(token)
+                token_info = get_token_info(token)
             except Exception:
                 app_log.error(
                     "Unable to get user information from authentication token!"
@@ -63,9 +63,9 @@ class KBaseLoginHandler(LoginHandler):
             # if app_log.isEnabledFor(logging.DEBUG):
             #     app_log.debug("kbase cookie = {}".format(cookie_val))
             #     app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-            #                   .format(uid=auth_info.get('user', 'none'),
+            #                   .format(uid=token_info.get('user', 'none'),
             #                           tok=token))
-            init_session_env(auth_info, client_ip)
+            init_session_env(token_info, client_ip)
             self.current_user = kbase_env.user
             log_event(
                 g_log, "session_start", {"user": kbase_env.user, "user_agent": ua}

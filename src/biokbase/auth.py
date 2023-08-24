@@ -30,15 +30,28 @@ class TokenInfo:
     """
 
     def __init__(self, info_dict: dict, token: str = None):
-        self.token_type = info_dict.get("type")
-        self.token_id = info_dict.get("id")
-        self.expires = info_dict.get("expires", 0)
-        self.created = info_dict.get("created", 0)
-        self.name = info_dict.get("name")
-        self.user = info_dict.get("user")
-        self.custom = info_dict.get("custom", {})
         self.cachefor = info_dict.get("cachefor", 0)
+        self.created = info_dict.get("created", 0)
+        self.custom = info_dict.get("custom", {})
+        self.expires = info_dict.get("expires", 0)
+        self.id = info_dict.get("id")
         self.token = token if token is not None else info_dict.get("token")
+        self.token_name = info_dict.get("name")
+        self.token_type = info_dict.get("type")
+        self.user_name = info_dict.get("user")
+
+
+class UserInfo:
+    """
+    A container for user information that comes from the Auth service. Does not
+    hold the token itself.
+    """
+
+    def __init__(self, user_dict: dict):
+        self.anon_user_id = user_dict.get("anonid")
+        self.custom_roles = user_dict.get("customroles", [])
+        self.display_name = user_dict.get("display")
+        self.user_name = user_dict.get("user")
 
 
 def validate_token():
@@ -67,24 +80,37 @@ def get_auth_token() -> Optional[str]:
     return kbase_env.auth_token
 
 
+def get_user_info(token: str) -> UserInfo:
+    """
+    Returns the UserInfo object with information about the user who
+    owns the valid token. If the token is invalid (i.e. the status_code
+    of the request is not ok), an HTTPError exception is raised.
+    """
+    headers = {"Authorization": token}
+    r = requests.get(token_api_url + endpt_me, headers=headers)
+    r.raise_for_status()
+    user_info = UserInfo(r.json())
+    return user_info
+
+
 def get_token_info(token: str) -> TokenInfo:
     headers = {"Authorization": token}
     r = requests.get(token_api_url + endpt_token, headers=headers)
     r.raise_for_status()
-    auth_info = TokenInfo(r.json(), token=token)
-    return auth_info
+    token_info = TokenInfo(r.json(), token=token)
+    return token_info
 
 
-def init_session_env(auth_info: TokenInfo, ip: str) -> None:
+def init_session_env(token_info: TokenInfo, ip: str) -> None:
     """
     Initializes the internal session environment.
     Parameters:
-      auth_info: TokenInfo object, uses token_id, token, and user attributes
+      token_info: TokenInfo object, uses id, token, and user attributes
       ip: the client IP address
     """
-    set_environ_token(auth_info.token)
-    kbase_env.session = auth_info.token_id
-    kbase_env.user = auth_info.user
+    set_environ_token(token_info.token)
+    kbase_env.session = token_info.id
+    kbase_env.user = token_info.user_name
     kbase_env.client_ip = ip
 
 

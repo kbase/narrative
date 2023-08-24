@@ -876,18 +876,11 @@ class JobCommTestCase(unittest.TestCase):
 
     @mock.patch(CLIENTS, get_mock_client)
     def check_retry_jobs(self, job_args, job_id_list):
-        import json
         req_dict = make_comm_msg(RETRY, job_args, False)
         expected = {
             job_id: ALL_RESPONSE_DATA[RETRY][job_id] for job_id in job_id_list if job_id
         }
-        # print("request")
-        # print(json.dumps(req_dict, indent=4))
         retry_data = self.jc._handle_comm_message(req_dict)
-        # print("reply")
-        # print(json.dumps(retry_data, indent=4))
-        # print("expected")
-        # print(json.dumps(expected, indent=4))
         self.assertEqual(expected, retry_data)
         retry_msg = self.jc._comm.pop_message()
         self.assertEqual(

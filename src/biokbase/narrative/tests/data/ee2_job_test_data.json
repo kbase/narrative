@@ -292,7 +292,7 @@
         "widget_info": {
             "name": "no-display",
             "params": {
-                "obj_ref": "18836/5/1",
+                "obj_ref": "62425/2/12",
                 "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
                 "report_ref": "62425/18/1",
                 "report_window_line_height": "16",
@@ -512,7 +512,7 @@
         "widget_info": {
             "name": "no-display",
             "params": {
-                "obj_ref": "18836/5/1",
+                "obj_ref": "62425/17/1",
                 "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                 "report_ref": "62425/19/1",
                 "report_window_line_height": "16",

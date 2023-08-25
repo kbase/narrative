@@ -232,9 +232,19 @@ class MockClients:
                 None,
             ]
         ]
-        paths = [["18836/5/1"]]
+        upa = "18836/5/1"
         num_objects = len(params.get("objects", [0]))
-        return {"infos": infos * num_objects, "paths": paths * num_objects}
+        paths = []
+        for obj_ident in params.get("objects", []):
+            ref_path = []
+            if "ref" in obj_ident and ";" in obj_ident["ref"]:
+                num_steps = len(obj_ident["ref"].split(";"))
+                for step in range(num_steps - 1):
+                    i = step + 1
+                    ref_path.append(f"{i}/{i}/{i}")
+            ref_path.append(upa)
+            paths.append(ref_path)
+        return {"infos": infos * num_objects, "paths": paths}
 
     def list_objects(self, params):
         ws_ids = params["ids"]

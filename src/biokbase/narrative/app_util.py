@@ -1,7 +1,9 @@
 import json
 import re
+from typing import Any, Optional
 
 import biokbase.narrative.clients as clients
+import biokbase.narrative.upa as upa
 from biokbase.narrative.system import system_variable
 
 """
@@ -9,6 +11,7 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 """
 
 app_version_tags = ["release", "beta", "dev"]
+
 
 def check_tag(tag, raise_exception=False):
     """
@@ -23,7 +26,6 @@ def check_tag(tag, raise_exception=False):
             % (tag, ", ".join(app_version_tags))
         )
     return tag_exists
-
 
 
 def map_inputs_from_job(job_inputs, app_spec):
@@ -93,7 +95,7 @@ def _untransform(transform_type, value):
         if slash == -1:
             return value
         else:
-            return value[slash + 1 :]
+            return value[slash + 1:]
     else:
         return value
 
@@ -113,7 +115,8 @@ def app_param(p):
         "type": string
         "is_output": boolean
         "allow_multiple": boolean
-        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown values
+        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown
+            values
         "default": None, singleton, or list if "allow_multiple" is True
         "checkbox_map": [checked_value, unchecked_value] if type == checkbox
         The following only apply if the "text_options" field is present in the original spec
@@ -259,7 +262,8 @@ def get_result_sub_path(result, path):
 
     So it recursively works through.
     look at path[pos] - that's a 0, so get the 0th element of result (the dict that's there.)
-    since result is a list (it almost always is, to start with, since that's what run_job returns), we get:
+    since result is a list (it almost always is, to start with, since that's what run_job
+    returns), we get:
     result[path[0]] = {'report': 'asdf', 'report_ref': 'xyz'}
     path = ['0', 'report_ref']
     pos = 1
@@ -685,12 +689,8 @@ def resolve_single_ref(workspace, value):
         for path_item in path_items:
             if len(path_item.split("/")) > 3:
                 raise ValueError(
-                    "Object reference {} has too many slashes  - should be workspace/object/version(optional)".format(
-                        value
-                    )
+                    f"Object reference {value} has too many slashes - should be ws/object/version"
                 )
-            # return (ws_ref, 'Data reference named {} does not have the right format
-            # - should be workspace/object/version(optional)')
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"ref": value}]}
         )[0]
@@ -727,7 +727,9 @@ def resolve_ref_if_typed(value, spec_param):
     return value
 
 
-def transform_param_value(transform_type, value, spec_param):
+def transform_param_value(
+    transform_type: Optional[str], value: Any, spec_param: Optional[dict]
+) -> Any:
     """
     Transforms an input according to the rules given in
     NarrativeMethodStore.ServiceMethodInputMapping
@@ -738,7 +740,62 @@ def transform_param_value(transform_type, value, spec_param):
       (4.) none or None - doesn't transform.
 
     Returns a transformed (or not) value.
+
+    Rules and logic, esp for objects being sent.
+    1. Test if current transform applies. (None is a valid transform)
+        A. Check if input is an object - valid transforms are ref, resolved-ref, list<ref>,
+            list<resolved-ref>, None
+        B. If not object, int, list<int>, and None are allowed.
+    2. If object and not output field, apply transform as follows:
+        A. None -> returns only object name
+        B. ref -> returns workspace_name/object_name
+        C. resolved-ref -> returns UPA
+        D. (not in docs yet) upa -> returns UPA
+        E. any of the above can be applied in list<X>
+    3. Exception: if the input is an UPA path or reference path, it should only get transformed
+        to an UPA path.
+
+    This function will attempt to transform value according to the above rules. If value looks
+    like a ref (ws_name/obj_name) and transform_type is None, then obj_name will be returned.
+    Likewise, if resolved-ref is given, and value looks like an UPA already, then the already
+    resolved-ref will be returned.
+
+    Parameters:
+    transform_type - str/None - should be one of the following, if not None:
+        * string
+        * int
+        * ref
+        * resolved-ref
+        * upa
+        * list<X> where X is any of the above
+    value - anything or None. Parameter values are expected, by the KBase app stack, to
+        generally be either a singleton or a list of singletons. In practice, they're usually
+        strings, ints, floats, None, or a list of those.
+    spec_param - either None or a spec parameter dictionary as defined by
+        SpecManager.app_params. That is:
+        {
+            optional = boolean,
+            is_constant = boolean,
+            value = (whatever, optional),
+            type = [text|int|float|list|textsubdata],
+            is_output = boolean,
+            short_hint = string,
+            description = string,
+            allowed_values = list (optional),
+        }
     """
+    if transform_type is not None:
+        transform_type = transform_type.lower()
+
+    is_input_object_param = False
+    if (
+        spec_param is not None
+        and spec_param["type"] == "text"
+        and not spec_param["is_output"]
+        and len(spec_param.get("allowed_types", []))
+    ):
+        is_input_object_param = True
+
     if (
         transform_type is None
         and spec_param is not None
@@ -746,60 +803,105 @@ def transform_param_value(transform_type, value, spec_param):
     ):
         transform_type = "string"
 
-    if (
-        transform_type is None
-        or transform_type == "none"
-        or transform_type == "object-name"
+    if not is_input_object_param and (
+        transform_type is None or transform_type == "none"
     ):
         return value
 
-    elif transform_type == "ref" or transform_type == "unresolved-ref":
-        # make unresolved workspace ref (like 'ws-name/obj-name')
-        if (value is not None) and ("/" not in value):
-            value = system_variable("workspace") + "/" + value
-        return value
+    if transform_type in ["ref", "unresolved-ref", "resolved-ref", "upa"] or (
+        is_input_object_param and transform_type is None
+    ):
+        if isinstance(value, list):
+            return [transform_object_value(transform_type, v) for v in value]
+        return transform_object_value(transform_type, value)
 
-    elif transform_type == "resolved-ref":
-        # make a workspace ref
-        if value is not None:
-            value = resolve_ref(system_variable("workspace"), value)
-        return value
-
-    elif transform_type == "future-default":
-        # let's guess base on spec_param
-        if spec_param is None:
-            return value
-        else:
-            if value is not None:
-                value = resolve_ref_if_typed(value, spec_param)
-            return value
-
-    elif transform_type == "int":
+    if transform_type == "int":
         # make it an integer, OR 0.
         if value is None or len(str(value).strip()) == 0:
             return None
         return int(value)
 
-    elif transform_type == "string":
+    if transform_type == "string":
         if value is None:
             return value
-        elif isinstance(value, list):
+        if isinstance(value, list):
             return ",".join(value)
-        elif isinstance(value, dict):
-            return ",".join([key + "=" + str(value[key]) for key in value])
-        else:
-            return str(value)
+        if isinstance(value, dict):
+            return ",".join([f"{key}={value[key]}" for key in value])
+        return str(value)
 
-    elif transform_type.startswith("list<") and transform_type.endswith(">"):
+    if transform_type.startswith("list<") and transform_type.endswith(">"):
         # make it a list of transformed types.
         list_type = transform_type[5:-1]
         if isinstance(value, list):
-            ret = []
-            for pos in range(0, len(value)):
-                ret.append(transform_param_value(list_type, value[pos], None))
-            return ret
-        else:
-            return [transform_param_value(list_type, value, None)]
+            return [transform_param_value(list_type, v, None) for v in value]
+        return [transform_param_value(list_type, value, None)]
 
     else:
         raise ValueError("Unsupported Transformation type: " + transform_type)
+
+
+def transform_object_value(transform_type: Optional[str], value: Optional[str]) -> str:
+    """
+    Cases:
+    transform = ref or unresolved-ref:
+        - should return wsname / object name
+    transform = upa or resolved-ref:
+        - should return UPA
+    transform = None:
+        - should return object name
+    Note that if it is a reference path, it was always get returned as an UPA-path
+    for the best compatibility.
+
+    value can be either object name, ref, upa, or ref-path
+    can tell by testing with UPA api
+
+    If we can't find any object info on the value, just return the value as-is
+    """
+    if value is None:
+        return None
+
+    # 1. get object info
+    is_upa = upa.is_upa(value)
+    is_ref = upa.is_ref(value)
+    is_path = (is_upa or is_ref) and ";" in value
+
+    # simple cases:
+    # 1. if is_upa and we want resolved-ref or upa, return the value
+    # 2. if is_ref and not is_upa and we want ref or unresolved-ref, return the value
+    # 3. if is neither upa or ref and transform is None, then we want the string, so return that
+    # 4. Otherwise, look up the object and return what's desired from there.
+
+    if is_upa and transform_type in ["upa", "resolved-ref"]:
+        return value
+    if is_ref and not is_upa and transform_type in ["ref", "unresolved-ref"]:
+        return value
+    if not is_upa and not is_ref and transform_type is None:
+        return value
+
+
+    search_ref = value
+    if not is_upa and not is_ref:
+        search_ref = f"{system_variable('workspace')}/{value}"
+    try:
+        obj_info = clients.get("workspace").get_object_info3(
+            {"objects": [{"ref": search_ref}]}
+        )
+    except Exception:
+        transform = transform_type
+        if transform is None:
+            transform = "object name"
+        raise ValueError(
+            f"Unable to find object reference '{search_ref}' to transform as {transform}"
+        )
+
+    if is_path:
+        return ";".join(obj_info["paths"][0])
+    if transform_type in ["ref", "unresolved-ref"]:
+        obj = obj_info["infos"][0]
+        return f"{obj[7]}/{obj[1]}"
+    if transform_type in ["resolved-ref", "upa"]:
+        return ";".join(obj_info["paths"][0])
+    if transform_type is None:
+        return obj_info["infos"][0][1]
+    return value

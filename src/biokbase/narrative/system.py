@@ -2,8 +2,8 @@ import os
 import time
 from typing import Union
 
-import biokbase.auth
 import biokbase.narrative.clients as clients
+from biokbase.auth import get_auth_token, get_user_info
 
 
 def strict_system_variable(var: str) -> Union[str, int]:
@@ -49,12 +49,12 @@ def system_variable(var: str) -> Union[str, int, None]:
         except Exception:
             return None
     elif var == "user_id":
-        token = biokbase.auth.get_auth_token()
+        token = get_auth_token()
         if token is None:
             return None
         try:
-            user_info = biokbase.auth.get_user_info(token)
-            return user_info.get("user")
+            user_info = get_user_info(token)
+            return user_info.user_name
         except Exception:
             return None
         # TODO: make this better with more exception handling.

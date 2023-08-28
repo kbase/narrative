@@ -6,6 +6,7 @@ from requests import HTTPError
 
 from biokbase.auth import (
     TokenInfo,
+    UserInfo,
     get_agent_token,
     get_auth_token,
     get_display_names,
@@ -144,14 +145,17 @@ def test_init_session_env():
     ip = "127.0.0.1"
     token_id = "some-token-id"
     user = "kbase_user"
+    anonymous_id = "some_anon_id"
 
     token_info = TokenInfo({"id": token_id, "user": user}, token=token)
-    init_session_env(token_info, ip)
+    user_info = UserInfo({"user": user, "anonid": anonymous_id})
+    init_session_env(token_info, user_info, ip)
     assert get_auth_token() == token
     assert kbase_env.session == token_info.id
     assert kbase_env.user == token_info.user_name
     assert kbase_env.client_ip == ip
-    init_session_env(TokenInfo({}), None)
+    assert kbase_env.anon_user_id == anonymous_id
+    init_session_env(TokenInfo({}), UserInfo({}), None)
 
 
 def test_get_agent_token_ok(mock_token_endpoint):

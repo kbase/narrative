@@ -7,7 +7,12 @@ from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
 from traitlets.config import Application
 
-from biokbase.auth import get_token_info, init_session_env, set_environ_token
+from biokbase.auth import (
+    get_token_info,
+    get_user_info,
+    init_session_env,
+    set_environ_token,
+)
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env
 
@@ -52,7 +57,8 @@ class KBaseLoginHandler(LoginHandler):
         if auth_cookie:
             token = urllib.parse.unquote(auth_cookie.value)
             try:
-                token_info = get_token_info(token)
+                auth_info = get_token_info(token)
+                user_info = get_user_info(token)
             except Exception:
                 app_log.error(
                     "Unable to get user information from authentication token!"
@@ -65,7 +71,7 @@ class KBaseLoginHandler(LoginHandler):
             #     app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
             #                   .format(uid=token_info.get('user', 'none'),
             #                           tok=token))
-            init_session_env(token_info, client_ip)
+            init_session_env(auth_info, user_info, client_ip)
             self.current_user = kbase_env.user
             log_event(
                 g_log, "session_start", {"user": kbase_env.user, "user_agent": ua}
@@ -99,7 +105,10 @@ class KBaseLoginHandler(LoginHandler):
 
     @classmethod
     def login_available(cls, settings):
-        """Whether this LoginHandler is needed - and therefore whether the login page should be displayed."""
+        """
+        Whether this LoginHandler is needed - and therefore whether the login page should be
+        displayed.
+        """
         return True
 
 

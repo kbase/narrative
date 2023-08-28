@@ -1,14 +1,14 @@
 import os
-import biokbase.auth
-from unittest import mock
-from biokbase.narrative.system import (
-    strict_system_variable,
-    system_variable
-)
-from .narrative_mock.mockclients import get_mock_client
 import time
-from . import util
+from unittest import mock
+
 import pytest
+
+import biokbase.auth
+from biokbase.narrative.system import strict_system_variable, system_variable
+
+from . import util
+from .narrative_mock.mockclients import get_mock_client
 
 user_token = "SOME_TOKEN"
 config = util.ConfigTests()
@@ -82,9 +82,11 @@ def test_strict_sys_var_user_ok():
     if user_token:
         biokbase.auth.set_environ_token(user_token)
         assert strict_system_variable("user_id") == user_id
+        biokbase.auth.set_environ_token(None)
 
 def test_strict_sys_var_user_bad():
     biokbase.auth.set_environ_token(bad_fake_token)
     with pytest.raises(ValueError, match='Unable to retrieve system variable: "user_id"') as e:
         strict_system_variable("user_id")
         assert e
+    biokbase.auth.set_environ_token(None)

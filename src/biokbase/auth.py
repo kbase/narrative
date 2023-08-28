@@ -101,7 +101,7 @@ def get_token_info(token: str) -> TokenInfo:
     return token_info
 
 
-def init_session_env(token_info: TokenInfo, ip: str) -> None:
+def init_session_env(token_info: TokenInfo, user_info: UserInfo, ip: str) -> None:
     """
     Initializes the internal session environment.
     Parameters:
@@ -111,6 +111,7 @@ def init_session_env(token_info: TokenInfo, ip: str) -> None:
     set_environ_token(token_info.token)
     kbase_env.session = token_info.id
     kbase_env.user = token_info.user_name
+    kbase_env.anon_user_id = user_info.anon_user_id
     kbase_env.client_ip = ip
 
 

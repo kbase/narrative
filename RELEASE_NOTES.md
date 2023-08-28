@@ -10,6 +10,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 -   PTV-1810 - address object name display issues in the View Configure tab of app cells. This now saves all app inputs as UPAs in the cell. It also includes an update to input transforms to properly convert from UPAs <-> names or references as appropriate before starting the app. 
 -   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
 -   PTV-1878 - fix some failing front end unit tests
+-   UIP-36 - add support for anonymous user ids sent to Google Analytics
 
 ### Dependency Changes
 

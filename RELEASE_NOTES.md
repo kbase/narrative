@@ -4,12 +4,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
-## Unreleased
--   PTV-1875 - fix public data paging issue by removing paging from workspace data sources
--   UIP-28 - update Google Analytics tags to GA4 properties
+## Version 5.2.0
+A new feature here is that app cells now store object information internally as UPAs, instead of object names. This will lead to more reproducible results, and is on the path to fixing the long-standing copy-of-a-copy problem.
+
 -   PTV-1810 - address object name display issues in the View Configure tab of app cells. This now saves all app inputs as UPAs in the cell. It also includes an update to input transforms to properly convert from UPAs <-> names or references as appropriate before starting the app. 
+-   PTV-1875 - fix public data paging issue by removing paging from workspace data sources
 -   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
 -   PTV-1878 - fix some failing front end unit tests
+-   UIP-28 - update Google Analytics tags to GA4 properties
 -   UIP-36 - add support for anonymous user ids sent to Google Analytics
 
 ### Dependency Changes

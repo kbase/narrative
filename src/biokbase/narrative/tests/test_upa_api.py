@@ -1,16 +1,17 @@
 """
 Tests for the Python side of the UPA api.
 """
+import os
 import unittest
 from unittest import mock
+
 from biokbase.narrative.upa import (
-    external_tag,
-    serialize,
     deserialize,
-    serialize_external,
+    external_tag,
     is_ref,
+    serialize,
+    serialize_external,
 )
-import os
 
 this_ws = "31"
 

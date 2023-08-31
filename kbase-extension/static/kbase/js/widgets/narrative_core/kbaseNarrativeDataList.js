@@ -268,9 +268,8 @@ define([
 
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
+                .addClass('kb-data-list-main')
                 .css({
-                    'overflow-x': 'hidden',
-                    'overflow-y': 'auto',
                     height: this.mainListPanelHeight,
                 })
                 .on('scroll', (event) => {
@@ -285,7 +284,6 @@ define([
             this.$addDataButton = $('<button>')
                 .addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                 .attr('aria-label', 'add data')
-                .css({ position: 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
                 .click(() => {
                     this.trigger('toggleSidePanelOverlay.Narrative', [
                         this.options.parentControlPanel.$overlayPanel,
@@ -605,6 +603,9 @@ define([
                             updateSetInfo(obj);
                         }
                     });
+                    const term = this.bsSearch.val();
+                    const type = this.$filterTypeSelect.find('option:selected').val();
+                    this.search(term, type);
                 })
                 .catch((error) => {
                     this.showBlockingError(

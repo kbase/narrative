@@ -1,11 +1,11 @@
-import biokbase.auth as auth
-from biokbase.narrative.common.url_config import URLS
-
-import urllib.parse
-import urllib.request
-import urllib.error
 import json
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
+
+import biokbase.auth as auth
+from biokbase.narrative.common.url_config import URLS
 
 """
 KBase staging.helper class
@@ -15,7 +15,7 @@ __author__ = "Tianhao Gu <tgu@anl.gov>"
 CHUNK_SIZE = 16 * 1024
 
 
-class Helper(object):
+class Helper:
     def __token(self):
         """
         Authorization token passed in from front-end.
@@ -125,9 +125,7 @@ class Helper(object):
         end_point = self._staging_url + "/metadata/" + path
         response = self.__fetch_url(end_point)
 
-        resp_json = json.loads(response)
-
-        return resp_json
+        return json.loads(response)
 
     def jgi_metadata(self, path=""):
         """
@@ -140,9 +138,7 @@ class Helper(object):
         end_point = self._staging_url + "/jgi-metadata/" + path
         response = self.__fetch_url(end_point)
 
-        resp_json = json.loads(response)
-
-        return resp_json
+        return json.loads(response)
 
     def search(self, path=""):
         """
@@ -155,9 +151,7 @@ class Helper(object):
         end_point = self._staging_url + "/search/" + path
         response = self.__fetch_url(end_point)
 
-        resp_json = json.loads(response)
-
-        return resp_json
+        return json.loads(response)
 
     def delete(self, path=""):
         """

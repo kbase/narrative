@@ -1,5 +1,6 @@
 import json
 import socket
+
 from .url_config import URLS
 from .util import kbase_env
 
@@ -14,7 +15,7 @@ A simple ELK stack logger for a few Narrative events.
 # * include environment
 
 
-class NarrativeLogger(object):
+class NarrativeLogger:
     """
     This is a very simple logger that talks to Elastic search.
     It's initialized from the internally configured log host and port, along with

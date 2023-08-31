@@ -1,6 +1,6 @@
 'use strict';
 
-const { makeURL, clickWhenReady } = require('./wdioUtils');
+const { makeURL, clickWhenReady, KBASE_ENV } = require('./wdioUtils');
 
 function mergeObjects(listOfObjects) {
     const simpleObjectPrototype = Object.getPrototypeOf({});
@@ -59,7 +59,6 @@ class NarrativeTesting {
         if (this.caseData) {
             return this.caseData;
         }
-        const env = browser.config.testParams.ENV;
 
         // Note, order is least specific to most specific, so that the more
         // specific can override the least.
@@ -69,11 +68,11 @@ class NarrativeTesting {
         const caseData = this.testData.cases[this.caseLabel] || {};
 
         // Each env can establish defaults (e.g. narrative id)
-        const envDefaults = this.testData.envs[env].defaults || {};
+        const envDefaults = this.testData.envs[KBASE_ENV].defaults || {};
 
         // Each test case is defined per environment as well, as the
         // state of services will be different.
-        const envCaseData = this.testData.envs[env][this.caseLabel];
+        const envCaseData = this.testData.envs[KBASE_ENV][this.caseLabel];
 
         return mergeObjects([caseData, envDefaults, envCaseData]);
     }

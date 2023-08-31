@@ -96,7 +96,8 @@ BATCH_CHILDREN = [
 BATCH_PARENT_CHILDREN = [BATCH_PARENT] + BATCH_CHILDREN
 
 JOBS_TERMINALITY = {
-    job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES for job_id in TEST_JOBS.keys()
+    job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES
+    for job_id in TEST_JOBS.keys()
 }
 
 TERMINAL_JOBS = []

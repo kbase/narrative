@@ -118,8 +118,7 @@ def make_comm_msg(
 
     if as_job_request:
         return JobRequest(msg)
-    else:
-        return msg
+    return msg
 
 
 class JobCommTestCase(unittest.TestCase):
@@ -372,7 +371,9 @@ class JobCommTestCase(unittest.TestCase):
         ]
 
         for msg_type in functions:
-            req_dict = make_comm_msg(msg_type, {"job_id": "something", "batch_id": "another_thing"}, False)
+            req_dict = make_comm_msg(
+                msg_type, {"job_id": "something", "batch_id": "another_thing"}, False
+            )
             err = JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
             with self.assertRaisesRegex(type(err), str(err)):
                 self.jc._handle_comm_message(req_dict)
@@ -430,7 +431,8 @@ class JobCommTestCase(unittest.TestCase):
                 exp_msg = {
                     "msg_type": "job_status_all",
                     "content": {
-                        job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in exp_job_ids
+                        job_id: ALL_RESPONSE_DATA[STATUS][job_id]
+                        for job_id in exp_job_ids
                     },
                 }
                 self.assertEqual(exp_msg, msg)
@@ -626,7 +628,10 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
 
-        expected = {job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id]) for job_id in ALL_JOBS}
+        expected = {
+            job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id])
+            for job_id in ALL_JOBS
+        }
         for job_id in ACTIVE_JOBS:
             # add in the ee2_error message
             expected[job_id]["error"] = exc_message
@@ -691,7 +696,9 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_states_by_cell_id__all_results(self):
         cell_id_list = TEST_CELL_ID_LIST
         expected_ids = ALL_JOBS
-        expected_states = {job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in expected_ids}
+        expected_states = {
+            job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in expected_ids
+        }
 
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         self.jc._handle_comm_message(req_dict)
@@ -870,7 +877,9 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def check_retry_jobs(self, job_args, job_id_list):
         req_dict = make_comm_msg(RETRY, job_args, False)
-        expected = {job_id: ALL_RESPONSE_DATA[RETRY][job_id] for job_id in job_id_list if job_id}
+        expected = {
+            job_id: ALL_RESPONSE_DATA[RETRY][job_id] for job_id in job_id_list if job_id
+        }
         retry_data = self.jc._handle_comm_message(req_dict)
         self.assertEqual(expected, retry_data)
         retry_msg = self.jc._comm.pop_message()
@@ -967,7 +976,11 @@ class JobCommTestCase(unittest.TestCase):
             (8, None, True, lines_available),
         ]
         for c in cases:
-            content = {PARAM["FIRST_LINE"]: c[0], PARAM["NUM_LINES"]: c[1], PARAM["LATEST"]: c[2]}
+            content = {
+                PARAM["FIRST_LINE"]: c[0],
+                PARAM["NUM_LINES"]: c[1],
+                PARAM["LATEST"]: c[2],
+            }
             req_dict = make_comm_msg(LOGS, [job_id], False, content)
             self.jc._handle_comm_message(req_dict)
             msg = self.jc._comm.last_message
@@ -1564,8 +1577,7 @@ class exc_to_msgTestCase(unittest.TestCase):
         def f(i=5):
             if i == 0:
                 raise ValueError(message)
-            else:
-                f(i - 1)
+            f(i - 1)
 
         with self.assertRaisesRegex(ValueError, message):
             self.foo(req_dict, f)

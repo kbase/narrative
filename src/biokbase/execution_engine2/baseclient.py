@@ -8,9 +8,10 @@
 from __future__ import print_function
 
 import json as _json
-import requests as _requests
-import random as _random
 import os as _os
+import random as _random
+
+import requests as _requests
 
 try:
     from configparser import ConfigParser as _ConfigParser  # py 3
@@ -21,6 +22,7 @@ try:
     from urllib.parse import urlparse as _urlparse  # py3
 except ImportError:
     from urlparse import urlparse as _urlparse  # py2
+
 import time
 
 _CT = "content-type"
@@ -109,7 +111,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
         return _json.JSONEncoder.default(self, obj)
 
 
-class BaseClient(object):
+class BaseClient:
     """
     The KBase base client.
     Required initialization arguments (positional):

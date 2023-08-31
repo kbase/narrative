@@ -1,9 +1,11 @@
-from biokbase.workspace.client import Workspace
-import requests
 import json
 import sys
-from time import time
 from pprint import pprint
+from time import time
+
+import requests
+
+from biokbase.workspace.client import Workspace
 
 kb_port = 9999
 mini_ws_url = f"http://localhost:{kb_port}/services/ws"

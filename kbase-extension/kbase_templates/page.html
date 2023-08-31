@@ -44,12 +44,12 @@
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
       gtag('config', '{{google_analytics_id}}', {
-        'username': '{{userName}}',
+        'username': '{{anon_user_id}}',
         'Page_location': document.location,
         'page_path': document.location.pathname,
         'page_title': document.location.pathname
       });
-      gtag('set', {'user_id': '{{userName}}'});
+      gtag('set', {'user_id': '{{anon_user_id}}'});
       {% if google_ad_id %}
         gtag('config', '{{google_ad_id}}');
         gtag('event', 'conversion', {'send_to': '{{google_ad_id}}'+'{{google_ad_conversion}}'});

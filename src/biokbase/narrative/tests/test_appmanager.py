@@ -1,6 +1,7 @@
 """
 Tests for the app manager.
 """
+import contextlib
 import copy
 import io
 import os
@@ -11,6 +12,7 @@ from unittest.mock import MagicMock
 
 from IPython.display import HTML, Javascript
 
+from biokbase.auth import TokenInfo
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.appmanager import BATCH_APP, AppManager
 from biokbase.narrative.jobs.job import Job
@@ -58,7 +60,7 @@ def get_method(tag, app_id):
 
 
 def mock_agent_token(*args, **kwargs):
-    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+    return TokenInfo({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
 
 
 def get_timestamp():
@@ -186,10 +188,8 @@ class AppManagerTestCase(unittest.TestCase):
         self.jm._running_jobs = {}
 
     def tearDown(self):
-        try:
+        with contextlib.suppress(Exception):
             del os.environ["KB_WORKSPACE_ID"]
-        except Exception:
-            pass
 
     def run_app_expect_error(
         self, comm_mock, run_func, func_name, print_error, cell_id=None
@@ -253,7 +253,7 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.am.available_apps(self.bad_tag)
 
-    ############# Testing run_app #############
+    # Testing run_app
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -406,9 +406,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_app #############
+    # End tests for run_app
 
-    ############# Test run_legacy_batch_app #############
+    # Test run_legacy_batch_app
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -603,9 +603,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_legacy_batch_app #############
+    # End tests for run_legacy_batch_app
 
-    ############# Test run_local_app #############
+    # Test run_local_app
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
     @mock.patch(
@@ -706,9 +706,9 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id=cell_id,
         )
 
-    ############# End tests for run_local_app #############
+    # End tests for run_local_app
 
-    ############# Test run_app_batch #############
+    # Test run_app_batch
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -726,9 +726,7 @@ class AppManagerTestCase(unittest.TestCase):
         batch_run_params = dry_run_results["batch_run_params"]
         batch_params = dry_run_results["batch_params"]
 
-        expected_batch_run_keys = set(
-            ["method", "service_ver", "params", "app_id", "meta"]
-        )
+        expected_batch_run_keys = {"method", "service_ver", "params", "app_id", "meta"}
         # expect only the above keys in each batch run params (note the missing wsid key)
         for param_set in batch_run_params:
             self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
@@ -933,7 +931,7 @@ class AppManagerTestCase(unittest.TestCase):
             'Unable to retrieve system variable: "workspace_id"',
         )
 
-    ############# End tests for run_app_batch #############
+    # End tests for run_app_batch
 
     def test_reconstitute_shared_params(self):
         app_info_el = {
@@ -1044,9 +1042,9 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         spec = self.am.spec_manager.get_spec(app_id, tag=tag)
         spec_params = self.am.spec_manager.app_params(spec)
-        spec_params_map = dict(
-            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
+        spec_params_map = {
+            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+        }
         mapped_inputs = self.am._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], inputs, spec_params_map
         )
@@ -1075,8 +1073,9 @@ class AppManagerTestCase(unittest.TestCase):
         ref_path = (
             ws_name + "/MyReadsSet; " + ws_name + "/rhodobacterium.art.q10.PE.reads"
         )
+        # ref_paths get mocked as 1/1/1;2/2/2;...N/N/N;18836/5/1
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
-        self.assertEqual(ret, ws_name + "/MyReadsSet;18836/5/1")
+        self.assertEqual(ret, "1/1/1;18836/5/1")
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_generate_input(self):
@@ -1099,19 +1098,19 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         test_data = [
             {
-                "value": "input_value",
+                "value": READS_OBJ_1,
                 "type": "ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
-                "value": ws_name + "/input_value",
+                "value": ws_name + "/" + READS_OBJ_1,
                 "type": "ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
-                "value": "input_value",
+                "value": READS_OBJ_1,
                 "type": "unresolved-ref",
-                "expected": ws_name + "/" + "input_value",
+                "expected": ws_name + "/" + READS_OBJ_1,
             },
             {
                 "value": READS_OBJ_1,
@@ -1126,9 +1125,9 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": None, "type": "int", "expected": None},
             {"value": "5", "type": "int", "expected": 5},
             {
-                "value": ["a", "b", "c"],
+                "value": [READS_OBJ_1, READS_OBJ_2],
                 "type": "list<ref>",
-                "expected": [ws_name + "/a", ws_name + "/b", ws_name + "/c"],
+                "expected": [ws_name + "/" + READS_OBJ_1, ws_name + "/" + READS_OBJ_2],
             },
             {
                 "value": [
@@ -1138,15 +1137,13 @@ class AppManagerTestCase(unittest.TestCase):
                 "type": "list<resolved-ref>",
                 "expected": ["11635/9/1", "11635/10/1"],
             },
-            {"value": "foo", "type": "list<ref>", "expected": [ws_name + "/foo"]},
-            {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
-            {"value": "bar", "type": None, "expected": "bar"},
             {
                 "value": READS_OBJ_1,
-                "type": "future-default",
-                "spec": {"is_output": 0, "allowed_types": ["Some.KnownType"]},
-                "expected": "11635/9/1",
+                "type": "list<ref>",
+                "expected": [ws_name + "/" + READS_OBJ_1],
             },
+            {"value": ["1", "2", 3], "type": "list<int>", "expected": [1, 2, 3]},
+            {"value": "bar", "type": None, "expected": "bar"},
             {"value": [123, 456], "type": None, "expected": [123, 456]},
             {"value": 123, "type": "string", "expected": "123"},
             {
@@ -1164,7 +1161,7 @@ class AppManagerTestCase(unittest.TestCase):
             {"value": {"one": 1}, "type": "string", "expected": "one=1"},
         ]
         for test in test_data:
-            spec = test.get("spec", None)
+            spec = test.get("spec")
             ret = app_util.transform_param_value(test["type"], test["value"], spec)
             self.assertEqual(ret, test["expected"])
 
@@ -1208,7 +1205,6 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(transformed_call_args_list, [expected_message])
 
     def _single_messages(self, cell_id=None, run_id=None):
-
         return [
             {
                 "msg_type": MESSAGE_TYPE["RUN_STATUS"],
@@ -1223,7 +1219,6 @@ class AppManagerTestCase(unittest.TestCase):
         ]
 
     def _bulk_messages(self, cell_id=None, run_id=None, num_jobs=1):
-
         child_ids = []
         n_child_jobs = num_jobs - 1
         for i in range(n_child_jobs):

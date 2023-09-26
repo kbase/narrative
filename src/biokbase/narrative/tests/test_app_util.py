@@ -6,23 +6,26 @@ import os
 from unittest import mock
 
 import pytest
+import re
+from biokbase.narrative.common.url_config import URLS
+from biokbase.workspace.client import Workspace
 
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
+    clients,
     get_result_sub_path,
     map_inputs_from_job,
     map_outputs_from_state,
     transform_param_value,
 )
+
+from biokbase.narrative.tests.conftest import narrative_vcr as vcr
+from biokbase.narrative.tests import util
 from biokbase.narrative.upa import is_upa
 
-from . import util
-from .narrative_mock.mockclients import get_mock_client
-
-user_token = "SOME_TOKEN"
 config = util.ConfigTests()
-user_id = config.get("users", "test_user")
+user_name = config.get("users", "test_user")
 user_token = util.read_token_file(
     config.get_path("token_files", "test_user", from_root=True)
 )
@@ -331,37 +334,175 @@ def test_transform_param_value_textsubdata(value, expected):
     assert transform_param_value(None, value, spec) == expected
 
 
-mock_obj_ref = "wjriehl:1490995018528/Sbicolor2"
-ref_cases = [
-    (None, None),
-    ("foo/bar", "foo/bar"),
-    ("1/2/3", mock_obj_ref),
-    ("Sbicolor2", mock_obj_ref),
+tf_types = [None, "ref", "resolved-ref", "unresolved-ref", "putative-ref", "upa"]
+all_types = []
+for t in tf_types:
+    all_types.append(t)
+    if t is not None:
+        all_types.append(f"list<{t}>")
+
+ws_name = "narrative_1695311690413"
+
+VALID_UPA_A = "69356/5/2"
+VALID_UPA_B = "69356/4/1"
+VALID_NAME_A = "Abiotrophia_defectiva_ATCC_49176"
+VALID_NAME_B = "_Nostoc_azollae__0708"
+VALID_REF_A = f"{user_name}:{ws_name}/Abiotrophia_defectiva_ATCC_49176"
+VALID_REF_B = f"{user_name}:{ws_name}/_Nostoc_azollae__0708"
+
+input_list = [
+    pytest.param(None, id="none"),
+    pytest.param(VALID_UPA_A, id="upa"),
+    pytest.param(VALID_NAME_A, id="name"),
+    pytest.param(VALID_REF_A, id="ws_name"),
+    pytest.param([VALID_UPA_A, VALID_UPA_B], id="upa_arr"),
+    pytest.param([VALID_NAME_A, VALID_NAME_B], id="name_arr"),
+    pytest.param(
+        [
+            VALID_REF_A,
+            VALID_REF_B,
+        ],
+        id="ws_name_arr",
+    ),
 ]
 
 
-@mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
-@pytest.mark.parametrize("value,expected", ref_cases)
-def test_transform_param_value_simple_ref(value, expected, workspace_name):
-    workspace_name(workspace)
-    for tf_type in ["ref", "unresolved-ref"]:
-        tf_value = transform_param_value(tf_type, value, None)
-        assert tf_value == expected
+@pytest.mark.parametrize("tf_type", all_types)
+@pytest.mark.parametrize("inp", input_list)
+def test_transform_param_value_all_types_with_all_inputs(
+    inp, tf_type, workspace_name, monkeypatch, request
+):
+    workspace_name(f"{user_name}:{ws_name}")
+
+    def get_workspace(_):
+        # ensure that there's a token for the workspace client
+        return Workspace(URLS.workspace, token=user_token)
+
+    monkeypatch.setattr(clients, "get", get_workspace)
+
+    with vcr.use_cassette(
+        f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
+    ):
+        output = transform_param_value(tf_type, inp, None)
+
+        if inp is None:
+            if tf_type and "list" in tf_type:
+                assert output == [None]
+            else:
+                assert output is None
+            return
+
+        if tf_type is None:
+            assert output == inp
+            return
+
+        # list input
+        if isinstance(inp, list):
+            if len(inp) > 1:
+                if "upa" in tf_type or tf_type in [
+                    "resolved-ref",
+                    "list<resolved-ref>",
+                ]:
+                    assert output == [VALID_UPA_A, VALID_UPA_B]
+                else:
+                    assert output == [VALID_REF_A, VALID_REF_B]
+                return
+            if "upa" in tf_type or tf_type in [
+                "resolved-ref",
+                "list<resolved-ref>",
+            ]:
+                assert output == [VALID_UPA_A]
+            else:
+                assert output == [VALID_REF_A]
+            return
+
+        # input is a single entity
+        if tf_type in ["list<resolved-ref>", "list<upa>"]:
+            assert output == [VALID_UPA_A]
+        elif tf_type in ["resolved-ref", "upa"]:
+            assert output == VALID_UPA_A
+        elif tf_type in ["ref", "unresolved-ref", "putative-ref"]:
+            assert output == VALID_REF_A
+        elif tf_type in ["list<ref>", "list<unresolved-ref>", "list<putative-ref>"]:
+            assert output == [VALID_REF_A]
 
 
-mock_upa = "18836/5/1"
-upa_cases = [
-    ("some_name", mock_upa),
-    (["multiple", "names"], [mock_upa, mock_upa]),
-    ("already/ref", mock_upa),
+INVALID_UPA_A = "69356/666/666"  # object doesn't exist in this ws
+INVALID_NAME_A = "some_defective_name"
+INVALID_REF_A = f"{user_name}:{ws_name}/{INVALID_NAME_A}"
+
+putative_refs = [
+    pytest.param(
+        {"in": INVALID_NAME_A, "tf": "putative-ref", "out": INVALID_REF_A},
+        id="invalid-name_putative-ref",
+    ),
+    pytest.param(
+        {"in": INVALID_UPA_A, "tf": "putative-ref", "out": INVALID_UPA_A},
+        id="invalid-upa_putative-ref",
+    ),
 ]
 
 
-@mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client)
-@pytest.mark.parametrize("value,expected", upa_cases)
-def test_transform_param_value_resolved_ref(value, expected, workspace_name):
-    workspace_name(workspace)
-    assert transform_param_value("resolved-ref", value, None) == expected
+@pytest.mark.parametrize("params", putative_refs)
+def test_transform_param_value_putative_refs(
+    params, workspace_name, monkeypatch, request
+):
+    workspace_name(f"{user_name}:{ws_name}")
+
+    def get_workspace(_):
+        return Workspace(URLS.workspace, token=user_token)
+
+    monkeypatch.setattr(clients, "get", get_workspace)
+
+    with vcr.use_cassette(
+        f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
+    ):
+        assert transform_param_value(params["tf"], params["in"], None) == params["out"]
+
+
+invalid_upa_fails = [
+    pytest.param(
+        {
+            "in": INVALID_NAME_A,
+            "tf": tf,
+            "error": f"Unable to find object reference '{INVALID_REF_A}' to transform as {tf}",
+        },
+        id=f"name_{tf}",
+    )
+    for tf in ["upa", "resolved-ref"]
+]
+
+
+invalid_ref_fails = [
+    pytest.param(
+        {
+            "in": INVALID_UPA_A,
+            "tf": tf,
+            "error": f"Unable to find object reference '{INVALID_UPA_A}' to transform as {tf}",
+        },
+        id=f"upa_{tf}",
+    )
+    for tf in ["ref", "unresolved-ref"]
+]
+
+
+@pytest.mark.parametrize("params", invalid_upa_fails + invalid_ref_fails)
+def test_transform_param_value_fail_all_types(
+    params, workspace_name, monkeypatch, request
+):
+    workspace_name(f"{user_name}:{ws_name}")
+
+    def get_workspace(_):
+        return Workspace(URLS.workspace, token=user_token)
+
+    monkeypatch.setattr(clients, "get", get_workspace)
+
+    with vcr.use_cassette(
+        f"test_app_util/transform_param_value-fail-{request.node.callspec.id}.yaml",
+    ):
+        regex = re.escape(params["error"]) + ".+"
+        with pytest.raises(ValueError, match=regex):
+            transform_param_value(params["tf"], params["in"], None)
 
 
 class RefChainWorkspace:
@@ -422,18 +563,24 @@ def get_ref_path_mock_ws(name="workspace"):
     return RefChainWorkspace()
 
 
+@pytest.mark.parametrize(
+    "tf_type", ["ref", "unresolved-ref", "upa", "resolved-ref", "putative-ref"]
+)
 @mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
-def test_transform_param_value_upa_path():
-    upa_path = "123/456/789;234/345/456"
-    for tf_type in ["ref", "unresolved-ref", "upa", "resolved-ref"]:
-        assert transform_param_value(tf_type, upa_path, None) == upa_path
+def test_transform_param_value_upa_path(tf_type):
+    upa_path = f"69375/2/2;67729/2/2"
+    assert transform_param_value(tf_type, upa_path, None) == upa_path
 
 
+@pytest.mark.parametrize(
+    "tf_type", ["ref", "unresolved-ref", "upa", "resolved-ref", "putative-ref"]
+)
 @mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
-def test_transform_param_value_ref_path():
+def test_transform_param_value_ref_path(tf_type):
     ref_path = "some_ws/some_obj;some_other_ws/some_other_obj"
-    for tf_type in ["ref", "unresolved-ref"]:
+    if tf_type in ["ref", "unresolved-ref", "putative-ref"]:
         assert transform_param_value(tf_type, ref_path, None) == ref_path
-    expected_upa = "1/1/1;2/2/2"
-    for tf_type in ["upa", "resolved-ref"]:
+
+    if tf_type in ["upa", "resolved-ref"]:
+        expected_upa = "1/1/1;2/2/2"
         assert transform_param_value(tf_type, ref_path, None) == expected_upa

@@ -10,7 +10,17 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 - Javascript dependency updates
 
-
+@wdio/browserstack-service: 8.12.2 -> 8.15.10
+@wdio/cli: 8.12.2 -> 8.15.10
+commander: 10.0.0 -> 11.0.0
+eslint-config-prettier: 8.8.0 -> 9.0.0
+handlebars: 4.7.7 -> 4.7.8
+plotly-js-dist.min: 2.18.2 -> 2.26.0
+postcss: 8.4.27 -> 8.4.29
+prettier: 3.0.0 -> 3.0.3
+puppeteer: 20.8.2 -> 21.1.1
+pure-uuid: 1.6.4 -> 1.7.0
+selenium-webdriver: 4.10.0 -> 4.12.0
 
 ## Version 5.2.0
 A new feature here is that app cells now store object information internally as UPAs, instead of object names. This will lead to more reproducible results, and is on the path to fixing the long-standing copy-of-a-copy problem.

@@ -347,7 +347,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     )
 
     # First, test for presence.
-    missing_params = list()
+    missing_params = []
     for p in spec_params:
         if not p["optional"] and not p["default"] and not params.get(p["id"], None):
             missing_params.append(p["id"])
@@ -360,7 +360,7 @@ def validate_parameters(app_id, tag, spec_params, params):
         raise ValueError(msg)
 
     # Next, test for extra params that don't make sense
-    extra_params = list()
+    extra_params = []
     for p in params.keys():
         if p not in spec_param_ids:
             extra_params.append(p)
@@ -425,7 +425,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     return (params, ws_input_refs)
 
 
-def check_parameter(param, value, workspace, all_params=Optional[dict]):
+def check_parameter(param, value, workspace, all_params: Optional[dict] = None):
     """
     Checks if the given value matches the rules provided in the param dict.
     If yes, returns None
@@ -475,8 +475,8 @@ def check_parameter(param, value, workspace, all_params=Optional[dict]):
 
 
 def validate_group_values(param, value, workspace, spec_params):
-    ref = list()
-    err = list()
+    ref = []
+    err = []
 
     if not isinstance(value, dict):
         return (None, "A parameter-group must be a dictionary")

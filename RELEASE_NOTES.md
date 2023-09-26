@@ -4,6 +4,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
+## Unreleased
+
+### Dependency Changes
+
+- Javascript dependency updates
+
+
+
 ## Version 5.2.0
 A new feature here is that app cells now store object information internally as UPAs, instead of object names. This will lead to more reproducible results, and is on the path to fixing the long-standing copy-of-a-copy problem.
 

@@ -97,7 +97,7 @@ def deserialize(serial_upa: str) -> str:
     if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
-        deserial = serial_upa[len(external_tag):]
+        deserial = serial_upa[len(external_tag) :]
     else:
         ws_id = system_variable("workspace_id")
         if ws_id is None:

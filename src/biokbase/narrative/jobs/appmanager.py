@@ -6,10 +6,10 @@ import functools
 import random
 import re
 import traceback
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
-import biokbase.auth as auth
-import biokbase.narrative.clients as clients
+from biokbase import auth
+from biokbase.narrative import clients
 from biokbase.narrative.app_util import (
     extract_ws_refs,
     map_outputs_from_state,
@@ -23,12 +23,13 @@ from biokbase.narrative.system import (
     strict_system_variable,
     system_variable
 )
+
 from biokbase.narrative.widgetmanager import WidgetManager
 
-from . import specmanager
-from .job import Job
-from .jobcomm import MESSAGE_TYPE, JobComm
-from .jobmanager import JobManager
+from biokbase.narrative.jobs import specmanager
+from biokbase.narrative.jobs.job import Job
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE, JobComm
+from biokbase.narrative.jobs.jobmanager import JobManager
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -645,10 +646,10 @@ class AppManager:
         spec: dict,
         tag: str,
         param_set: dict,
-        version: str = None,
-        cell_id: str = None,
-        run_id: str = None,
-        ws_id: int = None,
+        version: Optional[str] = None,
+        cell_id: Optional[str] = None,
+        run_id: Optional[str] = None,
+        ws_id: Optional[int] = None,
     ) -> dict:
         """
         Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec

@@ -24,3 +24,4 @@ requests==2.31.0
 requests-mock==1.11.0
 rsa==4.9
 terminado==0.17.1
+vcrpy==5.1.0

@@ -55,7 +55,7 @@ define([
         hintColClass: 'col-md-5',
         init: function (input) {
             this._super(input);
-            var self = this,
+            const self = this,
                 runtime = Runtime.make(),
                 ev = runtime.bus().listen({
                     channel: 'data',
@@ -64,7 +64,6 @@ define([
                     },
                     handle: function (message) {
                         if (!$.contains(document, self.$elem[0])) {
-                            // console.warn('widget no longer in dom, detaching event');
                             runtime.bus().removeListener(ev);
                         } else {
                             self.updateDataList(message.data);
@@ -111,14 +110,12 @@ define([
             self.$mainPanel.append(self.$rowsContainer);
             self.$addRowController = $('<div>');
 
-            var d = spec.default_values;
-
             // based on whether we have one or allow multiple, render the output rows...
             if (!self.allow_multiple) {
-                var defaultValue = '';
+                let defaultValue = '';
                 if (spec.default_values) {
                     if (spec.default_values.length >= 1) {
-                        var d = spec.default_values;
+                        const d = spec.default_values;
                         defaultValue = d[0] !== '' && d[0] !== undefined ? d[0] : '';
                     }
                 }
@@ -134,16 +131,16 @@ define([
                         $(this).removeClass('kb-method-parameter-row-hover');
                     });
 
-                var defaultValue = '';
+                let defaultValue = '';
                 if (spec.default_values) {
                     if (spec.default_values.length >= 1) {
-                        var d = spec.default_values;
+                        const d = spec.default_values;
                         defaultValue = d[0] !== '' && d[0] !== undefined ? d[0] : '';
                     }
                 }
                 self.addRow(defaultValue, true, false);
                 if (spec.default_values) {
-                    var d = spec.default_values;
+                    let d = spec.default_values;
                     for (let i = 1; i < d.length; d++) {
                         defaultValue = d[i] !== '' && d[i] !== undefined ? d[i] : '';
                         self.addRow(defaultValue, false, false);
@@ -325,14 +322,12 @@ define([
             }
         },
         getLookupTypes: function () {
-            let lookupTypes = [],
-                foundTypes = {},
-                validWsTypes;
+            const foundTypes = {};
+            let validWsTypes;
             if (this.spec.text_options && this.spec.text_options.valid_ws_types) {
                 validWsTypes = this.spec.text_options.valid_ws_types;
                 if (validWsTypes.length > 0) {
                     validWsTypes.forEach((type) => {
-                        lookupTypes.push(type);
                         foundTypes[type] = true;
                     });
                 }
@@ -371,10 +366,10 @@ define([
                 if (self.spec.text_options.valid_ws_types) {
                     if (self.spec.text_options.valid_ws_types.length > 0) {
                         const types = self.spec.text_options.valid_ws_types;
-                        for (let i = 0; i < types.length; i++) {
-                            if (!foundTypes.hasOwnProperty(types[i])) {
-                                lookupTypes.push(types[i]);
-                                foundTypes[types[i]] = 1;
+                        for (const element of types) {
+                            if (!foundTypes.hasOwnProperty(element)) {
+                                lookupTypes.push(element);
+                                foundTypes[element] = 1;
                                 needToMakeCall = true;
                             }
                         }
@@ -397,8 +392,8 @@ define([
                     const allObjInfo = [];
                     for (const typeName in objects) {
                         if (objects.hasOwnProperty(typeName)) {
-                            for (var i = 0; i < objects[typeName].length; i++) {
-                                allObjInfo.push(objects[typeName][i]);
+                            for (const element of objects[typeName]) {
+                                allObjInfo.push(element);
                             }
                         }
                     }
@@ -425,12 +420,12 @@ define([
 
                     // populate the valid data object list
                     self.validDataObjectList = [];
-                    for (var i = 0; i < allObjInfo.length; i++) {
+                    for (const element of allObjInfo) {
                         self.validDataObjectList.push({
-                            id: allObjInfo[i][1],
-                            text: allObjInfo[i][1],
-                            name: allObjInfo[i][1],
-                            info: allObjInfo[i],
+                            id: element[1],
+                            text: element[1],
+                            name: element[1],
+                            info: element,
                         });
                     }
 
@@ -447,7 +442,7 @@ define([
             ]);
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
-        setupSelect2: function ($input, placeholder, defaultValue, data) {
+        setupSelect2: function ($input, placeholder, _defaultValue, data) {
             const self = this;
             let noMatchesFoundStr = 'No matching data found.';
             let tags = false;
@@ -513,6 +508,7 @@ define([
             let errorDetected = false;
             const errorMessages = [];
             if (p instanceof Array) {
+                // no op
             } else {
                 p = [p];
             }
@@ -521,7 +517,7 @@ define([
                 if (p[i] === null) {
                     continue;
                 }
-                const pVal = p ? p[i].trim() : '';
+                const pVal = p[i].trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal === '' && self.required && i === 0) {
                     self.rowInfo[i].$row.removeClass('kb-method-parameter-row-error');
@@ -542,7 +538,7 @@ define([
                             // int | float | nonnumeric | nospaces | none
                             if ('int' === fieldtype.toLowerCase()) {
                                 if (pVal !== '') {
-                                    var n = ~~Number(pVal);
+                                    const n = ~~Number(pVal);
                                     if (String(n) !== pVal) {
                                         self.rowInfo[i].$row.addClass(
                                             'kb-method-parameter-row-error'
@@ -608,7 +604,7 @@ define([
                                         'value must be a number in field ' + self.spec.ui_name
                                     );
                                 } else {
-                                    var n = parseFloat(pVal);
+                                    const n = parseFloat(pVal);
                                     if (self.spec.text_options.max_float) {
                                         if (n > self.spec.text_options.max_float) {
                                             self.rowInfo[i].$row.addClass(
@@ -686,7 +682,7 @@ define([
                                         'data object names cannot be a number, in field ' +
                                             self.spec.ui_name
                                     );
-                                } else if (!/^[a-z0-9|\.|\||_\-]*$/i.test(pVal)) {
+                                } else if (!/^[a-z0-9.|_-]*$/i.test(pVal)) {
                                     if (self.rowInfo[i]) {
                                         self.rowInfo[i].$row.addClass(
                                             'kb-method-parameter-row-error'
@@ -746,11 +742,11 @@ define([
         disableParameterEditing: function () {
             // disable the input
             this.enabled = false;
-            for (let i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$input.prop('disabled', true);
-                this.rowInfo[i].$feedback.removeClass();
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.hide();
+            for (const element of this.rowInfo) {
+                element.$input.prop('disabled', true);
+                element.$feedback.removeClass();
+                if (element.$removalButton) {
+                    element.$removalButton.hide();
                 }
             }
             this.$addRowController.hide();
@@ -761,10 +757,10 @@ define([
         enableParameterEditing: function () {
             // enable the input
             this.enabled = true;
-            for (let i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$input.prop('disabled', false);
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.show();
+            for (const element of this.rowInfo) {
+                element.$input.prop('disabled', false);
+                if (element.$removalButton) {
+                    element.$removalButton.show();
                 }
             }
             this.$addRowController.show();
@@ -772,24 +768,24 @@ define([
         },
         lockInputs: function () {
             if (this.enabled) {
-                for (var i = 0; i < this.rowInfo.length; i++) {
-                    this.rowInfo[i].$input.prop('disabled', true);
+                for (const element of this.rowInfo) {
+                    element.$input.prop('disabled', true);
                 }
             }
-            for (var i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$feedback.removeClass();
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.hide();
+            for (const element of this.rowInfo) {
+                element.$feedback.removeClass();
+                if (element.$removalButton) {
+                    element.$removalButton.hide();
                 }
             }
             this.$addRowController.hide();
         },
         unlockInputs: function () {
             if (this.enabled) {
-                for (let i = 0; i < this.rowInfo.length; i++) {
-                    this.rowInfo[i].$input.prop('disabled', false);
-                    if (this.rowInfo[i].$removalButton) {
-                        this.rowInfo[i].$removalButton.show();
+                for (const element of this.rowInfo) {
+                    element.$input.prop('disabled', false);
+                    if (element.$removalButton) {
+                        element.$removalButton.show();
                     }
                 }
             }
@@ -812,6 +808,7 @@ define([
                 return;
             }
             if (value instanceof Array) {
+                // no op
             } else {
                 value = [value];
             }
@@ -859,8 +856,8 @@ define([
              * If we're not ignoring the validate as type, then coerce the type into
              *    what it's expected to validate as.
              */
-            for (let i = 0; i < this.rowInfo.length; i++) {
-                let val = this.rowInfo[i].$input.val() || '';
+            for (const element of this.rowInfo) {
+                let val = element.$input.val() || '';
                 val = val.trim();
                 if (!isOptional || val.length > 0) {
                     if (!ignoreType) {
@@ -895,15 +892,12 @@ define([
                 return value;
             }
             switch (this.validateAs) {
-                default:
-                    return value;
-                    break;
                 case 'int':
                     return Number(value);
-                    break;
                 case 'float':
                     return Number(value);
-                    break;
+                default:
+                    return value;
             }
         },
 
@@ -927,19 +921,10 @@ define([
                 this.rowInfo[0].$input.val().length === 0 &&
                 this.spec.optional === 1
             ) {
-                //var e = new Error('dummy');
-                //var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
-                //	.replace(/^\s+at\s+/gm, '')
-                //	.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-                //	.split('\n');
-                //console.log(stack);
                 const paramId = this.spec.id;
-                var inputMapping = null;
-                let isScript = false;
-                var inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
+                let inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
                 if (!inputMapping) {
                     inputMapping = methodSpec['behavior']['script_input_mapping'];
-                    isScript = true;
                 }
                 let generatedValueMapping = null;
                 for (const i in inputMapping) {

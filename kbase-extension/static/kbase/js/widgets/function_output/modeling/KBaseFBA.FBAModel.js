@@ -1,4 +1,4 @@
-define(['kbasePathways'], (kbasePathways) => {
+define(['jquery', 'kbasePathways'], ($, kbasePathways) => {
     function KBaseFBA_FBAModel(modeltabs) {
         const self = this;
         this.modeltabs = modeltabs;
@@ -340,7 +340,7 @@ define(['kbasePathways'], (kbasePathways) => {
             );
             if (rxn.rxnkbid != 'rxn00000') {
                 console.log(rxn.rxnkbid);
-                const p = self.modeltabs
+                return self.modeltabs
                     .kbapi('biochem', 'get_reactions', {
                         reactions: [rxn.rxnkbid],
                     })
@@ -359,10 +359,10 @@ define(['kbasePathways'], (kbasePathways) => {
                         }
                         const aliashash = {};
                         const finalaliases = [];
-                        for (let i = 0; i < data[0].aliases.length; i++) {
-                            if (!(data[0].aliases[i] in aliashash)) {
-                                finalaliases.push(data[0].aliases[i]);
-                                aliashash[data[0].aliases[i]] = 1;
+                        for (const element of data[0].aliases) {
+                            if (!(element in aliashash)) {
+                                finalaliases.push(element);
+                                aliashash[element] = 1;
                             }
                         }
                         output.push({
@@ -371,13 +371,12 @@ define(['kbasePathways'], (kbasePathways) => {
                         });
                         return output;
                     });
-                return p;
             }
             return output;
         };
 
         this.GeneTab = function (info) {
-            // var gene = this.genehash[id];
+            // let gene = this.genehash[id];
             // doing this instead of creating hash
             let data;
             self.modelgenes.forEach((gene) => {
@@ -439,7 +438,7 @@ define(['kbasePathways'], (kbasePathways) => {
                 },
             ];
             if (cpd.smiles && cpd.cpdkbid == 'cpd00000') {
-                var p = self.modeltabs
+                return self.modeltabs
                     .kbapi('biochem', 'depict_compounds', { structures: [cpd.smiles] })
                     .then((data) => {
                         output[1] = {
@@ -448,10 +447,9 @@ define(['kbasePathways'], (kbasePathways) => {
                         };
                         return output;
                     });
-                return p;
             }
             if (cpd.cpdkbid != 'cpd00000') {
-                var p = self.modeltabs
+                return self.modeltabs
                     .kbapi('biochem', 'get_compounds', {
                         compounds: [cpd.cpdkbid],
                     })
@@ -464,10 +462,10 @@ define(['kbasePathways'], (kbasePathways) => {
                         }
                         const aliashash = {};
                         const finalaliases = [];
-                        for (let i = 0; i < data[0].aliases.length; i++) {
-                            if (!(data[0].aliases[i] in aliashash)) {
-                                finalaliases.push(data[0].aliases[i]);
-                                aliashash[data[0].aliases[i]] = 1;
+                        for (const element of data[0].aliases) {
+                            if (!(element in aliashash)) {
+                                finalaliases.push(element);
+                                aliashash[element] = 1;
                             }
                         }
                         output.push({
@@ -475,16 +473,14 @@ define(['kbasePathways'], (kbasePathways) => {
                             data: finalaliases.join(', '),
                         });
                         return output;
-                        return output;
                     });
-                return p;
             }
             return output;
         };
 
         this.CompartmentTab = function (info) {
             const cmp = self.cmphash[info.id];
-            const output = [
+            return [
                 {
                     label: 'Compartment',
                     data: cmp.id,
@@ -502,12 +498,11 @@ define(['kbasePathways'], (kbasePathways) => {
                     data: cmp.potential,
                 },
             ];
-            return output;
         };
 
         this.BiomassTab = function (info) {
             const bio = self.biohash[info.id];
-            const output = [
+            return [
                 {
                     label: 'Biomass',
                     data: bio.id,
@@ -553,7 +548,6 @@ define(['kbasePathways'], (kbasePathways) => {
                     data: bio.equation,
                 },
             ];
-            return output;
         };
 
         this.setData = function (indata) {
@@ -574,7 +568,7 @@ define(['kbasePathways'], (kbasePathways) => {
             this.biochemws = 'kbase';
             this.biochem = 'default';
             const gfobjects = [];
-            for (var i = 0; i < this.gapfillings.length; i++) {
+            for (let i = 0; i < this.gapfillings.length; i++) {
                 this.gapfillings[i].simpid = 'gf.' + (i + 1);
                 if ('fba_ref' in this.gapfillings[i] && this.gapfillings[i].fba_ref.length > 0) {
                     gfobjects.push({ ref: this.gapfillings[i].fba_ref });
@@ -586,8 +580,8 @@ define(['kbasePathways'], (kbasePathways) => {
                 }
                 this.gfhash[this.gapfillings[i].simpid] = this.gapfillings[i];
             }
-            for (var i = 0; i < this.modelcompartments.length; i++) {
-                const cmp = this.modelcompartments[i];
+            for (const element of this.modelcompartments) {
+                const cmp = element;
                 cmp.cmpkbid = cmp.compartment_ref.split('/').pop();
                 if (cmp.cmpkbid == 'd') {
                     this.biochem = 'plantdefault';
@@ -595,35 +589,34 @@ define(['kbasePathways'], (kbasePathways) => {
                 cmp.name = self.cmpnamehash[cmp.cmpkbid];
                 this.cmphash[cmp.id] = cmp;
             }
-            for (var i = 0; i < this.modelcompounds.length; i++) {
-                const cpd = this.modelcompounds[i];
-                var idarray = cpd.id.split('_');
+            for (const element of this.modelcompounds) {
+                const cpd = element;
+                const idarray = cpd.id.split('_');
                 cpd.dispid = idarray[0] + '[' + idarray[1] + ']';
                 cpd.cmpkbid = cpd.modelcompartment_ref.split('/').pop();
                 cpd.cpdkbid = cpd.compound_ref.split('/').pop();
                 if (cpd.name === undefined) {
                     cpd.name = cpd.dispid;
                 }
-                cpd.name = cpd.name.replace(/_[a-zA-z]\d+$/, '');
+                cpd.name = cpd.name.replace(/_[a-zA-Z]\d+$/, '');
                 this.cpdhash[cpd.id] = cpd;
                 if (cpd.cpdkbid != 'cpd00000') {
-                    const array = cpd.compound_ref.split('/');
                     this.cpdhash[cpd.cpdkbid + '_' + cpd.cmpkbid] = cpd;
                     if (idarray[0] != cpd.cpdkbid) {
                         cpd.dispid += '<br>(' + cpd.cpdkbid + ')';
                     }
                 }
             }
-            for (var i = 0; i < this.biomasses.length; i++) {
+            for (let i = 0; i < this.biomasses.length; i++) {
                 const biomass = this.biomasses[i];
                 this.biohash[biomass.id] = biomass;
                 biomass.dispid = biomass.id;
-                var reactants = '';
-                var products = '';
-                for (var j = 0; j < biomass.biomasscompounds.length; j++) {
-                    const biocpd = biomass.biomasscompounds[j];
+                let reactants = '';
+                let products = '';
+                for (const element of biomass.biomasscompounds) {
+                    const biocpd = element;
                     biocpd.id = biocpd.modelcompound_ref.split('/').pop();
-                    var idarray = biocpd.id.split('_');
+                    const idarray = biocpd.id.split('_');
                     biocpd.dispid = idarray[0] + '[' + idarray[1] + ']';
                     biocpd.name = this.cpdhash[biocpd.id].name;
                     biocpd.formula = this.cpdhash[biocpd.id].formula;
@@ -636,7 +629,7 @@ define(['kbasePathways'], (kbasePathways) => {
                             reactants += ' + ';
                         }
                         if (biocpd.coefficient != -1) {
-                            var abscoef = Math.round(-1 * 100 * biocpd.coefficient) / 100;
+                            const abscoef = Math.round(-1 * 100 * biocpd.coefficient) / 100;
                             reactants += '(' + abscoef + ') ';
                         }
                         reactants += biocpd.name + '[' + biocpd.cmpkbid + ']';
@@ -645,7 +638,7 @@ define(['kbasePathways'], (kbasePathways) => {
                             products += ' + ';
                         }
                         if (biocpd.coefficient != 1) {
-                            var abscoef = Math.round(100 * biocpd.coefficient) / 100;
+                            const abscoef = Math.round(100 * biocpd.coefficient) / 100;
                             products += '(' + abscoef + ') ';
                         }
                         products += biocpd.name + '[' + biocpd.cmpkbid + ']';
@@ -653,14 +646,14 @@ define(['kbasePathways'], (kbasePathways) => {
                 }
                 biomass.equation = reactants + ' => ' + products;
             }
-            for (var i = 0; i < this.modelreactions.length; i++) {
+            for (let i = 0; i < this.modelreactions.length; i++) {
                 const rxn = this.modelreactions[i];
-                var idarray = rxn.id.split('_');
+                const idarray = rxn.id.split('_');
                 rxn.dispid = idarray[0] + '[' + idarray[1] + ']';
                 rxn.rxnkbid = rxn.reaction_ref.split('/').pop();
-                rxn.rxnkbid = rxn.rxnkbid.replace(/_[a-zA-z]/, '');
+                rxn.rxnkbid = rxn.rxnkbid.replace(/_[a-zA-Z]/, '');
                 rxn.cmpkbid = rxn.modelcompartment_ref.split('/').pop();
-                rxn.name = rxn.name.replace(/_[a-zA-z]\d+$/, '');
+                rxn.name = rxn.name.replace(/_[a-zA-Z]\d+$/, '');
                 rxn.gpr = '';
                 if (rxn.name == 'CustomReaction') {
                     rxn.name = rxn.dispid;
@@ -672,8 +665,8 @@ define(['kbasePathways'], (kbasePathways) => {
                         rxn.dispid += '<br>(' + rxn.rxnkbid + ')';
                     }
                 }
-                var reactants = '';
-                var products = '';
+                let reactants = '';
+                let products = '';
                 let sign = '<=>';
                 if (rxn.direction == '>') {
                     sign = '=>';
@@ -683,7 +676,7 @@ define(['kbasePathways'], (kbasePathways) => {
                 if (rxn.modelReactionProteins > 0) {
                     rxn.gpr = '';
                 }
-                for (var j = 0; j < rxn.modelReactionReagents.length; j++) {
+                for (let j = 0; j < rxn.modelReactionReagents.length; j++) {
                     const rgt = rxn.modelReactionReagents[j];
                     rgt.cpdkbid = rgt.modelcompound_ref.split('/').pop();
                     if (rgt.coefficient < 0) {
@@ -691,7 +684,7 @@ define(['kbasePathways'], (kbasePathways) => {
                             reactants += ' + ';
                         }
                         if (rgt.coefficient != -1) {
-                            var abscoef = Math.round(-1 * 100 * rgt.coefficient) / 100;
+                            const abscoef = Math.round(-1 * 100 * rgt.coefficient) / 100;
                             reactants += '(' + abscoef + ') ';
                         }
                         reactants +=
@@ -707,7 +700,7 @@ define(['kbasePathways'], (kbasePathways) => {
                             products += ' + ';
                         }
                         if (rgt.coefficient != 1) {
-                            var abscoef = Math.round(100 * rgt.coefficient) / 100;
+                            const abscoef = Math.round(100 * rgt.coefficient) / 100;
                             products += '(' + abscoef + ') ';
                         }
                         products +=
@@ -721,7 +714,7 @@ define(['kbasePathways'], (kbasePathways) => {
                     }
                 }
                 rxn.ftrhash = {};
-                for (var j = 0; j < rxn.modelReactionProteins.length; j++) {
+                for (let j = 0; j < rxn.modelReactionProteins.length; j++) {
                     const prot = rxn.modelReactionProteins[j];
                     if (j > 0) {
                         rxn.gpr += ' or ';
@@ -764,7 +757,7 @@ define(['kbasePathways'], (kbasePathways) => {
                 for (const gene in rxn.ftrhash) {
                     rxn.genes.push({ id: gene });
 
-                    var genes = [];
+                    const genes = [];
                     this.modelgenes.forEach((item) => {
                         genes.push(item.id);
                     });
@@ -791,7 +784,7 @@ define(['kbasePathways'], (kbasePathways) => {
                         for (let j = 0; j < solrxns.length; j++) {
                             const array = solrxns[j].reaction_ref.split('/');
                             let id = array.pop();
-                            var rxnobj;
+                            let rxnobj;
                             if (id in self.rxnhash) {
                                 rxnobj = self.rxnhash[id];
                             } else {

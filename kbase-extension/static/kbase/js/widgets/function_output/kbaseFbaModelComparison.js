@@ -1,11 +1,9 @@
-define([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-    'kbaseAuthenticatedWidget',
-    'kbaseTabs',
-    'jquery-dataTables',
-], (KBWidget, bootstrap, $, kbaseAuthenticatedWidget, kbaseTabs, jquery_dataTables) => {
+define(['kbwidget', 'jquery', 'kbaseAuthenticatedWidget', 'kbaseTabs'], (
+    KBWidget,
+    $,
+    kbaseAuthenticatedWidget,
+    kbaseTabs
+) => {
     return KBWidget({
         name: 'FbaModelComparisonWidget',
         parent: kbaseAuthenticatedWidget,
@@ -61,7 +59,6 @@ define([
                     '">&nbsp;&nbsp;Loading models and comparison data...</div>'
             );
 
-            const pref = this.uuid();
             const kbws = new Workspace(this.wsUrl, { token: self.authToken() });
             const get_object_input = [
                 { ref: self.ws_name + '/' + self.fba_model1_id },
@@ -81,9 +78,9 @@ define([
                     self.genome2_ref = self.fba_model2.genome_ref;
                     if (data[2]) {
                         let ftrs = data[2].data.proteome1names;
-                        for (var i = 0; i < ftrs.length; i++) {
-                            var hits = data[2].data.data1[i];
-                            for (var j = 0; j < hits.length; j++) {
+                        for (let i = 0; i < ftrs.length; i++) {
+                            const hits = data[2].data.data1[i];
+                            for (let j = 0; j < hits.length; j++) {
                                 //if (hits[j][2] == 100) {
                                 if (self.gene_translation[ftrs[i]] === undefined) {
                                     self.gene_translation[ftrs[i]] = [];
@@ -95,9 +92,9 @@ define([
                             }
                         }
                         ftrs = data[2].data.proteome2names;
-                        for (var i = 0; i < ftrs.length; i++) {
-                            var hits = data[2].data.data2[i];
-                            for (var j = 0; j < hits.length; j++) {
+                        for (let i = 0; i < ftrs.length; i++) {
+                            const hits = data[2].data.data2[i];
+                            for (let j = 0; j < hits.length; j++) {
                                 //if (hits[j][2] == 100) {
                                 if (self.gene_translation[ftrs[i]] === undefined) {
                                     self.gene_translation[ftrs[i]] = [];
@@ -135,35 +132,35 @@ define([
                 }
             );
 
-            var prepare_model = function (model) {
+            const prepare_model = function (model) {
                 model.cpdhash = {};
                 model.rxnhash = {};
                 model.cmphash = {};
-                for (var i = 0; i < model.modelcompartments.length; i++) {
+                for (let i = 0; i < model.modelcompartments.length; i++) {
                     const cmp = model.modelcompartments[i];
                     model.cmphash[cmp.id] = cmp;
                 }
-                for (var i = 0; i < model.modelcompounds.length; i++) {
+                for (let i = 0; i < model.modelcompounds.length; i++) {
                     const cpd = model.modelcompounds[i];
                     cpd.cmpkbid = cpd.modelcompartment_ref.split('/').pop();
                     cpd.cpdkbid = cpd.compound_ref.split('/').pop();
                     if (cpd.name === undefined) {
                         cpd.name = cpd.id;
                     }
-                    cpd.name = cpd.name.replace(/_[a-zA-z]\d+$/, '');
+                    cpd.name = cpd.name.replace(/_[a-zA-Z]\d+$/, '');
                     model.cpdhash[cpd.id] = cpd;
                     if (cpd.cpdkbid != 'cpd00000') {
                         model.cpdhash[cpd.cpdkbid + '_' + cpd.cmpkbid] = cpd;
                     }
                 }
-                for (var i = 0; i < model.modelreactions.length; i++) {
+                for (let i = 0; i < model.modelreactions.length; i++) {
                     const rxn = model.modelreactions[i];
                     rxn.rxnkbid = rxn.reaction_ref.split('/').pop();
                     rxn.cmpkbid = rxn.modelcompartment_ref.split('/').pop();
-                    rxn.dispid = rxn.id.replace(/_[a-zA-z]\d+$/, '') + '[' + rxn.cmpkbid + ']';
-                    rxn.name = rxn.name.replace(/_[a-zA-z]\d+$/, '');
+                    rxn.dispid = rxn.id.replace(/_[a-zA-Z]\d+$/, '') + '[' + rxn.cmpkbid + ']';
+                    rxn.name = rxn.name.replace(/_[a-zA-Z]\d+$/, '');
                     if (rxn.name == 'CustomReaction') {
-                        rxn.name = rxn.id.replace(/_[a-zA-z]\d+$/, '');
+                        rxn.name = rxn.id.replace(/_[a-zA-Z]\d+$/, '');
                     }
                     model.rxnhash[rxn.id] = rxn;
                     if (rxn.rxnkbid != 'rxn00000') {
@@ -180,7 +177,7 @@ define([
                     } else if (rxn.direction == '<') {
                         sign = '<=';
                     }
-                    for (var j = 0; j < rxn.modelReactionReagents.length; j++) {
+                    for (let j = 0; j < rxn.modelReactionReagents.length; j++) {
                         const rgt = rxn.modelReactionReagents[j];
                         rgt.cpdkbid = rgt.modelcompound_ref.split('/').pop();
                         if (rgt.coefficient < 0) {
@@ -188,7 +185,7 @@ define([
                                 reactants += ' + ';
                             }
                             if (rgt.coefficient != -1) {
-                                var abscoef = Math.round(-1 * 100 * rgt.coefficient) / 100;
+                                const abscoef = Math.round(-1 * 100 * rgt.coefficient) / 100;
                                 reactants += '(' + abscoef + ') ';
                             }
                             reactants +=
@@ -201,7 +198,7 @@ define([
                                 products += ' + ';
                             }
                             if (rgt.coefficient != 1) {
-                                var abscoef = Math.round(100 * rgt.coefficient) / 100;
+                                const abscoef = Math.round(100 * rgt.coefficient) / 100;
                                 products += '(' + abscoef + ') ';
                             }
                             products +=
@@ -212,7 +209,7 @@ define([
                         }
                     }
                     rxn.ftrhash = {};
-                    for (var j = 0; j < rxn.modelReactionProteins.length; j++) {
+                    for (let j = 0; j < rxn.modelReactionProteins.length; j++) {
                         const prot = rxn.modelReactionProteins[j];
                         for (let k = 0; k < prot.modelReactionProteinSubunits.length; k++) {
                             const subunit = prot.modelReactionProteinSubunits[k];
@@ -233,28 +230,28 @@ define([
             };
 
             const compare_models = function () {
-                model1 = self.fba_model1;
-                model2 = self.fba_model2;
+                const model1 = self.fba_model1;
+                const model2 = self.fba_model2;
                 self.overlap_rxns = [];
                 self.exact_matches = 0;
                 model1.unique_rxn = [];
-                for (var i = 0; i < model1.modelreactions.length; i++) {
-                    var rxn = model1.modelreactions[i];
+                for (let i = 0; i < model1.modelreactions.length; i++) {
+                    const rxn = model1.modelreactions[i];
                     if (rxn.rxnkbid == 'rxn00000') {
                         if (model2.rxnhash[rxn.id] === undefined) {
                             model1.unique_rxn.push(rxn);
                         } else {
-                            var rxn2 = model2.rxnhash[rxn.id];
-                            var model1ftrs = '';
-                            var exact = 1;
-                            for (var gene in rxn.ftrhash) {
+                            const rxn2 = model2.rxnhash[rxn.id];
+                            let model1ftrs = '';
+                            let exact = 1;
+                            for (const gene in rxn.ftrhash) {
                                 if (model1ftrs.length > 0) {
                                     model1ftrs += '<br>';
                                 }
                                 if (self.gene_translation[gene]) {
-                                    var transftrs = self.gene_translation[gene];
-                                    var found = 0;
-                                    for (var n = 0; n < transftrs.length; n++) {
+                                    const transftrs = self.gene_translation[gene];
+                                    let found = 0;
+                                    for (let n = 0; n < transftrs.length; n++) {
                                         if (rxn2.ftrhash[transftrs[n]]) {
                                             model1ftrs += gene;
                                             found = 1;
@@ -272,15 +269,15 @@ define([
                                     model1ftrs += gene;
                                 }
                             }
-                            var model2ftrs = '';
-                            for (var gene in rxn2.ftrhash) {
+                            let model2ftrs = '';
+                            for (const gene in rxn2.ftrhash) {
                                 if (model2ftrs.length > 0) {
                                     model2ftrs += '<br>';
                                 }
                                 if (self.gene_translation[gene]) {
-                                    var transftrs = self.gene_translation[gene];
-                                    var found = 0;
-                                    for (var n = 0; n < transftrs.length; n++) {
+                                    const transftrs = self.gene_translation[gene];
+                                    let found = 0;
+                                    for (let n = 0; n < transftrs.length; n++) {
                                         if (rxn.ftrhash[transftrs[n]]) {
                                             model2ftrs += gene;
                                             found = 1;
@@ -313,17 +310,17 @@ define([
                     } else if (model2.rxnhash[rxn.rxnkbid + '_' + rxn.cmpkbid] === undefined) {
                         model1.unique_rxn.push(rxn);
                     } else {
-                        var rxn2 = model2.rxnhash[rxn.rxnkbid + '_' + rxn.cmpkbid];
-                        var model1ftrs = '';
-                        var exact = 1;
-                        for (var gene in rxn.ftrhash) {
+                        const rxn2 = model2.rxnhash[rxn.rxnkbid + '_' + rxn.cmpkbid];
+                        let model1ftrs = '';
+                        let exact = 1;
+                        for (const gene in rxn.ftrhash) {
                             if (model1ftrs.length > 0) {
                                 model1ftrs += '<br>';
                             }
                             if (self.gene_translation[gene]) {
-                                var transftrs = self.gene_translation[gene];
-                                var found = 0;
-                                for (var n = 0; n < transftrs.length; n++) {
+                                const transftrs = self.gene_translation[gene];
+                                let found = 0;
+                                for (let n = 0; n < transftrs.length; n++) {
                                     if (rxn2.ftrhash[transftrs[n]]) {
                                         model1ftrs += gene;
                                         found = 1;
@@ -341,15 +338,15 @@ define([
                                 model1ftrs += gene;
                             }
                         }
-                        var model2ftrs = '';
-                        for (var gene in rxn2.ftrhash) {
+                        let model2ftrs = '';
+                        for (const gene in rxn2.ftrhash) {
                             if (model2ftrs.length > 0) {
                                 model2ftrs += '<br>';
                             }
                             if (self.gene_translation[gene]) {
-                                var transftrs = self.gene_translation[gene];
-                                var found = 0;
-                                for (var n = 0; n < transftrs.length; n++) {
+                                const transftrs = self.gene_translation[gene];
+                                let found = 0;
+                                for (let n = 0; n < transftrs.length; n++) {
                                     if (rxn.ftrhash[transftrs[n]]) {
                                         model2ftrs += gene;
                                         found = 1;
@@ -381,8 +378,8 @@ define([
                     }
                 }
                 model2.unique_rxn = [];
-                for (var i = 0; i < model2.modelreactions.length; i++) {
-                    var rxn = model2.modelreactions[i];
+                for (let i = 0; i < model2.modelreactions.length; i++) {
+                    const rxn = model2.modelreactions[i];
                     if (rxn.rxnkbid == 'rxn00000') {
                         if (model1.rxnhash[rxn.id] === undefined) {
                             model2.unique_rxn.push(rxn);
@@ -393,7 +390,7 @@ define([
                 }
             };
 
-            var dataIsReady = function () {
+            const dataIsReady = function () {
                 compare_models();
                 ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
                 container.empty();
@@ -639,13 +636,13 @@ define([
             return this;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             this.token = auth.token;
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;

@@ -1,22 +1,11 @@
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'jquery-dataTables',
     'util/string',
     'narrativeConfig',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    jquery_dataTables,
-    StringUtil,
-    Config
-) => {
+], (KBWidget, $, kbaseAuthenticatedWidget, kbaseTabs, StringUtil, Config) => {
     return KBWidget({
         name: 'kbaseGenomeComparisonViewer',
         parent: kbaseAuthenticatedWidget,
@@ -57,7 +46,6 @@ define([
 
             const kbws = new Workspace(self.wsUrl, { token: self.authToken() });
 
-            //var request = {auth: self.authToken(), workspace: self.ws_name, id: self.simulation_id, type: 'KBasePhenotypes.PhenotypeSimulationSet'};
             kbws.get_objects(
                 [{ ref: self.ws + '/' + self.id }],
                 (data) => {
@@ -139,20 +127,20 @@ define([
                     tabGenomes.append(tableGenomes);
                     const headings = ['Genome', 'Legend'];
                     const numGenomes = genomes.length;
-                    for (var i = 0; i < numGenomes; i++) {
+                    for (let i = 0; i < numGenomes; i++) {
                         headings.push('G' + (i + 1));
                     }
                     tableGenomes.append(
                         '<tr><th><b>' + headings.join('</b></th><th><b>') + '</b></th></tr>'
                     );
-                    for (var i = 0; i < numGenomes; i++) {
+                    for (let i = 0; i < numGenomes; i++) {
                         const genome = genomes[i];
                         const row = [
                             '<b>G' + (i + 1) + '</b>-' + genome.name,
                             '# of families:<br># of functions:',
                         ];
-                        for (var j in genomes) {
-                            var compgenome = genomes[j];
+                        for (const j in genomes) {
+                            const compgenome = genomes[j];
                             if (genome.genome_similarity[compgenome.genome_ref]) {
                                 row.push(
                                     genome.genome_similarity[compgenome.genome_ref][0] +
@@ -195,7 +183,7 @@ define([
                     );
                     tabFamilies.append(tableFamilies);
                     const fam_data = [];
-                    tableSettings = {
+                    const tableSettings = {
                         sPaginationType: 'full_numbers',
                         iDisplayLength: 10,
                         aaData: fam_data,
@@ -219,8 +207,8 @@ define([
                         },
                         fnDrawCallback: events,
                     };
-                    for (var i in families) {
-                        var fam = families[i];
+                    for (const i in families) {
+                        const fam = families[i];
                         const famdata = {
                             id:
                                 '<a class="show-family' +
@@ -233,15 +221,15 @@ define([
                         };
                         const famindecies = {};
                         const famgenomes = {};
-                        var gcount = 0;
-                        for (var j in genomes) {
-                            var compgenome = genomes[j];
+                        let gcount = 0;
+                        for (const j in genomes) {
+                            const compgenome = genomes[j];
                             if (fam.genome_features[compgenome.genome_ref]) {
-                                var genomefams = {};
-                                var genes = fam.genome_features[compgenome.genome_ref];
-                                for (var k in genes) {
+                                const genomefams = {};
+                                const genes = fam.genome_features[compgenome.genome_ref];
+                                for (const k in genes) {
                                     gcount++;
-                                    gene = genes[k];
+                                    const gene = genes[k];
                                     const array = gene[1];
                                     for (const m in array) {
                                         if (famindecies[array[m]] === undefined) {
@@ -251,7 +239,7 @@ define([
                                         famindecies[array[m]]++;
                                     }
                                 }
-                                for (var genfam in genomefams) {
+                                for (const genfam in genomefams) {
                                     if (famgenomes[genfam] === undefined) {
                                         famgenomes[genfam] = 0;
                                     }
@@ -274,7 +262,7 @@ define([
                         famdata.funcgenes = '';
                         famdata.funcgenomes = '';
                         let count = 1;
-                        for (var j in sortedfuncs) {
+                        for (const j in sortedfuncs) {
                             if (famdata.functions.length > 0) {
                                 famdata.functions += '<br>';
                                 famdata.subsystem += '<br>';
@@ -349,7 +337,7 @@ define([
                     );
                     tabFunctions.append(tableFunctions);
                     const func_data = [];
-                    var tableSettings = {
+                    const tableTwoSettings = {
                         sPaginationType: 'full_numbers',
                         iDisplayLength: 10,
                         aaData: func_data,
@@ -373,21 +361,19 @@ define([
                         },
                         fnDrawCallback: events,
                     };
-                    for (var i in families) {
-                        var fam = families[i];
-                        var gcount = 0;
-                        for (var j in genomes) {
-                            var compgenome = genomes[j];
+                    for (const i in families) {
+                        const fam = families[i];
+                        let gcount = 0;
+                        for (const j in genomes) {
+                            const compgenome = genomes[j];
                             if (fam.genome_features[compgenome.genome_ref]) {
-                                var genes = fam.genome_features[compgenome.genome_ref];
-                                for (var k in genes) {
-                                    gcount++;
-                                }
+                                const genes = fam.genome_features[compgenome.genome_ref];
+                                gcount += genes.length;
                             }
                         }
                         fam.numgenes = gcount;
                     }
-                    for (var i in functions) {
+                    for (const i in functions) {
                         const func = functions[i];
                         func.subsystem = func.subsystem.replace(/_/g, ' ');
                         const funcdata = {
@@ -405,22 +391,22 @@ define([
                         };
                         const funcindecies = {};
                         const funcgenomes = {};
-                        var gcount = 0;
-                        for (var j in genomes) {
-                            var compgenome = genomes[j];
+                        let gcount = 0;
+                        for (const j in genomes) {
+                            const compgenome = genomes[j];
                             if (func.genome_features[compgenome.genome_ref]) {
-                                var genomefams = {};
-                                var genes = func.genome_features[compgenome.genome_ref];
-                                for (var k in genes) {
+                                const genomefams = {};
+                                const genes = func.genome_features[compgenome.genome_ref];
+                                for (const k in genes) {
                                     gcount++;
-                                    gene = genes[k];
+                                    const gene = genes[k];
                                     genomefams[gene[1]] = 1;
                                     if (funcindecies[gene[1]] === undefined) {
                                         funcindecies[gene[1]] = 0;
                                     }
                                     funcindecies[gene[1]]++;
                                 }
-                                for (var genfam in genomefams) {
+                                for (const genfam in genomefams) {
                                     if (funcgenomes[genfam] === undefined) {
                                         funcgenomes[genfam] = 0;
                                     }
@@ -440,7 +426,7 @@ define([
                         funcdata.families = '';
                         funcdata.famgenes = '';
                         funcdata.famgenomes = '';
-                        for (var j in sortedfams) {
+                        for (const j in sortedfams) {
                             if (funcdata.families.length > 0) {
                                 funcdata.families += '<br>';
                                 funcdata.famgenes += '<br>';
@@ -477,9 +463,9 @@ define([
                                     '</a>';
                             }
                         }
-                        tableSettings.aaData.push(funcdata);
+                        tableTwoSettings.aaData.push(funcdata);
                     }
-                    tableFunctions.dataTable(tableSettings);
+                    tableFunctions.dataTable(tableTwoSettings);
                     ///////////////////////////////////// Event handling for links ///////////////////////////////////////////
                     function events() {
                         // event for clicking on ortholog count
@@ -491,7 +477,7 @@ define([
                                 return;
                             }
                             let fam;
-                            for (var i in families) {
+                            for (const i in families) {
                                 if (families[i].id == id) {
                                     fam = families[i];
                                 }
@@ -517,7 +503,7 @@ define([
                             tableFamGen.append(
                                 '<tr><th><b>' + headings.join('</b></th><th><b>') + '</b></th></tr>'
                             );
-                            for (var i in genomes) {
+                            for (const i in genomes) {
                                 const genome = genomes[i];
                                 let genes = '';
                                 let scores = '';
@@ -653,13 +639,13 @@ define([
             return this;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function () {
             //this.token = auth.token;
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             //this.token = null;
             this.render();
             return this;

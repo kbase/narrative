@@ -1,7 +1,3 @@
-/**
- * @public
- */
-
 define([
     'kbwidget',
     'bootstrap',
@@ -10,7 +6,7 @@ define([
     'handlebars',
     'kbaseNarrativeParameterInput',
     'select2',
-], (KBWidget, bootstrap, $, Config, Handlebars, kbaseNarrativeParameterInput, select2) => {
+], (KBWidget, bootstrap, $, Config, Handlebars, kbaseNarrativeParameterInput) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeParameterTextSubdataInput',
@@ -65,7 +61,6 @@ define([
             // initialize autofill data and fetch
             self.autofillData = [];
             self.firstLookup = true;
-            //self.fetchSubData();  // do a lazy fetch...
 
             if (self.options.isInSidePanel) {
                 self.nameColClass = 'col-md-12';
@@ -99,15 +94,13 @@ define([
             self.$mainPanel.append(self.$rowsContainer);
             self.$addRowController = $('<div>');
 
-            var d = spec.default_values;
-
             // based on whether we have one or allow multiple, render the output rows...
             // if multiselection is on, only allow a single input row
             if (!self.allow_multiple || multiselection) {
-                var defaultValue = '';
+                let defaultValue = '';
                 if (spec.default_values) {
                     if (spec.default_values.length >= 1) {
-                        var d = spec.default_values;
+                        const d = spec.default_values;
                         defaultValue = d[0] !== '' && d[0] !== undefined ? d[0] : '';
                     }
                 }
@@ -123,16 +116,16 @@ define([
                         $(this).removeClass('kb-method-parameter-row-hover');
                     });
 
-                var defaultValue = '';
+                let defaultValue = '';
                 if (spec.default_values) {
                     if (spec.default_values.length >= 1) {
-                        var d = spec.default_values;
+                        const d = spec.default_values;
                         defaultValue = d[0] !== '' && d[0] !== undefined ? d[0] : '';
                     }
                 }
                 self.addRow(defaultValue, true, false);
                 if (spec.default_values) {
-                    var d = spec.default_values;
+                    let d = spec.default_values;
                     for (let i = 1; i < d.length; d++) {
                         defaultValue = d[i] !== '' && d[i] !== undefined ? d[i] : '';
                         self.addRow(defaultValue, false, false);
@@ -169,8 +162,8 @@ define([
             if (!text_template) {
                 text_template = '';
                 if (selection_description) {
-                    for (let sd = 0; sd < selection_description.length; sd++) {
-                        text_template += ' - {{' + selection_description[sd] + '}}';
+                    for (const element of selection_description) {
+                        text_template += ' - {{' + element + '}}';
                     }
                 }
             }
@@ -196,13 +189,9 @@ define([
                 self.isFetching = true;
 
                 const query = [];
-                for (
-                    let i = 0;
-                    i < spec.textsubdata_options.subdata_selection.constant_ref.length;
-                    i++
-                ) {
+                for (const element of spec.textsubdata_options.subdata_selection.constant_ref) {
                     query.push({
-                        ref: spec.textsubdata_options.subdata_selection.constant_ref[i],
+                        ref: element,
                         included: subdata_included,
                     });
                 }
@@ -268,9 +257,9 @@ define([
                         if (typeof param === 'string') {
                             query.push({ ref: ws_name + '/' + param, included: subdata_included });
                         } else if (param instanceof Array) {
-                            for (let i = 0; i < param.length; i++) {
+                            for (const element of param) {
                                 query.push({
-                                    ref: ws_name + '/' + param[i],
+                                    ref: ws_name + '/' + element,
                                     included: subdata_included,
                                 });
                             }
@@ -329,7 +318,7 @@ define([
             result,
             path_to_subdata,
             selection_id,
-            selection_description,
+            _selection_description,
             includeWsId,
             text_template
         ) {
@@ -339,28 +328,28 @@ define([
             const hb_template = Handlebars.compile(text_template);
 
             // loop over subdata from every object
-            for (let r = 0; r < result.length; r++) {
-                let subdata = result[r].data;
-                const datainfo = result[r].info;
+            for (const res of result) {
+                let subdata = res.data;
+                const datainfo = res.info;
 
-                for (let p = 0; p < path_to_subdata.length; p++) {
-                    subdata = subdata[path_to_subdata[p]];
+                for (const path of path_to_subdata) {
+                    subdata = subdata[path];
                 }
 
                 if (subdata instanceof Array) {
-                    for (var k = 0; k < subdata.length; k++) {
-                        var dname = datainfo[1];
+                    for (const element of subdata) {
+                        let dname = datainfo[1];
                         if (includeWsId) {
                             dname = datainfo[6] + '/' + datainfo[1];
                         }
-                        var id = subdata[k]; // default id is just the value
+                        let id = element; // default id is just the value
                         // if the selection_id is set, and the object is an object of somekind, then use that value
                         if (selection_id && typeof id === 'object') {
-                            id = subdata[k][selection_id];
+                            id = element[selection_id];
                         }
-                        var autofill = {
+                        const autofill = {
                             id: id,
-                            desc: hb_template(subdata[k]),
+                            desc: hb_template(element),
                             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                             dname: dname,
                         };
@@ -369,12 +358,12 @@ define([
                 } else {
                     for (const key in subdata) {
                         if (subdata.hasOwnProperty(key)) {
-                            var dname = datainfo[1];
+                            let dname = datainfo[1];
                             if (includeWsId) {
                                 dname = datainfo[6] + '/' + datainfo[1];
                             }
                             // the default id is the mapping key
-                            var id = key;
+                            let id = key;
                             // if the selection id is set, and it is an object, then use that field instead
                             if (selection_id && typeof subdata[key] === 'object') {
                                 id = subdata[key][selection_id];
@@ -389,9 +378,9 @@ define([
                                     id = subdata[key];
                                 }
                             }
-                            var autofill = {
+                            const autofill = {
                                 id: id,
-                                desc: hb_template(subdata[k]),
+                                desc: hb_template(subdata[key]),
                                 dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                                 dname: dname,
                             };
@@ -477,7 +466,7 @@ define([
             }
 
             const form_id = spec.id;
-            var $input = ($input = $(
+            let $input = ($input = $(
                 '<input id="' + form_id + '" type="text" style="width:100%" />'
             ).on('change', () => {
                 self.isValid();
@@ -577,10 +566,7 @@ define([
             }
         },
 
-        refresh: function () {
-            //var self = this;
-            //self.fetchSubData(); //lazy load, so don't do this here
-        },
+        refresh: function () {},
 
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function (
@@ -629,10 +615,8 @@ define([
                             $input.data('select2').kbaseHackLastTerm = query.term;
 
                             // populate the names from our valid data object list
-                            const exactMatch = false;
                             if (self.autofillData) {
-                                for (let i = 0; i < self.autofillData.length; i++) {
-                                    const d = self.autofillData[i];
+                                for (const d of self.autofillData) {
                                     let text = ' '; // for some reason, this has to be nonempty in some cases
                                     if (d.desc) {
                                         text = d.desc;
@@ -679,12 +663,10 @@ define([
                         });
                     },
 
-                    formatSelection: function (object, container) {
-                        const display =
-                            '<span class="kb-parameter-data-selection">' + object.id + '</span>';
-                        return display;
+                    formatSelection: function (object) {
+                        return '<span class="kb-parameter-data-selection">' + object.id + '</span>';
                     },
-                    formatResult: function (object, container, query) {
+                    formatResult: function (object) {
                         let display =
                             '<span style="word-wrap:break-word;"><b>' + object.id + '</b>';
                         if (object.text) display += object.text;
@@ -728,6 +710,7 @@ define([
             const errorMessages = [];
 
             if (p instanceof Array) {
+                // no op
             } else {
                 p = [p];
             }
@@ -791,12 +774,12 @@ define([
         disableParameterEditing: function () {
             // disable the input
             this.enabled = false;
-            for (let i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$input.select2('disable', true);
+            for (const element of this.rowInfo) {
+                element.$input.select2('disable', true);
                 // stylize the row div
-                this.rowInfo[i].$feedback.removeClass();
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.hide();
+                element.$feedback.removeClass();
+                if (element.$removalButton) {
+                    element.$removalButton.hide();
                 }
             }
             this.$addRowController.hide();
@@ -808,10 +791,10 @@ define([
         enableParameterEditing: function () {
             // enable the input
             this.enabled = true;
-            for (let i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$input.select2('enable', true);
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.show();
+            for (const element of this.rowInfo) {
+                element.$input.select2('enable', true);
+                if (element.$removalButton) {
+                    element.$removalButton.show();
                 }
             }
             this.$addRowController.show();
@@ -821,14 +804,14 @@ define([
         lockInputs: function () {
             this.locked_inputs = true;
             if (this.enabled) {
-                for (var i = 0; i < this.rowInfo.length; i++) {
-                    this.rowInfo[i].$input.select2('disable', true);
+                for (const element of this.rowInfo) {
+                    element.$input.select2('disable', true);
                 }
             }
-            for (var i = 0; i < this.rowInfo.length; i++) {
-                this.rowInfo[i].$feedback.removeClass();
-                if (this.rowInfo[i].$removalButton) {
-                    this.rowInfo[i].$removalButton.hide();
+            for (const element of this.rowInfo) {
+                element.$feedback.removeClass();
+                if (element.$removalButton) {
+                    element.$removalButton.hide();
                 }
             }
             this.$addRowController.hide();
@@ -836,10 +819,10 @@ define([
         unlockInputs: function () {
             this.locked_inputs = false;
             if (this.enabled) {
-                for (let i = 0; i < this.rowInfo.length; i++) {
-                    this.rowInfo[i].$input.select2('enable', true);
-                    if (this.rowInfo[i].$removalButton) {
-                        this.rowInfo[i].$removalButton.show();
+                for (const element of this.rowInfo) {
+                    element.$input.select2('enable', true);
+                    if (element.$removalButton) {
+                        element.$removalButton.show();
                     }
                 }
             }
@@ -860,6 +843,7 @@ define([
                 return;
             }
             if (value instanceof Array) {
+                // no op
             } else {
                 value = [value];
             }
@@ -885,8 +869,8 @@ define([
             if (this.spec.textsubdata_options.multiselection) {
                 const valueList = value.split(',');
                 setValue = [];
-                for (let k = 0; k < valueList.length; k++) {
-                    setValue.push({ id: valueList[k], text: valueList[k] });
+                for (const element of valueList) {
+                    setValue.push({ id: element, text: element });
                 }
             }
             if (this.enabled) {
@@ -905,6 +889,7 @@ define([
          */
         getParameterValue: function () {
             // if this is optional, and not filled out, then we return null
+            let valueArr = [];
             if (this.spec.optional === 1) {
                 if (this.rowInfo.length === 1) {
                     if (this.rowInfo[0].$input.val().trim().length === 0) {
@@ -915,16 +900,15 @@ define([
                     }
                     return this.rowInfo[0].$input.val();
                 }
-                var value = [];
-                for (var i = 0; i < this.rowInfo.length; i++) {
+                for (const element of this.rowInfo) {
                     if (this.rowInfo[0].$input.val().trim().length > 0) {
-                        value.push(this.rowInfo[i].$input.val()); // only push the value if it is not empty
+                        valueArr.push(element.$input.val()); // only push the value if it is not empty
                     }
                 }
-                if (value.length === 0) {
+                if (valueArr.length === 0) {
                     return null;
                 } // return null since this is optional and nothing was set
-                return value;
+                return valueArr;
             }
 
             if (this.rowInfo.length === 1) {
@@ -933,14 +917,13 @@ define([
                 }
                 return this.rowInfo[0].$input.val();
             }
-            var value = [];
-            for (var i = 0; i < this.rowInfo.length; i++) {
-                value.push(this.rowInfo[i].$input.val());
+            for (const element of this.rowInfo) {
+                valueArr.push(element.$input.val());
             }
-            return value;
+            return valueArr;
         },
 
-        prepareValueBeforeRun: function (methodSpec) {},
+        prepareValueBeforeRun: function () {},
 
         genUUID: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

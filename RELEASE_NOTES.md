@@ -12,6 +12,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 @wdio/browserstack-service: 8.12.2 -> 8.15.10
 @wdio/cli: 8.12.2 -> 8.15.10
+chromedriver: 114.0.0 -> 116.0.0
 commander: 10.0.0 -> 11.0.0
 eslint-config-prettier: 8.8.0 -> 9.0.0
 handlebars: 4.7.7 -> 4.7.8

@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Version 5.2.1
 -   PTV-1900 - a previous bugfix exposed an issue in the SpeciesTreeBuilder apps. This provides a workaround to keep those apps running.
+-   PTV-1687 - update favicon
 
 ### Dependency Changes
 

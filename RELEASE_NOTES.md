@@ -11,7 +11,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 ### Dependency Changes
 
 - Python dependency updates
-  - coverage: 7.2.7 -> 7.3.0
+  - coverage: 7.2.7 -> 7.3.1
   - cryptography: 41.0.2 -> 41.0.4
   - pygments: 2.15.1 -> 2.16.1
   - pymongo: 4.4.1 -> 4.5.0

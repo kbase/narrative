@@ -18,7 +18,7 @@ ndg-httpsclient==0.5.1
 pygments==2.16.1
 pymongo==4.5.0
 pyopenssl==23.2.0
-pytest==7.4.0
+pytest==7.4.2
 pytest-cov==4.1.0
 requests==2.31.0
 requests-mock==1.11.0

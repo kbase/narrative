@@ -149,7 +149,7 @@
         "test_local": "karma start test/unit/karma.local.conf.js",
         "test": "karma start test/unit/karma.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
-        "update_browserslist": "npx browserslist@latest --update-db",
+        "update_browserslist": "npx update-browserslist-db@latest",
         "watch_css": "grunt watch"
     },
     "lint-staged": {

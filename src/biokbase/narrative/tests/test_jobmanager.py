@@ -107,7 +107,7 @@ class JobManagerTest(unittest.TestCase):
         terminal_ids = [
             job_id
             for job_id, d in self.jm._running_jobs.items()
-            if d["job"].was_terminal()
+            if d["job"].in_terminal_state()
         ]
         self.assertEqual(
             set(TERMINAL_JOBS),
@@ -233,12 +233,6 @@ class JobManagerTest(unittest.TestCase):
         exc = Exception("Test exception")
         exc_msg = str(exc)
 
-        def mock_check_jobs(params):
-            raise exc
-
-        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
-            job_states = self.jm._construct_job_output_state_set(ALL_JOBS)
-
         expected = {
             job_id: copy.deepcopy(ALL_RESPONSE_DATA[MESSAGE_TYPE["STATUS"]][job_id])
             for job_id in ALL_JOBS
@@ -247,6 +241,12 @@ class JobManagerTest(unittest.TestCase):
         for job_id in ACTIVE_JOBS:
             # expect there to be an error message added
             expected[job_id]["error"] = exc_msg
+
+        def mock_check_jobs(params):
+            raise exc
+
+        with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
+            job_states = self.jm._construct_job_output_state_set(ALL_JOBS)
 
         self.assertEqual(
             expected,
@@ -403,8 +403,8 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_jobs__job_already_finished(self):
         self.assertEqual(get_test_job(JOB_COMPLETED)["status"], "completed")
         self.assertEqual(get_test_job(JOB_TERMINATED)["status"], "terminated")
-        self.assertTrue(self.jm.get_job(JOB_COMPLETED).was_terminal())
-        self.assertTrue(self.jm.get_job(JOB_TERMINATED).was_terminal())
+        self.assertTrue(self.jm.get_job(JOB_COMPLETED).in_terminal_state())
+        self.assertTrue(self.jm.get_job(JOB_TERMINATED).in_terminal_state())
         job_id_list = [JOB_COMPLETED, JOB_TERMINATED]
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.JobManager._cancel_job"

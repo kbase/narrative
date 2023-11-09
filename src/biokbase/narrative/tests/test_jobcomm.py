@@ -618,6 +618,14 @@ class JobCommTestCase(unittest.TestCase):
         exc = Exception("Test exception")
         exc_message = str(exc)
 
+        expected = {
+            job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id])
+            for job_id in ALL_JOBS
+        }
+        for job_id in ACTIVE_JOBS:
+            # add in the ee2_error message
+            expected[job_id]["error"] = exc_message
+
         def mock_check_jobs(params):
             raise exc
 
@@ -627,14 +635,6 @@ class JobCommTestCase(unittest.TestCase):
         with mock.patch.object(MockClients, "check_jobs", side_effect=mock_check_jobs):
             self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-
-        expected = {
-            job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id])
-            for job_id in ALL_JOBS
-        }
-        for job_id in ACTIVE_JOBS:
-            # add in the ee2_error message
-            expected[job_id]["error"] = exc_message
 
         self.assertEqual(
             {

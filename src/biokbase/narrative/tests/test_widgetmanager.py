@@ -74,6 +74,8 @@ class WidgetManagerTestCase(unittest.TestCase):
                 check_widget=True,
             )
 
+    # N.b. the following test contacts the workspace
+    # src/config/config.json must be set to use the CI configuration
     def test_show_advanced_viewer_widget(self):
         title = "Widget Viewer"
         cell_id = "abcde"

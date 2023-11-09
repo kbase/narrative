@@ -5,10 +5,8 @@ Narrative and workspace service.
 import unittest
 from unittest.mock import patch
 
-from tornado.web import HTTPError
-
 import biokbase.auth
-import biokbase.narrative.clients as clients
+from biokbase.narrative import clients
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.common.url_config import URLS
@@ -16,27 +14,26 @@ from biokbase.narrative.contents.narrativeio import (
     LIST_OBJECTS_FIELDS,
     KBaseWSManagerMixin,
 )
+from tornado.web import HTTPError
 
 from . import util
 from .narrative_mock.mockclients import MockClients, get_mock_client, get_nar_obj
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-metadata_fields = set(
-    [
-        "objid",
-        "name",
-        "type",
-        "save_date",
-        "ver",
-        "saved_by",
-        "wsid",
-        "workspace",
-        "chsum",
-        "size",
-        "meta",
-    ]
-)
+metadata_fields = {
+    "objid",
+    "name",
+    "type",
+    "save_date",
+    "ver",
+    "saved_by",
+    "wsid",
+    "workspace",
+    "chsum",
+    "size",
+    "meta",
+}
 HAS_TEST_TOKEN = False
 
 

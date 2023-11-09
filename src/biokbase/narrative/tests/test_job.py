@@ -30,7 +30,7 @@ from biokbase.narrative.tests.job_test_constants import (
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
-    JOBS_TERMINALITY,
+    JOB_TERMINAL_STATE,
     MAX_LOG_LINES,
     TERMINAL_JOBS,
     get_test_job,
@@ -109,6 +109,7 @@ def create_attrs_from_ee2(job_id):
         "run_id": narr_cell_info.get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
         "tag": narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"]),
         "user": state.get("user", JOB_ATTR_DEFAULTS["user"]),
+        "wsid": state.get("wsid", JOB_ATTR_DEFAULTS["wsid"]),
     }
 
 
@@ -140,17 +141,14 @@ def get_batch_family_jobs(return_list=False):
     As invoked in appmanager's run_app_batch, i.e.,
     with from_job_id(s)
     """
-    child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
+    child_jobs = Job.from_job_ids(BATCH_CHILDREN)
     batch_job = Job.from_job_id(BATCH_PARENT, children=child_jobs)
 
     if return_list:
-        return [batch_job] + child_jobs
+        return [batch_job, *child_jobs]
     return {
         BATCH_PARENT: batch_job,
-        **{
-            child_id: child_job
-            for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
-        },
+        **{job.job_id: job for job in child_jobs},
     }
 
 
@@ -186,11 +184,11 @@ class JobTest(unittest.TestCase):
     def check_job_attrs_custom(self, job, exp_attr=None):
         if not exp_attr:
             exp_attr = {}
-        attr = dict(JOB_ATTR_DEFAULTS)
+        attr = copy.deepcopy(JOB_ATTR_DEFAULTS)
         attr.update(exp_attr)
         with mock.patch(CLIENTS, get_mock_client):
             for name, value in attr.items():
-                self.assertEqual(value, getattr(job, name))
+                assert value == getattr(job, name)
 
     def check_job_attrs(self, job, job_id, exp_attrs=None, skip_state=False):
         # TODO check _acc_state full vs pruned, extra_data
@@ -240,10 +238,10 @@ class JobTest(unittest.TestCase):
         job_ids.remove(BATCH_PARENT)
 
         with mock.patch(CLIENTS, get_mock_client):
-            jobs = Job.from_job_ids(job_ids, return_list=False)
+            jobs = Job.from_job_ids(job_ids)
 
-        for job_id, job in jobs.items():
-            self.check_job_attrs(job, job_id)
+        for job in jobs:
+            self.check_job_attrs(job, job.job_id)
 
     def test_job_init__extra_state(self):
         """
@@ -311,6 +309,7 @@ class JobTest(unittest.TestCase):
             "job_id": "0123456789abcdef",
             "params": params,
             "run_id": JOB_ATTR_DEFAULTS["run_id"],
+            "status": JOB_ATTR_DEFAULTS["status"],
             "tag": JOB_ATTR_DEFAULTS["tag"],
             "user": "the_user",
         }
@@ -344,9 +343,9 @@ class JobTest(unittest.TestCase):
         """
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal())
+        self.assertFalse(job.in_terminal_state())
         state = job.refresh_state()
-        self.assertFalse(job.was_terminal())
+        self.assertFalse(job.in_terminal_state())
         self.assertEqual(state["status"], "created")
 
         expected_state = create_state_from_ee2(JOB_CREATED)
@@ -357,7 +356,7 @@ class JobTest(unittest.TestCase):
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
-        self.assertTrue(job.was_terminal())
+        self.assertTrue(job.in_terminal_state())
         expected = create_state_from_ee2(JOB_COMPLETED)
 
         with assert_obj_method_called(MockClients, "check_job", call_status=False):
@@ -368,37 +367,12 @@ class JobTest(unittest.TestCase):
     @mock.patch(CLIENTS, get_failing_mock_client)
     def test_refresh_state__raise_exception(self):
         """
-        test that the correct exception is thrown if check_job cannot be called
+        test that the correct exception is thrown if check_jobs cannot be called
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal())
-        with self.assertRaisesRegex(ServerError, "check_job failed"):
+        self.assertFalse(job.in_terminal_state())
+        with self.assertRaisesRegex(ServerError, "check_jobs failed"):
             job.refresh_state()
-
-    def test_refresh_state__returns_none(self):
-        def mock_state(self, state=None):
-            return None
-
-        job = create_job_from_ee2(JOB_CREATED)
-        expected = {
-            "status": "error",
-            "error": {
-                "code": -1,
-                "name": "Job Error",
-                "message": "Unable to return job state",
-                "error": "Unable to find current job state. Please try again later, or contact KBase.",
-            },
-            "errormsg": "Unable to return job state",
-            "error_code": -1,
-            "job_id": job.job_id,
-            "cell_id": job.cell_id,
-            "run_id": job.run_id,
-            "created": 0,
-        }
-
-        with mock.patch.object(Job, "refresh_state", mock_state):
-            state = job.output_state()
-        self.assertEqual(expected, state)
 
     # TODO: improve this test
     def test_job_update__no_state(self):
@@ -406,15 +380,20 @@ class JobTest(unittest.TestCase):
         test that without a state object supplied, the job state is unchanged
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal())
+        job_copy = copy.deepcopy(job)
+        assert job.cached_state() == job_copy.cached_state()
 
         # should fail with error 'state must be a dict'
         with self.assertRaisesRegex(TypeError, "state must be a dict"):
             job.update_state(None)
-        self.assertFalse(job.was_terminal())
+        assert job.cached_state() == job_copy.cached_state()
 
         job.update_state({})
-        self.assertFalse(job.was_terminal())
+        assert job.cached_state() == job_copy.cached_state()
+
+        job.update_state({"wsid": "something or other"})
+        assert job.cached_state() != job_copy.cached_state()
+        assert job.wsid == "something or other"
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_job_update__invalid_job_id(self):
@@ -574,7 +553,7 @@ class JobTest(unittest.TestCase):
             children=child_jobs,
         )
 
-        self.assertFalse(parent_job.was_terminal())
+        self.assertFalse(parent_job.in_terminal_state())
 
         # Make all child jobs completed
         with mock.patch.object(
@@ -585,7 +564,7 @@ class JobTest(unittest.TestCase):
             for child_job in child_jobs:
                 child_job.refresh_state(force_refresh=True)
 
-        self.assertTrue(parent_job.was_terminal())
+        self.assertTrue(parent_job.in_terminal_state())
 
     def test_parent_children__fail(self):
         parent_state = create_state_from_ee2(BATCH_PARENT)
@@ -645,19 +624,19 @@ class JobTest(unittest.TestCase):
         self.assertIsNone(out)
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_query_job_state(self):
+    def test_query_job_states_single_job(self):
         for job_id in ALL_JOBS:
             exp = create_state_from_ee2(
                 job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
             )
-            got = Job.query_ee2_state(job_id, init=True)
-            self.assertEqual(exp, got)
+            got = Job.query_ee2_states([job_id], init=True)
+            assert exp == got[job_id]
 
             exp = create_state_from_ee2(
                 job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS
             )
-            got = Job.query_ee2_state(job_id, init=False)
-            self.assertEqual(exp, got)
+            got = Job.query_ee2_states([job_id], init=False)
+            assert exp == got[job_id]
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_query_job_states(self):
@@ -731,18 +710,18 @@ class JobTest(unittest.TestCase):
         with mock.patch.object(MockClients, "check_job", mock_check_job):
             self.check_job_attrs(job, job_id, {"child_jobs": self.NEW_CHILD_JOBS})
 
-    def test_was_terminal(self):
+    def test_in_terminal_state(self):
         all_jobs = get_all_jobs()
 
         for job_id, job in all_jobs.items():
-            self.assertEqual(JOBS_TERMINALITY[job_id], job.was_terminal())
+            self.assertEqual(JOB_TERMINAL_STATE[job_id], job.in_terminal_state())
 
     @mock.patch(CLIENTS, get_mock_client)
-    def test_was_terminal__batch(self):
+    def test_in_terminal_state__batch(self):
         batch_fam = get_batch_family_jobs(return_list=True)
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
 
-        self.assertFalse(batch_job.was_terminal())
+        self.assertFalse(batch_job.in_terminal_state())
 
         def mock_check_job(self_, params):
             self.assertTrue(params["job_id"] in BATCH_CHILDREN)
@@ -752,7 +731,7 @@ class JobTest(unittest.TestCase):
             for job in child_jobs:
                 job.refresh_state(force_refresh=True)
 
-        self.assertTrue(batch_job.was_terminal())
+        self.assertTrue(batch_job.in_terminal_state())
 
     def test_in_cells(self):
         all_jobs = get_all_jobs()

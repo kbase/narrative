@@ -95,7 +95,7 @@ BATCH_CHILDREN = [
 
 BATCH_PARENT_CHILDREN = [BATCH_PARENT] + BATCH_CHILDREN
 
-JOBS_TERMINALITY = {
+JOB_TERMINAL_STATE = {
     job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES
     for job_id in TEST_JOBS.keys()
 }
@@ -103,7 +103,7 @@ JOBS_TERMINALITY = {
 TERMINAL_JOBS = []
 ACTIVE_JOBS = []
 REFRESH_STATE = {}
-for key, value in JOBS_TERMINALITY.items():
+for key, value in JOB_TERMINAL_STATE.items():
     if value:
         TERMINAL_JOBS.append(key)
     else:

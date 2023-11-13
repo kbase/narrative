@@ -12,4 +12,4 @@ from biokbase.narrative.services.user import UserService
 class UserServiceTestCase(unittest.TestCase):
     def test_user_trust(self):
         us = UserService()
-        self.assertTrue(us.is_trusted_user("anybody"))
+        assert us.is_trusted_user("anybody")

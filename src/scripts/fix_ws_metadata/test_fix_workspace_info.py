@@ -2,9 +2,9 @@ import json
 import unittest
 from unittest import mock
 
-from requests.exceptions import HTTPError
-
+import pytest
 from biokbase.workspace.baseclient import ServerError
+from requests.exceptions import HTTPError
 
 from . import fix_workspace_info
 
@@ -32,8 +32,7 @@ def mocked_requests_get(*args, **kwargs):
         tok = kwargs["headers"]["Authorization"]
         if "good" in tok:
             return MockResponse(json.dumps({"user": FAKE_ADMIN_ID}), 200)
-        else:
-            return MockResponse("Bad!", 401)
+        return MockResponse("Bad!", 401)
 
 
 class MockWorkspace:
@@ -154,13 +153,12 @@ class TestWSInfoFix(unittest.TestCase):
         ]
         for input_args in good_args_set:
             args = fix_workspace_info.parse_args(input_args)
-            self.assertEqual(args.token, token)
-            self.assertEqual(args.auth_url, auth_url)
-            self.assertEqual(args.ws_url, ws_url)
+            assert args.token == token
+            assert args.auth_url == auth_url
+            assert args.ws_url == ws_url
         for bad_args in bad_args_set:
-            with self.assertRaises(ValueError) as e:
+            with pytest.raises(ValueError, match=bad_args[1]):
                 fix_workspace_info.parse_args(bad_args[0])
-            self.assertIn(bad_args[1], str(e.exception))
 
     def test__admin_update_metadata(self):
         reset_fake_ws_db()
@@ -169,28 +167,28 @@ class TestWSInfoFix(unittest.TestCase):
 
         ws_id = 1
         fix_workspace_info._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
-        self.assertEqual(ws.fake_ws_db[str(ws_id)]["ws_info"][8]["foo"], "bar")
-        self.assertNotIn(
-            FAKE_ADMIN_ID,
-            ws.administer(
+        assert ws.fake_ws_db[str(ws_id)]["ws_info"][8]["foo"] == "bar"
+        assert (
+            FAKE_ADMIN_ID
+            not in ws.administer(
                 {
                     "command": "getPermissionsMass",
                     "params": {"workspaces": [{"id": ws_id}]},
                 }
-            )["perms"][0],
+            )["perms"][0]
         )
 
         ws_id = 3
         fix_workspace_info._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
-        self.assertEqual(ws.fake_ws_db[str(ws_id)]["ws_info"][8]["foo"], "bar")
-        self.assertEqual(
+        assert ws.fake_ws_db[str(ws_id)]["ws_info"][8]["foo"] == "bar"
+        assert (
             ws.administer(
                 {
                     "command": "getPermissionsMass",
                     "params": {"workspaces": [{"id": ws_id}]},
                 }
-            )["perms"][0].get(FAKE_ADMIN_ID),
-            "r",
+            )["perms"][0].get(FAKE_ADMIN_ID)
+            == "r"
         )
 
     @mock.patch(
@@ -199,8 +197,8 @@ class TestWSInfoFix(unittest.TestCase):
     )
     def test__get_user_id(self, request_mock):
         userid = fix_workspace_info._get_user_id("some_endpoint", "goodtoken")
-        self.assertEqual(userid, FAKE_ADMIN_ID)
-        with self.assertRaises(HTTPError):
+        assert userid == FAKE_ADMIN_ID
+        with pytest.raises(HTTPError):
             fix_workspace_info._get_user_id("some_endpoint", "badtoken")
 
     @mock.patch(
@@ -212,7 +210,7 @@ class TestWSInfoFix(unittest.TestCase):
         reset_fake_ws_db()
         fake_ws = MockWorkspace()
         fix_workspace_info.Workspace = MockWorkspace
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             fix_workspace_info.fix_all_workspace_info(
                 "fake_ws", "fake_auth", "bad_token", 20
             )
@@ -222,94 +220,74 @@ class TestWSInfoFix(unittest.TestCase):
         )
         # TODO: add actual tests for results of "database"
         # ws1 - no change to metadata
-        self.assertEqual(fake_ws.fake_ws_db["1"]["ws_info"][8], {})
+        assert fake_ws.fake_ws_db["1"]["ws_info"][8] == {}
 
         # ws2 - add cell_count = 1
-        self.assertEqual(
-            fake_ws.fake_ws_db["2"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "1",
-                "narrative_nice_name": "Test",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["2"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }
 
         # ws3 - not temp, fix name, add num-cells
-        self.assertEqual(
-            fake_ws.fake_ws_db["3"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "1",
-                "narrative_nice_name": "Test3",
-                "cell_count": "2",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["3"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test3",
+            "cell_count": "2",
+            "searchtags": "narrative",
+        }
 
         # ws4 - not temp, 1 cell
-        self.assertEqual(
-            fake_ws.fake_ws_db["4"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "1",
-                "narrative_nice_name": "Test4",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["4"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test4",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }
 
         # ws5 - add num cells. even though there's > 1, it's configured.
-        self.assertEqual(
-            fake_ws.fake_ws_db["5"]["ws_info"][8],
-            {"is_temporary": "false", "narrative": "1", "narrative_nice_name": "Test5"},
-        )
+        assert fake_ws.fake_ws_db["5"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test5",
+        }
 
         # ws6 - fix id, add cell count
-        self.assertEqual(
-            fake_ws.fake_ws_db["6"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "3",
-                "narrative_nice_name": "Test6",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["6"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "3",
+            "narrative_nice_name": "Test6",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }
 
         # ws7 - fix id, cell count
-        self.assertEqual(
-            fake_ws.fake_ws_db["7"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "3",
-                "narrative_nice_name": "Test7",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["7"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "3",
+            "narrative_nice_name": "Test7",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }
 
         # ws8 - missing metadata all together, so add it
-        self.assertEqual(
-            fake_ws.fake_ws_db["8"]["ws_info"][8],
-            {
-                "is_temporary": "false",
-                "narrative": "3",
-                "narrative_nice_name": "Test8",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["8"]["ws_info"][8] == {
+            "is_temporary": "false",
+            "narrative": "3",
+            "narrative_nice_name": "Test8",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }
 
         # ws9 - missing metadata here, too, but it's temporary
-        self.assertEqual(
-            fake_ws.fake_ws_db["9"]["ws_info"][8],
-            {
-                "is_temporary": "true",
-                "narrative": "3",
-                "narrative_nice_name": "Untitled",
-                "cell_count": "1",
-                "searchtags": "narrative",
-            },
-        )
+        assert fake_ws.fake_ws_db["9"]["ws_info"][8] == {
+            "is_temporary": "true",
+            "narrative": "3",
+            "narrative_nice_name": "Untitled",
+            "cell_count": "1",
+            "searchtags": "narrative",
+        }

@@ -1,10 +1,9 @@
 import unittest
 
 import requests
-from requests.exceptions import HTTPError
-
 from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.narrative.exception_util import transform_job_exception
+from requests.exceptions import HTTPError
 
 ERROR_MSG = "some error message"
 
@@ -19,11 +18,11 @@ class ExceptionUtilTestCase(unittest.TestCase):
         name = "EEError"
         ee2_err = EEServerError(name, code, message)
         nar_err = transform_job_exception(ee2_err)
-        self.assertEqual(nar_err.code, code)
-        self.assertEqual(nar_err.message, message)
-        self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, "ee2")
-        self.assertIsNone(nar_err.error)
+        assert nar_err.code == code
+        assert nar_err.message == message
+        assert nar_err.name == name
+        assert nar_err.source == "ee2"
+        assert nar_err.error is None
 
     def test_transform_ee2_err__with_error(self):
         code = 1000
@@ -32,11 +31,11 @@ class ExceptionUtilTestCase(unittest.TestCase):
         error = "Unable to perform some request"
         ee2_err = EEServerError(name, code, message)
         nar_err = transform_job_exception(ee2_err, error)
-        self.assertEqual(nar_err.code, code)
-        self.assertEqual(nar_err.message, message)
-        self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, "ee2")
-        self.assertEqual(nar_err.error, error)
+        assert nar_err.code == code
+        assert nar_err.message == message
+        assert nar_err.name == name
+        assert nar_err.source == "ee2"
+        assert nar_err.error == error
 
     def test_transform_http_err_unavailable(self):
         codes = [404, 502, 503]
@@ -47,11 +46,11 @@ class ExceptionUtilTestCase(unittest.TestCase):
             res.status_code = c
             err = HTTPError(HTTP_ERROR_MSG, response=res)
             nar_err = transform_job_exception(err)
-            self.assertEqual(nar_err.code, c)
-            self.assertEqual(nar_err.message, message)
-            self.assertEqual(nar_err.name, name)
-            self.assertEqual(nar_err.source, "network")
-            self.assertIsNone(nar_err.error)
+            assert nar_err.code == c
+            assert nar_err.message == message
+            assert nar_err.name == name
+            assert nar_err.source == "network"
+            assert nar_err.error is None
 
     def test_transform_http_err_timeout(self):
         codes = [504, 598, 599]
@@ -62,11 +61,11 @@ class ExceptionUtilTestCase(unittest.TestCase):
             res.status_code = c
             err = HTTPError(HTTP_ERROR_MSG, response=res)
             nar_err = transform_job_exception(err)
-            self.assertEqual(nar_err.code, c)
-            self.assertEqual(nar_err.message, message)
-            self.assertEqual(nar_err.name, name)
-            self.assertEqual(nar_err.source, "network")
-            self.assertIsNone(nar_err.error)
+            assert nar_err.code == c
+            assert nar_err.message == message
+            assert nar_err.name == name
+            assert nar_err.source == "network"
+            assert nar_err.error is None
 
     def test_transform_http_err_internal(self):
         code = 500
@@ -76,11 +75,11 @@ class ExceptionUtilTestCase(unittest.TestCase):
         res.status_code = code
         err = HTTPError(HTTP_ERROR_MSG, response=res)
         nar_err = transform_job_exception(err)
-        self.assertEqual(nar_err.code, code)
-        self.assertEqual(nar_err.message, message)
-        self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, "network")
-        self.assertIsNone(nar_err.error)
+        assert nar_err.code == code
+        assert nar_err.message == message
+        assert nar_err.name == name
+        assert nar_err.source == "network"
+        assert nar_err.error is None
 
     def test_transform_http_err_unknown(self):
         code = 666
@@ -90,8 +89,8 @@ class ExceptionUtilTestCase(unittest.TestCase):
         res.status_code = code
         err = HTTPError(HTTP_ERROR_MSG, response=res)
         nar_err = transform_job_exception(err)
-        self.assertEqual(nar_err.code, code)
-        self.assertEqual(nar_err.message, message)
-        self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, "network")
-        self.assertIsNone(nar_err.error)
+        assert nar_err.code == code
+        assert nar_err.message == message
+        assert nar_err.name == name
+        assert nar_err.source == "network"
+        assert nar_err.error is None

@@ -1,6 +1,7 @@
 import unittest
 
 import biokbase.auth
+import pytest
 
 from . import util
 
@@ -30,18 +31,17 @@ class ViewersTestCase(unittest.TestCase):
     def test_bad_view_as_clustergrammer_params(self):
         from biokbase.narrative import viewers
 
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             viewers.view_as_clustergrammer(self.generic_ref, col_categories="Time")
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             viewers.view_as_clustergrammer(self.generic_ref, row_categories="Time")
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             viewers.view_as_clustergrammer(self.generic_ref, normalize_on="Time")
-        with self.assertRaisesRegex(ValueError, "not a compatible data type"):
+        with pytest.raises(ValueError, match="not a compatible data type"):
             viewers.view_as_clustergrammer(self.attribute_set_ref)
 
     def test__get_categories(self):
         import pandas as pd
-
         from biokbase.narrative import viewers
 
         ids = ["WRI_RS00010_CDS_1", "WRI_RS00015_CDS_1", "WRI_RS00025_CDS_1"]
@@ -83,23 +83,21 @@ class ViewersTestCase(unittest.TestCase):
             labels=[[0, 1, 2], [0, 1, 2]],
             names=["ID", "test_attribute_1"],
         )
-        self.assertEqual(ids, viewers._get_categories(ids, self.generic_ref))
-        with self.assertRaisesRegex(ValueError, "not in the provided mapping"):
+        assert ids, viewers._get_categories(ids == self.generic_ref)
+        with pytest.raises(ValueError, match="not in the provided mapping"):
             viewers._get_categories(
                 ["boo"], self.generic_ref, self.attribute_set_ref, mapping
             )
-        with self.assertRaisesRegex(ValueError, "has no attribute"):
+        with pytest.raises(ValueError, match="has no attribute"):
             viewers._get_categories(["boo"], self.generic_ref, self.attribute_set_ref)
-        self.assertEqual(
-            index,
-            viewers._get_categories(
-                ids,
-                self.generic_ref,
-                self.attribute_set_ref,
-                mapping,
-                clustergrammer=True,
-            ),
+        assert index == viewers._get_categories(
+            ids,
+            self.generic_ref,
+            self.attribute_set_ref,
+            mapping,
+            clustergrammer=True,
         )
+
         pd.testing.assert_index_equal(
             multi_index,
             viewers._get_categories(
@@ -110,47 +108,43 @@ class ViewersTestCase(unittest.TestCase):
                 {"test_attribute_1"},
             ),
         )
-        self.assertEqual(
-            filtered_index,
-            viewers._get_categories(
-                ids,
-                self.generic_ref,
-                self.attribute_set_ref,
-                mapping,
-                {"test_attribute_1"},
-                clustergrammer=True,
-            ),
+        assert filtered_index == viewers._get_categories(
+            ids,
+            self.generic_ref,
+            self.attribute_set_ref,
+            mapping,
+            {"test_attribute_1"},
+            clustergrammer=True,
         )
 
     def test_get_df(self):
         import pandas as pd
-
         from biokbase.narrative import viewers
 
         res = viewers.get_df(self.generic_ref)
-        self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape, (3, 4))
-        self.assertIsInstance(res.index, pd.MultiIndex)
+        assert isinstance(res, pd.DataFrame)
+        assert res.shape, 3 == 4
+        assert isinstance(res.index, pd.MultiIndex)
 
         res = viewers.get_df(self.generic_ref, None, None)
-        self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape, (3, 4))
-        self.assertIsInstance(res.index, pd.Index)
+        assert isinstance(res, pd.DataFrame)
+        assert res.shape, 3 == 4
+        assert isinstance(res.index, pd.Index)
 
         res = viewers.get_df(self.generic_ref, clustergrammer=True)
-        self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape, (3, 4))
-        self.assertIsInstance(res.index, pd.Index)
+        assert isinstance(res, pd.DataFrame)
+        assert res.shape, 3 == 4
+        assert isinstance(res.index, pd.Index)
 
         res = viewers.get_df(self.expression_matrix_ref)
-        self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape, (4297, 16))
-        self.assertIsInstance(res.index, pd.Index)
+        assert isinstance(res, pd.DataFrame)
+        assert res.shape, 4297 == 16
+        assert isinstance(res.index, pd.Index)
 
     def test_view_as_clustergrammer(self):
         from biokbase.narrative import viewers
 
-        self.assertEqual(
-            str(type(viewers.view_as_clustergrammer(self.generic_ref))),
-            "<class 'clustergrammer_widget.example.clustergrammer_widget'>",
+        assert (
+            str(type(viewers.view_as_clustergrammer(self.generic_ref)))
+            == "<class 'clustergrammer_widget.example.clustergrammer_widget'>"
         )

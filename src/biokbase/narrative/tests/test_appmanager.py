@@ -10,10 +10,9 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 
-from IPython.display import HTML, Javascript
-
+import pytest
 from biokbase.auth import TokenInfo
-import biokbase.narrative.app_util as app_util
+from biokbase.narrative import app_util
 from biokbase.narrative.jobs.appmanager import BATCH_APP, AppManager
 from biokbase.narrative.jobs.job import Job
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
@@ -24,6 +23,7 @@ from biokbase.narrative.tests.job_test_constants import (
     READS_OBJ_1,
     READS_OBJ_2,
 )
+from IPython.display import HTML, Javascript
 
 from .narrative_mock.mockclients import WSID_STANDARD, get_mock_client
 from .util import ConfigTests
@@ -205,52 +205,49 @@ class AppManagerTestCase(unittest.TestCase):
         """
         output = io.StringIO()
         sys.stdout = output
-        self.assertIsNone(run_func())
+        assert run_func() is None
         sys.stdout = sys.__stdout__  # reset to normal
         output_str = output.getvalue()
         if print_error is not None and len(print_error):
-            self.assertIn(
-                f"Error while trying to start your app ({func_name})!", output_str
-            )
-            self.assertIn(print_error, output_str)
+            assert f"Error while trying to start your app ({func_name})!" in output_str
+            assert print_error in output_str
         else:
-            self.assertEqual(
-                "", output_str
-            )  # if nothing gets written to a StringIO, getvalue returns an empty string
+            # if nothing gets written to a StringIO, getvalue returns an empty string
+            assert output_str == ""
         self._verify_comm_error(comm_mock, cell_id=cell_id)
 
     def test_reload(self):
         self.am.reload()
         info = self.am.app_usage(self.good_app_id, self.good_tag)
-        self.assertTrue(info)
+        assert info
 
     def test_app_usage(self):
         # good id and good tag
         usage = self.am.app_usage(self.good_app_id, self.good_tag)
-        self.assertTrue(usage)
+        assert usage
 
         # bad id
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am.app_usage(self.bad_app_id)
 
         # bad tag
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am.app_usage(self.good_app_id, self.bad_tag)
 
     def test_app_usage_html(self):
         usage = self.am.app_usage(self.good_app_id, self.good_tag)
-        self.assertTrue(usage._repr_html_())
+        assert usage._repr_html_()
 
     def test_app_usage_str(self):
         usage = self.am.app_usage(self.good_app_id, self.good_tag)
-        self.assertTrue(str(usage))
+        assert str(usage)
 
     def test_available_apps_good(self):
         apps = self.am.available_apps(self.good_tag)
-        self.assertIsInstance(apps, HTML)
+        assert isinstance(apps, HTML)
 
     def test_available_apps_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am.available_apps(self.bad_tag)
 
     # Testing run_app
@@ -275,8 +272,8 @@ class AppManagerTestCase(unittest.TestCase):
         output = self.am.run_app(
             self.test_app_id, self.test_app_params, tag=self.test_tag, dry_run=True
         )
-        self.assertEqual(expected, output)
-        self.assertEqual(mock_comm.call_count, 0)
+        assert expected == output
+        assert mock_comm.call_count == 0
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -289,11 +286,11 @@ class AppManagerTestCase(unittest.TestCase):
         new_job = self.am.run_app(
             self.test_app_id, self.test_app_params, tag=self.test_tag
         )
-        self.assertIsInstance(new_job, Job)
-        self.assertEqual(self.jm.get_job(self.test_job_id), new_job)
+        assert isinstance(new_job, Job)
+        assert self.jm.get_job(self.test_job_id) == new_job
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-        self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
+        assert self.jm._running_jobs[new_job.job_id]["refresh"] is False
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -304,13 +301,14 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_app__from_gui_cell(self, auth, c):
         cell_id = "12345"
         c.return_value.send_comm_message = MagicMock()
-        self.assertIsNone(
+        assert (
             self.am.run_app(
                 self.test_app_id,
                 self.test_app_params,
                 tag=self.test_tag,
                 cell_id=cell_id,
             )
+            is None
         )
         self._verify_comm_success(
             c.return_value.send_comm_message, False, cell_id=cell_id
@@ -371,7 +369,7 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_app__missing_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        self.assertIsNotNone(self.am.run_app(self.good_app_id, None, tag=self.good_tag))
+        assert self.am.run_app(self.good_app_id, None, tag=self.good_tag) is not None
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
     @mock.patch(CLIENTS_AM, get_mock_client)
@@ -465,7 +463,7 @@ class AppManagerTestCase(unittest.TestCase):
             "wsid": WSID_STANDARD,
         }
 
-        self.assertEqual(job_runner_inputs, expected)
+        assert job_runner_inputs == expected
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -482,11 +480,11 @@ class AppManagerTestCase(unittest.TestCase):
             version=self.test_app_version,
             tag=self.test_tag,
         )
-        self.assertIsInstance(new_job, Job)
-        self.assertEqual(self.jm.get_job(self.test_job_id), new_job)
+        assert isinstance(new_job, Job)
+        assert self.jm.get_job(self.test_job_id) == new_job
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
-        self.assertEqual(False, self.jm._running_jobs[new_job.job_id]["refresh"])
+        assert self.jm._running_jobs[new_job.job_id]["refresh"] is False
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -497,13 +495,14 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_legacy_batch_app__gui_cell(self, auth, c):
         cell_id = "12345"
         c.return_value.send_comm_message = MagicMock()
-        self.assertIsNone(
+        assert (
             self.am.run_legacy_batch_app(
                 self.test_app_id,
                 [self.test_app_params, self.test_app_params],
                 tag=self.test_tag,
                 cell_id=cell_id,
             )
+            is None
         )
         self._verify_comm_success(
             c.return_value.send_comm_message, False, cell_id=cell_id
@@ -568,8 +567,9 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_legacy_batch_app__missing_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        self.assertIsNotNone(
+        assert (
             self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.good_tag)
+            is not None
         )
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
@@ -623,8 +623,8 @@ class AppManagerTestCase(unittest.TestCase):
             {"param0": "fakegenome"},
             tag="release",
         )
-        self.assertIsInstance(result, Javascript)
-        self.assertIn("KBaseNarrativeOutputCell", result.data)
+        assert isinstance(result, Javascript)
+        assert "KBaseNarrativeOutputCell" in result.data
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -733,15 +733,15 @@ class AppManagerTestCase(unittest.TestCase):
         expected_batch_run_keys = {"method", "service_ver", "params", "app_id", "meta"}
         # expect only the above keys in each batch run params (note the missing wsid key)
         for param_set in batch_run_params:
-            self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
-        self.assertEqual(["wsid"], list(batch_params.keys()))
+            assert expected_batch_run_keys == set(param_set.keys())
+        assert ["wsid"] == list(batch_params.keys())
 
         # expect shared_params to have been merged into respective param_sets
         for exp, outp in zip(
             iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params
         ):
             got = outp["params"][0]
-            self.assertDictEqual({**got, **exp}, got)  # assert exp_params <= got_params
+            assert {**got, **exp} == got
 
         def mod(param_set):
             for key, value in param_set.items():
@@ -766,10 +766,10 @@ class AppManagerTestCase(unittest.TestCase):
         ]
         exp_batch_params = {"wsid": WSID_STANDARD}
 
-        self.assertEqual(exp_batch_run_params, batch_run_params)
-        self.assertEqual(exp_batch_params, batch_params)
+        assert exp_batch_run_params == batch_run_params
+        assert exp_batch_params == batch_params
 
-        self.assertEqual(mock_comm.call_count, 0)
+        assert mock_comm.call_count == 0
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -782,23 +782,22 @@ class AppManagerTestCase(unittest.TestCase):
         test_input = get_bulk_run_good_inputs()
 
         new_jobs = self.am.run_app_batch(test_input)
-        self.assertIsInstance(new_jobs, dict)
-        self.assertIn("parent_job", new_jobs)
-        self.assertIn("child_jobs", new_jobs)
-        self.assertTrue(new_jobs["parent_job"])
+        assert isinstance(new_jobs, dict)
+        assert "parent_job" in new_jobs
+        assert "child_jobs" in new_jobs
+        assert new_jobs["parent_job"]
         parent_job = new_jobs["parent_job"]
         child_jobs = new_jobs["child_jobs"]
-        self.assertIsInstance(parent_job, Job)
-        self.assertIsInstance(child_jobs, list)
-        self.assertEqual(len(child_jobs), 3)
-        self.assertEqual(
-            [job.job_id for job in child_jobs],
-            [f"{self.test_job_id}_child_{i}" for i in range(len(child_jobs))],
-        )
+        assert isinstance(parent_job, Job)
+        assert isinstance(child_jobs, list)
+        assert len(child_jobs) == 3
+        assert [job.job_id for job in child_jobs] == [
+            f"{self.test_job_id}_child_{i}" for i in range(len(child_jobs))
+        ]
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 
-        for job in [parent_job] + child_jobs:
-            self.assertEqual(False, self.jm._running_jobs[job.job_id]["refresh"])
+        for job in [parent_job, *child_jobs]:
+            assert self.jm._running_jobs[job.job_id]["refresh"] is False
 
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
@@ -814,10 +813,11 @@ class AppManagerTestCase(unittest.TestCase):
         # test with / w/o run_id
         # should return None, fire a couple of messages
         for run_id in run_ids:
-            self.assertIsNone(
+            assert (
                 self.am.run_app_batch(
                     get_bulk_run_good_inputs(), cell_id=cell_id, run_id=run_id
                 )
+                is None
             )
 
             self._verify_comm_success(
@@ -969,25 +969,25 @@ class AppManagerTestCase(unittest.TestCase):
 
         # Merge shared_params into each params dict
         self.am._reconstitute_shared_params(app_info_el)
-        self.assertEqual(expected, app_info_el)
+        assert expected == app_info_el
 
         # No shared_params means no change
         self.am._reconstitute_shared_params(app_info_el)
-        self.assertEqual(expected, app_info_el)
+        assert expected == app_info_el
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description(self):
         desc = self.am.app_description(self.good_app_id, tag=self.good_tag)
-        self.assertIsInstance(desc, HTML)
+        assert isinstance(desc, HTML)
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_tag(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am.app_description(self.good_app_id, tag=self.bad_tag)
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_app_description_bad_name(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am.app_description(self.bad_app_id)
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
@@ -1016,9 +1016,9 @@ class AppManagerTestCase(unittest.TestCase):
         (params, ws_inputs) = app_util.validate_parameters(
             app_id, tag, spec_params, inputs
         )
-        self.assertDictEqual(params, inputs)
-        self.assertIn("12345/8/1", ws_inputs)
-        self.assertIn("12345/7/1", ws_inputs)
+        assert params == inputs
+        assert "12345/8/1" in ws_inputs
+        assert "12345/7/1" in ws_inputs
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     @mock.patch(CLIENTS_SM, get_mock_client)
@@ -1073,13 +1073,13 @@ class AppManagerTestCase(unittest.TestCase):
                 "workspace": ws_name,
             }
         ]
-        self.assertDictEqual(expected[0], mapped_inputs[0])
+        assert expected[0] == mapped_inputs[0]
         ref_path = (
             ws_name + "/MyReadsSet; " + ws_name + "/rhodobacterium.art.q10.PE.reads"
         )
         # ref_paths get mocked as 1/1/1;2/2/2;...N/N/N;18836/5/1
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
-        self.assertEqual(ret, "1/1/1;18836/5/1")
+        assert ret == "1/1/1;18836/5/1"
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     def test_generate_input(self):
@@ -1088,14 +1088,14 @@ class AppManagerTestCase(unittest.TestCase):
         num_symbols = 8
         generator = {"symbols": num_symbols, "prefix": prefix, "suffix": suffix}
         rand_str = self.am._generate_input(generator)
-        self.assertTrue(rand_str.startswith(prefix))
-        self.assertTrue(rand_str.endswith(suffix))
-        self.assertEqual(len(rand_str), len(prefix) + len(suffix) + num_symbols)
+        assert rand_str.startswith(prefix)
+        assert rand_str.endswith(suffix)
+        assert len(rand_str) == len(prefix) + len(suffix) + num_symbols
 
     def test_generate_input_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am._generate_input({"symbols": "foo"})
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.am._generate_input({"symbols": -1})
 
     # N.b. the following test contacts the workspace
@@ -1169,10 +1169,10 @@ class AppManagerTestCase(unittest.TestCase):
         for test in test_data:
             spec = test.get("spec")
             ret = app_util.transform_param_value(test["type"], test["value"], spec)
-            self.assertEqual(ret, test["expected"])
+            assert ret == test["expected"]
 
     def test_transform_input_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             app_util.transform_param_value("foo", "bar", None)
 
     def _transform_comm_messages(self, comm_mock):
@@ -1205,10 +1205,10 @@ class AppManagerTestCase(unittest.TestCase):
             expected_message["content"]["cell_id"] = cell_id
 
         for key in ["error_message", "error_stacktrace"]:
-            self.assertTrue(key in transformed_call_args_list[0]["content"])
+            assert key in transformed_call_args_list[0]["content"]
             del transformed_call_args_list[0]["content"][key]
 
-        self.assertEqual(transformed_call_args_list, [expected_message])
+        assert transformed_call_args_list == [expected_message]
 
     def _single_messages(self, cell_id=None, run_id=None):
         return [
@@ -1254,7 +1254,7 @@ class AppManagerTestCase(unittest.TestCase):
         else:
             expected = self._single_messages(cell_id, run_id)
 
-        self.assertEqual(transformed_call_args_list, expected)
+        assert transformed_call_args_list == expected
 
 
 if __name__ == "__main__":

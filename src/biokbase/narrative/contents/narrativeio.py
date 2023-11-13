@@ -99,15 +99,14 @@ class KBaseWSManagerMixin:
         except WorkspaceError as err:
             if err.http_code == 404:
                 return False
-            else:
-                raise
+            raise
 
     def _validate_nar_type(self, t, ref):
         if not t.startswith(NARRATIVE_TYPE):
             err = "Expected a Narrative object"
             if ref is not None:
-                err += " with reference {}".format(ref)
-            err += ", got a {}".format(t)
+                err += f" with reference {ref}"
+            err += f", got a {t}"
             raise HTTPError(500, err)
 
     def read_narrative(self, ref, content=True, include_metadata=True):

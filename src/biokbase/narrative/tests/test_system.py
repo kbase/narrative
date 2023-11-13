@@ -2,9 +2,8 @@ import os
 import time
 from unittest import mock
 
-import pytest
-
 import biokbase.auth
+import pytest
 from biokbase.narrative.system import strict_system_variable, system_variable
 
 from . import util

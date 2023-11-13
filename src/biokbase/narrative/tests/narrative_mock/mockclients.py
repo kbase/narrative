@@ -81,7 +81,7 @@ class MockClients:
     config = ConfigTests()
     _job_state_data = TEST_JOBS
 
-    def __init__(self, client_name=None, token=None):
+    def __init__(self, client_name=None, token=None) -> None:
         if token is not None:
             assert isinstance(token, str)
         self.client_name = client_name
@@ -326,9 +326,7 @@ class MockClients:
             lines = []
             if skip < total_lines:
                 for i in range(total_lines - skip):
-                    lines.append(
-                        {"is_error": 0, "line": "This is line {}".format(i + skip)}
-                    )
+                    lines.append({"is_error": 0, "line": f"This is line {i + skip}"})
             return {"last_line_number": max(total_lines, skip), "lines": lines}
 
         if job_id == JOB_COMPLETED:
@@ -355,6 +353,7 @@ class MockClients:
     def sync_call(self, call, params):
         if call == "NarrativeService.list_objects_with_sets":
             return self._mock_ns_list_objects_with_sets(params)
+        return None
 
     def _mock_ns_list_objects_with_sets(self, params):
         """
@@ -374,7 +373,7 @@ class MockClients:
         if params.get("workspaces"):
             ws_name = params["workspaces"][0]
         dp_id = 999
-        dp_ref = "{}/{}".format(ws_id, dp_id)
+        dp_ref = f"{ws_id}/{dp_id}"
 
         data = {
             "data": [
@@ -511,10 +510,7 @@ class MockClients:
             data["data"] = list(
                 filter(
                     lambda x: any(
-                        [
-                            x["object_info"][2].lower().startswith(t.lower())
-                            for t in types
-                        ]
+                        x["object_info"][2].lower().startswith(t.lower()) for t in types
                     ),
                     data["data"],
                 )
@@ -535,7 +531,7 @@ def get_failing_mock_client(client_name, token=None):
 
 
 class FailingMockClient:
-    def __init__(self, token=None):
+    def __init__(self, token=None) -> None:
         pass
 
     def check_workspace_jobs(self, params):
@@ -590,7 +586,7 @@ class assert_obj_method_called:
     )
     """
 
-    def __init__(self, target, method_name, call_status=True):
+    def __init__(self, target, method_name, call_status=True) -> None:
         self.target = target
         self.method_name = method_name
         self.call_status = call_status

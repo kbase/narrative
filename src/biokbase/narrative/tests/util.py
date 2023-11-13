@@ -39,7 +39,7 @@ class ConfigTests:
     Test utility functions
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._path_prefix = os.path.join(
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"
         )
@@ -66,7 +66,7 @@ class ConfigTests:
         location in <narrative_root>/src/biokbase/narrative/tests
         """
         json_file_path = self.file_path(filename)
-        with open(json_file_path, "r") as f:
+        with open(json_file_path) as f:
             data = json.loads(f.read())
             f.close()
             return data
@@ -121,7 +121,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     """
 
     # read the file
-    with open(nar_file, "r") as f:
+    with open(nar_file) as f:
         nar = json.loads(f.read())
         f.close()
 
@@ -163,7 +163,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     return {
         "ws": ws_info[0],
         "obj": obj_info[0][0],
-        "refstr": "{}/{}".format(ws_info[0], obj_info[0][0]),
+        "refstr": f"{ws_info[0]}/{obj_info[0][0]}",
         "ref": NarrativeRef({"wsid": ws_info[0], "objid": obj_info[0][0]}),
     }
 
@@ -185,7 +185,7 @@ def read_token_file(path):
     if not os.path.isfile(path):
         return None
 
-    with open(path, "r") as f:
+    with open(path) as f:
         token = f.read().strip()
         f.close()
         return token
@@ -196,41 +196,16 @@ def read_json_file(path):
     Generically reads in any JSON file and returns it as a dict.
     Especially intended for reading a Narrative file.
     """
-    with open(path, "r") as f:
+    with open(path) as f:
         data = json.loads(f.read())
         f.close()
         return data
 
 
-class MyTestCase(unittest.TestCase):
-    def test_kvparse(self):
-        for user_input, text, kvp in (
-            ("foo", "foo", {}),
-            ("name=val", "", {"name": "val"}),
-            ("a name=val boy", "a boy", {"name": "val"}),
-        ):
-            rkvp = {}
-            rtext = util.parse_kvp(user_input, rkvp)
-            self.assertEqual(
-                text,
-                rtext,
-                "Text '{}' does not match "
-                "result '{}' "
-                "from input '{}'".format(text, rtext, user_input),
-            )
-            self.assertEqual(
-                text,
-                rtext,
-                "Dict '{}' does not match "
-                "result '{}' "
-                "from input '{}'".format(kvp, rkvp, user_input),
-            )
-
-
 class SocketServerBuf(socketserver.TCPServer):
     allow_reuse_address = True
 
-    def __init__(self, addr, handler):
+    def __init__(self, addr, handler) -> None:
         socketserver.TCPServer.__init__(self, addr, handler)
         self.buf = ""
 
@@ -283,7 +258,7 @@ class NarrativeMessageBufferer(socketserver.StreamRequestHandler):
 
 
 def start_tcp_server(host, port, poll_interval, bufferer=LogProxyMessageBufferer):
-    _log.info("Starting server on {}:{}".format(host, port))
+    _log.info(f"Starting server on {host}:{port}")
     server = SocketServerBuf((host, port), bufferer)
     thr = threading.Thread(target=server.serve_forever, args=[poll_interval])
     thr.daemon = True
@@ -318,7 +293,7 @@ def validate_job_state(job_state: dict) -> None:
     assert isinstance(job_state["jobState"], dict), "jobState is not a dict"
     assert "outputWidgetInfo" in job_state, "outputWidgetInfo key missing"
     assert isinstance(
-        job_state["outputWidgetInfo"], (dict, NoneType)
+        job_state["outputWidgetInfo"], dict | NoneType
     ), "outputWidgetInfo is not a dict or None"
     state = job_state["jobState"]
     # list of tuples - first = key name, second = value type

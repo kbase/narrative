@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 import IPython
-
+import pytest
 from biokbase.narrative.widgetmanager import WidgetManager
 
 from .narrative_mock.mockclients import get_mock_client
@@ -15,6 +15,20 @@ Tests for the WidgetManager class
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
+def assert_is_valid_cell_code(js_obj):
+    code_lines = js_obj.data.strip().split("\n")
+    assert code_lines[0].strip().startswith("element.html(\"<div id='kb-vis")
+    assert (
+        code_lines[1].strip()
+        == "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {"
+    )
+    assert (
+        code_lines[2]
+        .strip()
+        .startswith("var w = new KBaseNarrativeOutputCell($('#kb-vis")
+    )
+
+
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -23,7 +37,7 @@ class WidgetManagerTestCase(unittest.TestCase):
             "KB_WORKSPACE_ID"
         ] = "12345"  # That's the same workspace as my luggage!
         app_specs_list = config.load_json_file(config.get("specs", "app_specs_file"))
-        app_specs_dict = dict()
+        app_specs_dict = {}
         for s in app_specs_list:
             app_specs_dict[s["info"]["id"]] = s
         cls.wm = WidgetManager()
@@ -37,25 +51,25 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.wm.load_widget_info(verbose=True)
 
     def test_widgetmanager_instantiated(self):
-        self.assertIsInstance(self.wm, WidgetManager)
+        assert isinstance(self.wm, WidgetManager)
 
     def test_widget_inputs(self):
         self.wm.print_widget_inputs(self.good_widget)
 
     def test_widget_inputs_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.wm.print_widget_inputs(self.bad_widget)
 
     def test_widget_constants(self):
         constants = self.wm.get_widget_constants(self.widget_with_consts)
-        self.assertTrue("ws" in constants)
+        assert "ws" in constants
 
     def test_widget_constants_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.wm.get_widget_constants(self.bad_widget)
 
     def test_show_output_widget(self):
-        self.assertIsInstance(
+        assert isinstance(
             self.wm.show_output_widget(
                 self.good_widget,
                 {"obj": "TestObject"},
@@ -66,7 +80,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         )
 
     def test_show_output_widget_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.wm.show_output_widget(
                 self.bad_widget,
                 {"bad": "inputs"},
@@ -89,14 +103,14 @@ class WidgetManagerTestCase(unittest.TestCase):
             tag="dev",
             check_widget=True,
         )
-        self.assertIsInstance(widget_js, IPython.core.display.Javascript)
+        assert isinstance(widget_js, IPython.core.display.Javascript)
         widget_code = widget_js.data
-        self.assertIn("widget: '{}'".format(widget_name), widget_code)
-        self.assertIn('cellId: "{}"'.format(cell_id), widget_code)
-        self.assertIn("title: '{}'".format(title), widget_code)
+        assert f"widget: '{widget_name}'" in widget_code
+        assert f'cellId: "{cell_id}"' in widget_code
+        assert f"title: '{title}'" in widget_code
 
     def test_show_advanced_viewer_widget_bad(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.wm.show_advanced_viewer_widget(
                 self.bad_widget, {"bad": "inputs"}, {"bad": "state"}, check_widget=True
             )
@@ -105,7 +119,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         widget = self.wm.show_external_widget(
             "contigSet", "My ContigSet View", {"objectRef": "6402/3/8"}, {}
         )
-        self.assertIsInstance(widget, IPython.core.display.Javascript)
+        assert isinstance(widget, IPython.core.display.Javascript)
 
     def test_show_external_widget_list(self):
         widget = self.wm.show_external_widget(
@@ -115,7 +129,7 @@ class WidgetManagerTestCase(unittest.TestCase):
             {},
             auth_required=True,
         )
-        self.assertIsInstance(widget, IPython.core.display.Javascript)
+        assert isinstance(widget, IPython.core.display.Javascript)
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_show_data_cell(self):
@@ -132,7 +146,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         test mocks.
         """
         js_obj = self.wm.show_data_widget("18836/5/1", "some title", "no_id")
-        self.assertIsValidCellCode(js_obj)
+        assert_is_valid_cell_code(js_obj)
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas(self):
@@ -153,15 +167,15 @@ class WidgetManagerTestCase(unittest.TestCase):
                 "other_extra_param": 0,
             },
         )
-        self.assertEqual(upas["obj_id1"], test_result_upa)
-        self.assertEqual(upas["obj_id2"], test_result_upa)
-        self.assertEqual(upas["obj_name1"], test_result_upa)
-        self.assertEqual(upas["obj_name2"], test_result_upa)
-        self.assertEqual(upas["obj_names"], [test_result_upa] * 3)
-        self.assertEqual(upas["obj_ref1"], "1/2/3")
-        self.assertEqual(upas["obj_ref2"], test_result_upa)
-        self.assertEqual(upas["obj_refs"], [test_result_upa] * 2)
-        self.assertEqual(len(upas.keys()), 8)
+        assert upas["obj_id1"] == test_result_upa
+        assert upas["obj_id2"] == test_result_upa
+        assert upas["obj_name1"] == test_result_upa
+        assert upas["obj_name2"] == test_result_upa
+        assert upas["obj_names"] == [test_result_upa] * 3
+        assert upas["obj_ref1"] == "1/2/3"
+        assert upas["obj_ref2"] == test_result_upa
+        assert upas["obj_refs"] == [test_result_upa] * 2
+        assert len(upas.keys()) == 8
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_none(self):
@@ -172,8 +186,8 @@ class WidgetManagerTestCase(unittest.TestCase):
             "testCrazyExample",
             {"some_param": "some_value", "another_param": "another_value"},
         )
-        self.assertIsInstance(upas, dict)
-        self.assertFalse(upas)
+        assert isinstance(upas, dict)
+        assert not upas
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_simple_widget(self):
@@ -189,8 +203,8 @@ class WidgetManagerTestCase(unittest.TestCase):
                 "ws_name": "some_workspace",
             },
         )
-        self.assertIsInstance(upas, dict)
-        self.assertFalse(upas)
+        assert isinstance(upas, dict)
+        assert not upas
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_nulls(self):
@@ -215,39 +229,24 @@ class WidgetManagerTestCase(unittest.TestCase):
                 "other_extra_param": 0,
             },
         )
-        self.assertIsInstance(upas, dict)
-        self.assertNotIn("obj_id1", upas)
-        self.assertNotIn("obj_id2", upas)
-        self.assertEqual(upas["obj_name1"], test_result_upa)
-        self.assertEqual(upas["obj_name2"], test_result_upa)
-        self.assertEqual(upas["obj_names"], [test_result_upa] * 3)
-        self.assertEqual(upas["obj_ref1"], "1/2/3")
-        self.assertEqual(upas["obj_ref2"], test_result_upa)
-        self.assertEqual(upas["obj_refs"], [test_result_upa] * 2)
+        assert isinstance(upas, dict)
+        assert "obj_id1" not in upas
+        assert "obj_id2" not in upas
+        assert upas["obj_name1"] == test_result_upa
+        assert upas["obj_name2"] == test_result_upa
+        assert upas["obj_names"] == [test_result_upa] * 3
+        assert upas["obj_ref1"] == "1/2/3"
+        assert upas["obj_ref2"] == test_result_upa
+        assert upas["obj_refs"] == [test_result_upa] * 2
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_missing_env_path(self):
         backup_dir = os.environ["NARRATIVE_DIR"]
         del os.environ["NARRATIVE_DIR"]
         test_wm = WidgetManager()
-        self.assertIsInstance(test_wm.widget_param_map, dict)
-        self.assertFalse(test_wm.widget_param_map)
+        assert isinstance(test_wm.widget_param_map, dict)
+        assert not test_wm.widget_param_map
         os.environ["NARRATIVE_DIR"] = backup_dir
-
-    def assertIsValidCellCode(self, js_obj):
-        code_lines = js_obj.data.strip().split("\n")
-        self.assertTrue(
-            code_lines[0].strip().startswith("element.html(\"<div id='kb-vis")
-        )
-        self.assertEqual(
-            code_lines[1].strip(),
-            "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {",
-        )
-        self.assertTrue(
-            code_lines[2]
-            .strip()
-            .startswith(r"var w = new KBaseNarrativeOutputCell($('#kb-vis")
-        )
 
 
 if __name__ == "__main__":

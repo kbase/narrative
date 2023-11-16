@@ -18,7 +18,7 @@ from biokbase.narrative.tests.job_test_constants import (
 )
 from biokbase.workspace.baseclient import ServerError
 
-from ..util import ConfigTests
+from src.biokbase.narrative.tests.util import ConfigTests
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -29,11 +29,11 @@ NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
-def generate_ee2_error(fn):
+def generate_ee2_error(fn: str) -> EEServerError:
     return EEServerError("JSONRPCError", -32000, fn + " failed")
 
 
-def get_nar_obj(i):
+def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
     return [
         i,
         "My_Test_Narrative",
@@ -291,9 +291,7 @@ class MockClients:
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        job_state = self.job_state_data.get(
-            job_id, {"job_id": job_id, "status": "unmocked"}
-        )
+        job_state = self.job_state_data.get(job_id, {"job_id": job_id})
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
                 if f in job_state:
@@ -546,6 +544,9 @@ class FailingMockClient:
     def check_job(self, params):
         raise generate_ee2_error("check_job")
 
+    def check_jobs(self, params):
+        raise generate_ee2_error("check_jobs")
+
     def cancel_job(self, params):
         raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
 
@@ -618,7 +619,7 @@ class assert_obj_method_called:
 
         assert (
             getattr(self.target, self.method_name) == self.called
-        ), f"Method {self.target.__name__}.{self.method_name} was modified during context managment with {self.__class__.name}"
+        ), f"Method {self.target.__name__}.{self.method_name} was modified during context management with {self.__class__.name}"
         setattr(self.target, self.method_name, self.orig_method)
 
         self.assert_called(self.call_status)

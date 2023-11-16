@@ -316,6 +316,8 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
+    # N.b. the following three tests contact the workspace
+    # src/config/config.json must be set to use the CI configuration
     @mock.patch(JOB_COMM_MOCK)
     def test_run_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
@@ -507,6 +509,8 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message, False, cell_id=cell_id
         )
 
+    # N.b. the following three tests contact the workspace
+    # src/config/config.json must be set to use the CI configuration
     @mock.patch(JOB_COMM_MOCK)
     def test_run_legacy_batch_app__bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
@@ -1094,6 +1098,8 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.am._generate_input({"symbols": -1})
 
+    # N.b. the following test contacts the workspace
+    # src/config/config.json must be set to use the CI configuration
     def test_transform_input_good(self):
         ws_name = self.public_ws
         test_data = [

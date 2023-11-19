@@ -8,6 +8,20 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ### Dependency Changes
 
+- Javascript dependency updates
+  - @wdio/browserstack-service: 8.12.2 -> 8.15.10
+  - @wdio/cli: 8.12.2 -> 8.15.10
+  - chromedriver: 114.0.0 -> 116.0.0
+  - commander: 10.0.0 -> 11.0.0
+  - eslint-config-prettier: 8.8.0 -> 9.0.0
+  - handlebars: 4.7.7 -> 4.7.8
+  - plotly-js-dist.min: 2.18.2 -> 2.26.0
+  - postcss: 8.4.27 -> 8.4.29
+  - prettier: 3.0.0 -> 3.0.3
+  - puppeteer: 20.8.2 -> 21.1.1
+  - pure-uuid: 1.6.4 -> 1.7.0
+  - selenium-webdriver: 4.10.0 -> 4.12.0
+
 - Python dependency updates
   - black: 23.7.0 -> 23.11.0
   - pytest: 7.4.0 -> 7.4.3

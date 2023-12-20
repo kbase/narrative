@@ -10,7 +10,6 @@
  */
 define(
 [
-    './ServiceWidgetCell',
     'util/cellSupport/CellManager',
 
     // For effect
@@ -18,10 +17,23 @@ define(
     'custom/custom',
 ],
 (
-    ServiceWidgetCell,
     CellManager
 ) => {
-    
+
+    /**
+     * A cheap way to scrub text of html, meant to be applied to external data being
+     * injected into the DOM. It has the effect of encoding special characters as html
+     * entities, so that they appear as markup and won't act as markup.
+     * 
+     * @param {*} text 
+     * @returns 
+     */
+    function textOnlyThanks(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     class ServiceWidgetCellManager extends CellManager {
 
         /** 
@@ -31,25 +43,24 @@ define(
         *
         */
         getCellTitle(cell) {
-            const {moduleName, widgetName} = this.getCellExtensionMetadata(cell, 'service');
-            return `Service Widget Demo (module: ${moduleName}, widget: ${widgetName})`;
+            const {title} = this.getCellExtensionMetadata(cell, 'service');
+            if (title) {
+                return textOnlyThanks(title);
+            }
+            return `Service Widget Viewer`;
+        }
+
+        getCellSubtitle(cell) {
+            const {subtitle,  moduleName, widgetName} = this.getCellExtensionMetadata(cell, 'service');
+            if (subtitle) {
+                return `${textOnlyThanks(subtitle)} <i>(${moduleName}/${widgetName})</i>`;
+            }
+            return `<i>(${moduleName}/${widgetName})</i>`;
         }
 
         getCellClass(cell) {
             return 'kb-service-widget-cell';
         }
-
-        // onSetupCell(cell) {
-        //     cell.element[0].classList.add('kb-service-widget-cell');
-        // }
-
-        // getCellInstance(cell) {
-        //     return new ServiceWidgetCell({
-        //         name: 'Service Widget Cell', 
-        //         type: 'serviceWidget',
-        //         cell, 
-        //     });
-        // }
 
         populateCell(serviceWidgetCell) {
             // TODO: the cell should "know" what params it needs to populate it (i.e.

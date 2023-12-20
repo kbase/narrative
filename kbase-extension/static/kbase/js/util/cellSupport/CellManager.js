@@ -197,6 +197,11 @@ define([
             throw new Error('The "getCellTitle" method must be defined by a subclass');
         }
 
+
+        getCellSubtitle(cell) {
+            throw new Error('The "getCellSubtitle" method must be defined by a subclass');
+        }
+
         /** 
         * Should only be called when a cell is first inserted into a narrative.
         *
@@ -225,6 +230,7 @@ define([
                 this.setCellExtensionMetadata(cell, key, value);
             }
             this.setCellMetadata(cell, 'attributes.title', this.getCellTitle(cell), true);
+            this.setCellMetadata(cell, 'attributes.subtitle', this.getCellSubtitle(cell), true);
         }
 
         setCellExtensionMetadata(cell, propPath, value) {

@@ -1277,13 +1277,16 @@ define(
                         // The "rest" of the parameters are extracted for the widget
                         // itself.
                         ///
-                        const {service_module_name, widget_name, ...params} = widget.params;
+                        const {service_module_name, widget_name, title, subtitle, ...params} = widget.params;
+
                         return  {
                             type: 'serviceWidget',
                             metadata: {
                                 service: {
                                     moduleName: service_module_name,
                                     widgetName: widget_name,
+                                    title,
+                                    subtitle,
                                     params,
                                     isDynamicService: true
                                 }

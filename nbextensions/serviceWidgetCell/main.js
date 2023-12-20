@@ -21,7 +21,7 @@ define(
             const cellManager = new ServiceWidgetCellManager({
                 type: typeName,
                 icon: {name: 'plug', color: 'silver'},
-                title: 'Service Widget Demo',
+                title: 'Service Widget Demo', // should be replaced when the widget runs
                 className: 'kb-service-widget-cell',
                 name: 'Service Widget Cell',
                 instanceClass: ServiceWidgetCell

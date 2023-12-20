@@ -26,9 +26,11 @@ require.config({
         domPurify: 'ext_components/dompurify/dist/purify.min',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/dist/handlebars.amd.min',
+        htm: 'ext_components/htm/dist/htm.umd',
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
         plotly: 'ext_components/plotly.js-dist-min/plotly.min',
+        preact: 'ext_components/preact/dist/preact.umd',
         kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
         kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
@@ -108,6 +110,7 @@ require.config({
 
         common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
+        preactComponents: 'kbase/js/preactComponents',
         appWidgets: 'kbase/js/widgets/appWidgets2',
 
         /***

@@ -159,6 +159,21 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
     }
 
     /**
+     * Given a cell with the given id (as stored in the kbase.attributes metadata), this
+     * returns the title of that cell (as stored in kbase.attributes.title).
+     * If no cell is present with that id, returns undefined
+     * @param {string} cellId the cell id stored in the kbase.attributes.id metadata field
+     * @param {string} title The title for the cell
+     * @returns {string} the title of the cell with that id or undefined
+     */
+    function setTitle(cellId, title) {
+        const cellWithId = findById(cellId);
+        if (cellWithId) {
+            setCellMeta(cellWithId, 'kbase.attributes.title', title, true);
+        }
+    }
+
+    /**
      * Given a unique cell id, this attempts to find and return associated the Jupyter
      * notebook cell. If there is no cell with that id, or more than one cell with that id,
      * this returns undefined. If and only if there's a single cell with that id, it gets returned.
@@ -183,6 +198,7 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
         getCellMeta,
         setCellMeta,
         getTitle,
+        setTitle,
         findById,
     };
 });

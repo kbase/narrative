@@ -1258,11 +1258,11 @@ define(
                 const widget = model.getItem('exec.outputWidgetInfo');
 
                 const cellSetupData = (() => {
-                    if (widget.name === 'DynamicServiceWidgetGenericWidget') {
+                    if (widget.name === 'ServiceWidgetGeneric') {
                         //
                         // Here we handle this widget name with the serviceWidget cell
                         // type. Specifying an output widget of
-                        // "DynamicServiceWidgetGenericWidget" will cause widget to be
+                        // "ServiceWidgetGeneric" will cause widget to be
                         // handled by the serviceWidget cell. 
                         // 
                         // he specific widget is specified by a pair of values - the

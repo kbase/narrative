@@ -11,11 +11,17 @@ define(['jquery', 'bootstrap'], ($) => {
      *     enterToTrigger: boolean, default false,
      *     type: string, type of alert (from bootstrap text types: warning, error, etc.),
      *     alertOnly: create as an "alert" with a single "Close" button in the footer
+     *     size: 'sm', 'lg', null
      * }
      */
     const BootstrapDialog = function (options) {
-        this.$modal = $('<div class="modal fade" role="dialog">');
+        this.$modal = $('<div class="modal fade" role="dialog" tabindex="-1">');
         this.$dialog = $('<div class="modal-dialog">');
+
+        if ('size' in options) {
+            this.$dialog.addClass(`modal-${options.size}`);
+        }
+
         this.$dialogContent = $('<div class="modal-content">');
         this.$header = $('<div class="modal-header">');
         this.$headerTitle = $('<h4 class="modal-title">');
@@ -37,6 +43,13 @@ define(['jquery', 'bootstrap'], ($) => {
                 ),
             ];
             options.enterToTrigger = true;
+        }
+
+        // The onShown option allows a dialog to lazily load content.
+        if (options.onShown) {
+            this.$modal.on('show.bs.modal', (ev) => {
+                options.onShown(this.$dialogBody);
+            });
         }
 
         this.initialize(options);
@@ -90,6 +103,14 @@ define(['jquery', 'bootstrap'], ($) => {
         }
         for (let i = 0; i < buttonList.length; i++) {
             const $btn = buttonList[i];
+            // Wrap button function so the consumer can 
+            // get a dialog ref if it needs it (e.g. to close).
+            if ($btn.onClick) {
+                $btn.click((ev) => {
+                    $btn.onClick(this);
+                });
+            }
+            
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {
@@ -97,6 +118,8 @@ define(['jquery', 'bootstrap'], ($) => {
                 if (e.keyCode === 13) {
                     e.stopPropagation();
                     e.preventDefault();
+                    // TODO: huh, assumes that the "close" button is
+                    // the last one!
                     this.$footer.find('button:last').trigger('click');
                 }
             });

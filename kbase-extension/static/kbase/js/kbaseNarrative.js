@@ -38,6 +38,10 @@ define([
     'widgets/loadingWidget',
     'kb_service/client/workspace',
     'util/kbaseApiUtil',
+    'widgets/serviceWidgetCell/AddServiceWidgetData',
+    'widgets/serviceWidgetCell/AddServiceWidget',
+
+    /* for effect */
     'bootstrap',
 ], (
     $,
@@ -68,7 +72,9 @@ define([
     ServiceUtils,
     LoadingWidget,
     Workspace,
-    APIUtil
+    APIUtil,
+    AddServiceWidgetData,
+    AddServiceWidget
 ) => {
     'use strict';
 
@@ -377,6 +383,65 @@ define([
             staticWidget = new StaticNarrativesPanel(staticPanel);
         $('#kb-static-btn').click(() => {
             staticWidget.refresh();
+            staticDialog.show();
+        });
+    };
+
+    Narrative.prototype.isDeveloper = function () {
+        return new URL(window.location.href).searchParams.get('developer') === "t";
+    }
+
+    /**
+     * Ensures any element with the "data-developer-only" attribute is displayed by
+     * removing the "hide" bootstrap class, and initializes any ui elements that need
+     * some javascript setup.
+     */
+    Narrative.prototype.enableDeveloperUI = function () {
+        document.querySelectorAll('[data-developer-only]').forEach((element) => {
+            element.classList.remove('hide');
+        });
+
+        this.initAddServiceWidgetDataMenu();
+        this.initAddServiceWidgetMenu();
+    }
+
+    /**
+     * 
+     */
+    Narrative.prototype.initAddServiceWidgetDataMenu = () => {
+        const widget = new AddServiceWidgetData();
+        const $body = $('<div>');
+        const staticDialog = new BootstrapDialog({
+            title: 'Add Object ViewerService Widget (takes data object)',
+            onShown: () => {
+                $body.html(widget.$renderBody());
+            },
+            body: $body,
+            closeButton: true,
+            buttons: widget.$renderButtons()
+        });
+
+        $('#kb-develop-add-service-widget-data-btn').click(() => {
+            staticDialog.show();
+        });
+    };
+
+     /**
+     * 
+     */
+    Narrative.prototype.initAddServiceWidgetMenu = () => {
+        const widget = new AddServiceWidget();
+        const $body = $('<div>');
+        const staticDialog = new BootstrapDialog({
+            title: 'Add Service Widget',
+            onShown: () => {
+                $body.html(widget.$renderBody());
+            },
+            body: $body,
+            closeButton: true,
+            buttons: widget.$renderButtons()
+        });
+        $('#kb-develop-add-service-widget-btn').click(() => {
             staticDialog.show();
         });
     };
@@ -820,6 +885,9 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
+            if (this.isDeveloper()) {
+                this.enableDeveloperUI();
+            }
             this.updateDocumentVersion().finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {

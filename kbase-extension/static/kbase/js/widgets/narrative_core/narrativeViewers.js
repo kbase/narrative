@@ -1,8 +1,15 @@
-define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeMethodStore'], (
+define([
+    'jquery', 
+    'underscore', 
+    'narrativeConfig', 
+    'kb_service/client/narrativeMethodStore',
+    'base/js/namespace'
+], (
     $,
     _,
     Config,
-    NarrativeMethodStore
+    NarrativeMethodStore,
+    Jupyter
 ) => {
     'use strict';
 
@@ -11,17 +18,33 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
     let lastViewerCache = 0; // age in ms since epoch
     const VIEWER_CACHE_MAX = 5 * 60 * 1000; // 5 min in ms
 
+    // Store the tag for the last time the "viewer info" was loaded and cached.
+    // If the tag changes between requests, we need to re-fetch it.
+    let viewerInfoCacheTag = null;
+
     /**
      * returns the cached data viewer promise if needed.
      * If it's old (> 5 minutes), it makes and returns a new one.
      * @returns {Promise} a promise that resolves into viewer info, see loadViewerInfo.
      */
     function getViewerInfo() {
-        if (!viewerInfoCache || Date.now() - lastViewerCache > VIEWER_CACHE_MAX) {
-            viewerInfoCache = loadViewerInfo();
+        const currentTag = getAppVersionTag();
+        if (!viewerInfoCache || this.viewerInfoCacheTag !== currentTag || Date.now() - lastViewerCache > VIEWER_CACHE_MAX) {
+            viewerInfoCache = loadViewerInfo(currentTag);
             lastViewerCache = Date.now();
         }
         return viewerInfoCache;
+    }
+
+    /**
+     * Simply returns the current app version tag in the app panel.
+     * 
+     * @returns The current app version tag set in the app panel, or 'release' if not set
+     */
+    function getAppVersionTag() {
+        // This is the
+        const tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+        return tag || 'release';
     }
 
     /**
@@ -46,15 +69,22 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
      *
      * would dump out the object with the five keys outlined above.
      */
-    function loadViewerInfo() {
+    function loadViewerInfo(appTag) {
         const viewers = {};
         const landingPageUrls = {};
         const typeNames = {};
         let methodIds = [];
 
         const methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+        //
+        // NB - this did not previously respect the currently selected tag, so this is a
+        // change in behavior
+        // Without specifying the tag, it would have defaulted to 'release', which is
+        // the common model in NMS, although not documented for this method.
+        //
         return methodStoreClient
             .list_categories({
+                tag: appTag,
                 load_methods: 1,
                 load_apps: 0,
                 load_types: 1,
@@ -70,7 +100,32 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
                     }
                     // If it has at least one method id, make sure it's there.
                     else if (val.view_method_ids && val.view_method_ids.length > 0) {
-                        const methodId = val.view_method_ids[0];
+                        //
+                        // BEGIN DEMO HACK: this code is to be removed
+                        //
+                        // This simulates a change to NarrativeViewers - but we've
+                        // made the change to a different viewers module for
+                        // testing.
+                        //
+                        // Specifically, the "eapearson/eapearsonNarrativeViewersTest" which is a
+                        // clone of "kbase/NarrativeViewers". At present, the viewers
+                        // for media and protein structures have been modified to use
+                        // "eapearsonWidgetTest10" for dynamic widgets.
+                        //
+                        // This testing viewers app should be used so that the release
+                        // matches CI and/or production, and the dev tag carries the
+                        // dynamic service widgets.
+                        // 
+                        const methodId = (() => {
+                            const methodId = val.view_method_ids[0];
+                            const [moduleName, viewerName] = methodId.split('/');
+                            if (moduleName !== 'NarrativeViewers') {
+                                throw new Error(`Viewer module should be "NarrativeViewers" but is "${moduleName}"`)    
+                            }
+                            return `eapearson${moduleName}Test/${viewerName}`;
+                        })();
+                        // END DEMO HACK
+                        
                         if (!methodInfo[methodId]) {
                             console.warn("Can't find method info for id: " + methodId);
                         } else if (methodInfo[methodId].loading_error) {
@@ -90,11 +145,11 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
                 });
 
                 methodIds = _.uniq(methodIds);
-                return methodStoreClient.get_method_spec({ ids: methodIds });
+                return methodStoreClient.get_method_spec({ tag: appTag, ids: methodIds });
             })
             .then((specs) => {
-                _.each(specs, (val) => {
-                    specs[val.info.id] = val;
+                _.each(specs, (spec) => {
+                    specs[spec.info.id] = spec;
                 });
                 return {
                     viewers: viewers,

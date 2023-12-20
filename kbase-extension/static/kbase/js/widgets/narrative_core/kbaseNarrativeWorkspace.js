@@ -21,6 +21,9 @@ define([
     'common/props',
     'common/jobCommMessages',
     'text!kbase/templates/report_error_button.html',
+    'narrativeViewers',
+
+    // For effect
     'bootstrap',
 ], (
     Jupyter,
@@ -34,7 +37,8 @@ define([
     Handlebars,
     Props,
     jcm,
-    ReportErrorBtnTmpl
+    ReportErrorBtnTmpl,
+    narrativeViewers
 ) => {
     'use strict';
 
@@ -568,15 +572,76 @@ define([
          *  - placement (optional) - either 'above' or 'below',
          *  - info: an Object Info array (see Workspace docs)
          */
-        buildViewerCell: function (cellIndex, data) {
+        buildViewerCell: async function (cellIndex, data) {
             let placement = data.placement;
             if (['above', 'below'].indexOf(placement) === -1) {
                 placement = 'below';
             }
-            const cellData = {
-                type: 'data',
-                objectInfo: data.info,
-            };
+
+            // We want to have the type definitions, since we dispatch to different
+            // behavior depending on the type of the object being viewed...
+
+            // May already be cached, so not as expensive as it looks.
+            const viewersInfo = await narrativeViewers.getViewerInfo();
+            const {
+                id: objectId, 
+                version: objectVersion, 
+                wsid: workspaceId, 
+                type: workspaceObjectType 
+            } = data.info;
+            const [versionlessType, _version] = workspaceObjectType.split('-');
+            const viewerMethodId = viewersInfo.viewers[versionlessType];
+            const viewerSpec = viewersInfo.specs[viewerMethodId]
+
+            // We just use a simple object ref, as by definition we can only view
+            // objects within this narrative.
+            const ref = `${workspaceId}/${objectId}/${objectVersion}`;
+
+            const cellData = (() => {
+                if (viewerSpec && viewerSpec.widgets.output == 'ServiceWidgetViewer') {
+                    // Extract constant params out of the viewer's output mapping.
+                    // We only support sending constant params for a viewer, as we 
+                    // generate the ref.
+                    const constantParams = viewerSpec.behavior.output_mapping
+                        .filter((mapping) => {
+                            return 'constant_value' in mapping;
+                        })
+                        .reduce((accum, {constant_value, target_property}) => {
+                            accum[target_property] = constant_value;
+                            return accum;
+                        }, {});
+
+                    // Remove the required service module name and widget name from the
+                    // params, as they are intended as directives to the dynamic service
+                    // widget mechanism, not the widget itself.
+                    const moduleName = constantParams.service_module_name;
+                    const widgetName = constantParams.widget_name;
+                    delete constantParams.service_module_name;
+                    delete constantParams.widget_name;
+
+                    const params = {...constantParams, ref};
+
+                    // Finally, we return an object as the serviceWidget handler expects.
+                    return {
+                        type: 'serviceWidget',
+                        metadata: {
+                            service: {
+                                moduleName,
+                                widgetName,
+                                params,
+                                // todo: get this from the form.
+                                isDynamicService: true
+                            }
+                        }
+                    };
+                } else {
+                    return {
+                        type: 'data',
+                        objectInfo: data.info,
+                    };
+                }
+            })();
+
             if (placement === 'above') {
                 return Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
             } else {

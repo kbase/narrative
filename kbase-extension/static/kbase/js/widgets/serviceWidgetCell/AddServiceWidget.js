@@ -20,6 +20,8 @@ define([
             this.state = {
                 moduleName: '',
                 widgetName: '',
+                title: '',
+                subtitle: '',
                 param1: {name: '', value: ''},
                 param2: {name: '', value: ''},
                 param3: {name: '', value: ''},
@@ -46,6 +48,8 @@ define([
                     service: {
                         moduleName: this.state.moduleName,
                         widgetName: this.state.widgetName,
+                        title: this.state.title,
+                        subtitle: this.state.subtitle,
                         params,
                         // todo: get this from the form.
                         isDynamicService: true
@@ -175,6 +179,28 @@ define([
                                             .attr('value', this.state.widgetName)
                                             .on('change', (ev) => {
                                                 this.setState('widgetName', ev.currentTarget.value);
+                                            })
+                                    )
+                                ),
+                                $el('div').addClass('rotated-table-row').append(
+                                    $el('div').addClass('rotated-table-header-cell').text('Title'),
+                                    $el('div').addClass('rotated-table-value-cell').append(
+                                        $el('input')
+                                            .addClass('form-control')
+                                            .attr('value', this.state.title)
+                                            .on('change', (ev) => {
+                                                this.setState('title', ev.currentTarget.value);
+                                            })
+                                    )
+                                ),
+                                $el('div').addClass('rotated-table-row').append(
+                                    $el('div').addClass('rotated-table-header-cell').text('Subtitle'),
+                                    $el('div').addClass('rotated-table-value-cell').append(
+                                        $el('input')
+                                            .addClass('form-control')
+                                            .attr('value', this.state.subtitle)
+                                            .on('change', (ev) => {
+                                                this.setState('subtitle', ev.currentTarget.value);
                                             })
                                     )
                                 ),

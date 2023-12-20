@@ -47,7 +47,7 @@ define(
             if (title) {
                 return textOnlyThanks(title);
             }
-            return `Service Widget Viewer`;
+            return `Service Widget`;
         }
 
         getCellSubtitle(cell) {

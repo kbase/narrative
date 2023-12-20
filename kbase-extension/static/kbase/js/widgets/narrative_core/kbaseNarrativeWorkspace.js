@@ -622,7 +622,7 @@ define([
                     const params = {...constantParams, ref};
 
                     const title = `${data.info.name}`;
-                    const subtitle = `v${data.info.version} - ${data.info.type} (<i>widget: ${moduleName}/${widgetName}</i>)`;
+                    const subtitle = `v${data.info.version} - ${data.info.type}`;
 
                     // Finally, we return an object as the serviceWidget handler expects.
                     return {

@@ -21,6 +21,8 @@ define([
                 moduleName: '',
                 widgetName: '',
                 objectRef: '',
+                title: '',
+                subtitle: '',
                 isDynamic: true
             }
             this.$objectSelectorWrapper = $el('div');
@@ -35,6 +37,8 @@ define([
                     service: {
                         moduleName: this.state.moduleName,
                         widgetName: this.state.widgetName,
+                        title: this.state.title,
+                        subtitle: this.state.subtitle,
                         params: {
                             ref: this.state.objectRef
                         },
@@ -59,13 +63,17 @@ define([
                 });
         }
 
-        renderObjectSelector($into) {
+        $renderObjectSelector($into) {
             // Do this as a promise so that we can let it fly...
             new Promise(async () => {
                 try {
                     const objects = await this.fetchObjects();
 
-                    const $options = objects.map(({ref, name, typeName }) => {
+                    const objectsMap = {};
+
+                    const $options = objects.map((objectInfo) => {
+                        const {ref, name, typeName } = objectInfo;
+                        objectsMap[ref] = objectInfo;
                         return $el('option')
                             .attr('value', ref)
                             .text(`${name} (${typeName})`);
@@ -80,7 +88,18 @@ define([
                                         .css('margin', '0')
                                         .append($options)
                                         .on('change', (ev) => {
-                                            this.setState('objectRef', ev.currentTarget.value);
+                                            const objectInfo = objectsMap[ev.currentTarget.value];
+                                            console.log('objectInfo', objectInfo)
+                                            const title = objectInfo.name;
+                                            const subtitle = `v${objectInfo.version} ${objectInfo.type}`;
+                                            this.$body.find('#title-field input').val(title);
+                                            this.$body.find('#subtitle-field input').val(subtitle);
+                                            this.setState([
+                                                ['objectRef', ev.currentTarget.value],
+                                                ['title', title],
+                                                ['subtitle', subtitle]
+                                            ]);
+
                                         });
 
                     // Then update the control.
@@ -120,8 +139,10 @@ define([
         //     $into.html($select);
         // }
 
-        setState(name, value) {
-            this.state[name] = value;
+        setState(updates) {
+            for (const [name, value] of updates) {
+                this.state[name] = value;
+            }
             this.evaluate();
         }
 
@@ -144,7 +165,7 @@ define([
                         .addClass('form-control')
                         .attr('value', this.state[stateKey])
                         .on('change', (ev) => {
-                            this.setState(stateKey, ev.currentTarget.value);
+                            this.setState([[stateKey, ev.currentTarget.value]]);
                         })
                 )
             );
@@ -159,7 +180,7 @@ define([
         }
         
         $renderBody() {
-            this.renderObjectSelector(this.$objectSelectorWrapper);
+            this.$renderObjectSelector(this.$objectSelectorWrapper);
             // this.renderWidgetSelector(this.$widgetSelectorWrapper);
             const $body = $el('form') 
                 .addClass('form')
@@ -170,33 +191,48 @@ define([
                     $el('div')
                         .addClass('rotated-table').addClass('add-service-widget')
                         .append(
-                                // $el('div').addClass('rotated-table-row').append(
-                                //     $el('div').addClass('rotated-table-header-cell').text('Module'),
-                                //     $el('div').addClass('rotated-table-value-cell').append(
-                                //         $el('input')
-                                //             .addClass('form-control')
-                                //             .attr('value', this.state.moduleName)
-                                //             .on('change', (ev) => {
-                                //                 this.setState('moduleName', ev.currentTarget.value);
-                                //             })
-                                //     )
-                                // ),
-                                // $el('div').addClass('rotated-table-row').append(
-                                //     $el('div').addClass('rotated-table-header-cell').text('Widget'),
-                                //     $el('div').addClass('rotated-table-value-cell').append(
-                                //         this.$widgetSelectorWrapper
-                                //     )
-                                // ),
                                 this.$renderModuleField(),
                                 this.$renderWidgetField(),
+
                                 $el('div').addClass('rotated-table-row').append(
                                     $el('div').addClass('rotated-table-header-cell').text('Object'),
                                     $el('div').addClass('rotated-table-value-cell').append(
                                         this.$objectSelectorWrapper
                                     )
-                                )
+                                ),   
+
+                                $el('div')
+                                    .addClass('rotated-table-row')
+                                    .attr('id', 'title-field')
+                                    .append(
+                                        $el('div').addClass('rotated-table-header-cell').text('Title'),
+                                        $el('div').addClass('rotated-table-value-cell').append(
+                                            $el('input')
+                                                .addClass('form-control')
+                                                .attr('value', this.state.title)
+                                                .on('change', (ev) => {
+                                                    this.setState([['title', ev.currentTarget.value]]);
+                                                })
+                                        )
+                                ),
+
+                                $el('div')
+                                    .addClass('rotated-table-row')
+                                    .attr('id', 'subtitle-field')
+                                    .append(
+                                        $el('div').addClass('rotated-table-header-cell').text('Subtitle'),
+                                        $el('div').addClass('rotated-table-value-cell').append(
+                                            $el('input')
+                                                .addClass('form-control')
+                                                .attr('value', this.state.subtitle)
+                                                .on('change', (ev) => {
+                                                    this.setState([['subtitle', ev.currentTarget.value]]);
+                                                })
+                                        )
+                                ),
                         )
                 )
+            this.$body = $body
             this.evaluate();
             return $body;
         }

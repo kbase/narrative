@@ -230,7 +230,7 @@ define([
                                     $el('div').addClass('rotated-table-header-cell').append(
                                         $el('input')
                                             .addClass('form-control')
-                                            .attr('value', this.state.param1.name)
+                                            .attr('value', this.state.param2.name)
                                             .on('change', (ev) => {
                                                 this.setState('param2.name', ev.currentTarget.value);
                                             })
@@ -238,7 +238,7 @@ define([
                                     $el('div').addClass('rotated-table-value-cell').append(
                                         $el('input')
                                             .addClass('form-control')
-                                            .attr('value', this.state.param1.value)
+                                            .attr('value', this.state.param2.value)
                                             .on('change', (ev) => {
                                                 this.setState('param2.value', ev.currentTarget.value);
                                             })
@@ -248,7 +248,7 @@ define([
                                     $el('div').addClass('rotated-table-header-cell').append(
                                         $el('input')
                                             .addClass('form-control')
-                                            .attr('value', this.state.param1.name)
+                                            .attr('value', this.state.param3.name)
                                             .on('change', (ev) => {
                                                 this.setState('param3.name', ev.currentTarget.value);
                                             })
@@ -256,7 +256,7 @@ define([
                                     $el('div').addClass('rotated-table-value-cell').append(
                                         $el('input')
                                             .addClass('form-control')
-                                            .attr('value', this.state.param1.value)
+                                            .attr('value', this.state.param3.value)
                                             .on('change', (ev) => {
                                                 this.setState('param3.value', ev.currentTarget.value);
                                             })

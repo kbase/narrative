@@ -3,13 +3,10 @@ Tests for the app_util module
 """
 import copy
 import os
+import re
 from unittest import mock
 
 import pytest
-import re
-from biokbase.narrative.common.url_config import URLS
-from biokbase.workspace.client import Workspace
-
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
@@ -19,10 +16,11 @@ from biokbase.narrative.app_util import (
     map_outputs_from_state,
     transform_param_value,
 )
-
-from biokbase.narrative.tests.conftest import narrative_vcr as vcr
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.tests import util
+from biokbase.narrative.tests.conftest import narrative_vcr as vcr
 from biokbase.narrative.upa import is_upa
+from biokbase.workspace.client import Workspace
 
 config = util.ConfigTests()
 user_name = config.get("users", "test_user")
@@ -74,7 +72,7 @@ get_result_sub_path_cases = [
 ]
 
 
-@pytest.mark.parametrize("result,path,expected", get_result_sub_path_cases)
+@pytest.mark.parametrize(("result", "path", "expected"), get_result_sub_path_cases)
 def test_get_result_sub_path(result, path, expected):
     assert get_result_sub_path(result, path) == expected
 
@@ -275,7 +273,7 @@ app_param_cases = [
 ]
 
 
-@pytest.mark.parametrize("field_type,spec_add,expect_add", app_param_cases)
+@pytest.mark.parametrize(("field_type", "spec_add", "expect_add"), app_param_cases)
 def test_app_param(field_type, spec_add, expect_add):
     spec_param = copy.deepcopy(base_app_param)
     expected = copy.deepcopy(base_expect)
@@ -307,7 +305,8 @@ transform_param_value_simple_cases = [
 
 
 @pytest.mark.parametrize(
-    "transform_type,value,spec_param,expected", transform_param_value_simple_cases
+    ("transform_type", "value", "spec_param", "expected"),
+    transform_param_value_simple_cases,
 )
 def test_transform_param_value_simple(transform_type, value, spec_param, expected):
     assert transform_param_value(transform_type, value, spec_param) == expected
@@ -328,7 +327,7 @@ textsubdata_cases = [
 ]
 
 
-@pytest.mark.parametrize("value,expected", textsubdata_cases)
+@pytest.mark.parametrize(("value", "expected"), textsubdata_cases)
 def test_transform_param_value_textsubdata(value, expected):
     spec = {"type": "textsubdata"}
     assert transform_param_value(None, value, spec) == expected
@@ -506,9 +505,6 @@ def test_transform_param_value_fail_all_types(
 
 
 class RefChainWorkspace:
-    def __init__(self):
-        pass
-
     def get_object_info3(self, params):
         """
         Makes quite a few assumptions about input, as it's used for a specific test.
@@ -568,7 +564,7 @@ def get_ref_path_mock_ws(name="workspace"):
 )
 @mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
 def test_transform_param_value_upa_path(tf_type):
-    upa_path = f"69375/2/2;67729/2/2"
+    upa_path = "69375/2/2;67729/2/2"
     assert transform_param_value(tf_type, upa_path, None) == upa_path
 
 

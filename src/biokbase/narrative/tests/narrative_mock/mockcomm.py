@@ -5,7 +5,7 @@ class MockComm:
     analyzed during the test.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Mock the init"""
         self.messages = []
 

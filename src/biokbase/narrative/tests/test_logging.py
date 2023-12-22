@@ -54,7 +54,7 @@ class TestClient(unittest.TestCase):
         self.stop_receiver(kblog)
 
         # check that receiver got the (buffered) messages
-        self.assertEqual(data, "helloworld")
+        assert data == "helloworld"
 
     @unittest.skip("Skipping buffering test for now")
     def test_buffering(self):
@@ -72,7 +72,6 @@ class TestClient(unittest.TestCase):
         self.stop_receiver(kblog)
 
         # check that receiver got the (buffered) messages
-        # self.assertEqual(data, "helloworld")
 
 
 if __name__ == "__main__":

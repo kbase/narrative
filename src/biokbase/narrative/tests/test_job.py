@@ -347,7 +347,6 @@ class JobTest(unittest.TestCase):
         state = job.refresh_state()
         assert not job.in_terminal_state()
         assert state["status"] == "created"
-
         expected_state = create_state_from_ee2(JOB_CREATED)
         assert state == expected_state
 
@@ -552,7 +551,6 @@ class JobTest(unittest.TestCase):
             create_state_from_ee2(BATCH_PARENT),
             children=child_jobs,
         )
-
         assert not parent_job.in_terminal_state()
 
         # Make all child jobs completed
@@ -563,7 +561,6 @@ class JobTest(unittest.TestCase):
         ):
             for child_job in child_jobs:
                 child_job.refresh_state(force_refresh=True)
-
         assert parent_job.in_terminal_state()
 
     def test_parent_children__fail(self):
@@ -721,7 +718,6 @@ class JobTest(unittest.TestCase):
     def test_in_terminal_state__batch(self):
         batch_fam = get_batch_family_jobs(return_list=True)
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
-
         assert not batch_job.in_terminal_state()
 
         def mock_check_job(self_, params):
@@ -731,7 +727,6 @@ class JobTest(unittest.TestCase):
         with mock.patch.object(MockClients, "check_job", mock_check_job):
             for job in child_jobs:
                 job.refresh_state(force_refresh=True)
-
         assert batch_job.in_terminal_state()
 
     def test_in_cells(self):

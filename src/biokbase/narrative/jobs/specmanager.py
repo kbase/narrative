@@ -140,7 +140,12 @@ class SpecManager:
 
         return AppUsage(usage)
 
-    def check_app(self, app_id, tag="release", raise_exception=False):
+    def check_app(
+        self: "SpecManager",
+        app_id: str,
+        tag: str = "release",
+        raise_exception: bool = False,
+    ):
         """
         Checks if a method (and release tag) is available for running and such.
         If raise_exception==True, and either the tag or app_id are invalid, a ValueError is raised.

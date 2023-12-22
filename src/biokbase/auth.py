@@ -54,26 +54,23 @@ class UserInfo:
         self.user_name = user_dict.get("user")
 
 
-def validate_token():
+def validate_token() -> bool:
     """
     Validates the currently set auth token. Returns True if valid, False otherwise.
     """
     headers = {"Authorization": get_auth_token()}
     r = requests.get(token_api_url + endpt_token, headers=headers)
-    if r.status_code == 200:
-        return True
-    else:
-        return False
+    return r.status_code == 200
 
 
-def set_environ_token(token: str) -> None:
+def set_environ_token(token: str | None) -> None:
     """
     Sets a login token in the local environment variable.
     """
     kbase_env.auth_token = token
 
 
-def get_auth_token() -> Optional[str]:
+def get_auth_token() -> str | None:
     """
     Returns the current login token being used, or None if one isn't set.
     """

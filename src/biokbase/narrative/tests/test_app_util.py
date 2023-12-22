@@ -505,9 +505,6 @@ def test_transform_param_value_fail_all_types(
 
 
 class RefChainWorkspace:
-    def __init__(self) -> None:
-        pass
-
     def get_object_info3(self, params):
         """
         Makes quite a few assumptions about input, as it's used for a specific test.

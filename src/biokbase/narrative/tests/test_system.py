@@ -101,7 +101,6 @@ def test_strict_sys_var_user_bad():
     biokbase.auth.set_environ_token(bad_fake_token)
     with pytest.raises(
         ValueError, match='Unable to retrieve system variable: "user_id"'
-    ) as e:
+    ):
         strict_system_variable("user_id")
-        assert e
     biokbase.auth.set_environ_token(None)

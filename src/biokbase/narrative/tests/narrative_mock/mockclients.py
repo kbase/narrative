@@ -532,6 +532,7 @@ def get_failing_mock_client(client_name, token=None):
 
 class FailingMockClient:
     def __init__(self, token=None) -> None:
+        # nothing to do here
         pass
 
     def check_workspace_jobs(self, params):

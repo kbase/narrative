@@ -34,8 +34,11 @@ class SpecManagerTestCase(unittest.TestCase):
         # bad id and good tag no raise
         assert self.sm.check_app(self.bad_app_id, self.good_tag) is False
 
+    def test_check_app_error(self):
         # bad id with raise
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match=f'Unknown app id "{self.bad_app_id}" tagged as "release"'
+        ):
             self.sm.check_app(self.bad_app_id, raise_exception=True)
 
     @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
@@ -46,9 +49,7 @@ class SpecManagerTestCase(unittest.TestCase):
             self.sm.get_type_spec("KBaseFBA.NU_FBA").keys()
         )
         with pytest.raises(ValueError, match="Unknown type"):
-            assert "export_functions" in list(
-                self.sm.get_type_spec("KBaseExpression.NU_FBA").keys()
-            )
+            self.sm.get_type_spec("KBaseExpression.NU_FBA")
 
 
 if __name__ == "__main__":

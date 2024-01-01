@@ -3,7 +3,7 @@
 # sklearn
 # clustergrammer_widget
 beautifulsoup4==4.12.2
-black==23.11.0
+black==23.12.1
 coverage==7.3.1
 cryptography==41.0.4
 decorator==5.1.1

@@ -21,7 +21,7 @@
         "cssnano": "6.0.1",
         "ejs": "^3.1.7",
         "eslint": "8.46.0",
-        "eslint-config-prettier": "^8.3.0",
+        "eslint-config-prettier": "^9.1.0",
         "expect-webdriverio": "3.1.4",
         "glob": "^7.1.7",
         "grunt": "^1.5.3",

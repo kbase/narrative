@@ -17,7 +17,7 @@ define([
     {getCells, deleteCell, disableKeyListenersForCell},
     {tag},
     {getCellMeta, setCellMeta},
-    Icon
+    {makeAppOutputIcon, makeDataIcon, makeGenericIcon}
 ) => {
     const div = tag('div');
     const p = tag('p');
@@ -325,18 +325,18 @@ define([
             switch (icon.type) {
                 case "generic": {
                     const {name, color} = icon.params;
-                    return Icon.makeGenericIcon(name, color);
+                    return makeGenericIcon(name, color);
                 }
                 case "data": {
                     const {type, stacked} = icon.params;
-                    return Icon.makeDataIcon(type, stacked);
+                    return makeDataIcon(type, stacked);
                 }
                 case "appoutput": {
                     const {appSpec} = icon.params;
-                    return Icon.makeAppOutputIcon(appSpec);
+                    return makeAppOutputIcon(appSpec);
                 }
                 default: {
-                    return Icon.makeGenericIcon('thumbs-down', 'red');
+                    return makeGenericIcon('thumbs-down', 'red');
                 }
             }
         }

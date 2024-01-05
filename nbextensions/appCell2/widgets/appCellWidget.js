@@ -1287,6 +1287,9 @@ define(
                                     type: 'appoutput',
                                     params: {
                                         appSpec,
+                                        extraIcon: {
+                                            classSuffix: 'arrow-right',
+                                        },
                                         stacked: false
                                     }
                                 }

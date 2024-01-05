@@ -13,6 +13,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         t = html.tag,
         span = t('span'),
         img = t('img'),
+        div = t('div'),
         cssBaseName = 'kb-icon';
 
     /**
@@ -197,6 +198,42 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         return iconSpec.colors[code % iconSpec.colors.length];
     }
 
+
+    function _makeSplitIcon(iconType, iconClass, shape = 'square', color = null, secondaryIconClass) {
+        const style = color ? { color } : {};
+        iconClass = iconClass.replace('icon ', '');
+
+        return span(
+            {
+                class: `${cssBaseName}__container--${iconType} fa-stack`,
+                style: 'position: relative;'
+            },
+            [
+                // The icon container (provides the shape and background color)
+                span({
+                    class: `${cssBaseName}__icon_background--${iconType} fa fa-${shape} fa-stack-2x`,
+                    style: style,
+                }),
+                // The icon itself, split between the main icon, and the secondary icon.
+                div({style: {position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column'}}, [
+                    div({style: {flex: '1 1 0', alignItems: 'center', display: 'flex', flexDirection: 'row', marginTop: '4px'}}, [
+                        span({
+                            class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${iconClass}`,
+                            style: {fontSize: '60%',}
+                        }),
+                    ]),
+                    div({style: {flex: '1 1 0', alignItems: 'center', display: 'flex', flexDirection: 'row', marginBottom: '6px'}}, [
+                        span({
+                            class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${secondaryIconClass}`,
+                            style: {fontSize: '75%'}
+                        })
+                    ])
+                ])
+            ]
+        );
+    }
+
+
     function makeAppIcon(appSpec = {}, isToolbarIcon = false) {
         // icon is in the spec
         const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
@@ -208,13 +245,14 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
     }
 
     function makeAppOutputIcon(appSpec = {}, isToolbarIcon = false) {
-        // icon is in the spec
+       
         const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
             return _makeIconFromUrl(nmsBase + iconUrl);
         }
-        return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square', null, true);
+        return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square');
+        // return _makeSplitIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square', null, 'fa-arrow-right');
     }
 
     function makeToolbarAppIcon(appSpec) {

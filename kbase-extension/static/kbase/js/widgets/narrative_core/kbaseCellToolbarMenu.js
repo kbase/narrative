@@ -7,9 +7,10 @@ define([
     'narrativeConfig',
     'common/jobs',
     'common/runtime',
+    'util/icon',
     
     'custom/custom',
-], ($, html, Events, Jupyter, utils, Config, Jobs, Runtime) => {
+], ($, html, Events, Jupyter, utils, Config, Jobs, Runtime, icon) => {
     'use strict';
 
     const t = html.tag,
@@ -89,7 +90,11 @@ define([
             }
         }
 
-        function doToggleCodeView() {
+        function nukeDoubleClick(events) {
+
+        }
+
+        function doToggleCodeView(event) {
             cell.element.trigger('toggleCodeArea.cell');
         }
 
@@ -130,7 +135,7 @@ define([
                 const label = isCodeShowing(cell) ? 'Hide code' : 'Show code'
                 const attribs = {
                     ...buttonBase,
-                    id: events.addEvent({ type: 'click', handler: doToggleCodeView })
+                    id: handleClick(events, doToggleCodeView)
                 }
                 if (isCodeShowing(cell)) {
                     attribs.title = 'Hide code';
@@ -150,7 +155,7 @@ define([
             const attribs = {
                 ...buttonBase,
                 title: 'Delete cell...', 
-                id: events.addEvent({ type: 'click', handler: doDeleteCell })
+                id: handleClick(events, doDeleteCell)
             }
             // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-trash fa-lg text-danger' }));
@@ -170,7 +175,7 @@ define([
             const attribs = {
                 ...buttonBase,
                 title: 'Run cell ', 
-                id: events.addEvent({ type: 'click', handler: () => doRunCell(cell) })
+                id: handleClick(events, () => doRunCell(cell))
             }
             // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-repeat fa-lg ' }));
@@ -212,12 +217,7 @@ define([
                 dataOriginalTitle: 'Move Cell Up',
                 dataElement: 'cell-move-up',
                 ariaLabel: 'Move cell up',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: () => {
-                        doMoveCellUp(cell);
-                    }
-                })
+                id: handleClick(events, () => doMoveCellUp(cell))
             }
             return button(
                 attribs,
@@ -247,12 +247,7 @@ define([
                 dataOriginalTitle: 'Move Cell Down',
                 dataElement: 'cell-move-down',
                 ariaLabel: 'Move cell down',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: () => {
-                        doMoveCellDown(cell);
-                    }
-                })
+                id: handleClick(events, () => doMoveCellDown(cell))
             }
             return button(
                 attribs,
@@ -272,12 +267,7 @@ define([
                 dataOriginalTitle: 'Move Cell To Top',
                 dataElement: 'cell-move-to-top',
                 ariaLabel: 'Move cell to top',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: () => {
-                        doMoveCellToTop(cell);
-                    }
-                }),
+                id: handleClick(events, () => doMoveCellToTop(cell))
             };
             return button(
                   attribs,
@@ -297,17 +287,20 @@ define([
                 dataOriginalTitle: 'Move Cell To Bottom',
                 dataElement: 'cell-move-to-bottom',
                 ariaLabel: 'Move cell to bottom',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: () => {
-                        doMoveCellToBottom(cell);
-                    }
-                }),
+                id: handleClick(events, () => doMoveCellToBottom(cell))
             };
             return button(
                   attribs,
                   [span({ class: 'fa fa-long-arrow-down fa-lg' })]
             );
+        }
+
+        function handleClick(events, handler) {
+            const id = events.addEvent({ type: 'click', handler})
+            events.addEvent({type: 'dblclick', id, handler: (e) => {
+                e.stopPropagation();
+            }});
+            return id;
         }
 
         function renderOptions(_cell, events) {
@@ -321,7 +314,7 @@ define([
                     icon: {
                         type: 'terminal',
                     },
-                    id: events.addEvent({ type: 'click', handler: doToggleCodeView }),
+                    id: handleClick(events, doToggleCodeView)
                 });
             }
 
@@ -332,12 +325,7 @@ define([
                     icon: {
                         type: 'info',
                     },
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: () => {
-                            _cell.showInfo();
-                        },
-                    }),
+                    id: handleClick(events, () => _cell.showInfo())
                 });
             }
 
@@ -349,12 +337,7 @@ define([
                         icon: {
                             type: 'table',
                         },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: () => {
-                                _cell.toggleBatch();
-                            },
-                        }),
+                        id: handleClick(events, () => _cell.toggleBatch())
                     });
                 }
 
@@ -370,7 +353,7 @@ define([
                     icon: {
                         type: 'times',
                     },
-                    id: events.addEvent({ type: 'click', handler: doDeleteCell }),
+                    id: handleClick(events, doDeleteCell)
                 });
             }
 
@@ -463,6 +446,25 @@ define([
                 }
             }
 
+            const extraIcon = (() => {
+                if (utils.getCellMeta(_cell, 'kbase.serviceWidget')) {
+                    const extraIcon = utils.getCellMeta(_cell, 'kbase.attributes.icon.params.extraIcon');
+                    if (!extraIcon) {
+                        return '';
+                    }
+
+                    return div(
+                        {
+                            dataElement: 'icon',
+                            class: `${cssBaseClass}__app_icon`,
+                        },
+                        [icon.makeGenericIcon(extraIcon.classSuffix)]
+                    )
+                } else {
+                    return '';
+                }
+            })();
+
             const cellIndex = Jupyter.notebook.find_cell_index(_cell);
             const cellCount = Jupyter.notebook.get_cells().length;
             const isFirst = cellIndex === 0;
@@ -510,10 +512,7 @@ define([
                                             toggleMinMax === 'maximized'
                                                 ? 'Collapse Cell'
                                                 : 'Expand Cell',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: doToggleMinMaxCell,
-                                        }),
+                                        id: handleClick(events, doToggleMinMaxCell)
                                     }),
                                     [
                                         span({
@@ -537,6 +536,7 @@ define([
                             },
                             [buildIcon(_cell)]
                         ),
+                        extraIcon,
                         div(
                             {
                                 class: `${cssBaseClass}__title-container`,
@@ -606,6 +606,13 @@ define([
                 rendered.events.attachEvents();
 
                 container.addEventListener('dblclick', (e) => {
+                    // // Prevent a double click on another element from trigger a min/max
+                    // // toggle. This can happen easily if one accidentally double-clicks
+                    // // on an element, or uses a toggle control quickly.
+                    // console.log('double trouble', e.target, e.currentTarget, container);
+                    // if (e.target !== container) {
+                    //     return;
+                    // }
                     doToggleMinMaxCell(e);
                 });
             } catch (ex) {

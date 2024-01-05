@@ -63,25 +63,29 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
             num_stacked_circles = 1; // up to 2
         let parsed_color, r, g, b;
 
+        const stackColor = color || 'rgb(150, 150, 150)';
+
         // XXX: Assume color is in form '#RRGGBB'
-        if (color) {
-            if (color[0] == '#') {
+        if (stackColor) {
+            if (stackColor[0] == '#') {
                 parsed_color = color.match(/#(..)(..)(..)/);
+                // console.log('or color??', color, parsed_color);
                 r = parseInt(parsed_color[1], 16);
                 g = parseInt(parsed_color[2], 16);
                 b = parseInt(parsed_color[3], 16);
             }
             // XXX: Assume color is in form "rgb(#,#,#)"
             else {
-                parsed_color = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-                r = parsed_color[1];
-                g = parsed_color[2];
-                b = parsed_color[3];
+                parsed_color = stackColor.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+                // console.log('color??', color, parsed_color);
+                r = parseInt(parsed_color[1], 10);
+                g = parseInt(parsed_color[2], 10);
+                b = parseInt(parsed_color[3], 10);
             }
         }
         // Add circles with lighter colors
         for (let i = num_stacked_circles; i > 0; i--) {
-            const stacked_color = color
+            const stacked_color = stackColor
                 ? 'rgb(' +
                   cmax(r + i * cstep) +
                   ',' +
@@ -90,7 +94,8 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
                   cmax(b + i * cstep) +
                   ')'
                 : '';
-            const style = color ? { color: stacked_color } : {};
+            const style = stackColor ? { color: stacked_color } : {};
+            console.log('stack style', stackColor, r, g, b, cstep, style);
             layers.push(
                 span({
                     class: `${cssBaseName}__stack--l${i} fa fa-stack-2x fa-${shape}`,
@@ -119,7 +124,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
      */
 
     function _makeIcon(iconType, iconClass, shape = 'square', color = null, stacked = false) {
-        const style = color ? { color: color } : {};
+        const style = color ? { color } : {};
         const layers = stacked ? _makeStackLayers(shape, color) : [];
         iconClass = iconClass.replace('icon ', '');
 
@@ -205,6 +210,16 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square');
     }
 
+    function makeAppOutputIcon(appSpec = {}, isToolbarIcon = false) {
+        // icon is in the spec
+        const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+
+        if (iconUrl) {
+            return _makeIconFromUrl(nmsBase + iconUrl);
+        }
+        return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square', null, true);
+    }
+
     function makeToolbarAppIcon(appSpec) {
         return makeAppIcon(appSpec, true);
     }
@@ -245,6 +260,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
     return {
         cssBaseName: cssBaseName,
         makeAppIcon: makeAppIcon,
+        makeAppOutputIcon: makeAppOutputIcon,
         makeGenericIcon: makeGenericIcon,
         makeToolbarAppIcon: makeToolbarAppIcon,
         makeToolbarGenericIcon: makeToolbarGenericIcon,

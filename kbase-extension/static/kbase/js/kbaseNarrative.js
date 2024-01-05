@@ -387,10 +387,6 @@ define([
         });
     };
 
-    Narrative.prototype.isDeveloper = function () {
-        return new URL(window.location.href).searchParams.get('developer') === "t";
-    }
-
     /**
      * Ensures any element with the "data-developer-only" attribute is displayed by
      * removing the "hide" bootstrap class, and initializes any ui elements that need
@@ -885,7 +881,7 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
-            if (this.isDeveloper()) {
+            if (this.runtime.isDeveloper()) {
                 this.enableDeveloperUI();
             }
             this.updateDocumentVersion().finally(() => this.sidePanel.render());

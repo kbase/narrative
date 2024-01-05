@@ -1,14 +1,13 @@
 define([
     'preact',
     'htm',
-    './Loading.styles',
 
     // For effect
-    'bootstrap'
+    'bootstrap',
+    'css!./Loading.css'
 ], (
     preact,
-    htm,
-    styles
+    htm
 ) => {
 
     const {h, Component} = preact;
@@ -26,21 +25,21 @@ define([
             })();
             if (this.props.type === 'inline') {
                 return html`
-                    <div style=${styles.LoadingInline}>
+                    <div className="Loading-Inline">
                         ${spinner}
                         ${' '}
-                        <span style=${styles.LoadingMessage}>
+                        <span className="Loading-Message">
                             ${this.props.message}
                         </span>
                     </div>
                 `;
             } else {
                 return html`
-                    <div style=${styles.LoadingContainer}>
-                        <div style=${styles.Loading}>
+                    <div className="Loading-Container">
+                        <div className="Loading">
                             ${spinner}
                             ${' '}
-                            <span style=${styles.LoadingMessage}>
+                            <span className="Loading-Message">
                                 ${this.props.message}
                             </span>
                         </div>

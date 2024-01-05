@@ -13,13 +13,13 @@ define(
     (
         CellManager,
         ServiceWidgetCell,
-        {typeName}
+        {CELL_TYPE_NAME}
     ) => {
         function load_ipython_extension() {
             // We essentially punt all work to the service widget cell manager class, although 
             // we do specify some simple configuration for this widget.
             const cellManager = new CellManager({
-                type: typeName,
+                type: CELL_TYPE_NAME,
                 icon: {name: 'thumbs-down', color: 'red'},
                 title: 'Service Widget Demo', // should be replaced when the widget runs
                 className: 'kb-service-widget-cell',

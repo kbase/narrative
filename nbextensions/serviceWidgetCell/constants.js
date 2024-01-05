@@ -1,10 +1,8 @@
 define([], () => {
-    const DEFAULT_MAX_HEIGHT = '15em';
-    const DEFAULT_SHOW_BORDER = false;
-    const PLUGIN_STARTUP_TIMEOUT = 60000;
+    const WIDGET_SERVICE_TIMEOUT = 60000;
+    const CELL_TYPE_NAME = 'serviceWidget';
 
     return {
-        typeName: 'serviceWidget',
-        DEFAULT_MAX_HEIGHT, DEFAULT_SHOW_BORDER, PLUGIN_STARTUP_TIMEOUT
+        CELL_TYPE_NAME, WIDGET_SERVICE_TIMEOUT
     }
 });

@@ -3,7 +3,6 @@ define(
         'common/cellUtils',
         'common/pythonInterop',
         'util/cellSupport/CellBase',
-        'util/icon',
         './constants',
 
         // For effect
@@ -13,8 +12,7 @@ define(
         cellUtils,
         pythonInterop,
         CellBase,
-        Icon,
-        {typeName}
+        {CELL_TYPE_NAME}
     ) => {
         function textOnlyThanks(text) {
             const div = document.createElement('div');
@@ -47,7 +45,7 @@ define(
                     // that very soon.
                     const {widgetState} = payload;
 
-                    cellUtils.setCellMeta(thisCell, `kbase.${typeName}.widgetState`, widgetState);
+                    cellUtils.setCellMeta(thisCell, `kbase.${CELL_TYPE_NAME}.widgetState`, widgetState);
                 }));
 
                 // Preserves height of cell.
@@ -57,12 +55,12 @@ define(
                     }
                     const height = entries[0].contentRect.height;
                     const thisCell = this.findCell();
-                    cellUtils.setCellMeta(thisCell, `kbase.${typeName}.widgetState.height`, height);
+                    cellUtils.setCellMeta(thisCell, `kbase.${CELL_TYPE_NAME}.widgetState.height`, height);
                 });
                 this.resizeObserver.observe(this.cell.element.find('.output_wrapper>.output').get(0));
 
                 // Set the output area height according to the last saved height.
-                const height = cellUtils.getCellMeta(this.findCell(), `kbase.${typeName}.widgetState.height`);
+                const height = cellUtils.getCellMeta(this.findCell(), `kbase.${CELL_TYPE_NAME}.widgetState.height`);
                 if (height) {
                     this.cell.element.find('.output_wrapper>.output').css('height', `${height}px`);
                 }

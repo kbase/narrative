@@ -35,7 +35,7 @@ define([
     Jupyter,
     IFrame,
     {niceConfig},
-    {PLUGIN_STARTUP_TIMEOUT}
+    {WIDGET_SERVICE_TIMEOUT}
 ) => {
     const {h, Component} = preact;
     const html = htm.bind(h);
@@ -198,7 +198,7 @@ define([
             // removed from the channel.
             //
             // TODO: error handler in case of plugin startup timeout.
-            this.receiveChannel.once('ready', PLUGIN_STARTUP_TIMEOUT, async ({channelId}) => {
+            this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async ({channelId}) => {
                 // this.channel.setPartner(channelId || this.pluginChannelId);
                 this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
 
@@ -235,7 +235,7 @@ define([
 
             // The 'started' event is sent after the app receives and processes the
             // 'start' event.
-            this.receiveChannel.once('started', PLUGIN_STARTUP_TIMEOUT, ({height, channelId}) => {
+            this.receiveChannel.once('started', WIDGET_SERVICE_TIMEOUT, ({height, channelId}) => {
                 // TODO: Remove the loading
                 this.$widgetArea.css('height', `${height}px`);
             });

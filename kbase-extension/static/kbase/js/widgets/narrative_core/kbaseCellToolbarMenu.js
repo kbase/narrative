@@ -106,7 +106,6 @@ define([
         function buildIcon(_cell) {
             if (_cell && _cell.getIcon) {
                 const icon = _cell.getIcon();
-                console.log('BUILD ICON', icon);
                 return icon;
             }
             return span({

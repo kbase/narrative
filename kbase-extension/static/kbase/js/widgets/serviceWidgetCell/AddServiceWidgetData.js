@@ -89,7 +89,6 @@ define([
                                         .append($options)
                                         .on('change', (ev) => {
                                             const objectInfo = objectsMap[ev.currentTarget.value];
-                                            console.log('objectInfo', objectInfo)
                                             const title = objectInfo.name;
                                             const subtitle = `v${objectInfo.version} ${objectInfo.type}`;
                                             this.$body.find('#title-field input').val(title);

@@ -69,7 +69,6 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         if (stackColor) {
             if (stackColor[0] == '#') {
                 parsed_color = color.match(/#(..)(..)(..)/);
-                // console.log('or color??', color, parsed_color);
                 r = parseInt(parsed_color[1], 16);
                 g = parseInt(parsed_color[2], 16);
                 b = parseInt(parsed_color[3], 16);
@@ -77,7 +76,6 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
             // XXX: Assume color is in form "rgb(#,#,#)"
             else {
                 parsed_color = stackColor.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-                // console.log('color??', color, parsed_color);
                 r = parseInt(parsed_color[1], 10);
                 g = parseInt(parsed_color[2], 10);
                 b = parseInt(parsed_color[3], 10);
@@ -95,7 +93,6 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
                   ')'
                 : '';
             const style = stackColor ? { color: stacked_color } : {};
-            console.log('stack style', stackColor, r, g, b, cstep, style);
             layers.push(
                 span({
                     class: `${cssBaseName}__stack--l${i} fa fa-stack-2x fa-${shape}`,

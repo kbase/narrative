@@ -93,7 +93,6 @@ define([
                 ),
             ]);
             iconElement.innerHTML = icon;
-            console.log('UPDATE ICON', icon, iconElement.innerHTML);
             this.cell.metadata = this.cell.metadata;
         }
 
@@ -203,7 +202,6 @@ define([
         *
         */
         upgradeCell(data) {
-            console.log('upgrading cell with ', this.type, data);
             const cell = this.cell;
             function getAttribute(name) {
                 if ('attributes' in data) {
@@ -256,7 +254,6 @@ define([
         }
 
         setCellIcon(icon, render) {
-            console.log('setting cell icon???', icon);
             this.setMetadata('attributes.icon', icon, render);
         }
 
@@ -325,7 +322,6 @@ define([
 
         buildIcon() {
             const icon = this.getMetadata('attributes.icon');
-            console.log('ICON?', icon);
             switch (icon.type) {
                 case "generic": {
                     const {name, color} = icon.params;

@@ -121,7 +121,7 @@ define([
 
             const targetOrigin = new URL(this.state.value.serviceURL).origin;
             this.sendChannel = new SendChannel({
-                window: iframeWindow,
+                window: iframeWindow.contentWindow,
                 targetOrigin,
                 id: this.hostChannelId,
                 to: this.guestChannelId
@@ -284,7 +284,7 @@ define([
                     serviceURL=${serviceURL}
                     appName=${this.props.appName}
                     hostChannelId=${this.hostChannelId}
-                    appChannelId=${this.guestChannelId}
+                    guestChannelId=${this.guestChannelId}
                     params=${this.props.params}
                     onLoaded=${this.onIframeLoaded.bind(this)}
                     />

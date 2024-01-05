@@ -13,6 +13,13 @@ define([
     class IFrame extends Component {
         render() {
 
+            // All the app needs to get started is the host channel id, so that it can
+            // begin communicating with the host (the Narrative!) via the iframe window.
+            const iframeParams = {
+                hostChannelId: this.props.hostChannelId,
+                appChannelId: this.props.guestChannelId,
+                hostOrigin: window.location.origin
+            }
             // The target url is based on the base service url, with a namespace of "widgets",
             // and ultimately invoking the web app as "appName".
             const url = (() => {
@@ -21,23 +28,15 @@ define([
                 //     url.searchParams.append(key, value);
                 // }
                 url.searchParams.append('params', JSON.stringify(this.props.params));
+                url.searchParams.append('iframeParams', JSON.stringify(iframeParams));
                 return url.toString();
             })();
 
-
-            // All the app needs to get started is the host channel id, so that it can
-            // begin communicating with the host (the Narrative!) via the iframe window.
-            const iframeParams = {
-                hostChannelId: this.props.hostChannelId,
-                pluginChannelId: this.props.pluginChannelId
-            }
-
             return html`
                 <iframe src=${url}
-                        class="nbextensions-serviceWidgetCell-IFrame"
-                        data-params=${encodeURIComponent(JSON.stringify(iframeParams))}
-                        data-app-host="true"
-                        onLoad=${(ev) => {this.props.onLoaded(ev.target)}}
+                    class="nbextensions-serviceWidgetCell-IFrame"
+                    data-app-host="true"
+                    onLoad=${(ev) => {this.props.onLoaded(ev.target)}}
                 />
             `;
         }

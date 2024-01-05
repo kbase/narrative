@@ -1,6 +1,5 @@
 define([
     'jquery',
-    'uuid',
     'common/html',
     'common/jupyter',
     'common/cellUtils',
@@ -8,7 +7,6 @@ define([
     'common/ui'
 ], (
     $,
-    Uuid,
     html,
     notebook, // {getCells, disableKeyListenersForCell},
     {getCellMeta, setCellMeta},
@@ -35,101 +33,6 @@ define([
             this.instanceClass = instanceClass;
         }
 
-        // async setupWorkspace(workspaceUrl) {
-        //     if (this.workspaceInfo) {
-        //         return;
-        //     }
-        //     const workspaceRef = { id: this.runtime.workspaceId() };
-        //     const workspace = new Workspace(workspaceUrl, {
-        //         token: this.runtime.authToken(),
-        //     });
-
-        //     const info = await workspace.get_workspace_info(workspaceRef);
-        //     this.workspaceInfo = workspaceInfoToObject(info);
-        // }
-
-        /**
-         * Add additional methods to the cell that are utilized by our ui.
-         * 
-         * This includes minimizing and maximizing the cell, and displaying 
-         * a per-type icon.
-         * 
-         * @param {*} cell 
-         */
-        augmentCell(cell) {
-            /**
-             * 
-             */
-            cell.minimize = function () {
-                // Note that the "this" is the cell; thus we must preserve the
-                // usage of "function" rather than fat arrow.
-                const inputArea = this.input.find('.input_area');
-                const outputArea = this.element.find('.output_wrapper');
-                const viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
-                const showCode = getCellMeta(
-                    cell,
-                    'kbase.serviceWidget.user-settings.showCodeInputArea'
-                );
-
-                if (showCode) {
-                    inputArea.classList.remove('-show');
-                }
-                outputArea.addClass('hidden');
-                viewInputArea.addClass('hidden');
-            };
-
-            /**
-             * 
-             */
-            cell.maximize = function () {
-                // Note that the "this" is the cell; thus we must preserve the
-                // usage of "function" rather than fat arrow.
-                const inputArea = this.input.find('.input_area');
-                const outputArea = this.element.find('.output_wrapper');
-                const viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
-                const showCode = getCellMeta(
-                    cell,
-                    'kbase.viewCell.user-settings.showCodeInputArea'
-                );
-
-                if (showCode) {
-                    if (!inputArea.classList.contains('-show')) {
-                        inputArea.classList.add('-show');
-                    }
-                }
-                outputArea.removeClass('hidden');
-                viewInputArea.removeClass('hidden');
-            };
-
-            /**
-             * 
-             * @returns 
-             * 
-             * Note that the icon must be rendered as text, as that is what kbaseCellToolbarMenu.js expects.
-             */
-            
-
-            cell.getIcon = () => {
-                // Now "this" is the CellManager object, as we ARE using fat arrow.
-                const {name, color} = this.icon;
-                return span([
-                    span(
-                        {
-                            class: 'fa-stack fa-2x',
-                            style: { textAlign: 'center', color },
-                        },
-                        [
-                            span({
-                                class: 'fa fa-square fa-stack-2x',
-                                style: { color },
-                            }),
-                            span({ class: `fa fa-inverse fa-stack-1x fa-${name}` })
-                        ]
-                    ),
-                ]);
-            };
-        }
-
         isType(cell) {
             // We only handle cells of the type set for this CellManager object.
             if (cell.cell_type !== 'code') {
@@ -145,132 +48,47 @@ define([
             return true;
         }
 
-        async startCell(cell) {
-            throw new Error('The "startCell" method must be defined by a sub-class');
-        }
-
-        // onSetupCell(cell) {
-        //     throw new Error('The "onSetupCell" method must be defined by a sub-class');
+        // async startCell(cell) {
+        //     throw new Error('The "startCell" method must be defined by a sub-class');
         // }
 
-        getCellClass(cell) {
-            throw new Error('The "getCellClass" method must be defined by a sub-class');
-        }
+        // setCellExtensionMetadata(cell, propPath, value) {
+        //     const path = `kbase.${this.type}.${propPath}`;
+        //     setCellMeta(cell, path, value, true);
+        // }
 
-        /**
-         * Responsible for setting up cell augmentations required at runtime.
-         * 
-         * @param {*} cell 
-         */
-        setupCell(cell) {
-            this.augmentCell(cell);
+        // getCellExtensionMetadata(cell, propPath, defaultValue) {
+        //     const path = `kbase.${this.type}.${propPath}`;
+        //     return getCellMeta(cell, path, defaultValue);
+        // }
 
-            // Add custom classes to the cell.
-            // TODO: this needs to be a generic kbase custom cell class.
-            // TODO: remove, not necessary
-            // cell.element[0].classList.add('kb-service-widget-cell');
-
-            // The kbase property is used for managing _runtime_ state of the cell
-            // for kbase. Anything to be persistent should be on the metadata.
-            cell.kbase = {};
-
-            // Update metadata.
-            // TODO: remove, not necessary.
-            // setMeta(cell, 'attributes', 'lastLoaded', new Date().toUTCString());
-
-            // await this.setupWorkspace(this.runtime.config('services.workspace.url'))
-
-            notebook.disableKeyListenersForCell(cell);
-
-            cell.renderMinMax();
-
-            // this.onSetupCell(cell);
-
-            cell.element[0].classList.add(this.getCellClass(cell));
-
-            // force toolbar rerender.
-            // eslint-disable-next-line no-self-assign
-            cell.metadata = cell.metadata;
-        }
-
-        getCellTitle(cell) {
-            throw new Error('The "getCellTitle" method must be defined by a subclass');
-        }
-
-
-        getCellSubtitle(cell) {
-            throw new Error('The "getCellSubtitle" method must be defined by a subclass');
-        }
-
-        /** 
-        * Should only be called when a cell is first inserted into a narrative.
-        *
-        * It creates the correct metadata and then sets up the cell.
-        *
-        */
-        upgradeCell(cell, data) {
-            // Create base app cell
-            const meta = cell.metadata;
-            // TODO: drop? doesn't seem to be used
-			const {initialData} = data;
-            meta.kbase = {
-                type: this.type,
-                attributes: {
-                    id: new Uuid(4).format(),
-                    // title: `FAIR Narrative Description`,
-                    title: this.title,
-                    created: new Date().toUTCString(),
-                    icon: this.icon
-                },
-                [this.type]: initialData || {}
-            };
-            cell.metadata = meta;
-            // this.onUpgradeCell(cell, data);
-            for (const [key, value] of Object.entries(data.metadata)) {
-                this.setCellExtensionMetadata(cell, key, value);
-            }
-            this.setCellMetadata(cell, 'attributes.title', this.getCellTitle(cell), true);
-            this.setCellMetadata(cell, 'attributes.subtitle', this.getCellSubtitle(cell), true);
-        }
-
-        setCellExtensionMetadata(cell, propPath, value) {
-            const path = `kbase.${this.type}.${propPath}`;
-            setCellMeta(cell, path, value, true);
-        }
-
-        getCellExtensionMetadata(cell, propPath, defaultValue) {
-            const path = `kbase.${this.type}.${propPath}`;
-            return getCellMeta(cell, path, defaultValue);
-        }
-
-        setCellMetadata(cell, propPath, value) {
-            const path = `kbase.${propPath}`;
-            setCellMeta(cell, path, value, true);
-        }
+        // setCellMetadata(cell, propPath, value) {
+        //     const path = `kbase.${propPath}`;
+        //     setCellMeta(cell, path, value, true);
+        // }
 
         reviveCell(cell) {
-            this.setupCell(cell);
             const instance = new this.instanceClass({
                 name: this.name,
                 type: this.type,
+                icon: this.icon,
                 cell, 
             });
-            // const instance = this.getCellInstance(cell);
-            this.startCell(instance);
+            instance.setupCell();
+            instance.start();
         }
 
         initializeCell(cell, setupData) {
-            this.upgradeCell(cell, setupData);
-            this.setupCell(cell);
-            // const instance = this.getCellInstance(cell);
-
             const instance = new this.instanceClass({
                 name: this.name,
                 type: this.type,
+                icon: this.icon,
                 cell, 
             });
-            this.populateCell(instance);
-            this.startCell(instance);
+            instance.upgradeCell(setupData);
+            instance.setupCell();
+            instance.create();
+            instance.start();
         }
 
         /*

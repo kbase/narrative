@@ -589,7 +589,9 @@ define([
                 wsid: workspaceId, 
                 type: workspaceObjectType 
             } = data.info;
+
             const [versionlessType, _version] = workspaceObjectType.split('-');
+            const [_typeModule, typeName] = versionlessType.split('.');
             const viewerMethodId = viewersInfo.viewers[versionlessType];
             const viewerSpec = viewersInfo.specs[viewerMethodId]
 
@@ -598,7 +600,7 @@ define([
             const ref = `${workspaceId}/${objectId}/${objectVersion}`;
 
             const cellData = (() => {
-                if (viewerSpec && viewerSpec.widgets.output == 'ServiceWidgetViewer') {
+                if (viewerSpec && viewerSpec.widgets.output == 'ServiceWidget') {
                     // Extract constant params out of the viewer's output mapping.
                     // We only support sending constant params for a viewer, as we 
                     // generate the ref.
@@ -627,10 +629,24 @@ define([
                     // Finally, we return an object as the serviceWidget handler expects.
                     return {
                         type: 'serviceWidget',
+                        attributes: {
+                            title,
+                            subtitle,
+                            icon: {
+                                type: 'data',
+                                params: {
+                                    type: typeName,
+                                    stacked: false
+                                }
+                            }
+                        },
                         metadata: {
                             service: {
                                 moduleName,
                                 widgetName,
+                                // We put the title and subtitle here, because otherwise
+                                // they'll be displayed directly, and we want to tweak
+                                // them first ... maybe?
                                 title,
                                 subtitle,
                                 params,

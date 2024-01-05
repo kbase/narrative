@@ -3,6 +3,7 @@ define(
         'common/cellUtils',
         'common/pythonInterop',
         'util/cellSupport/CellBase',
+        'util/icon',
         './constants',
 
         // For effect
@@ -12,10 +13,26 @@ define(
         cellUtils,
         pythonInterop,
         CellBase,
+        Icon,
         {typeName}
     ) => {
+        function textOnlyThanks(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         return class ServiceWidgetCell extends CellBase {
             resizeObserver = null;
+            constructor(params) {
+                super(params);
+                this.icon = {name: 'thumbs-down', color: 'red'};
+            }
+
+            // Optional methods
+            // the onXyz() methods are called by CellBase if they exist; the methods
+            // they are called from named xyz().
+
             /**
              * Called when the cell is first started.
              * 
@@ -49,13 +66,37 @@ define(
                 if (height) {
                     this.cell.element.find('.output_wrapper>.output').css('height', `${height}px`);
                 }
-            }
 
+                this.renderCellToolbar();
+            }
+            
             onStop() {
                 // Nothing to do, but we must define it.
                 if (this.resizeObserver) {
                     this.resizeObserver.unobserve(this.cell.element.find('.output_wrapper>.output').get(0));
                 }
+            }
+
+            // Implementation of "abstract" methods
+
+            getCellClass(cell) {
+                return 'kb-service-widget-cell';
+            }
+
+            getCellTitle(cell) {
+                const {title} = this.getExtensionMetadata(cell, 'service');
+                if (title) {
+                    return textOnlyThanks(title);
+                }
+                return `Service Widget`;
+            }
+
+            getCellSubtitle(cell) {
+                const {subtitle,  moduleName, widgetName} = this.getExtensionMetadata(cell, 'service');
+                if (subtitle) {
+                    return `${textOnlyThanks(subtitle)} <i>(${moduleName}/${widgetName})</i>`;
+                }
+                return `<i>(${moduleName}/${widgetName})</i>`;
             }
 
             generatePython() {

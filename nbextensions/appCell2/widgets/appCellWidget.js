@@ -7,8 +7,6 @@ define(
         'base/js/namespace',
         'kb_service/client/catalog',
         'kb_service/client/narrativeMethodStore',
-        'jsonrpc/1.1/ServiceClient',
-        'kb_service/utils',
         'narrativeConfig',
         'common/runtime',
         'common/dialogMessages',
@@ -48,8 +46,6 @@ define(
         Jupyter,
         Catalog,
         NarrativeMethodStore,
-        ServiceClient,
-        ServiceUtils,
         Config,
         Runtime,
         DialogMessages,
@@ -1257,8 +1253,9 @@ define(
                 const cellId = new Uuid(4).format();
                 const widget = model.getItem('exec.outputWidgetInfo');
 
+
                 const cellSetupData = (() => {
-                    if (widget.name === 'ServiceWidgetGeneric') {
+                    if (widget.name === 'ServiceWidget') {
                         //
                         // Here we handle this widget name with the serviceWidget cell
                         // type. Specifying an output widget of
@@ -1279,8 +1276,21 @@ define(
                         ///
                         const {service_module_name, widget_name, title, subtitle, ...params} = widget.params;
 
+                        const appSpec = model.getItem('app.spec');
+
                         return  {
                             type: 'serviceWidget',
+                            attributes: {
+                                title,
+                                subtitle,
+                                icon: {
+                                    type: 'appoutput',
+                                    params: {
+                                        appSpec,
+                                        stacked: false
+                                    }
+                                }
+                            },
                             metadata: {
                                 service: {
                                     moduleName: service_module_name,

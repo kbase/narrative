@@ -4,12 +4,14 @@ define([
     'preactComponents/Loading',
     'preactComponents/ErrorAlert',
     'uuid',
-    'util/windowChannel',
+    '../util/SendChannel',
+    '../util/ReceiveChannel',
     'narrativeConfig',
     'api/auth',
     'common/runtime',
     'common/cellUtils',
     'jsonrpc/1.1/DynamicServiceClient',
+    'base/js/namespace',
     './IFrame',
     '../utils',
     '../constants',
@@ -23,12 +25,14 @@ define([
     Loading,
     ErrorAlert,
     Uuid,
-    {WindowChannelInit},
+    {SendChannel},
+    {ReceiveChannel},
     narrativeConfig,
     Auth,
     Runtime,
     {findById, getCellMeta, setTitle},
     DynamicServiceClient,
+    Jupyter,
     IFrame,
     {niceConfig},
     {PLUGIN_STARTUP_TIMEOUT}
@@ -52,8 +56,16 @@ define([
             super(props);
 
             this.runtime = Runtime.make();
+
+            // For the postMessage communication with the widget.
             this.hostChannelId = new Uuid(4).format();
-            this.pluginChannelId = new Uuid(4).format();
+            this.guestChannelId = new Uuid(4).format();
+            this.receiveChannel = new ReceiveChannel({
+                window,
+                id: this.hostChannelId
+            });
+            this.receiveChannel.receiveFrom(this.guestChannelId);
+
 
             this.status = {
                 status: STATUS.NONE,
@@ -84,34 +96,58 @@ define([
             }
         }
 
+        findCellForId(id) {
+            const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
+                if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
+                    return cell.metadata.kbase.attributes.id === id;
+                }
+                return false;
+            });
+            if (matchingCells.length === 1) {
+                return matchingCells[0];
+            }
+            return null;
+        }
+
          /**
          *
          * @param {*} iframeWindow - The window DOM object for the iframe containing the app
          * @param {*} params - The parameters to pass to the app when it is first loaded
          */
         onIframeLoaded(iframeWindow) {
-            const chan = new WindowChannelInit({
+            // if (this.state.status !== 'SUCCESS') {
+            //     return;
+            // }
+
+            const targetOrigin = new URL(this.state.value.serviceURL).origin;
+            this.sendChannel = new SendChannel({
+                window: iframeWindow,
+                targetOrigin,
                 id: this.hostChannelId,
-                window: iframeWindow.contentWindow,
-                host: window.document.location.origin,
+                to: this.guestChannelId
             });
-            this.channel = chan.makeChannel(this.pluginChannelId);
 
-            // The app should emit the 'clicked' event for any mouse clicks.
+            // The app in the iframe should emit the 'clicked' event for any mouse clicks.
             // E.g. catch the click event on the body.
-            // This allows anything in the host environment, like drop down windows,
-            // which open and rely upon catching 'click' on the host body.
-            this.channel.on('clicked', () => {
-                window.document.body.click();
-            });
-
-            this.channel.on('click', () => {
-                window.document.body.click();
+            // 
+            // This allows ui elements in the host environment, like drop down windows,
+            // which rely upon catching 'click' events on the body, to operate as
+            // expected.
+            //
+            // For example, dropdown menus should close automatically when the user
+            // clicks anywhere outside the menu. Without propagating a click from inside
+            // the iframe, the menu would not close if a user clicked inside the iframe.
+            //
+            this.receiveChannel.on('click', () => {
+                const cell = this.findCellForId(this.props.cellId);
+                if (!cell) {
+                    return;
+                }
+                cell.element.click();
             });
 
             // A widget may set the title of its cell.
-             this.channel.on('set-title', ({title}) => {
-                 console.log('setting title...', title);
+             this.receiveChannel.on('set-title', ({title}) => {
                 setTitle(this.props.cellId, title);
              });
 
@@ -134,7 +170,7 @@ define([
             // The 'widget-state' event is emitted by the service widget app
             // when it's internal state is changed in a manner which it wants
             // to restore later, when it is reloaded.
-            this.channel.on('widget-state', ({widgetState}) => {
+            this.receiveChannel.on('widget-state', ({widgetState}) => {
                 this.runtime.bus().send(
                     {
                         widgetState
@@ -162,16 +198,15 @@ define([
             // removed from the channel.
             //
             // TODO: error handler in case of plugin startup timeout.
-            this.channel.once('ready', PLUGIN_STARTUP_TIMEOUT, async ({channelId}) => {
-                this.channel.setPartner(channelId || this.pluginChannelId);
+            this.receiveChannel.once('ready', PLUGIN_STARTUP_TIMEOUT, async ({channelId}) => {
+                // this.channel.setPartner(channelId || this.pluginChannelId);
+                this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
 
                 const authClient = Auth.make({
                     url: narrativeConfig.url('auth')
                 })
 
                 const token = authClient.getAuthToken();
-                // const temp = await authClient.getCurrentProfile(token);
-                // console.log('TEMP', temp);
                 const {user: username, display: realname, roles} = await authClient.getCurrentProfile(token);
 
                 const authentication = {
@@ -195,20 +230,20 @@ define([
                     state: {...propsState, ...widgetState}
                 };
 
-                this.channel.send('start', startMessage);
+                this.sendChannel.send('start', startMessage);
             });
 
             // The 'started' event is sent after the app receives and processes the
             // 'start' event.
-            this.channel.once('started', PLUGIN_STARTUP_TIMEOUT, (message) => {
+            this.receiveChannel.once('started', PLUGIN_STARTUP_TIMEOUT, ({height, channelId}) => {
                 // TODO: Remove the loading
+                this.$widgetArea.css('height', `${height}px`);
             });
 
-            this.channel.start();
+            this.receiveChannel.start();
         }
 
         async getServiceURL() {
-            // TODO? what is this madness, get it from the runtime.
             const authClient = Auth.make({
                 url: narrativeConfig.url('auth')
             })
@@ -221,19 +256,18 @@ define([
             // E.g. https://ci.kbase.us/servics/
 
             if (this.props.isDynamicService) {
-                console.log('is dynamic service...');
                 const {url} = await new DynamicServiceClient({
                     url: narrativeConfig.config.services.service_wizard.url,
                     module: this.props.moduleName,
                     timeout: 10000,
                     token
                 }).getModule()
-                console.log('got url', url);
                 return url;
             }
             const [_, serviceBaseURL] = narrativeConfig.config.services.service_wizard.url.match(/^(.*\/services\/).*/);
             return new URL(`${serviceBaseURL}${this.props.moduleName}`).toString();
         }
+
         // actions
 
         renderPending() {
@@ -250,7 +284,7 @@ define([
                     serviceURL=${serviceURL}
                     appName=${this.props.appName}
                     hostChannelId=${this.hostChannelId}
-                    pluginChannelId=${this.pluginChannelId}
+                    appChannelId=${this.guestChannelId}
                     params=${this.props.params}
                     onLoaded=${this.onIframeLoaded.bind(this)}
                     />
@@ -265,7 +299,6 @@ define([
                 case STATUS.PENDING:
                     return this.renderPending();
                 case STATUS.SUCCESS:
-                    console.log('SUCCESS');
                     return this.renderSuccess(this.state.value);
                 case STATUS.ERROR:
                     return this.renderError(this.state.error);

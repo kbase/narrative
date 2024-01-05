@@ -75,22 +75,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
                 },
             });
 
-         $('#kb-add-service-widget-cell')
-            .click(() => {
-                const data = {
-                    type: 'code',
-                    language: 'python',
-                };
-                Jupyter.narrative.insertAndSelectCellBelow('code', null, data);
-            })
-            .tooltip({
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay,
-                },
-            });
-
-
         $('#kb-side-toggle-in').click(() => {
             Jupyter.narrative.toggleSidePanel();
         });

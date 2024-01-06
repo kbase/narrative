@@ -1,4 +1,6 @@
 define([], () => {
+    'use strict';
+
     function uniqueId() {
         if (window.crypto) {
             return window.crypto.randomUUID();
@@ -8,11 +10,7 @@ define([], () => {
     }
 
     class ChannelMessage {
-        constructor({
-            name,
-            payload,
-            envelope,
-        }) {
+        constructor({ name, payload, envelope }) {
             this.name = name;
             this.payload = payload;
             this.id = uniqueId();
@@ -54,11 +52,11 @@ define([], () => {
             return this.id;
         }
 
-        getPartnerId()  {
+        getPartnerId() {
             return this.partnerId;
         }
 
-        getStats()  {
+        getStats() {
             return this.stats;
         }
 
@@ -77,7 +75,7 @@ define([], () => {
                 from: this.id,
                 to: this.partnerId,
                 created: Date.now(),
-                id: this.genId()
+                id: this.genId(),
             };
             const message = new ChannelMessage({ name, payload, envelope });
             this.sendMessage(message);
@@ -88,6 +86,5 @@ define([], () => {
         }
     }
 
-    return {SendChannel};
-
+    return SendChannel;
 });

@@ -1,16 +1,16 @@
-.rotated-table {
+.preactComponent-rotated-table {
     display: flex;
     flex-direction: column;
 }
 
-.rotated-table-row {
+.preactComponent-rotated-table-row {
     flex: 0 0 auto;
     display: flex;
     flex-direction: row;
     margin-bottom: 0.25em;
 }
 
-.rotated-table-header-cell {
+.preactComponent-rotated-table-header-cell {
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
@@ -19,13 +19,10 @@
     justify-content: center;
 }
 
-.rotated-table-value-cell {
+.preactComponent-rotated-table-value-cell {
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
-.add-service-widget .rotated-table-header-cell {
-    flex: 0 0 8em;
-}

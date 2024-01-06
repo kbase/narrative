@@ -45,13 +45,6 @@ define(['jquery', 'bootstrap'], ($) => {
             options.enterToTrigger = true;
         }
 
-        // The onShown option allows a dialog to lazily load content.
-        if (options.onShown) {
-            this.$modal.on('show.bs.modal', (ev) => {
-                options.onShown(this.$dialogBody);
-            });
-        }
-
         this.initialize(options);
     };
 
@@ -103,14 +96,14 @@ define(['jquery', 'bootstrap'], ($) => {
         }
         for (let i = 0; i < buttonList.length; i++) {
             const $btn = buttonList[i];
-            // Wrap button function so the consumer can 
+            // Wrap button function so the consumer can
             // get a dialog ref if it needs it (e.g. to close).
             if ($btn.onClick) {
-                $btn.click((ev) => {
+                $btn.click(() => {
                     $btn.onClick(this);
                 });
             }
-            
+
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {
@@ -140,6 +133,10 @@ define(['jquery', 'bootstrap'], ($) => {
 
     BootstrapDialog.prototype.show = function () {
         this.$modal.modal('show');
+    };
+
+    BootstrapDialog.prototype.onShown = function (handler) {
+        this.$modal.on('show.bs.modal', handler);
     };
 
     BootstrapDialog.prototype.hide = function () {

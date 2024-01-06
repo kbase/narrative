@@ -7,32 +7,31 @@ define([
     'common/jupyter',
     'common/html',
     'common/cellUtils',
-    'util/icon'
-], (
-    Uuid,
-    runtime,
-    UI,
-    BusEventManager,
-    Props,
-    {getCells, deleteCell, disableKeyListenersForCell},
-    {tag},
-    {getCellMeta, setCellMeta},
-    {makeAppOutputIcon, makeDataIcon, makeGenericIcon}
-) => {
+    'util/icon',
+], (Uuid, runtime, UI, BusEventManager, Props, jupyter, html, cellUtils, icon) => {
+    'use strict';
+
+    const { tag } = html;
     const div = tag('div');
     const p = tag('p');
     const span = tag('span');
 
+    // This business because we cannot destructure in the parameters with 'use strict',
+    // yet we can't get rid of use strict due to the linting configuration.
+    const { getCells, deleteCell, disableKeyListenersForCell } = jupyter;
+    const { getCellMeta, setCellMeta } = cellUtils;
+    const { makeAppOutputIcon, makeDataIcon, makeGenericIcon } = icon;
+
     /**
      * The Cell class serves as the base class for Narrative cells.
-     * 
+     *
      * All subclasses must define `generatePython`
-     * 
+     *
      * In addition, the `deleteMessage` method may be overridden to provide a more
      * appropriate confirmation warning when deleting a cell.
      */
     class CellBase {
-        constructor({cell, type, name, icon, container}) {
+        constructor({ cell, type, name, icon, container }) {
             // Initialize properties from constructor
             if (typeof cell === 'undefined') {
                 throw new Error('The "cell" parameter must be supplied');
@@ -42,7 +41,7 @@ define([
             if (typeof type === 'undefined') {
                 throw new Error('The "type" parameter must be supplied');
             }
-            this.type = type; 
+            this.type = type;
 
             if (typeof name === 'undefined') {
                 throw new Error('The "name" parameter must be supplied');
@@ -58,7 +57,7 @@ define([
             this.ui = UI.make({ node: container || document.body });
 
             this.runtime = runtime.make();
-        } 
+        }
 
         setupComm() {
             this.cellBus = this.runtime.bus().makeChannelBus({
@@ -68,14 +67,16 @@ define([
                 description: `A ${this.name} channel`,
             });
 
-            this.eventManager.add(this.cellBus.on('delete-cell', () => {
-                this.doDeleteCell();
-            }));
+            this.eventManager.add(
+                this.cellBus.on('delete-cell', () => {
+                    this.doDeleteCell();
+                })
+            );
         }
 
-        updateIcon({name, color}) {
+        updateIcon({ name, color }) {
             const cellToolbarElement = this.cell.element.find('celltoolbar');
-            const iconElement = cellToolbarElement.find('[data-element="icon"]')
+            const iconElement = cellToolbarElement.find('[data-element="icon"]');
 
             const icon = span([
                 span(
@@ -88,15 +89,17 @@ define([
                             class: 'fa fa-square fa-stack-2x',
                             style: { color },
                         }),
-                        span({ class: `fa fa-inverse fa-stack-1x fa-${name}` })
+                        span({ class: `fa fa-inverse fa-stack-1x fa-${name}` }),
                     ]
                 ),
             ]);
             iconElement.innerHTML = icon;
-            this.cell.metadata = this.cell.metadata;
+            this.renderCellToolbar();
+            // this.cell.metadata = this.cell.metadata;
         }
 
         renderCellToolbar() {
+            // eslint-disable-next-line no-self-assign
             this.cell.metadata = this.cell.metadata;
         }
 
@@ -126,9 +129,9 @@ define([
         }
 
         async doDeleteCell() {
-            const confirmed = await this.ui.showConfirmDialog({ 
-                title: 'Confirm Cell Deletion', 
-                body: this.deleteMessage() 
+            const confirmed = await this.ui.showConfirmDialog({
+                title: 'Confirm Cell Deletion',
+                body: this.deleteMessage(),
             });
 
             if (!confirmed) {
@@ -144,7 +147,7 @@ define([
             this.icon = icon;
             // The kbaseCellToolbarMenu will rebuild the icon during a render,
             // and rendering the toolbar is triggered by updating the cell metadata.
-            this.cell.metadata = this.cell.metadata;
+            this.renderCellToolbar();
         }
 
         setExtensionMetadata(propPath, value) {
@@ -172,35 +175,34 @@ define([
             this.cell.set_text(this.generatePython());
             // Nothing is returned for this execution.
             // It is asynchronous, clearly, so we don't know
-            // when it completes. 
+            // when it completes.
             // In the context of the cell lifecycle, the cell will
             // come to life when the code executes, inserts the widget javascript.
             this.cell.execute();
         }
 
         // "abstract" methods
-        getCellTitle(cell) {
+        getCellTitle() {
             throw new Error('The "getCellTitle" method must be defined by a subclass');
         }
 
-        getCellSubtitle(cell) {
+        getCellSubtitle() {
             throw new Error('The "getCellSubtitle" method must be defined by a subclass');
         }
 
         generatePython() {
             throw new Error('The "generatePython" method must be redefined by a sub-class');
         }
-        getCellClass(cell) {
+        getCellClass() {
             throw new Error('The "getCellClass" method must be defined by a sub-class');
         }
 
-
-        /** 
-        * Should only be called when a cell is first inserted into a narrative.
-        *
-        * It creates the correct metadata and then sets up the cell.
-        *
-        */
+        /**
+         * Should only be called when a cell is first inserted into a narrative.
+         *
+         * It creates the correct metadata and then sets up the cell.
+         *
+         */
         upgradeCell(data) {
             const cell = this.cell;
             function getAttribute(name) {
@@ -213,8 +215,11 @@ define([
             // Create base app cell
             const meta = cell.metadata;
             // TODO: drop? doesn't seem to be used
-			const {initialData} = data;
-            this.icon = getAttribute('icon') || {type: 'generic', params: {name: "thumbs-down", color: "red"}}
+            const { initialData } = data;
+            this.icon = getAttribute('icon') || {
+                type: 'generic',
+                params: { name: 'thumbs-down', color: 'red' },
+            };
             meta.kbase = {
                 type: this.type,
                 attributes: {
@@ -227,13 +232,13 @@ define([
                     // I don't think this is used any more? Most cells use
                     // calls to util/icon.js, though it is somewhat compatible
                     // with the simple icon struct ({name, color}).
-                    icon: getAttribute('icon') || this.icon
+                    icon: getAttribute('icon') || this.icon,
                 },
-                [this.type]: initialData || {}
+                [this.type]: initialData || {},
             };
             cell.metadata = meta;
 
-            // Sets the metadata, property by property. 
+            // Sets the metadata, property by property.
             for (const [key, value] of Object.entries(data.metadata)) {
                 this.setExtensionMetadata(key, value);
             }
@@ -242,7 +247,6 @@ define([
             this.setCellTitle(getAttribute('title'));
             this.setCellSubtitle(getAttribute('subtitle'));
             this.setCellIcon(getAttribute('icon'));
- 
         }
 
         setCellTitle(title, render) {
@@ -259,16 +263,16 @@ define([
 
         /**
          * Add additional methods to the cell that are utilized by our ui.
-         * 
-         * This includes minimizing and maximizing the cell, and displaying 
+         *
+         * This includes minimizing and maximizing the cell, and displaying
          * a per-type icon.
-         * 
-         * @param {*} cell 
+         *
+         * @param {*} cell
          */
-         augmentCell() {
+        augmentCell() {
             const cell = this.cell;
             /**
-             * 
+             *
              */
             cell.minimize = function () {
                 // Note that the "this" is the cell; thus we must preserve the
@@ -289,7 +293,7 @@ define([
             };
 
             /**
-             * 
+             *
              */
             cell.maximize = function () {
                 // Note that the "this" is the cell; thus we must preserve the
@@ -312,27 +316,27 @@ define([
             };
 
             /**
-             * 
-             * @returns 
-             * 
+             *
+             * @returns
+             *
              * Note that the icon must be rendered as text, as that is what kbaseCellToolbarMenu.js expects.
              */
-            cell.getIcon = this.buildIcon.bind(this)
+            cell.getIcon = this.buildIcon.bind(this);
         }
 
         buildIcon() {
             const icon = this.getMetadata('attributes.icon');
             switch (icon.type) {
-                case "generic": {
-                    const {name, color} = icon.params;
+                case 'generic': {
+                    const { name, color } = icon.params;
                     return makeGenericIcon(name, color);
                 }
-                case "data": {
-                    const {type, stacked} = icon.params;
+                case 'data': {
+                    const { type, stacked } = icon.params;
                     return makeDataIcon(type, stacked);
                 }
-                case "appoutput": {
-                    const {appSpec} = icon.params;
+                case 'appoutput': {
+                    const { appSpec } = icon.params;
                     return makeAppOutputIcon(appSpec);
                 }
                 default: {
@@ -341,11 +345,11 @@ define([
             }
         }
 
-         /**
+        /**
          * Responsible for setting up cell augmentations required at runtime.
-         * 
+         *
          */
-         setupCell() {
+        setupCell() {
             const cell = this.cell;
             this.augmentCell(cell);
 
@@ -377,14 +381,15 @@ define([
             cell.metadata = cell.metadata;
         }
 
-
-        async start() {
+        start() {
             this.eventManager = BusEventManager.make({
-                bus: this.runtime.bus()
+                bus: this.runtime.bus(),
             });
 
             // manager object's direct bus
-            this.bus = this.runtime.bus().makeChannelBus({description: 'A service widget cell (widget!)'});
+            this.bus = this.runtime
+                .bus()
+                .makeChannelBus({ description: 'A service widget cell (widget!)' });
 
             // Called when the cell is deleted from the narrative.
             this.eventManager.add(
@@ -396,7 +401,7 @@ define([
             this.setupComm();
 
             if (typeof this.onStart === 'function') {
-                await this.onStart();
+                this.onStart();
             }
         }
 

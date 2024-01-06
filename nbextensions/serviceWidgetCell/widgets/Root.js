@@ -1,22 +1,12 @@
-define([
-    'preact',
-    'htm',
-    '../components/Main',
+define(['preact', 'htm', '../components/Main'], (preact, htm, Main) => {
+    'use strict';
 
-    // For effect
-    'css!./Root.css'
-], (
-    preact,
-    htm,
-    Main,
-) => {
-    const {h} = preact;
+    const { h } = preact;
     const html = htm.bind(h);
 
-    function Root({hostNodeId, cellId, state, moduleName, appName, params, isDynamicService}) {
+    function Root({ hostNodeId, cellId, state, moduleName, appName, params, isDynamicService }) {
         const container = document.createElement('div');
         container.classList.add('nbextensions-serviceWidgetCell-Root');
-        this.container = container;
 
         const hostNode = document.getElementById(hostNodeId);
 
@@ -27,13 +17,14 @@ define([
         hostNode.appendChild(container);
 
         const content = html`
-            <${Main} moduleName=${moduleName} 
-                     isDynamicService=${true}
-                     cellId=${cellId}
-                     state=${state}
-                     appName=${appName}
-                     params=${params}
-                     isDynamicService=${isDynamicService}
+            <${Main}
+                moduleName=${moduleName}
+                isDynamicService=${true}
+                cellId=${cellId}
+                state=${state}
+                appName=${appName}
+                params=${params}
+                isDynamicService=${isDynamicService}
             />
         `;
         preact.render(content, container);

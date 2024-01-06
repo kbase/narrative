@@ -10,6 +10,8 @@
 
 define([
     'jquery',
+    'preact',
+    'htm',
     'bluebird',
     'handlebars',
     'narrativeConfig',
@@ -38,13 +40,15 @@ define([
     'widgets/loadingWidget',
     'kb_service/client/workspace',
     'util/kbaseApiUtil',
-    'widgets/serviceWidgetCell/AddServiceWidgetData',
+    'widgets/serviceWidgetCell/AddServiceWidgetDataViewer',
     'widgets/serviceWidgetCell/AddServiceWidget',
 
     /* for effect */
     'bootstrap',
 ], (
     $,
+    preact,
+    htm,
     Promise,
     Handlebars,
     Config,
@@ -73,7 +77,7 @@ define([
     LoadingWidget,
     Workspace,
     APIUtil,
-    AddServiceWidgetData,
+    AddServiceWidgetDataViewer,
     AddServiceWidget
 ) => {
     'use strict';
@@ -397,45 +401,54 @@ define([
             element.classList.remove('hide');
         });
 
-        this.initAddServiceWidgetDataMenu();
+        this.initAddServiceWidgetDataViewerMenu();
         this.initAddServiceWidgetMenu();
-    }
+    };
 
     /**
-     * 
+     *
      */
-    Narrative.prototype.initAddServiceWidgetDataMenu = () => {
-        const widget = new AddServiceWidgetData();
+    Narrative.prototype.initAddServiceWidgetDataViewerMenu = () => {
+        const { h } = preact;
+        const html = htm.bind(h);
         const $body = $('<div>');
         const staticDialog = new BootstrapDialog({
-            title: 'Add Object ViewerService Widget (takes data object)',
-            onShown: () => {
-                $body.html(widget.$renderBody());
-            },
+            title: 'Add Object Viewer Service Widget',
             body: $body,
             closeButton: true,
-            buttons: widget.$renderButtons()
         });
-
+        staticDialog.onShown(() => {
+            Jupyter.narrative.disableKeyboardManager();
+            const body = html` <${AddServiceWidgetDataViewer} done=${() => staticDialog.hide()} />`;
+            preact.render(body, $body.get(0));
+        });
+        staticDialog.onHidden(() => {
+            Jupyter.narrative.enableKeyboardManager();
+        });
         $('#kb-develop-add-service-widget-data-btn').click(() => {
             staticDialog.show();
         });
     };
 
-     /**
-     * 
+    /**
+     *
      */
     Narrative.prototype.initAddServiceWidgetMenu = () => {
-        const widget = new AddServiceWidget();
+        const { h } = preact;
+        const html = htm.bind(h);
         const $body = $('<div>');
         const staticDialog = new BootstrapDialog({
             title: 'Add Service Widget',
-            onShown: () => {
-                $body.html(widget.$renderBody());
-            },
             body: $body,
             closeButton: true,
-            buttons: widget.$renderButtons()
+        });
+        staticDialog.onShown(() => {
+            Jupyter.narrative.disableKeyboardManager();
+            const body = html` <${AddServiceWidget} done=${() => staticDialog.hide()} />`;
+            preact.render(body, $body.get(0));
+        });
+        staticDialog.onHidden(() => {
+            Jupyter.narrative.enableKeyboardManager();
         });
         $('#kb-develop-add-service-widget-btn').click(() => {
             staticDialog.show();

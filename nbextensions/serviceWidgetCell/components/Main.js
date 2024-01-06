@@ -18,40 +18,42 @@ define([
 
     // For effect
     'bootstrap',
-    'css!./Main.css'
+    'css!./Main.css',
 ], (
     preact,
     htm,
     Loading,
     ErrorAlert,
     Uuid,
-    {SendChannel},
-    {ReceiveChannel},
+    SendChannel,
+    ReceiveChannel,
     narrativeConfig,
     Auth,
     Runtime,
-    {findById, getCellMeta, setTitle},
+    cellUtils,
     DynamicServiceClient,
     Jupyter,
     IFrame,
-    {niceConfig},
-    {WIDGET_SERVICE_TIMEOUT}
+    utils,
+    constants
 ) => {
-    const {h, Component} = preact;
+    'use strict';
+
+    const { h, Component } = preact;
     const html = htm.bind(h);
+
+    const { findById, getCellMeta, setTitle } = cellUtils;
+    const { niceConfig } = utils;
+    const { WIDGET_SERVICE_TIMEOUT } = constants;
 
     const STATUS = {
         NONE: 'NONE',
         PENDING: 'PENDING',
         SUCCESS: 'SUCCESS',
-        ERROR: 'ERROR'
-    }
+        ERROR: 'ERROR',
+    };
 
     class Main extends Component {
-        state = {
-            status: STATUS.NONE,
-        }
-
         constructor(props) {
             super(props);
 
@@ -62,19 +64,18 @@ define([
             this.guestChannelId = new Uuid(4).format();
             this.receiveChannel = new ReceiveChannel({
                 window,
-                id: this.hostChannelId
+                id: this.hostChannelId,
             });
             this.receiveChannel.receiveFrom(this.guestChannelId);
 
-
             this.status = {
                 status: STATUS.NONE,
-            }
+            };
         }
 
         async componentDidMount() {
             this.setState({
-                status: STATUS.PENDING
+                status: STATUS.PENDING,
             });
 
             try {
@@ -83,16 +84,16 @@ define([
                 this.setState({
                     status: STATUS.SUCCESS,
                     value: {
-                        serviceURL
-                    }
-                })
+                        serviceURL,
+                    },
+                });
             } catch (ex) {
                 this.setState({
                     status: STATUS.ERROR,
                     error: {
-                        message: ex.message
-                    }
-                })
+                        message: ex.message,
+                    },
+                });
             }
         }
 
@@ -109,7 +110,7 @@ define([
             return null;
         }
 
-         /**
+        /**
          *
          * @param {*} iframeWindow - The window DOM object for the iframe containing the app
          * @param {*} params - The parameters to pass to the app when it is first loaded
@@ -124,12 +125,12 @@ define([
                 window: iframeWindow.contentWindow,
                 targetOrigin,
                 id: this.hostChannelId,
-                to: this.guestChannelId
+                to: this.guestChannelId,
             });
 
             // The app in the iframe should emit the 'clicked' event for any mouse clicks.
             // E.g. catch the click event on the body.
-            // 
+            //
             // This allows ui elements in the host environment, like drop down windows,
             // which rely upon catching 'click' events on the body, to operate as
             // expected.
@@ -147,15 +148,15 @@ define([
             });
 
             // A widget may set the title of its cell.
-             this.receiveChannel.on('set-title', ({title}) => {
+            this.receiveChannel.on('set-title', ({ title }) => {
                 setTitle(this.props.cellId, title);
-             });
+            });
 
             // TODO: re-enable auto sizing. The cell size should end up being
-             // either the height of the internal widget, or the max height, whichever
-             // is the least.
-             // The cell is still resizable in case the user wants to make the cell taller
-             // for a tall internal widget.
+            // either the height of the internal widget, or the max height, whichever
+            // is the least.
+            // The cell is still resizable in case the user wants to make the cell taller
+            // for a tall internal widget.
 
             // The iframe wrapper needs to be resized when the internal content is
             // resized
@@ -170,10 +171,10 @@ define([
             // The 'widget-state' event is emitted by the service widget app
             // when it's internal state is changed in a manner which it wants
             // to restore later, when it is reloaded.
-            this.receiveChannel.on('widget-state', ({widgetState}) => {
+            this.receiveChannel.on('widget-state', ({ widgetState }) => {
                 this.runtime.bus().send(
                     {
-                        widgetState
+                        widgetState,
                     },
                     {
                         channel: {
@@ -184,7 +185,7 @@ define([
                         },
                     }
                 );
-            })
+            });
 
             // When the service widget app is fully loaded and ready to start
             // running, it needs to emit the 'ready' event. It may, optionally,
@@ -198,22 +199,26 @@ define([
             // removed from the channel.
             //
             // TODO: error handler in case of plugin startup timeout.
-            this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async ({channelId}) => {
+            this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async ({ channelId }) => {
                 // this.channel.setPartner(channelId || this.pluginChannelId);
                 this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
 
                 const authClient = Auth.make({
-                    url: narrativeConfig.url('auth')
-                })
+                    url: narrativeConfig.url('auth'),
+                });
 
                 const token = authClient.getAuthToken();
-                const {user: username, display: realname, roles} = await authClient.getCurrentProfile(token);
+                const {
+                    user: username,
+                    display: realname,
+                    roles,
+                } = await authClient.getCurrentProfile(token);
 
                 const authentication = {
                     token,
                     username,
                     realname,
-                    roles: roles.map(({ id }) => id)
+                    roles: roles.map(({ id }) => id),
                 };
 
                 // Some widget state may come from the props, which ultimately comes from the code cell's
@@ -221,13 +226,17 @@ define([
                 const propsState = this.props.state || {};
 
                 // We also get stored widget state from the cell's metadata.
-                const widgetState = getCellMeta(findById(this.props.cellId), "kbase.serviceWidget.widgetState", {});
+                const widgetState = getCellMeta(
+                    findById(this.props.cellId),
+                    'kbase.serviceWidget.widgetState',
+                    {}
+                );
 
                 const startMessage = {
                     authentication,
                     config: niceConfig(),
                     params: this.props.params,
-                    state: {...propsState, ...widgetState}
+                    state: { ...propsState, ...widgetState },
                 };
 
                 this.sendChannel.send('start', startMessage);
@@ -235,7 +244,7 @@ define([
 
             // The 'started' event is sent after the app receives and processes the
             // 'start' event.
-            this.receiveChannel.once('started', WIDGET_SERVICE_TIMEOUT, ({height, channelId}) => {
+            this.receiveChannel.once('started', WIDGET_SERVICE_TIMEOUT, ({ height }) => {
                 // TODO: Remove the loading
                 this.$widgetArea.css('height', `${height}px`);
             });
@@ -245,8 +254,8 @@ define([
 
         async getServiceURL() {
             const authClient = Auth.make({
-                url: narrativeConfig.url('auth')
-            })
+                url: narrativeConfig.url('auth'),
+            });
 
             const token = authClient.getAuthToken();
 
@@ -256,15 +265,16 @@ define([
             // E.g. https://ci.kbase.us/servics/
 
             if (this.props.isDynamicService) {
-                const {url} = await new DynamicServiceClient({
+                const { url } = await new DynamicServiceClient({
                     url: narrativeConfig.config.services.service_wizard.url,
                     module: this.props.moduleName,
                     timeout: 10000,
-                    token
-                }).getModule()
+                    token,
+                }).getModule();
                 return url;
             }
-            const [_, serviceBaseURL] = narrativeConfig.config.services.service_wizard.url.match(/^(.*\/services\/).*/);
+            const [, serviceBaseURL] =
+                narrativeConfig.config.services.service_wizard.url.match(/^(.*\/services\/).*/);
             return new URL(`${serviceBaseURL}${this.props.moduleName}`).toString();
         }
 
@@ -274,11 +284,11 @@ define([
             return html`<${Loading} message="Loading..." />`;
         }
 
-        renderError({message}) {
-            return html`<${ErrorAlert} message=${message} />`
+        renderError({ message }) {
+            return html`<${ErrorAlert} message=${message} />`;
         }
 
-        renderSuccess({serviceURL }) {
+        renderSuccess({ serviceURL }) {
             return html`
                 <${IFrame}
                     serviceURL=${serviceURL}
@@ -287,7 +297,7 @@ define([
                     guestChannelId=${this.guestChannelId}
                     params=${this.props.params}
                     onLoaded=${this.onIframeLoaded.bind(this)}
-                    />
+                />
             `;
         }
 
@@ -306,10 +316,8 @@ define([
         }
 
         render() {
-            return html `
-                <div className="nbextensions-serviceWidgetCell-Main">
-                    ${this.renderState()}
-                </div>
+            return html`
+                <div className="nbextensions-serviceWidgetCell-Main">${this.renderState()}</div>
             `;
         }
     }

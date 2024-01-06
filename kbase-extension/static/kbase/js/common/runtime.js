@@ -83,41 +83,47 @@ define([
 
         /**
          * Determines if a given feature is enabled.
-         * 
-         * Sources of feature enablement are, in order of precedence: 
+         *
+         * Sources of feature enablement are, in order of precedence:
          *   url search param, user settings, configuration.
-         * 
+         *
          * url search param -  url search param named "features" containing a
          *   comma-separated list of features found in "feature-config.json".
          * user settings - a userSettings feature (see getUserSetting above) which does
          *   not seem to be used
-         * configuration - the file "feature-config.json" located in 
+         * configuration - the file "feature-config.json" located in
          *   "kbase-extension/static/kbase/config/feature-config.json" contains a object
          *   in which the keys are feature ids and the value indicates whether it is
          *   enabled or not. This is both the canonical set of features, and also their
          *   default values.
-         * 
+         *
          * If a feature is not found under the given name, the result is always false.
-         * 
-         * @param {string} featureName 
+         *
+         * @param {string} featureName
          * @returns {boolean} Whether the given feature is enabled
          */
         function isFeatureEnabled(featureName) {
             // Extract a comma-separated list of features (see
             // config/feature-config.json) to enable.
-            const featuresFromURL = (new URL(window.location.href).searchParams.get('features') || '').split(',');
+            const featuresFromURL = (
+                new URL(window.location.href).searchParams.get('features') || ''
+            ).split(',');
 
             // May be a string value? At least the pre-existing code implied it may not
             // be boolean, so we coerce it.
-            const featureEnabledFromUserSetting =  !!getUserSetting(featureName);
+            const featureEnabledFromUserSetting = !!getUserSetting(featureName);
 
             // The full set of features, with default enablement, is available in
             // feature-config.json, which is made available in the Narrative config
             // object under the 'features' key.
-            
+
             const featureEnabledFromConfig = config(['features', featureName], false);
 
-            return (featuresFromURL.includes(featureName)) || featureEnabledFromUserSetting || featureEnabledFromConfig;
+            return (
+                featuresFromURL.includes(featureName) ||
+                featureEnabledFromUserSetting ||
+                featureEnabledFromConfig
+            );
         }
 
         function isDeveloper() {
@@ -134,18 +140,6 @@ define([
             } else {
                 return NARRATIVE_CONFIG.getRawObject();
             }
-        }
-
-        function getUserSetting(settingKey, defaultValue) {
-            const settings = Jupyter.notebook.metadata.kbase.userSettings;
-            if (!settings) {
-                return defaultValue;
-            }
-            const setting = settings[settingKey];
-            if (setting === undefined) {
-                return defaultValue;
-            }
-            return setting;
         }
 
         function setEnv(key, value) {
@@ -186,6 +180,6 @@ define([
     }
 
     return {
-        make: factory
-    }
+        make: factory,
+    };
 });

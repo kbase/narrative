@@ -1,15 +1,7 @@
-define([
-    'preact',
-    'htm',
+define(['preact', 'htm', 'bootstrap', 'css!./ErrorAlert.css'], (preact, htm) => {
+    'use strict';
 
-    'bootstrap',
-    'css!./ErrorAlert.css',
-], (
-    preact,
-    htm,
-) => {
-
-    const {h, Component} = preact;
+    const { h, Component } = preact;
     const html = htm.bind(h);
 
     class ErrorAlert extends Component {
@@ -17,9 +9,7 @@ define([
             if (!this.props.showIcon) {
                 return;
             }
-            return html `
-                <span class="fa fa-exclamation-triangle"></span>
-            `;
+            return html` <span class="fa fa-exclamation-triangle"></span> `;
         }
 
         renderTitle() {
@@ -27,10 +17,7 @@ define([
                 return this.renderIcon();
             }
             return html`
-                <p class="ErrorAlert-title">
-                    ${this.renderIcon()}
-                    ${this.props.title || 'Error'}
-                </p>
+                <p class="ErrorAlert-title">${this.renderIcon()} ${this.props.title || 'Error'}</p>
             `;
         }
         renderContent() {
@@ -42,8 +29,7 @@ define([
         render() {
             return html`
                 <div class="ErrorAlert -grow alert alert-danger">
-                    ${this.renderTitle()}
-                    ${this.renderContent()}
+                    ${this.renderTitle()} ${this.renderContent()}
                 </div>
             `;
         }

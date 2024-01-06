@@ -1,16 +1,10 @@
 define([
-    'jquery', 
-    'underscore', 
-    'narrativeConfig', 
+    'jquery',
+    'underscore',
+    'narrativeConfig',
     'kb_service/client/narrativeMethodStore',
-    'base/js/namespace'
-], (
-    $,
-    _,
-    Config,
-    NarrativeMethodStore,
-    Jupyter
-) => {
+    'base/js/namespace',
+], ($, _, Config, NarrativeMethodStore, Jupyter) => {
     'use strict';
 
     // this is the cached promise about the viewer info
@@ -29,8 +23,13 @@ define([
      */
     function getViewerInfo() {
         const currentTag = getAppVersionTag();
-        if (!viewerInfoCache || this.viewerInfoCacheTag !== currentTag || Date.now() - lastViewerCache > VIEWER_CACHE_MAX) {
+        if (
+            !viewerInfoCache ||
+            viewerInfoCacheTag !== currentTag ||
+            Date.now() - lastViewerCache > VIEWER_CACHE_MAX
+        ) {
             viewerInfoCache = loadViewerInfo(currentTag);
+            viewerInfoCacheTag = currentTag;
             lastViewerCache = Date.now();
         }
         return viewerInfoCache;
@@ -38,7 +37,7 @@ define([
 
     /**
      * Simply returns the current app version tag in the app panel.
-     * 
+     *
      * @returns The current app version tag set in the app panel, or 'release' if not set
      */
     function getAppVersionTag() {
@@ -115,17 +114,19 @@ define([
                         // This testing viewers app should be used so that the release
                         // matches CI and/or production, and the dev tag carries the
                         // dynamic service widgets.
-                        // 
+                        //
                         const methodId = (() => {
                             const methodId = val.view_method_ids[0];
                             const [moduleName, viewerName] = methodId.split('/');
                             if (moduleName !== 'NarrativeViewers') {
-                                throw new Error(`Viewer module should be "NarrativeViewers" but is "${moduleName}"`)    
+                                throw new Error(
+                                    `Viewer module should be "NarrativeViewers" but is "${moduleName}"`
+                                );
                             }
                             return `eapearson${moduleName}Test/${viewerName}`;
                         })();
                         // END DEMO HACK
-                        
+
                         if (!methodInfo[methodId]) {
                             console.warn("Can't find method info for id: " + methodId);
                         } else if (methodInfo[methodId].loading_error) {
@@ -214,6 +215,7 @@ define([
             const o = dataCell.obj_info;
             const methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
+                // eslint-disable-next-line no-console
                 console.debug('No viewer found for type=' + o.bare_type);
                 return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }

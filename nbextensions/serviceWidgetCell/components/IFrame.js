@@ -17,9 +17,6 @@ define(['preact', 'htm'], (preact, htm) => {
             // and ultimately invoking the web app as "appName".
             const url = (() => {
                 const url = new URL(`${this.props.serviceURL}/widgets/${this.props.appName}`);
-                // for (const [key, value] of Object.entries(this.props.params)) {
-                //     url.searchParams.append(key, value);
-                // }
                 url.searchParams.append('params', JSON.stringify(this.props.params));
                 url.searchParams.append('iframeParams', JSON.stringify(iframeParams));
                 return url.toString();

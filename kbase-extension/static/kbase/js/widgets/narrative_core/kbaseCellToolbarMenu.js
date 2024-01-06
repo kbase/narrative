@@ -8,7 +8,7 @@ define([
     'common/jobs',
     'common/runtime',
     'util/icon',
-    
+
     'custom/custom',
 ], ($, html, Events, Jupyter, utils, Config, Jobs, Runtime, icon) => {
     'use strict';
@@ -28,7 +28,7 @@ define([
         let container, cell;
 
         function doMoveCellToTop(cell) {
-            const {cellIndex, cellCount, isFirst, isLast} = getCellStats(cell);
+            const { cellIndex, isFirst } = getCellStats(cell);
             if (isFirst) {
                 console.warn('Already the first element!');
                 return;
@@ -41,7 +41,7 @@ define([
         }
 
         function doMoveCellToBottom(cell) {
-            const {cellIndex, cellCount, isFirst, isLast} = getCellStats(cell);
+            const { cellIndex, cellCount, isLast } = getCellStats(cell);
             if (isLast) {
                 console.warn('Already the last element!');
                 return;
@@ -90,11 +90,7 @@ define([
             }
         }
 
-        function nukeDoubleClick(events) {
-
-        }
-
-        function doToggleCodeView(event) {
+        function doToggleCodeView() {
             cell.element.trigger('toggleCodeArea.cell');
         }
 
@@ -132,11 +128,10 @@ define([
                 return;
             }
             if (cell.cell_type === 'code') {
-                const label = isCodeShowing(cell) ? 'Hide code' : 'Show code'
                 const attribs = {
                     ...buttonBase,
-                    id: handleClick(events, doToggleCodeView)
-                }
+                    id: handleClick(events, doToggleCodeView),
+                };
                 if (isCodeShowing(cell)) {
                     attribs.title = 'Hide code';
                     attribs.class += ' active';
@@ -151,16 +146,15 @@ define([
             if (!runtime.isDeveloper()) {
                 return;
             }
-            const label = isCodeShowing(cell) ? 'Hide code' : 'Show code'
             const attribs = {
                 ...buttonBase,
-                title: 'Delete cell...', 
-                id: handleClick(events, doDeleteCell)
-            }
+                title: 'Delete cell...',
+                id: handleClick(events, doDeleteCell),
+            };
             // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-trash fa-lg text-danger' }));
         }
-        
+
         function doRunCell(cell) {
             cell.execute();
         }
@@ -174,9 +168,9 @@ define([
             }
             const attribs = {
                 ...buttonBase,
-                title: 'Run cell ', 
-                id: handleClick(events, () => doRunCell(cell))
-            }
+                title: 'Run cell ',
+                id: handleClick(events, () => doRunCell(cell)),
+            };
             // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-repeat fa-lg ' }));
         }
@@ -186,7 +180,7 @@ define([
             const cellCount = Jupyter.notebook.get_cells().length;
             const isFirst = cellIndex === 0;
             const isLast = cellIndex === cellCount - 1;
-            return {cellIndex, cellCount, isFirst, isLast};
+            return { cellIndex, cellCount, isFirst, isLast };
         }
 
         function selectCell(cell) {
@@ -197,9 +191,9 @@ define([
         }
 
         function doMoveCellUp(cell) {
-            const {isFirst} = getCellStats(cell);
+            const { isFirst } = getCellStats(cell);
             selectCell(cell);
-           
+
             if (isFirst) {
                 console.warn('Already the first cell!');
                 return;
@@ -217,18 +211,15 @@ define([
                 dataOriginalTitle: 'Move Cell Up',
                 dataElement: 'cell-move-up',
                 ariaLabel: 'Move cell up',
-                id: handleClick(events, () => doMoveCellUp(cell))
-            }
-            return button(
-                attribs,
-                [span({ class: 'fa fa-arrow-up fa-lg' })]
-            );
+                id: handleClick(events, () => doMoveCellUp(cell)),
+            };
+            return button(attribs, [span({ class: 'fa fa-arrow-up fa-lg' })]);
         }
 
         function doMoveCellDown(cell) {
-            const {isLast} = getCellStats(cell);
+            const { isLast } = getCellStats(cell);
             selectCell(cell);
-           
+
             if (isLast) {
                 console.warn('Already the last cell!');
                 return;
@@ -237,7 +228,7 @@ define([
             Jupyter.notebook.move_cell_down();
         }
 
-         function renderMoveCellDown(cell, events) {
+        function renderMoveCellDown(cell, events) {
             if (readOnly) {
                 return;
             }
@@ -247,12 +238,9 @@ define([
                 dataOriginalTitle: 'Move Cell Down',
                 dataElement: 'cell-move-down',
                 ariaLabel: 'Move cell down',
-                id: handleClick(events, () => doMoveCellDown(cell))
-            }
-            return button(
-                attribs,
-                [span({ class: 'fa fa-arrow-down fa-lg' })]
-            );
+                id: handleClick(events, () => doMoveCellDown(cell)),
+            };
+            return button(attribs, [span({ class: 'fa fa-arrow-down fa-lg' })]);
         }
 
         function renderMoveToTop(cell, events) {
@@ -263,16 +251,13 @@ define([
                 return;
             }
             const attribs = {
-                ...buttonBase, 
+                ...buttonBase,
                 dataOriginalTitle: 'Move Cell To Top',
                 dataElement: 'cell-move-to-top',
                 ariaLabel: 'Move cell to top',
-                id: handleClick(events, () => doMoveCellToTop(cell))
+                id: handleClick(events, () => doMoveCellToTop(cell)),
             };
-            return button(
-                  attribs,
-                  [span({ class: 'fa fa-long-arrow-up fa-lg' })]
-            );
+            return button(attribs, [span({ class: 'fa fa-long-arrow-up fa-lg' })]);
         }
 
         function renderMoveToBottom(cell, events) {
@@ -283,23 +268,24 @@ define([
                 return;
             }
             const attribs = {
-                ...buttonBase, 
+                ...buttonBase,
                 dataOriginalTitle: 'Move Cell To Bottom',
                 dataElement: 'cell-move-to-bottom',
                 ariaLabel: 'Move cell to bottom',
-                id: handleClick(events, () => doMoveCellToBottom(cell))
+                id: handleClick(events, () => doMoveCellToBottom(cell)),
             };
-            return button(
-                  attribs,
-                  [span({ class: 'fa fa-long-arrow-down fa-lg' })]
-            );
+            return button(attribs, [span({ class: 'fa fa-long-arrow-down fa-lg' })]);
         }
 
         function handleClick(events, handler) {
-            const id = events.addEvent({ type: 'click', handler})
-            events.addEvent({type: 'dblclick', id, handler: (e) => {
-                e.stopPropagation();
-            }});
+            const id = events.addEvent({ type: 'click', handler });
+            events.addEvent({
+                type: 'dblclick',
+                id,
+                handler: (e) => {
+                    e.stopPropagation();
+                },
+            });
             return id;
         }
 
@@ -314,7 +300,7 @@ define([
                     icon: {
                         type: 'terminal',
                     },
-                    id: handleClick(events, doToggleCodeView)
+                    id: handleClick(events, doToggleCodeView),
                 });
             }
 
@@ -325,7 +311,7 @@ define([
                     icon: {
                         type: 'info',
                     },
-                    id: handleClick(events, () => _cell.showInfo())
+                    id: handleClick(events, () => _cell.showInfo()),
                 });
             }
 
@@ -337,7 +323,7 @@ define([
                         icon: {
                             type: 'table',
                         },
-                        id: handleClick(events, () => _cell.toggleBatch())
+                        id: handleClick(events, () => _cell.toggleBatch()),
                     });
                 }
 
@@ -353,7 +339,7 @@ define([
                     icon: {
                         type: 'times',
                     },
-                    id: handleClick(events, doDeleteCell)
+                    id: handleClick(events, doDeleteCell),
                 });
             }
 
@@ -448,7 +434,10 @@ define([
 
             const extraIcon = (() => {
                 if (utils.getCellMeta(_cell, 'kbase.serviceWidget')) {
-                    const extraIcon = utils.getCellMeta(_cell, 'kbase.attributes.icon.params.extraIcon');
+                    const extraIcon = utils.getCellMeta(
+                        _cell,
+                        'kbase.attributes.icon.params.extraIcon'
+                    );
                     if (!extraIcon) {
                         return '';
                     }
@@ -459,16 +448,11 @@ define([
                             class: `${cssBaseClass}__app_icon`,
                         },
                         [icon.makeGenericIcon(extraIcon.classSuffix)]
-                    )
+                    );
                 } else {
                     return '';
                 }
             })();
-
-            const cellIndex = Jupyter.notebook.find_cell_index(_cell);
-            const cellCount = Jupyter.notebook.get_cells().length;
-            const isFirst = cellIndex === 0;
-            const isLast = cellIndex === cellCount - 1;
 
             const events = Events.make({ node: container }),
                 title = getCellTitle(_cell),
@@ -512,7 +496,7 @@ define([
                                             toggleMinMax === 'maximized'
                                                 ? 'Collapse Cell'
                                                 : 'Expand Cell',
-                                        id: handleClick(events, doToggleMinMaxCell)
+                                        id: handleClick(events, doToggleMinMaxCell),
                                     }),
                                     [
                                         span({

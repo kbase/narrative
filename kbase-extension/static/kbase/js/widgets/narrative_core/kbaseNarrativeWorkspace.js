@@ -584,16 +584,16 @@ define([
             // May already be cached, so not as expensive as it looks.
             const viewersInfo = await narrativeViewers.getViewerInfo();
             const {
-                id: objectId, 
-                version: objectVersion, 
-                wsid: workspaceId, 
-                type: workspaceObjectType 
+                id: objectId,
+                version: objectVersion,
+                wsid: workspaceId,
+                type: workspaceObjectType,
             } = data.info;
 
-            const [versionlessType, _version] = workspaceObjectType.split('-');
-            const [_typeModule, typeName] = versionlessType.split('.');
+            const [versionlessType] = workspaceObjectType.split('-');
+            const [, typeName] = versionlessType.split('.');
             const viewerMethodId = viewersInfo.viewers[versionlessType];
-            const viewerSpec = viewersInfo.specs[viewerMethodId]
+            const viewerSpec = viewersInfo.specs[viewerMethodId];
 
             // We just use a simple object ref, as by definition we can only view
             // objects within this narrative.
@@ -602,13 +602,13 @@ define([
             const cellData = (() => {
                 if (viewerSpec && viewerSpec.widgets.output == 'ServiceWidget') {
                     // Extract constant params out of the viewer's output mapping.
-                    // We only support sending constant params for a viewer, as we 
+                    // We only support sending constant params for a viewer, as we
                     // generate the ref.
                     const constantParams = viewerSpec.behavior.output_mapping
                         .filter((mapping) => {
                             return 'constant_value' in mapping;
                         })
-                        .reduce((accum, {constant_value, target_property}) => {
+                        .reduce((accum, { constant_value, target_property }) => {
                             accum[target_property] = constant_value;
                             return accum;
                         }, {});
@@ -621,7 +621,7 @@ define([
                     delete constantParams.service_module_name;
                     delete constantParams.widget_name;
 
-                    const params = {...constantParams, ref};
+                    const params = { ...constantParams, ref };
 
                     const title = `${data.info.name}`;
                     const subtitle = `v${data.info.version} - ${data.info.type}`;
@@ -636,9 +636,9 @@ define([
                                 type: 'data',
                                 params: {
                                     type: typeName,
-                                    stacked: false
-                                }
-                            }
+                                    stacked: false,
+                                },
+                            },
                         },
                         metadata: {
                             service: {
@@ -651,9 +651,9 @@ define([
                                 subtitle,
                                 params,
                                 // todo: get this from the form.
-                                isDynamicService: true
-                            }
-                        }
+                                isDynamicService: true,
+                            },
+                        },
                     };
                 } else {
                     return {

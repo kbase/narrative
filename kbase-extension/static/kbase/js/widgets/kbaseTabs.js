@@ -1,35 +1,56 @@
 /*
-
     Easy widget to serve as a tabbed container.
 
-    It is an extension of the Bootstrap 3 tab (https://getbootstrap.com/docs/3.4/javascript/#tabs).
+    It is an extension of the Bootstrap 3 tab
+    (https://getbootstrap.com/docs/3.4/javascript/#tabs).
+    
+    Below is a commented usage example:
 
-    var $tabs =  new kbaseTabs($('#tabs'), {
-            canDelete : true,       // boolean; whether a tab which does not otherwise specify this option
-                                    //   will have a close button and can be removed. Defaults to false, overridden
-                                    //   if set on a tab.
-            tabs : [
-                {
-                    tab : 'T1',                                     // string; label of the tab
-                    content : $('<div></div>').html("I am a tab"),  // jquery "content" (string markup, string text, element, jquery object);
-                                                                    //   displayed as the tab pane content; note will be displayed "eagerly",
-                                                                    //   i.e. when tab is created (not on first render)
-                    canDelete : false,                              // boolean; if true, the tab will have a close button, the clicking of which will 
-                                                                    //   cause the tab navigation and tab pane to be removed.
-                },
-                {
-                    tab : 'T2',
-                    content : $('<div></div>').html("I am a tab 2"),
-                },
-                {
-                    tab : 'T3',
-                    show : true,                                    // boolean; If true the tab is shown by default. If not specified, the first tab is shown.
-                    showContentCallback: function                   // function returning jquery "content" (see above); renders tab pane content to enable
-                                                                    //   "lazy" rendering of a tab pane when the corresponding tab is
-                },
-            ],
-        }
-    );
+    const $tabs =  new kbaseTabs($('#tabs'), {
+        // boolean; whether a tab which does not otherwise specify this option
+        // will have a close button and can be removed. Defaults to false, overridden
+        // if set on a tab.
+        canDelete : true,
+    
+        tabs : [
+            {
+                // string; label of the tab
+                tab : 'T1',
+    
+                // jquery "content" (string markup, string text, element, jquery
+                // object); displayed as the tab pane content; note will be displayed
+                // "eagerly", i.e. when tab is created (not on first render)
+                content : $('<div></div>').html("I am a tab"),  
+    
+                // boolean; if true, the tab will have a close button, the clicking of
+                // which will cause the tab navigation and tab pane to be removed.
+                canDelete : true
+
+                // boolean; if true, the tab will pop up a confirmation dialog when
+                // the close button is clicked
+                confirmDelete: true
+            },
+            {
+                tab : 'T2',
+                content : $('<div></div>').html("I am a tab 2")
+            },
+            {
+                tab : 'T3',
+    
+                // boolean; If true the tab is shown by default. If not specified, the first
+                // tab is shown.
+                show : true,
+    
+                // function returning jquery "content" (see above); renders tab pane
+                // content to enable "lazy" rendering of a tab pane when the
+                // corresponding tab is shown.
+                // In modern times, this is known commonly named "render"
+                showContentCallback: function($element) {
+                    $element.html('hello');
+                }
+            }
+        ]
+    });
 */
 
 define([
@@ -89,14 +110,33 @@ define([
             $elem.append($tabset);
 
             if (tabs && tabs.length > 0) {
-                // defaults to first tab being active if none are set as active by default.
-                if (
-                    !tabs.some((tab) => {
-                        return tab.show;
-                    })
-                ) {
+                // defaults to first tab being active if none are set as active by
+                // default.
+                const shownTabCount = tabs.filter(({ show }) => show).length;
+
+                if (shownTabCount == 0) {
+                    // No tabs configured to show? Okay, then show the first one.
                     tabs[0].show = true;
+                } else if (shownTabCount > 1) {
+                    // More than one tab configured to show? This is a programmer error,
+                    // but let's be nice and only show the first, but issue an warning
+                    // to the console.
+                    console.warn(
+                        'more than one tab configured to show; only showing the first one'
+                    );
+
+                    let shownTabSelected = false;
+                    for (const tab of tabs) {
+                        if (tab.show) {
+                            if (shownTabSelected) {
+                                tab.show = false;
+                            } else {
+                                shownTabSelected = true;
+                            }
+                        }
+                    }
                 }
+
                 tabs.forEach((tab) => {
                     this.addTab(tab);
                 });
@@ -121,8 +161,6 @@ define([
                         e.preventDefault();
                         e.stopPropagation();
                         // If a delete callback is defined, avoid the confirmation dialog.
-                        // I (eap) am not sure what this logic is supposed to achieve, seems that
-                        // a delete callback and confirmation are orthogonal.
                         if (typeof tab.deleteCallback !== 'undefined') {
                             tab.deleteCallback(tab.tab);
                         } else {
@@ -173,29 +211,33 @@ define([
 
             $tabPanel.hasContent = false;
 
-            // Note - this code implements eager tab rendering if the "content" for a tab is
-            // already set. The "content" property essentially implements static tab content.
+            // Note - this code implements eager tab rendering if the "content" for a
+            // tab is already set. The "content" property essentially implements static
+            // tab content.
             //
-            // So, I was wondering why have such eager insertion of tab pane content into the DOM?
-            // It does not seem necessary for kbaseTabs logic, as there are callbacks for tab display.
+            // So, I was wondering why have such eager insertion of tab pane content
+            // into the DOM? It does not seem necessary for kbaseTabs logic, as there
+            // are callbacks for tab display.
             //
-            // However, there are tab usages in the codebase which presume that after the tab
-            // is created, that all tab content is rendered and inserted into the DOM.
+            // However, there are tab usages in the codebase which presume that after
+            // the tab is created, that all tab content is rendered and inserted into
+            // the DOM.
             //
-            // E.g. in kbaseExpressionFeatureClusters the content contains links which are treated as buttons,
-            // whose event handlers are added as the tabset is constructed.
+            // E.g. in kbaseExpressionFeatureClusters the content contains links which
+            // are treated as buttons, whose event handlers are added as the tabset is
+            // constructed.
             //
-            // There may be reasons for this, but it does seem that, given the onShown or whenShown callbacks,
-            // per-tab setup logic could (should) be implemented lazily through these callbacks, even for
-            // otherwise static content.
+            // There may be reasons for this, but it does seem that, given the onShown
+            // or whenShown callbacks, per-tab setup logic could (should) be implemented
+            // lazily through these callbacks, even for otherwise static content.
             //
             if (tab.content) {
                 $tabPanel.append(tab.content);
                 $tabPanel.hasContent = true;
             }
 
-            // We need to preserve "this" for the jquery "click" handling below, since that code
-            // uses the jquery logic for "this".
+            // We need to preserve "this" for the jquery "click" handling below, since
+            // that code uses the jquery logic for "this".
             const $widget = this;
 
             // Create the tab button itself.
@@ -264,21 +306,24 @@ define([
 
             // A tab requests that it be shown.
             //
-            // Note that the use case for this is more complicated than it may appear at first glance.
+            // Note that the use case for this is more complicated than it may appear at
+            // first glance.
             //
             // Primary use cases:
             //
-            // For tabsets which provide all tabs via the constructor and don't specify "show" on a tab,
-            // the initial tab will be set to "show" in the constructor.
+            // For tabsets which provide all tabs via the constructor and don't specify
+            // "show" on a tab, the initial tab will be set to "show" in the
+            // constructor.
             //
-            // For tabs which are dynamically added, the "show" property on that tab will indicate that it
-            // should be shown as it is added.
+            // For tabs which are dynamically added, the "show" property on that tab
+            // will indicate that it should be shown as it is added.
             //
             // Less common use cases:
             //
-            // The ui is invoked with the initial tab parameterized, and the code which creates the tabset
-            // uses that to select a tab other than the first one as selected. I'm not sure that there is
-            // any usage of this in the narrative codebase.
+            // The ui is invoked with the initial tab parameterized, and the code which
+            // creates the tabset uses that to select a tab other than the first one as
+            // selected. I'm not sure that there is any usage of this in the narrative
+            // codebase.
             //
             if (tab.show) {
                 this.showTab(tab.tab);
@@ -331,9 +376,9 @@ define([
                 })();
 
                 if ($nextTab) {
-                    // We remove the tab nav button, but hide the tab
-                    // panel - this causes it to take up the same space and become
-                    // transparent. This helps prevent the tab shrinking then expanding.
+                    // We remove the tab nav button, but hide the tab panel - this
+                    // causes it to take up the same space and become transparent. This
+                    // helps prevent the tab shrinking then expanding.
                     deleteNav();
                     $tab.css('visibility', 'hidden');
 

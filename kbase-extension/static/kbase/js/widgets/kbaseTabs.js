@@ -56,12 +56,12 @@
 define([
     'kbwidget',
     'jquery',
-    'widgets/kbaseDeletePrompt',
+    'widgets/kbaseConfirmationPrompt',
     'widgets/common/ErrorMessage',
 
     // For effect
     'bootstrap',
-], (KBWidget, $, $DeletePrompt, $ErrorMessage) => {
+], (KBWidget, $, $ConfirmationPrompt, $ErrorMessage) => {
     'use strict';
 
     const $el = (tagName) => {
@@ -398,14 +398,17 @@ define([
         },
 
         deletePrompt: function (tabName) {
-            const $deleteModal = new $DeletePrompt($el('div'), {
-                name: tabName,
-                callback: (e, $prompt) => {
-                    $prompt.closePrompt();
+            const $confirmationPrompt = new $ConfirmationPrompt($('<div>'), {
+                title: 'Confirm Tab Deletion',
+                message: `Really delete tab <b>${tabName}</b>?`,
+                verb: 'Delete Tab',
+                onConfirm: (close) => {
+                    close();
+                    // Do what you want to do
                     this.removeTab(tabName);
                 },
             });
-            $deleteModal.openPrompt();
+            $confirmationPrompt.open();
         },
 
         activeTab: function () {

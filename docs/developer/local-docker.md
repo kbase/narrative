@@ -1,6 +1,17 @@
 # Running Narrative in local Docker
 
-It is useful to run the Narrative within a local docker container. E.g. this makes it easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
+It is useful to run the Narrative within a local docker container. E.g. this makes it
+easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
+
+## Requirements
+
+- make
+- git
+- docker
+- nodejs 16
+- nvm
+
+> Sorry, this is just a quick guide, no instructions provided for installing these.
 
 ## Narrative
 
@@ -63,7 +74,7 @@ This may all be overridden.
 
 Unit tests require a running Narrative server in order to access Jupyter javascript files which are only available when the server is built and running.
 
-As a server, it can be accessed within a container is well, and for those who prefer Docker-based workflows, is quite convenient.
+As a server, it can be accessed within a container as well, and for those who prefer Docker-based workflows, is quite convenient.
 
 - run the container as specified above. For example:
 
@@ -79,6 +90,9 @@ nvm use 16
 npm install
 NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local
 ```
+
+> You are using `nvm` for node work on your host machine, aren't you? If not, please
+> install it first.
 
 To run with authentication, follow the normal instructions, but briefly:
 
@@ -108,7 +122,7 @@ add this:
     }
 ```
 
-Now your tests, if they pass, will be quite pleasant to gaze at:
+Now your tests, if they pass, will be quite pleasant to gaze upon:
 
 ```shell
 erikpearson@Eriks-MacBook-Pro narrative % NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local
@@ -124,7 +138,6 @@ TOTAL: 13 SUCCESS 13 passed      0 failed      0 skipped
 
 To focus tests, you can modify `karma.local.conf.js`. Here we have focussed on the tests that
 are directly contained within `test/unit/spec/widgets/*`, which at the moment, is just `kbaseTabs-spec.js`.
-
 
 ```javascript
  .concat([
@@ -148,6 +161,25 @@ are directly contained within `test/unit/spec/widgets/*`, which at the moment, i
             'test/unit/spec/widgets/common/*',
             // 'test/unit/spec/widgets/*'
         ]);
+```
+
+You may also focus or exclude individual tests using the usual `f*` and `x*` prefixes
+for `describe` and `it`. 
+
+E.g. to only run a test group you can focus the `describe` function by prefixing the it
+with an `f`:
+
+```javascript
+    fdescribe('The KBaseTabs widget', () => {
+      ..
+    }
+```
+
+or to exclude a cranky test you can prefix `it` with `x`:
+
+```javascript
+          xit('should render with minimal options', () => {
+            const kbaseTabs = makeKBaseTabs({
 ```
 
 ### Additional Options

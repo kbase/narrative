@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/common.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+    <meta charset="utf-8">
+    <title>KBase Demo - AlertMessage.js</title>
+</head>
+
+<body class="Demo">
+    <h1>KBase Tabs Demo</h1>
+
+    <p><a href="../index.html">Index</a></p>
+
+
+    <h4>Global tabset options</h4>
+    <table class="table table-striped" style="width: auto;">
+        <thead>
+            <tr>
+                <th>Setting</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    canDelete
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    false
+                </td>
+                <td>
+                    If set "true" all tabs are deletable, unless a tab has canDelete set explicitly to false.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    confirmDelete
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    true
+                </td>
+                <td>
+                    Prompts for confirmation of tab deletion.<br />
+                    Only effective if canDelete is true, or a tab is set as canDelete.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    tabs
+                </td>
+                <td>
+                    array of tabs
+                </td>
+                <td>
+                    empty array
+                </td>
+                <td>
+                    This is the raison d'etre for the Tabs widget - the tabs themselves.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabs structure</h4>
+
+    <p>Keys include: tab, content, show, 
+    showContentCallback, dynamicContent, onShown, canDelete, confirmDelete, deleteCallback </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value type</th>
+                <th>Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    tab
+                </td>
+                <td>
+                    string
+                </td>
+                <td>
+                    none
+                </td>
+                <td>
+                    The tab control's label
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    content
+                </td>
+                <td>
+                    string, html string, jquery object
+                </td>
+                <td>
+                    none
+                </td>
+                <td>
+                    If provided, used to set the tab's content.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    show
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    false
+                </td>
+                <td>
+                    Whether to show the tab initially or not; when adding a tab (addTab
+                    method), it is used to show the tab after adding it. If not set,
+                    showContentCallback should be provided
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    showContentCallback
+                </td>
+                <td>
+                    function
+                </td>
+                <td>
+                    none
+                </td>
+                <td>
+                    If provided, and "content" not provided, will be called and expected
+                    to return content (string, html string, jquery object).
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    dynamicContent
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    none (but naturally defaults to falsy if not provided and thus undefined)
+                </td>
+                <td>
+                    Relevant only if showContentCallback provided and content is not.
+                    If true cases the showContentCallback to be called every time the
+                    tab's panel is rendered; otherwise, the result of
+                    showContentCallback will be retained and showContentCallback will
+                    only be called once.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    canDelete
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    false
+                </td>
+                <td>
+                    If true, causes the associated tab to display a small button which
+                    will remove that tab from the tabset.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    confirmDelete
+                </td>
+                <td>
+                    boolean
+                </td>
+                <td>
+                    true
+                </td>
+                <td>
+                   If true, the default, causes the tab set to pop up a confirmation
+                   dialog when a user clicks the delete button on a tab. Only relevant
+                   if "canDelete" is true.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    deleteCallback
+                </td>
+                <td>
+                    function
+                </td>
+                <td>
+                    none
+                </td>
+                <td>
+                   If provided, will be called rather than the built-in code, when a
+                   user clicks the delete button on a tab. This means that the callback
+                   is responsible for confirmation, if it so desires, and removing the tab.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <h2>Default Tabs</h2>
+
+    <p>
+        This is just about the simplest tab usage - just create a set of static tabs, leaving
+        everything to defaults.
+    </p>
+
+    <div class="Example">
+        <div id="demo1"></div>
+    </div>
+
+    <h2>Simple Tabs with second tab selected</h2>
+
+    <p>
+        This is just a bit more complex - in this case the second tab is selected by default.
+    </p>
+
+    <div class="Example">
+        <div id="demo2"></div>
+    </div>
+
+
+    <h2>Deletable Tabs</h2>
+
+    <p>
+        By setting the "canDelete" option for the entire tabset, any tab may be deleted.
+    </p>
+    <p>
+        A tab may be set as "undeletable", as is the case for tab 2 below.
+    </p>
+    <p>
+        This is not a very common use case.
+    </p>
+
+    <div class="Example">
+        <div id="demo3"></div>
+    </div>
+
+
+    <h2>Deletable Tabs - confirmation behavior</h2>
+
+    <p>
+        Here we set deletable tabs globally again, but we expose the fact that deletable
+        tabs by default will ask for confirmation.
+    </p>
+    <p>
+        In this example, we set the "confirmDelete" option to false, which forces the
+        tabset to delete tabs without confirmation.
+    </p>
+
+    <div class="Example">
+        <div id="demo4"></div>
+    </div>
+
+
+    <h2>Dynamically Adding Tabs</h2>
+
+    <p>
+        One common use case is to dynamically add deletable tabs to the tabset, e.g.
+        when exploring data.
+    </p>
+
+    <div class="Example">
+        <div id="demo5"></div>
+    </div>
+
+
+    <h2>Empty Tabset?</h2>
+
+    <p>
+        What happens when a tabset is empty?
+    </p>
+
+    <p>
+        Go ahead, delete them all!
+    </p>
+
+    <div class="Example">
+        <div id="demo6"></div>
+    </div>
+
+
+    <h2>Tab Content Render Functions</h2>
+
+    <p>
+        Did you know that the tab content can be provided as a function as well as
+        markup or a jquery object?
+    </p>
+
+    <p>
+        The tab content can also be configured as "dynamic", meaning that it is rendered
+        whenever the tab is shown.
+    </p>
+
+    <div class="Example">
+        <div id="demo7"></div>
+    </div>
+
+    <h2>Tab rendering with error</h2>
+
+    <p>
+        If a tab's rendering function throws an error, it is displayed in place of the tab panel.
+    </p>
+
+    <div class="Example">
+        <div id="demo9"></div>
+    </div>
+
+
+    <h2>Tabs with a tab configured to "show" by default</h2>
+
+    <p>
+        When setting up a tabset, one may configure a tab to be initially shown. In this
+        example, we set the 2nd tab to initially show.
+    </p>
+
+    <div class="Example">
+        <div id="demo10"></div>
+    </div>
+
+
+    <h2>Tabs without a tab configured to "show" by default</h2>
+
+    <p>
+        When setting up a tabset, one may configure a tab to be initially shown. The most
+        common, by far!, use case for Tabs is to show the first tab by default. So that is
+        what we do, see?
+    </p>
+
+    <div class="Example">
+        <div id="demo11"></div>
+    </div>
+
+
+    <h2>Tabs with too many tabs set to show</h2>
+
+    <p>
+        What if the programmer sets not just the first tab to show, but a whole bunch? We
+        ignore all but the first and issue a warning to console for the observant
+        programmer, tsk tsk.
+    </p>
+
+    <div class="Example">
+        <div id="demo12"></div>
+    </div>
+
+    <div style="height: 4em"></div>
+
+    <script>
+        require(['narrative_paths'], () => {
+            require(['jquery', 'widgets/kbaseTabs'], ($, $KBaseTabs) => {
+                const $tabContent = (content) => {
+                    return $('<div>')
+                        .css('background-color', 'white')
+                        .css('padding', '1em')
+                        .append($(content));
+                };
+
+                const tabs1 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>'),
+                        },
+                        {
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            canDelete: false
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo1'), tabs1);
+
+
+                const tabs2 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>')
+                        },
+                        {
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            show: true
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo2'), tabs2);
+
+
+                const tabs3 = {
+                    canDelete: true,
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one; it is deletable since the entire tabset has <code>CanDelete</code> set to <code>true</code>.</p>')
+                        }, {
+
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two; it is set as non-deletable by setting <code>canDelete</code> to <code>false</code>.</p>'),
+                            canDelete: false
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo3'), tabs3);
+
+
+                const tabs4 = {
+                    canDelete: true,
+                    confirmDelete: false,
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>')
+                        }, {
+
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            canDelete: false
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo4'), tabs4);
+
+                let tabNumber = 0;
+                const tabAdder = (show, canDelete) => {
+                    tabNumber += 1;
+                    const confirmDelete = tabNumber > 4;
+                    $tabset5.addTab({
+                        tab: `Dynamic Tab ${tabNumber}`,
+                        content: $tabContent(`<p>This is dynamic tab ${tabNumber}.</p>`),
+                        canDelete, confirmDelete, show
+                    });
+                };
+
+
+                const $tabset5 = new $KBaseTabs($('#demo5'), {
+                    tabs: [
+                        {
+                            tab: 'Tab Adder',
+                            content: $tabContent(
+                                $('<div>')
+                                    .append($('<p>Hi, click the links!</p>'))
+                                    .append($('<p>').append(
+                                        $('<a>')
+                                            .attr('href', '#')
+                                            .text('Add Tab!')
+                                            .click((e) => {
+                                                e.preventDefault();
+                                                tabAdder(false, false);
+                                            })))
+                                    .append($('<p>').append(
+                                        $('<a>')
+                                            .attr('href', '#')
+                                            .text('Add Tab and show!')
+                                            .click((e) => {
+                                                e.preventDefault();
+                                                tabAdder(true, false);
+                                            })))
+                                    .append($('<p>').append(
+                                        $('<a>')
+                                            .attr('href', '#')
+                                            .text('Add Tab and show and deletable!')
+                                            .click((e) => {
+                                                e.preventDefault();
+                                                tabAdder(true, true);
+                                            })))
+                            )
+                        }, {
+
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            canDelete: false
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                });
+
+                const tabs6 = {
+                    canDelete: true,
+                    confirmDelete: false,
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>')
+                        }, {
+
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo6'), tabs6);
+
+
+                let tab7Counter = 0;
+                const tabs7 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            showContentCallback: ($panel) => {
+                                $panel.html($tabContent(`
+                                <p>
+                                    So this content was rendered by the awkwardly named
+                                    "showContentCallback" property of a tab.
+                                 </p>
+                            `));
+                            }
+                        }, {
+
+                            tab: 'Tab Two',
+                            dynamicContent: true,
+                            showContentCallback: ($panel) => {
+                                $panel.html($tabContent(`
+                                <p>
+                                    This is a dynamic, rendered tab. Each time it is displayed,
+                                    the "showContentCallback" function is called.
+                                </p>
+                                <p>
+                                    I've been called ${++tab7Counter} times.
+                                 </p>
+                            `));
+                            }
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo7'), tabs7);
+
+
+                let tabs9ErrorCountDynamic = 0;
+                let tabs9ErrorCountNonDynamic = 0;
+                const tabs9 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            showContentCallback: () => {
+                                return $tabContent(`
+                                <p>
+                                    So this content was rendered by the awkwardly named
+                                    "showContentCallback" property of a tab.
+                                 </p>
+                            `);
+                            }
+                        }, {
+                            tab: 'Tab Two',
+                            showContentCallback: () => {
+                                throw new Error('So this render function should throw an error.');
+                            }
+                        }, {
+                            tab: 'Tab Three',
+                            showContentCallback: () => {
+                                throw new Error(`So this render tab is not dynamic; it has been rendered ${++tabs9ErrorCountNonDynamic} ${tabs9ErrorCountNonDynamic === 1 ? 'time' : 'times'}`);
+                            }
+                        }, {
+                            tab: 'Tab Four',
+                            dynamicContent: true,
+                            showContentCallback: ($panel) => {
+                                if (++tabs9ErrorCountDynamic % 2) {
+                                    return $tabContent(`
+                                  <p>
+                                    This content will render every other time; the other times are an error.
+                                  </p>
+                                  <p>
+                                    This is enabled by the "dynamicContent" option set on this tab.
+                                  </p>
+                                `);
+                                }
+                                throw new Error(`So this tab is dynamic; it has been rendered ${tabs9ErrorCountDynamic} ${tabs9ErrorCountDynamic === 1 ? 'time' : 'times'}`);
+                            }
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo9'), tabs9);
+
+                const tabs10 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>'),
+                        },
+                        {
+                            tab: 'Tab Two (show me)',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            show: true
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo10'), tabs10);
+
+                const tabs11 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One',
+                            content: $tabContent('<p>This is tab one.</p>'),
+                        },
+                        {
+                            tab: 'Tab Two',
+                            content: $tabContent('<p>This is tab two.</p>')
+                        },
+                        {
+                            tab: 'Tab Three',
+                            content: $tabContent('<p>This is tab three.</p>')
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo11'), tabs11);
+
+                const tabs12 = {
+                    tabs: [
+                        {
+                            tab: 'Tab One (show me)',
+                            content: $tabContent('<p>This is tab one.</p>'),
+                            show: true
+                        },
+                        {
+                            tab: 'Tab Two (show me too)',
+                            content: $tabContent('<p>This is tab two.</p>'),
+                            show: true
+                        },
+                        {
+                            tab: 'Tab Three  (show me 3!)',
+                            content: $tabContent('<p>This is tab three.</p>'),
+                            show: true
+                        }
+                    ]
+                };
+                new $KBaseTabs($('#demo12'), tabs12);
+
+            });
+        });
+    </script>
+</body>
+
+</html>

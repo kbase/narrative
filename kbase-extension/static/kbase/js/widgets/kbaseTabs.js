@@ -56,12 +56,13 @@
 define([
     'kbwidget',
     'jquery',
+    'uuid',
     'widgets/kbaseConfirmationPrompt',
     'widgets/common/ErrorMessage',
 
     // For effect
     'bootstrap',
-], (KBWidget, $, $ConfirmationPrompt, $ErrorMessage) => {
+], (KBWidget, $, UUID, $ConfirmationPrompt, $ErrorMessage) => {
     'use strict';
 
     const $el = (tagName) => {
@@ -145,16 +146,8 @@ define([
 
         renderDeleteTabButton: function (tab) {
             return $el('button')
-                .addClass('btn btn-default btn-xs')
-                .append($el('span').append('&#x2716;'))
-                .css('padding', '0px')
-                .css('width', '12px')
-                .css('height', '12px')
-                .css('margin-left', '10px')
-                .css('font-size', '10px')
-                .css('margin-bottom', '3px')
-                .css('outline', 'none')
-                .css('border', '0')
+                .addClass('btn btn-default btn-xs kbaseTabs-delete-button')
+                .append($el('span').addClass('fa fa-times'))
                 .bind(
                     'click',
                     $.proxy(function (e) {
@@ -206,8 +199,10 @@ define([
             if (typeof tab.canDelete === 'undefined') {
                 tab.canDelete = this.options.canDelete;
             }
-
-            const $tabPanel = $el('div').attr('role', 'tabpanel').addClass('tab-pane fade');
+            
+            const $tabPanel = $el('div')
+                .attr('role', 'tabpanel')
+                .addClass('tab-pane fade');
 
             $tabPanel.hasContent = false;
 
@@ -243,6 +238,7 @@ define([
             // Create the tab button itself.
             const $navButton = $el('a')
                 .attr('href', '#')
+                .addClass('kbaseTabs-tab')
                 .text(tab.tab)
                 .attr('data-tab', tab.tab)
                 .bind('click', function (e) {

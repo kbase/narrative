@@ -394,7 +394,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo1'), tabs1);
+                const _demo1 = new $KBaseTabs($('#demo1'), tabs1);
 
 
                 const tabs2 = {
@@ -414,7 +414,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo2'), tabs2);
+                const _demo2 = new $KBaseTabs($('#demo2'), tabs2);
 
 
                 const tabs3 = {
@@ -435,7 +435,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo3'), tabs3);
+                const _demo3 = new $KBaseTabs($('#demo3'), tabs3);
 
 
                 const tabs4 = {
@@ -457,13 +457,13 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo4'), tabs4);
+                const _demo4 = new $KBaseTabs($('#demo4'), tabs4);
 
                 let tabNumber = 0;
                 const tabAdder = (show, canDelete) => {
                     tabNumber += 1;
                     const confirmDelete = tabNumber > 4;
-                    $tabset5.addTab({
+                    tabset5.addTab({
                         tab: `Dynamic Tab ${tabNumber}`,
                         content: $tabContent(`<p>This is dynamic tab ${tabNumber}.</p>`),
                         canDelete, confirmDelete, show
@@ -471,7 +471,7 @@
                 };
 
 
-                const $tabset5 = new $KBaseTabs($('#demo5'), {
+                const tabset5 = new $KBaseTabs($('#demo5'), {
                     tabs: [
                         {
                             tab: 'Tab Adder',
@@ -534,7 +534,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo6'), tabs6);
+                const _demo6 = new $KBaseTabs($('#demo6'), tabs6);
 
 
                 let tab7Counter = 0;
@@ -568,7 +568,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo7'), tabs7);
+                const _demo7 = new $KBaseTabs($('#demo7'), tabs7);
 
 
                 let tabs9ErrorCountDynamic = 0;
@@ -614,7 +614,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo9'), tabs9);
+                const _demo8 =new $KBaseTabs($('#demo9'), tabs9);
 
                 const tabs10 = {
                     tabs: [
@@ -633,7 +633,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo10'), tabs10);
+                const _demo10 = new $KBaseTabs($('#demo10'), tabs10);
 
                 const tabs11 = {
                     tabs: [
@@ -651,7 +651,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo11'), tabs11);
+                const _demo11 = new $KBaseTabs($('#demo11'), tabs11);
 
                 const tabs12 = {
                     tabs: [
@@ -672,7 +672,7 @@
                         }
                     ]
                 };
-                new $KBaseTabs($('#demo12'), tabs12);
+                const _temo12 = new $KBaseTabs($('#demo12'), tabs12);
 
             });
         });

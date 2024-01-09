@@ -1,6 +1,6 @@
 'use strict';
 
-const { login, openNarrative, sendString, clickWhenReady } = require('../wdioUtils.js');
+const { login, openNarrative, sendString, clickWhenReady, KBASE_ENV } = require('../wdioUtils.js');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -652,7 +652,7 @@ const allTestCases = {
     },
 };
 
-const testCases = allTestCases[browser.config.testParams.ENV];
+const testCases = allTestCases[KBASE_ENV];
 
 async function testField({ container, id, label, value }) {
     const lineageLabel = await container.$(

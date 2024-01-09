@@ -1,5 +1,5 @@
 __all__ = ["magics", "common", "handlers", "contents", "services", "widgetmanager"]
-__version__ = "5.1.3"
+__version__ = "5.2.1"
 
 
 def version():

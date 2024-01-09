@@ -1,10 +1,9 @@
 import clustergrammer_widget
+import pandas as pd
 from clustergrammer_widget.clustergrammer import Network
 
-import pandas as pd
-
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.system import system_variable
 
 
 def view_as_clustergrammer(
@@ -79,14 +78,14 @@ def get_df(ws_ref, col_attributes=(), row_attributes=(), clustergrammer=False):
 
 
 def _is_compatible_matrix(obj):
-    try:
-        assert "data" in obj
-        assert "col_ids" in obj["data"]
-        assert "row_ids" in obj["data"]
-        assert "values" in obj["data"]
-    except AssertionError:
-        return False
-    return True
+    if (
+        "data" in obj
+        and "col_ids" in obj["data"]
+        and "row_ids" in obj["data"]
+        and "values" in obj["data"]
+    ):
+        return True
+    return False
 
 
 def _get_categories(

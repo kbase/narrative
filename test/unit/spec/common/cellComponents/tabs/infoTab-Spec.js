@@ -42,6 +42,12 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                     TAG: 'blah',
                     VERSION: 'halb',
                 },
+                FOUR: {
+                    ID: 'fourapp',
+                    NAME: 'The Fourth App',
+                    TAG: 'dev',
+                    VERSION: '5.0.0',
+                },
             },
             DOCSTRING = 'View full documentation',
             FONT_TAG_CONTENTS = 'Some text in a font tag';
@@ -108,6 +114,28 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
             app: {
                 spec: {
                     full_info: {
+                        description:
+                            'Contains <i>safe</i> and <script>unsafe</script>, and <a href="http://kbase.us/data-upload-download-guide/">docs</a>',
+                        name: APP.THREE.NAME,
+                        authors: [],
+                        id: APP.THREE.ID,
+                        ver: APP.THREE.VERSION,
+                        tag: APP.THREE.TAG,
+                    },
+                    parameters: [],
+                },
+            },
+        };
+
+        appData[APP.FOUR.ID] = {
+            app: {
+                spec: {
+                    full_info: {
+                        // triggers error in domPurity's sanitize, as a "toString" is expected to
+                        // be a method (returning a string) if the provided "string" is an object.
+                        // If there is no toString property, it is converted to a string, which would
+                        // fail the test for different reasons.
+                        description: { toString: 123 },
                         name: APP.THREE.NAME,
                         authors: [],
                         id: APP.THREE.ID,
@@ -125,7 +153,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
             },
         };
 
-        ['ONE', 'TWO', 'THREE'].forEach((number) => {
+        ['ONE', 'TWO', 'THREE', 'FOUR'].forEach((number) => {
             appData.multi.app.specs[APP[number].ID] = appData[APP[number].ID].app.spec;
         });
 
@@ -354,6 +382,26 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                         `/#appcatalog/app/${APP.THREE.ID}/${APP.THREE.TAG}`
                     );
                 });
+                it('displays the description', () => {
+                    const description = container.querySelector(
+                        `.${cssBaseClass}__description`
+                    ).innerHTML;
+                    expect(description).toContain('safe');
+                    expect(description).not.toContain('unsafe');
+                    expect(description).toContain(
+                        'https://docs.kbase.us/data/upload-download-guide'
+                    );
+                    expect(description).toContain('target="_blank"');
+                });
+            }
+
+            function appFourTests() {
+                it('displays the description error message', () => {
+                    const description = container.querySelector(
+                        `.${cssBaseClass}__description`
+                    ).innerHTML;
+                    expect(description).toContain('Error in app description');
+                });
             }
 
             afterEach(() => {
@@ -382,6 +430,14 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                     container = this.container;
                 });
                 appThreeTests();
+            });
+
+            describe('app four info, single app mode', () => {
+                beforeEach(async function () {
+                    await createInfoTab(this, { model: appModels[APP.FOUR.ID] });
+                    container = this.container;
+                });
+                appFourTests();
             });
 
             describe('app one info, multi-app mode', () => {

@@ -1,15 +1,17 @@
 import unittest
+
 from biokbase.narrative.contents.updater import (
-    update_narrative,
     find_app_info,
     suggest_apps,
+    update_narrative,
 )
+
 from .util import ConfigTests
 
 
 class KeyErrorTest(ValueError):
-    def __init__(self, keyname, source):
-        ValueError.__init__(self, "Key {} not found in {}".format(keyname, source))
+    def __init__(self, keyname, source) -> None:
+        ValueError.__init__(self, f"Key {keyname} not found in {source}")
 
 
 class UpdaterTestCase(unittest.TestCase):
@@ -120,35 +122,33 @@ class UpdaterTestCase(unittest.TestCase):
 
     def test_update_narrative(self):
         nar_update = update_narrative(self.test_nar)
-        self.assertTrue(self.validate_narrative(nar_update))
+        assert self.validate_narrative(nar_update)
 
     def test_update_narrative_big(self):
         nar_update = update_narrative(self.test_nar_big)
-        self.assertTrue(self.validate_narrative(nar_update))
+        assert self.validate_narrative(nar_update)
 
     def test_update_narrative_poplar(self):
         nar_update = update_narrative(self.test_nar_poplar)
-        self.assertTrue(self.validate_narrative(nar_update))
+        assert self.validate_narrative(nar_update)
 
     def test_find_app(self):
         info = find_app_info("NarrativeTest/test_input_params")
-        self.assertTrue(isinstance(info, dict))
+        assert isinstance(info, dict)
 
     def test_find_bad_app(self):
-        self.assertIsNone(find_app_info("NotAnAppModule"))
+        assert find_app_info("NotAnAppModule") is None
 
     def test_suggest_apps(self):
         obsolete_id = "build_a_metabolic_model"
         suggestions = suggest_apps(obsolete_id)
-        self.assertTrue(isinstance(suggestions, list))
-        self.assertEqual(
-            suggestions[0]["spec"]["info"]["id"], "fba_tools/build_metabolic_model"
-        )
+        assert isinstance(suggestions, list)
+        assert suggestions[0]["spec"]["info"]["id"] == "fba_tools/build_metabolic_model"
 
     def test_suggest_apps_none(self):
         suggestions = suggest_apps("NotAnAppModule")
-        self.assertTrue(isinstance(suggestions, list))
-        self.assertEqual(len(suggestions), 0)
+        assert isinstance(suggestions, list)
+        assert len(suggestions) == 0
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+import os
+
 # Configuration file for ipython-notebook.
 
 c = get_config()  # noqa: F821
@@ -124,7 +126,7 @@ c.NotebookApp.tornado_settings = {
 # c.NotebookApp.kernel_manager_class = <class 'IPython.html.services.kernels.kernelmanager.MappingKernelManager'>
 
 # The file where the cookie secret is stored.
-c.NotebookApp.cookie_secret_file = u"/tmp/notebook_cookie"
+c.NotebookApp.cookie_secret_file = "/tmp/notebook_cookie"
 
 # Supply SSL options for the tornado HTTPServer. See the tornado docs for
 # details.
@@ -192,8 +194,6 @@ c.NotebookApp.cookie_secret_file = u"/tmp/notebook_cookie"
 # If specified, load this config file in addition to any other IPython config.
 # c.NotebookApp.extra_config_file = u''
 
-
-import os
 
 try:
     myfile = __file__

@@ -1,13 +1,148 @@
-### OVERVIEW
+# OVERVIEW
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
 This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
 
-## Unreleased
+## Version unreleased
 
--   PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
 -   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed; previously it showed an empty space.
+
+### Dependency Changes
+
+- Python dependency updates
+  - black: 23.7.0 -> 23.11.0
+  - pytest: 7.4.0 -> 7.4.3
+
+## Version 5.2.1
+-   PTV-1900 - a previous bugfix exposed an issue in the SpeciesTreeBuilder apps. This provides a workaround to keep those apps running.
+-   PTV-1687 - update favicon
+
+### Dependency Changes
+
+- Python dependency updates
+  - coverage: 7.2.7 -> 7.3.1
+  - cryptography: 41.0.2 -> 41.0.4
+  - pygments: 2.15.1 -> 2.16.1
+  - pymongo: 4.4.1 -> 4.5.0
+
+## Version 5.2.0
+A new feature here is that app cells now store object information internally as UPAs, instead of object names. This will lead to more reproducible results, and is on the path to fixing the long-standing copy-of-a-copy problem.
+
+-   PTV-1810 - address object name display issues in the View Configure tab of app cells. This now saves all app inputs as UPAs in the cell. It also includes an update to input transforms to properly convert from UPAs <-> names or references as appropriate before starting the app.
+-   PTV-1875 - fix public data paging issue by removing paging from workspace data sources
+-   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
+-   PTV-1878 - fix some failing front end unit tests
+-   UIP-28 - update Google Analytics tags to GA4 properties
+-   UIP-36 - add support for anonymous user ids sent to Google Analytics
+
+### Dependency Changes
+
+- Javascript dependency updates
+  - @wdio/browserstack-service: 8.10.2 -> 8.12.2,
+  - @wdio/cli: 8.10.2 -> 8.12.2
+  - @wdio/local-runner: 8.10.2 -> 8.12.1,
+  - @wdio/mocha-framework: 8.10.2 -> 8.12.1,
+  - @wdio/selenium-standalone-service: 8.10.2 -> 8.14.0,
+  - @wdio/spec-reporter: 8.10.2 -> 8.12.2,
+  - chromedriver: ^112.0.0 -> ^114.0.0
+  - commander: 10.0.0 -> 11.0.0
+  - cssnano: 6.0.0 -> 6.0.1
+  - datatables.net-buttons-bs: 2.2.3 -> 2.4.1
+  - dompurify: none -> 2.3.8
+  - eslint: 8.34.0 -> 8.46.0
+  - grunt-stylelint: ^0.16.0 -> ^0.19.0
+  - karma: ^6.3.16 -> 6.4.2
+  - karma-jasmine-html-reporter: 2.0.0 -> 2.1.0
+  - numeral: 1.5.0 -> 2.0.6
+  - postcss: ^8.3.2 -> 8.4.27
+  - postcss-discard-comments: ^5.1.2 -> 6.0.0
+  - prettier: 2.7.1 -> 3.0.0
+  - puppeteer: 19.8.2 -> 20.8.2
+  - pure-uuid: 1.6.2 -> 1.6.4
+  - sass: 1.60.0 -> 1.63.6
+  - selenium-webdriver: 4.8.0 -> 4.10.0
+  - stylelint: ^13.13.1 -> 15.10.2
+  - stylelint-config-recommended: ^5.0.0 -> ^13.0.0
+  - stylelint-config-sass-guidelines: ^8.0.0 -> ^10.0.0
+  - stylelint-config-standard: ^22.0.0 -> ^34.0.0
+  - webdriverio: 8.10.2 -> 8.12.3
+
+- Python dependency updates
+  - beautifulsoup4: 4.12.1 -> 4.12.2
+  - black: 23.3.0 -> 23.7.0
+  - coverage: 7.2.2 -> 7.2.7
+  - cryptography: 40.0.1 -> 41.0.2
+  - flake8: 6.0.0 -> 6.1.0
+  - isort: none -> 5.18.0
+  - markupsafe: 2.1.2 -> 2.1.3
+  - pygments: 2.14.0 -> 2.15.1
+  - pymongo: 4.3.3 -> 4.4.1
+  - pyopenssl: 23.1.1 -> 23.2.0
+  - pytest-cov: 4.0.0 -> 4.1.0
+  - pytest: 7.2.2 -> 7.4.0
+  - pyyaml: 6.0.0 -> 6.0.1
+  - requests: 2.28.2 -> 2.31.0
+  - requests-mock: none -> 1.11.0
+
+## Version 5.1.4
+-    PTV-1234 - add padding to the bottom of the data list so that the bottom-most row can slide up above the add data button and show its ellipsis icon.
+-    PTV-1793 - fix problem where users could sometimes not enter spaces in bulk import cells.
+
+Dependency Changes
+
+-   Github Actions
+
+    -   actions/checkout v2 -> v3
+    -   actions/setup-node v2 -> v3
+    -   codecov/codecov-action v2 -> v3
+    -   docker/setup-qemu-action v1 -> v2
+    -   docker/setup-buildx-action v1 -> v2
+    -   docker/login-action v1 -> v2
+    -   docker/build-push-action v2 -> v3
+
+-   Python dependency updates
+
+    -   beautifulsoup4 4.11.1 -> 4.12.0
+    -   black 22.8.0 -> 23.3.0
+    -   coverage 6.4.4 -> 7.2.2
+    -   cryptography 38.0.1 -> 40.0.1
+    -   flake8 3.8.4 -> 6.0.0
+    -   idna 3.3 -> 3.4
+    -   jupyter-console 6.4.3 -> 6.6.3
+    -   markupsafe 2.0.1 -> 2.1.2
+    -   pygments 2.13.0 -> 2.14.0
+    -   pymongo 4.1.0 -> 4.3.3
+    -   pyopenssl 22.0.0 -> 23.1.1
+    -   pytest 7.0.1 -> 7.2.2
+    -   pytest-cov 3.0.0 -> 4.0.0
+    -   requests 2.28.1 -> 2.28.2
+    -   terminado 0.12.1 -> 0.17.1
+
+-   Javascript dependency updates
+    -   @wdio/browserstack-service 7.20.1 -> 8.3.9
+    -   @wdio/cli 7.25.0 -> 8.3.9
+    -   @wdio/local-runner 7.25.0 -> 8.3.9
+    -   @wdio/mocha-framework 7.20.0 -> 8.3.0
+    -   @wdio/selenium-standalone-service 7.19.5 -> 8.3.2
+    -   @wdio/spec-reporter 7.25.0 -> 8.6.8
+    -   chromedriver 105.0.0 -> 110.0.0
+    -   commander 9.3.0 -> 10.0.0
+    -   cssnano 5.1.13 -> 6.0.0
+    -   eslint 8.16.0 -> 8.34.0
+    -   grunt-shell 3.0.1 -> 4.0.0
+    -   husky 7.0.4 -> 8.0.3
+    -   jasmine-core 4.4.0 -> 4.6.0
+    -   karma-jasmine 5.0.1 -> 5.1.0
+    -   plotly.js-dist-min 1.50.0 -> 2.18.0
+    -   postcss-scss 4.0.4 -> 4.0.6
+    -   puppeteer 18.0.5 -> 19.8.2
+    -   requirejs-domready 2.0.1 -> 2.0.3
+    -   sass 1.55.0 -> 1.60.0
+    -   selenium-standalone 8.2.0 -> 8.3.0
+    -   selenium-webdriver 4.4.0 -> 4.8.0
+    -   wdio-chromedriver-service 7.3.2 -> 8.1.1
+    -   webdriverio 7.20.1 -> 8.3.9
 
 ## Version 5.1.3
 
@@ -47,7 +182,7 @@ Dependency Changes
     -   terser 5.13.1 -> 5.15.0
     -   underscore 1.13.3 -> 1.13.6
 
-Removed dependencies  
+Removed dependencies
 **note** a number of these were removed from the narrative, but left in the narrative base image. The `requirements.txt` in this repo is intended for those packages required for the narrative to run. Any other packages, including scientific programming ones, useful for either KBase Apps or other manual use in Narrative code cells are included in the narrative base image (see [narrative-base-image](https://github.com/kbase/narrative-base-image) for more details). Also note that most of these are duplicated and included in that image - these are still necessary for narrative functionality when installed locally (i.e. not in a Docker image), so they're left in.
 
 -   plotly - not necessary for core narrative functionality, moved to narrative base image
@@ -523,7 +658,7 @@ Dependency Changes
 -   SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.
 -   Re-enable security measure that prevents Markdown cells from rendering JavaScript. We're about a year past the point when that was necessary.
 -   SCT-628 - adds a viewer for the CompoundSet object.
--   Bump Tornado dependency to 5.0.0
+-       - Tornado dependency to 5.0.0
 -   SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 -   SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
 -   SCT-590 - add cache busting to the public data mapping lookup. No more force-refreshing!

@@ -14,6 +14,7 @@ define([
     'common/spec',
     'common/ui',
     'common/cellUtils',
+    'common/jupyter',
     'util/appCellUtil',
     'util/string',
     'common/pythonInterop',
@@ -45,6 +46,7 @@ define([
     Spec,
     UI,
     Utils,
+    JupyterUtil,
     BulkImportUtil,
     StringUtil,
     PythonInterop,
@@ -693,6 +695,8 @@ define([
                 cell,
                 bus: runtime.bus(),
             });
+
+            JupyterUtil.disableKeyListenersForCell(cell);
 
             render()
                 .then(() => {

@@ -1,11 +1,11 @@
-class MockComm(object):
+class MockComm:
     """
     Mock class for ipython.kernel.Comm
     This keeps the last message that was sent, so it can be retrieved and
     analyzed during the test.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Mock the init"""
         self.messages = []
 

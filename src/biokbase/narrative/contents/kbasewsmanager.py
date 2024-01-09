@@ -14,36 +14,27 @@ Copyright (C) 2013 The KBase Project
 Distributed unspecified open source license as of 9/27/2013
 
 """
-# System
-import os
-import json
-import re
 import itertools
+import json
+import os
+import re
 
-# Third-party
-from tornado.web import HTTPError
-
-# IPython
-# from IPython import nbformat
 import nbformat
-from nbformat import validate, ValidationError
+from nbformat import ValidationError, validate
 from notebook.services.contents.manager import ContentsManager
-from traitlets.traitlets import Unicode, Dict, List
+from tornado.web import HTTPError
+from traitlets.traitlets import List, Unicode
 
-# Local
-from .manager_util import base_model
-from .narrativeio import KBaseWSManagerMixin
-from .kbasecheckpoints import KBaseCheckpoints
-from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common import util
+from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.kblogging import get_narrative_logger
 from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.services.user import UserService
 
-# -----------------------------------------------------------------------------
-# Classes
-# -----------------------------------------------------------------------------
+from .kbasecheckpoints import KBaseCheckpoints
+from .manager_util import base_model
+from .narrativeio import KBaseWSManagerMixin
 
 
 class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
@@ -135,9 +126,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Return the current user id (if logged in), or None"""
         return util.kbase_env.user
 
-    def _clean_id(self, id):
+    def _clean_id(self, dirty_id):
         """Clean any whitespace out of the given id"""
-        return self.wsid_regex.sub("", id.replace(" ", "_"))
+        return self.wsid_regex.sub("", dirty_id.replace(" ", "_"))
 
     #####
     # API part 1: methods that must be implemented in subclasses.
@@ -148,8 +139,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         that dir, so it's real."""
         if not path:
             return True
-        else:
-            return False
+        return False
 
     def is_hidden(self, path):
         """We can only see what gets returned from Workspace lookup,
@@ -175,13 +165,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                         path
                     ),
                 )
-            else:
-                raise HTTPError(
-                    err.http_code,
-                    "An error occurred while trying to find the Narrative with id {}".format(
-                        path
-                    ),
-                )
+            raise HTTPError(
+                err.http_code,
+                "An error occurred while trying to find the Narrative with id {}".format(
+                    path
+                ),
+            )
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)
@@ -213,7 +202,11 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             raise HTTPError(404, "Invalid Narrative path {}".format(path))
         try:
             return NarrativeRef(
-                dict(wsid=m.group("wsid"), objid=m.group("objid"), ver=m.group("ver"))
+                {
+                    "wsid": m.group("wsid"),
+                    "objid": m.group("objid"),
+                    "ver": m.group("ver"),
+                }
             )
         except RuntimeError as e:
             raise HTTPError(500, str(e))
@@ -296,7 +289,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
             nb = result[0]
             self.validate_notebook_model(model)
-            validation_message = model.get("message", None)
+            validation_message = model.get("message")
 
             model = self.get(path, content=False)
             if validation_message:
@@ -405,7 +398,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             )
         return model
 
-    def new_untitled(self, path="", type="", ext=""):
+    def new_untitled(self, path="", model_type="", ext=""):
         """Create a new untitled file or directory in path
 
         path must be a directory
@@ -419,8 +412,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             raise HTTPError(404, "No such directory: %s" % path)
 
         model = {}
-        if type:
-            model["type"] = type
+        if model_type:
+            model["type"] = model_type
 
         if ext == ".ipynb":
             model.setdefault("type", "notebook")

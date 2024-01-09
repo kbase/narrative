@@ -279,6 +279,27 @@ define([
                 ).toThrow();
             });
 
+            it('should disable the Jupyter keyboard manager on focus', () => {
+                const cell = Mocks.buildMockCell('code');
+                // mock the global Jupyter keyboard manager.
+                Jupyter.keyboard_manager = {
+                    disable: () => {},
+                };
+                spyOn(Jupyter.keyboard_manager, 'disable');
+                cell.element[0].dispatchEvent(new Event('focus'));
+                // shouldn't get disabled on a plain non-bulk-import cell
+                expect(Jupyter.keyboard_manager.disable).not.toHaveBeenCalled();
+
+                BulkImportCell.make({
+                    cell,
+                    importData: fakeInputs,
+                    specs: fakeSpecs,
+                    initialize: true,
+                });
+                cell.element[0].dispatchEvent(new Event('focus'));
+                expect(Jupyter.keyboard_manager.disable).toHaveBeenCalledTimes(1);
+            });
+
             describe('xsv specific setup', () => {
                 const inFiles = ['dvh.fasta', 'styphi.fasta', 'mex.fasta'],
                     appParams1 = {

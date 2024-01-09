@@ -7,12 +7,14 @@ Updated 1/31/2015
 """
 
 from __future__ import print_function
+
+import argparse
 import json
 import os
+import re
 import subprocess
 import sys
-import argparse
-import re
+
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 default_cfg_file = 'config.json.templ'
 

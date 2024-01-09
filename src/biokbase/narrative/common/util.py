@@ -6,18 +6,15 @@ __date__ = "1/6/14"
 
 import os
 import re
-import requests
+
 from setuptools import Command
-from .kvp import KVP_EXPR, parse_kvp
-from biokbase.workspace.client import Workspace as WS2
-from biokbase.workspace.baseclient import ServerError
 
 
 def kbase_debug_mode():
     return bool(os.environ.get("KBASE_DEBUG", None))
 
 
-class _KBaseEnv(object):
+class _KBaseEnv:
     """Single place to get/set KBase environment variables.
 
     Also act as a dict for LogAdapter's "extra" arg.
@@ -35,6 +32,7 @@ class _KBaseEnv(object):
     env_workspace = "KB_WORKSPACE_ID"
     env_user = "KB_USER_ID"
     env_env = "KB_ENVIRONMENT"
+    env_anon_user_id = "KB_ANON_USER_ID"
 
     _defaults = {
         "auth_token": "none",
@@ -44,14 +42,14 @@ class _KBaseEnv(object):
         "user": "anonymous",
         "workspace": "none",
         "env": "none",
+        "anon_user_id": "none",
     }
 
     def __getattr__(self, name):
         ename = "env_" + name
         if ename in _KBaseEnv.__dict__:
             return os.environ.get(getattr(self.__class__, ename), self._defaults[name])
-        else:
-            raise KeyError("kbase_env:{}".format(name))
+        raise KeyError("kbase_env:{}".format(name))
 
     def __setattr__(self, name, value):
         ename = "env_" + name

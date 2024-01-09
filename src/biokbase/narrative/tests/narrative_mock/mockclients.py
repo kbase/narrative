@@ -1,24 +1,24 @@
-from ..util import ConfigTests
-from biokbase.workspace.baseclient import ServerError
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 import copy
 import functools
 from unittest.mock import call
 
-from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.narrative.jobs.job import COMPLETED_STATUS
-
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
+from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
 from biokbase.narrative.tests.job_test_constants import (
-    TEST_JOBS,
-    MAX_LOG_LINES,
-    JOB_COMPLETED,
-    BATCH_RETRY_RUNNING,
     BATCH_PARENT,
+    BATCH_RETRY_RUNNING,
+    JOB_COMPLETED,
+    MAX_LOG_LINES,
     READS_OBJ_1,
     READS_OBJ_2,
+    TEST_JOBS,
     generate_error,
 )
-from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
+from biokbase.workspace.baseclient import ServerError
+
+from src.biokbase.narrative.tests.util import ConfigTests
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -29,11 +29,11 @@ NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
-def generate_ee2_error(fn):
+def generate_ee2_error(fn: str) -> EEServerError:
     return EEServerError("JSONRPCError", -32000, fn + " failed")
 
 
-def get_nar_obj(i):
+def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
     return [
         i,
         "My_Test_Narrative",
@@ -81,7 +81,7 @@ class MockClients:
     config = ConfigTests()
     _job_state_data = TEST_JOBS
 
-    def __init__(self, client_name=None, token=None):
+    def __init__(self, client_name=None, token=None) -> None:
         if token is not None:
             assert isinstance(token, str)
         self.client_name = client_name
@@ -132,13 +132,13 @@ class MockClients:
                 "unlocked",
                 {},
             ]
-        elif wsid == 789:
+        if wsid == 789:
             raise ServerError(
                 "JSONRPCError", -32500, "User you may not read workspace 789"
             )
-        elif wsid == 890:
+        if wsid == 890:
             raise ServerError("JSONRPCError", -32500, "Workspace 890 is deleted")
-        elif name != "invalid_workspace":
+        if name != "invalid_workspace":
             return [
                 wsid,
                 name,
@@ -154,8 +154,7 @@ class MockClients:
                     "narrative_nice_name": "Fake",
                 },
             ]
-        else:
-            raise Exception("not found")
+        raise Exception("not found")
 
     def get_object_info_new(self, params):
         """
@@ -233,13 +232,23 @@ class MockClients:
                 None,
             ]
         ]
-        paths = [["18836/5/1"]]
+        upa = "18836/5/1"
         num_objects = len(params.get("objects", [0]))
-        return {"infos": infos * num_objects, "paths": paths * num_objects}
+        paths = []
+        for obj_ident in params.get("objects", []):
+            ref_path = []
+            if "ref" in obj_ident and ";" in obj_ident["ref"]:
+                num_steps = len(obj_ident["ref"].split(";"))
+                for step in range(num_steps - 1):
+                    i = step + 1
+                    ref_path.append(f"{i}/{i}/{i}")
+            ref_path.append(upa)
+            paths.append(ref_path)
+        return {"infos": infos * num_objects, "paths": paths}
 
     def list_objects(self, params):
         ws_ids = params["ids"]
-        return [get_nar_obj(int(id)) for id in ws_ids]
+        return [get_nar_obj(int(ws_id)) for ws_id in ws_ids]
 
     # ----- Execution Engine (EE2) functions -----
 
@@ -262,7 +271,7 @@ class MockClients:
 
     def retry_jobs(self, params):
         job_ids = params["job_ids"]
-        results = list()
+        results = []
         for job_id in job_ids:
             output = {"job_id": job_id}
             if job_id in RETRIED_JOBS:
@@ -282,9 +291,7 @@ class MockClients:
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        job_state = self.job_state_data.get(
-            job_id, {"job_id": job_id, "status": "unmocked"}
-        )
+        job_state = self.job_state_data.get(job_id, {"job_id": job_id})
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
                 if f in job_state:
@@ -293,7 +300,7 @@ class MockClients:
 
     def check_jobs(self, params):
         job_ids = params.get("job_ids")
-        job_states = dict()
+        job_states = {}
         for job in job_ids:
             job_states[job] = self.check_job(
                 {"job_id": job, "exclude_fields": params.get("exclude_fields", [])}
@@ -316,12 +323,10 @@ class MockClients:
 
         def log_gen(log_params, total_lines=MAX_LOG_LINES):
             skip = log_params.get("skip_lines", 0)
-            lines = list()
+            lines = []
             if skip < total_lines:
                 for i in range(total_lines - skip):
-                    lines.append(
-                        {"is_error": 0, "line": "This is line {}".format(i + skip)}
-                    )
+                    lines.append({"is_error": 0, "line": f"This is line {i + skip}"})
             return {"last_line_number": max(total_lines, skip), "lines": lines}
 
         if job_id == JOB_COMPLETED:
@@ -348,6 +353,7 @@ class MockClients:
     def sync_call(self, call, params):
         if call == "NarrativeService.list_objects_with_sets":
             return self._mock_ns_list_objects_with_sets(params)
+        return None
 
     def _mock_ns_list_objects_with_sets(self, params):
         """
@@ -359,7 +365,7 @@ class MockClients:
         ws_name = "some_workspace"
         ws_id = 1
         types = params.get("types", [])
-        with_meta = True if params.get("includeMetadata") else False
+        with_meta = bool(params.get("includeMetadata"))
         if params.get("ws_name"):
             ws_name = params["ws_name"]
         if params.get("ws_id"):
@@ -367,7 +373,7 @@ class MockClients:
         if params.get("workspaces"):
             ws_name = params["workspaces"][0]
         dp_id = 999
-        dp_ref = "{}/{}".format(ws_id, dp_id)
+        dp_ref = f"{ws_id}/{dp_id}"
 
         data = {
             "data": [
@@ -504,10 +510,7 @@ class MockClients:
             data["data"] = list(
                 filter(
                     lambda x: any(
-                        [
-                            x["object_info"][2].lower().startswith(t.lower())
-                            for t in types
-                        ]
+                        x["object_info"][2].lower().startswith(t.lower()) for t in types
                     ),
                     data["data"],
                 )
@@ -528,7 +531,8 @@ def get_failing_mock_client(client_name, token=None):
 
 
 class FailingMockClient:
-    def __init__(self, token=None):
+    def __init__(self, token=None) -> None:
+        # nothing to do here
         pass
 
     def check_workspace_jobs(self, params):
@@ -536,6 +540,9 @@ class FailingMockClient:
 
     def check_job(self, params):
         raise generate_ee2_error("check_job")
+
+    def check_jobs(self, params):
+        raise generate_ee2_error("check_jobs")
 
     def cancel_job(self, params):
         raise generate_ee2_error(MESSAGE_TYPE["CANCEL"])
@@ -580,7 +587,7 @@ class assert_obj_method_called:
     )
     """
 
-    def __init__(self, target, method_name, call_status=True):
+    def __init__(self, target, method_name, call_status=True) -> None:
         self.target = target
         self.method_name = method_name
         self.call_status = call_status
@@ -609,7 +616,7 @@ class assert_obj_method_called:
 
         assert (
             getattr(self.target, self.method_name) == self.called
-        ), f"Method {self.target.__name__}.{self.method_name} was modified during context managment with {self.__class__.name}"
+        ), f"Method {self.target.__name__}.{self.method_name} was modified during context management with {self.__class__.name}"
         setattr(self.target, self.method_name, self.orig_method)
 
         self.assert_called(self.call_status)

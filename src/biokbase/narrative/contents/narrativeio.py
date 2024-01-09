@@ -3,23 +3,23 @@ Utilities for doing IO operations on Narrative objects.
 Implements the KBaseWSManagerMixin class.
 """
 
+import json
+import re
+from collections import Counter
+
+from tornado.web import HTTPError
+
 import biokbase.auth
 import biokbase.narrative.clients
-from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common import util
 import biokbase.workspace
-from biokbase.workspace.baseclient import ServerError
-from tornado.web import HTTPError
-from notebook.utils import to_api_path, to_os_path
+from biokbase.narrative.common import util
 from biokbase.narrative.common.exceptions import WorkspaceError
-from traitlets import Unicode, Dict, Bool, List, TraitError
 from biokbase.narrative.common.kblogging import get_logger, log_event
-import re
-import json
-from collections import Counter
-from .updater import update_narrative
 from biokbase.narrative.common.narrative_ref import NarrativeRef
+from biokbase.narrative.common.url_config import URLS
+from biokbase.workspace.baseclient import ServerError
 
+from .updater import update_narrative
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -50,7 +50,7 @@ NARRATIVE_TYPE = "KBaseNarrative.Narrative"
 g_log = get_logger("biokbase.narrative")
 
 
-class KBaseWSManagerMixin(object):
+class KBaseWSManagerMixin:
     """
     Manages the connection to the workspace for a user
     """
@@ -99,15 +99,14 @@ class KBaseWSManagerMixin(object):
         except WorkspaceError as err:
             if err.http_code == 404:
                 return False
-            else:
-                raise
+            raise
 
     def _validate_nar_type(self, t, ref):
         if not t.startswith(NARRATIVE_TYPE):
             err = "Expected a Narrative object"
             if ref is not None:
-                err += " with reference {}".format(ref)
-            err += ", got a {}".format(t)
+                err += f" with reference {ref}"
+            err += f", got a {t}"
             raise HTTPError(500, err)
 
     def read_narrative(self, ref, content=True, include_metadata=True):
@@ -222,7 +221,7 @@ class KBaseWSManagerMixin(object):
             meta["format"] = "ipynb"
 
             if len(meta["name"]) > MAX_METADATA_STRING_BYTES - len("name"):
-                meta["name"] = meta["name"][0 : MAX_METADATA_STRING_BYTES - len("name")]
+                meta["name"] = meta["name"][0:MAX_METADATA_STRING_BYTES-len("name")]  # noqa:E203
 
             nb["metadata"] = meta
         except Exception as e:
@@ -535,7 +534,7 @@ class KBaseWSManagerMixin(object):
             for i in range(0, len(ws_ids), MAX_WORKSPACES):
                 res += ws.list_objects(
                     {
-                        "ids": ws_ids[i : i + MAX_WORKSPACES],
+                        "ids": ws_ids[i:i+MAX_WORKSPACES],  # noqa:E203
                         "type": NARRATIVE_TYPE,
                         "includeMetadata": 1,
                     }

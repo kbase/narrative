@@ -172,8 +172,8 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
                         pageSize,
                     } = arg;
 
+                    this.paging = true;
                     this.pageSize = pageSize;
-
                     this.currentPage = null;
                     this.page = null;
                     this.config = config;
@@ -273,7 +273,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
                                     const genomeRecord = parseGenomeSearchResultItem(item);
 
                                     const name = this.titleTemplate(genomeRecord);
-                                    const metadata = common.applyMetadataTemplates(
+                                    const metadataList = common.applyMetadataTemplates(
                                         this.metadataTemplates,
                                         genomeRecord
                                     );
@@ -284,7 +284,8 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
                                         objectId: null,
                                         name,
                                         objectName: genomeRecord.object_name,
-                                        metadata,
+                                        metadata: genomeRecord.metadata,
+                                        metadataList,
                                         ws: this.config.workspaceName,
                                         type: this.config.type,
                                         attached: false,

@@ -1,13 +1,15 @@
-from notebook.utils import url_path_join, url_escape
-from notebook.base.handlers import IPythonHandler, FilesRedirectHandler
-from tornado import web
-from biokbase.narrative.common.kblogging import get_logger, log_event
-from biokbase.narrative.common.util import kbase_env
 import urllib.parse
+
 import tornado.log
+from notebook.base.handlers import FilesRedirectHandler, IPythonHandler
+from notebook.utils import url_escape, url_path_join
+from tornado import web
 from traitlets.config import Application
-from biokbase.auth import get_user_info, init_session_env
+
+from biokbase.auth import get_token_info, get_user_info, init_session_env
+from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.util import kbase_env
 
 HTTPError = web.HTTPError
 
@@ -33,7 +35,7 @@ def _init_session(request, cookies):
             reason="Authorization required for Narrative access",
         )
     if token != kbase_env.auth_token:
-        init_session_env(get_user_info(token), client_ip)
+        init_session_env(get_token_info(token), get_user_info(token), client_ip)
         log_event(g_log, "session_start", {"user": kbase_env.user, "user_agent": ua})
 
 
@@ -81,7 +83,7 @@ class NarrativeMainHandler(IPythonHandler):
                 kill_kernel=False,
                 mathjax_url=self.mathjax_url,
                 google_analytics_id=URLS.google_analytics_id,
-                userName=kbase_env.user,
+                anon_user_id=kbase_env.anon_user_id,
                 google_ad_id=URLS.google_ad_id,
                 google_ad_conversion=URLS.google_ad_conversion,
             )

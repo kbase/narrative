@@ -6,27 +6,26 @@ import functools
 import random
 import re
 import traceback
-from typing import Callable, Dict, Union
+from collections.abc import Callable
+from typing import Any
 
-import biokbase.auth as auth
-import biokbase.narrative.clients as clients
+from biokbase import auth
+from biokbase.narrative import clients
 from biokbase.narrative.app_util import (
     extract_ws_refs,
     map_outputs_from_state,
     resolve_ref_if_typed,
-    strict_system_variable,
-    system_variable,
     transform_param_value,
     validate_parameters,
 )
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.jobs import specmanager
+from biokbase.narrative.jobs.job import Job
+from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE, JobComm
+from biokbase.narrative.jobs.jobmanager import JobManager
+from biokbase.narrative.system import strict_system_variable, system_variable
 from biokbase.narrative.widgetmanager import WidgetManager
-
-from . import specmanager
-from .job import Job
-from .jobcomm import MESSAGE_TYPE, JobComm
-from .jobmanager import JobManager
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -45,7 +44,7 @@ def timestamp() -> str:
     return datetime.datetime.utcnow().isoformat() + "Z"
 
 
-def _app_error_wrapper(app_func: Callable) -> any:
+def _app_error_wrapper(app_func: Callable) -> Callable:
     """
     This is a decorator meant to wrap any of the `run_app*` methods here.
     It captures any raised exception, formats it into a message that can be sent
@@ -122,7 +121,7 @@ class AppManager:
             AppManager.__instance._comm = None
         return AppManager.__instance
 
-    def reload(self):
+    def reload(self: "AppManager"):
         """
         Reloads all app specs into memory from the App Catalog.
         Any outputs of app_usage, app_description, or available_apps
@@ -130,7 +129,7 @@ class AppManager:
         """
         self.spec_manager.reload()
 
-    def app_usage(self, app_id, tag="release"):
+    def app_usage(self: "AppManager", app_id: str, tag: str = "release"):
         """
         This shows the list of inputs and outputs for a given app with a given
         tag. By default, this is done in a pretty HTML way, but this app can be
@@ -149,7 +148,7 @@ class AppManager:
         """
         return self.spec_manager.app_usage(app_id, tag)
 
-    def app_description(self, app_id, tag="release"):
+    def app_description(self: "AppManager", app_id: str, tag: str = "release"):
         """
         Returns the app description in a printable HTML format.
 
@@ -166,7 +165,7 @@ class AppManager:
         """
         return self.spec_manager.app_description(app_id, tag)
 
-    def available_apps(self, tag="release"):
+    def available_apps(self: "AppManager", tag: str = "release"):
         """
         Lists the set of available apps for a given tag in a simple table.
         If the tag is not found, a ValueError will be raised.
@@ -181,13 +180,13 @@ class AppManager:
 
     @_app_error_wrapper
     def run_legacy_batch_app(
-        self,
-        app_id,
+        self: "AppManager",
+        app_id: str,
         params,
-        tag="release",
-        version=None,
-        cell_id=None,
-        run_id=None,
+        tag: str = "release",
+        version: str | None = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
         dry_run=False,
     ):
         if params is None:
@@ -205,9 +204,9 @@ class AppManager:
         batch_run_inputs = []
 
         for param_set in params:
-            spec_params_map = dict(
-                (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-            )
+            spec_params_map = {
+                spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+            }
             batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, param_set))
             batch_run_inputs.append(
                 self._map_inputs(
@@ -219,7 +218,7 @@ class AppManager:
 
         service_method = spec["behavior"]["kb_service_method"]
         service_name = spec["behavior"]["kb_service_name"]
-        service_ver = spec["behavior"].get("kb_service_version", None)
+        service_ver = spec["behavior"].get("kb_service_version")
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -258,7 +257,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_meta["token_id"] = agent_token["id"]
+        job_meta["token_id"] = agent_token.id
 
         # This is the input set for ee2.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
@@ -286,9 +285,9 @@ class AppManager:
         kblogging.log_event(self._log, "run_batch_app", log_info)
 
         try:
-            job_id = clients.get(
-                "execution_engine2", token=agent_token["token"]
-            ).run_job(job_runner_inputs)
+            job_id = clients.get("execution_engine2", token=agent_token.token).run_job(
+                job_runner_inputs
+            )
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
@@ -320,15 +319,15 @@ class AppManager:
 
     @_app_error_wrapper
     def run_app(
-        self,
-        app_id,
+        self: "AppManager",
+        app_id: str,
         params,
-        tag="release",
-        version=None,
-        cell_id=None,
-        run_id=None,
+        tag: str = "release",
+        version: str | None = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
         dry_run=False,
-    ):
+    ) -> dict[str, Any]:
         """
         Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the
@@ -370,7 +369,7 @@ class AppManager:
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-        job_runner_inputs["meta"]["token_id"] = agent_token["id"]
+        job_runner_inputs["meta"]["token_id"] = agent_token.id
 
         # Log that we're trying to run a job...
         log_info = {
@@ -383,9 +382,9 @@ class AppManager:
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            job_id = clients.get(
-                "execution_engine2", token=agent_token["token"]
-            ).run_job(job_runner_inputs)
+            job_id = clients.get("execution_engine2", token=agent_token.token).run_job(
+                job_runner_inputs
+            )
         except Exception as e:
             log_info.update({"err": str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -409,12 +408,12 @@ class AppManager:
 
     @_app_error_wrapper
     def run_app_batch(
-        self,
+        self: "AppManager",
         app_info: list,
-        cell_id: str = None,
-        run_id: str = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
         dry_run: bool = False,
-    ) -> Union[dict, None]:
+    ) -> None | dict[str, Job | list[Job]] | dict[str, dict[str, str | int] | list]:
         """
         Attempts to run a batch of apps in bulk using the Execution Engine's run_app_batch endpoint.
         If a cell_id is provided, this sends various job messages over the comm channel, and returns None.
@@ -527,12 +526,12 @@ class AppManager:
 
         # add the token id to the meta for all jobs
         for job_input in batch_run_inputs:
-            job_input["meta"]["token_id"] = agent_token["id"]
+            job_input["meta"]["token_id"] = agent_token.id
 
         # run the job batch and get a batch_submission record
         try:
             batch_submission = clients.get(
-                "execution_engine2", token=agent_token["token"]
+                "execution_engine2", token=agent_token.token
             ).run_job_batch(batch_run_inputs, batch_params)
         except Exception as e:
             log_info.update({"err": str(e)})
@@ -554,7 +553,7 @@ class AppManager:
             },
         )
 
-        child_jobs = Job.from_job_ids(child_ids, return_list=True)
+        child_jobs = Job.from_job_ids(child_ids)
         parent_job = Job.from_job_id(
             batch_id,
             children=child_jobs,
@@ -568,7 +567,7 @@ class AppManager:
         if cell_id is None:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
 
-    def _validate_bulk_app_info(self, app_info: dict):
+    def _validate_bulk_app_info(self: "AppManager", app_info: dict):
         """
         Validation consists of:
         1. must have "app_id" with format xyz/abc
@@ -610,7 +609,9 @@ class AppManager:
                 f"an app version must be a string, not {app_info['version']}"
             )
 
-    def _reconstitute_shared_params(self, app_info_el: dict) -> None:
+    def _reconstitute_shared_params(
+        self: "AppManager", app_info_el: dict[str, Any]
+    ) -> None:
         """
         Mutate each params dict to include any shared_params
         app_info_el is structured like:
@@ -639,14 +640,14 @@ class AppManager:
                     param_set.setdefault(k, v)
 
     def _build_run_job_params(
-        self,
-        spec: dict,
+        self: "AppManager",
+        spec: dict[str, Any],
         tag: str,
-        param_set: dict,
-        version: str = None,
-        cell_id: str = None,
-        run_id: str = None,
-        ws_id: int = None,
+        param_set: dict[str, Any],
+        version: str | None = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
+        ws_id: int | None = None,
     ) -> dict:
         """
         Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec
@@ -683,9 +684,9 @@ class AppManager:
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        spec_params_map = dict(
-            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
+        spec_params_map = {
+            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
+        }
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
         input_vals = self._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map
@@ -693,7 +694,7 @@ class AppManager:
 
         service_method = spec["behavior"]["kb_service_method"]
         service_name = spec["behavior"]["kb_service_name"]
-        service_ver = spec["behavior"].get("kb_service_version", None)
+        service_ver = spec["behavior"].get("kb_service_version")
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -726,13 +727,13 @@ class AppManager:
 
     @_app_error_wrapper
     def run_local_app(
-        self,
-        app_id,
-        params,
-        tag="release",
-        version=None,
-        cell_id=None,
-        run_id=None,
+        self: "AppManager",
+        app_id: str,
+        params: dict[str, Any],
+        tag: str = "release",
+        version: str | None = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
         widget_state=None,
     ):
         """
@@ -806,20 +807,19 @@ class AppManager:
             return wm.show_advanced_viewer_widget(
                 output_widget, widget_params, widget_state, cell_id=cell_id, tag=tag
             )
-        else:
-            return wm.show_output_widget(
-                output_widget, widget_params, cell_id=cell_id, tag=tag
-            )
+        return wm.show_output_widget(
+            output_widget, widget_params, cell_id=cell_id, tag=tag
+        )
 
     def run_local_app_advanced(
-        self,
-        app_id,
-        params,
+        self: "AppManager",
+        app_id: str,
+        params: dict[str, Any],
         widget_state,
-        tag="release",
-        version=None,
-        cell_id=None,
-        run_id=None,
+        tag: str = "release",
+        version: str | None = None,
+        cell_id: str | None = None,
+        run_id: str | None = None,
     ):
         return self.run_local_app(
             app_id,
@@ -831,7 +831,9 @@ class AppManager:
             run_id=run_id,
         )
 
-    def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
+    def _get_validated_app_spec(
+        self: "AppManager", app_id: str, tag: str, is_long, version: str | None = None
+    ):
         if (
             version is not None
             and tag != "release"
@@ -861,37 +863,48 @@ class AppManager:
             )
         return spec
 
-    def _map_group_inputs(self, value, spec_param, spec_params):
+    def _map_group_inputs(
+        self: "AppManager",
+        value: list | dict | None,
+        spec_param: dict[str, Any],
+        spec_params: dict[str, Any],
+    ):
         if isinstance(value, list):
             return [self._map_group_inputs(v, spec_param, spec_params) for v in value]
-        elif value is None:
+
+        if value is None:
             return None
-        else:
-            mapped_value = {}
-            id_map = spec_param.get("id_mapping", {})
-            for param_id in id_map:
-                # ensure that the param referenced in the group param list
-                # exists in the spec.
-                # NB: This should really never happen if the sdk registration
-                # process validates them.
-                if param_id not in spec_params:
-                    msg = "Unknown parameter id in group mapping: " + param_id
-                    raise ValueError(msg)
-            for param_id in value:
-                target_key = id_map.get(param_id, param_id)
-                # Sets either the raw value, or if the parameter is an object
-                # reference the full object refernce (see the method).
-                if value[param_id] is None:
-                    target_val = None
-                else:
-                    target_val = resolve_ref_if_typed(
-                        value[param_id], spec_params[param_id]
-                    )
 
-                mapped_value[target_key] = target_val
-            return mapped_value
+        mapped_value = {}
+        id_map = spec_param.get("id_mapping", {})
+        for param_id in id_map:
+            # ensure that the param referenced in the group param list
+            # exists in the spec.
+            # NB: This should really never happen if the sdk registration
+            # process validates them.
+            if param_id not in spec_params:
+                msg = "Unknown parameter id in group mapping: " + param_id
+                raise ValueError(msg)
+        for param_id in value:
+            target_key = id_map.get(param_id, param_id)
+            # Sets either the raw value, or if the parameter is an object
+            # reference the full object refernce (see the method).
+            if value[param_id] is None:
+                target_val = None
+            else:
+                target_val = resolve_ref_if_typed(
+                    value[param_id], spec_params[param_id]
+                )
 
-    def _map_inputs(self, input_mapping, params, spec_params):
+            mapped_value[target_key] = target_val
+        return mapped_value
+
+    def _map_inputs(
+        self: "AppManager",
+        input_mapping: list[dict[str, Any]],
+        params: dict[str, Any],
+        spec_params: dict[str, Any],
+    ):
         """
         Maps the dictionary of parameters and inputs based on rules provided in
         the input_mapping. This iterates over the list of input_mappings, and
@@ -912,7 +925,7 @@ class AppManager:
             input_param_id = None
             if "input_parameter" in p:
                 input_param_id = p["input_parameter"]
-                p_value = params.get(input_param_id, None)
+                p_value = params.get(input_param_id)
                 if spec_params[input_param_id].get("type", "") == "group":
                     p_value = self._map_group_inputs(
                         p_value, spec_params[input_param_id], spec_params
@@ -936,7 +949,7 @@ class AppManager:
 
             # get position!
             arg_position = p.get("target_argument_position", 0)
-            target_prop = p.get("target_property", None)
+            target_prop = p.get("target_property")
             if target_prop is not None:
                 final_input = inputs_dict.get(arg_position, {})
                 if "/" in target_prop:
@@ -977,7 +990,7 @@ class AppManager:
             inputs_list.append(inputs_dict[k])
         return inputs_list
 
-    def _generate_input(self, generator):
+    def _generate_input(self: "AppManager", generator: dict[str, Any] | None):
         """
         Generates an input value using rules given by
         NarrativeMethodStore.AutoGeneratedValue.
@@ -1007,10 +1020,10 @@ class AppManager:
             return ret + str(generator["suffix"])
         return ret
 
-    def _send_comm_message(self, msg_type, content):
+    def _send_comm_message(self: "AppManager", msg_type: str, content: dict[str, Any]):
         JobComm().send_comm_message(msg_type, content)
 
-    def _get_agent_token(self, name: str) -> Dict[str, str]:
+    def _get_agent_token(self: "AppManager", name: str) -> auth.TokenInfo:
         """
         Retrieves an agent token from the Auth service with a formatted name.
         This prepends "KBApp_" to the name for filtering, and trims to make sure the name

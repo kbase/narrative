@@ -266,26 +266,31 @@ You should now be able to navigate to https://ci.kbase.us, log in, and pull a Na
 
 ## Testing with a local container
 
-Testing instructions assume that all JS and Python dependencies are installed locally, and that Narrative is built on the host for local usage.
+Testing instructions assume that JS and Python dependencies are installed locally, and that the Narrative is built on the host for local usage.
 
-This, however, is not necessary with the container, although it is necessary for now to install JS dependencies because tooling relies up it. Of course,
+> Recent changes introduce running the Narrative via a Docker container
+
+This, however, is not necessary with the container, although it is still necessary (for now) to install JS dependencies because tooling relies up it. Of course,
 it would be possible to run any node-based tool via a simple node container, but that is for another day.
 
 - Get the narrative running in one terminal window:
   - `make dev-image`
   - `ENV=ci make run-dev-image`
-- In another terminal window:
-  - `NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local`
 
-Please note the volume mounts in `scripts/local-def-run.sh`. Not all directories in kbase-extension/static local narrative repo are mounted, due to
+- Ensure node testing dependencies are installed:
+  - `npm install`
+  
+- In another terminal window:
+  - `NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local` if running w/o kbase-ui
+  - `NARRATIVE_SERVER_URL=https://ci.kbase.us/narrative npm run test_local`, optionally if running with kbase-ui proxying ci.
+
+Please note the volume mounts in `scripts/local-dev-run.sh`. Not all directories in kbase-extension/static local narrative repo are mounted, due to
 the fact that ext_components is installed.
 
 To explain the `ext_` directories briefly.
 
-- `ext_modules` is where all node modules should be placed; that is what it was originally designed for and a very few npm dependencies are placed there;
-   it does not exist until the narrative is built.
-- `ext_components` is where `node_modules` is copied to, for those bower components which were migrated to npm modules; it also does not exist until the
-   narrative is built.
+- `ext_modules` is where all node modules should be placed; that is what it was originally designed for and a very few npm dependencies are placed there; it does not exist until the narrative is built.
+- `ext_components` is where `node_modules` is copied to, for those bower components which were migrated to npm modules; it also does not exist until the narrative is built.
 - `ext_packages` is where old dependencies which cannot be brought into the codebase as normal npm dependencies reside; it essentially never changes as
    it freezes certain dependencies that could not be brought in as bower dependencies when the narrative was converted from manually installed
    dependencies to bower.

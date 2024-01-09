@@ -6,7 +6,9 @@ import os
 import signal
 import time
 import unittest
-from biokbase.narrative.common import log_proxy as proxy
+
+import pytest
+from biokbase.narrative.common import log_proxy
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 
@@ -20,8 +22,8 @@ class MainTestCase(unittest.TestCase):
 
     def setUp(self):
         self._config(["db: test", "collection: kblog"])
-        if proxy.g_log is None:
-            proxy.g_log = logging.getLogger(proxy.LOGGER_NAME)
+        if log_proxy.g_log is None:
+            log_proxy.g_log = logging.getLogger(log_proxy.LOGGER_NAME)
 
     def _config(self, lines):
         text = "\n".join(lines)
@@ -32,34 +34,39 @@ class MainTestCase(unittest.TestCase):
         pid = os.fork()
         if pid == 0:
             print("Run child")
-            proxy.run(self)
+            log_proxy.run(self)
         else:
             time.sleep(1)
             print("Wait for child to start")
             # let it start
             time.sleep(4)
             # send it a HUP to stop it
-            print("Send child ({:d}) a HUP".format(pid))
+            print(f"Send child ({pid:d}) a HUP")
             os.kill(pid, signal.SIGHUP)
             # wait for it to stop
-            print("Wait for child ({:d}) to stop".format(pid))
+            print(f"Wait for child ({pid:d}) to stop")
             cpid, r = os.waitpid(pid, 0)
-            print("cpid, r: {}, {}".format(cpid, r))
-            self.assertTrue(r < 2, "Bad exit status ({:d}) from proxy".format(r))
+            print(f"cpid, r: {cpid}, {r}")
+            assert r < 2, f"Bad exit status ({r:d}) from proxy"
 
     def test_configuration(self):
         # empty
         self._config([])
-        self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(ValueError):
+            log_proxy.DBConfiguration(self.conf)
+        # , proxy.DBConfiguration, self.conf)
         # missing collection
         self._config(["db: test"])
-        self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(KeyError):
+            log_proxy.DBConfiguration(self.conf)
         # bad db name
         self._config(["db: 1test", "collection: kblog"])
-        self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(ValueError):
+            log_proxy.DBConfiguration(self.conf)
         # bad db name
         self._config(["db: test.er", "collection: kblog"])
-        self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(ValueError):
+            log_proxy.DBConfiguration(self.conf)
         # too long
         self._config(
             [
@@ -68,26 +75,29 @@ class MainTestCase(unittest.TestCase):
                 "ddddddddddddddddddddddddddddddd",
             ]
         )
-        self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(ValueError):
+            log_proxy.DBConfiguration(self.conf)
         # bad collection
         self._config(["db: test", "collection: kb$log"])
-        self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(ValueError):
+            log_proxy.DBConfiguration(self.conf)
         # user, no pass
         self._config(["db: test", "collection: kblog", "user: joe"])
-        self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
+        with pytest.raises(KeyError):
+            log_proxy.DBConfiguration(self.conf)
 
 
 class LogRecordTest(unittest.TestCase):
     def setUp(self):
-        if proxy.g_log is None:
-            proxy.g_log = logging.getLogger(proxy.LOGGER_NAME)
+        if log_proxy.g_log is None:
+            log_proxy.g_log = logging.getLogger(log_proxy.LOGGER_NAME)
 
     def test_basic(self):
-        for input in {}, {"message": "hello"}:
-            kbrec = proxy.DBRecord(input)
-        kbrec = proxy.DBRecord({"message": "greeting;Hello=World"})
-        self.assertEqual(kbrec.record["event"], "greeting")
-        self.assertEqual(kbrec.record["Hello"], "World")
+        for inpt in {}, {"message": "hello"}:
+            log_proxy.DBRecord(inpt)
+        kbrec = log_proxy.DBRecord({"message": "greeting;Hello=World"})
+        assert kbrec.record["event"] == "greeting"
+        assert kbrec.record["Hello"] == "World"
 
     def test_strict(self):
         for inp in (
@@ -95,8 +105,9 @@ class LogRecordTest(unittest.TestCase):
             {12: "xanthium"},
             {"message": "Hello=World;greeting"},
         ):
-            proxy.DBRecord(inp)
-            self.assertRaises(ValueError, proxy.DBRecord, inp, strict=True)
+            log_proxy.DBRecord(inp)
+            with pytest.raises(ValueError):
+                log_proxy.DBRecord(inp, strict=True)
 
 
 if __name__ == "__main__":

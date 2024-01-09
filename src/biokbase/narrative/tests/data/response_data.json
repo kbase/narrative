@@ -401,20 +401,21 @@
                 "widget_info": {
                     "name": "no-display",
                     "params": {
-                        "obj_ref": "18836/5/1",
+                        "obj_ref": "62425/2/12",
                         "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
                         "report_ref": "62425/18/1",
                         "report_window_line_height": "16",
                         "wsName": "wjriehl:1475006266615"
                     },
                     "tag": "release"
-                }
+                },
+                "wsid": 10538
             },
             "job_id": "BATCH_COMPLETED",
             "outputWidgetInfo": {
                 "name": "no-display",
                 "params": {
-                    "obj_ref": "18836/5/1",
+                    "obj_ref": "62425/2/12",
                     "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
                     "report_ref": "62425/18/1",
                     "report_window_line_height": "16",
@@ -446,7 +447,8 @@
                     "BATCH_RETRY_ERROR"
                 ],
                 "running": 1625755952628,
-                "status": "error"
+                "status": "error",
+                "wsid": 10538
             },
             "job_id": "BATCH_ERROR_RETRIED",
             "outputWidgetInfo": null
@@ -469,7 +471,8 @@
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "status": "created"
+                "status": "created",
+                "wsid": 10538
             },
             "job_id": "BATCH_PARENT",
             "outputWidgetInfo": null
@@ -502,20 +505,21 @@
                 "widget_info": {
                     "name": "no-display",
                     "params": {
-                        "obj_ref": "18836/5/1",
+                        "obj_ref": "62425/17/1",
                         "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                         "report_ref": "62425/19/1",
                         "report_window_line_height": "16",
                         "wsName": "wjriehl:1475006266615"
                     },
                     "tag": "release"
-                }
+                },
+                "wsid": 10538
             },
             "job_id": "BATCH_RETRY_COMPLETED",
             "outputWidgetInfo": {
                 "name": "no-display",
                 "params": {
-                    "obj_ref": "18836/5/1",
+                    "obj_ref": "62425/17/1",
                     "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                     "report_ref": "62425/19/1",
                     "report_window_line_height": "16",
@@ -546,7 +550,8 @@
                 "retry_ids": [],
                 "retry_parent": "BATCH_ERROR_RETRIED",
                 "running": 1625757662469,
-                "status": "error"
+                "status": "error",
+                "wsid": 10538
             },
             "job_id": "BATCH_RETRY_ERROR",
             "outputWidgetInfo": null
@@ -564,7 +569,8 @@
                 "retry_ids": [],
                 "retry_parent": "BATCH_TERMINATED_RETRIED",
                 "running": 1625757285899,
-                "status": "running"
+                "status": "running",
+                "wsid": 10538
             },
             "job_id": "BATCH_RETRY_RUNNING",
             "outputWidgetInfo": null
@@ -583,7 +589,8 @@
                 "retry_ids": [],
                 "running": 1625755952599,
                 "status": "terminated",
-                "terminated_code": 0
+                "terminated_code": 0,
+                "wsid": 10538
             },
             "job_id": "BATCH_TERMINATED",
             "outputWidgetInfo": null
@@ -605,7 +612,8 @@
                 ],
                 "running": 1625755952563,
                 "status": "terminated",
-                "terminated_code": 0
+                "terminated_code": 0,
+                "wsid": 10538
             },
             "job_id": "BATCH_TERMINATED_RETRIED",
             "outputWidgetInfo": null
@@ -641,7 +649,8 @@
                         "report_window_line_height": "16"
                     },
                     "tag": "dev"
-                }
+                },
+                "wsid": 54321
             },
             "job_id": "JOB_COMPLETED",
             "outputWidgetInfo": {
@@ -664,7 +673,8 @@
                 "job_output": {},
                 "retry_count": 0,
                 "retry_ids": [],
-                "status": "created"
+                "status": "created",
+                "wsid": 55555
             },
             "job_id": "JOB_CREATED",
             "outputWidgetInfo": null
@@ -690,7 +700,8 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "running": 1642431847689,
-                "status": "error"
+                "status": "error",
+                "wsid": 65854
             },
             "job_id": "JOB_ERROR",
             "outputWidgetInfo": null
@@ -707,7 +718,8 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "running": 1642521775867,
-                "status": "running"
+                "status": "running",
+                "wsid": 54321
             },
             "job_id": "JOB_RUNNING",
             "outputWidgetInfo": null
@@ -725,7 +737,8 @@
                 "retry_count": 0,
                 "retry_ids": [],
                 "status": "terminated",
-                "terminated_code": 0
+                "terminated_code": 0,
+                "wsid": 54321
             },
             "job_id": "JOB_TERMINATED",
             "outputWidgetInfo": null
@@ -773,20 +786,21 @@
                     "widget_info": {
                         "name": "no-display",
                         "params": {
-                            "obj_ref": "18836/5/1",
+                            "obj_ref": "62425/2/12",
                             "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
                             "report_ref": "62425/18/1",
                             "report_window_line_height": "16",
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    }
+                    },
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
-                        "obj_ref": "18836/5/1",
+                        "obj_ref": "62425/2/12",
                         "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
                         "report_ref": "62425/18/1",
                         "report_window_line_height": "16",
@@ -821,7 +835,8 @@
                         "BATCH_RETRY_ERROR"
                     ],
                     "running": 1625755952628,
-                    "status": "error"
+                    "status": "error",
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_ERROR_RETRIED",
                 "outputWidgetInfo": null
@@ -849,7 +864,8 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
                     "running": 1625757662469,
-                    "status": "error"
+                    "status": "error",
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -876,7 +892,8 @@
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "status": "created"
+                    "status": "created",
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_PARENT",
                 "outputWidgetInfo": null
@@ -913,20 +930,21 @@
                     "widget_info": {
                         "name": "no-display",
                         "params": {
-                            "obj_ref": "18836/5/1",
+                            "obj_ref": "62425/17/1",
                             "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                             "report_ref": "62425/19/1",
                             "report_window_line_height": "16",
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    }
+                    },
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
-                        "obj_ref": "18836/5/1",
+                        "obj_ref": "62425/17/1",
                         "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                         "report_ref": "62425/19/1",
                         "report_window_line_height": "16",
@@ -961,7 +979,8 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_ERROR_RETRIED",
                     "running": 1625757662469,
-                    "status": "error"
+                    "status": "error",
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_RETRY_ERROR",
                 "outputWidgetInfo": null
@@ -983,7 +1002,8 @@
                     "retry_ids": [],
                     "retry_parent": "BATCH_TERMINATED_RETRIED",
                     "running": 1625757285899,
-                    "status": "running"
+                    "status": "running",
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_RETRY_RUNNING",
                 "outputWidgetInfo": null
@@ -1006,7 +1026,8 @@
                     "retry_ids": [],
                     "running": 1625755952599,
                     "status": "terminated",
-                    "terminated_code": 0
+                    "terminated_code": 0,
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_TERMINATED",
                 "outputWidgetInfo": null
@@ -1031,7 +1052,8 @@
                     ],
                     "running": 1625755952563,
                     "status": "terminated",
-                    "terminated_code": 0
+                    "terminated_code": 0,
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_TERMINATED_RETRIED",
                 "outputWidgetInfo": null
@@ -1065,20 +1087,21 @@
                     "widget_info": {
                         "name": "no-display",
                         "params": {
-                            "obj_ref": "18836/5/1",
+                            "obj_ref": "62425/17/1",
                             "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                             "report_ref": "62425/19/1",
                             "report_window_line_height": "16",
                             "wsName": "wjriehl:1475006266615"
                         },
                         "tag": "release"
-                    }
+                    },
+                    "wsid": 10538
                 },
                 "job_id": "BATCH_RETRY_COMPLETED",
                 "outputWidgetInfo": {
                     "name": "no-display",
                     "params": {
-                        "obj_ref": "18836/5/1",
+                        "obj_ref": "62425/17/1",
                         "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
                         "report_ref": "62425/19/1",
                         "report_window_line_height": "16",
@@ -1122,7 +1145,8 @@
                             "report_window_line_height": "16"
                         },
                         "tag": "dev"
-                    }
+                    },
+                    "wsid": 54321
                 },
                 "job_id": "JOB_COMPLETED",
                 "outputWidgetInfo": {
@@ -1149,7 +1173,8 @@
                     "job_output": {},
                     "retry_count": 0,
                     "retry_ids": [],
-                    "status": "created"
+                    "status": "created",
+                    "wsid": 55555
                 },
                 "job_id": "JOB_CREATED",
                 "outputWidgetInfo": null
@@ -1179,7 +1204,8 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "running": 1642431847689,
-                    "status": "error"
+                    "status": "error",
+                    "wsid": 65854
                 },
                 "job_id": "JOB_ERROR",
                 "outputWidgetInfo": null
@@ -1200,7 +1226,8 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "running": 1642521775867,
-                    "status": "running"
+                    "status": "running",
+                    "wsid": 54321
                 },
                 "job_id": "JOB_RUNNING",
                 "outputWidgetInfo": null
@@ -1222,7 +1249,8 @@
                     "retry_count": 0,
                     "retry_ids": [],
                     "status": "terminated",
-                    "terminated_code": 0
+                    "terminated_code": 0,
+                    "wsid": 54321
                 },
                 "job_id": "JOB_TERMINATED",
                 "outputWidgetInfo": null

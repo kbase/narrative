@@ -1,10 +1,12 @@
 """
 Installer for KBase narrative Python libraries
 """
-from biokbase.narrative.common.util import BuildDocumentation
-from setuptools import setup, find_packages
 import glob
+
+from setuptools import find_packages, setup
+
 import ez_setup
+from biokbase.narrative.common.util import BuildDocumentation
 
 ez_setup.use_setuptools()
 

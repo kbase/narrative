@@ -1,14 +1,13 @@
-import os
-import re
 import json
-import biokbase.narrative.clients as clients
-import biokbase.auth
-import time
+import re
+from typing import Any, Optional
+
+from biokbase.narrative import clients, upa
+from biokbase.narrative.system import system_variable
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
 """
-__author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
 
 app_version_tags = ["release", "beta", "dev"]
 
@@ -25,73 +24,12 @@ def check_tag(tag, raise_exception=False):
             "Can't find tag %s - allowed tags are %s"
             % (tag, ", ".join(app_version_tags))
         )
-    else:
-        return tag_exists
-
-
-def strict_system_variable(var):
-    """
-    Returns a system variable.
-    If that variable isn't defined, or anything else happens, raises an exception.
-    """
-    result = system_variable(var)
-    if result is None:
-        raise ValueError('Unable to retrieve system variable: "{}"'.format(var))
-    return result
-
-
-def system_variable(var):
-    """
-    Returns a KBase system variable. Just a little wrapper.
-
-    Parameters
-    ----------
-    var: string, one of "workspace", "workspace_id", "token", "user_id"
-        workspace - returns the KBase workspace name
-        workspace_id - returns the numerical id of the current workspace
-        token - returns the current user's token credential
-        user_id - returns the current user's id
-
-    if anything is not found, returns None
-    """
-    var = var.lower()
-    if var == "workspace":
-        return os.environ.get("KB_WORKSPACE_ID", None)
-    elif var == "workspace_id":
-        ws_name = os.environ.get("KB_WORKSPACE_ID", None)
-        if ws_name is None:
-            return None
-        try:
-            ws_info = clients.get("workspace").get_workspace_info(
-                {"workspace": ws_name}
-            )
-            return ws_info[0]
-        except BaseException:
-            return None
-    elif var == "user_id":
-        token = biokbase.auth.get_auth_token()
-        if token is None:
-            return None
-        try:
-            user_info = biokbase.auth.get_user_info(token)
-            return user_info.get("user", None)
-        except BaseException:
-            return None
-        # TODO: make this better with more exception handling.
-    elif var == "timestamp_epoch_ms":
-        # get epoch time in milliseconds
-        return int(time.time() * 1000)
-    elif var == "timestamp_epoch_sec":
-        # get epoch time in seconds
-        return int(time.time())
-    else:
-        return None
+    return tag_exists
 
 
 def map_inputs_from_job(job_inputs, app_spec):
     """
-    Unmaps the actual list of job inputs back to the
-    parameters specified by app_spec.
+    Unmaps the actual list of job inputs back to the parameters specified by app_spec.
     For example, the inputs given to a method might be a list like this:
     ['input1', {'ws': 'my_workspace', 'foo': 'bar'}]
     and the input mapping looks like:
@@ -119,7 +57,7 @@ def map_inputs_from_job(job_inputs, app_spec):
     field. system variables, constants, etc., are ignored - this function just goes back to the
     original inputs set by the user.
     """
-    input_dict = dict()
+    input_dict = {}
     spec_inputs = app_spec["behavior"]["kb_service_input_mapping"]
 
     # expect the inputs to be valid. so things in the expected position should be the
@@ -154,13 +92,37 @@ def _untransform(transform_type, value):
         slash = value.find("/")
         if slash == -1:
             return value
-        else:
-            return value[slash + 1 :]
-    else:
-        return value
+        return value[(slash+1):]  # noqa:E203
+    return value
 
 
 def app_param(p):
+    """
+    TODO: create an AppParam class to hold and validate this
+    TODO: create a Spec class to hold, validate, and process App Specs
+    Converts a param dictionary from a NarrativeMethodStore param spec into this structure with
+    a number of optional keys:
+    {
+        "id": string
+        "is_group": boolean
+        "optional: boolean
+        "short_hint": string
+        "description": string
+        "type": string
+        "is_output": boolean
+        "allow_multiple": boolean
+        "allowed_values": present if type == "dropdown" or "checkbox", a list of allowed dropdown
+            values
+        "default": None, singleton, or list if "allow_multiple" is True
+        "checkbox_map": [checked_value, unchecked_value] if type == checkbox
+        The following only apply if the "text_options" field is present in the original spec
+        "is_output": 1, 0, True, or False
+        "allowed_types": list[str] - valid workspace object types
+        "min_val": either the "min_float" or "min_int" field, if present
+        "max_val": either the "max_float" or "max_int" field, if present
+        "regex_constraint": string
+    }
+    """
     p_info = {"id": p["id"], "is_group": False}
 
     if p["optional"] == 0:
@@ -230,7 +192,7 @@ def map_outputs_from_state(state, params, app_spec):
     """
     if "behavior" not in app_spec:
         raise ValueError("Invalid app spec - unable to map outputs")
-    widget_params = dict()
+    widget_params = {}
     out_mapping_key = "kb_service_output_mapping"
     if out_mapping_key not in app_spec["behavior"]:
         # for viewers or short-running things, but the inner keys are the same.
@@ -296,7 +258,8 @@ def get_result_sub_path(result, path):
 
     So it recursively works through.
     look at path[pos] - that's a 0, so get the 0th element of result (the dict that's there.)
-    since result is a list (it almost always is, to start with, since that's what run_job returns), we get:
+    since result is a list (it almost always is, to start with, since that's what run_job
+    returns), we get:
     result[path[0]] = {'report': 'asdf', 'report_ref': 'xyz'}
     path = ['0', 'report_ref']
     pos = 1
@@ -345,7 +308,7 @@ def extract_ws_refs(app_id, tag, spec_params, params):
         (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
     )
     workspace = system_variable("workspace")
-    ws_input_refs = list()
+    ws_input_refs = []
     for p in spec_params:
         if p["id"] in params:
             (wsref, err) = check_parameter(
@@ -383,7 +346,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     )
 
     # First, test for presence.
-    missing_params = list()
+    missing_params = []
     for p in spec_params:
         if not p["optional"] and not p["default"] and not params.get(p["id"], None):
             missing_params.append(p["id"])
@@ -396,7 +359,7 @@ def validate_parameters(app_id, tag, spec_params, params):
         raise ValueError(msg)
 
     # Next, test for extra params that don't make sense
-    extra_params = list()
+    extra_params = []
     for p in params.keys():
         if p not in spec_param_ids:
             extra_params.append(p)
@@ -421,10 +384,10 @@ def validate_parameters(app_id, tag, spec_params, params):
         msg = msg.format(workspace, ws_id)
         raise ValueError(msg)
 
-    param_errors = list()
+    param_errors = []
     # If they're workspace objects, track their refs in a list we'll pass
     # to run_job as a separate param to track provenance.
-    ws_input_refs = list()
+    ws_input_refs = []
     for p in spec_params:
         if p["id"] in params:
             (wsref, err) = check_parameter(
@@ -461,7 +424,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     return (params, ws_input_refs)
 
 
-def check_parameter(param, value, workspace, all_params=dict()):
+def check_parameter(param, value, workspace, all_params: Optional[dict] = None):
     """
     Checks if the given value matches the rules provided in the param dict.
     If yes, returns None
@@ -483,9 +446,11 @@ def check_parameter(param, value, workspace, all_params=dict()):
         All spec parameters. Really only needed when validating a parameter
         group, because it probably needs to dig into all of them.
     """
+    if all_params is None:
+        all_params = {}
     if param["allow_multiple"] and isinstance(value, list):
-        ws_refs = list()
-        error_list = list()
+        ws_refs = []
+        error_list = []
         for v in value:
             if param["type"] == "group":
                 # returns ref and err as a list
@@ -509,8 +474,8 @@ def check_parameter(param, value, workspace, all_params=dict()):
 
 
 def validate_group_values(param, value, workspace, spec_params):
-    ref = list()
-    err = list()
+    ref = []
+    err = []
 
     if not isinstance(value, dict):
         return (None, "A parameter-group must be a dictionary")
@@ -722,12 +687,8 @@ def resolve_single_ref(workspace, value):
         for path_item in path_items:
             if len(path_item.split("/")) > 3:
                 raise ValueError(
-                    "Object reference {} has too many slashes  - should be workspace/object/version(optional)".format(
-                        value
-                    )
+                    f"Object reference {value} has too many slashes - should be ws/object/version"
                 )
-            # return (ws_ref, 'Data reference named {} does not have the right format
-            # - should be workspace/object/version(optional)')
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"ref": value}]}
         )[0]
@@ -764,7 +725,9 @@ def resolve_ref_if_typed(value, spec_param):
     return value
 
 
-def transform_param_value(transform_type, value, spec_param):
+def transform_param_value(
+    transform_type: Optional[str], value: Any, spec_param: Optional[dict]
+) -> Any:
     """
     Transforms an input according to the rules given in
     NarrativeMethodStore.ServiceMethodInputMapping
@@ -775,7 +738,64 @@ def transform_param_value(transform_type, value, spec_param):
       (4.) none or None - doesn't transform.
 
     Returns a transformed (or not) value.
+
+    Rules and logic, esp for objects being sent.
+    1. Test if current transform applies. (None is a valid transform)
+        A. Check if input is an object - valid transforms are ref, resolved-ref, list<ref>,
+            list<resolved-ref>, None
+        B. If not object, int, list<int>, and None are allowed.
+    2. If object and not output field, apply transform as follows:
+        A. None -> returns only object name
+        B. ref -> returns workspace_name/object_name
+        C. resolved-ref -> returns UPA
+        D. (not in docs yet) upa -> returns UPA
+        E. any of the above can be applied in list<X>
+    3. Exception: if the input is an UPA path or reference path, it should only get transformed
+        to an UPA path.
+
+    This function will attempt to transform value according to the above rules. If value looks
+    like a ref (ws_name/obj_name) and transform_type is None, then obj_name will be returned.
+    Likewise, if resolved-ref is given, and value looks like an UPA already, then the already
+    resolved-ref will be returned.
+
+    Parameters:
+    transform_type - str/None - should be one of the following, if not None:
+        * string
+        * int
+        * ref
+        * resolved-ref
+        * upa
+        * list<X> where X is any of the above
+    value - anything or None. Parameter values are expected, by the KBase app stack, to
+        generally be either a singleton or a list of singletons. In practice, they're usually
+        strings, ints, floats, None, or a list of those.
+    spec_param - either None or a spec parameter dictionary as defined by
+        SpecManager.app_params. That is:
+        {
+            optional = boolean,
+            is_constant = boolean,
+            value = (whatever, optional),
+            type = [text|int|float|list|textsubdata],
+            is_output = boolean,
+            short_hint = string,
+            description = string,
+            allowed_values = list (optional),
+        }
     """
+    if transform_type is not None:
+        transform_type = transform_type.lower()
+        if transform_type == "none":
+            transform_type = None
+
+    is_input_object_param = False
+    if (
+        spec_param is not None
+        and spec_param["type"] == "text"
+        and not spec_param["is_output"]
+        and len(spec_param.get("allowed_types", []))
+    ):
+        is_input_object_param = True
+
     if (
         transform_type is None
         and spec_param is not None
@@ -783,60 +803,123 @@ def transform_param_value(transform_type, value, spec_param):
     ):
         transform_type = "string"
 
-    if (
-        transform_type is None
-        or transform_type == "none"
-        or transform_type == "object-name"
-    ):
+    if not is_input_object_param and transform_type is None:
         return value
 
-    elif transform_type == "ref" or transform_type == "unresolved-ref":
-        # make unresolved workspace ref (like 'ws-name/obj-name')
-        if (value is not None) and ("/" not in value):
-            value = system_variable("workspace") + "/" + value
-        return value
+    if transform_type in [
+        "ref",
+        "unresolved-ref",
+        "resolved-ref",
+        "putative-ref",
+        "upa",
+    ] or (is_input_object_param and transform_type is None):
+        if isinstance(value, list):
+            return [transform_object_value(transform_type, v) for v in value]
+        return transform_object_value(transform_type, value)
 
-    elif transform_type == "resolved-ref":
-        # make a workspace ref
-        if value is not None:
-            value = resolve_ref(system_variable("workspace"), value)
-        return value
-
-    elif transform_type == "future-default":
-        # let's guess base on spec_param
-        if spec_param is None:
-            return value
-        else:
-            if value is not None:
-                value = resolve_ref_if_typed(value, spec_param)
-            return value
-
-    elif transform_type == "int":
+    if transform_type == "int":
         # make it an integer, OR 0.
         if value is None or len(str(value).strip()) == 0:
             return None
         return int(value)
 
-    elif transform_type == "string":
+    if transform_type == "string":
         if value is None:
             return value
-        elif isinstance(value, list):
+        if isinstance(value, list):
             return ",".join(value)
-        elif isinstance(value, dict):
-            return ",".join([key + "=" + str(value[key]) for key in value])
-        else:
-            return str(value)
+        if isinstance(value, dict):
+            return ",".join([f"{key}={value[key]}" for key in value])
+        return str(value)
 
-    elif transform_type.startswith("list<") and transform_type.endswith(">"):
+    if transform_type.startswith("list<") and transform_type.endswith(">"):
         # make it a list of transformed types.
         list_type = transform_type[5:-1]
         if isinstance(value, list):
-            ret = []
-            for pos in range(0, len(value)):
-                ret.append(transform_param_value(list_type, value[pos], None))
-            return ret
-        else:
-            return [transform_param_value(list_type, value, None)]
+            return [transform_param_value(list_type, v, None) for v in value]
+        return [transform_param_value(list_type, value, None)]
 
     else:
         raise ValueError("Unsupported Transformation type: " + transform_type)
+
+
+def transform_object_value(
+    transform_type: Optional[str], value: Optional[str]
+) -> Optional[str]:
+    """
+    Cases:
+    transform = ref, unresolved-ref, or putative-ref:
+        - should return wsname / object name
+    transform = upa or resolved-ref:
+        - should return UPA
+    transform = None:
+        - should return object name
+    Note that if it is a reference path, it was always get returned as an UPA-path
+    for the best compatibility.
+
+    value can be either object name, ref, upa, or ref-path
+    can tell by testing with UPA api
+
+    If we can't find any object info on the value, just return the value as-is
+
+    "putative-ref" is a special case where the value is an object name and the object may or
+    may not exist. It is used to deal with the input from SpeciesTreeBuilder; if that app gets
+    fixed, it can be removed.
+
+    """
+    if value is None:
+        return None
+
+    # 1. get object info
+    is_upa = upa.is_upa(value)
+    is_ref = upa.is_ref(value)
+    is_path = (is_upa or is_ref) and ";" in value
+
+    # simple cases:
+    # 1. if is_upa and we want resolved-ref or upa, return the value
+    # 2. if is_ref and not is_upa and we want ref or unresolved-ref, return the value
+    # 3. if is neither upa or ref and transform is None, then we want the string, so return that
+    # 4. Otherwise, look up the object and return what's desired from there.
+
+    if is_upa and transform_type in ["upa", "resolved-ref"]:
+        return value
+    if (
+        not is_upa
+        and is_ref
+        and transform_type in ["ref", "unresolved-ref", "putative-ref"]
+    ):
+        return value
+    if not is_upa and not is_ref and transform_type is None:
+        return value
+
+    search_ref = value
+    if not is_upa and not is_ref:
+        search_ref = f"{system_variable('workspace')}/{value}"
+    try:
+        obj_info = clients.get("workspace").get_object_info3(
+            {"objects": [{"ref": search_ref}]}
+        )
+    except Exception as e:
+        # a putative-ref can be an extant or a to-be-created object; if the object
+        # is not found, the workspace name/object name can be returned
+        if transform_type == "putative-ref" and (
+            "No object with name" in str(e) or "No object with id" in str(e)
+        ):
+            return search_ref
+
+        transform = transform_type
+        if transform is None:
+            transform = "object name"
+        raise ValueError(
+            f"Unable to find object reference '{search_ref}' to transform as {transform}: "
+            + str(e)
+        )
+
+    if is_path or transform_type in ["resolved-ref", "upa"]:
+        return ";".join(obj_info["paths"][0])
+    if transform_type in ["ref", "unresolved-ref", "putative-ref"]:
+        obj = obj_info["infos"][0]
+        return f"{obj[7]}/{obj[1]}"
+    if transform_type is None:
+        return obj_info["infos"][0][1]
+    return value

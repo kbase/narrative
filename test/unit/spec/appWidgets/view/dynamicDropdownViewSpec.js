@@ -126,8 +126,6 @@ define(['jquery', 'widgets/appWidgets2/view/dynamicDropdownView', 'common/runtim
             expect(this.node.querySelector(SELECT2_OPTION_SELECTOR).innerText).toContain(
                 updatedValue
             );
-
-            // expect($(selectElem).select2('data')[0].text).toBe(updatedValue);
             await widget.stop();
         });
 

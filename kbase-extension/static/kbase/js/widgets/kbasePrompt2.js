@@ -89,12 +89,16 @@ define([
             // Here is where it is inserted (by the bootstrap javascript api)
             // into the DOM, in case you were wondering how that magic happens.
             this.$dialogModal = this.createDialogModal();
+            this.$dialogModal.on('hidden.bs.modal', function () {
+                // Zap the model.
+                $(this).html('');
+            });
             this.$dialogModal.modal({ keyboard: true });
         },
 
         close: function () {
             if (this.$dialogModal) {
-                this.$dialogModal.modal('hide');
+                this.$dialogModal.removeClass('fade').modal('hide');
             }
         },
 

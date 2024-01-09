@@ -6,17 +6,19 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
      * <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
      * (or wherever the bootstrap styles appear) as it contains the bootstrap styles.
      *
-     * The reliance upon the 'bootstrap' dependency above does not incorporate bootstratp styles.
+     * The reliance upon the 'bootstrap' dependency above does not incorporate
+     * bootstrap styles.
      *
-     * This could be utilized to test for visibility of elements vs their existence in the DOM.
-     * In behavior-oriented testing one wants to test what the user can see and experience,
-     * rather than internal attributes such as style.
+     * This could be utilized to test for visibility of elements vs their existence in
+     * the DOM. In behavior-oriented testing one wants to test what the user can see and
+     * experience, rather than internal attributes such as style.
      *
      * One example is eagerly-rendered tab panes. Such panes construct and insert their
      * pane content, hidden, as the tabset is built.
      *
-     * We would like to be able to test when such content is visible to the user, but without
-     * the bootstrap styles being present we simulate this by using the "active" class.
+     * We would like to be able to test when such content is visible to the user, but
+     * without the bootstrap styles being present we simulate this by using the "active"
+     * class.
      */
 
     const { tryFor } = testUtil;
@@ -33,8 +35,10 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
      *  which should focus on what the user sees and experiences.
      *  Here we assume that the "active" class makes a panel visible.
      *
-     * @param {JQuery} $host - an ancestor node containing the tabset; expects there to be only one tabset.
-     * @returns {{navText: string, panelText: string}} - an object containing the tab navigation (aka "tab") text and the tab pane text.
+     * @param {JQuery} $host - an ancestor node containing the tabset; expects there to
+     * be only one tabset.
+     * @returns {{navText: string, panelText: string}} - an object containing the tab
+     * navigation (aka "tab") text and the tab pane text.
      */
     function getVisiblePanelText(kbaseTabs) {
         // Get tab text (always visible)
@@ -269,7 +273,8 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             // Initially, the second tab should be empty.
             expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
-            // Ensure that when we open the 2nd tab, the content has changed to that set by `showContentCallback`
+            // Ensure that when we open the 2nd tab, the content has changed to that set
+            // by `showContentCallback`
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz' });
         });
 
@@ -297,11 +302,13 @@ define(['jquery', 'kbaseTabs', 'testUtil', 'bootstrap'], ($, KBaseTabs, testUtil
             // Initially, the second tab should be empty.
             expectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: '' });
 
-            // After selecting the 2nd tab, the content should be that determined by `showContentCallback`.
+            // After selecting the 2nd tab, the content should be that determined by
+            // `showContentCallback`.
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz 1' });
             await expectSelectNthTab(kbaseTabs, 1, { nav: 'Foo', panel: 'BAR' });
 
-            // After selecting the 2nd tab again, the content should be that determined by `showContentCallback`.
+            // After selecting the 2nd tab again, the content should be that determined
+            // by `showContentCallback`.
             await expectSelectNthTab(kbaseTabs, 2, { nav: 'Baz', panel: 'Fuzz 2' });
         });
 

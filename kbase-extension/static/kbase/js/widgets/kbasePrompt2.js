@@ -157,7 +157,7 @@ define([
             if (this.options.onEnterKey) {
                 $dialogModal.unbind('keypress');
                 $dialogModal.keypress((e) => {
-                    if (e.keyCode == 13) {
+                    if (e.keyCode === 13) {
                         e.stopPropagation();
                         e.preventDefault();
                         this.options.onEnterKey(this);

@@ -230,7 +230,7 @@ define([
             expect($addDataButton).toBeDefined();
             expect($addDataButton.length).toEqual(1);
             expect($addDataButton.is('button')).toBeTruthy();
-            expect($addDataButton.css('display')).toEqual('block');
+            expect($addDataButton.css('display')).toEqual('inline-block');
         });
 
         it('Should render with data, conduct a search, and show a resulting data card', async () => {

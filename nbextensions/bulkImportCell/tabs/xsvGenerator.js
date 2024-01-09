@@ -9,6 +9,9 @@ define([
     'common/spec',
     'common/ui',
     'util/string',
+
+    // For effect
+    'jquery-nearest',
 ], ($, Promise, StagingServiceClient, ParamsWidget, html, Runtime, Props, Spec, UI, String) => {
     'use strict';
     const div = html.tag('div'),

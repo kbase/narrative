@@ -7,7 +7,7 @@ define(['jquery', 'widgets/kbaseConfirmationPrompt', 'testUtil'], (
 
     const { waitForText } = testUtil;
 
-    fdescribe('The Prompt widget', () => {
+    describe('The Prompt widget', () => {
         it('should be defined', () => {
             expect(ConfirmationPrompt).toBeDefined();
         });

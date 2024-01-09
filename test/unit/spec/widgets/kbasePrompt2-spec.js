@@ -3,7 +3,7 @@ define(['jquery', 'widgets/kbasePrompt2', 'testUtil'], ($, Prompt, testUtil) => 
 
     const { waitForText } = testUtil;
 
-    fdescribe('The Prompt widget', () => {
+    describe('The Prompt widget', () => {
         it('should be defined', () => {
             expect(Prompt).toBeDefined();
         });

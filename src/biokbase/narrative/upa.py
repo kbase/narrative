@@ -109,4 +109,3 @@ def deserialize(serial_upa: str) -> str:
     if not is_upa(deserial):
         raise ValueError('Deserialized UPA: "{}" is invalid!'.format(deserial))
     return deserial
-    return deserial

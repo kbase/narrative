@@ -474,6 +474,7 @@ define([
                 });
             }
             $('#kb-view-only-msg').removeClass('hidden');
+            $('[data-edit-mode-only]').addClass('hidden');
         },
 
         /**
@@ -496,6 +497,9 @@ define([
             // Remove the view-only buttons (first 1 or 2 children)
             $('#kb-view-only-msg').addClass('hidden');
             $('#kb-view-only-copy').addClass('hidden');
+            // How about an attribute that indicates the element wants to be
+            // hidden when in view-only.
+            $('[data-edit-mode-only]').removeClass('hidden');
 
             // re-enable clicking on narrative name
             $('#save_widget').click(() => {

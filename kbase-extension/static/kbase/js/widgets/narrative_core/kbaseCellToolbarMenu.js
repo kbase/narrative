@@ -143,7 +143,7 @@ define([
         }
 
         function renderDeveloperDeleteButton(cell, events) {
-            if (!runtime.isDeveloper()) {
+            if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
             const attribs = {
@@ -151,7 +151,6 @@ define([
                 title: 'Delete cell...',
                 id: handleClick(events, doDeleteCell),
             };
-            // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-trash fa-lg text-danger' }));
         }
 
@@ -160,10 +159,7 @@ define([
         }
 
         function renderDeveloperRunCellButton(cell, events) {
-            if (!runtime.isDeveloper()) {
-                return;
-            }
-            if (cell.cell_type !== 'code') {
+            if (!runtime.isDeveloper() || readOnly || cell.cell_type !== 'code') {
                 return;
             }
             const attribs = {
@@ -171,7 +167,6 @@ define([
                 title: 'Run cell ',
                 id: handleClick(events, () => doRunCell(cell)),
             };
-            // attribs.class += ' text-danger';
             return button(attribs, span({ class: 'fa fa-repeat fa-lg ' }));
         }
 
@@ -244,10 +239,7 @@ define([
         }
 
         function renderMoveToTop(cell, events) {
-            if (readOnly) {
-                return;
-            }
-            if (!runtime.isDeveloper()) {
+            if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
             const attribs = {
@@ -261,10 +253,7 @@ define([
         }
 
         function renderMoveToBottom(cell, events) {
-            if (readOnly) {
-                return;
-            }
-            if (!runtime.isDeveloper()) {
+            if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
             const attribs = {

@@ -15,7 +15,7 @@
         tabs : [
             {
                 // string; label of the tab
-                tab : 'T1',
+                tab : 'First Tab',
     
                 // jquery "content" (string markup, string text, element, jquery
                 // object); displayed as the tab pane content; note will be displayed
@@ -31,11 +31,11 @@
                 confirmDelete: true
             },
             {
-                tab : 'T2',
+                tab : 'Second Tab',
                 content : $('<div></div>').html("I am a tab 2")
             },
             {
-                tab : 'T3',
+                tab : 'Tab the Third',
     
                 // boolean; If true the tab is shown by default. If not specified, the first
                 // tab is shown.

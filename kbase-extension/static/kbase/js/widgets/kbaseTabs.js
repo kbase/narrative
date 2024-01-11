@@ -364,11 +364,11 @@ define([
                 const [$nextTab, $nextPanel] = (() => {
                     if ($nav.next('li').length) {
                         return [$nav.next('li'), $tab.next('[role="tabpanel"]')];
-                    } else if ($nav.prev('li').length) {
-                        return [$nav.prev('li'), $tab.prev('[role="tabpanel"]')];
-                    } else {
-                        return [null, null];
                     }
+                    if ($nav.prev('li').length) {
+                        return [$nav.prev('li'), $tab.prev('[role="tabpanel"]')];
+                    }
+                    return [null, null];
                 })();
 
                 if ($nextTab) {

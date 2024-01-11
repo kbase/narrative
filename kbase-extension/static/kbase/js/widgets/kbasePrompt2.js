@@ -7,8 +7,6 @@
     At this time, it is also a proper AMD module, whilst the older one is not (but still
     works, as it is loaded globally).
 
-    It also uses viewer of the 
-
     const myPrompt =  new Prompt($('<div>'), {
         title : 'Acknowledge Receipt',
         body : 'Did you get the message?',
@@ -34,8 +32,6 @@
         footer : 'Some footer value here',
     });
     myPrompt.open();
-
-
 
     It takes three content objects: title, body, and footer: These are all strings,
     strings with html, or jQuery objects. They will be placed as the title, body, and

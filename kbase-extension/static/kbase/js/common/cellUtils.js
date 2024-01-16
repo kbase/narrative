@@ -185,7 +185,7 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
     }
 
     const TOOLBAR_RENDER_DEBOUNCE_INTERVAL = 25;
-    let cellToolbarRenderInProgress = null;
+    const cellToolbarRendersInProgress = new Map();
 
     /**
      * Renders the cell toolbar with "debouncing".
@@ -212,14 +212,17 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
      * @returns {void}
      */
     function renderCellToolbar(cell) {
-        if (cellToolbarRenderInProgress) {
+        const cellId = getCellMeta(cell, 'kbase.attributes.id');
+        const inProgress = cellToolbarRendersInProgress.get(cellId);
+        if (inProgress) {
             return;
         }
-        cellToolbarRenderInProgress = window.setTimeout(() => {
+        const timer = window.setTimeout(() => {
             // eslint-disable-next-line no-self-assign
             cell.metadata = cell.metadata;
-            cellToolbarRenderInProgress = null;
+            cellToolbarRendersInProgress.delete(cellId);
         }, TOOLBAR_RENDER_DEBOUNCE_INTERVAL);
+        cellToolbarRendersInProgress.set(cellId, timer);
     }
 
     /**

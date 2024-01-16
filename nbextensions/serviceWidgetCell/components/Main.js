@@ -79,11 +79,10 @@ define([
             this.runtime = Runtime.make();
 
             // For the postMessage communication with the widget.
-            this.hostChannelId = new Uuid(4).format();
-            this.guestChannelId = new Uuid(4).format();
+            this.channelId = new Uuid(4).format();
             this.receiveChannel = new ReceiveChannel({
                 window,
-                id: this.hostChannelId,
+                channel: this.channelId,
             });
 
             this.status = {
@@ -123,12 +122,12 @@ define([
          *
          * @returns {void}
          */
-        onIframeLoaded(iframeWindow) {
+        onIFrameLoaded(iframeWindow) {
             const targetOrigin = new URL(this.state.value.serviceURL).origin;
             this.sendChannel = new SendChannel({
                 window: iframeWindow.contentWindow,
                 targetOrigin,
-                channel: this.guestChannelId,
+                channel: this.channelId,
             });
 
             // The app in the iframe should emit the 'clicked' event for any mouse clicks.
@@ -199,9 +198,6 @@ define([
             //
             // TODO: error handler in case of plugin startup timeout.
             this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async () => {
-                // this.channel.setPartner(channelId || this.pluginChannelId);
-                // this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
-
                 const authClient = Auth.make({
                     url: narrativeConfig.url('auth'),
                 });
@@ -245,6 +241,10 @@ define([
             });
 
             this.receiveChannel.start();
+
+            this.props.onDelete(() => {
+                this.receiveChannel.stop();
+            });
         }
 
         /**
@@ -275,10 +275,9 @@ define([
                 <${IFrame}
                     serviceURL=${serviceURL}
                     widgetName=${this.props.widgetName}
-                    hostChannelId=${this.hostChannelId}
-                    guestChannelId=${this.guestChannelId}
+                    channelId=${this.channelId}
                     params=${this.props.params}
-                    onLoaded=${this.onIframeLoaded.bind(this)}
+                    onLoaded=${this.onIFrameLoaded.bind(this)}
                 />
             `;
         }

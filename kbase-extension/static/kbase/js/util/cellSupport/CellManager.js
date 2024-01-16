@@ -177,7 +177,11 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
             // Note that cell setup c
             for (const cell of notebook.getCells()) {
                 if (this.isType(cell)) {
-                    this.reviveCell(cell);
+                    try {
+                        this.reviveCell(cell);
+                    } catch (ex) {
+                        console.error('DBG: ERROR reviving cell', ex);
+                    }
                 }
             }
 

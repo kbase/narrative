@@ -11,16 +11,20 @@
  * @property {object} params The parameters object to be passed to the widget
  */
 
-define(['preact', 'htm', 'base/js/namespace', '../components/Main'], (
-    preact,
-    htm,
-    Jupyter,
-    Main
-) => {
+define([
+    'preact',
+    'htm',
+    'common/jupyter',
+    'base/js/namespace',
+    'common/cellUtils',
+    '../components/Main',
+], (preact, htm, notebook, Jupyter, cellUtils, Main) => {
     'use strict';
 
     const { h } = preact;
     const html = htm.bind(h);
+
+    const { getCellMeta } = cellUtils;
 
     /**
      * As the cell widget runs independently, it does not automatically have a
@@ -63,6 +67,26 @@ define(['preact', 'htm', 'base/js/namespace', '../components/Main'], (
 
         const cell = findCellForId(cellId);
 
+        const deleteTasks = [];
+
+        const onDelete = (task) => {
+            deleteTasks.push(task);
+        };
+
+        notebook.onEvent('delete.Cell', (_event, payload) => {
+            const deletedCellId = getCellMeta(payload.cell, 'kbase.attributes.id');
+            if (deletedCellId !== cellId) {
+                return;
+            }
+            for (const task of deleteTasks) {
+                try {
+                    task();
+                } catch (ex) {
+                    console.error('Task with error, skipped: ', ex);
+                }
+            }
+        });
+
         const content = html`
             <${Main}
                 moduleName=${moduleName}
@@ -71,6 +95,7 @@ define(['preact', 'htm', 'base/js/namespace', '../components/Main'], (
                 params=${params}
                 state=${state}
                 cell=${cell}
+                onDelete=${onDelete}
             />
         `;
         preact.render(content, container);

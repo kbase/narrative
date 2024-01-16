@@ -13,8 +13,7 @@ define(['preact', 'htm'], (preact, htm) => {
             // All the app needs to get started is the host channel id, so that it can
             // begin communicating with the host (the Narrative!) via the iframe window.
             const iframeParams = {
-                hostChannelId: this.props.hostChannelId,
-                appChannelId: this.props.guestChannelId,
+                channelId: this.props.channelId,
                 hostOrigin: window.location.origin,
             };
             // The target url is based on the base service url, with a namespace of "widgets",

@@ -92,7 +92,7 @@ define([], () => {
          */
         send(name, payload) {
             const envelope = {
-                channel: this.id,
+                channel: this.channel,
                 created: Date.now(),
                 id: uniqueId(),
             };

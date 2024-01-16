@@ -1,8 +1,8 @@
-.Demo {
+.gallery {
     padding: 1em;
 }
 
-.Demo .Example {
+.gallery .Example {
     border: 3px solid rgb(200, 200, 200);
     padding: 1em;
     border-radius: 1em;
@@ -15,6 +15,6 @@
     );
 }
 
-.Demo .Example + .Example {
+.gallery .Example + .Example {
     margin-top: 1em;
 }

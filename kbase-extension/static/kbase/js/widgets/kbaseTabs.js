@@ -238,7 +238,6 @@ define([
             // Create the tab button itself.
             const $navButton = $el('a')
                 .attr('href', '#')
-                .addClass('kbaseTabs-tab')
                 .text(tab.tab)
                 .attr('data-tab', tab.tab)
                 .bind('click', function (e) {

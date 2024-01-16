@@ -11,7 +11,7 @@
     <title>KBase Demo - AlertMessage.js</title>
 </head>
 
-<body class="Demo">
+<body class="gallery">
     <h1>KBase Tabs Demo</h1>
 
     <p><a href="../index.html">Index</a></p>
@@ -368,8 +368,12 @@
     <div style="height: 4em"></div>
 
     <script>
+        window.testTabs = [];
+        function addTestTab(tab) {
+            window.testTabs.push(tab);
+        }
         require(['narrative_paths'], () => {
-            require(['jquery', 'widgets/kbaseTabs'], ($, $KBaseTabs) => {
+            require(['jquery', 'widgets/kbaseTabs'], ($, KBaseTabs) => {
                 const $tabContent = (content) => {
                     return $('<div>')
                         .css('background-color', 'white')
@@ -394,7 +398,7 @@
                         }
                     ]
                 };
-                const _demo1 = new $KBaseTabs($('#demo1'), tabs1);
+                addTestTab(new KBaseTabs($('#demo1'), tabs1));
 
 
                 const tabs2 = {
@@ -414,7 +418,7 @@
                         }
                     ]
                 };
-                const _demo2 = new $KBaseTabs($('#demo2'), tabs2);
+                addTestTab(new KBaseTabs($('#demo2'), tabs2));
 
 
                 const tabs3 = {
@@ -435,7 +439,7 @@
                         }
                     ]
                 };
-                const _demo3 = new $KBaseTabs($('#demo3'), tabs3);
+                addTestTab(new KBaseTabs($('#demo3'), tabs3));
 
 
                 const tabs4 = {
@@ -457,7 +461,7 @@
                         }
                     ]
                 };
-                const _demo4 = new $KBaseTabs($('#demo4'), tabs4);
+                addTestTab(new KBaseTabs($('#demo4'), tabs4));
 
                 let tabNumber = 0;
                 const tabAdder = (show, canDelete) => {
@@ -471,7 +475,7 @@
                 };
 
 
-                const tabset5 = new $KBaseTabs($('#demo5'), {
+                addTestTab(new KBaseTabs($('#demo5'), {
                     tabs: [
                         {
                             tab: 'Tab Adder',
@@ -514,7 +518,7 @@
                             content: $tabContent('<p>This is tab three.</p>')
                         }
                     ]
-                });
+                }));
 
                 const tabs6 = {
                     canDelete: true,
@@ -534,7 +538,7 @@
                         }
                     ]
                 };
-                const _demo6 = new $KBaseTabs($('#demo6'), tabs6);
+                addTestTab(new KBaseTabs($('#demo6'), tabs6));
 
 
                 let tab7Counter = 0;
@@ -568,7 +572,7 @@
                         }
                     ]
                 };
-                const _demo7 = new $KBaseTabs($('#demo7'), tabs7);
+                const _demo7 = new KBaseTabs($('#demo7'), tabs7);
 
 
                 let tabs9ErrorCountDynamic = 0;
@@ -614,7 +618,7 @@
                         }
                     ]
                 };
-                const _demo8 =new $KBaseTabs($('#demo9'), tabs9);
+                addTestTab(new KBaseTabs($('#demo9'), tabs9));
 
                 const tabs10 = {
                     tabs: [
@@ -633,7 +637,7 @@
                         }
                     ]
                 };
-                const _demo10 = new $KBaseTabs($('#demo10'), tabs10);
+                const _demo10 = new KBaseTabs($('#demo10'), tabs10);
 
                 const tabs11 = {
                     tabs: [
@@ -651,7 +655,7 @@
                         }
                     ]
                 };
-                const _demo11 = new $KBaseTabs($('#demo11'), tabs11);
+                addTestTab(new KBaseTabs($('#demo11'), tabs11));
 
                 const tabs12 = {
                     tabs: [
@@ -672,7 +676,7 @@
                         }
                     ]
                 };
-                const _temo12 = new $KBaseTabs($('#demo12'), tabs12);
+                addTestTab(new KBaseTabs($('#demo12'), tabs12));
 
             });
         });

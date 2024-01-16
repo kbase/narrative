@@ -1,101 +1,145 @@
 define([], () => {
     'use strict';
 
-    class ChannelListener {
-        // name;
-        // callback: (payload: Payload) => void;
-        // onError?: (error: any) => void;
+    const DEFAULT_WAITING_LISTENER_TIMEOUT = 5000;
+    const DEFAULT_WAITING_LISTENER_WAKEUP_INTERVAL = 100;
 
-        constructor({ name, callback, onError }) {
+    /**
+     * This class defines a thing which can be used to register itself to be called when
+     * an event matching the name provided is received.
+     *
+     * @callback ListenerCallback
+     * @param {object} payload The message payload
+     *
+     * @callback ErrorCallback
+     * @param {Error} error The error/exception thrown by by the listener callback
+     *
+     * @typedef {Object} ChannelListenerParams
+     * @property {string}           name The message name, or id.
+     * @property {ListenerCallback} callback The function to be called when a message matching
+     * the name is received
+     * @property {ErrorCallback}    onError An optional function to call in case an exception is
+     * caught executing the callback
+     *
+     *
+     */
+    class ChannelListener {
+        /**
+         *
+         * @param {ChannelListenerParams} params
+         */
+        constructor(params) {
+            const { name, callback, onError } = params;
             this.name = name;
             this.callback = callback;
             this.onError = onError;
         }
     }
 
+    /**
+     * This class defines a thing which, in addition to a basic listener, will be used
+     * in situations in which which a listener is only enabled for a certain amount of time.
+     *
+     * @typedef {Object} ChannelWaitingListener
+     * @extends {ChannelListenerParams}
+     * @property {number} timeout The duration for which the listener is valid; after
+     * the timeout expires the onError, if defined, will be called
+     *
+     */
     class ChannelWaitingListener extends ChannelListener {
-        // started: Date;
-        // timeout: number;
-
+        /**
+         *
+         * @param {ChannelWaitingListener} params
+         */
         constructor(params) {
             super(params);
+            const { timeout } = params;
             this.started = new Date();
-            this.timeout = params.timeout || 5000;
+            this.timeout = timeout || DEFAULT_WAITING_LISTENER_TIMEOUT;
         }
     }
 
+    /**
+     * An implementation of a "channel", or constrained window message listener.
+     *
+     * The channel is established by a pair of identifiers - one assigned to the sender,
+     * one to the receiver.
+     *
+     * @typedef {Object} ReceiveChannelConstructorParameters
+     * @property {Window} window The window upon whFch to receive messages
+     * @property {string} channel The identifier to use for this "channel"; only messages
+     * whose envelope contains this id will be recognized.
+     *
+     */
     class ReceiveChannel {
-        constructor({ window, id }) {
+        /**
+         *
+         * @param {ReceiveChannelConstructorParameters} param0
+         */
+        constructor({ window, channel }) {
             // The given window upon which we will listen for messages.
             this.window = window;
 
-            // The channel id. Used to filter all messages received to
-            // this channel.
-            this.receiveFromIds = [];
-
-            this.id = id;
+            this.channel = channel;
 
             this.waitingListeners = new Map();
             this.listeners = new Map();
 
             this.currentListener = null;
-            this.running = false;
-            this.stats = {
-                sent: 0,
-                received: 0,
-                ignored: 0,
-            };
-        }
-
-        receiveFrom(id) {
-            this.receiveFromIds.push(id);
-        }
-
-        getId() {
-            return this.id;
-        }
-
-        getStats() {
-            return this.stats;
         }
 
         /**
          * Receives all messages sent via postMessage to the associated window.
          *
-         * @param messageEvent - a post message event
+         * @private
+         *
+         * @typedef {object} MessageEvent
+         * @property {import('./SendChannel.js').ChannelMessage}  data The message to
+         * send
+         *
+         * @param {MessageEvent} messageEvent - a post message event
+         *
+         * @returns {void} nothing
          */
         receiveMessage(messageEvent) {
             const message = messageEvent.data;
+
             // Here we have a series of filters to determine whether this message should be
             // handled by this post message bus.
-            // In all cases we issue a warning, and return.
-
+            // In all cases we simply return.
             if (typeof message !== 'object' || message === null) {
-                this.stats.ignored += 1;
                 return;
             }
 
             // TODO: could do more here.
             if (!message.envelope) {
-                this.stats.ignored += 1;
                 return;
             }
 
-            // Here we ignore messages intended for another channels.
-            if (message.envelope.to !== this.id) {
-                this.stats.ignored += 1;
+            // Ignore messages intended for another channels.
+            if (message.envelope.channel !== this.channel) {
                 return;
             }
 
-            if (!this.receiveFromIds.includes(message.envelope.from)) {
-                this.stats.ignored += 1;
-                return;
-            }
+            this.processMessage(message);
+        }
 
-            this.stats.received += 1;
-
+        /**
+         * Attempts to handle the given message.
+         *
+         * @private
+         *
+         * @param {import('./SendChannel.js').ChannelMessage} message
+         * @returns {void} nothing
+         */
+        processMessage(message) {
+            // "waiting listeners" will exist for a limited amount of time, during which
+            // they are "waiting" for the given message to be received.
+            // Here we process any waiting listeners that match the incoming message.
             if (this.waitingListeners.has(message.name)) {
                 const awaiting = this.waitingListeners.get(message.name);
+
+                // Waiting listeners are always removed when processed, even if they fail.
                 this.waitingListeners.delete(message.name);
                 awaiting.forEach((listener) => {
                     try {
@@ -112,22 +156,22 @@ define([], () => {
             // message name.
             const listeners = this.listeners.get(message.name) || [];
             for (const listener of listeners) {
-                switch (message.envelope.type) {
-                    case 'plain':
-                    default:
-                        // default case handles older messages without the envelope type.
-                        try {
-                            return listener.callback(message.payload);
-                        } catch (ex) {
-                            if (listener.onError) {
-                                listener.onError(ex);
-                            }
-                        }
-                        break;
+                try {
+                    return listener.callback(message.payload);
+                } catch (ex) {
+                    if (listener.onError) {
+                        listener.onError(ex);
+                    }
                 }
             }
         }
 
+        /**
+         * Registers a listener object to be available thenceforth from now.
+         *
+         * @private
+         * @param {ChannelListener} listener
+         */
         listen(listener) {
             if (!this.listeners.has(listener.name)) {
                 this.listeners.set(listener.name, []);
@@ -135,10 +179,19 @@ define([], () => {
             this.listeners.get(listener.name).push(listener);
         }
 
-        on(messageId, callback, onError) {
+        /**
+         *
+         *
+         * @public
+         *
+         * @param {*} name
+         * @param {*} callback
+         * @param {*} onError
+         */
+        on(name, callback, onError) {
             this.listen(
                 new ChannelListener({
-                    name: messageId,
+                    name,
                     callback,
                     onError: (error) => {
                         if (onError) {
@@ -149,12 +202,24 @@ define([], () => {
             );
         }
 
+        /**
+         * Starts a timeout-based monitoring loop to handle any waiting listeners.
+         *
+         * If there are no waiting listeners, the loop will terminate.
+         *
+         * @private
+         *
+         * @returns {void} nothing
+         */
         startMonitor() {
             window.setTimeout(() => {
                 const now = new Date().getTime();
 
                 // first take care of listeners awaiting a message.
-                for (const [id, listeners] of Array.from(this.waitingListeners.entries())) {
+                for (const [messageName, listeners] of Array.from(
+                    this.waitingListeners.entries()
+                )) {
+                    // Remove any expired listeners.
                     const newListeners = listeners.filter((listener) => {
                         if (listener instanceof ChannelWaitingListener) {
                             const elapsed = now - listener.started.getTime();
@@ -164,7 +229,7 @@ define([], () => {
                                         listener.onError(new Error('timout after ' + elapsed));
                                     }
                                 } catch (ex) {
-                                    console.error('Error calling error handler', id, ex);
+                                    console.error('Error calling error handler', messageName, ex);
                                 }
                                 return false;
                             } else {
@@ -174,17 +239,28 @@ define([], () => {
                             return true;
                         }
                     });
+
+                    // Waiting listeners are organized in a map by message name;
                     if (newListeners.length === 0) {
-                        this.waitingListeners.delete(id);
+                        this.waitingListeners.delete(messageName);
                     }
                 }
 
+                // We only monitor waiting listeners if there are any.
                 if (this.waitingListeners.size > 0) {
                     this.startMonitor();
                 }
-            }, 100);
+            }, DEFAULT_WAITING_LISTENER_WAKEUP_INTERVAL);
         }
 
+        /**
+         *
+         * @private
+         *
+         * @param {ChannelWaitingListener} listener
+         *
+         * @returns {void} nothing
+         */
         listenOnce(listener) {
             if (!this.waitingListeners.has(listener.name)) {
                 this.waitingListeners.set(listener.name, []);
@@ -195,6 +271,17 @@ define([], () => {
             }
         }
 
+        /**
+         *
+         * @public
+         *
+         * @param {string} name The message name
+         * @param {number} timeout How long to wait for the message to be received
+         * @param {ListenerCallback} callback
+         * @param {ErrorCallback} onError
+         *
+         * @returns {void} nothing
+         */
         once(name, timeout, callback, onError) {
             this.listenOnce(
                 new ChannelWaitingListener({
@@ -210,6 +297,17 @@ define([], () => {
             );
         }
 
+        /**
+         * A Promise-based version of "once" - resolves when the message is received,
+         * rejects if the timeout is exceeded before the message is received.
+         *
+         * @public
+         *
+         * @param {string} name The message name
+         * @param {number} timeout How long to wait for the message to be received
+         *
+         * @returns {Promise} A promise which resolves when the message is re
+         */
         when(name, timeout) {
             return new Promise((resolve, reject) => {
                 return this.listenOnce(
@@ -227,17 +325,25 @@ define([], () => {
             });
         }
 
+        /**
+         * Starts the channel listening for window messages.
+         *
+         * @returns {ReceiveChannel}
+         */
         start() {
             this.currentListener = (message) => {
                 this.receiveMessage(message);
             };
             this.window.addEventListener('message', this.currentListener, false);
-            this.running = true;
             return this;
         }
 
+        /**
+         * Stops listening for window messages.
+         *
+         * @returns {ReceiveChannel}
+         */
         stop() {
-            this.running = false;
             if (this.currentListener) {
                 this.window.removeEventListener('message', this.currentListener, false);
             }

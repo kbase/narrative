@@ -1253,15 +1253,14 @@ define(
                 const cellId = new Uuid(4).format();
                 const widget = model.getItem('exec.outputWidgetInfo');
 
-
                 const cellSetupData = (() => {
                     if (widget.name === 'ServiceWidget') {
                         //
                         // Here we handle this widget name with the serviceWidget cell
                         // type. Specifying an output widget of
                         // "ServiceWidgetGeneric" will cause widget to be
-                        // handled by the serviceWidget cell. 
-                        // 
+                        // handled by the serviceWidget cell.
+                        //
                         // he specific widget is specified by a pair of values - the
                         // service module name and the widget name in that service.
                         //
@@ -1274,11 +1273,12 @@ define(
                         // The "rest" of the parameters are extracted for the widget
                         // itself.
                         ///
-                        const {service_module_name, widget_name, title, subtitle, ...params} = widget.params;
+                        const { service_module_name, widget_name, title, subtitle, ...params } =
+                            widget.params;
 
                         const appSpec = model.getItem('app.spec');
 
-                        return  {
+                        return {
                             type: 'serviceWidget',
                             attributes: {
                                 title,
@@ -1290,29 +1290,26 @@ define(
                                         extraIcon: {
                                             classSuffix: 'arrow-right',
                                         },
-                                        stacked: false
-                                    }
-                                }
+                                        stacked: false,
+                                    },
+                                },
                             },
-                            metadata: {
+                            params: {
                                 service: {
                                     moduleName: service_module_name,
                                     widgetName: widget_name,
-                                    title,
-                                    subtitle,
                                     params,
-                                    isDynamicService: true
-                                }
-                            }
+                                    isDynamicService: true,
+                                },
+                            },
                         };
-
                     } else {
                         return {
                             cellId,
                             jobId,
                             parentCellId,
                             type: 'output',
-                            widget
+                            widget,
                         };
                     }
                 })();

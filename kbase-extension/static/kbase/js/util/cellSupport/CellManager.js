@@ -1,6 +1,39 @@
+/**
+ * A class for managing the interface between a Cell and Jupyter.
+ *
+ * Note that all values must be serializable as JSON.
+ *
+ * @typedef {Object} KBaseCellAttributes
+ * @property {string} id A unique, persistent identifier for
+ * the cell
+ * @property {string} title The title to be displayed for the
+ * cell in the cell's header area
+ * @property {string} subtitle The subtitle to be displayed
+ * for the cell in the cell's header area
+ * @property {object} icon An icon specification object which
+ * will be interpreted by the `getIconForCell` method of the cell (in CellBase)
+ * @property {string} created A timestamp recording the moment the cell was created,
+ * stored in ISO8601 format.
+ */
+
+/**
+ * @param {Object} KBaseCellSetupData An object which provides information to create a
+ * cell of the type this manager is designed to handle. The detailed
+ * specification of this object depends on the KBase cell type.
+ * @property {string} type The KBase cell type, which will be defined as
+ * as a notebook extension in `nbextensions/TYPE`.
+ * @property {KBaseCellAttributes} attributes Common KBase cell attributes; these are
+ * the same across all KBase cell types
+ * @property {object} custom State data which is specific
+ */
+
+/**
+ * @typedef {Object} NotebookCell The native notebook cell object.
+ */
+
 define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
     $,
-    notebook, // {getCells, disableKeyListenersForCell},
+    notebook,
     Jupyter,
     UI
 ) => {
@@ -22,8 +55,30 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
             this.workspaceInfo = null;
             this.name = name;
             this.instanceClass = instanceClass;
+
+            // TODO: is there a predicate method, rather than using what is presumably
+            // a private property like this?
+            if (Jupyter.notebook._fully_loaded) {
+                // handles case in which it is already loaded by the time
+                // nbextensions are loaded
+                this.initializeExtension();
+            } else {
+                // Handles case in which the notebook is not finished loading by the the
+                // nbextensions are loaded; the notebook_loaded.Notebook is used to trigger
+                // instead.
+                $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
+                    this.initializeExtension();
+                });
+            }
         }
 
+        /**
+         * Determines whether the given Notebook cell is compatible with the KBase cell
+         * type for which this manager was created.
+         *
+         * @param {NotebookCell} cell A Jupyter Notebook cell object
+         * @returns {boolean} `true` if the cell is compatible, `false` otherwise
+         */
         isType(cell) {
             // We only handle cells of the type set for this CellManager object.
             if (cell.cell_type !== 'code') {
@@ -39,31 +94,55 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
             return true;
         }
 
-        reviveCell(cell) {
-            const instance = new this.instanceClass({
+        /**
+         * Creates an instance of the cell class this manager is dedicated to.
+         *
+         * @param {NotebookCell} cell A Jupyter Notebook cell object
+         * @returns {void} nothing
+         */
+        createCellInstance(cell) {
+            return new this.instanceClass({
+                cell,
                 name: this.name,
                 type: this.type,
                 icon: this.icon,
-                cell,
             });
+        }
+
+        /**
+         * Responsible for getting the given existing cell into a proper running state.
+         *
+         * @param {NotebookCell} cell A Jupyter Notebook cell object
+         * @returns {void} nothing
+         */
+        reviveCell(cell) {
+            const instance = this.createCellInstance(cell);
             instance.setupCell();
             instance.start();
         }
 
+        /**
+         * Responsible for getting the give newly inserted cell into a proper running
+         * state, and configured for persistence of it's state so that it may be revived
+         * when the Narrative is reopened at a later time.
+         *
+         * @param {NotebookCell} cell A Jupyter Notebook cell object
+         * @param {KBaseCellSetupData} setupData An object which provides information to create a
+         * cell of the type this manager is designed to handle. The detailed
+         * specification of this object depends on the KBase cell type.
+         *
+         * @returns {void} nothing
+         */
         initializeCell(cell, setupData) {
-            const instance = new this.instanceClass({
-                name: this.name,
-                type: this.type,
-                icon: this.icon,
-                cell,
-            });
+            const instance = this.createCellInstance(cell);
             instance.upgradeCell(setupData);
             instance.setupCell();
-            instance.create();
+            instance.injectPython();
             instance.start();
+            instance.runPython();
         }
 
-        /*
+        /**
          * Called directly by Jupyter during the notebook startup process,
          * after the notebook is loaded and the dom structure is created.
          *
@@ -89,6 +168,8 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
          *
          * But we do have asynchronous dependencies - particularly the runtime -
          * move them out of here?
+         *
+         * @returns {void} nothing
          */
         initializeExtension() {
             // Sets up all existing instances of cells of type `this.type`.
@@ -119,23 +200,6 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
                     }
                 }
             });
-        }
-
-        initialize() {
-            // TODO: is there a predicate method, rather than using what is presumably
-            // a private property like this?
-            if (Jupyter.notebook._fully_loaded) {
-                // handles case in which it is already loaded by the time
-                // nbextensions are loaded
-                this.initializeExtension();
-            } else {
-                // Handles case in which the notebook is not finished loading by the the
-                // nbextensions are loaded; the notebook_loaded.Notebook is used to trigger
-                // instead.
-                $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
-                    this.initializeExtension();
-                });
-            }
         }
     }
 

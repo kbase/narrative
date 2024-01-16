@@ -80,12 +80,10 @@ define([
                         },
                     },
                 },
-                metadata: {
+                params: {
                     service: {
                         moduleName,
                         widgetName,
-                        title,
-                        subtitle,
                         params,
                         // todo: get this from the form.
                         isDynamicService: true,

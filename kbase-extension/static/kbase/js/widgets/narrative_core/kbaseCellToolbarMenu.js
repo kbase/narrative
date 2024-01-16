@@ -106,8 +106,7 @@ define([
 
         function buildIcon(_cell) {
             if (_cell && _cell.getIcon) {
-                const icon = _cell.getIcon();
-                return icon;
+                return _cell.getIcon();
             }
             return span({
                 class: `${cssBaseClass}__icon--build_icon fa fa-thumbs-down fa-2x`,
@@ -422,15 +421,11 @@ define([
             }
 
             const extraIcon = (() => {
-                if (utils.getCellMeta(_cell, 'kbase.serviceWidget')) {
-                    const extraIcon = utils.getCellMeta(
-                        _cell,
-                        'kbase.attributes.icon.params.extraIcon'
-                    );
-                    if (!extraIcon) {
-                        return '';
-                    }
-
+                const extraIcon = utils.getCellMeta(
+                    _cell,
+                    'kbase.attributes.icon.params.extraIcon'
+                );
+                if (extraIcon) {
                     return div(
                         {
                             dataElement: 'icon',

@@ -11,14 +11,12 @@ define([
     'common/runtime',
     'common/cellUtils',
     'jsonrpc/1.1/DynamicServiceClient',
-    'base/js/namespace',
     './IFrame',
     '../utils',
     '../constants',
 
     // For effect
     'bootstrap',
-    'css!./Main.css',
 ], (
     preact,
     htm,
@@ -32,7 +30,6 @@ define([
     Runtime,
     cellUtils,
     DynamicServiceClient,
-    Jupyter,
     IFrame,
     utils,
     constants
@@ -42,7 +39,7 @@ define([
     const { h, Component } = preact;
     const html = htm.bind(h);
 
-    const { findById, getCellMeta, setTitle } = cellUtils;
+    const { getCellMeta, setTitle } = cellUtils;
     const { niceConfig } = utils;
     const { WIDGET_SERVICE_TIMEOUT } = constants;
 
@@ -53,7 +50,29 @@ define([
         ERROR: 'ERROR',
     };
 
+    /**
+     * @typedef {object} MainProps
+     * @property {string} moduleName The name of the service model which will be serving
+     * the widget app.
+     * @property {string} widgetName The name of the widget within the service
+     * @property {boolean} isDynamicService Whether the service is a dynamic service or not
+     * @property {object} params A parameters object utilized by the widget; think parameters
+     * for a widget like function parameters.
+     * @property {object} state The state object contains dynamic information which can
+     * be utilized by the widget; typically state is set by the service widget or widget
+     * app, stored in the cell metadata, and restored to the cell and cell app when the
+     * cell is next revived.
+     * @property {string} cellId The cell's unique, persistent id; used by to coordinate
+     * events between this cell and the widget app.
+     *
+     *  @typedef {Object} NotebookCell The native notebook cell object.
+     */
+
     class Main extends Component {
+        /**
+         *
+         * @param {MainProps} props
+         */
         constructor(props) {
             super(props);
 
@@ -66,7 +85,6 @@ define([
                 window,
                 id: this.hostChannelId,
             });
-            this.receiveChannel.receiveFrom(this.guestChannelId);
 
             this.status = {
                 status: STATUS.NONE,
@@ -97,35 +115,20 @@ define([
             }
         }
 
-        findCellForId(id) {
-            const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
-                if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
-                    return cell.metadata.kbase.attributes.id === id;
-                }
-                return false;
-            });
-            if (matchingCells.length === 1) {
-                return matchingCells[0];
-            }
-            return null;
-        }
-
         /**
+         * Called when the iframe has been loaded, as signaled by the 'load' event on
+         * the window.
          *
-         * @param {*} iframeWindow - The window DOM object for the iframe containing the app
-         * @param {*} params - The parameters to pass to the app when it is first loaded
+         * @param {Window} iframeWindow - The window DOM object for the iframe containing the app
+         *
+         * @returns {void}
          */
         onIframeLoaded(iframeWindow) {
-            // if (this.state.status !== 'SUCCESS') {
-            //     return;
-            // }
-
             const targetOrigin = new URL(this.state.value.serviceURL).origin;
             this.sendChannel = new SendChannel({
                 window: iframeWindow.contentWindow,
                 targetOrigin,
-                id: this.hostChannelId,
-                to: this.guestChannelId,
+                channel: this.guestChannelId,
             });
 
             // The app in the iframe should emit the 'clicked' event for any mouse clicks.
@@ -140,16 +143,12 @@ define([
             // the iframe, the menu would not close if a user clicked inside the iframe.
             //
             this.receiveChannel.on('click', () => {
-                const cell = this.findCellForId(this.props.cellId);
-                if (!cell) {
-                    return;
-                }
-                cell.element.click();
+                this.props.cell.element.click();
             });
 
             // A widget may set the title of its cell.
             this.receiveChannel.on('set-title', ({ title }) => {
-                setTitle(this.props.cellId, title);
+                setTitle(this.props.cell, title);
             });
 
             // TODO: re-enable auto sizing. The cell size should end up being
@@ -199,9 +198,9 @@ define([
             // removed from the channel.
             //
             // TODO: error handler in case of plugin startup timeout.
-            this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async ({ channelId }) => {
+            this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async () => {
                 // this.channel.setPartner(channelId || this.pluginChannelId);
-                this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
+                // this.receiveChannel.receiveFrom(channelId || this.guestChannelId);
 
                 const authClient = Auth.make({
                     url: narrativeConfig.url('auth'),
@@ -226,11 +225,7 @@ define([
                 const propsState = this.props.state || {};
 
                 // We also get stored widget state from the cell's metadata.
-                const widgetState = getCellMeta(
-                    findById(this.props.cellId),
-                    'kbase.serviceWidget.widgetState',
-                    {}
-                );
+                const widgetState = getCellMeta(this.props.cell, 'kbase.widgetState', {});
 
                 const startMessage = {
                     authentication,
@@ -252,30 +247,17 @@ define([
             this.receiveChannel.start();
         }
 
+        /**
+         *
+         * @returns
+         */
         async getServiceURL() {
-            const authClient = Auth.make({
-                url: narrativeConfig.url('auth'),
-            });
-
-            const token = authClient.getAuthToken();
-
-            // Note that the service base url is the same form as the classic
-            // environment variable KBASE_ENDPOINT, which includes the /services/ suffix,
-            // which you will also note includes the training forward slash.
-            // E.g. https://ci.kbase.us/servics/
-
-            if (this.props.isDynamicService) {
-                const { url } = await new DynamicServiceClient({
-                    url: narrativeConfig.config.services.service_wizard.url,
-                    module: this.props.moduleName,
-                    timeout: 10000,
-                    token,
-                }).getModule();
-                return url;
-            }
-            const [, serviceBaseURL] =
-                narrativeConfig.config.services.service_wizard.url.match(/^(.*\/services\/).*/);
-            return new URL(`${serviceBaseURL}${this.props.moduleName}`).toString();
+            const { url } = await new DynamicServiceClient({
+                url: narrativeConfig.config.services.service_wizard.url,
+                module: this.props.moduleName,
+                timeout: 10000,
+            }).getModule();
+            return url;
         }
 
         // actions
@@ -292,7 +274,7 @@ define([
             return html`
                 <${IFrame}
                     serviceURL=${serviceURL}
-                    appName=${this.props.appName}
+                    widgetName=${this.props.widgetName}
                     hostChannelId=${this.hostChannelId}
                     guestChannelId=${this.guestChannelId}
                     params=${this.props.params}

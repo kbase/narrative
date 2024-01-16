@@ -102,18 +102,20 @@ define([], () => {
         const fixedArgs = args.map((arg) => {
             const splitArgs = arg.split('\n');
             if (splitArgs.length > 1) {
-                return splitArgs.map((arg, index) => {
-                    // The re-joined string will be indented later, so we 
-                    // don't want to indent the first one.
-                    if (index === 0) {
-                        return arg;
-                    }
-                    return `${indent}${arg}`
-                }).join('\n');
+                return splitArgs
+                    .map((arg, index) => {
+                        // The re-joined string will be indented later, so we
+                        // don't want to indent the first one.
+                        if (index === 0) {
+                            return arg;
+                        }
+                        return `${indent}${arg}`;
+                    })
+                    .join('\n');
             } else {
                 return arg;
             }
-        })
+        });
 
         return '\n' + indent + fixedArgs.join(',\n' + indent) + '\n';
     }
@@ -250,32 +252,39 @@ define([], () => {
         return pythonCode;
     }
 
-
     /**
-     * 
-     * Builds a snippet of Python code which itself will build and render Javascript.
-     * 
-     * @param {*} param0 
-     * @returns 
+     *
+     * Builds a snippet of Python code (which itself will build and render Javascript)
+     * for rendering a service widget.
+     *
+     * @param {*} param0
+     * @returns
      */
-    function buildServiceWidgetRunner({cellId, moduleName, widgetName, params, isDynamicService, widgetState}) {
+    function buildServiceWidgetRunner({
+        cellId,
+        moduleName,
+        widgetName,
+        params,
+        isDynamicService,
+        widgetState,
+    }) {
         const positionalArgs = [
             pythonifyValue(cellId),
             pythonifyValue(moduleName),
             pythonifyValue(widgetName),
-            pythonifyValue(params, {autoIndent: true}),
+            pythonifyValue(params, { autoIndent: true }),
             pythonifyValue(isDynamicService),
-            pythonifyValue(widgetState)
+            pythonifyValue(widgetState),
         ];
 
         const pythonCode = [
-            'from biokbase.cells.service_widget import render_app',
+            'from biokbase.cells.service_widget import render',
             'import importlib',
             'importlib.reload(biokbase.cells.service_widget)',
-            `render_app(${buildNiceArgsList(positionalArgs)})`
+            `render(${buildNiceArgsList(positionalArgs)})`,
         ].join('\n');
 
-        return pythonCode
+        return pythonCode;
     }
 
     function buildCustomWidgetRunner(cellId, runId, app) {
@@ -343,6 +352,6 @@ define([], () => {
         buildCustomWidgetRunner,
         buildDataWidgetRunner,
         buildBulkAppRunner,
-        buildServiceWidgetRunner
+        buildServiceWidgetRunner,
     };
 });

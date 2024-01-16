@@ -1,25 +1,63 @@
+/**
+ * A class for managing the interface between a Cell and Jupyter.
+ *
+ * Note that all values must be serializable as JSON.
+ *
+ * @typedef {Object} KBaseCellAttributes
+ * @property {string} id A unique, persistent identifier for
+ * the cell
+ * @property {string} title The title to be displayed for the
+ * cell in the cell's header area
+ * @property {string} subtitle The subtitle to be displayed
+ * for the cell in the cell's header area
+ * @property {object} icon An icon specification object which
+ * will be interpreted by the `getIconForCell` method of the cell (in CellBase)
+ * @property {string} created A timestamp recording the moment the cell was created,
+ * stored in ISO8601 format.
+ */
+
+/**
+ * @typedef {Object} KBaseCellSetupData An object which provides information to create a
+ * cell of the type this manager is designed to handle. The detailed
+ * specification of this object depends on the KBase cell type.
+ * @property {string} type The KBase cell type, which will be defined as
+ * as a notebook extension in `nbextensions/TYPE`.
+ * @property {KBaseCellAttributes} attributes Common KBase cell attributes; these are
+ * the same across all KBase cell types and are expected by cell management and
+ * integration code.
+ * @property {object} params Parameters for the kbase cell implementation; this is
+ * essentially all the information that will be passed to the kbase cell itself.
+ */
+
+/**
+ * @typedef {Object} KBaseCellIconSpec An object which provides a specification for an
+ * icon to be displayed in the cell header.
+ * @property {string} type The type of cell; supported types are `'generic'`,
+ * `'appoutput'`, and `'data'`
+ * @property {object} params Paramaters required to construct an icon of the given type;
+ * see `getIconForCell` for details
+ */
+
 define([
     'uuid',
     'common/runtime',
     'common/ui',
-    'common/busEventManager',
     'common/props',
     'common/jupyter',
     'common/html',
     'common/cellUtils',
     'util/icon',
-], (Uuid, runtime, UI, BusEventManager, Props, jupyter, html, cellUtils, icon) => {
+], (Uuid, runtime, UI, Props, jupyter, html, cellUtils, icon) => {
     'use strict';
 
     const { tag } = html;
     const div = tag('div');
     const p = tag('p');
-    const span = tag('span');
 
     // This business because we cannot destructure in the parameters with 'use strict',
     // yet we can't get rid of use strict due to the linting configuration.
     const { getCells, deleteCell, disableKeyListenersForCell } = jupyter;
-    const { getCellMeta, setCellMeta } = cellUtils;
+    const { getCellMeta, setCellMeta, renderCellToolbar } = cellUtils;
     const { makeAppOutputIcon, makeDataIcon, makeGenericIcon } = icon;
 
     /**
@@ -29,9 +67,18 @@ define([
      *
      * In addition, the `deleteMessage` method may be overridden to provide a more
      * appropriate confirmation warning when deleting a cell.
+     *
+     * @param {object} constructor_params The required and optional constructor
+     * parameters, wrapped into an object so that they may be named.
+     * @param {Cell} constructor_params.cell The Notebook cell for which this Cell is responsible.
+     * @param {string} constructor_params.type The KBase cell type, such as
+     * "serviceWidget"; each cell type must be implemented as an nbextension
+     * @param {string} constructor_params.name A name for the cell type, meant to be
+     * displayed to humans
+     * @param {icon}
      */
     class CellBase {
-        constructor({ cell, type, name, icon, container }) {
+        constructor({ cell, type, name, icon }) {
             // Initialize properties from constructor
             if (typeof cell === 'undefined') {
                 throw new Error('The "cell" parameter must be supplied');
@@ -48,79 +95,135 @@ define([
             }
             this.name = name;
 
+            if (typeof icon === 'undefined') {
+                throw new Error('The "icon" parameter must be supplied');
+            }
             this.icon = icon;
-
-            this.container = container || null;
-
-            // Initialize all else.
-
-            this.ui = UI.make({ node: container || document.body });
-
-            this.runtime = runtime.make();
         }
 
-        setupComm() {
-            this.cellBus = this.runtime.bus().makeChannelBus({
-                name: {
-                    cell: Props.getDataItem(this.cell.metadata, 'kbase.attributes.id'),
-                },
-                description: `A ${this.name} channel`,
-            });
+        // Abstract methods
 
-            this.eventManager.add(
-                this.cellBus.on('delete-cell', () => {
-                    this.doDeleteCell();
-                })
-            );
+        /**
+         * Generates a python string to be inserted into the code input area when the
+         * cell is created.
+         *
+         * @abstract
+         * @returns {string} A snippet of Python code in text form.
+         */
+        generatePython() {
+            throw new Error('The "generatePython" method must be redefined by a sub-class');
         }
 
-        updateIcon({ name, color }) {
-            const cellToolbarElement = this.cell.element.find('celltoolbar');
-            const iconElement = cellToolbarElement.find('[data-element="icon"]');
+        /**
+         * Returns a class string which will be placed on the top level cell; typically
+         * used to add custom behavior to the cell.
+         *
+         * @abstract
+         * @returns {string} The class string that should be added to the top level cell element
+         */
+        getCellClass() {
+            throw new Error('The "getCellClass" method must be defined by a sub-class');
+        }
 
-            const icon = span([
-                span(
-                    {
-                        class: 'fa-stack fa-2x',
-                        style: { textAlign: 'center', color },
+        // "Soft abstract" methods
+        // May be overrident, but otherwise are essentially noops.
+
+        /**
+         * Called during the start lifecycle method, this optional method provides an
+         * opportunity for the cell implementation subclass to perform any actions when
+         * the cell is loaded and activated.
+         *
+         * @returns {void} nothing
+         */
+        onStart() {
+            return;
+        }
+
+        /**
+         * Called during the stop lifecycle method, this optional method provides an
+         * opportunity for the cell implementation subclass to perform any actions when
+         * the cell is being unloaded (deleted).
+         *
+         * @returns {void} nothing
+         */
+        onStop() {
+            return;
+        }
+
+        // Concrete methods
+
+        /**
+         * This method establishes a channel on the main communication bus, with a name
+         * set to the structure `{cell: CELL_ID}`, where `CELL_ID` is the unique uuid
+         * created for this cell.
+         *
+         * Generally this allows messages to be targeted at this cell from disparate
+         * hinterlands of the Narrative.
+         *
+         * @returns {void}
+         */
+        createCellChannel() {
+            return runtime
+                .make()
+                .bus()
+                .makeChannelBus({
+                    name: {
+                        cell: Props.getDataItem(this.cell.metadata, 'kbase.attributes.id'),
                     },
-                    [
-                        span({
-                            class: 'fa fa-square fa-stack-2x',
-                            style: { color },
-                        }),
-                        span({ class: `fa fa-inverse fa-stack-1x fa-${name}` }),
-                    ]
-                ),
-            ]);
-            iconElement.innerHTML = icon;
-            this.renderCellToolbar();
-            // this.cell.metadata = this.cell.metadata;
+                    description: `A ${this.name} channel`,
+                });
         }
 
+        /**
+         * The reverse of the above. Removes the cell's channel from the runtime bus.
+         * There is no need to remove listeners from the channel, as they are removed
+         * along with the channel.
+         *
+         * @returns {void}
+         */
+        deleteCellChannel() {
+            this.cellBus.stop();
+        }
+
+        /**
+         * Causes the cell's toolbar to be re-rendered, reflecting the state of the cell.
+         *
+         * It is "debounced" so it is okay to call it repeatedly without worrying much
+         * about spamming the cell toolbar.
+         *
+         */
         renderCellToolbar() {
-            // eslint-disable-next-line no-self-assign
-            this.cell.metadata = this.cell.metadata;
+            renderCellToolbar(this.cell);
         }
 
+        /**
+         * Inspects all of the cells of the notebook , returning the cell which matches
+         * the id
+         *
+         * @returns {object} The Notbook cell associated with the cell object
+         */
         findCell() {
             const found = getCells().filter((cell) => {
                 return cell.metadata.kbase.attributes.id === this.cell.metadata.kbase.attributes.id;
             });
 
             if (found.length === 0) {
-                console.error('Cell not found, state will not be saved');
-                return;
+                throw new Error('The cell could not be found');
             }
 
             if (found.length > 1) {
-                console.error('Too many cells found, state cannot be saved');
-                return;
+                throw new Error('Too many cells found');
             }
 
             return found[0];
         }
 
+        /**
+         * Creates a message to be displayed in the confirmation dialog displayed after
+         * a user has used the UI to delete the cell
+         *
+         * @returns {string} An html string
+         */
         deleteMessage() {
             return div([
                 p(['Deleting this cell will remove the code and any generated code output.']),
@@ -128,8 +231,15 @@ define([
             ]);
         }
 
+        /**
+         * Called after the user has used the delete button.
+         *
+         * Requires confirmation before the cell is actually deleted.
+         *
+         * @returns {void}
+         */
         async doDeleteCell() {
-            const confirmed = await this.ui.showConfirmDialog({
+            const confirmed = await UI.make({ node: document.body }).showConfirmDialog({
                 title: 'Confirm Cell Deletion',
                 body: this.deleteMessage(),
             });
@@ -143,58 +253,134 @@ define([
             deleteCell(this.cell);
         }
 
-        setIcon(icon) {
-            this.icon = icon;
-            // The kbaseCellToolbarMenu will rebuild the icon during a render,
-            // and rendering the toolbar is triggered by updating the cell metadata.
+        /**
+         * Convenience function to get a property from the `params` part of the kbase
+         * cell metadata.
+         *
+         * The property path is `metadata.kbase.params`;
+         *
+         * @public
+         *
+         * @param {string} propPath The property name, or dot-separated path, from which
+         * to extract the value.
+         * @param {unknown} defaultValue A value to return if the property does not
+         * exist; defaults to `unknown`.
+         * @returns
+         */
+        getParams(propPath, defaultValue) {
+            const path = ['kbase', 'params'];
+            if (propPath) {
+                path.push(propPath);
+            }
+            return getCellMeta(this.cell, path.join('.'), defaultValue);
+        }
+
+        /**
+         * Set a JSON-compatible on a given property path within `metadata.kbase`.
+         *
+         * Will create objects with corresponding properties, if need be.
+         *
+         * @public
+         *
+         * @param {string} propPath The property name, or dot-separated path, at which
+         * the value should be available.
+         * @param {unknown} value Any JSON-serializable value to set for the property.
+         */
+        setMetadata(propPath, value) {
+            const path = `kbase.${propPath}`;
+            setCellMeta(this.cell, path, value);
+        }
+
+        /**
+         * Convenience function to get a property from the kbase cell metadata.
+         *
+         * The property path is `metadata.kbase`;
+         *
+         * @param {string} propPath The property name, or dot-separated path, from which
+         * to extract the value.
+         * @param {unknown} defaultValue A value to return if the property does not
+         * exist; defaults to `unknown`.
+         * @returns {unknown}
+         */
+        getMetadata(propPath, defaultValue) {
+            const path = ['kbase'];
+            if (propPath) {
+                path.push(propPath);
+            }
+            return getCellMeta(this.cell, path.join('.'), defaultValue);
+        }
+
+        /**
+         * Set a JSON-compatible on a given property path within the common cell state,
+         * `metadata.kbase.cellState`.
+         *
+         * Will create objects with corresponding properties, if need be.
+         *
+         * Will trigger a cell toolbar re-render.
+         *
+         * @public
+         *
+         * @param {string} propPath The property name, or dot-separated path, at which
+         * the value should be available.
+         * @param {unknown} value Any JSON-serializable value to set for the property.
+         */
+        setCellState(propPath, value) {
+            const path = ['kbase', 'cellState'];
+            if (propPath) {
+                path.push(propPath);
+            }
+            setCellMeta(this.cell, path.join('.'), value);
             this.renderCellToolbar();
         }
 
-        setExtensionMetadata(propPath, value) {
-            const path = `kbase.${this.type}.${propPath}`;
-            setCellMeta(this.cell, path, value, true);
+        /**
+         * Convenience function to get a property from the common cell state, located at
+         * `metadata.kbase.cellState`
+         *
+         * The property path is `metadata.kbase`
+         *
+         * @public
+         *
+         * @param {string} propPath The property name, or dot-separated path, from which
+         * to extract the value.
+         * @param {unknown} defaultValue A value to return if the property does not
+         * exist; defaults to `unknown`.
+         * @returns {unknown} The requested value, or the default value if not found
+         */
+        getCellState(propPath, defaultValue) {
+            const path = ['kbase', 'cellState'];
+            if (propPath) {
+                path.push(propPath);
+            }
+            return getCellMeta(this.cell, path.join('.'), defaultValue);
         }
 
-        getExtensionMetadata(propPath, defaultValue) {
-            const path = `kbase.${this.type}.${propPath}`;
-            return getCellMeta(this.cell, path, defaultValue);
-        }
-
-        setMetadata(propPath, value, render) {
-            const path = `kbase.${propPath}`;
-            setCellMeta(this.cell, path, value, render);
-        }
-
-        getMetadata(propPath, defaultValue) {
-            const path = `kbase.${propPath}`;
-            return getCellMeta(this.cell, path, defaultValue);
-        }
-
-        create() {
+        /**
+         * Sets the code for the cell from the results of `generatePython()`
+         *
+         * @private
+         *
+         * @returns {void} nothing
+         *
+         */
+        injectPython() {
             //TODO: we only need to do this once, when the cell is first created.
             this.cell.set_text(this.generatePython());
-            // Nothing is returned for this execution.
-            // It is asynchronous, clearly, so we don't know
-            // when it completes.
-            // In the context of the cell lifecycle, the cell will
-            // come to life when the code executes, inserts the widget javascript.
+        }
+
+        /**
+         * Requests that Jupyter run the code found in this cell.
+         *
+         * In the context of the cell lifecycle, the cell will come to life when the
+         * code executes, inserts the widget javascript.
+         *
+         * @private
+         *
+         * @returns {void} nothing
+         */
+        runPython() {
+            // It is asynchronous, but we don't know when it completes.
             this.cell.execute();
-        }
-
-        // "abstract" methods
-        getCellTitle() {
-            throw new Error('The "getCellTitle" method must be defined by a subclass');
-        }
-
-        getCellSubtitle() {
-            throw new Error('The "getCellSubtitle" method must be defined by a subclass');
-        }
-
-        generatePython() {
-            throw new Error('The "generatePython" method must be redefined by a sub-class');
-        }
-        getCellClass() {
-            throw new Error('The "getCellClass" method must be defined by a sub-class');
         }
 
         /**
@@ -202,141 +388,62 @@ define([
          *
          * It creates the correct metadata and then sets up the cell.
          *
+         * @public
+         *
+         * @param {KBaseCellSetupData} setupData An object which provides information to create a
+         * cell of the type this manager is designed to handle. The detailed
+         * specification of this object depends on the KBase cell type.
+         *
+         * @returns {void}
          */
-        upgradeCell(data) {
-            const cell = this.cell;
-            function getAttribute(name) {
-                if ('attributes' in data) {
-                    if (name in data.attributes) {
-                        return data.attributes[name];
-                    }
-                }
-            }
-            // Create base app cell
-            const meta = cell.metadata;
-            // TODO: drop? doesn't seem to be used
-            const { initialData } = data;
-            this.icon = getAttribute('icon') || {
-                type: 'generic',
-                params: { name: 'thumbs-down', color: 'red' },
-            };
-            meta.kbase = {
+        upgradeCell(setupData) {
+            const {
+                attributes: { title, subtitle, icon },
+                params,
+            } = setupData;
+            this.cell.metadata.kbase = {
                 type: this.type,
                 attributes: {
                     id: new Uuid(4).format(),
-                    // title: `FAIR Narrative Description`,
-                    title: 'Loading...',
-                    // title: getAttribute('title') || this.title,
-                    // subtitle: getAttribute('subtitle') || '',
                     created: new Date().toUTCString(),
-                    // I don't think this is used any more? Most cells use
-                    // calls to util/icon.js, though it is somewhat compatible
-                    // with the simple icon struct ({name, color}).
-                    icon: getAttribute('icon') || this.icon,
+                    title,
+                    subtitle,
+                    icon,
                 },
-                [this.type]: initialData || {},
+                params,
             };
-            cell.metadata = meta;
-
-            // Sets the metadata, property by property.
-            for (const [key, value] of Object.entries(data.metadata)) {
-                this.setExtensionMetadata(key, value);
-            }
-
-            // Sets the attributes too
-            this.setCellTitle(getAttribute('title'));
-            this.setCellSubtitle(getAttribute('subtitle'));
-            this.setCellIcon(getAttribute('icon'));
         }
 
-        setCellTitle(title, render) {
-            this.setMetadata('attributes.title', title, render);
-        }
-
-        setCellSubtitle(subtitle, render) {
-            this.setMetadata('attributes.subtitle', subtitle, render);
-        }
-
-        setCellIcon(icon, render) {
-            this.setMetadata('attributes.icon', icon, render);
-        }
+        // Cell augmentation method implementation
 
         /**
-         * Add additional methods to the cell that are utilized by our ui.
+         * Constructs a supported icon type with a given set of parameters, using
+         * information from the cell's metadata.
          *
-         * This includes minimizing and maximizing the cell, and displaying
-         * a per-type icon.
+         * Note that the params object, stored in the cell metadata, provides named
+         * paramters which are, in the code, matched to the positional parameters in the
+         * external functions which implement the icon itself.
          *
-         * @param {*} cell
+         * Note that the icon is rendered as text rather than a jQuery object, as that
+         * is what kbaseCellToolbarMenu.js expects.
+         *
+         * @public
+         *
+         * @returns {string} An html string implementing the requested icon.
          */
-        augmentCell() {
-            const cell = this.cell;
-            /**
-             *
-             */
-            cell.minimize = function () {
-                // Note that the "this" is the cell; thus we must preserve the
-                // usage of "function" rather than fat arrow.
-                const inputArea = this.input.find('.input_area');
-                const outputArea = this.element.find('.output_wrapper');
-                const viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
-                const showCode = getCellMeta(
-                    cell,
-                    'kbase.serviceWidget.user-settings.showCodeInputArea'
-                );
-
-                if (showCode) {
-                    inputArea.classList.remove('-show');
-                }
-                outputArea.addClass('hidden');
-                viewInputArea.addClass('hidden');
-            };
-
-            /**
-             *
-             */
-            cell.maximize = function () {
-                // Note that the "this" is the cell; thus we must preserve the
-                // usage of "function" rather than fat arrow.
-                const inputArea = this.input.find('.input_area');
-                const outputArea = this.element.find('.output_wrapper');
-                const viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
-                const showCode = getCellMeta(
-                    cell,
-                    'kbase.viewCell.user-settings.showCodeInputArea'
-                );
-
-                if (showCode) {
-                    if (!inputArea.classList.contains('-show')) {
-                        inputArea.classList.add('-show');
-                    }
-                }
-                outputArea.removeClass('hidden');
-                viewInputArea.removeClass('hidden');
-            };
-
-            /**
-             *
-             * @returns
-             *
-             * Note that the icon must be rendered as text, as that is what kbaseCellToolbarMenu.js expects.
-             */
-            cell.getIcon = this.buildIcon.bind(this);
-        }
-
-        buildIcon() {
-            const icon = this.getMetadata('attributes.icon');
-            switch (icon.type) {
+        getIconForCell() {
+            const { type, params } = this.getMetadata('attributes.icon');
+            switch (type) {
                 case 'generic': {
-                    const { name, color } = icon.params;
+                    const { name, color } = params;
                     return makeGenericIcon(name, color);
                 }
                 case 'data': {
-                    const { type, stacked } = icon.params;
+                    const { type, stacked } = params;
                     return makeDataIcon(type, stacked);
                 }
                 case 'appoutput': {
-                    const { appSpec } = icon.params;
+                    const { appSpec } = params;
                     return makeAppOutputIcon(appSpec);
                 }
                 default: {
@@ -346,70 +453,186 @@ define([
         }
 
         /**
-         * Responsible for setting up cell augmentations required at runtime.
+         * Hides the cell's input and output areas.
          *
+         * @public
+         *
+         * @returns {void}
+         */
+        minimizeCell() {
+            this.showInputArea(false);
+            this.showOutputArea(false);
+        }
+
+        /**
+         * Shows the cell's input and output areas.
+         *
+         * @returns {void}
+         */
+        maximizeCell() {
+            const showCodeInputArea = this.getCellState('showCodeInputArea');
+            this.showInputArea(showCodeInputArea);
+            if (showCodeInputArea) {
+                // Ensures that the code input area is rendered.
+                if (this.cell.code_mirror) {
+                    this.cell.code_mirror.refresh();
+                }
+            }
+            this.showOutputArea(true);
+        }
+
+        /**
+         * Shows or hides the cell's code input area, hiding if it was showing, and
+         * showing if it was hiding.
+         *
+         * @public
+         *
+         * @returns {void}
+         */
+        toggleCodeInputArea() {
+            const $codeInputArea = this.$getInputArea();
+            if ($codeInputArea.length) {
+                $codeInputArea.toggleClass('-show');
+                this.setCellState('showCodeInputArea', this.cell.isCodeShowing());
+            }
+        }
+
+        /**
+         * Shows the output area or not, depending upon the value of argument.
+         *
+         * The output area is where the KBase cell implementation exists, so this is
+         * essentially maximizing and minimizing the cell.
+         *
+         * @private
+         *
+         * @param {boolean} show Whether to show the output area or not.
+         *
+         * @returns {void}
+         */
+        showOutputArea(show) {
+            this.cell.element.find('.output_wrapper').toggleClass('hidden', !show);
+        }
+
+        // Utilities for common cell operations
+
+        /**
+         * Finds and returns the code input area DOM node in the form of a jQuery
+         * object.
+         *
+         * @returns {jQuery}
+         */
+        $getInputArea() {
+            return this.cell.input.find('.input_area');
+        }
+
+        /**
+         * Shows the code input area, or hides it, depending upon the value of the argument.
+         *
+         * @private
+         *
+         * @param {boolean} show
+         *
+         * @returns {void}
+         */
+        showInputArea(show) {
+            const $inputArea = this.$getInputArea();
+            if (show) {
+                if (!$inputArea.hasClass('-show')) {
+                    $inputArea.addClass('-show');
+                }
+            } else {
+                if ($inputArea.hasClass('-show')) {
+                    $inputArea.removeClass('-show');
+                }
+            }
+        }
+
+        /**
+         * Add additional methods to the cell that are utilized by our ui.
+         *
+         * This includes minimizing and maximizing the cell, and displaying
+         * a per-type icon.
+         *
+         * @private
+         *
+         * @returns {void} nothing
+         */
+        addCellMethods() {
+            this.cell.minimize = this.minimizeCell.bind(this);
+            this.cell.maximize = this.maximizeCell.bind(this);
+            this.cell.getIcon = this.getIconForCell.bind(this);
+            // Note that we have replaced this method in custom.js (for now at least) as
+            // it does not take care of the code input area also.
+            this.cell.toggleCodeInputArea = this.toggleCodeInputArea.bind(this);
+        }
+
+        /**
+         * Responsible for setting up the cell to be ready for use, when being revived
+         * or after insertion.
+         *
+         * This must be run every time a cell is to be rendered in the Narrative, either
+         * when inserted or when revived.
+         *
+         * @public
+         *
+         * @returns {void} nothing
          */
         setupCell() {
-            const cell = this.cell;
-            this.augmentCell(cell);
-
-            // Add custom classes to the cell.
-            // TODO: this needs to be a generic kbase custom cell class.
-            // TODO: remove, not necessary
-            // cell.element[0].classList.add('kb-service-widget-cell');
+            this.addCellMethods();
 
             // The kbase property is used for managing _runtime_ state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
-            cell.kbase = {};
+            this.cell.kbase = {};
 
-            // Update metadata.
-            // TODO: remove, not necessary.
-            // setMeta(cell, 'attributes', 'lastLoaded', new Date().toUTCString());
+            // We want to ensure that Jupyter does not make key bindings for this cell,
+            // as it can lead to unexpected behavior.
+            disableKeyListenersForCell(this.cell);
 
-            // await this.setupWorkspace(this.runtime.config('services.workspace.url'))
+            // Here we render the cell as maximized or minimzed based on its state. This
+            // will also take care of whether the code input area is showing or not.
+            this.cell.renderMinMax();
 
-            disableKeyListenersForCell(cell);
+            this.cell.element.addClass(this.getCellClass());
 
-            cell.renderMinMax();
-
-            // this.onSetupCell(cell);
-
-            cell.element[0].classList.add(this.getCellClass(cell));
-
-            // force toolbar rerender.
-            // eslint-disable-next-line no-self-assign
-            cell.metadata = cell.metadata;
+            this.renderCellToolbar();
         }
 
+        /**
+         * The start method is responsible for runtime services such as event listeners.
+         * It is called whenever a cell is added or "revived" when a Narrative is loaded.
+         *
+         * It also helps a subclass implement the start (and stop) lifecycle by invoking
+         * the optional "onStart" method.
+         *
+         * @public
+         *
+         * @returns {void} nothing
+         */
         start() {
-            this.eventManager = BusEventManager.make({
-                bus: this.runtime.bus(),
+            this.cellBus = this.createCellChannel();
+
+            this.cellBus.on('delete-cell', () => {
+                this.doDeleteCell();
             });
 
-            // manager object's direct bus
-            this.bus = this.runtime
-                .bus()
-                .makeChannelBus({ description: 'A service widget cell (widget!)' });
-
-            // Called when the cell is deleted from the narrative.
-            this.eventManager.add(
-                this.bus.on('stop', () => {
-                    this.stop();
-                })
-            );
-
-            this.setupComm();
-
-            if (typeof this.onStart === 'function') {
-                this.onStart();
-            }
+            this.onStart();
         }
 
+        /**
+         * The stop method is responsible for cleaning up any runtime services started
+         * with the start method.
+         *
+         * It is called when the cell is removed. Otherwise, a cell is "running" from
+         * when it comes into existence (added or revived) until it is either removed or
+         * the Narrative is closed (in which case stop is not called, because the entire
+         * Narrative Interface runtime is destroyed.)
+         *
+         * @public
+         *
+         * @returns {} nothing
+         */
         stop() {
-            this.eventManager.removeAll();
-            if (typeof this.onStop === 'function') {
-                this.onStop();
-            }
+            this.onStop();
         }
     }
 

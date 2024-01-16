@@ -1,6 +1,11 @@
 define([], () => {
     'use strict';
 
+    /**
+     * Generates a random or pseudo-random string identifier.
+     *
+     * @returns {string}
+     */
     function uniqueId() {
         if (window.crypto) {
             return window.crypto.randomUUID();
@@ -9,7 +14,33 @@ define([], () => {
         }
     }
 
+    /**
+     * @typedef {Object} MessagePayload
+     *
+     * @typedef {Object} MessageEnvelope
+     * @property {string} channel The unique identifier for the channel
+     * @property {number} created The creation time of the message
+     * @property {string} id A unique identifier for the message
+     *
+     * @typedef {Object} ChannelMessageConstructorParams
+     * @property {string}            name      The message name; what one might think of
+     * as the event name, if the message can be thought of as an event.
+     * @property {MessagePayload}    payload   The data sent with the message; any
+     * JSON-compatible value may be used, but it is advised to use an object for
+     * self-documentation and future expandability.
+     * @property {MessageEnvelope}  envelope  Think of this as the message metadata;
+     */
+
+    /**
+     * Represents a message in a channel.
+     *
+     */
     class ChannelMessage {
+        /**
+         *
+         * @param {ChannelMessageConstructorParams} param0 The constructor parameters in
+         * object clothing
+         */
         constructor({ name, payload, envelope }) {
             this.name = name;
             this.payload = payload;
@@ -19,16 +50,29 @@ define([], () => {
         }
 
         toJSON() {
-            return {
-                envelope: this.envelope,
-                name: this.name,
-                payload: this.payload,
-            };
+            const { envelope, name, payload } = this;
+            return { envelope, name, payload };
         }
     }
 
+    /**
+     * @typedef {Object} SendChannelConstructorParams
+     * @property {Window} window The window to which to send messages
+     * @property {string} targetOrigin The URL origin of the window to which we are
+     * sending messages
+     * @property {string} channel The identifier assigned to this channel.
+     */
+
+    /**
+     * Supports targeted window message sending.
+     *
+     */
     class SendChannel {
-        constructor({ window, targetOrigin, id, to }) {
+        /**
+         *
+         * @param {SendChannelConstructorParams} param0 The constructor parameters;
+         */
+        constructor({ window, targetOrigin, channel }) {
             // The given window upon which we will listen for messages.
             this.window = window;
 
@@ -37,52 +81,23 @@ define([], () => {
 
             // The channel id. Used to filter all messages received to
             // this channel.
-            this.id = id;
-
-            this.partnerId = to;
-
-            this.stats = {
-                sent: 0,
-                received: 0,
-                ignored: 0,
-            };
+            this.channel = channel;
         }
 
-        getId() {
-            return this.id;
-        }
-
-        getPartnerId() {
-            return this.partnerId;
-        }
-
-        getStats() {
-            return this.stats;
-        }
-
-        sendMessage(message) {
-            this.stats.sent += 1;
-            this.window.postMessage(message.toJSON(), this.targetOrigin);
-        }
-
-        genId() {
-            return uniqueId();
-        }
-
+        /**
+         * Sends a message to the configured window.
+         *
+         * @param {string} name
+         * @param {MessagePayload} payload
+         */
         send(name, payload) {
             const envelope = {
-                type: 'plain',
-                from: this.id,
-                to: this.partnerId,
+                channel: this.id,
                 created: Date.now(),
-                id: this.genId(),
+                id: uniqueId(),
             };
             const message = new ChannelMessage({ name, payload, envelope });
-            this.sendMessage(message);
-        }
-
-        setPartner(id) {
-            this.partnerId = id;
+            this.window.postMessage(message.toJSON(), this.targetOrigin);
         }
     }
 

@@ -644,15 +644,14 @@ define([
                                 },
                             },
                         },
-                        metadata: {
+                        params: {
+                            // Parameters required for service functionality.
                             service: {
                                 moduleName,
                                 widgetName,
                                 // We put the title and subtitle here, because otherwise
                                 // they'll be displayed directly, and we want to tweak
                                 // them first ... maybe?
-                                title,
-                                subtitle,
                                 params,
                                 // todo: get this from the form.
                                 isDynamicService: true,

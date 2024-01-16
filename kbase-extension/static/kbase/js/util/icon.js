@@ -291,17 +291,17 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
     }
 
     return {
-        cssBaseName: cssBaseName,
-        makeAppIcon: makeAppIcon,
-        makeAppOutputIcon: makeAppOutputIcon,
-        makeGenericIcon: makeGenericIcon,
-        makeToolbarAppIcon: makeToolbarAppIcon,
-        makeToolbarGenericIcon: makeToolbarGenericIcon,
-        makeTypeIcon: makeTypeIcon,
-        makeToolbarTypeIcon: makeToolbarTypeIcon,
-        makeDataIcon: makeDataIcon,
+        cssBaseName,
+        makeAppIcon,
+        makeAppOutputIcon,
+        makeGenericIcon,
+        makeToolbarAppIcon,
+        makeToolbarGenericIcon,
+        makeTypeIcon,
+        makeToolbarTypeIcon,
+        makeDataIcon,
         // legacy methods
-        overwriteDataIcon: overwriteDataIcon,
-        buildDataIcon: buildDataIcon,
+        overwriteDataIcon,
+        buildDataIcon,
     };
 });

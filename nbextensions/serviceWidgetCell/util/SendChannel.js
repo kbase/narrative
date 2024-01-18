@@ -1,4 +1,4 @@
-define([], () => {
+define(['uuid'], (Uuid) => {
     'use strict';
 
     /**
@@ -7,11 +7,7 @@ define([], () => {
      * @returns {string}
      */
     function uniqueId() {
-        if (window.crypto) {
-            return window.crypto.randomUUID();
-        } else {
-            return `${Date.now()}-${Math.random()}`;
-        }
+        return new Uuid(4).format();
     }
 
     /**

@@ -4,7 +4,8 @@ define([
     'narrativeConfig',
     'kb_service/client/narrativeMethodStore',
     'base/js/namespace',
-], ($, _, Config, NarrativeMethodStore, Jupyter) => {
+    'common/props',
+], ($, _, Config, NarrativeMethodStore, Jupyter, Props) => {
     'use strict';
 
     // this is the cached promise about the viewer info
@@ -41,9 +42,16 @@ define([
      * @returns The current app version tag set in the app panel, or 'release' if not set
      */
     function getAppVersionTag() {
-        // This is the
-        const tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
-        return tag || 'release';
+        // The narrativeViewers may be loaded before the side panel. Since the current
+        // app panel tag resides in the app panel (aka `$methodsWidget` itself), we need
+        // to be tolerant of it not existing yet.
+        // We use the good ol' props api because, although awkwardly named, it allows us
+        // to safely traverse the object.
+        return Props.getDataItem(
+            Jupyter,
+            'narrative.sidePanel.$methodsWidget.currentTag',
+            'release'
+        );
     }
 
     /**
@@ -99,33 +107,7 @@ define([
                     }
                     // If it has at least one method id, make sure it's there.
                     else if (val.view_method_ids && val.view_method_ids.length > 0) {
-                        //
-                        // BEGIN DEMO HACK: this code is to be removed
-                        //
-                        // This simulates a change to NarrativeViewers - but we've
-                        // made the change to a different viewers module for
-                        // testing.
-                        //
-                        // Specifically, the "eapearson/eapearsonNarrativeViewersTest" which is a
-                        // clone of "kbase/NarrativeViewers". At present, the viewers
-                        // for media and protein structures have been modified to use
-                        // "eapearsonWidgetTest10" for dynamic widgets.
-                        //
-                        // This testing viewers app should be used so that the release
-                        // matches CI and/or production, and the dev tag carries the
-                        // dynamic service widgets.
-                        //
-                        const methodId = (() => {
-                            const methodId = val.view_method_ids[0];
-                            const [moduleName, viewerName] = methodId.split('/');
-                            if (moduleName !== 'NarrativeViewers') {
-                                throw new Error(
-                                    `Viewer module should be "NarrativeViewers" but is "${moduleName}"`
-                                );
-                            }
-                            return `eapearson${moduleName}Test/${viewerName}`;
-                        })();
-                        // END DEMO HACK
+                        const methodId = val.view_method_ids[0];
 
                         if (!methodInfo[methodId]) {
                             console.warn("Can't find method info for id: " + methodId);

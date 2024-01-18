@@ -111,7 +111,12 @@ define([
 
             // May be a string value? At least the pre-existing code implied it may not
             // be boolean, so we coerce it.
-            const featureEnabledFromUserSetting = !!getUserSetting(featureName);
+            // TODO: temporarily disabled; there is a race condition in the underlying
+            // code, as we need the notebook to be fully populated in order to get the
+            // userSetting, but that may not be the case when this code is called.
+
+            // const featureEnabledFromUserSetting = !!getUserSetting(featureName);
+            const featureEnabledFromUserSetting = null;
 
             // The full set of features, with default enablement, is available in
             // feature-config.json, which is made available in the Narrative config

@@ -99,25 +99,8 @@ define([], () => {
      */
     function buildNiceArgsList(args) {
         const indent = indentString;
-        const fixedArgs = args.map((arg) => {
-            const splitArgs = arg.split('\n');
-            if (splitArgs.length > 1) {
-                return splitArgs
-                    .map((arg, index) => {
-                        // The re-joined string will be indented later, so we
-                        // don't want to indent the first one.
-                        if (index === 0) {
-                            return arg;
-                        }
-                        return `${indent}${arg}`;
-                    })
-                    .join('\n');
-            } else {
-                return arg;
-            }
-        });
 
-        return '\n' + indent + fixedArgs.join(',\n' + indent) + '\n';
+        return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 
     function buildBatchAppRunner(cellId, runId, app, params) {

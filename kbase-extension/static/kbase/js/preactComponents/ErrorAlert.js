@@ -1,4 +1,4 @@
-define(['preact', 'htm', 'bootstrap', 'css!./ErrorAlert.css'], (preact, htm) => {
+define(['preact', 'htm', 'bootstrap'], (preact, htm) => {
     'use strict';
 
     const { h, Component } = preact;
@@ -17,7 +17,9 @@ define(['preact', 'htm', 'bootstrap', 'css!./ErrorAlert.css'], (preact, htm) => 
                 return this.renderIcon();
             }
             return html`
-                <p class="ErrorAlert-title">${this.renderIcon()} ${this.props.title || 'Error'}</p>
+                <p class="preactComponent-ErrorAlert-title">
+                    ${this.renderIcon()} ${this.props.title || 'Error'}
+                </p>
             `;
         }
         renderContent() {
@@ -28,7 +30,7 @@ define(['preact', 'htm', 'bootstrap', 'css!./ErrorAlert.css'], (preact, htm) => 
         }
         render() {
             return html`
-                <div class="ErrorAlert -grow alert alert-danger">
+                <div class="preactComponent-ErrorAlert alert alert-danger">
                     ${this.renderTitle()} ${this.renderContent()}
                 </div>
             `;

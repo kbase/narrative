@@ -1,24 +1,18 @@
-.ErrorAlert {
+.preactComponent-ErrorAlert {
     animation: grow 0.25s;
 }
 
-.ErrorAlert-title {
+.preactComponent-ErrorAlert-title {
     display: flex;
     flex-direction: row;
     align-items: center;
     font-weight: bold;
 }
 
-.ErrorAlert-title .fa {
+.preactComponent-ErrorAlert-title .fa {
     margin-right: 4px;
 }
 
-/* .ErrorAlert.-grow {
-    animation: grow 0.25s;
-}
-.ErrorAlert.shrink {
-    animation: shrink 0.25s;
-} */
 @keyframes grow {
   from {
     transform: scale(0);

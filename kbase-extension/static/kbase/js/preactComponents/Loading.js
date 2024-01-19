@@ -4,7 +4,6 @@ define([
 
     // For effect
     'bootstrap',
-    'css!./Loading.css',
 ], (preact, htm) => {
     'use strict';
     const { h, Component } = preact;
@@ -22,17 +21,21 @@ define([
             })();
             if (this.props.type === 'inline') {
                 return html`
-                    <div className="Loading-Inline">
+                    <div className="preactComponent-Loading-Inline">
                         ${spinner} ${' '}
-                        <span className="Loading-Message"> ${this.props.message} </span>
+                        <span className="preactComponent-Loading-Message">
+                            ${this.props.message}
+                        </span>
                     </div>
                 `;
             } else {
                 return html`
-                    <div className="Loading-Container">
-                        <div className="Loading">
+                    <div className="preactComponent-Loading-Container">
+                        <div className="preactComponent-Loading">
                             ${spinner} ${' '}
-                            <span className="Loading-Message"> ${this.props.message} </span>
+                            <span className="preactComponent-Loading-Message">
+                                ${this.props.message}
+                            </span>
                         </div>
                     </div>
                 `;

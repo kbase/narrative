@@ -31,13 +31,15 @@
 @import "partials/errorDialog";
 @import "partials/appCell";
 @import "partials/editorCell";
-@import "partials/_preactComponentRotatedTable";
 
 // order should not be important for the following files
 @import "partials/appInput";
 @import "partials/appParams";
 @import "partials/bulkImportCell";
 @import "partials/cellToolbar";
+@import "partials/preactComponents/errorAlert";
+@import "partials/preactComponents/loading";
+@import "partials/preactComponents/RotatedTable";
 @import "partials/dataStaging";
 @import "partials/dropzoneDz";
 @import "partials/errorDisplay";

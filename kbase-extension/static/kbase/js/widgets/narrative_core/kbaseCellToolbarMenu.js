@@ -122,7 +122,7 @@ define([
             title: true,
         };
 
-        function renderDeveloperCodeViewToggleButton(cell, events) {
+        function renderDeveloperCodeViewToggleButton(events) {
             if (!runtime.isDeveloper()) {
                 return;
             }
@@ -141,7 +141,7 @@ define([
             }
         }
 
-        function renderDeveloperDeleteButton(cell, events) {
+        function renderDeveloperDeleteButton(events) {
             if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
@@ -157,7 +157,7 @@ define([
             cell.execute();
         }
 
-        function renderDeveloperRunCellButton(cell, events) {
+        function renderDeveloperRunCellButton(events) {
             if (!runtime.isDeveloper() || readOnly || cell.cell_type !== 'code') {
                 return;
             }
@@ -454,9 +454,9 @@ define([
                                 },
                                 collapsedCellJobStatus
                             ),
-                            renderDeveloperRunCellButton(_cell, events),
-                            renderDeveloperCodeViewToggleButton(_cell, events),
-                            renderDeveloperDeleteButton(_cell, events),
+                            renderDeveloperRunCellButton(events),
+                            renderDeveloperCodeViewToggleButton(events),
+                            renderDeveloperDeleteButton(events),
 
                             renderMoveToTop(_cell, events),
                             renderMoveToBottom(_cell, events),

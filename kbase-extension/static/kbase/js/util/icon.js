@@ -63,27 +63,26 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
             num_stacked_circles = 1; // up to 2
         let parsed_color, r, g, b;
 
-        const stackColor = color || 'rgb(150, 150, 150)';
-
         // XXX: Assume color is in form '#RRGGBB'
-        if (stackColor) {
-            if (stackColor[0] == '#') {
-                parsed_color = color.match(/#(..)(..)(..)/);
+        if (color) {
+            if (color.startsWith('#')) {
+                parsed_color = /#(..)(..)(..)/.exec(color.match);
                 r = parseInt(parsed_color[1], 16);
                 g = parseInt(parsed_color[2], 16);
                 b = parseInt(parsed_color[3], 16);
             }
             // XXX: Assume color is in form "rgb(#,#,#)"
             else {
-                parsed_color = stackColor.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+                parsed_color = /rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/.exec(color);
                 r = parseInt(parsed_color[1], 10);
                 g = parseInt(parsed_color[2], 10);
                 b = parseInt(parsed_color[3], 10);
             }
         }
+
         // Add circles with lighter colors
         for (let i = num_stacked_circles; i > 0; i--) {
-            const stacked_color = stackColor
+            const stacked_color = color
                 ? 'rgb(' +
                   cmax(r + i * cstep) +
                   ',' +
@@ -92,7 +91,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
                   cmax(b + i * cstep) +
                   ')'
                 : '';
-            const style = stackColor ? { color: stacked_color } : {};
+            const style = color ? { color: stacked_color } : {};
             layers.push(
                 span({
                     class: `${cssBaseName}__stack--l${i} fa fa-stack-2x fa-${shape}`,
@@ -155,6 +154,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
                 ? iconSpec.color_mapping[type]
                 : logoColorLookup(type),
             icon = _.has(iconSpec.data, type) ? iconSpec.data[type] : iconSpec.data.DEFAULT;
+
         return _makeIcon(iconType, icon[0], 'circle', color, stacked);
     }
 
@@ -197,42 +197,6 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         return iconSpec.colors[code % iconSpec.colors.length];
     }
 
-    // Unused, but it is kinda cool - put the main icon on the upper half, and another
-    // one below it.
-    // function _makeSplitIcon(iconType, iconClass, shape = 'square', color = null, secondaryIconClass) {
-    //     const style = color ? { color } : {};
-    //     iconClass = iconClass.replace('icon ', '');
-
-    //     return span(
-    //         {
-    //             class: `${cssBaseName}__container--${iconType} fa-stack`,
-    //             style: 'position: relative;'
-    //         },
-    //         [
-    //             // The icon container (provides the shape and background color)
-    //             span({
-    //                 class: `${cssBaseName}__icon_background--${iconType} fa fa-${shape} fa-stack-2x`,
-    //                 style: style,
-    //             }),
-    //             // The icon itself, split between the main icon, and the secondary icon.
-    //             div({style: {position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column'}}, [
-    //                 div({style: {flex: '1 1 0', alignItems: 'center', display: 'flex', flexDirection: 'row', marginTop: '4px'}}, [
-    //                     span({
-    //                         class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${iconClass}`,
-    //                         style: {fontSize: '60%',}
-    //                     }),
-    //                 ]),
-    //                 div({style: {flex: '1 1 0', alignItems: 'center', display: 'flex', flexDirection: 'row', marginBottom: '6px'}}, [
-    //                     span({
-    //                         class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${secondaryIconClass}`,
-    //                         style: {fontSize: '75%'}
-    //                     })
-    //                 ])
-    //             ])
-    //         ]
-    //     );
-    // }
-
     function makeAppIcon(appSpec = {}, isToolbarIcon = false) {
         // icon is in the spec
         const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
@@ -243,14 +207,21 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square');
     }
 
-    function makeAppOutputIcon(appSpec = {}, isToolbarIcon = false) {
+    /**
+     * Creates a an icon suitable for an app output cell.
+     *
+     * @param {object} appSpec
+     * @param {boolean} isToolbarIcon
+     * @returns
+     */
+    function makeAppOutputIcon(appSpec = {}) {
         const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
             return _makeIconFromUrl(nmsBase + iconUrl);
         }
-        return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square');
-        // return _makeSplitIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square', null, 'fa-arrow-right');
+        // The only place the app output icon exists is in a cell toolbar.
+        return _makeIcon('app-toolbar', 'fa-cube', 'square');
     }
 
     function makeToolbarAppIcon(appSpec) {

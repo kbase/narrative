@@ -7,10 +7,10 @@ define([
     './monoBus',
 ], ($, Jupyter, Config, Props, Clock, Bus) => {
     'use strict';
-    const NARRATIVE_CONFIG = Props.make({ data: Config.getConfig() });
+    const narrativeConfig = Props.make({ data: Config.getConfig() });
 
-    function factory(params = {}) {
-        const busArgs = params.bus || {};
+    function factory(config = {}) {
+        const busArgs = config.bus || {};
         let clock, theBus;
 
         function createRuntime() {
@@ -139,11 +139,11 @@ define([
             return isFeatureEnabled('advanced');
         }
 
-        function config(key, defaultValue) {
+        function getConfig(key, defaultValue) {
             if (key) {
-                return NARRATIVE_CONFIG.getItem(key, defaultValue);
+                return narrativeConfig.getItem(key, defaultValue);
             } else {
-                return NARRATIVE_CONFIG.getRawObject();
+                return narrativeConfig.getRawObject();
             }
         }
 
@@ -165,12 +165,12 @@ define([
          * The kbaseNarrative object does this, but it also does a lot more...
          */
         function workspaceId() {
-            return NARRATIVE_CONFIG.getItem('workspaceId', null);
+            return narrativeConfig.getItem('workspaceId', null);
         }
 
         return {
             authToken,
-            config,
+            config: getConfig,
             bus,
             getUserSetting,
             setEnv,

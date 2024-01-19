@@ -99,7 +99,6 @@ define([], () => {
      */
     function buildNiceArgsList(args) {
         const indent = indentString;
-
         return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 

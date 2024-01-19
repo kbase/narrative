@@ -122,7 +122,7 @@ define([
             // feature-config.json, which is made available in the Narrative config
             // object under the 'features' key.
 
-            const featureEnabledFromConfig = config(['features', featureName], false);
+            const featureEnabledFromConfig = getConfig(['features', featureName], false);
 
             return (
                 featuresFromURL.includes(featureName) ||

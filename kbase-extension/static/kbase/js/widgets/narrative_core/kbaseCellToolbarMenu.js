@@ -124,7 +124,7 @@ define([
 
         function renderDeveloperCodeViewToggleButton(events) {
             if (!runtime.isDeveloper()) {
-                return;
+                return '';
             }
             if (cell.cell_type === 'code') {
                 const attribs = {
@@ -143,7 +143,7 @@ define([
 
         function renderDeveloperDeleteButton(events) {
             if (!runtime.isDeveloper() || readOnly) {
-                return;
+                return '';
             }
             const attribs = {
                 ...buttonBase,
@@ -159,7 +159,7 @@ define([
 
         function renderDeveloperRunCellButton(events) {
             if (!runtime.isDeveloper() || readOnly || cell.cell_type !== 'code') {
-                return;
+                return '';
             }
             const attribs = {
                 ...buttonBase,

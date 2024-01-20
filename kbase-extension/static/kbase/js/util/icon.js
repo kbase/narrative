@@ -66,7 +66,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         // XXX: Assume color is in form '#RRGGBB'
         if (color) {
             if (color.startsWith('#')) {
-                parsed_color = /#(..)(..)(..)/.exec(color.match);
+                parsed_color = /#(..)(..)(..)/.exec(color);
                 r = parseInt(parsed_color[1], 16);
                 g = parseInt(parsed_color[2], 16);
                 b = parseInt(parsed_color[3], 16);

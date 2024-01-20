@@ -5,7 +5,13 @@ define(['preact', 'htm'], (preact, htm) => {
 
     class Row extends Component {
         render() {
-            return html`<div className="preactComponent-rotated-table-row">
+            const key = this.props['row-key'];
+            const extraProps = {};
+            if (key) {
+                extraProps.key = key;
+                extraProps['data-row-key'] = key;
+            }
+            return html`<div className="preactComponent-rotated-table-row" ...${extraProps}>
                 ${this.props.children}
             </div>`;
         }

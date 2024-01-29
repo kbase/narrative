@@ -2,8 +2,7 @@ import json
 import re
 from typing import Any, Optional
 
-from biokbase.narrative import clients
-from biokbase.narrative import upa
+from biokbase.narrative import clients, upa
 from biokbase.narrative.system import system_variable
 
 """
@@ -93,7 +92,7 @@ def _untransform(transform_type, value):
         slash = value.find("/")
         if slash == -1:
             return value
-        return value[slash + 1 :]
+        return value[(slash+1):]  # noqa:E203
     return value
 
 

@@ -1,6 +1,17 @@
 # Running Narrative in local Docker
 
-It is useful to run the Narrative within a local docker container. E.g. this makes it easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
+It is useful to run the Narrative within a local docker container. E.g. this makes it
+easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
+
+## Requirements
+
+- make
+- git
+- docker
+- nodejs 16
+- nvm
+
+> Sorry, this is just a quick guide, no instructions provided for installing these.
 
 ## Narrative
 
@@ -12,6 +23,15 @@ The following changes are required:
   ```bash
   make dev-image
   ```
+
+  > Note that this may produce an error, since the build attempts to attach to the running container.
+  > For example
+  > ```shell
+  > Use 'docker scan' to run Snyk tests against images to find vulnerabilities and learn how to fix them
+  > Untagged: kbase/narrative:tmp
+  > curl: (7) Failed to connect to localhost port 443 after 6 ms: Couldn't connect to server
+  > Ignore Error
+  > ```
 
 - start the container:
 
@@ -49,6 +69,118 @@ The `BASE_URL` option will override the default test runner behavior, which is t
 This will launch the integration test  runner against the CI environment, using chrome browser, and using the chromedriver testing service.
 
 This may all be overridden.
+
+## Unit tests
+
+Unit tests require a running Narrative server in order to access Jupyter javascript files which are only available when the server is built and running.
+
+As a server, it can be accessed within a container as well, and for those who prefer Docker-based workflows, is quite convenient.
+
+- run the container as specified above. For example:
+
+```shell
+make dev-image
+ENV=ci make run-dev-image
+```
+
+Then, to run tests without authentication.
+
+```shell
+nvm use 16
+npm install
+NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local
+```
+
+> You are using `nvm` for node work on your host machine, aren't you? If not, please
+> install it first.
+
+To run with authentication, follow the normal instructions, but briefly:
+
+- obtain a KBase token for a given user, such as yourself. This token does not require any special privileges.
+- in `test/testConfig.json` you may change `SOMETESTUSER` to the associated username, or leave as is
+- create `test/SOMETESTUSER.tok` (or using the actual username as changed above) and make the contents the token string.
+
+### Other conveniences
+
+The unit tests, by default, are quite noisy. To quiet them down make the following changes to the test configuration:
+
+(all of these changes may not be necessary, but the combination of them does inhibit all logging, with just test results left)
+
+- in `test/unit/karma.conf.js` change `logLevel: config.LOG_INFO,` to `logLevel: config.LOG_DISABLE,`
+
+after the line:
+
+```javascript
+    config.reporters = ['kjhtml', 'brief'];
+```
+
+add this:
+
+``` javascript
+    config.briefReporter = {
+        suppressBrowserLogs: true
+    }
+```
+
+Now your tests, if they pass, will be quite pleasant to gaze upon:
+
+```shell
+erikpearson@Eriks-MacBook-Pro narrative % NARRATIVE_SERVER_URL=http://localhost:8888 npm run test_local
+
+> kbase-narrative-core@5.1.3 test_local /Users/erikpearson/Work/KBase/2022/helpdesk/PTV-1620/pr2redux/narrative
+> karma start test/unit/karma.local.conf.js
+
+
+Chrome Headless 108.0.5359.124 (Mac OS 10.15.7) WARN: 'Loaded token file test/SOMETESTUSER.tok'
+TOTAL: 13 SUCCESS 13 passed      0 failed      0 skipped            
+   13 total       13 passed      0 failed      0 skipped 
+```
+
+To focus tests, you can modify `karma.local.conf.js`. Here we have focussed on the tests that
+are directly contained within `test/unit/spec/widgets/*`, which at the moment, is just `kbaseTabs-spec.js`.
+
+```javascript
+ .concat([
+            // To isolate groups of tests, uncomment ALL of the
+            // exclude filters below, and comment the group you
+            // want to test.
+            //
+            'test/unit/spec/*.js',
+            'test/unit/spec/api/**/*',
+            'test/unit/spec/appWidgets/**/*',
+            'test/unit/spec/common/**/*',
+            'test/unit/spec/function_output/*.js',
+            'test/unit/spec/function_output/kbaseSampleSet/**/*',
+            'test/unit/spec/function_output/modeling/**/*',
+            'test/unit/spec/function_output/rna-seq/**/*',
+            'test/unit/spec/jsonrpc/**/*',
+            'test/unit/spec/narrative_core/**/*',
+            'test/unit/spec/nbextensions/**/*',
+            'test/unit/spec/util/**/*',
+            'test/unit/spec/vis/**/*',
+            'test/unit/spec/widgets/common/*',
+            // 'test/unit/spec/widgets/*'
+        ]);
+```
+
+You may also focus or exclude individual tests using the usual `f*` and `x*` prefixes
+for `describe` and `it`. 
+
+E.g. to only run a test group you can focus the `describe` function by prefixing the it
+with an `f`:
+
+```javascript
+    fdescribe('The KBaseTabs widget', () => {
+      ..
+    }
+```
+
+or to exclude a cranky test you can prefix `it` with `x`:
+
+```javascript
+          xit('should render with minimal options', () => {
+            const kbaseTabs = makeKBaseTabs({
+```
 
 ### Additional Options
 

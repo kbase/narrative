@@ -220,12 +220,12 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
                             ),
                             appTag
                                 ? span(
-                                      {
-                                          class: `${cssBaseClass}__tag label label-primary`,
-                                          title: `${appTag} version of the app`,
-                                      },
-                                      appTag
-                                  )
+                                    {
+                                        class: `${cssBaseClass}__tag label label-primary`,
+                                        title: `${appTag} version of the app`,
+                                    },
+                                    appTag
+                                )
                                 : '',
                         ]
                     ),

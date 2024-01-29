@@ -221,7 +221,7 @@ class KBaseWSManagerMixin:
             meta["format"] = "ipynb"
 
             if len(meta["name"]) > MAX_METADATA_STRING_BYTES - len("name"):
-                meta["name"] = meta["name"][0 : MAX_METADATA_STRING_BYTES - len("name")]
+                meta["name"] = meta["name"][0:MAX_METADATA_STRING_BYTES-len("name")]  # noqa:E203
 
             nb["metadata"] = meta
         except Exception as e:
@@ -534,7 +534,7 @@ class KBaseWSManagerMixin:
             for i in range(0, len(ws_ids), MAX_WORKSPACES):
                 res += ws.list_objects(
                     {
-                        "ids": ws_ids[i : i + MAX_WORKSPACES],
+                        "ids": ws_ids[i:i+MAX_WORKSPACES],  # noqa:E203
                         "type": NARRATIVE_TYPE,
                         "includeMetadata": 1,
                     }

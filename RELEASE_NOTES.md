@@ -6,6 +6,8 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Version unreleased
 
+-   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed; previously it showed an empty space.
+
 ### Dependency Changes
 
 - Python dependency updates

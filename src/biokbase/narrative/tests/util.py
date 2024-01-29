@@ -11,7 +11,6 @@ import time
 import unittest
 from contextlib import closing
 
-from biokbase.narrative.common import util
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.workspace.client import Workspace
 

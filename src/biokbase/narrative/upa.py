@@ -5,6 +5,7 @@ documents.
 """
 
 import re
+
 from .system import system_variable
 
 external_tag = "&"
@@ -97,7 +98,7 @@ def deserialize(serial_upa: str) -> str:
     if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
-        deserial = serial_upa[len(external_tag) :]
+        deserial = serial_upa[len(external_tag):]  # noqa:E203
     else:
         ws_id = system_variable("workspace_id")
         if ws_id is None:

@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 import pytest
+
 from biokbase.narrative.staging.helper import Helper
 
 
@@ -30,7 +31,9 @@ class StagingHelperTest(unittest.TestCase):
         with pytest.raises(
             ValueError,
             match=re.escape(
-                "The server could not fulfill the request.\nServer message: b'Error connecting to auth service: 401 Unauthorized\\n10020 Invalid token'\nReason: Unauthorized\nError code: 401\n"
+                "The server could not fulfill the request.\nServer message: b'Error " +
+                "connecting to auth service: 401 Unauthorized\\n10020 Invalid token'\n" +
+                "Reason: Unauthorized\nError code: 401\n"
             ),
         ):
             self.staging_helper.list()

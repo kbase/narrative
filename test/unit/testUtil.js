@@ -22,8 +22,8 @@ define('testUtil', [
     }
 
     /**
-     * Runs the Jasmine pending() function if there's no Auth token available. This skips the
-     * current test.
+     * Runs the Jasmine pending() function if there's no Auth token available. This
+     * skips the current test.
      */
     function pendingIfNoToken() {
         if (!token) {
@@ -34,7 +34,8 @@ define('testUtil', [
     function initialize() {
         if (TestConfig.token === undefined) {
             throw new Error(
-                'Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json'
+                'Missing an auth token. Please enter one (or null to skip those tests)' +
+                    'in test/unit/testConfig.json'
             );
         }
         if (TestConfig.token === null) {
@@ -67,14 +68,14 @@ define('testUtil', [
     /**
      * Wait for something to happen in the DOM underneath `documentElement`
      * @param {Object} args with keys
-     *      {object}   config           configuration for the MutationObserver
-     *      {string}   documentElement  DOM element to watch
-     *      {function} domStateFunction function that returns true when the watched event happens
-     *      {function} executeFirst     a function to execute after setting up the observer
-     * @param {string} selector to identify the element being watched for
+     * @param {Object} args.config configuration for the MutationObserver
+     * @param {string} args.documentElement  DOM element to watch
+     * @param {function} args.domStateFunction function that returns true when the
+     * watched event happens
+     * @param {function} args.executeFirst     a function to execute after setting up
+     * the observer
      * @returns {Promise} that resolves to produce the element
      */
-
     function waitFor(args) {
         const { documentElement, domStateFunction, executeFirst } = args;
         const config = args.config || { attributes: true, childList: true, subtree: true };
@@ -105,7 +106,8 @@ define('testUtil', [
      * Wait for an element to appear in the DOM underneath `documentElement`
      * @param {DOM element} documentElement to watch for the appearance of the element
      * @param {string} selector to identify the element being watched for
-     * @param {function} doThisFirst (optional) function to execute before returning the Promise
+     * @param {function} doThisFirst (optional) function to execute before returning the
+     * Promise
      * @returns {Promise} that resolves when the element is seen
      */
     function waitForElement(documentElement, selector, doThisFirst) {
@@ -132,8 +134,10 @@ define('testUtil', [
     /**
      * Wait for a certain DOM state
      * @param {DOM element} documentElement to watch for changes
-     * @param {function} elementStateFunction function returning true when the state occurs
-     * @param {function} doThisFirst (optional) function to execute before returning the Promise
+     * @param {function} elementStateFunction function returning true when the state
+     * occurs
+     * @param {function} doThisFirst (optional) function to execute before returning the
+     * Promise
      * @returns {Promise} that resolves when the DOM state is seen
      */
     function waitForElementState(documentElement, elementStateFunction, doThisFirst) {
@@ -155,9 +159,76 @@ define('testUtil', [
     }
 
     /**
+     * Wait for matching text to be found within the element found by a selector.
+     *
+     * By default, supplying a string to look for, it will use the JS "include()" string
+     * method.
+     *
+     * @param {string} selector Selector for the element within which to look for text
+     * @param {function | string} textOrComparisonFunction Either a string to look for
+     * or function to do the looking; if a string, the JS includes() method is used to
+     * look for it within the element; a function will accept a string to look in, and
+     * will return a boolean indicating whether it was found.
+     * @param {Object} options (optional) several options to control behavior
+     * @param {number} options.timeout (optional) duration, in milliseconds, for which
+     * to look for the string; defaults to 1000ms
+     * @param {number} options.interval (optional) the duration, in milliseconds,
+     * between attempts to find the string; defaults to 100ms
+     * @param {string} options.textName (optional) the a name for the text being looked
+     * for, used in the test failure message; defaults to "text".
+     * @returns {Promise} that resolves when the target element or text is found, or
+     * rejects if the timeout duration is exceeded without finding it.
+     */
+    function waitForText(selector, textOrComparisonFunction, options = {}) {
+        const { timeout = 1000, interval = 100, textName = 'text' } = options;
+        const startedAt = Date.now();
+        const textComparison = (() => {
+            if (typeof textOrComparisonFunction === 'function') {
+                return textOrComparisonFunction;
+            }
+            return (text) => {
+                return text.includes(textOrComparisonFunction);
+            };
+        })();
+        const tryIt = () => {
+            const element = document.querySelector(selector);
+            if (!element) {
+                return;
+            }
+            return textComparison(element.innerText);
+        };
+        return new Promise((resolve, reject) => {
+            const loop = () => {
+                window.setTimeout(() => {
+                    const elapsed = Date.now() - startedAt;
+                    if (elapsed > timeout) {
+                        reject(new Error(`Expected ${textName} not found after ${elapsed}`));
+                    } else {
+                        try {
+                            if (tryIt()) {
+                                resolve();
+                            } else {
+                                loop();
+                            }
+                        } catch (ex) {
+                            reject(ex);
+                        }
+                    }
+                }, interval);
+            };
+            if (tryIt()) {
+                resolve();
+                return;
+            }
+            loop();
+        });
+    }
+
+    /**
      * Wait for an element to change
      * @param {DOM element} documentElement to watch for changes
-     * @param {function} doThisFirst (optional) function to execute before returning the Promise
+     * @param {function} doThisFirst (optional) function to execute before returning the
+     * Promise
      * @returns {Promise} that resolves when the element changes
      */
     function waitForElementChange(documentElement, doThisFirst) {
@@ -346,9 +417,12 @@ define('testUtil', [
      * and reject if it exceeds the provided timeout or default of 5s, or if the
      * function throws an exception.
      *
-     * @param {Function} fun - A function to "try"; returns [true, value] if the "try" succeeds, [false] otherwise
-     * @param {number} duration - The timeout, in milliseconds, after which trying without success will fail
-     * @param {number} loopInterval - The time, in milliseconds, between attempts to run "fun" (optional).
+     * @param {Function} fun - A function to "try"; returns [true, value] if the "try"
+     * succeeds, [false] otherwise
+     * @param {number} duration - The timeout, in milliseconds, after which trying
+     * without success will fail
+     * @param {number} loopInterval - The time, in milliseconds, between attempts to run
+     * "fun" (optional).
      * @returns {Promise} - A promise resolved
      */
     async function tryFor(fun, duration, loopInterval = 100) {
@@ -385,6 +459,7 @@ define('testUtil', [
         waitForElement,
         waitForElementState,
         waitForElementChange,
+        waitForText,
         send_INFO,
         send_LOGS,
         send_RETRY,

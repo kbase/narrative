@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 
 import pytest
+
 from biokbase.narrative.exception_util import (
     JobRequestException,
     NarrativeException,
@@ -932,7 +933,7 @@ class JobCommTestCase(unittest.TestCase):
             assert LOGS == msg["msg_type"]
             msg_content = msg["content"][job_id]
             assert job_id == msg_content["job_id"]
-            assert None == msg_content["batch_id"]
+            assert msg_content["batch_id"] is None
             assert lines_available == msg_content["max_lines"]
             assert c[3] == len(msg_content["lines"])
             assert c[2] == msg_content["latest"]

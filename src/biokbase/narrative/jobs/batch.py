@@ -95,7 +95,7 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
     This has limited use, I know, but it's useful for fetching UPAs for objects you know, or names you're iterating over another way.
 
     This first prototype just returns a list of dictionaries, where each dict contains 'type', 'upa', and 'name' keys for each object.
-    """
+    """  # noqa: 501
     ws_name = system_variable("workspace")
     service = clients.get("service")
     service_params = {"ws_name": ws_name}

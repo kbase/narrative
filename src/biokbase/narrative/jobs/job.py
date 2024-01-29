@@ -4,10 +4,11 @@ import uuid
 from pprint import pprint
 from typing import Any
 
+from jinja2 import Template
+
 from biokbase.narrative import clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
-from jinja2 import Template
 
 from .specmanager import SpecManager
 
@@ -426,7 +427,11 @@ class Job:
                         "source": getattr(new_e, "source", "JobManager"),
                         "name": "App Error",
                         "message": "Unable to build output viewer parameters",
-                        "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
+                        "error": (
+                            "Unable to generate App output viewer!\nThe App appears to have "
+                            "completed successfully,\nbut we cannot construct its output "
+                            "viewer.\nPlease contact https://kbase.us/support for assistance."
+                        )
                     },
                 }
 
@@ -513,7 +518,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line : first_line + num_lines],
+            self._job_logs[first_line:first_line+num_lines],  # noqa:E203
         )
 
     def _update_log(self: "Job") -> None:
@@ -601,7 +606,7 @@ class Job:
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
             var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}, 'outputWidgetInfo': {{output_widget_info}}});
         });
-        """
+        """  # noqa: E501
         output_widget_info = None
         try:
             state = self.refresh_state()

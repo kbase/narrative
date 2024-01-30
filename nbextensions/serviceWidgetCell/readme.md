@@ -26,9 +26,11 @@ where `dir` is the `nbextensions` full directory path.
 A cell is invoked within a Narrative notebook by calling a single function exported from the `main.js` script specified in the second installation line shown above: `load_ipython_extension`.
 
 
-
 ### Adding Cell
+
+> TODO: write this section
 
 
 ### Loading Cell
 
+> TODO: write this section

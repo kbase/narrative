@@ -97,7 +97,6 @@ define([
 
             try {
                 const serviceURL = await this.getServiceURL();
-
                 this.setState({
                     status: STATUS.SUCCESS,
                     value: {
@@ -227,7 +226,7 @@ define([
                     authentication,
                     config: niceConfig(),
                     params: this.props.params,
-                    state: { ...propsState, ...widgetState },
+                    state: Object.assign({}, propsState, widgetState),
                 };
 
                 this.sendChannel.send('start', startMessage);

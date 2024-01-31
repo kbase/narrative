@@ -141,13 +141,12 @@ define([
                     const title = name;
                     const subtitle = `v${version} ${type}`;
                     this.setState({
-                        fields: {
-                            ...this.state.fields,
+                        fields: Object.assign({}, this.state.fields, {
                             ref: e.target.value,
                             typeName,
                             title,
                             subtitle,
-                        },
+                        }),
                     });
                 }}
             >
@@ -170,10 +169,9 @@ define([
                                     value=${this.state.moduleName}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 moduleName: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -187,10 +185,9 @@ define([
                                     value=${this.state.fields.widgetName}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 widgetName: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -211,10 +208,9 @@ define([
                                     value=${this.state.fields.title}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 title: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -227,10 +223,9 @@ define([
                                     value=${this.state.fields.subtitle}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 subtitle: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>

@@ -125,7 +125,11 @@ define(['common/pythonInterop', 'util/cellSupport/CellBase'], (pythonInterop, Ce
          * @returns {void} nothing
          */
         setWidgetState(widgetStateUpdate) {
-            const widgetState = { ...this.getMetadata('widgetState', {}), ...widgetStateUpdate };
+            const widgetState = Object.assign(
+                {},
+                this.getMetadata('widgetState', {}),
+                widgetStateUpdate
+            );
             this.setMetadata('widgetState', widgetState);
         }
     };

@@ -132,10 +132,9 @@ define([
                                     value=${this.state.moduleName}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 moduleName: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -149,10 +148,9 @@ define([
                                     value=${this.state.fields.widgetName}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 widgetName: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -165,10 +163,9 @@ define([
                                     value=${this.state.fields.title}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 title: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -181,10 +178,9 @@ define([
                                     value=${this.state.fields.subtitle}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 subtitle: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -197,10 +193,9 @@ define([
                                     value=${this.state.fields.iconName}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 iconName: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -213,10 +208,9 @@ define([
                                     value=${this.state.fields.iconColor}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
+                                            fields: Object.assign({}, this.state.fields, {
                                                 iconColor: e.target.value,
-                                            },
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -232,13 +226,15 @@ define([
                                     value=${this.state.fields.param1.name}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param1: {
-                                                    ...this.state.fields.param1,
-                                                    name: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param1: Object.assign(
+                                                    {},
+                                                    this.state.fields.param1,
+                                                    {
+                                                        name: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.HeaderCell}>
@@ -248,13 +244,15 @@ define([
                                     value=${this.state.fields.param1.value}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param1: {
-                                                    ...this.state.fields.param1,
-                                                    value: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param1: Object.assign(
+                                                    {},
+                                                    this.state.fields.param1,
+                                                    {
+                                                        value: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -266,13 +264,15 @@ define([
                                     value=${this.state.fields.param2.name}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param2: {
-                                                    ...this.state.fields.param2,
-                                                    name: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param2: Object.assign(
+                                                    {},
+                                                    this.state.fields.param2,
+                                                    {
+                                                        name: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.HeaderCell}>
@@ -282,13 +282,15 @@ define([
                                     value=${this.state.fields.param2.value}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param2: {
-                                                    ...this.state.fields.param2,
-                                                    value: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param2: Object.assign(
+                                                    {},
+                                                    this.state.fields.param2,
+                                                    {
+                                                        value: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -300,13 +302,15 @@ define([
                                     value=${this.state.fields.param3.name}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param3: {
-                                                    ...this.state.fields.param3,
-                                                    name: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.spread({}, this.state.fields, {
+                                                param3: Object.spread(
+                                                    {},
+                                                    this.state.fields.param3,
+                                                    {
+                                                        name: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.HeaderCell}>
@@ -316,13 +320,15 @@ define([
                                     value=${this.state.fields.param3.value}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: {
-                                                ...this.state.fields,
-                                                param3: {
-                                                    ...this.state.fields.param3,
-                                                    value: e.target.value,
-                                                },
-                                            },
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param3: Object.assign(
+                                                    {},
+                                                    this.state.fields.param3,
+                                                    {
+                                                        value: e.target.value,
+                                                    }
+                                                ),
+                                            }),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>

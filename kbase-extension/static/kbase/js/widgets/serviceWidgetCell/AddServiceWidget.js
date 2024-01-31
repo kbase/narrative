@@ -245,7 +245,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
-                                    value=${this.state.fields.param1.name}
+                                    value=${this.state.fields.param1.value}
                                     onInput=${(e) =>
                                         this.setState({
                                             fields: {
@@ -267,6 +267,7 @@ define([
                                     onInput=${(e) =>
                                         this.setState({
                                             fields: {
+                                                ...this.state.fields,
                                                 param2: {
                                                     ...this.state.fields.param2,
                                                     name: e.target.value,
@@ -278,7 +279,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
-                                    value=${this.state.fields.param2.name}
+                                    value=${this.state.fields.param2.value}
                                     onInput=${(e) =>
                                         this.setState({
                                             fields: {
@@ -296,12 +297,13 @@ define([
                             <${RotatedTable.HeaderCell}>
                                 <input
                                     className="form-control"
-                                    value=${this.state.fields.param2.name}
+                                    value=${this.state.fields.param3.name}
                                     onInput=${(e) =>
                                         this.setState({
                                             fields: {
-                                                param2: {
-                                                    ...this.state.fields.param2,
+                                                ...this.state.fields,
+                                                param3: {
+                                                    ...this.state.fields.param3,
                                                     name: e.target.value,
                                                 },
                                             },
@@ -311,7 +313,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
-                                    value=${this.state.fields.param3.name}
+                                    value=${this.state.fields.param3.value}
                                     onInput=${(e) =>
                                         this.setState({
                                             fields: {

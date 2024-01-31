@@ -625,7 +625,7 @@ define([
                     delete constantParams.service_module_name;
                     delete constantParams.widget_name;
 
-                    const params = { ...constantParams, ref };
+                    const params = Object.assign({}, constantParams, { ref });
 
                     const title = `${data.info.name}`;
                     const subtitle = `v${data.info.version} - ${data.info.type}`;

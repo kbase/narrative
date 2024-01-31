@@ -144,11 +144,10 @@ define([
             if (!runtime.isDeveloper() || readOnly) {
                 return '';
             }
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 title: 'Delete cell...',
                 id: handleClick(events, doDeleteCell),
-            };
+            });
             return button(attribs, span({ class: 'fa fa-trash fa-lg text-danger' }));
         }
 
@@ -160,11 +159,11 @@ define([
             if (!runtime.isDeveloper() || readOnly || cell.cell_type !== 'code') {
                 return '';
             }
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 title: 'Run cell ',
                 id: handleClick(events, () => doRunCell(cell)),
-            };
+            });
+
             return button(attribs, span({ class: 'fa fa-repeat fa-lg ' }));
         }
 
@@ -199,13 +198,12 @@ define([
                 return;
             }
 
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 dataOriginalTitle: 'Move Cell Up',
                 dataElement: 'cell-move-up',
                 ariaLabel: 'Move cell up',
                 id: handleClick(events, () => doMoveCellUp(cell)),
-            };
+            });
             return button(attribs, [span({ class: 'fa fa-arrow-up fa-lg' })]);
         }
 
@@ -226,13 +224,12 @@ define([
                 return;
             }
 
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 dataOriginalTitle: 'Move Cell Down',
                 dataElement: 'cell-move-down',
                 ariaLabel: 'Move cell down',
                 id: handleClick(events, () => doMoveCellDown(cell)),
-            };
+            });
             return button(attribs, [span({ class: 'fa fa-arrow-down fa-lg' })]);
         }
 
@@ -240,13 +237,12 @@ define([
             if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 dataOriginalTitle: 'Move Cell To Top',
                 dataElement: 'cell-move-to-top',
                 ariaLabel: 'Move cell to top',
                 id: handleClick(events, () => doMoveCellToTop(cell)),
-            };
+            });
             return button(attribs, [span({ class: 'fa fa-long-arrow-up fa-lg' })]);
         }
 
@@ -254,13 +250,12 @@ define([
             if (!runtime.isDeveloper() || readOnly) {
                 return;
             }
-            const attribs = {
-                ...buttonBase,
+            const attribs = Object.assign({}, buttonBase, {
                 dataOriginalTitle: 'Move Cell To Bottom',
                 dataElement: 'cell-move-to-bottom',
                 ariaLabel: 'Move cell to bottom',
                 id: handleClick(events, () => doMoveCellToBottom(cell)),
-            };
+            });
             return button(attribs, [span({ class: 'fa fa-long-arrow-down fa-lg' })]);
         }
 

@@ -2,7 +2,7 @@
 # pandas
 # sklearn
 # clustergrammer_widget
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 black==23.11.0
 coverage==7.3.1
 cryptography==41.0.4

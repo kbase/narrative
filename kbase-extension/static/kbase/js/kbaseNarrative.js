@@ -406,7 +406,46 @@ define([
     };
 
     /**
+     * Configures the "developer mode" hamburger menu item, which is only enabled for
+     * users with the "DevToken" role. Note that the developer mode is available to
+     * anyone who knows the secret incantation, but we don't necessarily want to make it
+     * available to all users.
      *
+     * NB this could be altered to enable ui elements by DevToken or any
+     * other token. E.g. have a flag attribute like data-edit-mode-only, say
+     * data-devtoken-only, or data-if-devtoken, or data-show-if-devtoken, or
+     * data-show-for-roles="DevToken,ServiceToken", etc.
+     */
+    Narrative.prototype.initDeveloperHamburgerMenuItem = function () {
+        const menuItem = $('#kb-developer-menu-item');
+        const { roles } = NarrativeLogin.accountInfo;
+        const isDeveloperMode = this.runtime.isFeatureEnabled('developer');
+
+        // We show the menu if developer mode is already enabled (in order to be able to
+        // switch it off) or the user has a suitable role to enable developer mode.
+        const enableDeveloperMenuItem =
+            isDeveloperMode ||
+            roles.some(({ id }) => {
+                return ['DevToken'].includes(id);
+            });
+
+        if (!enableDeveloperMenuItem) {
+            return;
+        }
+
+        menuItem.removeClass('hide');
+
+        if (isDeveloperMode) {
+            menuItem.find('[data-element="label"]').text('Reopen in User Mode');
+        } else {
+            // This may be the default text in the narrative_header.html template, but
+            // we repeat it here for completeness with the above.
+            menuItem.find('[data-element="label"]').text('Reopen in Developer Mode');
+        }
+    };
+
+    /**
+     * Initializes the developer menu "Add Service Widget Data Viewer" button
      */
     Narrative.prototype.initAddServiceWidgetDataViewerMenu = () => {
         const { h } = preact;
@@ -697,6 +736,41 @@ define([
         $('#kb-about-btn').click(() => {
             aboutDialog.show();
         });
+
+        $('#kb-developer-menu-item-btn').click(() => {
+            // Toggles between developer and "normal" mode.
+            // This is accomplished by adding the search params "features=developer"
+            // to or removing it from the current url and then re-navigating to the
+            // Narrative with the resulting url.
+            const url = new URL(window.location.href);
+            if (this.runtime.isFeatureEnabled('developer')) {
+                if (url.searchParams.has('features')) {
+                    const features = url.searchParams
+                        .get('features')
+                        .split(/[\s]*,[\s]*/)
+                        .filter((feature) => {
+                            return feature !== 'developer';
+                        });
+                    if (features.length > 0) {
+                        url.searchParams.set('features', features.join(','));
+                    } else {
+                        url.searchParams.delete('features');
+                    }
+                }
+            } else {
+                const features = new Set(['developer']);
+                if (url.searchParams.has('features')) {
+                    url.searchParams
+                        .get('features')
+                        .split(/[\s]*,[\s]*/)
+                        .forEach((feature) => {
+                            features.add(feature);
+                        });
+                }
+                url.searchParams.set('features', Array.from(features).join(','));
+            }
+            window.location = url.toString();
+        });
     };
 
     Narrative.prototype.initShutdownDialog = function () {
@@ -894,9 +968,10 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
-            if (this.runtime.isDeveloper()) {
+            if (this.runtime.isFeatureEnabled('developer')) {
                 this.enableDeveloperUI();
             }
+            this.initDeveloperHamburgerMenuItem();
             this.updateDocumentVersion().finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {

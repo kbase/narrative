@@ -300,10 +300,10 @@ define([
             authClient.getTokenInfo(sessionToken),
             authClient.getUserProfile(sessionToken),
         ])
-            .then((results) => {
-                const tokenInfo = results[0];
+            .then(([tokenInfo, accountInfo]) => {
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
+                this.accountInfo = accountInfo;
                 this.sessionInfo.token = sessionToken;
                 this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
                 this.sessionInfo.user_id = this.sessionInfo.user;
@@ -318,8 +318,8 @@ define([
                     target: $elem,
                     token: sessionToken,
                     userName: sessionInfo.user,
-                    email: results[1].email,
-                    displayName: results[1].display,
+                    email: accountInfo.email,
+                    displayName: accountInfo.display,
                 });
                 return userMenu.start();
             })

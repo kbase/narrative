@@ -8,7 +8,10 @@
                 <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
                     <li><a href="/narratives" target="_blank"><div class="kb-nav-menu-icon"><span class="fa fa-files-o"></span></div> Narratives</a></li>
                     <li class="divider"></li>
-                    <li><a id="kb-about-btn"><div class="kb-nav-menu-icon"><span class="fa fa-info-circle"></span></div> About the Narrative</a></li>
+                    <li data-edit-mode-only><a id="kb-about-btn"><div class="kb-nav-menu-icon"><span
+                    class="fa fa-info-circle"></span></div> About the Narrative</a></li>
+                    <li id="kb-developer-menu-item" class="hide"><a id="kb-developer-menu-item-btn"><div class="kb-nav-menu-icon"><span
+                    class="fa fa-code"></span></div><span data-element="label">Reopen in Developer Mode</span></a></li>
                     <li class="divider"></li>
                     <li><a id="kb-shutdown-btn"><div class="kb-nav-menu-icon"><span class="fa fa-power-off"></span></div> Shutdown and Restart</a></li>
                 </ul>
@@ -87,7 +90,8 @@
                     </ul>
                 </div>
                 <!-- Developer Menu -->
-                <!-- TODO: Should be hidden by default, and expose if the user has DevToken role -->
+                <!-- Is hidden by default, and only exposed if the "developer" feature
+                is enabled. -->
                 <div class="btn-group hide" data-developer-only data-edit-mode-only>
                     <button id="kb-develop-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">

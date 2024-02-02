@@ -477,7 +477,7 @@ define([
         const html = htm.bind(h);
         const $body = $('<div>');
         const staticDialog = new BootstrapDialog({
-            title: 'Add Service Widget',
+            title: 'Insert Generic Service Widget',
             body: $body,
             closeButton: true,
         });

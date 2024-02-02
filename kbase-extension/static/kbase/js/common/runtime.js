@@ -131,14 +131,6 @@ define([
             );
         }
 
-        function isDeveloper() {
-            return isFeatureEnabled('developer');
-        }
-
-        function isAdvanced() {
-            return isFeatureEnabled('advanced');
-        }
-
         function getConfig(key, defaultValue) {
             if (key) {
                 return narrativeConfig.getItem(key, defaultValue);
@@ -177,8 +169,6 @@ define([
             getEnv,
             workspaceId,
             userId,
-            isDeveloper,
-            isAdvanced,
             isFeatureEnabled,
             destroy,
         };

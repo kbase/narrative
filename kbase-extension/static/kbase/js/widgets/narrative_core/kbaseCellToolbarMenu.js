@@ -123,7 +123,7 @@ define([
         };
 
         function renderDeveloperCodeViewToggleButton(events) {
-            if (!runtime.isDeveloper()) {
+            if (!runtime.isFeatureEnabled('developer')) {
                 return '';
             }
             if (cell.cell_type === 'code') {
@@ -141,7 +141,7 @@ define([
         }
 
         function renderDeveloperDeleteButton(events) {
-            if (!runtime.isDeveloper() || readOnly) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
                 return '';
             }
             const attribs = Object.assign({}, buttonBase, {
@@ -156,7 +156,7 @@ define([
         }
 
         function renderDeveloperRunCellButton(events) {
-            if (!runtime.isDeveloper() || readOnly || cell.cell_type !== 'code') {
+            if (!runtime.isFeatureEnabled('developer') || readOnly || cell.cell_type !== 'code') {
                 return '';
             }
             const attribs = Object.assign({}, buttonBase, {
@@ -234,7 +234,7 @@ define([
         }
 
         function renderMoveToTop(cell, events) {
-            if (!runtime.isDeveloper() || readOnly) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
                 return;
             }
             const attribs = Object.assign({}, buttonBase, {
@@ -247,7 +247,7 @@ define([
         }
 
         function renderMoveToBottom(cell, events) {
-            if (!runtime.isDeveloper() || readOnly) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
                 return;
             }
             const attribs = Object.assign({}, buttonBase, {

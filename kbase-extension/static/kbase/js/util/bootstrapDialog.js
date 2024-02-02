@@ -89,7 +89,7 @@ define(['jquery', 'bootstrap'], ($) => {
     BootstrapDialog.prototype.setButtons = function (buttonList) {
         this.$footer.empty();
         if (!buttonList || buttonList.length === 0) {
-            this.$footer.css({ 'border-top': 0 });
+            this.$footer.css({ 'border-top': 0, padding: 0 });
             return;
         } else {
             this.$footer.css({ 'border-top': '' });
@@ -135,8 +135,12 @@ define(['jquery', 'bootstrap'], ($) => {
         this.$modal.modal('show');
     };
 
-    BootstrapDialog.prototype.onShown = function (handler) {
+    BootstrapDialog.prototype.onShow = function (handler) {
         this.$modal.on('show.bs.modal', handler);
+    };
+
+    BootstrapDialog.prototype.onShown = function (handler) {
+        this.$modal.on('shown.bs.modal', handler);
     };
 
     BootstrapDialog.prototype.hide = function () {

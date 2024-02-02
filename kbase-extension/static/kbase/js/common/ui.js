@@ -990,24 +990,52 @@ define([
             }
         }
 
+        function getUserSetting(settingKey, defaultValue) {
+            const settings = Jupyter.notebook.metadata.kbase.userSettings;
+            if (!settings) {
+                return defaultValue;
+            }
+            const setting = settings[settingKey];
+            if (setting === undefined) {
+                return defaultValue;
+            }
+            return setting;
+        }
+
         function ifAdvanced(fun) {
-            if (isAdvanced()) {
+            const userIsAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            if (userIsAdvanced) {
                 return fun();
             }
         }
 
         function ifDeveloper(fun) {
-            if (isDeveloper()) {
+            const userIsDeveloper = getUserSetting(
+                'developer',
+                runtime.config('features.developer')
+            );
+            if (userIsDeveloper) {
                 return fun();
             }
         }
 
         function isAdvanced() {
-            return runtime.isAdvanced();
+            const userIsAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            if (userIsAdvanced) {
+                return true;
+            }
+            return false;
         }
 
         function isDeveloper() {
-            return runtime.isDeveloper();
+            const userIsDeveloper = getUserSetting(
+                'developer',
+                runtime.config('features.developer')
+            );
+            if (userIsDeveloper) {
+                return true;
+            }
+            return false;
         }
 
         function updateTab(tabId, tabName, updates) {

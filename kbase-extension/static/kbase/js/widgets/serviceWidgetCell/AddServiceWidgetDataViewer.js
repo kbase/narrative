@@ -12,11 +12,12 @@ define([
 ], (preact, htm, Jupyter, dataProvider, serviceUtils, RotatedTable) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h, Component, createRef } = preact;
     const html = htm.bind(h);
     class AddServiceWidgetDataViewer extends Component {
         constructor(props) {
             super(props);
+            this.defaultInputRef = createRef();
             this.state = {
                 form: {
                     completed: false,
@@ -36,6 +37,7 @@ define([
         }
 
         async componentDidMount() {
+            this.defaultInputRef.current.focus();
             const objects = await this.fetchObjects();
             const objectsMap = objects.reduce((accum, objectInfo) => {
                 accum[objectInfo.ref] = objectInfo;
@@ -166,6 +168,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    ref=${this.defaultInputRef}
                                     value=${this.state.moduleName}
                                     onInput=${(e) =>
                                         this.setState({

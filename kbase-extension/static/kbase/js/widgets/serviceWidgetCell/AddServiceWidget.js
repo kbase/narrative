@@ -10,11 +10,12 @@ define([
 ], (preact, htm, Jupyter, RotatedTable) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h, Component, createRef } = preact;
     const html = htm.bind(h);
     class AddServiceWidget extends Component {
         constructor(props) {
             super(props);
+            this.defaultInputRef = createRef();
             this.state = {
                 form: {
                     completed: false,
@@ -32,6 +33,10 @@ define([
                     isDynamic: true,
                 },
             };
+        }
+
+        componentDidMount() {
+            this.defaultInputRef.current.focus();
         }
 
         insertWidget() {
@@ -129,6 +134,9 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="moduleName"
+                                    autoFocus
+                                    ref=${this.defaultInputRef}
                                     value=${this.state.moduleName}
                                     onInput=${(e) =>
                                         this.setState({
@@ -145,6 +153,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="widgetName"
                                     value=${this.state.fields.widgetName}
                                     onInput=${(e) =>
                                         this.setState({
@@ -160,6 +169,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="title"
                                     value=${this.state.fields.title}
                                     onInput=${(e) =>
                                         this.setState({
@@ -175,6 +185,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="subtitle"
                                     value=${this.state.fields.subtitle}
                                     onInput=${(e) =>
                                         this.setState({
@@ -190,6 +201,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="iconName"
                                     value=${this.state.fields.iconName}
                                     onInput=${(e) =>
                                         this.setState({
@@ -205,6 +217,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="iconColor"
                                     value=${this.state.fields.iconColor}
                                     onInput=${(e) =>
                                         this.setState({
@@ -223,6 +236,7 @@ define([
                             <${RotatedTable.HeaderCell}>
                                 <input
                                     className="form-control"
+                                    name="param1_name"
                                     value=${this.state.fields.param1.name}
                                     onInput=${(e) =>
                                         this.setState({
@@ -241,6 +255,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="param1_value"
                                     value=${this.state.fields.param1.value}
                                     onInput=${(e) =>
                                         this.setState({
@@ -261,6 +276,7 @@ define([
                             <${RotatedTable.HeaderCell}>
                                 <input
                                     className="form-control"
+                                    name="param2_name"
                                     value=${this.state.fields.param2.name}
                                     onInput=${(e) =>
                                         this.setState({
@@ -279,6 +295,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="param_value"
                                     value=${this.state.fields.param2.value}
                                     onInput=${(e) =>
                                         this.setState({
@@ -299,6 +316,7 @@ define([
                             <${RotatedTable.HeaderCell}>
                                 <input
                                     className="form-control"
+                                    name="param3_name"
                                     value=${this.state.fields.param3.name}
                                     onInput=${(e) =>
                                         this.setState({
@@ -317,6 +335,7 @@ define([
                             <${RotatedTable.DisplayCell}>
                                 <input
                                     className="form-control"
+                                    name="param3_value"
                                     value=${this.state.fields.param3.value}
                                     onInput=${(e) =>
                                         this.setState({

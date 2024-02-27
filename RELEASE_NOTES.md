@@ -11,8 +11,22 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 ### Dependency Changes
 
 - Python dependency updates
-  - black: 23.7.0 -> 23.11.0
-  - pytest: 7.4.0 -> 7.4.3
+  - beautifulsoup4: 4.12.2 -> 4.12.3
+  - black: 23.7.0 -> 24.1.1
+  - coverage: 7.3.1 -> 7.4.1
+  - cryptography: 41.0.4 -> 41.0.6
+  - cryptography: 41.0.4 -> 42.0.2
+  - flake8: 6.1.0 -> 7.0.0
+  - idna: 3.4 -> 3.6
+  - isort: 5.12.0 -> 5.13.2
+  - jinja2: 3.1.2 -> 3.1.3
+  - markupsafe: 2.1.3 -> 2.1.4
+  - pygments: 2.16.1 -> 2.17.2
+  - pymongo: 4.5.0 -> 4.6.1
+  - pyopenssl: 23.2.0 -> 24.0.0
+  - pytest: 7.4.0 -> 8.0.0
+  - terminado: 0.17.1 -> 0.18.0
+  - vcrpy: 5.1.0 -> 6.0.1
 
 ## Version 5.2.1
 -   PTV-1900 - a previous bugfix exposed an issue in the SpeciesTreeBuilder apps. This provides a workaround to keep those apps running.

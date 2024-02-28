@@ -6,7 +6,9 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 
 ## Version unreleased
 
--   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed; previously it showed an empty space.
+- PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed; previously it showed an empty space.
+- PTV-1905 - add new serviceWidget cell, integration of serviceWidget cell into data
+  viewer and app output, add developer support for it, and more
 
 ### Dependency Changes
 

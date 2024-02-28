@@ -8,13 +8,17 @@
                 <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
                     <li><a href="/narratives" target="_blank"><div class="kb-nav-menu-icon"><span class="fa fa-files-o"></span></div> Narratives</a></li>
                     <li class="divider"></li>
-                    <li><a id="kb-about-btn"><div class="kb-nav-menu-icon"><span class="fa fa-info-circle"></span></div> About the Narrative</a></li>
+                    <li data-edit-mode-only><a id="kb-about-btn"><div class="kb-nav-menu-icon"><span
+                    class="fa fa-info-circle"></span></div> About the Narrative</a></li>
+                    <li id="kb-developer-menu-item" class="hide"><a id="kb-developer-menu-item-btn"><div class="kb-nav-menu-icon"><span
+                    class="fa fa-code"></span></div><span data-element="label">Reopen in Developer Mode</span></a></li>
                     <li class="divider"></li>
                     <li><a id="kb-shutdown-btn"><div class="kb-nav-menu-icon"><span class="fa fa-power-off"></span></div> Shutdown and Restart</a></li>
                 </ul>
             </div>
             <a href="https://www.kbase.us">
-                <img id="logo" src="{{ static_url("kbase/images/kbase_logo.png") }}" width="46">
+                <img id="logo" src="{{ static_url('kbase/images/kbase_logo.png') }}"
+                width="46" alt="KBase Logo">
             </a>
         </div>
         <div class="navbar-text kb-narr-namestamp">
@@ -84,6 +88,31 @@
                     <ul class="dropdown-menu" aria-labelledby="kb-share-menu">
                         <li><a id="kb-share-btn"><div class="kb-nav-menu-icon"><span class="fa fa-share-alt"></span></div> Manage Sharing</a></li>
                         <li><a id="kb-static-btn"><div class="kb-nav-menu-icon"><span class="fa fa-file-text-o"></span></div> Manage Static Narratives</a></li>
+                    </ul>
+                </div>
+                <!-- Developer Menu -->
+                <!-- Is hidden by default, and only exposed if the "developer" feature
+                is enabled. -->
+                <div class="btn-group hide" data-developer-only data-edit-mode-only>
+                    <button id="kb-develop-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <div class="fa fa-code"><span class="caret"></span></div>
+                        <div class="kb-nav-btn-txt">developer</div>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="kb-share-menu">
+                        <li>
+                            <a id="kb-develop-add-service-widget-data-btn">
+                                <div class="kb-nav-menu-icon"><span class="fa fa-plus-square-o"></span></div>Insert
+                                Service Widget Object Viewer
+                            </a>
+                        </li>
+                        <li>
+                            <a id="kb-develop-add-service-widget-btn">
+                                <div class="kb-nav-menu-icon"><span class="fa fa-plus-square-o"></span></div> Insert
+                                Generic Service Widget
+                            </a>
+                        </li>
+
                     </ul>
                 </div>
                 <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">

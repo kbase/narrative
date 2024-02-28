@@ -42,7 +42,8 @@ if [ "${mount_local_dirs}" == "t" ]; then
 		--mount "type=bind,src=${root}/${src_dir},dst=${container_root}/${src_dir}" \
 		--mount "type=bind,src=${root}/${nbextension_dir},dst=${container_root}/kbase-extension/static/${nbextension_dir}" \
 		--rm -it \
-		kbase/narrative:dev
+		"${IMAGE:-kbase/narrative:dev}"
+
 else
 	echo "Not mounting local dirs ${MOUNT}"
 	docker run \

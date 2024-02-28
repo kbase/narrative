@@ -109,19 +109,8 @@ define([
             // If any fields are empty, disable the "Add to Narrative" button.
             const { moduleName, widgetName, ref } = this.state.fields;
 
-            if (!moduleName) {
-                return false;
-            }
-
-            if (!widgetName) {
-                return false;
-            }
-
-            if (!ref) {
-                return false;
-            }
-
-            return true;
+            // Note that we are not performing any sort of validation other than non-empty.
+            return !!moduleName && !!widgetName && !!ref;
         }
 
         renderObjectSelector() {

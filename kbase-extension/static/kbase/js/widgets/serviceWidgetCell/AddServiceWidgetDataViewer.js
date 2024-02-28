@@ -145,8 +145,8 @@ define([
                     this.setState({
                         // We use Object.assign because the minifier currently in use
                         // chokes on some usages of object spread.
-                        // NOSONAR
                         fields: Object.assign({}, this.state.fields, {
+                            // NOSONAR
                             ref: e.target.value,
                             typeName,
                             title,
@@ -177,8 +177,8 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
+                                                // NOSONAR
                                                 moduleName: e.target.value,
                                             }),
                                         })}
@@ -196,8 +196,8 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
+                                                // NOSONAR
                                                 widgetName: e.target.value,
                                             }),
                                         })}
@@ -222,8 +222,8 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
+                                                // NOSONAR
                                                 title: e.target.value,
                                             }),
                                         })}
@@ -240,8 +240,8 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
+                                                // NOSONAR
                                                 subtitle: e.target.value,
                                             }),
                                         })}

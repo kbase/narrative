@@ -81,17 +81,11 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
          */
         isType(cell) {
             // We only handle cells of the type set for this CellManager object.
-            if (cell.cell_type !== 'code') {
-                return false;
-            }
-            if (!cell.metadata.kbase) {
-                return false;
-            }
-            if (cell.metadata.kbase.type !== this.type) {
-                return false;
-            }
-
-            return true;
+            return (
+                cell.cell_type === 'code' &&
+                !!cell.metadata.kbase &&
+                cell.metadata.kbase.type === this.type
+            );
         }
 
         /**

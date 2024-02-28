@@ -125,7 +125,6 @@ define([
                     if (feature.charAt(0) === '-') {
                         disable = true;
                         name = feature.slice(1);
-                        return { disable: true, name: feature.slice(1) };
                     } else {
                         disable = false;
                         name = feature;

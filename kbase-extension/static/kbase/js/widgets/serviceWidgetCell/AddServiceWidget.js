@@ -80,7 +80,6 @@ define([
                         moduleName,
                         widgetName,
                         params,
-                        // todo: get this from the form.
                         isDynamicService: true,
                     },
                 },

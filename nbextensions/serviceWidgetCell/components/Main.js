@@ -235,7 +235,6 @@ define([
             // The 'started' event is sent after the app receives and processes the
             // 'start' event.
             this.receiveChannel.once('started', WIDGET_SERVICE_TIMEOUT, ({ height }) => {
-                // TODO: Remove the loading
                 this.$widgetArea.css('height', `${height}px`);
             });
 
@@ -282,7 +281,6 @@ define([
         }
 
         // renderers
-        // TODO: enable when we have a loading/error cover for the iframe
         renderState() {
             switch (this.state.status) {
                 case STATUS.NONE:

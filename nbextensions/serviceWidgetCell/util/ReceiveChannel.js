@@ -111,7 +111,6 @@ define([], () => {
                 return;
             }
 
-            // TODO: could do more here.
             if (!message.envelope) {
                 return;
             }

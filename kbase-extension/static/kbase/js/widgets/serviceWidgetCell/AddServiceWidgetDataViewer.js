@@ -143,6 +143,9 @@ define([
                     const title = name;
                     const subtitle = `v${version} ${type}`;
                     this.setState({
+                        // We use Object.assign because the minifier currently in use
+                        // chokes on some usages of object spread.
+                        // NOSONAR
                         fields: Object.assign({}, this.state.fields, {
                             ref: e.target.value,
                             typeName,
@@ -172,6 +175,9 @@ define([
                                     value=${this.state.moduleName}
                                     onInput=${(e) =>
                                         this.setState({
+                                            // We use Object.assign because the minifier currently in use
+                                            // chokes on some usages of object spread.
+                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
                                                 moduleName: e.target.value,
                                             }),
@@ -188,6 +194,9 @@ define([
                                     value=${this.state.fields.widgetName}
                                     onInput=${(e) =>
                                         this.setState({
+                                            // We use Object.assign because the minifier currently in use
+                                            // chokes on some usages of object spread.
+                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
                                                 widgetName: e.target.value,
                                             }),
@@ -211,6 +220,9 @@ define([
                                     value=${this.state.fields.title}
                                     onInput=${(e) =>
                                         this.setState({
+                                            // We use Object.assign because the minifier currently in use
+                                            // chokes on some usages of object spread.
+                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
                                                 title: e.target.value,
                                             }),
@@ -226,6 +238,9 @@ define([
                                     value=${this.state.fields.subtitle}
                                     onInput=${(e) =>
                                         this.setState({
+                                            // We use Object.assign because the minifier currently in use
+                                            // chokes on some usages of object spread.
+                                            // NOSONAR
                                             fields: Object.assign({}, this.state.fields, {
                                                 subtitle: e.target.value,
                                             }),

@@ -54,8 +54,8 @@ define([
             return objects
                 .filter(({ object_info }) => {
                     // eslint-disable-next-line no-unused-vars
-                    const [_typeModule, typeName, _majorVersion, _minorVersion] =
-                        object_info[2].split(/[.-]/);
+                    const typeParts = object_info[2].split(/[.-]/);
+                    const typeName = typeParts[1];
                     return typeName !== 'Narrative';
                 })
                 .map(({ object_info }) => {

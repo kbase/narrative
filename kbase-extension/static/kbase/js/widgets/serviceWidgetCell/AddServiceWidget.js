@@ -110,15 +110,17 @@ define([
                 return false;
             }
 
-            if (param1.name && !param1.value) {
+            // We only consider a parameter if it has a name or value.
+
+            if ((param1.name || param1.value) && (!param1.name || !param1.value)) {
                 return false;
             }
 
-            if (param2.name && !param2.value) {
+            if ((param2.name || param2.value) && (!param2.name || !param2.value)) {
                 return false;
             }
 
-            if (param3.name && !param3.value) {
+            if ((param3.name || param3.value) && (!param3.name || !param3.value)) {
                 return false;
             }
 
@@ -320,8 +322,8 @@ define([
                                     value=${this.state.fields.param3.name}
                                     onInput=${(e) =>
                                         this.setState({
-                                            fields: Object.spread({}, this.state.fields, {
-                                                param3: Object.spread(
+                                            fields: Object.assign({}, this.state.fields, {
+                                                param3: Object.assign(
                                                     {},
                                                     this.state.fields.param3,
                                                     {

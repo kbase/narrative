@@ -122,7 +122,7 @@ define([
                     let name;
                     let disable;
 
-                    if (feature.charAt(0) === '-') {
+                    if (feature.startsWith('-')) {
                         disable = true;
                         name = feature.slice(1);
                     } else {

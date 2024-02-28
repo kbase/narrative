@@ -540,10 +540,8 @@ define([
                 if (!$inputArea.hasClass('-show')) {
                     $inputArea.addClass('-show');
                 }
-            } else {
-                if ($inputArea.hasClass('-show')) {
-                    $inputArea.removeClass('-show');
-                }
+            } else if ($inputArea.hasClass('-show')) {
+                $inputArea.removeClass('-show');
             }
         }
 

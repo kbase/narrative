@@ -9,6 +9,8 @@ define([
     'use strict';
     const narrativeConfig = Props.make({ data: Config.getConfig() });
 
+    const FEATURE_DELIMITER = '_';
+
     function factory(config = {}) {
         const busArgs = config.bus || {};
         let clock, theBus;
@@ -82,6 +84,127 @@ define([
         }
 
         /**
+         * The FeatureEnablement represents an instruction as to whether to enable
+         * or disable a given feature. A feature is identified, to the human and the
+         * Narrative, by the `name`. If `disable` is `true`, the feature is enabled; if
+         * `false` it is disabled.
+         *
+         * The provision of a FeatureEnablement in the URL supersedes all other settings, as
+         * it represents the immediate desire of the user.
+         *
+         * @typedef {Object} FeatureEnablement
+         * @property {string} name the feature name and identifier
+         * @property {boolean} disable -hether to disable the feature or not (enable it)
+         */
+
+        /**
+         * Get the list of features, if any, provided in the Narrative URL.
+         *
+         * The optional `features` search parameter provides a list of features to be
+         * enabled or disabled. A feature `name` prefixed with a dash `-` disables the
+         * feature; otherwise the feature `name` enables it.
+         *
+         * If the feature is not provided, other configuration in the Narrative may
+         * determine whether it is enabled or disabled.
+         *
+         * @returns {Array<FeatureEnablement>} An array of features as provided in the URL.
+         */
+        function getFeaturesFromURL() {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('features')) {
+                return [];
+            }
+            // Extract a comma-separated list of features (see
+            // config/feature-config.json) to enable.
+            return (new URL(window.location.href).searchParams.get('features') || '')
+                .split(FEATURE_DELIMITER)
+                .map((feature) => {
+                    let name;
+                    let disable;
+
+                    if (feature.charAt(0) === '-') {
+                        disable = true;
+                        name = feature.slice(1);
+                        return { disable: true, name: feature.slice(1) };
+                    } else {
+                        disable = false;
+                        name = feature;
+                    }
+                    return { name, disable };
+                })
+                .filter(({ name }) => {
+                    if (!this.hasConfig(['features', name])) {
+                        console.error(`Feature is undefined: ${name}`);
+                        return false;
+                    }
+                    return true;
+                });
+        }
+
+        /**
+         * Given a list of features, create and return a url which contains the feature
+         * enablement instructions in single `features` search param field.
+         *
+         * The list of features are encoded in a single field with a very specific format.
+         * The format is chosen to be human-readable.
+         *
+         * Each feature is represented as the feature `name`. If the name is prefixed with a
+         * dash `-` the meaning is that the feature is disabled; otherwise, it is enabled.
+         * Such feature enablement instructions are separated by an underscore `_`. This
+         * separator was chosen because it is allowable in urls, and it is visually distinct
+         * from the dash. Other allowable non-alphanumeric characters are more difficult to
+         * distinguish from the dash, or might otherwise be confusing (e.g. period `.`)
+         *
+         * @param {Array<FeatureEnablement>} features
+         * @returns {void} nothing
+         */
+        function setFeaturesInURL(features) {
+            const featuresString = features
+                .filter(({ name }) => {
+                    // If a feature is not defined in the configuration, we ignore it.
+                    const isDefined = this.hasConfig(['features', name]);
+                    if (!isDefined) {
+                        console.error(`Feature is undefined: ${name}`);
+                    }
+                    return isDefined;
+                })
+                .map(({ name, disable }) => {
+                    return `${disable ? '-' : ''}${name}`;
+                })
+                .join(FEATURE_DELIMITER);
+
+            const url = new URL(window.location.href);
+
+            url.searchParams.set('features', featuresString);
+
+            return url;
+        }
+
+        /**
+         * Given a feature name, return the feature enablement from the URL, if any.
+         *
+         * If absent, `undefined` is returned.
+         *
+         * @param {FeatureEnablement} featureName
+         * @returns {FeatureEnablement | undefined}
+         */
+        function getFeatureFromURL(featureName) {
+            // An undefined feature is always undefined.
+            if (!this.hasConfig(['features', featureName], false)) {
+                console.error(`Feature is undefined: ${featureName}`);
+                return false;
+            }
+
+            // Extract a comma-separated list of features (see
+            // config/feature-config.json) to enable.
+            const matchingFeatures = this.getFeaturesFromURL().filter(({ name }) => {
+                return name === featureName;
+            });
+
+            return matchingFeatures.slice(-1)[0];
+        }
+
+        /**
          * Determines if a given feature is enabled.
          *
          * Sources of feature enablement are, in order of precedence:
@@ -99,18 +222,26 @@ define([
          *
          * If a feature is not found under the given name, the result is always false.
          *
-         * @param {string} featureName
+         * @param {string} featureName The name of the given feature.
          * @returns {boolean} Whether the given feature is enabled
          */
         function isFeatureEnabled(featureName) {
-            // Extract a comma-separated list of features (see
-            // config/feature-config.json) to enable.
-            const featuresFromURL = (
-                new URL(window.location.href).searchParams.get('features') || ''
-            ).split(',');
+            // An undefined feature is always disabled.
+            if (!this.hasConfig(['features', featureName], false)) {
+                console.error(`Feature is undefined: ${featureName}`);
+                return false;
+            }
+
+            // If a feature is specified in the URL (see above), we either enable or
+            // disable it. Otherwise, try to get the feature from the other places.
+            const featureFromURL = this.getFeatureFromURL(featureName);
+            if (featureFromURL) {
+                return !featureFromURL.disable;
+            }
 
             // May be a string value? At least the pre-existing code implied it may not
             // be boolean, so we coerce it.
+            //
             // TODO: temporarily disabled; there is a race condition in the underlying
             // code, as we need the notebook to be fully populated in order to get the
             // userSetting, but that may not be the case when this code is called.
@@ -121,14 +252,9 @@ define([
             // The full set of features, with default enablement, is available in
             // feature-config.json, which is made available in the Narrative config
             // object under the 'features' key.
-
             const featureEnabledFromConfig = getConfig(['features', featureName], false);
 
-            return (
-                featuresFromURL.includes(featureName) ||
-                featureEnabledFromUserSetting ||
-                featureEnabledFromConfig
-            );
+            return featureEnabledFromUserSetting || featureEnabledFromConfig;
         }
 
         function getConfig(key, defaultValue) {
@@ -137,6 +263,10 @@ define([
             } else {
                 return narrativeConfig.getRawObject();
             }
+        }
+
+        function hasConfig(key) {
+            return narrativeConfig.hasItem(key);
         }
 
         function setEnv(key, value) {
@@ -163,6 +293,7 @@ define([
         return {
             authToken,
             config: getConfig,
+            hasConfig,
             bus,
             getUserSetting,
             setEnv,
@@ -170,6 +301,9 @@ define([
             workspaceId,
             userId,
             isFeatureEnabled,
+            getFeaturesFromURL,
+            getFeatureFromURL,
+            setFeaturesInURL,
             destroy,
         };
     }

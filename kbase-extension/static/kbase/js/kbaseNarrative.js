@@ -742,34 +742,23 @@ define([
             // This is accomplished by adding the search params "features=developer"
             // to or removing it from the current url and then re-navigating to the
             // Narrative with the resulting url.
-            const url = new URL(window.location.href);
-            if (this.runtime.isFeatureEnabled('developer')) {
-                if (url.searchParams.has('features')) {
-                    const features = url.searchParams
-                        .get('features')
-                        .split(/[\s]*,[\s]*/)
-                        .filter((feature) => {
-                            return feature !== 'developer';
-                        });
-                    if (features.length > 0) {
-                        url.searchParams.set('features', features.join(','));
-                    } else {
-                        url.searchParams.delete('features');
-                    }
-                }
-            } else {
-                const features = new Set(['developer']);
-                if (url.searchParams.has('features')) {
-                    url.searchParams
-                        .get('features')
-                        .split(/[\s]*,[\s]*/)
-                        .forEach((feature) => {
-                            features.add(feature);
-                        });
-                }
-                url.searchParams.set('features', Array.from(features).join(','));
+
+            // The developer feature may be enabled by various means - we don't really
+            // care how here. It is important to know, however, that the features set in
+            // the URL have the highest precedence -- they override other means of
+            // setting features.
+            const disable = this.runtime.isFeatureEnabled('developer');
+
+            try {
+                const features = this.runtime.getFeaturesFromURL().filter(({ name }) => {
+                    return name !== 'developer';
+                });
+                features.push({ name: 'developer', disable });
+                const url = this.runtime.setFeaturesInURL(features);
+                window.location = url.toString();
+            } catch (ex) {
+                console.error('ERROR getting features', ex);
             }
-            window.location = url.toString();
         });
     };
 
@@ -968,6 +957,7 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
+
             if (this.runtime.isFeatureEnabled('developer')) {
                 this.enableDeveloperUI();
             }

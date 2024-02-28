@@ -568,13 +568,6 @@ define([
                 rendered.events.attachEvents();
 
                 container.addEventListener('dblclick', (e) => {
-                    // // Prevent a double click on another element from trigger a min/max
-                    // // toggle. This can happen easily if one accidentally double-clicks
-                    // // on an element, or uses a toggle control quickly.
-                    // console.log('double trouble', e.target, e.currentTarget, container);
-                    // if (e.target !== container) {
-                    //     return;
-                    // }
                     doToggleMinMaxCell(e);
                 });
             } catch (ex) {

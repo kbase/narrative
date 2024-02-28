@@ -56,8 +56,6 @@ define(['jquery', 'common/jupyter', 'base/js/namespace', 'common/ui'], (
             this.name = name;
             this.instanceClass = instanceClass;
 
-            // TODO: is there a predicate method, rather than using what is presumably
-            // a private property like this?
             if (Jupyter.notebook._fully_loaded) {
                 // handles case in which it is already loaded by the time
                 // nbextensions are loaded

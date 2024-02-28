@@ -364,7 +364,6 @@ define([
          *
          */
         injectPython() {
-            //TODO: we only need to do this once, when the cell is first created.
             this.cell.set_text(this.generatePython());
         }
 

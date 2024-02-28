@@ -184,7 +184,7 @@ define([
          *
          * If absent, `undefined` is returned.
          *
-         * @param {FeatureEnablement} featureName
+         * @param {string} featureName
          * @returns {FeatureEnablement | undefined}
          */
         function getFeatureFromURL(featureName) {

@@ -145,8 +145,7 @@ define([
                     this.setState({
                         // We use Object.assign because the minifier currently in use
                         // chokes on some usages of object spread.
-                        fields: Object.assign({}, this.state.fields, {
-                            // NOSONAR
+                        fields: Object.assign(/* NOSONAR */ {}, this.state.fields, {
                             ref: e.target.value,
                             typeName,
                             title,
@@ -177,10 +176,13 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            fields: Object.assign({}, this.state.fields, {
-                                                // NOSONAR
-                                                moduleName: e.target.value,
-                                            }),
+                                            fields: Object.assign(
+                                                /* NOSONAR */ {},
+                                                this.state.fields,
+                                                {
+                                                    moduleName: e.target.value,
+                                                }
+                                            ),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -196,10 +198,13 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            fields: Object.assign({}, this.state.fields, {
-                                                // NOSONAR
-                                                widgetName: e.target.value,
-                                            }),
+                                            fields: Object.assign(
+                                                /* NOSONAR */ {},
+                                                this.state.fields,
+                                                {
+                                                    widgetName: e.target.value,
+                                                }
+                                            ),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -222,10 +227,13 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            fields: Object.assign({}, this.state.fields, {
-                                                // NOSONAR
-                                                title: e.target.value,
-                                            }),
+                                            fields: Object.assign(
+                                                /* NOSONAR */ {},
+                                                this.state.fields,
+                                                {
+                                                    title: e.target.value,
+                                                }
+                                            ),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>
@@ -240,10 +248,13 @@ define([
                                         this.setState({
                                             // We use Object.assign because the minifier currently in use
                                             // chokes on some usages of object spread.
-                                            fields: Object.assign({}, this.state.fields, {
-                                                // NOSONAR
-                                                subtitle: e.target.value,
-                                            }),
+                                            fields: Object.assign(
+                                                /* NOSONAR */ {},
+                                                this.state.fields,
+                                                {
+                                                    subtitle: e.target.value,
+                                                }
+                                            ),
                                         })}
                                 />
                             </${RotatedTable.DisplayCell}>

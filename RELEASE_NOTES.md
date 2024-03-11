@@ -28,6 +28,31 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - terminado: 0.17.1 -> 0.18.0
   - vcrpy: 5.1.0 -> 6.0.1
 
+
+- Javascript dependency updates
+  - @babel/traverse: 7.22.8 -> 7.23.3
+  - @wdio/browserstack-service: 8.12.2 -> 8.29.3
+  - @wdio/cli: 8.12.2 -> 8.29.3
+  - axios: 1.4.0 -> 1.6.1
+  - chromedriver: 114.0.2 -> 121.0.0
+  - commander: 10.0.0 -> 11.1.0
+  - dropzone: 5.7.0 -> 5.9.3
+  - eslint-config-prettier: 8.8.0 -> 9.1.0
+  - follow-redirects: 1.15.2 -> 1.15.4
+  - handlebars: 4.7.7 -> 4.7.8
+  - karma: 6.4.1 -> 6.4.2
+  - msw: 0.35.0 -> 2.1.5
+  - nunjucks: 2.4.3 -> 3.2.4 in /src/nodejs/NarrativeServer
+  - plotly.js-dist-min: 2.18.2 -> 2.28.0
+  - postcss: 8.4.27 -> 8.4.33
+  - prettier: 3.0.0 -> 3.2.4
+  - puppeteer: 20.8.2 -> 21.10.0
+  - pure-uuid: 1.6.4 -> 1.8.1
+  - selenium-webdriver: 4.10.0 -> 4.17.0
+  - word-wrap: 1.2.3 -> 1.2.4
+  - ws: 7.2.0 -> 7.4.6 in /src/nodejs/NarrativeServer
+
+
 ## Version 5.2.1
 -   PTV-1900 - a previous bugfix exposed an issue in the SpeciesTreeBuilder apps. This provides a workaround to keep those apps running.
 -   PTV-1687 - update favicon

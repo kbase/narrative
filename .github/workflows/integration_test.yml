@@ -48,7 +48,7 @@ jobs:
       run: docker pull ${{ env.APP_IMAGE_TAG }}
     -
       name: Use Node JS 20
-      uses: actions/setup-node@43
+      uses: actions/setup-node@4
       with:
         node-version: 20
     -

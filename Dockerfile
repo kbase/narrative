@@ -37,7 +37,7 @@ RUN \
     apt-get install -y nodejs=20.12.0-1nodesource1 && \
     # install JS deps
     npm install -g grunt-cli && \
-    npm ci && npm run install-npm && \
+    npm ci --ignore-scripts && npm run install-npm && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \

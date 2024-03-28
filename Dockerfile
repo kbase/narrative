@@ -34,7 +34,7 @@ RUN \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
     # Install updated nodejs
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs=20.12.0-1nodesource1 && \
+    apt-get --no-install-recommends install -y nodejs=20.12.0-1nodesource1 && \
     # install JS deps
     npm install -g grunt-cli && \
     npm ci --ignore-scripts && npm run install-npm && \

@@ -55,10 +55,10 @@ jobs:
         docker run -v "${{ github.workspace }}/output:/tmp/output" --user nobody ${{ env.APP_IMAGE_TAG }} /bin/bash scripts/narrative_backend_tests.sh
       continue-on-error: true
     -
-      name: Use Node JS 16
-      uses: actions/setup-node@v2
+      name: Use Node JS 20
+      uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version: 20
     -
       name: Install JS dependencies
       run: |

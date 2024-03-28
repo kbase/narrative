@@ -35,6 +35,7 @@ RUN \
     # Install updated nodejs
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get --no-install-recommends install -y nodejs=20.12.0-1nodesource1 && \
+    apt-get clean && \
     # install JS deps
     npm install -g grunt-cli && \
     npm ci --ignore-scripts && npm run install-npm && \

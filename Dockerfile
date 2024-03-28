@@ -32,9 +32,12 @@ RUN \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
+    # Install updated nodejs
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs=20.12.0-1nodesource1 && \
     # install JS deps
     npm install -g grunt-cli && \
-    npm install && npm run install-npm && \
+    npm ci && npm run install-npm && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \

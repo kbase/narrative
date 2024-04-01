@@ -61,7 +61,7 @@ define([
                 this.uploadGlobusClickEvent(e, globusUrlLinked);
             });
             this.$elem.append($dropzoneElem);
-            this.dropzone = new Dropzone($dropzoneElem.get(0), {
+            this.dropzone = new Dropzone.Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
                 accept: function (_, done) {
                     done();

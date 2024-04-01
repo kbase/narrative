@@ -263,13 +263,21 @@ define([
      * 3. Revoke the token from the auth server.
      * 4. Redirect to the logout page, with an optional warning that the user's now logged out.
      */
-    function tokenTimeout(showDialog) {
+    async function tokenTimeout(showDialog) {
         if (aboutToLogoutDialog) {
             aboutToLogoutDialog.hide();
         }
         clearTokenCheckTimers();
         authClient.clearAuthToken();
-        authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
+        try {
+            await authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
+        } catch (ex) {
+            // It isn't good to fail to revoke a token, but it should be rare.
+            // We can also bookmark that a better solution is a dialog, with an
+            // explanation, and a link to their account manager, where they can
+            // remove the un-revoked login token.
+            console.error('ERROR revoking token: ', ex.message);
+        }
         // show dialog - you're signed out!
         if (showDialog) {
             showNotLoggedInDialog();

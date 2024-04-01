@@ -4,6 +4,9 @@
     "version": "5.2.1",
     "private": true,
     "repository": "github.com/kbase/narrative",
+    "engines": {
+        "node": ">=20"
+    },
     "devDependencies": {
         "@babel/traverse": "7.23.3",
         "@lodder/grunt-postcss": "^3.0.1",
@@ -53,7 +56,7 @@
         "karma-safari-launcher": "^1.0.0",
         "lint-staged": "^12.3.6",
         "load-grunt-tasks": "^5.1.0",
-        "msw": "2.1.5",
+        "msw": "0.35.0",
         "postcss": "8.4.33",
         "postcss-cli": "10.0.0",
         "postcss-discard-comments": "6.0.0",
@@ -90,8 +93,8 @@
         "dompurify": "2.3.8",
         "dropzone": "5.9.3",
         "file-saver": "1.3.4",
-        "font-awesome": "4.7.0",
         "follow-redirects": "1.15.4",
+        "font-awesome": "4.7.0",
         "google-code-prettify": "1.0.5",
         "handlebars": "^4.7.8",
         "jquery": "2.2.4",

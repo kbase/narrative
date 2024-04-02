@@ -4,6 +4,7 @@ root=$(git rev-parse --show-toplevel)
 # Best would be one parent directory for KBase JS, one for all installed.
 # Note that if you want to fiddle with dependencies locally w/in the image
 # you can add a --mount of the entirety of kbase-extension
+narrative_paths=kbase-extension/static/narrative_paths.js
 kbase_dir=kbase-extension/static/kbase
 src_dir=src
 test_dir=test
@@ -38,6 +39,7 @@ if [ "${mount_local_dirs}" == "t" ]; then
 		--network=kbase-dev \
 		--name=narrative  \
  		--mount "type=bind,src=${root}/${kbase_dir},dst=${container_root}/${kbase_dir}" \
+ 		--mount "type=bind,src=${root}/${narrative_paths},dst=${container_root}/${narrative_paths}" \
 		--mount "type=bind,src=${root}/${test_dir},dst=${container_root}/${test_dir}" \
 		--mount "type=bind,src=${root}/${src_dir},dst=${container_root}/${src_dir}" \
 		--mount "type=bind,src=${root}/${nbextension_dir},dst=${container_root}/kbase-extension/static/${nbextension_dir}" \

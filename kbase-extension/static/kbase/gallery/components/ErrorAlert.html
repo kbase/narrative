@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+    <meta charset="utf-8">
+        <title>KBase Demo - AlertMessage.js</title>
+    </head>
+    <body class="gallery">
+       <h1>ErrorMessage Demo</h1>
+
+        <p><a href="../../index.html">Index</a></p>
+
+        <h2>From String</h2>
+                    
+        <p>The very simplest error message is a string</p>
+
+        <div class="Example">
+          <div id="example1"></div>
+        </div>
+
+        <h2>Bad String Value</h2>
+                    
+        <p>Two errors should be printed to the browser console:</p>
+
+        <code class="text-danger">
+Failed prop type: Invalid prop `title` of type `number` supplied to `ErrorAlert`, expected `string`. 
+    in ErrorAlert
+
+Failed prop type: Invalid prop `message` of type `number` supplied to `ErrorAlert`, expected `string`.
+    in ErrorAlert
+        </code>
+
+        <div class="Example">
+          <div id="example2"></div>
+        </div>
+
+        <script>
+            require(['narrative_paths'], () => {
+                require(['preact_debug'], (preactDebug) => {
+                    require([
+                        'jquery',
+                        'preact',
+                        'htm',
+                        'prop_types',
+                        'preactComponents/ErrorAlert',
+                        'jsonrpc/1.1/errors',
+                        'jsonrpc/1.1/jsonrpcErrors',
+                        'kb_common/jsonRpc/exceptions',
+                    ], (
+                        $,
+                        preact,
+                        htm,
+                        PropTypes,
+                        ErrorAlert,
+                        errors,
+                        jsonrpcErrors,
+                        jsonrpcExceptions
+                    ) => {
+                        const { h, render } = preact;
+                        const html = htm.bind(h);
+
+                        function renderExample(id, fun) {
+                            const node = document.getElementById(id);
+                            if (!node) {
+                                console.error(`Sorry, id ${id} does not exist`);
+                                return;
+                            }
+                            try {
+                                fun(node);
+                            } catch (ex) {
+                                $(node).html($('<div class="alert alert-danger">').append(ex.message));
+                            }
+                        }
+                        renderExample('example1', (node) => {
+                            preact.render(html`<${ErrorAlert} title="Simple Greeting" message="Hello" />`, node);
+                        });
+
+                        renderExample('example2', (node) => {
+                            preact.render(html`<${ErrorAlert} title=${456} message=${123} />`, node);
+                        });
+
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

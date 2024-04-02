@@ -1,7 +1,13 @@
-define(['preact', 'htm', 'bootstrap'], (preact, htm) => {
+define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
+    preact,
+    preactCompat,
+    htm,
+    PropTypes
+) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
 
     class ErrorAlert extends Component {
@@ -36,6 +42,14 @@ define(['preact', 'htm', 'bootstrap'], (preact, htm) => {
             `;
         }
     }
+
+    ErrorAlert.propTypes = {
+        showIcon: PropTypes.bool,
+        compact: PropTypes.bool,
+        title: PropTypes.string.isRequired,
+        render: PropTypes.func,
+        message: PropTypes.string,
+    };
 
     return ErrorAlert;
 });

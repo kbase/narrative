@@ -58,6 +58,7 @@ define(['jquery', 'widgets/kbasePrompt2', 'testUtil'], ($, Prompt, testUtil) => 
                 });
             } finally {
                 prompt.close();
+                $testDiv.remove();
             }
         });
     });

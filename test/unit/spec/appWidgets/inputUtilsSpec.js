@@ -38,13 +38,18 @@ define(['widgets/appWidgets2/inputUtils', 'testUtil'], (InputUtils, TestUtil) =>
                 await TestUtil.waitForElement(document.body, 'div.modal-body', () =>
                     node.querySelector('button').click()
                 );
+                const expectedMsg = `Message id: ${msg.id}`;
                 expect(document.body.querySelector('div.modal-body').innerHTML).toContain(
-                    'Message id: ' + msg.id
+                    expectedMsg
                 );
                 await TestUtil.waitForElementState(
                     document.body,
                     () => {
-                        return document.body.querySelectorAll('.modal').length === 0;
+                        const elem = document.body.querySelector('div.modal-body');
+                        if (!elem) {
+                            return true;
+                        }
+                        return !elem.innerHTML.includes(expectedMsg);
                     },
                     () => {
                         document.body.querySelector('div.modal-footer > button').click();
@@ -52,6 +57,7 @@ define(['widgets/appWidgets2/inputUtils', 'testUtil'], (InputUtils, TestUtil) =>
                 );
                 // expect the modal to be really gone.
                 expect(document.body.querySelectorAll('div.modal').length).toBe(0);
+                document.body.removeChild(node);
             });
         });
 

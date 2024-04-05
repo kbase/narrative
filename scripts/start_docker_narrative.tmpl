@@ -16,4 +16,4 @@ fi
 
 cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/config/
 
-jupyter notebook --NotebookApp.base_url=/narrative --NotebookApp.open_browser=False --NotebookApp.allow_origin=* --ip=0.0.0.0 "$@"
+jupyter notebook --ServerApp.base_url=/narrative --ServerApp.open_browser=False --ServerApp.allow_origin=* --ip=0.0.0.0 "$@"

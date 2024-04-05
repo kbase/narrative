@@ -9,6 +9,8 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 -   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed;
     previously it showed an empty space.
 -   PTV-1909 - Narrative sign out does sign out
+-   UIP-41 - Update Jupyter Notebook to version 6.5.6
+-   UIP-41 - Fix Dropzone dependency issues, address problems with unit tests
 
 ### Dependency Changes
 
@@ -36,14 +38,13 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
   - @wdio/browserstack-service: 8.12.2 -> 8.29.3
   - @wdio/cli: 8.12.2 -> 8.29.3
   - axios: 1.4.0 -> 1.6.1
-  - chromedriver: 114.0.2 -> 121.0.0
+  - chromedriver: 114.0.2 -> 123.0.0
   - commander: 10.0.0 -> 11.1.0
   - dropzone: 5.7.0 -> 5.9.3
   - eslint-config-prettier: 8.8.0 -> 9.1.0
   - follow-redirects: 1.15.2 -> 1.15.4
   - handlebars: 4.7.7 -> 4.7.8
   - karma: 6.4.1 -> 6.4.2
-  - msw: 0.35.0 -> 2.1.5
   - nunjucks: 2.4.3 -> 3.2.4 in /src/nodejs/NarrativeServer
   - plotly.js-dist-min: 2.18.2 -> 2.28.0
   - postcss: 8.4.27 -> 8.4.33

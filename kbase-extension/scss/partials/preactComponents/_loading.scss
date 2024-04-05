@@ -3,6 +3,10 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+
+    .preactComponent-Loading-Message {
+        margin-left: 1rem;
+    }
 }
 
 .preactComponent-Loading {
@@ -22,12 +26,12 @@
     flex: 0 0 auto;
     padding: 4px;
     margin: 4px;
-    display: flex;
+    display: inline-flex;
     flex-direction: row;
-    justify-content: center;
-    align-items: center
+    align-items: baseline;
+
+    .preactComponent-Loading-Message {
+        margin-left: 0.5rem;
+    }
 }
 
-.preactComponent-Loading-Message {
-    margin-left: 1em;
-}

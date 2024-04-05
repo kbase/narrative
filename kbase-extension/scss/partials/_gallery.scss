@@ -18,3 +18,30 @@
 .gallery .Example + .Example {
     margin-top: 1em;
 }
+
+.gallery h1, h2, h3, h4, h5 {
+    color: #383636;
+    font-weight: bold;
+}
+
+.gallery h1 {
+    font-weight: bold;
+}
+
+
+.gallery h2 {
+}
+
+
+.gallery h3 {
+}
+
+
+.gallery h4 {
+    font-style: italic;
+}
+
+
+.gallery h5 {
+    text-decoration: underline;
+}

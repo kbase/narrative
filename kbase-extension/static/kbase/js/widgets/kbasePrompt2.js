@@ -11,23 +11,23 @@
         title : 'Acknowledge Receipt',
         body : 'Did you get the message?',
         // Not required. jquery animation class to show/hide. Defaults to 'fade'
-        modalClass : 'fade', 
+        modalClass : 'fade',
         buttons : [
             {
                 label: 'No',
                 type: 'danger',
-                callback:  ((prompt) => { 
+                callback:  ((prompt) => {
                     prompt.close();
                 })
             },
             {
                 label: 'Yes',
                 type: 'primary',
-                callback:  ((prompt) => { 
+                callback:  ((prompt) => {
                     prompt.close();
                 })
             }
-           
+
         ],
         footer : 'Some footer value here',
     });
@@ -40,11 +40,11 @@
 
     Buttons are placed in the right-hand side of the footer area. There are no default
     buttons!
-    
-    Each button is specified by a label, type, and callback function. 
-    
-        The label may be a string or jquery object, allowing usage of icons or images. 
-    
+
+    Each button is specified by a label, type, and callback function.
+
+        The label may be a string or jquery object, allowing usage of icons or images.
+
         The type is the suffix to the "btn-" class assigned to the button. As per bootstrap,
         these may be default, primary, success, info, warning, danger, or link.
 
@@ -86,8 +86,8 @@ define([
             // into the DOM, in case you were wondering how that magic happens.
             this.$dialogModal = this.createDialogModal();
             this.$dialogModal.on('hidden.bs.modal', function () {
-                // Zap the model.
-                $(this).html('');
+                // Zap the modal.
+                $(this).remove();
             });
             this.$dialogModal.modal({ keyboard: true });
         },

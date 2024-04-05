@@ -1,19 +1,19 @@
-define([
-    'preact',
-    'htm',
-
-    // For effect
-    'bootstrap',
-], (preact, htm) => {
+define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
+    preact,
+    preactCompat,
+    htm,
+    PropTypes
+) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
 
     class Loading extends Component {
         render() {
             const spinner = (() => {
-                switch (this.props.size) {
+                switch (this.props.size || 'normal') {
                     case 'normal':
                         return html`<span className="fa fa-spinner fa-pulse"></span>`;
                     case 'large':
@@ -22,7 +22,7 @@ define([
                 }
             })();
 
-            switch (this.props.display) {
+            switch (this.props.display || 'block') {
                 case 'inline':
                     return html`
                         <div className="preactComponent-Loading-Inline" data-display="inline">
@@ -47,6 +47,17 @@ define([
             }
         }
     }
+
+    Loading.propTypes = {
+        size: PropTypes.oneOf(['normal', 'large']),
+        display: PropTypes.oneOf(['inline', 'block']),
+        message: PropTypes.string.isRequired,
+    };
+
+    Loading.defaultProps = {
+        size: 'large',
+        display: 'block',
+    };
 
     return Loading;
 });

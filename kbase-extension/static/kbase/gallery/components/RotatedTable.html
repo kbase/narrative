@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/gallery.css">
+    <meta charset="utf-8">
+        <title>KBase Demo - RotatedTable.js</title>
+    </head>
+    <body class="gallery">
+       <h1>Rotated Table</h1>
+
+        <p><a href="../index.html">Index</a></p>
+
+        <h2>Basic Usage</h2>
+                    
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+          <div class="Example">
+            <div id="example1"></div>
+          </div>
+  
+          <h4>Code</h4>
+  
+          <pre><code>
+&lt;div  style=${{width: &apos;40rem&apos;}}&gt;
+    &lt;${RotatedTable.Table}&gt;
+        &lt;${RotatedTable.Row}&gt;
+            &lt;${RotatedTable.HeaderCell}&gt;
+                Row One
+            &lt;/${RotatedTable.HeaderCell}&gt;
+            &lt;${RotatedTable.DisplayCell}&gt;
+            Content One
+            &lt;/${RotatedTable.DisplayCell}&gt;
+        &lt;/${RotatedTable.Row}&gt;
+        &lt;${RotatedTable.Row}&gt;
+            &lt;${RotatedTable.HeaderCell}&gt;
+                Row Two
+            &lt;/${RotatedTable.HeaderCell}&gt;
+            &lt;${RotatedTable.DisplayCell}&gt;
+            Content Two
+            &lt;/${RotatedTable.DisplayCell}&gt;
+        &lt;/${RotatedTable.Row}&gt;
+    &lt;/${RotatedTable.Table}&gt;
+&lt;/div&gt;
+          </code></pre>
+
+
+          <h2>Destructured</h2>
+                    
+          <h3>Example</h3>
+  
+          <h4>Display</h4>
+            <div class="Example">
+              <div id="example2"></div>
+            </div>
+    
+            <h4>Code</h4>
+    
+            <pre><code>
+&lt;${Table}&gt;
+    &lt;${Row}&gt;
+        &lt;${HeaderCell}&gt;
+            Row One
+        &lt;/${HeaderCell}&gt;
+        &lt;${DisplayCell}&gt;
+        Content One
+        &lt;/${DisplayCell}&gt;
+    &lt;/${Row}&gt;
+    &lt;${Row}&gt;
+        &lt;${HeaderCell}&gt;
+            Row Two
+        &lt;/${HeaderCell}&gt;
+        &lt;${DisplayCell}&gt;
+        Content Two
+        &lt;/${DisplayCell}&gt;
+    &lt;/${Row}&gt;
+&lt;/${Table}&gt;
+            </code></pre>
+  
+            <h2>Prop Types Error</h2>
+                    
+            <h3>Example</h3>
+    
+            <h4>Display</h4>
+              <div class="Example">
+                <div id="example3"></div>
+              </div>
+
+              <p>In the browser console you should see
+                the following error messages:</p>
+        
+                <code class="text-danger">
+Failed prop type: Invalid prop `row-key` of type `number` supplied to `Table`, expected `string`.
+    in Table
+                </code>
+      
+              <h4>Code</h4>
+      
+              <pre><code>
+&lt;${Table} row-key=${123}&gt;
+    &lt;${Row}&gt;
+        &lt;${HeaderCell}&gt;
+            Row One
+        &lt;/${HeaderCell}&gt;
+        &lt;${DisplayCell}&gt;
+        Content One
+        &lt;/${DisplayCell}&gt;
+    &lt;/${Row}&gt;
+&lt;/${Table}&gt;
+              </code></pre>
+    
+    
+  
+
+        <script>
+            require(['narrative_paths'], () => {
+                // Note that we need to recreate the usage of preact_debug, which is set
+                // in `narrativeMain.js` in the actual Narrative.
+                require(['preact_debug'], (preactDebug) => {
+                    require([
+                        'jquery',
+                        'preact',
+                        'htm',
+                        'prop_types',
+                        'preactComponents/RotatedTable',
+                        'jsonrpc/1.1/errors',
+                        'jsonrpc/1.1/jsonrpcErrors',
+                        'kb_common/jsonRpc/exceptions',
+                    ], (
+                        $,
+                        preact,
+                        htm,
+                        PropTypes,
+                        RotatedTable,
+                        errors,
+                        jsonrpcErrors,
+                        jsonrpcExceptions
+                    ) => {
+                        const { h, render } = preact;
+                        const html = htm.bind(h);
+
+                        function renderExample(id, fun) {
+                            const node = document.getElementById(id);
+                            if (!node) {
+                                console.error(`Sorry, id ${id} does not exist`);
+                                return;
+                            }
+                            try {
+                                fun(node);
+                            } catch (ex) {
+                                $(node).html($('<div class="alert alert-danger">').append(ex.message));
+                            }
+                        }
+                        renderExample('example1', (node) => {
+                            preact.render(html`<div  style=${{width: '40rem'}}>
+                                <${RotatedTable.Table}>
+                                    <${RotatedTable.Row}>
+                                        <${RotatedTable.HeaderCell}>
+                                            Row One
+                                        </${RotatedTable.HeaderCell}>
+                                        <${RotatedTable.DisplayCell}>
+                                        Content One
+                                        </${RotatedTable.DisplayCell}>
+                                    </${RotatedTable.Row}>
+                                    <${RotatedTable.Row}>
+                                        <${RotatedTable.HeaderCell}>
+                                            Row Two
+                                        </${RotatedTable.HeaderCell}>
+                                        <${RotatedTable.DisplayCell}>
+                                        Content Two
+                                        </${RotatedTable.DisplayCell}>
+                                    </${RotatedTable.Row}>
+                                </${RotatedTable.Table}>
+                            </div>`, node);
+                        });
+
+                        const {Table, Row, HeaderCell, DisplayCell} = RotatedTable;
+                        renderExample('example2', (node) => {
+                            preact.render(html`<div  style=${{width: '40rem'}}>
+                                <${Table}>
+                                    <${Row}>
+                                        <${HeaderCell}>
+                                            Row One
+                                        </${HeaderCell}>
+                                        <${DisplayCell}>
+                                        Content One
+                                        </${DisplayCell}>
+                                    </${Row}>
+                                    <${Row}>
+                                        <${HeaderCell}>
+                                            Row Two
+                                        </${HeaderCell}>
+                                        <${DisplayCell}>
+                                        Content Two
+                                        </${DisplayCell}>
+                                    </${Row}>
+                                </${Table}>
+                            </div>`, node);
+                        });
+
+                        renderExample('example3', (node) => {
+                            preact.render(html`<div  style=${{width: '40rem'}}>
+                                <${Table} row-key=${123}>
+                                    <${Row}>
+                                        <${HeaderCell}>
+                                            Row One
+                                        </${HeaderCell}>
+                                        <${DisplayCell}>
+                                        Content One
+                                        </${DisplayCell}>
+                                    </${Row}>
+                                </${Table}>
+                            </div>`, node);
+                        });
+
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

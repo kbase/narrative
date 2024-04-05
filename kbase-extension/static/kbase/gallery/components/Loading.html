@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/gallery.css">
+    <meta charset="utf-8">
+        <title>KBase Demo - AlertMessage.js</title>
+    </head>
+    <body class="gallery">
+       <h1>Loading Component</h1>
+
+        <p><a href="../index.html">Index</a></p>
+
+        <h2>Minimal Case</h2>
+                    
+        <p>The very simplest loading indicator supplies just a message.</p>
+
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+          <div class="Example">
+            <div id="example1"></div>
+          </div>
+  
+          <h4>Code</h4>
+  
+          <pre><code>
+<${Loading} message="Loading Something..." />
+          </code></pre>
+
+        <h2>"normal" Size</h2>
+                    
+        <p>Typical usage is as a larger display ("large") while a component is loading.
+        However, in situations in which you want to display it in a sub-context, a
+        "normal" size is appropriate</p>
+
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+
+        <div class="Example">
+          <div id="example2"></div>
+        </div>
+
+        <h4>Code</h4>
+
+        <pre><code>
+<${Loading} message="Loading Something..." size="normal" />
+        </code></pre>
+
+
+        <h2>"normal inline" display</h2>
+                    
+        <p>Typically the loading indicator is used in a standalone context, taking up the
+        center space in some container; however, sometimes it is convenient to display
+        it inline. In this case, we can set the <code>display</code> to "inline" and
+        <code>size</code> to "normal".</p>
+
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+
+        <div class="Example">
+          <div id="example3"></div>
+        </div>
+
+        <h4>Code</h4>
+
+        <pre><code>
+Hello, I am <${Loading} message="Loading Something..." display="inline" size="normal" />.
+        </code></pre>
+
+
+        <h2>Bad params</h2>
+                    
+        <p>In which we supply an invalid size, invalid display, and invalid message.</p>
+
+        <p>When invalid prop values are supplied, the default value, if any, for the
+        prop should be used. For invalid types, javascript type coercion may produce a
+        desirable result. In other case, it may produce unexpected results.</p>
+
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+
+        <div class="Example">
+          <div id="example5"></div>
+        </div>
+
+        <p>In the browser console you should see
+            the following error messages:</p>
+    
+            <code class="text-danger">
+Failed prop type: Invalid prop `size` of value `456` supplied to `Loading`, expected one of ["normal","large"].
+    in Loading
+
+Failed prop type: Invalid prop `display` of value `bar` supplied to `Loading`, expected one of ["inline","block"].
+    in Loading
+
+Failed prop type: Invalid prop `message` of type `number` supplied to `Loading`, expected `string`.
+    in Loading
+            </code>
+
+        <h4>Code</h4>
+
+        <pre><code>
+<${Loading} size=${456} display="bar" message=${123} />
+        </code></pre>
+
+
+        <script>
+            require(['narrative_paths'], () => {
+                require(['preact_debug'], (preactDebug) => {
+                    require([
+                        'jquery',
+                        'preact',
+                        'htm',
+                        'preactComponents/Loading',
+                        'jsonrpc/1.1/errors',
+                        'jsonrpc/1.1/jsonrpcErrors',
+                        'kb_common/jsonRpc/exceptions',
+                    ], (
+                        $,
+                        preact,
+                        htm,
+                        Loading,
+                        errors,
+                        jsonrpcErrors,
+                        jsonrpcExceptions
+                    ) => {
+                        const { h, render } = preact;
+                        const html = htm.bind(h);
+
+                        function renderExample(id, fun) {
+                            const node = document.getElementById(id);
+                            if (!node) {
+                                console.error(`Sorry, id ${id} does not exist`);
+                                return;
+                            }
+                            try {
+                                fun(node);
+                            } catch (ex) {
+                                $(node).html($('<div class="alert alert-danger">').append(ex.message));
+                            }
+                        }
+
+                        renderExample('example1', (node) => {
+                            preact.render(html`<${Loading} message="Loading Something..." />`, node);
+                        });
+
+                        renderExample('example2', (node) => {
+                            preact.render(html`<${Loading} message="Loading Something..." size="normal" />`, node);
+                        });
+
+                        renderExample('example3', (node) => {
+                            preact.render(html`Hello, I am <${Loading} message="Loading Something..." display="inline" size="normal" />.`, node);
+                        });
+
+                        renderExample('example5', (node) => {
+                            preact.render(html`<${Loading} size=${456} display="bar" message=${123} />`, node);
+                        });
+
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

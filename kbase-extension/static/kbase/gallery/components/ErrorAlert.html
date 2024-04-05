@@ -4,41 +4,61 @@
     <script src="/narrative/static/components/requirejs/require.js"></script>
     <script src="/narrative/static/kbase/gallery/common.js"></script>
     <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
-    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/gallery.css">
     <meta charset="utf-8">
         <title>KBase Demo - AlertMessage.js</title>
     </head>
     <body class="gallery">
-       <h1>ErrorMessage Demo</h1>
+       <h1>Error Alert</h1>
 
-        <p><a href="../../index.html">Index</a></p>
+        <p><a href="../index.html">Index</a></p>
 
         <h2>From String</h2>
                     
         <p>The very simplest error message is a string</p>
 
-        <div class="Example">
-          <div id="example1"></div>
-        </div>
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+          <div class="Example">
+            <div id="example1"></div>
+          </div>
+  
+          <h4>Code</h4>
+  
+          <pre><code>
+<${ErrorAlert} title="Simple Greeting" message="Hello" />
+          </code></pre>
 
         <h2>Bad String Value</h2>
-                    
-        <p>Two errors should be printed to the browser console:</p>
 
-        <code class="text-danger">
+        <h3>Example</h3>
+
+        <h4>Display</h4>
+          <div class="Example">
+            <div id="example2"></div>
+          </div>
+
+          <p>Two errors should be printed to the browser console:</p>
+
+          <code class="text-danger">
 Failed prop type: Invalid prop `title` of type `number` supplied to `ErrorAlert`, expected `string`. 
     in ErrorAlert
 
 Failed prop type: Invalid prop `message` of type `number` supplied to `ErrorAlert`, expected `string`.
     in ErrorAlert
-        </code>
-
-        <div class="Example">
-          <div id="example2"></div>
-        </div>
+          </code>
+  
+          <h4>Code</h4>
+  
+          <pre><code>
+<${ErrorAlert} title=${456} message=${123} />
+          </code></pre>
 
         <script>
             require(['narrative_paths'], () => {
+                // Note that we need to recreate the usage of preact_debug, which is set
+                // in `narrativeMain.js` in the actual Narrative.
                 require(['preact_debug'], (preactDebug) => {
                     require([
                         'jquery',

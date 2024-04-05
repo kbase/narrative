@@ -1,6 +1,13 @@
-define(['preact', 'htm'], (preact, htm) => {
+define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
+    preact,
+    preactCompat,
+    htm,
+    PropTypes
+) => {
     'use strict';
-    const { h, Component } = preact;
+
+    const { h } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
 
     class Row extends Component {
@@ -44,6 +51,23 @@ define(['preact', 'htm'], (preact, htm) => {
             </div>`;
         }
     }
+
+    Table.propTypes = {
+        'row-key': PropTypes.string,
+        children: PropTypes.element.isRequired,
+    };
+
+    DisplayCell.propTypes = {
+        children: PropTypes.element,
+    };
+
+    HeaderCell.propTypes = {
+        children: PropTypes.element,
+    };
+
+    Row.propTypes = {
+        children: PropTypes.isRequired,
+    };
 
     return { Table, Row, HeaderCell, DisplayCell };
 });

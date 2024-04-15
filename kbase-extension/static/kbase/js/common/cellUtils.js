@@ -201,10 +201,6 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
      * but generally I think it is best to not try to automate the re-render, but to
      * call this method after any changes which may affect the cell toolbar.
      *
-     * TODO: A more reliable, but also more complex, implementation could be to
-     * trigger a
-     *
-     *
      * @returns {void}
      *
      * @param {NotebookCell} cell A notebook cell

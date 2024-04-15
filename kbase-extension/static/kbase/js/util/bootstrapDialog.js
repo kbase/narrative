@@ -111,8 +111,6 @@ define(['jquery', 'bootstrap'], ($) => {
                 if (e.keyCode === 13) {
                     e.stopPropagation();
                     e.preventDefault();
-                    // TODO: huh, assumes that the "close" button is
-                    // the last one!
                     this.$footer.find('button:last').trigger('click');
                 }
             });

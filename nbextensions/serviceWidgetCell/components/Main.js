@@ -200,7 +200,6 @@ define([
             // Note that this event handler is only handled one time, and is then
             // removed from the channel.
             //
-            // TODO: error handler in case of plugin startup timeout.
             this.receiveChannel.once('ready', WIDGET_SERVICE_TIMEOUT, async () => {
                 const authClient = Auth.make({
                     url: narrativeConfig.url('auth'),

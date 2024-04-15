@@ -414,13 +414,13 @@ define([
          * This is called during initialization and by the view-mode toggle.
          * Note that this is for the view-only ui mode, and thus the narrative
          * itself may be writable (read-write). This crossover of terminology is
-         * a bit confusing to follow, and thus I've attempted to introduct the
-         * ui view/edit mode as orthgonal to narrative
+         * a bit confusing to follow, and thus I've attempted to introduce the
+         * ui view/edit mode as orthogonal to narrative
          * permission (read-only/read-write/read-write-share).
          *
-         * TODO: probably a better design to set the read / view only flags
-         * and thsn simply render everything that is interested in this.
-         * Otherwise, we just have to propogate the state that _will_ be true when
+         * Probably a better design to set the read / view only flags
+         * and then simply render everything that is interested in this.
+         * Otherwise, we just have to propagate the state that _will_ be true when
          * this operation is complete, because sub-rendering tasks can't just
          * look at the current state.
          */

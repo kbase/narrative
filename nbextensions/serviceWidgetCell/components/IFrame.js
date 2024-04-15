@@ -48,6 +48,7 @@ define(['preact', 'preact_compat', 'prop_types', 'htm'], (preact, preactCompat, 
     IFrame.propTypes = {
         channelId: PropTypes.string.isRequired,
         serviceURL: PropTypes.string.isRequired,
+        widgetName: PropTypes.string.isRequired,
         params: PropTypes.object.isRequired,
         onLoaded: PropTypes.func.isRequired,
     };

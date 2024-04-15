@@ -49,6 +49,7 @@ define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
         title: PropTypes.string.isRequired,
         render: PropTypes.func,
         message: PropTypes.string,
+        children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]),
     };
 
     return ErrorAlert;

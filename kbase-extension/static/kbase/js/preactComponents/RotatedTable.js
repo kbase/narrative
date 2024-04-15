@@ -53,7 +53,6 @@ define(['preact', 'preact_compat', 'prop_types', 'htm', 'bootstrap'], (
     }
 
     Table.propTypes = {
-        'row-key': PropTypes.string,
         children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)])
             .isRequired,
     };
@@ -67,6 +66,7 @@ define(['preact', 'preact_compat', 'prop_types', 'htm', 'bootstrap'], (
     };
 
     Row.propTypes = {
+        'row-key': PropTypes.string,
         children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)])
             .isRequired,
     };

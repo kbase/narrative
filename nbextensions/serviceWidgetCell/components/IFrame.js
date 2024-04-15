@@ -2,10 +2,11 @@
  * A module implementing an iframe to serve as the host of a dynamic service widget app.
  */
 
-define(['preact', 'htm'], (preact, htm) => {
+define(['preact', 'preact_compat', 'prop_types', 'htm'], (preact, preactCompat, PropTypes, htm) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
 
     class IFrame extends Component {
@@ -43,6 +44,13 @@ define(['preact', 'htm'], (preact, htm) => {
             `;
         }
     }
+
+    IFrame.propTypes = {
+        channelId: PropTypes.string.isRequired,
+        serviceURL: PropTypes.string.isRequired,
+        params: PropTypes.object.isRequired,
+        onLoaded: PropTypes.func.isRequired,
+    };
 
     return IFrame;
 });

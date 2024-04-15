@@ -1,8 +1,8 @@
-define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
+define(['preact', 'preact_compat', 'prop_types', 'htm', 'bootstrap'], (
     preact,
     preactCompat,
-    htm,
-    PropTypes
+    PropTypes,
+    htm
 ) => {
     'use strict';
 
@@ -54,19 +54,21 @@ define(['preact', 'preact_compat', 'htm', 'prop_types', 'bootstrap'], (
 
     Table.propTypes = {
         'row-key': PropTypes.string,
-        children: PropTypes.element.isRequired,
+        children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)])
+            .isRequired,
     };
 
     DisplayCell.propTypes = {
-        children: PropTypes.element,
+        children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]),
     };
 
     HeaderCell.propTypes = {
-        children: PropTypes.element,
+        children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]),
     };
 
     Row.propTypes = {
-        children: PropTypes.isRequired,
+        children: PropTypes.oneOfType([PropTypes.node, PropTypes.arrayOf(PropTypes.node)])
+            .isRequired,
     };
 
     return { Table, Row, HeaderCell, DisplayCell };

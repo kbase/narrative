@@ -1,17 +1,21 @@
 /* eslint-disable indent */
 define([
     'preact',
+    'preact_compat',
+    'prop_types',
     'htm',
     'base/js/namespace',
     'preactComponents/RotatedTable',
 
     // for effect
     'css!./AddServiceWidget.css',
-], (preact, htm, Jupyter, RotatedTable) => {
+], (preact, preactCompat, PropTypes, htm, Jupyter, RotatedTable) => {
     'use strict';
 
-    const { h, Component, createRef } = preact;
+    const { h, createRef } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
+
     class AddServiceWidget extends Component {
         constructor(props) {
             super(props);
@@ -374,6 +378,10 @@ define([
             `;
         }
     }
+
+    AddServiceWidget.propTypes = {
+        done: PropTypes.func,
+    };
 
     return AddServiceWidget;
 });

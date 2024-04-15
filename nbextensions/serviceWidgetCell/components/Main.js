@@ -1,5 +1,7 @@
 define([
     'preact',
+    'preact_compat',
+    'prop_types',
     'htm',
     'preactComponents/Loading',
     'preactComponents/ErrorAlert',
@@ -19,6 +21,8 @@ define([
     'bootstrap',
 ], (
     preact,
+    preactCompat,
+    PropTypes,
     htm,
     Loading,
     ErrorAlert,
@@ -36,7 +40,8 @@ define([
 ) => {
     'use strict';
 
-    const { h, Component } = preact;
+    const { h } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
 
     const { getCellMeta, setTitle } = cellUtils;
@@ -299,6 +304,16 @@ define([
             `;
         }
     }
+
+    Main.propTypes = {
+        cell: PropTypes.object.isRequired,
+        cellId: PropTypes.string.isRequired,
+        state: PropTypes.object,
+        params: PropTypes.object.isRequired,
+        moduleName: PropTypes.string.isRequired,
+        widgetName: PropTypes.string.isRequired,
+        onDelete: PropTypes.func.isRequired,
+    };
 
     return Main;
 });

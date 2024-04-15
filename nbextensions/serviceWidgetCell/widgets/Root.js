@@ -95,6 +95,7 @@ define([
                 params=${params}
                 state=${state}
                 cell=${cell}
+                cellId=${cellId}
                 onDelete=${onDelete}
             />
         `;

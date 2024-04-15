@@ -1,6 +1,8 @@
 /* eslint-disable indent */
 define([
     'preact',
+    'preact_compat',
+    'prop_types',
     'htm',
     'base/js/namespace',
     'api/dataProvider',
@@ -9,10 +11,11 @@ define([
 
     // for effect
     'css!./AddServiceWidgetDataViewer.css',
-], (preact, htm, Jupyter, dataProvider, serviceUtils, RotatedTable) => {
+], (preact, preactCompat, PropTypes, htm, Jupyter, dataProvider, serviceUtils, RotatedTable) => {
     'use strict';
 
-    const { h, Component, createRef } = preact;
+    const { h, createRef } = preact;
+    const { Component } = preactCompat;
     const html = htm.bind(h);
     class AddServiceWidgetDataViewer extends Component {
         constructor(props) {
@@ -267,6 +270,10 @@ define([
             `;
         }
     }
+
+    AddServiceWidgetDataViewer.propTypes = {
+        done: PropTypes.func,
+    };
 
     return AddServiceWidgetDataViewer;
 });

@@ -6,7 +6,6 @@
     <title>{% block title %}KBase Narrative{% endblock %}</title>
     {% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/kbase-favicon-32-bgwhite_rounded_corners.png") }}" sizes="32x32">{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{static_url("components/jquery-typeahead/dist/jquery.typeahead.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -82,7 +81,7 @@
             jquery: 'components/jquery/jquery.min',
             bootstrap: '{{ static_url("ext_components/bootstrap/dist/js/bootstrap.min") }}',
             bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            'jquery-ui': 'components/jquery-ui/jquery-ui.min',
+            'jquery-ui': 'ext_components/jquery-ui/dist/jquery-ui.min',
             moment: 'components/moment/moment',
             codemirror: 'components/codemirror',
             termjs: 'components/term.js/src/term',

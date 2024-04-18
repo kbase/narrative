@@ -55,17 +55,16 @@ define([
             });
         });
 
-        it('Should start and create a menu in the target node with an empty user profile', () => {
+        it('Should start and create a menu in the target node with an empty user profile', async () => {
             const $elem = $('<div>');
             const userMenu = makeTestUserMenu($elem);
-            return userMenu.start().then(() => {
-                expect($elem.find('.login-button-avatar')).toBeDefined();
-                const $profileItem = $elem.find('[data-menu-item="userlabel"]');
-                expect($profileItem).toBeDefined();
-                expect($profileItem.attr('href')).toEqual(`/#people/${TEST_USER}`);
-                expect($profileItem.text()).toContain(TEST_NAME);
-                expect($profileItem.text()).toContain(TEST_USER);
-            });
+            await userMenu.start();
+            expect($elem.find('.login-button-avatar')).toBeDefined();
+            const $profileItem = $elem.find('[data-menu-item="userlabel"]');
+            expect($profileItem).toBeDefined();
+            expect($profileItem.attr('href')).toEqual(`/#people/${TEST_USER}`);
+            expect($profileItem.text()).toContain(TEST_NAME);
+            expect($profileItem.text()).toContain(TEST_USER);
         });
 
         // logout popups
@@ -97,7 +96,7 @@ define([
         ];
 
         logoutTests.forEach((test) => {
-            it(`should ${test.desc} when clicking logout and then the modal button`, () => {
+            it(`should ${test.desc} when clicking logout and then the modal button`, async () => {
                 const $elem = $('<div>');
                 const userMenu = makeTestUserMenu($elem);
                 const modalQuerySelector = '.modal [data-element="signout-warning-body"]';
@@ -107,45 +106,42 @@ define([
                 spyOn(BootstrapDialog.prototype, 'destroy').and.callThrough();
                 spyOn($.fn, 'trigger').and.callThrough();
 
-                return userMenu
-                    .start()
-                    .then(() => {
-                        expect(document.querySelector(modalQuerySelector)).toBeNull();
+                await userMenu.start();
+                expect(document.querySelector(modalQuerySelector)).toBeNull();
 
-                        // click the signout button
-                        $elem.find('#signout-button').click();
-                        expect(BootstrapDialog.prototype.show).toHaveBeenCalled();
-                        expect(BootstrapDialog.prototype.hide).not.toHaveBeenCalled();
-                        expect(BootstrapDialog.prototype.destroy).not.toHaveBeenCalled();
-                        return TestUtil.waitForElement(document.body, modalQuerySelector);
-                    })
-                    .then(() => {
-                        // expect to see the modal appear now
-                        expect(document.querySelector(modalQuerySelector)).not.toBeNull();
+                // click the signout button
+                $elem.find('#signout-button').click();
+                expect(BootstrapDialog.prototype.show).toHaveBeenCalled();
+                expect(BootstrapDialog.prototype.hide).not.toHaveBeenCalled();
+                expect(BootstrapDialog.prototype.destroy).not.toHaveBeenCalled();
+                await TestUtil.waitForElement(document.body, modalQuerySelector);
 
-                        // wait for the modal to be removed
-                        return TestUtil.waitForElementState(
-                            document.body,
-                            () => {
-                                return document.querySelectorAll('.modal').length === 0;
-                            },
-                            () => {
-                                // click the appropriate button for this test
-                                document.querySelector(test.button).click();
-                                expect(BootstrapDialog.prototype.hide).toHaveBeenCalled();
-                            }
-                        );
-                    })
-                    .then(() => {
-                        expect(BootstrapDialog.prototype.destroy).toHaveBeenCalled();
-                        // expect the modal to go away
-                        expect(document.querySelector(modalQuerySelector)).toBeNull();
+                // expect to see the modal appear now
+                expect(document.querySelector(modalQuerySelector)).not.toBeNull();
 
-                        // get all the args from every call to $.fn.trigger
-                        const callArgs = $.fn.trigger.calls.allArgs();
-                        // check through the args to ensure that the test condition was matched
-                        expect(test.finalTest(callArgs)).toBeTrue();
-                    });
+                console.warn(`${test.desc} - modal query selector is visible!`);
+                // wait for the modal to be removed
+                await TestUtil.waitForElementState(
+                    document.body,
+                    () => {
+                        return document.querySelectorAll(modalQuerySelector).length === 0;
+                    },
+                    () => {
+                        // click the appropriate button for this test
+                        const actionBtn = document.querySelector(test.button);
+                        console.warn(actionBtn);
+                        document.querySelector(test.button).click();
+                        expect(BootstrapDialog.prototype.hide).toHaveBeenCalled();
+                    }
+                );
+                expect(BootstrapDialog.prototype.destroy).toHaveBeenCalled();
+                // expect the modal to go away
+                expect(document.querySelector(modalQuerySelector)).toBeNull();
+
+                // get all the args from every call to $.fn.trigger
+                const callArgs = $.fn.trigger.calls.allArgs();
+                // check through the args to ensure that the test condition was matched
+                expect(test.finalTest(callArgs)).toBeTrue();
             });
         });
     });

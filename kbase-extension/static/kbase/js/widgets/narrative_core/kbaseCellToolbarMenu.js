@@ -127,9 +127,7 @@ define([
                 return '';
             }
             if (cell.cell_type === 'code') {
-                const attribs = Object.assign({}, buttonBase, {
-                    id: handleClick(events, doToggleCodeView),
-                });
+                const attribs = { ...buttonBase, id: handleClick(events, doToggleCodeView) };
                 if (isCodeShowing(cell)) {
                     attribs.title = 'Hide code';
                     attribs.class += ' active';

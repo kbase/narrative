@@ -15,7 +15,7 @@ require.config({
         jquery: 'components/jquery/jquery.min',
         bootstrap: '/narrative/static/ext_components/bootstrap/dist/js/bootstrap.min',
         bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-        'jquery-ui': 'components/jquery-ui/jquery-ui.min',
+        'jquery-ui': 'ext_components/jquery-ui/dist/jquery-ui.min',
         moment: 'components/moment/moment',
         codemirror: 'components/codemirror',
         termjs: 'components/term.js/src/term',

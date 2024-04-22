@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM ghcr.io/kbase/narrative-base-image:pr-83
+FROM ghcr.io/kbase/narrative-base-image:latest
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE

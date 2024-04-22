@@ -15,7 +15,7 @@ markupsafe==2.1.1
 ndg-httpsclient==0.5.1
 pexpect==4.8.0
 pickleshare==0.7.5
-pillow==9.4.0
+pillow==10.3.0
 pyasn1==0.4.8
 pycurl==7.45.1
 pygments==2.14.0

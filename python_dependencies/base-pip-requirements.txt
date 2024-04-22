@@ -19,7 +19,7 @@ pillow==9.4.0
 pyasn1==0.4.8
 pycurl==7.45.1
 pygments==2.14.0
-pymongo==4.2.0
+pymongo==4.6.3
 pyopenssl==23.0.0
 python-daemon==2.3.2
 python-dateutil==2.8.2

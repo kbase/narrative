@@ -46,7 +46,8 @@ RUN \
     /bin/bash scripts/install_narrative_docker.sh && \
     cd /tmp && \
     mkdir /tmp/narrative && \
-    chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative ; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
+    chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative && \
+    find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ
 # into the location to check for a new narrative version. Normally we would put this in the template itself
@@ -61,17 +62,17 @@ ENV DOCKER_CONTAINER true
 USER nobody
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.0-rc1" \
-      us.kbase.vcs-branch=$BRANCH \
-      us.kbase.narrative-version=$NARRATIVE_VERSION \
-      maintainer="William Riehl wjriehl@lbl.gov"
+    org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.schema-version="1.0.0-rc1" \
+    us.kbase.vcs-branch=$BRANCH \
+    us.kbase.narrative-version=$NARRATIVE_VERSION \
+    maintainer="William Riehl wjriehl@lbl.gov"
 
 # populate the config files on start up
 ENTRYPOINT ["/kb/deployment/bin/dockerize"]
 CMD [ "--template", \
-      "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json", \
-      "--template", \
-      "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
-      "kbase-narrative"]
+    "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json", \
+    "--template", \
+    "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
+    "kbase-narrative"]

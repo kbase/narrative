@@ -28,16 +28,32 @@ ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
 ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
+# Core Python necessities
+RUN pip install -r ./python_dependencies/base-pip-requirements.txt
+
+# KBase scientific computing packages
+RUN pip install -r ./python_dependencies/kbase-pip-requirements.txt
+
+# Install Jupyter, Notebook, Ipywidgets
+RUN pip install -r ./python_dependencies/jupyter-pip-requirements.txt
+
+# Enable the widgets extension
+RUN jupyter nbextension enable --py widgetsnbextension
+RUN jupyter nbextension enable --py --sys-prefix clustergrammer_widget
+
 RUN \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
+
     # install JS deps
     npm install -g grunt-cli && \
     npm ci --ignore-scripts && npm run install-npm && \
+
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip="$SKIP_MINIFY" && \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \
+
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
     cd /tmp && \

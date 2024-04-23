@@ -1,12 +1,10 @@
-"""
-Installer for KBase narrative Python libraries
-"""
+"""Installer for KBase narrative Python libraries."""
+
 import glob
 
 from setuptools import find_packages, setup
 
 import ez_setup
-from biokbase.narrative.common.util import BuildDocumentation
 
 ez_setup.use_setuptools()
 
@@ -14,12 +12,15 @@ ez_setup.use_setuptools()
 
 long_desc = "This Python package contains all the KBase Python libraries to support the Python narrative UI, which is built on the IPython notebook."
 
+with open("requirements.txt") as f:
+    install_requires = [s.strip() for s in f]
+
 # Do the setup
 setup(
     name="biokbase",
     packages=find_packages(),
     version="0.0.1",
-    install_requires=[s.strip() for s in open("requirements.txt")],
+    install_requires=install_requires,
     extras_require={},
     package_data={"": ["*.json"]},
     scripts=glob.glob("scripts/kb-*"),
@@ -32,7 +33,7 @@ setup(
     long_description=long_desc,
     keywords=["kbase", "narrative", "UI"],
     classifiers=[
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.12",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
@@ -42,7 +43,4 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     ext_modules=[],
-    cmdclass={
-        "doc": BuildDocumentation,
-    },
 )

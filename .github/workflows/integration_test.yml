@@ -23,7 +23,7 @@ jobs:
         password: ${{ secrets.GHCR_TOKEN }}
     -
       name: Repo checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     -
       name: Set up environment
       run: |

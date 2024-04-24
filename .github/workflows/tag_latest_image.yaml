@@ -16,7 +16,7 @@ jobs:
     - name: Check out GitHub Repo
       with:
         ref: "${{ github.event.pull_request.head.sha }}"
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     -
       name: Log in to the Container registry
       uses: docker/login-action@v2

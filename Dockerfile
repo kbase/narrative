@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM ghcr.io/kbase/narrative-base-image:latest
+FROM ghcr.io/kbase/narrative-base-image:pr-113
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -45,15 +45,12 @@ RUN \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
-
     # install JS deps
     npm install -g grunt-cli && \
     npm ci --ignore-scripts && npm run install-npm && \
-
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip="$SKIP_MINIFY" && \
     [ -n "$SKIP_MINIFY" ] || npm run minify && \
-
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
     cd /tmp && \

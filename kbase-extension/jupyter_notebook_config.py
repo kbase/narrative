@@ -19,7 +19,7 @@ c = get_config()  # noqa: F821
 # c.NotebookApp.jinja_environment_options = {}
 
 # The IP address the notebook server will listen on.
-c.NotebookApp.ip = "localhost"
+# c.NotebookApp.ip = "localhost"
 
 # DEPRECATED use base_url
 # c.NotebookApp.base_project_url = '/'

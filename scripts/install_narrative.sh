@@ -37,9 +37,9 @@
 #
 # 8. Done!
 
-IPYTHON_VERSION=8.10.0
-NOTEBOOK_VERSION=6.5.6
-IPYWIDGETS_VERSION=7.7.1
+# IPYTHON_VERSION=8.10.0
+# NOTEBOOK_VERSION=6.5.6
+# IPYWIDGETS_VERSION=7.7.1
 
 SCRIPT_TGT="kbase-narrative"
 
@@ -91,24 +91,20 @@ if [ ! $update_only -eq 1 ]
 then
     # Install external JavaScript code
     # --------------------
-    cd $NARRATIVE_ROOT_DIR
     log "Installing front end build components with npm"
+    cd $NARRATIVE_ROOT_DIR
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
 
-    # Install IPython
-    # ---------------
-    log "Installing IPython version $IPYTHON_VERSION"
-    pip --no-cache-dir install ipython=="$IPYTHON_VERSION" 2>&1 | tee -a "${logfile}"
-
-    # Install Jupyter Notebook
-    # ------------------------
-    log "Installing Jupyter notebook version $NOTEBOOK_VERSION"
-    pip --no-cache-dir install notebook=="$NOTEBOOK_VERSION" 2>&1 | tee -a "${logfile}"
-
-    # Setup ipywidgets addon
-    log "Installing ipywidgets using $PYTHON"
-    pip --no-cache-dir install ipywidgets=="$IPYWIDGETS_VERSION" 2>&1 | tee -a "${logfile}"
+    # Install Jupyter dependencies
+    # ----------------------------
+    log "Installing Jupyter dependencies"
+    cd "$NARRATIVE_ROOT_DIR/python_dependencies"
+    cat jupyter-pip-requirements.txt | sed -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
+    if [ $? -ne 0 ]; then
+        console "pip install of Jupyter requirements failed: please examine $logfile"
+        exit 1
+    fi
 
     # Install Narrative requirements
     # ------------------------------
@@ -122,12 +118,21 @@ then
 
     # Install sklearn and clustergrammer
     # ----------------------------------
-    pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a "${logfile}"
+    pip --no-cache-dir install pandas scikit-learn clustergrammer_widget | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
     fi
     cd "$NARRATIVE_ROOT_DIR"
+
+    # Install development requirements
+    # --------------------------------
+    log "Installing Narrative developer requirements from src/requirements-dev.txt"
+    cat requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
+    if [ $? -ne 0 ]; then
+        console "pip install for Narrative development requirements failed: please examine $logfile"
+        exit 1
+    fi
 fi
 
 # Install Narrative code

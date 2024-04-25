@@ -96,15 +96,15 @@ then
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
 
-    # Install Jupyter dependencies
-    # ----------------------------
-    log "Installing Jupyter dependencies"
-    cd "$NARRATIVE_ROOT_DIR/python_dependencies"
-    cat jupyter-pip-requirements.txt | sed -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
-    if [ $? -ne 0 ]; then
-        console "pip install of Jupyter requirements failed: please examine $logfile"
-        exit 1
-    fi
+    # # Install Jupyter dependencies
+    # # ----------------------------
+    # log "Installing Jupyter dependencies"
+    # cd "$NARRATIVE_ROOT_DIR/python_dependencies"
+    # cat jupyter-pip-requirements.txt | sed -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
+    # if [ $? -ne 0 ]; then
+    #     console "pip install of Jupyter requirements failed: please examine $logfile"
+    #     exit 1
+    # fi
 
     # Install Narrative requirements
     # ------------------------------

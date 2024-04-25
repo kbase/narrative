@@ -38,7 +38,7 @@ Requires the following:
 
 -   Python 3.6+
 -   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
--   Node.js (16.x+, Latest LTS recommended)
+-   Node.js (20.x+, Latest LTS recommended)
 
 ### *Using a Conda Environment*
 

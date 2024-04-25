@@ -34,13 +34,6 @@ RUN pip install -r ./python_dependencies/base-pip-requirements.txt
 # KBase scientific computing packages
 RUN pip install -r ./python_dependencies/kbase-pip-requirements.txt
 
-# Install Jupyter, Notebook, Ipywidgets
-RUN pip install -r ./python_dependencies/jupyter-pip-requirements.txt
-
-# Enable the widgets extension
-RUN jupyter nbextension enable --py widgetsnbextension
-RUN jupyter nbextension enable --py --sys-prefix clustergrammer_widget
-
 RUN \
     # Generate a version file that we can scrape later
     mkdir -p /kb/deployment/ui-common/ && \

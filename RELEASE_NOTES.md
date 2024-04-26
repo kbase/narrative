@@ -19,9 +19,7 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - Retained scientific computing dependencies that may be useful to the community (SciPy, numpy, pandas, etc.)
 - Removed directly required dependencies that are really just used by the Jupyter Notebook.
 - Separated requirements into image dependencies (i.e. packages that are generally useful to have on the Narrative Docker image, ported from the narrative-base-image repo), application requirements and dev requirements.
-- Image dependencies are all found in the `python_dependencies` directory, and split into 2 files for convenience - base-pip-requirements and kbase-pip-requirements.
-- base-pip-requirements has "base" things - certifi, cryptography, pyopenssl, etc. These are modules that are generally useful as part of the image.
-- kbase-pip-requirements has scientific programming packages that may be of use to the KBase community
+- Image dependencies are all found in the `docker_image_dependencies` directory, and combined into the `python-requirements.txt` file.
 - the requirements in `src/requirements.txt` are needed for the Narrative to run.
 - the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
 

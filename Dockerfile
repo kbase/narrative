@@ -28,11 +28,8 @@ ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
 ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
-# Core Python necessities
-RUN pip install -r ./python_dependencies/base-pip-requirements.txt
-
-# KBase scientific computing packages
-RUN pip install -r ./python_dependencies/kbase-pip-requirements.txt
+# Core Python necessities + KBase scientific computing packages
+RUN pip install -r ./docker_image_dependencies/python-requirements.txt
 
 RUN \
     # Generate a version file that we can scrape later

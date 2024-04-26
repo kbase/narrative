@@ -1,46 +1,5 @@
 #!/usr/bin/env bash
 
-# installer steps
-# 0. prereqs = npm, conda, pip, Python 3+
-
-
-# given a virtual environment, install jupyter notebook, and the KBase goodies on top
-# 1. source into virtualenv
-# > virtualenv narrative-jupyter
-# > source narrative-jupyter/bin/activate
-#
-# 2. fetch the right tag of jupyter notebook
-# > git clone https://github.com/jupyter/notebook jupyter-notebook
-# > cd jupyter-notebook
-# > git checkout tags/4.0.5
-#
-# 3. do the install
-# > pip install --pre -e .
-#
-# > get clone https://github.com/ipython/ipywidgets
-# > cd ipywidgets
-# > git checkout tags/4.0.3
-# > pip install -e .
-#
-# 4. setup configs to be in kbase-config, not in /home/users/.jupyter
-# > SOME ENV VAR setup
-#
-# 5. go into src and grab requirements
-# > cd src
-# > pip install -r requirements.txt
-#
-# 6. install kbase stuff
-# > python setup.py install
-#
-# 7. build run script. (see jupyter-narrative.sh)
-# > cp jupyter-narrative.sh narrative-jupyter/bin
-#
-# 8. Done!
-
-# IPYTHON_VERSION=8.10.0
-# NOTEBOOK_VERSION=6.5.6
-# IPYWIDGETS_VERSION=7.7.1
-
 SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -96,16 +55,6 @@ then
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
 
-    # # Install Jupyter dependencies
-    # # ----------------------------
-    # log "Installing Jupyter dependencies"
-    # cd "$NARRATIVE_ROOT_DIR/python_dependencies"
-    # cat jupyter-pip-requirements.txt | sed -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
-    # if [ $? -ne 0 ]; then
-    #     console "pip install of Jupyter requirements failed: please examine $logfile"
-    #     exit 1
-    # fi
-
     # Install Narrative requirements
     # ------------------------------
     log "Installing biokbase requirements from src/requirements.txt"
@@ -115,15 +64,6 @@ then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
     fi
-
-    # Install sklearn and clustergrammer
-    # ----------------------------------
-    pip --no-cache-dir install pandas scikit-learn clustergrammer_widget | tee -a "${logfile}"
-    if [ $? -ne 0 ]; then
-        console "pip install for biokbase requirements failed: please examine $logfile"
-        exit 1
-    fi
-    cd "$NARRATIVE_ROOT_DIR"
 
     # Install development requirements
     # --------------------------------

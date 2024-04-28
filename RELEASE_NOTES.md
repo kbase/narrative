@@ -2,7 +2,7 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will follow).
 
 ## Version unreleased
 
@@ -11,14 +11,22 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 -   PTV-1909 - Narrative sign out does sign out
 -   UIP-41 - Update Jupyter Notebook to version 6.5.6
 -   UIP-41 - Fix Dropzone dependency issues, address problems with unit tests
+-   UIP-41 - Removed unused Python dependencies
 
 ### Dependency Changes
+
+- Updated to include all Python dependencies in the image built in this repo, and removed those that are not directly referenced in KBase code.
+- Retained scientific computing dependencies that may be useful to the community (SciPy, numpy, pandas, etc.)
+- Removed directly required dependencies that are really just used by the Jupyter Notebook.
+- Separated requirements into image dependencies (i.e. packages that are generally useful to have on the Narrative Docker image, ported from the narrative-base-image repo), application requirements and dev requirements.
+- Image dependencies are all found in the `docker_image_dependencies` directory, and combined into the `python-requirements.txt` file.
+- the requirements in `src/requirements.txt` are needed for the Narrative to run.
+- the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
 
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
   - black: 23.7.0 -> 24.1.1
   - coverage: 7.3.1 -> 7.4.1
-  - cryptography: 41.0.4 -> 41.0.6
   - cryptography: 41.0.4 -> 42.0.2
   - flake8: 6.1.0 -> 7.0.0
   - idna: 3.4 -> 3.6

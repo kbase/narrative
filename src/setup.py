@@ -12,7 +12,7 @@ ez_setup.use_setuptools()
 
 # added command classes
 
-long_desc = "This Python package contains all the KBase Python libraries to support the Python narrative UI, which is built on the IPython notebook."
+long_desc = "This Python package contains all the KBase Python libraries to support the Python Narrative UI, which is built on the Jupyter Notebook."
 
 # Do the setup
 setup(
@@ -32,7 +32,7 @@ setup(
     long_description=long_desc,
     keywords=["kbase", "narrative", "UI"],
     classifiers=[
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.12",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",

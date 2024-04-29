@@ -16,6 +16,9 @@ build-narrative-container:
 
 docker_image: build-narrative-container
 
+docker-narrative:
+	docker build -t kbase/narrative:local .
+
 # Per PR #1328, adding an option to skip minification
 dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
@@ -28,7 +31,7 @@ install:
 
 # runs the installer to locally build the Narrative in a
 # local venv.
-build-travis-narrative:
+build-venv-narrative:
 	bash $(INSTALLER) && \
 	npm run minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
@@ -64,14 +67,6 @@ test-integration:
 	@echo "running integration tests"
 	python scripts/run_tests.py -i
 	@echo "done"
-
-build-docs:
-	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc
-	-mkdir docs
-	cp -R src/biokbase-doc/_build/html/* docs/
-
-docker-narrative:
-	docker build -t kbase/narrative:1.0.3 .
 
 clean:
 	git clean -f

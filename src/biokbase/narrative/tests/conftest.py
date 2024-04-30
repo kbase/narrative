@@ -61,13 +61,11 @@ config = {
     "match_on": MATCH_ON,
 }
 
-body_match_vcr = vcr.VCR(
-    cassette_library_dir="src/biokbase/narrative/tests/data/cassettes/", **config
-)
-
-body_match_vcr.register_matcher("body_matcher", body_matcher)
-
 
 @pytest.fixture(scope="session")
 def vcr_config():
     return config
+
+
+def pytest_recording_configure(config, vcr):
+    vcr.register_matcher("body_matcher", body_matcher)

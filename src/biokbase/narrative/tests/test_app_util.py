@@ -1,12 +1,14 @@
 """
 Tests for the app_util module
 """
+
 import copy
 import os
 import re
 from unittest import mock
 
 import pytest
+
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
@@ -18,15 +20,12 @@ from biokbase.narrative.app_util import (
 )
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.tests import util
-from biokbase.narrative.tests.conftest import narrative_vcr as vcr
+from biokbase.narrative.tests.conftest import body_match_vcr as bm_vcr
 from biokbase.narrative.upa import is_upa
 from biokbase.workspace.client import Workspace
 
 config = util.ConfigTests()
 user_name = config.get("users", "test_user")
-user_token = util.read_token_file(
-    config.get_path("token_files", "test_user", from_root=True)
-)
 
 good_tag = "release"
 bad_tag = "not_a_tag"
@@ -369,7 +368,7 @@ input_list = [
 @pytest.mark.parametrize("tf_type", all_types)
 @pytest.mark.parametrize("inp", input_list)
 def test_transform_param_value_all_types_with_all_inputs(
-    inp, tf_type, workspace_name, monkeypatch, request
+    inp, tf_type, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -379,7 +378,7 @@ def test_transform_param_value_all_types_with_all_inputs(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
+    with bm_vcr.use_cassette(
         f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
     ):
         output = transform_param_value(tf_type, inp, None)
@@ -444,7 +443,7 @@ putative_refs = [
 
 @pytest.mark.parametrize("params", putative_refs)
 def test_transform_param_value_putative_refs(
-    params, workspace_name, monkeypatch, request
+    params, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -453,7 +452,7 @@ def test_transform_param_value_putative_refs(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
+    with bm_vcr.use_cassette(
         f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
     ):
         assert transform_param_value(params["tf"], params["in"], None) == params["out"]
@@ -487,7 +486,7 @@ invalid_ref_fails = [
 
 @pytest.mark.parametrize("params", invalid_upa_fails + invalid_ref_fails)
 def test_transform_param_value_fail_all_types(
-    params, workspace_name, monkeypatch, request
+    params, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -496,10 +495,11 @@ def test_transform_param_value_fail_all_types(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
+    regex = re.escape(params["error"]) + ".+"
+
+    with bm_vcr.use_cassette(
         f"test_app_util/transform_param_value-fail-{request.node.callspec.id}.yaml",
     ):
-        regex = re.escape(params["error"]) + ".+"
         with pytest.raises(ValueError, match=regex):
             transform_param_value(params["tf"], params["in"], None)
 

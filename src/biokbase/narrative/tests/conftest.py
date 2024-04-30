@@ -35,7 +35,8 @@ def user_token(test_config: ConfigTests) -> str | None:
 
 # Set up a local instance of VCR that stores its recordings in
 # "src/biokbase/narrative/tests/data/cassettes/" and omits the
-# authorization header.
+# authorization header. The "id" field in the request body is
+# also removed to prevent it from causing false mismatches.
 #
 # If the files in the cassette_library_dir are deleted, they will
 # be rerecorded during the next test run.
@@ -74,11 +75,3 @@ def vcr_config():
 
 def pytest_recording_configure(config, vcr):
     vcr.register_matcher("body_matcher", body_matcher)
-
-
-# def pytest_collection_modifyitems(items):
-#     # test_files = ["app_util", "auth", "system"]
-#     for item in items:
-#         # for test_file in test_files:
-#         #     if item.fspath.strpath.endswith(f"test_{test_file}.py"):
-#         item.add_marker(pytest.mark.vcr)

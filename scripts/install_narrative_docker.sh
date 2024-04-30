@@ -28,6 +28,9 @@ function console () {
 console "Installing biokbase requirements from src/requirements.txt"
 cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
 
+console "Installing dev requirements from src/requirements.txt"
+cat $NARRATIVE_ROOT_DIR/src/requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
+
 # overwrite existing pyyaml installation (from distutils, so pip cannot uninstall it)
 pip install --ignore-installed -r $NARRATIVE_ROOT_DIR/src/requirements-ignore-installed.txt
 

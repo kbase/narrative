@@ -39,7 +39,7 @@ def run_narrative():
     nb_command = [
         "kbase-narrative",
         "--no-browser",
-        '--NotebookApp.allow_origin="*"',
+        '--ServerApp.allow_origin="*"',
         f"--ip={IP_ADDRESS}",
         f"--port={JUPYTER_PORT}",
     ]

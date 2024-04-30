@@ -1,46 +1,5 @@
 #!/usr/bin/env bash
 
-# installer steps
-# 0. prereqs = npm, conda, pip, Python 3+
-
-
-# given a virtual environment, install jupyter notebook, and the KBase goodies on top
-# 1. source into virtualenv
-# > virtualenv narrative-jupyter
-# > source narrative-jupyter/bin/activate
-#
-# 2. fetch the right tag of jupyter notebook
-# > git clone https://github.com/jupyter/notebook jupyter-notebook
-# > cd jupyter-notebook
-# > git checkout tags/4.0.5
-#
-# 3. do the install
-# > pip install --pre -e .
-#
-# > get clone https://github.com/ipython/ipywidgets
-# > cd ipywidgets
-# > git checkout tags/4.0.3
-# > pip install -e .
-#
-# 4. setup configs to be in kbase-config, not in /home/users/.jupyter
-# > SOME ENV VAR setup
-#
-# 5. go into src and grab requirements
-# > cd src
-# > pip install -r requirements.txt
-#
-# 6. install kbase stuff
-# > python setup.py install
-#
-# 7. build run script. (see jupyter-narrative.sh)
-# > cp jupyter-narrative.sh narrative-jupyter/bin
-#
-# 8. Done!
-
-IPYTHON_VERSION=8.10.0
-NOTEBOOK_VERSION=6.5.6
-IPYWIDGETS_VERSION=7.7.1
-
 SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -91,24 +50,10 @@ if [ ! $update_only -eq 1 ]
 then
     # Install external JavaScript code
     # --------------------
-    cd $NARRATIVE_ROOT_DIR
     log "Installing front end build components with npm"
+    cd $NARRATIVE_ROOT_DIR
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
-
-    # Install IPython
-    # ---------------
-    log "Installing IPython version $IPYTHON_VERSION"
-    pip --no-cache-dir install ipython=="$IPYTHON_VERSION" 2>&1 | tee -a "${logfile}"
-
-    # Install Jupyter Notebook
-    # ------------------------
-    log "Installing Jupyter notebook version $NOTEBOOK_VERSION"
-    pip --no-cache-dir install notebook=="$NOTEBOOK_VERSION" 2>&1 | tee -a "${logfile}"
-
-    # Setup ipywidgets addon
-    log "Installing ipywidgets using $PYTHON"
-    pip --no-cache-dir install ipywidgets=="$IPYWIDGETS_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Install Narrative requirements
     # ------------------------------
@@ -120,14 +65,14 @@ then
         exit 1
     fi
 
-    # Install sklearn and clustergrammer
-    # ----------------------------------
-    pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a "${logfile}"
+    # Install development requirements
+    # --------------------------------
+    log "Installing Narrative developer requirements from src/requirements-dev.txt"
+    cat requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
-        console "pip install for biokbase requirements failed: please examine $logfile"
+        console "pip install for Narrative development requirements failed: please examine $logfile"
         exit 1
     fi
-    cd "$NARRATIVE_ROOT_DIR"
 fi
 
 # Install Narrative code

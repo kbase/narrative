@@ -51,7 +51,7 @@ else
     echo "starting local narrative"
     rm -f $OUTPUT_FILE
     touch $OUTPUT_FILE
-    kbase-narrative --no-browser --NotebookApp.allow_origin="*" --ip=$IP_ADDRESS --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
+    kbase-narrative --no-browser --ServerApp.allow_origin="*" --ip=$IP_ADDRESS --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
     bg_pid=$!
 fi
 

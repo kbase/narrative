@@ -71,7 +71,3 @@ body_match_vcr.register_matcher("body_matcher", body_matcher)
 @pytest.fixture(scope="session")
 def vcr_config():
     return config
-
-
-def pytest_recording_configure(config, vcr):
-    vcr.register_matcher("body_matcher", body_matcher)

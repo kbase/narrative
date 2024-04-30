@@ -24,13 +24,10 @@
  */
 require(['./narrative_paths'], () => {
     'use strict';
-    require(['jquery', 'narrativeConfig', 'narrativeLogin'], ($, Config, Login) => {
-        console.log('Loading KBase Narrative setup routine.');
-
+    require(['jquery', 'narrativeConfig', 'narrativeLogin', 'preact_debug'], ($, Config, Login) => {
         Config.updateConfig().then(() => {
             require(['kbaseNarrative'], () => {
                 Login.init($('#signin-button')).then(() => {
-                    console.log('Starting Jupyter main');
                     require(['notebook/js/main']);
                 });
             });

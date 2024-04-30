@@ -1,0 +1,9 @@
+.AddServiceWidget .preactComponent-rotated-table-header-cell {
+    flex: 0 0 8em;
+}
+
+.AddServiceWidget .btn-toolbar-centered {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}

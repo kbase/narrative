@@ -6,8 +6,11 @@ define([
     'common/cellUtils',
     'narrativeConfig',
     'common/jobs',
+    'common/runtime',
+    'util/icon',
+
     'custom/custom',
-], ($, html, Events, Jupyter, utils, Config, Jobs) => {
+], ($, html, Events, Jupyter, utils, Config, Jobs, Runtime, icon) => {
     'use strict';
 
     const t = html.tag,
@@ -18,16 +21,36 @@ define([
         li = t('li'),
         cssBaseClass = 'kb-cell-toolbar';
 
+    const runtime = Runtime.make();
+
     function factory() {
         const readOnly = Jupyter.narrative.readonly;
         let container, cell;
 
-        function doMoveCellUp() {
-            Jupyter.notebook.move_cell_up();
+        function doMoveCellToTop(cell) {
+            const { cellIndex, isFirst } = getCellStats(cell);
+            if (isFirst) {
+                console.warn('Already the first element!');
+                return;
+            }
+            selectCell(cell);
+            const moveCount = cellIndex;
+            for (let i = 0; i < moveCount; i += 1) {
+                Jupyter.notebook.move_selection_up();
+            }
         }
 
-        function doMoveCellDown() {
-            Jupyter.notebook.move_cell_down();
+        function doMoveCellToBottom(cell) {
+            const { cellIndex, cellCount, isLast } = getCellStats(cell);
+            if (isLast) {
+                console.warn('Already the last element!');
+                return;
+            }
+            selectCell(cell);
+            const moveCount = cellCount - cellIndex - 1;
+            for (let i = 0; i < moveCount; i += 1) {
+                Jupyter.notebook.move_selection_down();
+            }
         }
 
         function doDeleteCell() {
@@ -49,13 +72,22 @@ define([
         }
 
         function doToggleMinMaxCell(e) {
-            if (e.getModifierState) {
-                const modifier = e.getModifierState('Alt');
-                if (modifier) {
-                    // TODO: implement global cell toggling
+            const isMaximized = cell.getToggleMode() === 'maximized';
+            if (e.getModifierState && e.getModifierState('Alt')) {
+                for (const cell of Jupyter.notebook.get_cells()) {
+                    if (isMaximized) {
+                        if (cell.getToggleMode() === 'maximized') {
+                            cell.toggleMinMax();
+                        }
+                    } else {
+                        if (cell.getToggleMode() === 'minimized') {
+                            cell.toggleMinMax();
+                        }
+                    }
                 }
+            } else {
+                cell.toggleMinMax();
             }
-            cell.toggleMinMax();
         }
 
         function doToggleCodeView() {
@@ -90,6 +122,155 @@ define([
             title: true,
         };
 
+        function renderDeveloperCodeViewToggleButton(events) {
+            if (!runtime.isFeatureEnabled('developer')) {
+                return '';
+            }
+            if (cell.cell_type === 'code') {
+                const attribs = Object.assign({}, buttonBase, {
+                    id: handleClick(events, doToggleCodeView),
+                });
+                if (isCodeShowing(cell)) {
+                    attribs.title = 'Hide code';
+                    attribs.class += ' active';
+                } else {
+                    attribs.title = 'Show code';
+                }
+                return button(attribs, span({ class: 'fa fa-terminal fa-lg' }));
+            }
+        }
+
+        function renderDeveloperDeleteButton(events) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
+                return '';
+            }
+            const attribs = Object.assign({}, buttonBase, {
+                title: 'Delete cell...',
+                id: handleClick(events, doDeleteCell),
+            });
+            return button(attribs, span({ class: 'fa fa-trash fa-lg text-danger' }));
+        }
+
+        function doRunCell(cell) {
+            cell.execute();
+        }
+
+        function renderDeveloperRunCellButton(events) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly || cell.cell_type !== 'code') {
+                return '';
+            }
+            const attribs = Object.assign({}, buttonBase, {
+                title: 'Run cell ',
+                id: handleClick(events, () => doRunCell(cell)),
+            });
+
+            return button(attribs, span({ class: 'fa fa-repeat fa-lg ' }));
+        }
+
+        function getCellStats(cell) {
+            const cellIndex = Jupyter.notebook.find_cell_index(cell);
+            const cellCount = Jupyter.notebook.get_cells().length;
+            const isFirst = cellIndex === 0;
+            const isLast = cellIndex === cellCount - 1;
+            return { cellIndex, cellCount, isFirst, isLast };
+        }
+
+        function selectCell(cell) {
+            for (const other_cell of Jupyter.notebook.get_cells()) {
+                other_cell.unselect();
+            }
+            cell.select();
+        }
+
+        function doMoveCellUp(cell) {
+            const { isFirst } = getCellStats(cell);
+            selectCell(cell);
+
+            if (isFirst) {
+                console.warn('Already the first cell!');
+                return;
+            }
+            Jupyter.notebook.move_cell_up();
+        }
+
+        function renderMoveCellUp(cell, events) {
+            if (readOnly) {
+                return;
+            }
+
+            const attribs = Object.assign({}, buttonBase, {
+                dataOriginalTitle: 'Move Cell Up',
+                dataElement: 'cell-move-up',
+                ariaLabel: 'Move cell up',
+                id: handleClick(events, () => doMoveCellUp(cell)),
+            });
+            return button(attribs, [span({ class: 'fa fa-arrow-up fa-lg' })]);
+        }
+
+        function doMoveCellDown(cell) {
+            const { isLast } = getCellStats(cell);
+            selectCell(cell);
+
+            if (isLast) {
+                console.warn('Already the last cell!');
+                return;
+            }
+
+            Jupyter.notebook.move_cell_down();
+        }
+
+        function renderMoveCellDown(cell, events) {
+            if (readOnly) {
+                return;
+            }
+
+            const attribs = Object.assign({}, buttonBase, {
+                dataOriginalTitle: 'Move Cell Down',
+                dataElement: 'cell-move-down',
+                ariaLabel: 'Move cell down',
+                id: handleClick(events, () => doMoveCellDown(cell)),
+            });
+            return button(attribs, [span({ class: 'fa fa-arrow-down fa-lg' })]);
+        }
+
+        function renderMoveToTop(cell, events) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
+                return;
+            }
+            const attribs = Object.assign({}, buttonBase, {
+                dataOriginalTitle: 'Move Cell To Top',
+                dataElement: 'cell-move-to-top',
+                ariaLabel: 'Move cell to top',
+                id: handleClick(events, () => doMoveCellToTop(cell)),
+            });
+            return button(attribs, [span({ class: 'fa fa-long-arrow-up fa-lg' })]);
+        }
+
+        function renderMoveToBottom(cell, events) {
+            if (!runtime.isFeatureEnabled('developer') || readOnly) {
+                return;
+            }
+            const attribs = Object.assign({}, buttonBase, {
+                dataOriginalTitle: 'Move Cell To Bottom',
+                dataElement: 'cell-move-to-bottom',
+                ariaLabel: 'Move cell to bottom',
+                id: handleClick(events, () => doMoveCellToBottom(cell)),
+            });
+            return button(attribs, [span({ class: 'fa fa-long-arrow-down fa-lg' })]);
+        }
+
+        function handleClick(events, handler) {
+            const id = events.addEvent({ type: 'click', handler });
+            events.addEvent({
+                type: 'dblclick',
+                id,
+                handler: (e) => {
+                    e.stopPropagation();
+                },
+            });
+            return id;
+        }
+
         function renderOptions(_cell, events) {
             const dropdownId = html.genId(),
                 menuItems = [];
@@ -101,7 +282,7 @@ define([
                     icon: {
                         type: 'terminal',
                     },
-                    id: events.addEvent({ type: 'click', handler: doToggleCodeView }),
+                    id: handleClick(events, doToggleCodeView),
                 });
             }
 
@@ -112,12 +293,7 @@ define([
                     icon: {
                         type: 'info',
                     },
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: () => {
-                            _cell.showInfo();
-                        },
-                    }),
+                    id: handleClick(events, () => _cell.showInfo()),
                 });
             }
 
@@ -129,12 +305,7 @@ define([
                         icon: {
                             type: 'table',
                         },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: () => {
-                                _cell.toggleBatch();
-                            },
-                        }),
+                        id: handleClick(events, () => _cell.toggleBatch()),
                     });
                 }
 
@@ -150,7 +321,7 @@ define([
                     icon: {
                         type: 'times',
                     },
-                    id: events.addEvent({ type: 'click', handler: doDeleteCell }),
+                    id: handleClick(events, doDeleteCell),
                 });
             }
 
@@ -243,6 +414,24 @@ define([
                 }
             }
 
+            const extraIcon = (() => {
+                const extraIcon = utils.getCellMeta(
+                    _cell,
+                    'kbase.attributes.icon.params.extraIcon'
+                );
+                if (extraIcon) {
+                    return div(
+                        {
+                            dataElement: 'icon',
+                            class: `${cssBaseClass}__app_icon`,
+                        },
+                        [icon.makeGenericIcon(extraIcon.classSuffix)]
+                    );
+                } else {
+                    return '';
+                }
+            })();
+
             const events = Events.make({ node: container }),
                 title = getCellTitle(_cell),
                 subtitle = getCellSubtitle(_cell),
@@ -259,36 +448,16 @@ define([
                                 },
                                 collapsedCellJobStatus
                             ),
+                            renderDeveloperRunCellButton(events),
+                            renderDeveloperCodeViewToggleButton(events),
+                            renderDeveloperDeleteButton(events),
+
+                            renderMoveToTop(_cell, events),
+                            renderMoveToBottom(_cell, events),
                             // options dropdown
                             renderOptions(_cell, events),
-                            readOnly
-                                ? null
-                                : button(
-                                      Object.assign({}, buttonBase, {
-                                          dataOriginalTitle: 'Move Cell Up',
-                                          dataElement: 'cell-move-up',
-                                          ariaLabel: 'Move cell up',
-                                          id: events.addEvent({
-                                              type: 'click',
-                                              handler: doMoveCellUp,
-                                          }),
-                                      }),
-                                      [span({ class: 'fa fa-arrow-up fa-lg' })]
-                                  ),
-                            readOnly
-                                ? null
-                                : button(
-                                      Object.assign({}, buttonBase, {
-                                          dataOriginalTitle: 'Move Cell Down',
-                                          dataElement: 'cell-move-down',
-                                          ariaLabel: 'Move cell down',
-                                          id: events.addEvent({
-                                              type: 'click',
-                                              handler: doMoveCellDown,
-                                          }),
-                                      }),
-                                      [span({ class: 'fa fa-arrow-down fa-lg' })]
-                                  ),
+                            renderMoveCellUp(_cell, events),
+                            renderMoveCellDown(_cell, events),
                             (function () {
                                 const toggleMinMax = utils.getCellMeta(
                                         _cell,
@@ -305,10 +474,7 @@ define([
                                             toggleMinMax === 'maximized'
                                                 ? 'Collapse Cell'
                                                 : 'Expand Cell',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: doToggleMinMaxCell,
-                                        }),
+                                        id: handleClick(events, doToggleMinMaxCell),
                                     }),
                                     [
                                         span({
@@ -332,6 +498,7 @@ define([
                             },
                             [buildIcon(_cell)]
                         ),
+                        extraIcon,
                         div(
                             {
                                 class: `${cssBaseClass}__title-container`,

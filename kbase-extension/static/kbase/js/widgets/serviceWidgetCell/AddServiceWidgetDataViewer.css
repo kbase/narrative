@@ -1,0 +1,14 @@
+.AddServiceWidgetDataViewer .preactComponent-rotated-table-header-cell {
+    flex: 0 0 8em;
+}
+
+.AddServiceWidgetDataViewer .btn-toolbar-centered {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+/* Overrides a weird Jupyter custom style for select.form-control */
+.AddServiceWidgetDataViewer select.form-control {
+    margin: 0;
+}

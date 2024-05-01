@@ -7,5 +7,5 @@ pandas==2.2.2
 pymongo==4.6.1
 pyyaml==6.0
 requests==2.31.0
-scikit-learn==1.2.1
+scikit-learn==1.4.2
 tornado==6.2

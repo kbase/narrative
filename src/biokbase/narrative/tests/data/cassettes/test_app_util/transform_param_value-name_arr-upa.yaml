@@ -2,7 +2,7 @@ interactions:
 - request:
     body: '{"method": "Workspace.get_object_info3", "params": [{"objects": [{"ref":
       "test_narrative:narrative_1695311690413/Abiotrophia_defectiva_ATCC_49176"}]}],
-      "version": "1.1", "id": "41322998182097803"}'
+      "version": "1.1", "id": "08027306655070965"}'
     headers:
       Accept:
       - '*/*'
@@ -18,11 +18,7 @@ interactions:
     uri: https://ci.kbase.us/services/ws
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAAA11PPWsDMQz9L1rru1j+rG9LM3Tomi2Yw73qiOFqB9vJEvLfa1LoUCGkh97TE7rD
-        jUqNOcEEOCIwKFSvW4PpdIeY1lw7OmkG+8+YW8mXcwzzF620tHgL8/54OMzKoTV98+MtVHqnlL+p
-        jr99QDvyTgku5MDdIMwR5dRT2RfeA5hg0Ki2OYVSQvckYMZJbf6Ppz80o3FaYq9coezm2iCSEtbR
-        aqUjaQSq5RW7ZtEq2ADM8s46ZOm6bd4zuIR2fj4Gz1s7vRPg/cM/fgAIZRLWDwEAAA==
+      string: '{"version":"1.1","result":[{"infos":[[5,"Abiotrophia_defectiva_ATCC_49176","KBaseGenomes.Genome-17.0","2023-09-26T13:13:47+0000",2,"test_narrative",69356,"test_narrative:narrative_1695311690413","5611e4279ef739e36214c81531c54a7a",7027991,null]],"paths":[["69356/5/2"]]}]}'
     headers:
       Access-Control-Allow-Headers:
       - authorization
@@ -31,7 +27,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 80ce57b27ce717c4-SJC
+      - 87a98115acc5ce98-SJC
       Connection:
       - keep-alive
       Content-Encoding:
@@ -39,7 +35,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Sep 2023 20:44:02 GMT
+      - Fri, 26 Apr 2024 21:00:46 GMT
       Server:
       - cloudflare
       Strict-Transport-Security:
@@ -54,7 +50,7 @@ interactions:
 - request:
     body: '{"method": "Workspace.get_object_info3", "params": [{"objects": [{"ref":
       "test_narrative:narrative_1695311690413/_Nostoc_azollae__0708"}]}], "version":
-      "1.1", "id": "02633622972070504"}'
+      "1.1", "id": "658891521590704"}'
     headers:
       Accept:
       - '*/*'
@@ -63,18 +59,14 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '185'
+      - '183'
       User-Agent:
       - python-requests/2.31.0
     method: POST
     uri: https://ci.kbase.us/services/ws
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAAA11PTWvDMAz9L7rOSSV/JfFxlx4GO+1WjHETlwY8u8RuDyv97/M62GHiIT2kx3vo
-        DrewlTUnMEA9AYMtlGusYA53WNMpl8YOkoF7z6Xm2fmvHKMPzuGAY5O/vfoS9iHlz1D639nR0GM7
-        ceSiw6nj9EHaEBkpXrAVMGJQQ6ku+W3zdb0FYHoSSv9fmz/mSE9KUOsoSfyYe94w+2XhIw6LJk3z
-        wvF4WpTEYTq2EE04KqlYusZoLYOLr+fnO/AM28kdgbUP+/gGGyZNNwUBAAA=
+      string: '{"version":"1.1","result":[{"infos":[[4,"_Nostoc_azollae__0708","KBaseGenomes.Genome-17.0","2023-09-21T16:11:43+0000",1,"test_narrative",69356,"test_narrative:narrative_1695311690413","2a22a2cadd2807d6161cd20bfd54079b",16108545,null]],"paths":[["69356/4/1"]]}]}'
     headers:
       Access-Control-Allow-Headers:
       - authorization
@@ -83,7 +75,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 80ce57b34871176b-SJC
+      - 87a981169c23aaac-SJC
       Connection:
       - keep-alive
       Content-Encoding:
@@ -91,7 +83,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Sep 2023 20:44:02 GMT
+      - Fri, 26 Apr 2024 21:00:46 GMT
       Server:
       - cloudflare
       Strict-Transport-Security:

@@ -1,6 +1,4 @@
-"""
-Tests for the app_util module
-"""
+"""Tests for the app_util module."""
 
 import copy
 import os
@@ -366,7 +364,7 @@ input_list = [
 
 @pytest.mark.parametrize("tf_type", all_types)
 @pytest.mark.parametrize("inp", input_list)
-@pytest.mark.vcr
+@pytest.mark.vcr()
 def test_transform_param_value_all_types_with_all_inputs(
     inp, tf_type, workspace_name, monkeypatch, request, user_name, user_token
 ):
@@ -439,7 +437,7 @@ putative_refs = [
 
 
 @pytest.mark.parametrize("params", putative_refs)
-@pytest.mark.vcr
+@pytest.mark.vcr()
 def test_transform_param_value_putative_refs(
     params, workspace_name, monkeypatch, request, user_name, user_token
 ):
@@ -480,7 +478,7 @@ invalid_ref_fails = [
 
 
 @pytest.mark.parametrize("params", invalid_upa_fails + invalid_ref_fails)
-@pytest.mark.vcr
+@pytest.mark.vcr()
 def test_transform_param_value_fail_all_types(
     params, workspace_name, monkeypatch, request, user_name, user_token
 ):

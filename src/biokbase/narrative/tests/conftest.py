@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Any
 
 import pytest
 import vcr
@@ -13,7 +14,7 @@ from biokbase.narrative.tests.util import ConfigTests, read_token_file
 logging.basicConfig()
 vcr_log = logging.getLogger("vcr")
 # set to INFO or DEBUG for debugging
-vcr_log.setLevel(logging.INFO)
+vcr_log.setLevel(logging.WARNING)
 
 
 @pytest.fixture(scope="session")
@@ -63,9 +64,9 @@ config = {
 
 
 @pytest.fixture(scope="session")
-def vcr_config():
+def vcr_config() -> dict[str, Any]:
     return config
 
 
-def pytest_recording_configure(config, vcr):
+def pytest_recording_configure(config: dict[str, Any], vcr: vcr.VCR):
     vcr.register_matcher("body_matcher", body_matcher)

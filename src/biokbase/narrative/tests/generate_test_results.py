@@ -49,14 +49,14 @@ def get_test_spec(tag: str, app_id: str) -> dict[str, dict[str, Any]]:
 
 
 def generate_mappings(
-    all_jobs: dict[str, dict[str, Any]]
+    all_jobs: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, str], dict[str, dict[str, Any]], set[dict[str, Any]]]:
     # collect retried jobs and generate the cell-to-job mapping
     retried_jobs = {}
     jobs_by_cell_id = {}
     batch_jobs = set()
     for job in all_jobs.values():
-        if "batch_job" in job and job["batch_job"]:
+        if job.get("batch_job"):
             batch_jobs.add(job["job_id"])
         # save the first retry ID with the retried job
         if "retry_ids" in job and len(job["retry_ids"]) > 0:

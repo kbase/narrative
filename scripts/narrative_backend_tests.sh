@@ -3,12 +3,6 @@ export NARRATIVE_DIR=$(pwd)
 
 docker_container=${DOCKER_CONTAINER:-false}
 
-# if the test is being run in a docker container, ensure
-# that the conda base environment is activated
-if [ "$docker_container" == "true" ]; then
-    source activate base
-fi
-
 pytest \
     --cov=biokbase.narrative \
     --cov=biokbase.auth \

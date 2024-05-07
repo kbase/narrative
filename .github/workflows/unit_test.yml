@@ -52,7 +52,7 @@ jobs:
         mkdir -p ${{ github.workspace }}/output
         sudo chown nobody ${{ github.workspace }}/output
         sudo chmod -R 0777 ${{ github.workspace }}/output
-        docker run -v "${{ github.workspace }}/output:/tmp/output" --user nobody ${{ env.APP_IMAGE_TAG }} /bin/bash scripts/narrative_backend_tests.sh
+        docker run -v "${{ github.workspace }}/output:/tmp/output" --user nobody ${{ env.APP_IMAGE_TAG }} /bin/bash scripts/run_backend_tests.sh
       continue-on-error: true
     -
       name: Use Node JS 20

@@ -2,9 +2,8 @@
 
 import glob
 
-from setuptools import find_packages, setup
-
 import ez_setup
+from setuptools import find_packages, setup
 
 ez_setup.use_setuptools()
 

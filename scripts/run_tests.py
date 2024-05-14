@@ -1,3 +1,5 @@
+# Run frontend unit or integration tests... or both!
+#
 # Adapted from a Karma test startup script
 # developed by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
@@ -7,6 +9,8 @@
 # script.
 # (recipe here)
 # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+#
+# ruff: noqa: T201
 
 import argparse
 import os
@@ -16,9 +20,7 @@ import sys
 import threading
 
 argparser = argparse.ArgumentParser(description="Run KBase Narrative tests")
-argparser.add_argument(
-    "-u", "--unit", action="store_true", help="Whether to run unit tests"
-)
+argparser.add_argument("-u", "--unit", action="store_true", help="Whether to run unit tests")
 argparser.add_argument(
     "-i", "--integration", action="store_true", help="Whether to run integration tests"
 )
@@ -35,7 +37,8 @@ JUPYTER_PORT = 32323
 IP_ADDRESS = "0.0.0.0" if options.container else "127.0.0.1"
 
 
-def run_narrative():
+def run_narrative() -> subprocess.Popen[bytes]:
+    """Run the narrative server."""
     nb_command = [
         "kbase-narrative",
         "--no-browser",
@@ -80,13 +83,10 @@ def run_narrative():
             break
         if "is already in use" in line or "port is already allocated" in line:
             os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-            raise ValueError(
-                "The port {} was already taken, kill running notebook servers".format(
-                    JUPYTER_PORT
-                )
-            )
+            err_msg = f"The port {JUPYTER_PORT} was already taken, kill running notebook servers"
+            raise ValueError(err_msg)
 
-    def readlines():
+    def readlines() -> None:
         """Print the notebook server output."""
         while 1:
             line = nb_server.stdout.readline().decode("utf-8").strip()
@@ -122,7 +122,7 @@ try:
         try:
             print("running isolated unit tests")
             resp["unit_isolated"] = subprocess.check_call(
-                ["npm", "run", "test_isolated"],
+                ["npm", "run", "test_isolated"],  # noqa: S607
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec
@@ -131,7 +131,7 @@ try:
         try:
             print("running main unit tests")
             resp["unit"] = subprocess.check_call(
-                ["npm", "run", "test"],
+                ["npm", "run", "test"],  # noqa: S607
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec
@@ -147,7 +147,7 @@ try:
         print("starting integration tests")
         try:
             resp["integration"] = subprocess.check_call(
-                ["npx", "wdio", "test/integration/wdio.conf.js"],
+                ["npx", "wdio", "test/integration/wdio.conf.js"],  # noqa: S607
                 stderr=subprocess.STDOUT,
                 env=env,
                 shell=False,
@@ -156,14 +156,14 @@ try:
             resp["integration"] = e.returncode
 
 except Exception as e:
-    print(f"Error! {str(e)}")
+    print(f"Error! {e!s}")
 finally:
     print("Done running tests.")
     if nb_server is not None:
         print("Killing server.")
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
     exit_code = 0
-    for key in resp.keys():
+    for key in resp:
         if resp[key] != -1:
             print(f"{key} tests completed with code {resp[key]}")
             if resp[key] != 0:

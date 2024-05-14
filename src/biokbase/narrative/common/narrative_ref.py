@@ -1,7 +1,6 @@
-"""
-Describes a Narrative Ref and has utilities for dealing with it.
-"""
-import biokbase.narrative.clients as clients
+"""Describes a Narrative Ref and has utilities for dealing with it."""
+
+from biokbase.narrative import clients
 from biokbase.workspace.baseclient import ServerError
 
 from .exceptions import WorkspaceError
@@ -9,8 +8,7 @@ from .exceptions import WorkspaceError
 
 class NarrativeRef:
     def __init__(self, ref):
-        """
-        :param ref: dict with keys wsid, objid, ver (either present or None)
+        """:param ref: dict with keys wsid, objid, ver (either present or None)
         wsid is required, this will raise a ValueError if it is not present, or not a number
         objid, while required, can be gathered from the wsid. If there are problems with
         fetching the objid, this will raise a ValueError or a RuntimeError. ValueError gets
@@ -26,46 +24,37 @@ class NarrativeRef:
         )
         try:
             self.wsid = int(self.wsid)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
-                "A numerical Workspace id is required for a Narrative ref, not {}".format(
-                    self.wsid
-                )
-            )
+                f"A numerical Workspace id is required for a Narrative ref, not {self.wsid}"
+            ) from e
 
         if self.ver is not None:
             try:
                 self.ver = int(self.ver)
-            except ValueError:
+            except ValueError as e:
                 raise ValueError(
-                    "If ver is present in the ref, it must be numerical, not {}".format(
-                        self.ver
-                    )
-                )
+                    f"If ver is present in the ref, it must be numerical, not {self.ver}"
+                ) from e
         if self.objid is not None:
             try:
                 self.objid = int(self.objid)
-            except ValueError:
-                raise ValueError("objid must be numerical, not {}".format(self.objid))
+            except ValueError as e:
+                raise ValueError(f"objid must be numerical, not {self.objid}") from e
         else:
             self.objid = self._get_narrative_objid()
 
     def __str__(self):
-        ref_str = "{}/{}".format(self.wsid, self.objid)
+        ref_str = f"{self.wsid}/{self.objid}"
         if self.ver is not None:
-            ref_str = ref_str + "/{}".format(self.ver)
+            ref_str = ref_str + f"/{self.ver}"
         return ref_str
 
     def __eq__(self, other):
-        return (
-            self.wsid == other.wsid
-            and self.objid == other.objid
-            and self.ver == other.ver
-        )
+        return self.wsid == other.wsid and self.objid == other.objid and self.ver == other.ver
 
     def _get_narrative_objid(self):
-        """
-        Attempts to find the Narrative object id given a workspace id.
+        """Attempts to find the Narrative object id given a workspace id.
         This is only called on the internal wsid, which must be an int.
         Can raise:
             - PermissionsError
@@ -82,15 +71,15 @@ class NarrativeRef:
             ws_meta = clients.get("workspace").get_workspace_info({"id": self.wsid})[8]
             objid = ws_meta.get("narrative")
             return int(objid)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as typed_error:
             err = ""
             if objid is None:
                 err = "Couldn't find Narrative object id in Workspace metadata."
             else:
                 err = (
                     "Expected an integer while looking up the Narrative object id, "
-                    "got '{}'".format(objid)
+                    f"got '{objid}'"
                 )
-            raise RuntimeError(err)
+            raise RuntimeError(err) from typed_error
         except ServerError as err:
-            raise WorkspaceError(err, self.wsid)
+            raise WorkspaceError(err, self.wsid) from err

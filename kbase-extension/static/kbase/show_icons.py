@@ -1,6 +1,5 @@
-"""
-Build a simple HTML page showing all current icons in icons.json
-"""
+"""Build a simple HTML page showing all current icons in icons.json."""
+
 import json
 
 f = open("icons.json")
@@ -43,12 +42,12 @@ def color_lookup(name):
 
 
 def row(name, icons):
-    r = '<tr><td style="padding-top: 2em">{}</td>'.format(name)
+    r = f'<tr><td style="padding-top: 2em">{name}</td>'
     r += '<td class="fa-stack fa-2x" >'
     color = color_lookup(name)
-    r += '<i class="fa fa-circle fa-stack-2x" style="color: {}"></i>'.format(color)
+    r += f'<i class="fa fa-circle fa-stack-2x" style="color: {color}"></i>'
     for icon in icons:
-        r += '<i class="fa fa-inverse fa-stack-1x {}"></i>'.format(icon)
+        r += f'<i class="fa fa-inverse fa-stack-1x {icon}"></i>'
     r += "</td></tr>"
     return r
 

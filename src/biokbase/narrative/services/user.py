@@ -1,5 +1,4 @@
-"""
-The goal of this file is to provide a service that deals with user interactions with other users.
+"""The goal of this file is to provide a service that deals with user interactions with other users.
 It will provide some truth as to whether to trust another user's Narratives, and some kernel-side
 knowledge about whether what teams or groups or labs (or whatever the term will be) that a user
 is on.

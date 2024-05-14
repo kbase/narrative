@@ -73,9 +73,7 @@ class execution_engine2:
         Returns the current running version of the execution_engine2 servicve as a semantic version string.
         :returns: instance of String
         """
-        return self._client.call_method(
-            "execution_engine2.ver", [], self._service_ver, context
-        )
+        return self._client.call_method("execution_engine2.ver", [], self._service_ver, context)
 
     def status(self, context=None):
         """
@@ -94,9 +92,7 @@ class execution_engine2:
            String, parameter "version" of String, parameter "service" of
            String, parameter "server_time" of Double
         """
-        return self._client.call_method(
-            "execution_engine2.status", [], self._service_ver, context
-        )
+        return self._client.call_method("execution_engine2.status", [], self._service_ver, context)
 
     def run_job(self, params, context=None):
         """

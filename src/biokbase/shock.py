@@ -6,19 +6,11 @@ Authors:
 * Travis Harrison
 """
 
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
-
 import os
 import urllib
 
 import cStringIO
 import requests
-
-# -----------------------------------------------------------------------------
-# Classes
-# -----------------------------------------------------------------------------
 
 
 class Client:
@@ -33,7 +25,7 @@ class Client:
             self.set_auth(token)
 
     def set_auth(self, token):
-        self.auth_header = {"Authorization": "OAuth %s" % token}
+        self.auth_header = {"Authorization": f"OAuth {token}"}
 
     def get_acl(self, node):
         return self._manage_acl(node, "get")
@@ -57,21 +49,16 @@ class Client:
                 req = requests.delete(url, headers=self.auth_header)
         except Exception as ex:
             message = self.template.format(type(ex).__name__, ex.args)
-            raise Exception("Unable to connect to Shock server %s\n%s" % (url, message))
+            raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         if not (req.ok and req.text):
-            raise Exception(
-                "Unable to connect to Shock server %s: %s"
-                % (url, req.raise_for_status())
-            )
+            raise Exception(f"Unable to connect to Shock server {url}\n{req.raise_for_status()}")
         rj = req.json()
         if not (
-            rj
-            and isinstance(rj, dict)
-            and all([key in rj for key in ["status", "data", "error"]])
+            rj and isinstance(rj, dict) and all(key in rj for key in ["status", "data", "error"])
         ):
             raise Exception("Return data not valid Shock format")
         if rj["error"]:
-            raise Exception("Shock error: %d: %s" % (rj["status"], rj["error"][0]))
+            raise Exception(f"Shock error {rj['status']} : {rj['error'][0]}")
         return rj["data"]
 
     def get_node(self, node):
@@ -87,38 +74,28 @@ class Client:
             rget = requests.get(url, headers=self.auth_header, allow_redirects=True)
         except Exception as ex:
             message = self.template.format(type(ex).__name__, ex.args)
-            raise Exception("Unable to connect to Shock server %s\n%s" % (url, message))
+            raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         if not (rget.ok and rget.text):
-            raise Exception(
-                "Unable to connect to Shock server %s: %s"
-                % (url, rget.raise_for_status())
-            )
+            raise Exception(f"Unable to connect to Shock server {url}\n{rget.raise_for_status()}")
         rj = rget.json()
         if not (
-            rj
-            and isinstance(rj, dict)
-            and all([key in rj for key in ["status", "data", "error"]])
+            rj and isinstance(rj, dict) and all(key in rj for key in ["status", "data", "error"])
         ):
             raise Exception("Return data not valid Shock format")
         if rj["error"]:
-            raise Exception("Shock error: %d: %s" % (rj["status"], rj["error"][0]))
+            raise Exception(f"Shock error {rj['status']} : {rj['error'][0]}")
         return rj["data"]
 
     def download_to_string(self, node, index=None, part=None, chunk=None, binary=False):
-        result = self._get_node_download(
-            node, index=index, part=part, chunk=chunk, stream=False
-        )
+        result = self._get_node_download(node, index=index, part=part, chunk=chunk, stream=False)
         if binary:
             return result.content
-        else:
-            return result.text
+        return result.text
 
     def download_to_path(self, node, path, index=None, part=None, chunk=None):
         if path == "":
             raise Exception("download_to_path requires non-empty path parameter")
-        result = self._get_node_download(
-            node, index=index, part=part, chunk=chunk, stream=True
-        )
+        result = self._get_node_download(node, index=index, part=part, chunk=chunk, stream=True)
         with open(path, "wb") as f:
             for chunk in result.iter_content(chunk_size=8192):
                 if chunk:
@@ -129,7 +106,7 @@ class Client:
     def _get_node_download(self, node, index=None, part=None, chunk=None, stream=False):
         if node == "":
             raise Exception("download requires non-empty node parameter")
-        url = "%s/node/%s?download" % (self.shock_url, node)
+        url = f"{self.shock_url}/node/{node}?download"
         if index and part:
             url += "&index=" + index + "&part=" + str(part)
             if chunk:
@@ -138,12 +115,9 @@ class Client:
             rget = requests.get(url, headers=self.auth_header, stream=stream)
         except Exception as ex:
             message = self.template.format(type(ex).__name__, ex.args)
-            raise Exception("Unable to connect to Shock server %s\n%s" % (url, message))
+            raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         if not (rget.ok):
-            raise Exception(
-                "Unable to connect to Shock server %s: %s"
-                % (url, rget.raise_for_status())
-            )
+            raise Exception(f"Unable to connect to Shock server {url}: {rget.raise_for_status()}")
         return rget
 
     def delete_node(self, node):
@@ -153,9 +127,9 @@ class Client:
             rj = req.json()
         except Exception as ex:
             message = self.template.format(type(ex).__name__, ex.args)
-            raise Exception("Unable to connect to Shock server %s\n%s" % (url, message))
+            raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         if rj["error"]:
-            raise Exception("Shock error %s : %s" % (rj["status"], rj["error"][0]))
+            raise Exception(f"Shock error {rj['status']} : {rj['error'][0]}")
         return rj
 
     def index_node(self, node, index):
@@ -165,9 +139,9 @@ class Client:
             rj = req.json()
         except Exception as ex:
             message = self.template.format(type(ex).__name__, ex.args)
-            raise Exception("Unable to connect to Shock server %s\n%s" % (url, message))
+            raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         if rj["error"]:
-            raise Exception("Shock error %s : %s" % (rj["status"], rj["error"][0]))
+            raise Exception(f"Shock error {rj['status']} : {rj['error'][0]}")
         return rj
 
     def create_node(self, data="", attr="", data_name=""):
@@ -200,9 +174,7 @@ class Client:
                 rj = req.json()
             except Exception as ex:
                 message = self.template.format(type(ex).__name__, ex.args)
-                raise Exception(
-                    "Unable to connect to Shock server %s\n%s" % (url, message)
-                )
+                raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         elif (not form) and data:
             try:
                 if method == "PUT":
@@ -222,20 +194,15 @@ class Client:
                 rj = req.json()
             except Exception as ex:
                 message = self.template.format(type(ex).__name__, ex.args)
-                raise Exception(
-                    "Unable to connect to Shock server %s\n%s" % (url, message)
-                )
+                raise Exception(f"Unable to connect to Shock server {url}\n{message}") from ex
         else:
-            raise Exception("No data specificed for %s body" % method)
+            raise Exception(f"No data specificed for {method} body")
         if not (req.ok):
-            raise Exception(
-                "Unable to connect to Shock server %s: %s"
-                % (url, req.raise_for_status())
-            )
+            raise Exception(f"Unable to connect to Shock server {url}\n{req.raise_for_status()}")
+
         if rj["error"]:
-            raise Exception("Shock error %s : %s" % (rj["status"], rj["error"][0]))
-        else:
-            return rj["data"]
+            raise Exception(f"Shock error {rj['status']} : {rj['error'][0]}")
+        return rj["data"]
 
     # handles 3 cases
     # 1. file path
@@ -246,12 +213,11 @@ class Client:
             if os.path.exists(d):
                 name = n if n else os.path.basename(d)
                 return (name, open(d))
-            else:
-                name = n if n else "unknown"
-                return (name, cStringIO.StringIO(d))
+            name = n if n else "unknown"
+            return (name, cStringIO.StringIO(d))
         except TypeError:
             try:
                 name = n if n else d.name
                 return (name, d)
             except BaseException:
-                raise Exception("Error opening file handle for upload")
+                raise Exception("Error opening file handle for upload") from BaseException

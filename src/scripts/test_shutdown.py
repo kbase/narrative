@@ -1,12 +1,11 @@
-"""
-Very very simplistic tester for the narrative_shutdown REST call.
+"""Very very simplistic tester for the narrative_shutdown REST call.
 
 This authenticates a user with a valid token, then tries 3 things:
 1. Test shutting down without sending credentials
 2. Test shutting down another user's container with creds
 3. Test shutting down the user's container with creds.
 
-TODO:
+Todo:
  - have it spin up a narrative instance first
  - wrap this in an actual Pythonic unittest apparatus
 
@@ -27,7 +26,7 @@ DELETE_CMD = "narrative_shutdown"
 
 
 def main(args):
-    url = "https://{}.kbase.us".format(args.host_url)
+    url = f"https://{args.host_url}.kbase.us"
 
     # 1. get an auth token and cookie-ize it
     login_payload = {
@@ -36,9 +35,7 @@ def main(args):
         "cookie": 1,
         "fields": "name,kbase_sessionid,user_id,token",
     }
-    r = requests.post(
-        "https://kbase.us/services/authorization/Sessions/Login", data=login_payload
-    )
+    r = requests.post("https://kbase.us/services/authorization/Sessions/Login", data=login_payload)
     res = json.loads(r.content)
 
     formatted_token = res["token"].replace("|", "PIPESIGN").replace("=", "EQUALSSIGN")
@@ -47,22 +44,18 @@ def main(args):
     )
     # 2. test unauthorized
     print("Testing shutdown without authentication")
-    r = requests.delete("{}/{}/{}".format(url, DELETE_CMD, args.user))
+    r = requests.delete(f"{url}/{DELETE_CMD}/{args.user}")
     print(r.content)
 
     # 3. test authenticated, wrong user
     print("Testing shutdown of another user's container")
-    auth_cookie = dict(kbase_session=cookie_string)
-    r = requests.delete(
-        "{}/{}/{}".format(url, DELETE_CMD, args.wrong_user), cookies=auth_cookie
-    )
+    auth_cookie = {"kbase_session": cookie_string}
+    r = requests.delete(f"{url}/{DELETE_CMD}/{args.wrong_user}", cookies=auth_cookie)
     print(r.content)
 
     # 4. test authenticated, correct user
     print("Testing valid shutdown of user's container")
-    r = requests.delete(
-        "{}/{}/{}".format(url, DELETE_CMD, args.user), cookies=auth_cookie
-    )
+    r = requests.delete(f"{url}/{DELETE_CMD}/{args.user}", cookies=auth_cookie)
     print(r.content)
 
 
@@ -99,7 +92,7 @@ def parse_args():
 
     args = p.parse_args()
     if args.pw is None:
-        print('A password is required for user "{}". Not testing.'.format(args.user))
+        print(f'A password is required for user "{args.user}". Not testing.')
         sys.exit(0)
     return args
 

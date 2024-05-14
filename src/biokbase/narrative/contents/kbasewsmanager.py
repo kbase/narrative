@@ -14,23 +14,23 @@ Copyright (C) 2013 The KBase Project
 Distributed unspecified open source license as of 9/27/2013
 
 """
+
 import itertools
 import json
 import os
 import re
 
 import nbformat
-from nbformat import ValidationError, validate
-from notebook.services.contents.manager import ContentsManager
-from tornado.web import HTTPError
-from traitlets.traitlets import List, Unicode
-
 from biokbase.narrative.common import util
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.kblogging import get_narrative_logger
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.services.user import UserService
+from nbformat import ValidationError, validate
+from notebook.services.contents.manager import ContentsManager
+from tornado.web import HTTPError
+from traitlets.traitlets import List, Unicode
 
 from .kbasecheckpoints import KBaseCheckpoints
 from .manager_util import base_model
@@ -38,8 +38,7 @@ from .narrativeio import KBaseWSManagerMixin
 
 
 class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
-    """
-    A notebook manager that uses the KBase workspace for storage.
+    """A notebook manager that uses the KBase workspace for storage.
 
     The Workspace backend simply adds a few metadata fields into the
     notebook object and pushes it into the workspace as the 'data'
@@ -76,9 +75,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     """
 
-    kbasews_uri = Unicode(
-        URLS.workspace, config=True, help="Workspace service endpoint URI"
-    )
+    kbasews_uri = Unicode(URLS.workspace, config=True, help="Workspace service endpoint URI")
 
     ipynb_type = Unicode("ipynb")
     allowed_formats = List(["json"])
@@ -136,45 +133,43 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def dir_exists(self, path):
         """If it's blank, just return True -
         we'll be looking up the list of all Narratives from
-        that dir, so it's real."""
+        that dir, so it's real.
+        """
         if not path:
             return True
         return False
 
-    def is_hidden(self, path):
+    def is_hidden(self, _path):
         """We can only see what gets returned from Workspace lookup,
-        so nothing should be hidden"""
+        so nothing should be hidden
+        """
         return False
 
     def file_exists(self, path):
         """We only support narratives right now, so look up
-        a narrative from that path."""
+        a narrative from that path.
+        """
         ref = self._parse_path(path)
-        self.log.warn("looking up whether a narrative exists")
+        self.log.warning("looking up whether a narrative exists")
         try:
-            self.log.warn("trying to get narrative {}".format(ref))
+            self.log.warning(f"trying to get narrative {ref}")
             return self.narrative_exists(ref)
         except WorkspaceError as err:
-            self.log.warn(
-                "Error while testing narrative existence: {}".format(str(err))
-            )
+            self.log.warning(f"Error while testing narrative existence: {err!s}")
             if err.http_code == 403:
                 raise HTTPError(
                     403,
-                    "You do not have permission to view the narrative with id {}".format(
-                        path
-                    ),
-                )
+                    f"You do not have permission to view the narrative with id {path}",
+                ) from err
             raise HTTPError(
                 err.http_code,
-                "An error occurred while trying to find the Narrative with id {}".format(
-                    path
-                ),
-            )
+                f"An error occurred while trying to find the Narrative with id {path}",
+            ) from err
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)
-        exists"""
+        exists
+        """
         path = path.strip("/")
         if not path:  # it's a directory, for all narratives
             return True
@@ -182,24 +177,21 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def _wsobj_to_model(self, nar, content=True):
         nar_id = "ws.{}.obj.{}".format(nar["wsid"], nar["objid"])
-        model = base_model(
-            "{} - {} - {}".format(nar["saved_by"], nar_id, nar["name"]), nar_id
-        )
+        model = base_model("{} - {} - {}".format(nar["saved_by"], nar_id, nar["name"]), nar_id)
         model["format"] = "json"
         model["last_modified"] = nar["save_date"]
         model["type"] = "notebook"
         return model
 
     def _parse_path(self, path):
-        """
-        From the URL path for a Narrative, returns a NarrativeRef
+        """From the URL path for a Narrative, returns a NarrativeRef
 
         if the path isn't parseable, this raises a 404 with the invalid path.
         """
         path = path.strip("/")
         m = self.path_regex.match(path)
         if m is None:
-            raise HTTPError(404, "Invalid Narrative path {}".format(path))
+            raise HTTPError(404, f"Invalid Narrative path {path}")
         try:
             return NarrativeRef(
                 {
@@ -209,20 +201,20 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 }
             )
         except RuntimeError as e:
-            raise HTTPError(500, str(e))
+            raise HTTPError(500, str(e)) from e
         except WorkspaceError as e:
-            raise HTTPError(e.http_code, e.message)
+            raise HTTPError(e.http_code, e.message) from e
 
-    def get(self, path, content=True, type=None, format=None):
+    def get(self, path, content=True, ftype=None, _format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip("/")
         model = base_model(path, path)
         try:
-            if self.exists(path) and type != "directory":
+            if self.exists(path) and ftype != "directory":
                 # It's a narrative object, so try to fetch it.
                 ref = self._parse_path(path)
                 if not ref:
-                    raise HTTPError(404, 'Unknown Narrative "{}"'.format(path))
+                    raise HTTPError(404, f'Unknown Narrative "{path}"')
                 nar_obj = self.read_narrative(ref, content=content)
                 model["type"] = "notebook"
                 user = self.get_userid()
@@ -233,30 +225,26 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     self.mark_trusted_cells(nb, nar_obj["info"][5], path)
                     model["content"] = nb
                     model["name"] = nar_obj["data"]["metadata"].get("name", "Untitled")
-                    util.kbase_env.narrative = "ws.{}.obj.{}".format(
-                        ref.wsid, ref.objid
-                    )
+                    util.kbase_env.narrative = f"ws.{ref.wsid}.obj.{ref.objid}"
                     util.kbase_env.workspace = model["content"].metadata.ws_name
                     self.narrative_logger.narrative_open(
-                        "{}/{}".format(ref.wsid, ref.objid), nar_obj["info"][4]
+                        f"{ref.wsid}/{ref.objid}", nar_obj["info"][4]
                     )
                 if user is not None:
                     model["writable"] = self.narrative_writable(ref, user)
-                self.log.info("Got narrative {}".format(model["name"]))
+                self.log.info(f"Got narrative {model['name']}")
         except WorkspaceError as e:
-            raise HTTPError(e.http_code, e.message)
+            raise HTTPError(e.http_code, e.message) from e
 
-        if not path or type == "directory":
+        if not path or ftype == "directory":
             # if it's the empty string, look up all narratives, treat them as a dir
             self.log.info("Getting narrative list")
-            model["type"] = type
+            model["type"] = ftype
             model["format"] = "json"
             if content:
-                contents = []
                 nar_list = self.list_narratives()
-                self.log.info("Found {} narratives".format(len(nar_list)))
-                for nar in nar_list:
-                    contents.append(self._wsobj_to_model(nar, content=False))
+                self.log.info(f"Found {len(nar_list)} narratives")
+                contents = [self._wsobj_to_model(nar, content=False) for nar in nar_list]
                 model["content"] = contents
 
         return model
@@ -276,7 +264,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if "content" not in model and model["type"] != "directory":
             raise HTTPError(400, "No Narrative content found while trying to save")
 
-        self.log.debug("writing Narrative %s." % path)
+        self.log.debug(f"writing Narrative {path}.")
         nb = nbformat.from_dict(model["content"])
         self.check_and_sign(nb, path)
 
@@ -284,7 +272,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             ref = self._parse_path(path)
             result = self.write_narrative(ref, nb, self.get_userid())
 
-            new_id = "ws.%s.obj.%s" % (result[1], result[2])
+            new_id = f"ws.{result[1]}.obj.{result[2]}"
             util.kbase_env.narrative = new_id
 
             nb = result[0]
@@ -294,16 +282,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             model = self.get(path, content=False)
             if validation_message:
                 model["message"] = validation_message
-            self.narrative_logger.narrative_save(
-                "{}/{}".format(result[1], result[2]), result[3]
-            )
+            self.narrative_logger.narrative_save(f"{result[1]}/{result[2]}", result[3])
             return model
         except WorkspaceError as err:
-            raise HTTPError(
-                err.http_code, "While saving your Narrative: {}".format(err.message)
-            )
+            raise HTTPError(err.http_code, f"While saving your Narrative: {err.message}") from err
 
-    def delete_file(self, path):
+    def delete_file(self, _path):
         """Delete file or directory by path."""
         raise HTTPError(
             501,
@@ -314,15 +298,14 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Rename a file from old_path to new_path.
         This gets tricky in KBase since we don't deal with paths, but with
         actual file names. For now, assume that 'old_path' won't actually
-        change, but the 'new_path' is actually the new Narrative name."""
+        change, but the 'new_path' is actually the new Narrative name.
+        """
         try:
             self.rename_narrative(self._parse_path(path), self.get_userid(), new_name)
         except WorkspaceError as err:
-            raise HTTPError(err.http_code, err.message)
+            raise HTTPError(err.http_code, err.message) from err
         except Exception as err:
-            raise HTTPError(
-                500, "An error occurred while renaming your Narrative: {}".format(err)
-            )
+            raise HTTPError(500, f"An error occurred while renaming your Narrative: {err}") from err
 
     # API part 2: methods that have useable default
     # implementations, but can be overridden in subclasses.
@@ -345,9 +328,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         For use in PATCH requests, to enable renaming a file without
         re-uploading its contents. Only used for renaming at the moment.
         """
-        self.log.warn("update")
-        self.log.warn(model)
-        self.log.warn(path)
+        self.log.warning("update")
+        self.log.warning(model)
+        self.log.warning(path)
 
         path = path.strip("/")
         new_path = model.get("path", path).strip("/")
@@ -355,7 +338,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             new_path = new_path[: -len(".ipynb")]
         self.rename(path, new_path)
         model = self.get(path, content=False)
-        self.log.warn(model)
+        self.log.warning(model)
         return model
 
     def increment_filename(self, filename, path="", insert=""):
@@ -368,7 +351,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path : unicode
             The API path of the target's directory
 
-        Returns
+        Returns:
         -------
         name : unicode
             A filename that is unique, based on the input filename.
@@ -376,14 +359,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path = path.strip("/")
         basename, ext = os.path.splitext(filename)
         for i in itertools.count():
-            if i:
-                insert_i = "{}{}".format(insert, i)
-            else:
-                insert_i = ""
-            name = "{basename}{insert}{ext}".format(
-                basename=basename, insert=insert_i, ext=ext
-            )
-            if not self.exists("{}/{}".format(path, name)):
+            insert_i = f"{insert}{i}" if i else ""
+            name = f"{basename}{insert_i}{ext}"
+            if not self.exists(f"{path}/{name}"):
                 break
         return name
 
@@ -394,7 +372,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         except ValidationError as e:
             model["message"] = "Notebook Validation failed: {}:\n{}".format(
                 e.message,
-                json.dumps(e.instance, indent=1, default=lambda obj: "<UNKNOWN>"),
+                json.dumps(e.instance, indent=1, default=lambda _: "<UNKNOWN>"),
             )
         return model
 
@@ -409,7 +387,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """
         path = path.strip("/")
         if not self.dir_exists(path):
-            raise HTTPError(404, "No such directory: %s" % path)
+            raise HTTPError(404, f"No such directory: {path}")
 
         model = {}
         if model_type:
@@ -430,10 +408,10 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         elif model["type"] == "file":
             untitled = self.untitled_file
         else:
-            raise HTTPError(400, "Unexpected model type: %r" % model["type"])
+            raise HTTPError(400, f"Unexpected model type: {model['type']}")
 
         name = self.increment_filename(untitled + ext, path, insert=insert)
-        path = "{0}/{1}".format(path, name)
+        path = f"{path}/{name}"
         return self.new(model, path)
 
     # def new(self, model=None, path=""):
@@ -512,7 +490,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """
         model = self.get(path)
         nb = model["content"]
-        self.log.warn("Trusting notebook %s", path)
+        self.log.warning("Trusting notebook %s", path)
         self.notary.mark_cells(nb, True)
         self.save(model, path)
 
@@ -531,7 +509,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if self.notary.check_cells(nb):
             self.notary.sign(nb)
         else:
-            self.log.warn("Saving untrusted notebook %s", path)
+            self.log.warning("Saving untrusted notebook %s", path)
 
     def mark_trusted_cells(self, nb, saved_by, path=""):
         """Mark cells as trusted if the notebook signature matches.
@@ -551,7 +529,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             # commenting out, but leaving behind for a while.
             trusted = self.notary.check_signature(nb)
             if not trusted:
-                self.log.warn("Notebook %s is not trusted", path)
+                self.log.warning("Notebook %s is not trusted", path)
             self.notary.mark_cells(nb, trusted)
             # self.log.warn("Notebook %s is totally trusted", path)
             # # all notebooks are trustworthy, because KBase is Pollyanna.
@@ -561,7 +539,4 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     #     return not any(fnmatch(name, glob) for glob in self.hide_globs)
 
     def info_string(self):
-        return (
-            "Workspace Narrative Service with workspace endpoint at %s"
-            % self.kbasews_uri
-        )
+        return f"Workspace Narrative Service with workspace endpoint at {self.kbasews_uri}"

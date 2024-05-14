@@ -1,6 +1,5 @@
-"""
-Common stuff for kbase logging
-"""
+"""Common stuff for kbase logging"""
+
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "11/20/14"
 
@@ -9,7 +8,7 @@ EVENT_MSG_SEP = ";"  # separates event name from msg in log
 
 
 def format_event(event, mapping):
-    return "{}{}{}".format(event, EVENT_MSG_SEP, format_kvps(mapping))
+    return f"{event}{EVENT_MSG_SEP}{format_kvps(mapping)}"
 
 
 def format_kvps(mapping, prefix=""):
@@ -27,13 +26,14 @@ def format_kvps(mapping, prefix=""):
             kvps = format_kvps(v, prefix=new_prefix)  # format as string
             kvp_list.append(kvps)
             continue  # already prefixed with key; go to next
+        # FIXME: this overwrites loop variables
         if v is None:
             v = "None"
-        elif isinstance(v, int) or isinstance(v, float):
-            v = "{}".format(v)
+        elif isinstance(v, float | int):
+            v = f"{v}"
         elif " " in v:
             v = '"' + v.replace('"', '\\"') + '"'
         if prefix:
             k = prefix + "." + k
-        kvp_list.append("{}={}".format(k, v))
+        kvp_list.append(f"{k}={v}")
     return " ".join(kvp_list)

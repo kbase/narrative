@@ -1,6 +1,5 @@
-"""
-Key=value pair parser
-"""
+"""Key=value pair parser"""
+
 import re
 
 KVP_EXPR = re.compile(
@@ -22,8 +21,7 @@ KVP_EXPR = re.compile(
 
 
 def parse_kvp(msg, record, text_sep=" "):
-    """
-    Parse key-value pairs, adding to record in-place.
+    """Parse key-value pairs, adding to record in-place.
 
     :param msg: Input string
     :param record: In/out dict
@@ -34,6 +32,7 @@ def parse_kvp(msg, record, text_sep=" "):
     for n, v, vq, txt in KVP_EXPR.findall(msg):
         if n:
             if vq:
+                # N.b. probable coding error: v is used in the "for" loop
                 v = vq.replace('\\"', '"')
             # add this KVP to output dict
             record[n] = v

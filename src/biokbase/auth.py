@@ -6,7 +6,6 @@ This uses the KBase auth2 API to get and manage auth tokens.
 from typing import Any
 
 import requests
-
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
 
@@ -110,7 +109,8 @@ def init_session_env(token_info: TokenInfo, user_info: UserInfo, ip: str) -> Non
 
 
 def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> TokenInfo:
-    """
+    """Given a user token, get an agent token.
+
     Uses the given login token (if it's valid) to get and return an agent token from
     the server. This returns generated token as a dict with keys (straight from the
     auth service):
@@ -127,10 +127,8 @@ def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> Tok
     return TokenInfo(r.json())
 
 
-def get_display_names(auth_token: str, user_ids: list) -> dict:
+def get_display_names(auth_token: str, user_ids: list[str]) -> dict[str, Any]:
     headers = {"Authorization": auth_token}
-    r = requests.get(
-        token_api_url + endpt_user_display + ",".join(user_ids), headers=headers
-    )
+    r = requests.get(token_api_url + endpt_user_display + ",".join(user_ids), headers=headers)
     r.raise_for_status()
     return r.json()

@@ -1,5 +1,5 @@
 #!python
-"""Bootstrap setuptools installation
+"""Bootstrap setuptools installation.
 
 If you want to use setuptools in your package's setup.py, just include this
 file in the same directory with it, and add this to the top of your setup.py::
@@ -13,6 +13,7 @@ the appropriate options to ``use_setuptools()``.
 
 This file can also be run as a script to install or upgrade setuptools.
 """
+
 import os
 import sys
 
@@ -76,9 +77,7 @@ def _validate_md5(egg_name, data):
         digest = md5(data).hexdigest()
         if digest != md5_data[egg_name]:
             print(
-                "md5 validation of {} failed!  (Possible download problem?)".format(
-                    egg_name
-                ),
+                f"md5 validation of {egg_name} failed!  (Possible download problem?)",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -117,16 +116,14 @@ def use_setuptools(
         return do_download()
     try:
         pkg_resources.require("setuptools>=" + version)
-        return
+        return None
     except pkg_resources.VersionConflict as e:
         if was_imported:
             print(
-                "The required version of setuptools (>={}) is not available, and".format(
-                    version
-                ),
+                f"The required version of setuptools (>={version}) is not available, and",
                 "can't be installed while this script is running. Please install",
                 " a more recent version first, using 'easy_install -U setuptools'.",
-                "\n(Currently using {})".format(e.args[0]),
+                f"\n(Currently using {e.args[0]})",
                 sep="\n",
             )
             sys.exit(2)
@@ -244,8 +241,7 @@ def main(argv, version=DEFAULT_VERSION):
 
 
 def update_md5(filenames):
-    """Update our built-in md5 registry"""
-
+    """Update our built-in md5 registry."""
     import re
 
     for name in filenames:

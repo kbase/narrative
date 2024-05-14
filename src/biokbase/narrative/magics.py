@@ -8,13 +8,13 @@ import getpass
 import logging
 import sys
 
-# IPython
-from IPython.core.magic import Magics, line_magic, magics_class
-
 # KBase
 import biokbase.auth
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 from biokbase.narrative.common.url_config import URLS
+
+# IPython
+from IPython.core.magic import Magics, line_magic, magics_class
 
 # Logging
 g_log = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def user_msg(s):
     Adds a newline.
     Also logs it for posterity.
     """
-    g_log.debug("user_msg{}len={:d}".format(EVENT_MSG_SEP, len(s)))
+    g_log.debug(f"user_msg{EVENT_MSG_SEP}len={len(s):d}")
     sys.stderr.write(s + "\n")
 
 
@@ -60,7 +60,7 @@ def set_token(newtoken):
 def clear_token():
     global user_id, token, user_profile
     if token is not None:
-        user_msg("Clearing credentials and profile for {}".format(user_id))
+        user_msg(f"Clearing credentials and profile for {user_id}")
         user_id = None
         token = None
         user_profile = None
@@ -74,8 +74,7 @@ def clear_token():
 class kbasemagics(Magics):
     @line_magic
     def kblogin(self, line):
-        """
-        Login using username and password to KBase and then push login token into the environment.
+        """Login using username and password to KBase and then push login token into the environment.
         Usage is: kblogin {userid}
         If you have an ssh-agent with keys loaded, kblogin will attempt to use your ssh-key to
         get an Globus token, if not, then you will be prompted for your password.
@@ -91,8 +90,7 @@ class kbasemagics(Magics):
 
         if user_id is not None:
             user_msg(
-                "Already logged in as {}. "
-                "Please kblogout first if you want to re-login".format(user_id)
+                f"Already logged in as {user_id}. " "Please kblogout first if you want to re-login"
             )
         elif user is None:
             user_msg("kblogin requires at least a username")
@@ -115,10 +113,7 @@ class kbasemagics(Magics):
                         "Could not get token with username and password given"
                     )
             except biokbase.auth.AuthFail:
-                user_msg(
-                    "Failed to login with username password provided. "
-                    "Please try again."
-                )
+                user_msg("Failed to login with username password provided. " "Please try again.")
                 token = None
         if token is not None:
             return user_id
@@ -132,4 +127,3 @@ class kbasemagics(Magics):
         """
         # Call the clear_token method
         clear_token()
-        return

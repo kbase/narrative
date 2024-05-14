@@ -43,9 +43,7 @@ def system_variable(var: str) -> str | int | None:
         ws_name = os.environ.get("KB_WORKSPACE_ID")
         if ws_name:
             try:
-                ws_info = clients.get("workspace").get_workspace_info(
-                    {"workspace": ws_name}
-                )
+                ws_info = clients.get("workspace").get_workspace_info({"workspace": ws_name})
                 return ws_info[0]
             # TODO: catch specific exception(s)
             except Exception:

@@ -1,11 +1,8 @@
-"""
-Utils for implementing the KBase Narrative manager
-"""
+"""Utils for implementing the KBase Narrative manager."""
 
 
 def base_model(name, path):
-    """Build the common base of a contents model"""
-
+    """Build the common base of a contents model."""
     return {
         "name": name,
         "path": path,

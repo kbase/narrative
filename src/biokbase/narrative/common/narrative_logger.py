@@ -16,8 +16,7 @@ A simple ELK stack logger for a few Narrative events.
 
 
 class NarrativeLogger:
-    """
-    This is a very simple logger that talks to Elastic search.
+    """This is a very simple logger that talks to Elastic search.
     It's initialized from the internally configured log host and port, along with
     the environment it uses. On each log event, it opens a socket to Elastic, writes a
     JSON packet, then closes off the socket. If there's any errors while writing, it just

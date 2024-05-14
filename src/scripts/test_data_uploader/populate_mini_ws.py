@@ -4,7 +4,6 @@ from pprint import pprint
 from time import time
 
 import requests
-
 from biokbase.workspace.client import Workspace
 
 kb_port = 9999
@@ -38,14 +37,12 @@ test_user = "kbasetest"
 
 
 def create_user(user_id):
-    """
-    Returns a token for that user.
-    """
+    """Returns a token for that user."""
     headers = {"Content-Type": "application/json"}
     r = requests.post(
         mini_auth_url + "/api/V2/testmodeonly/user",
         headers=headers,
-        data=json.dumps({"user": user_id, "display": "User {}".format(user_id)}),
+        data=json.dumps({"user": user_id, "display": f"User {user_id}"}),
     )
     if r.status_code != 200 and r.status_code != 400:
         print("Can't create dummy user!")
@@ -63,13 +60,12 @@ def create_user(user_id):
 
 
 def load_narrative_type(ws):
-    """
-    Loads the KBaseNarrative.Narrative type info into mini kb.
+    """Loads the KBaseNarrative.Narrative type info into mini kb.
     ws = Workspace client configured for admin
     """
     ws.request_module_ownership("KBaseNarrative")
     ws.administer({"command": "approveModRequest", "module": "KBaseNarrative"})
-    with open(old_narrative_spec_file, "r") as f:
+    with open(old_narrative_spec_file) as f:
         old_spec = f.read()
     ws.register_typespec(
         {
@@ -79,23 +75,22 @@ def load_narrative_type(ws):
         }
     )
     ws.release_module("KBaseNarrative")
-    for n in ws.get_module_info({"mod": "KBaseNarrative"})["types"].keys():
+    for n in ws.get_module_info({"mod": "KBaseNarrative"})["types"]:
         if ".Narrative" in n:
             old_ver = n.split("-")[-1]
 
-    with open(narrative_spec_file, "r") as f:
+    with open(narrative_spec_file) as f:
         spec = f.read()
     ws.register_typespec({"spec": spec, "dryrun": 0, "new_types": []})
     ws.release_module("KBaseNarrative")
-    for n in ws.get_module_info({"mod": "KBaseNarrative"})["types"].keys():
+    for n in ws.get_module_info({"mod": "KBaseNarrative"})["types"]:
         if ".Narrative" in n:
             new_ver = n.split("-")[-1]
     return {"old_ver": old_ver, "new_ver": new_ver}
 
 
 def load_narrative_test_data(ws, vers):
-    """
-    Loads the test data set into mini kb ws.
+    """Loads the test data set into mini kb ws.
     Returns this structure:
     wsid: {
         narrative_id: int
@@ -105,36 +100,28 @@ def load_narrative_test_data(ws, vers):
 
     there's more than 1 wsid (should be ~7-10), but that's it.
     """
-    with open(test_narrative_data, "r") as f:
+    with open(test_narrative_data) as f:
         test_data = json.loads(f.read().strip())
 
-    uploaded_data = list()
+    uploaded_data = []
     for ws_data in test_data["old"]:
-        uploaded_data.append(
-            _load_workspace_data(ws, ws_data, len(uploaded_data), vers["old_ver"])
-        )
+        uploaded_data.append(_load_workspace_data(ws, ws_data, len(uploaded_data), vers["old_ver"]))
     for ws_data in test_data["new"]:
-        uploaded_data.append(
-            _load_workspace_data(ws, ws_data, len(uploaded_data), vers["new_ver"])
-        )
+        uploaded_data.append(_load_workspace_data(ws, ws_data, len(uploaded_data), vers["new_ver"]))
     return uploaded_data
 
 
 def _load_workspace_data(ws, ws_data, idx, narrative_ver):
-    """
-    Loads up a single workspace with data and returns a dict about it.
+    """Loads up a single workspace with data and returns a dict about it.
     Dict contains:
     id = the workspace id
     perms = the workspace permissions
     correct_meta = the correct workspace metadata (for validation)
     """
-
     print(ws_data.keys())
     narratives = ws_data["narratives"]
     ws_meta = ws_data["ws_meta"]
-    ws_info = ws.create_workspace(
-        {"workspace": "NarrativeWS-{}-{}".format(idx, int(time() * 1000))}
-    )
+    ws_info = ws.create_workspace({"workspace": f"NarrativeWS-{idx}-{int(time() * 1000)}"})
     ws_id = ws_info[0]
     info = {
         "ws_id": ws_id,
@@ -152,9 +139,9 @@ def _load_workspace_data(ws, ws_data, idx, narrative_ver):
                     "id": ws_id,
                     "objects": [
                         {
-                            "type": "KBaseNarrative.Narrative-{}".format(narrative_ver),
+                            "type": f"KBaseNarrative.Narrative-{narrative_ver}",
                             "data": nar,
-                            "name": "Narrative-{}".format(idx),
+                            "name": f"Narrative-{idx}",
                         }
                     ],
                 }
@@ -167,9 +154,7 @@ def _load_workspace_data(ws, ws_data, idx, narrative_ver):
         perms = ws_data["perms"]
         if len(perms) > 1:
             admin_perm = perms["wsadmin"]
-            ws.set_permissions(
-                {"id": ws_id, "new_permission": admin_perm, "users": ["wsadmin"]}
-            )
+            ws.set_permissions({"id": ws_id, "new_permission": admin_perm, "users": ["wsadmin"]})
     return info
 
 

@@ -46,9 +46,7 @@ class Catalog:
         Get the version of the deployed catalog service endpoint.
         :returns: instance of String
         """
-        return self._client.call_method(
-            "Catalog.version", [], self._service_ver, context
-        )
+        return self._client.call_method("Catalog.version", [], self._service_ver, context)
 
     def is_registered(self, params, context=None):
         """
@@ -734,9 +732,7 @@ class Catalog:
            "error_message" of String, parameter "module_name_lc" of String,
            parameter "git_url" of String
         """
-        return self._client.call_method(
-            "Catalog.list_builds", [params], self._service_ver, context
-        )
+        return self._client.call_method("Catalog.list_builds", [params], self._service_ver, context)
 
     def delete_module(self, params, context=None):
         """
@@ -1019,6 +1015,4 @@ class Catalog:
         :param username: instance of String
         :returns: instance of type "boolean" (@range [0,1])
         """
-        return self._client.call_method(
-            "Catalog.is_admin", [username], self._service_ver, context
-        )
+        return self._client.call_method("Catalog.is_admin", [username], self._service_ver, context)

@@ -22,8 +22,7 @@ _URL_SCHEME = frozenset(["http", "https"])
 def _get_token(
     user_id,
     password,
-    auth_svc="https://nexus.api.globusonline.org/goauth/token?"
-    + "grant_type=client_credentials",
+    auth_svc="https://nexus.api.globusonline.org/goauth/token?" + "grant_type=client_credentials",
 ):
     # This is bandaid helper function until we get a full
     # KBase python auth client released
@@ -35,8 +34,7 @@ def _get_token(
         tok = _json.loads(ret.text)
     elif status == 403:
         raise Exception(
-            "Authentication failed: Bad user_id/password "
-            + "combination for user %s" % (user_id)
+            "Authentication failed: Bad user_id/password " + "combination for user %s" % (user_id)
         )
     else:
         raise Exception(ret.text)
@@ -70,7 +68,7 @@ def _read_rcfile(file=_os.environ["HOME"] + "/.authrc"):  # @ReservedAssignment
 def _read_inifile(
     file=_os.environ.get(  # @ReservedAssignment
         "KB_DEPLOYMENT_CONFIG", _os.environ["HOME"] + "/.kbase_config"
-    )
+    ),
 ):
     # Another bandaid to read in the ~/.kbase_config file if one is present
     authdata = None
@@ -106,9 +104,7 @@ class ServerError(Exception):
         # data = JSON RPC 2.0, error = 1.1
 
     def __str__(self):
-        return (
-            self.name + ": " + str(self.code) + ". " + self.message + "\n" + self.data
-        )
+        return self.name + ": " + str(self.code) + ". " + self.message + "\n" + self.data
 
 
 class _JSONObjectEncoder(_json.JSONEncoder):
@@ -156,10 +152,7 @@ class Client:
             if authdata is not None:
                 if authdata.get("token") is not None:
                     self._headers["AUTHORIZATION"] = authdata["token"]
-                elif (
-                    authdata.get("user_id") is not None
-                    and authdata.get("password") is not None
-                ):
+                elif authdata.get("user_id") is not None and authdata.get("password") is not None:
                     self._headers["AUTHORIZATION"] = _get_token(
                         authdata["user_id"], authdata["password"]
                     )
@@ -203,9 +196,7 @@ class Client:
             raise ServerError("Unknown", 0, "An unknown server error occurred")
         return resp["result"]
 
-    def sync_call(
-        self, service_method, param_list, service_version=None, json_rpc_context=None
-    ):
+    def sync_call(self, service_method, param_list, service_version=None, json_rpc_context=None):
         if json_rpc_context and not isinstance(json_rpc_context, dict):
             raise ValueError(
                 "Method send_data: argument json_rpc_context is not type dict as required."

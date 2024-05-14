@@ -1,11 +1,9 @@
-from requests.exceptions import HTTPError
-
 from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from requests.exceptions import HTTPError
 
 
 class JobRequestException(ValueError):
-    """
-    Raised when a job request is invalid in some way; for example,
+    """Raised when a job request is invalid in some way; for example,
     if the required parameter(s) are empty (e.g. job_id or batch_id),
     if a job ID is not registered in JobManager._running_jobs, or
     it is not a batch ID as intended.
@@ -31,8 +29,7 @@ class NarrativeException(Exception):
 
 
 def transform_job_exception(e, error=None):
-    """
-    Transforms a job exception from one of several forms into
+    """Transforms a job exception from one of several forms into
     something more obvious and manageable.
 
     Assigns a standard HTTP error code, regardless of error (500 if nothing else).
@@ -48,7 +45,7 @@ def transform_job_exception(e, error=None):
     """
     if isinstance(e, EEServerError):
         return NarrativeException(e.code, e.message, e.name, "ee2", error)
-    elif isinstance(e, HTTPError):
+    if isinstance(e, HTTPError):
         code = e.response.status_code
         if code == 404 or code == 502 or code == 503:
             # service not found
@@ -61,8 +58,5 @@ def transform_job_exception(e, error=None):
             msg = "An internal error occurred in the KBase service."
         else:
             msg = "An untracked error occurred."
-        return NarrativeException(
-            e.response.status_code, msg, "HTTPError", "network", error
-        )
-    else:
-        return NarrativeException(-1, str(e), "Exception", "unknown", error)
+        return NarrativeException(e.response.status_code, msg, "HTTPError", "network", error)
+    return NarrativeException(-1, str(e), "Exception", "unknown", error)

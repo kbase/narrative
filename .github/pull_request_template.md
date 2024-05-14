@@ -24,7 +24,7 @@ Related Jira ticket: https://kbase-jira.atlassian.net/browse/DATAUP-X
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] (JavaScript) I have run Prettier and ESLint on changed code manually or with a git precommit hook
-- [ ] (Python) I have run Black and Flake8 on changed Python code manually or with a git precommit hook
+- [ ] (Python) I have run Ruff `format` and `check` on changed Python code manually or with a git precommit hook
 - [ ] Any dependent changes have been merged and published in downstream modules
 
 # Updating Version and Release Notes (if applicable)

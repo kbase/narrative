@@ -126,16 +126,19 @@
         "defaults"
     ],
     "scripts": {
-        "black": "black -v .",
-        "black_files": "black -v ",
+        "py-format": "ruff format .",
+        "py-format-files": "ruff format ",
+        "py-lint": "ruff check .",
+        "py-lint-files": "ruff check ",
+        "py-lint-files-exit-zero": "ruff check --exit-zero ",
+        "py-lint-fix": "ruff check --fix .",
+        "py-lint-fix-files": "ruff check --fix ",
         "compile_css_no_postcss": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/",
         "compile_css": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat",
         "compile_css_files": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat && git add kbase-extension/static/kbase/css/all_concat.* && echo integrating scss changes from ",
         "eslint": "eslint --fix '**/*.js'",
         "eslint-check": "eslint '**/*.js'",
         "eslint-pre-push": "scripts/eslint-pre-push.sh",
-        "flake8": "flake8 .",
-        "flake8_files": "flake8",
         "headless": "kbase-narrative --no-browser --ServerApp.allow_origin='*' --ip=127.0.0.1 --port=32323",
         "husky_msg": "echo Running git hooks -- see the 'lint-staged' section of package.json for details",
         "install-npm": "node scripts/install-npm.js",
@@ -166,9 +169,8 @@
             "npx prettier --ignore-unknown --write"
         ],
         "*.py": [
-            "npm run isort_files",
-            "npm run black_files",
-            "npm run flake8_files"
+            "npm run py-format-files",
+            "npm run py-lint-files-exit-zero"
         ],
         "*.{scss,css,css.map}": [
             "npm run compile_css_files"

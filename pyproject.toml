@@ -77,8 +77,6 @@ ignore = [
     "E501",
     "ISC001",
     "S101",
-    "ANN",
-    "D",
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.

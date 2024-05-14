@@ -14,6 +14,7 @@ the `--force` argument.
 import copy
 import os.path
 import sys
+from typing import Any
 
 from biokbase.narrative.app_util import app_version_tags
 from biokbase.narrative.jobs.job import (
@@ -43,19 +44,19 @@ for tag in app_version_tags:
     TEST_SPECS[tag] = spec_dict
 
 
-def get_test_spec(tag: str, app_id: str) -> dict[str, dict]:
+def get_test_spec(tag: str, app_id: str) -> dict[str, dict[str, Any]]:
     return copy.deepcopy(TEST_SPECS[tag][app_id])
 
 
 def generate_mappings(
-    all_jobs: dict[str, dict]
-) -> tuple[dict[str, str], dict[str, dict], set[dict]]:
+    all_jobs: dict[str, dict[str, Any]],
+) -> tuple[dict[str, str], dict[str, dict[str, Any]], set[dict[str, Any]]]:
     # collect retried jobs and generate the cell-to-job mapping
     retried_jobs = {}
     jobs_by_cell_id = {}
     batch_jobs = set()
     for job in all_jobs.values():
-        if "batch_job" in job and job["batch_job"]:
+        if job.get("batch_job"):
             batch_jobs.add(job["job_id"])
         # save the first retry ID with the retried job
         if "retry_ids" in job and len(job["retry_ids"]) > 0:
@@ -75,7 +76,7 @@ def generate_mappings(
     return (retried_jobs, jobs_by_cell_id, batch_jobs)
 
 
-def _generate_job_output(job_id: str) -> dict[str, str | dict]:
+def _generate_job_output(job_id: str) -> dict[str, Any]:
     state = get_test_job(job_id)
     widget_info = state.get("widget_info")
 
@@ -101,14 +102,16 @@ def _generate_job_output(job_id: str) -> dict[str, str | dict]:
     return {"job_id": job_id, "jobState": state, "outputWidgetInfo": widget_info}
 
 
-def generate_bad_jobs() -> dict[str, dict]:
+def generate_bad_jobs() -> dict[str, dict[str, Any]]:
     return {
         job_id: {"job_id": job_id, "error": generate_error(job_id, "not_found")}
         for job_id in BAD_JOBS
     }
 
 
-def generate_job_output_state(all_jobs: dict[str, dict]) -> dict[str, dict]:
+def generate_job_output_state(
+    all_jobs: dict[str, dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
     """
     Generate the expected output from a `job_status` request
     """
@@ -118,7 +121,7 @@ def generate_job_output_state(all_jobs: dict[str, dict]) -> dict[str, dict]:
     return job_status
 
 
-def generate_job_info(all_jobs: dict[str, dict]) -> dict[str, dict]:
+def generate_job_info(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """
     Expected output from a `job_info` request
     """
@@ -153,8 +156,8 @@ def generate_job_info(all_jobs: dict[str, dict]) -> dict[str, dict]:
 
 
 def generate_job_retries(
-    all_jobs: dict[str, dict], retried_jobs: dict[str, str]
-) -> dict[str, dict]:
+    all_jobs: dict[str, dict[str, Any]], retried_jobs: dict[str, str]
+) -> dict[str, dict[str, Any]]:
     """
     Expected output from a `retry_job` request
     """
@@ -186,7 +189,7 @@ def log_gen(n_lines: int) -> list[dict[str, int | str]]:
     return [{"is_error": 0, "line": f"This is line {i+1}"} for i in range(n_lines)]
 
 
-def generate_job_logs(all_jobs: dict[str, dict]) -> dict[str, dict]:
+def generate_job_logs(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """
     Expected output from a `job_logs` request. Note that only completed jobs have logs in this case.
     """

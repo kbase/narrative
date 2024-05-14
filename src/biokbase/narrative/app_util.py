@@ -1,6 +1,8 @@
+"""App-related utility functions."""
+
 import json
 import re
-from typing import Any, Optional
+from typing import Any
 
 from biokbase.narrative import clients, upa
 from biokbase.narrative.system import system_variable
@@ -12,7 +14,7 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 app_version_tags = ["release", "beta", "dev"]
 
 
-def check_tag(tag, raise_exception=False):
+def check_tag(tag, raise_exception: bool = False):
     """
     Checks if the given tag is one of "release", "beta", or "dev".
     Returns a boolean.
@@ -87,12 +89,14 @@ def map_inputs_from_job(job_inputs, app_spec):
 
 
 def _untransform(transform_type, value):
-    if transform_type in ["ref", "putative-ref", "unresolved-ref"] and isinstance(value, str):
+    if transform_type in ["ref", "putative-ref", "unresolved-ref"] and isinstance(
+        value, str
+    ):
         # shear off everything before the first '/' - there should just be one.
         slash = value.find("/")
         if slash == -1:
             return value
-        return value[(slash+1):]  # noqa:E203
+        return value[(slash + 1) :]  # noqa:E203
     return value
 
 
@@ -346,29 +350,25 @@ def validate_parameters(app_id, tag, spec_params, params):
     )
 
     # First, test for presence.
-    missing_params = []
-    for p in spec_params:
-        if not p["optional"] and not p["default"] and not params.get(p["id"], None):
-            missing_params.append(p["id"])
+    missing_params = [
+        p["id"]
+        for p in spec_params
+        if not p["optional"] and not p["default"] and not params.get(p["id"], None)
+    ]
     if len(missing_params):
         msg = (
-            "Missing required parameters {} - try executing app_usage("
-            '"{}", tag="{}") for more information'
+            f"Missing required parameters {json.dumps(missing_params)} - try executing app_usage("
+            f'"{app_id}", tag="{tag}") for more information'
         )
-        msg = msg.format(json.dumps(missing_params), app_id, tag)
         raise ValueError(msg)
 
     # Next, test for extra params that don't make sense
-    extra_params = []
-    for p in params.keys():
-        if p not in spec_param_ids:
-            extra_params.append(p)
+    extra_params = [p for p in params if p not in spec_param_ids]
     if len(extra_params):
         msg = (
-            "Unknown parameters {} - maybe something was misspelled?\n"
-            'execute app_usage("{}", tag="{}") for more information'
+            f"Unknown parameters {json.dumps(extra_params)} - maybe something was misspelled?\n"
+            f'execute app_usage("{app_id}", tag="{tag}") for more information'
         )
-        msg = msg.format(json.dumps(extra_params), app_id, tag)
         raise ValueError(msg)
 
     # Now, validate parameter values.
@@ -379,9 +379,8 @@ def validate_parameters(app_id, tag, spec_params, params):
     if workspace is None or ws_id is None:
         msg = (
             "Unable to retrive current Narrative workspace "
-            "information! workspace={}, workspace_id={}"
+            f"information! workspace={workspace}, workspace_id={ws_id}"
         )
-        msg = msg.format(workspace, ws_id)
         raise ValueError(msg)
 
     param_errors = []
@@ -394,28 +393,24 @@ def validate_parameters(app_id, tag, spec_params, params):
                 p, params[p["id"]], workspace, all_params=params_dict
             )
             if err is not None:
-                param_errors.append("{} - {}".format(p["id"], err))
+                param_errors.append(f"{p['id']} - {err}")
             if wsref is not None:
                 if isinstance(wsref, list):
-                    for ref in wsref:
-                        if ref is not None:
-                            ws_input_refs.append(ref)
+                    ws_input_refs = [ref for ref in wsref if ref is not None]
                 else:
                     ws_input_refs.append(wsref)
     if len(param_errors):
-        raise ValueError(
-            "Parameter value errors found!\n{}".format("\n".join(param_errors))
-        )
+        err_msg = "Parameter value errors found!\n" + "\n".join(param_errors)
+        raise ValueError(err_msg)
 
     # Hooray, parameters are validated. Set them up for transfer.
     for p in spec_params:
         # If any param is a checkbox, need to map from boolean to actual
         # expected value in p['checkbox_map']
         # note that True = 0th elem, False = 1st
-        if p["type"] == "checkbox":
-            if p["id"] in params:
-                checkbox_idx = 0 if params[p["id"]] else 1
-                params[p["id"]] = p["checkbox_map"][checkbox_idx]
+        if p["type"] == "checkbox" and p["id"] in params:
+            checkbox_idx = 0 if params[p["id"]] else 1
+            params[p["id"]] = p["checkbox_map"][checkbox_idx]
         # While we're at it, set the default values for any
         # unset parameters that have them
         if p.get("default", "") and p["id"] not in params:
@@ -424,7 +419,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     return (params, ws_input_refs)
 
 
-def check_parameter(param, value, workspace, all_params: Optional[dict] = None):
+def check_parameter(param, value, workspace, all_params: dict[str, Any] | None = None):
     """
     Checks if the given value matches the rules provided in the param dict.
     If yes, returns None
@@ -468,8 +463,7 @@ def check_parameter(param, value, workspace, all_params: Optional[dict] = None):
                     ws_refs.append(ref)
         if len(error_list):
             return (None, "\n\t".join(error_list))
-        else:
-            return (ws_refs, None)
+        return (ws_refs, None)
     return validate_param_value(param, value, workspace)
 
 
@@ -482,12 +476,10 @@ def validate_group_values(param, value, workspace, spec_params):
 
     for param_id in value:
         if param_id not in spec_params:
-            err.append('Unknown parameter id "{}" in parameter group'.format(param_id))
+            err.append(f'Unknown parameter id "{param_id}" in parameter group')
             continue
         if param_id not in param.get("parameter_ids", []):
-            err.append(
-                'Unmappable parameter id "{}" in parameter group'.format(param_id)
-            )
+            err.append(f'Unmappable parameter id "{param_id}" in parameter group')
             continue
         (param_ref, param_err) = validate_param_value(
             spec_params[param_id], value[param_id], workspace
@@ -538,9 +530,9 @@ def validate_param_value(param, value, workspace):
         isinstance(value, list) or isinstance(value, dict)
     ):
         return (ws_ref, "a parameter group must be of type list or dict")
-    elif param["type"] == "mapping" and not isinstance(value, dict):
+    if param["type"] == "mapping" and not isinstance(value, dict):
         return (ws_ref, "a parameter of type 'mapping' must be a dict")
-    elif param["type"] == "textsubdata" and not (
+    if param["type"] == "textsubdata" and not (
         isinstance(value, str) or isinstance(value, list)
     ):
         return (
@@ -548,7 +540,7 @@ def validate_param_value(param, value, workspace):
             "input value not supported for 'textsubdata' type - "
             "only str or list is supported",
         )
-    elif param["type"] == "custom_textsubdata" and not (
+    if param["type"] == "custom_textsubdata" and not (
         isinstance(value, str) or isinstance(value, list)
     ):
         return (
@@ -556,7 +548,7 @@ def validate_param_value(param, value, workspace):
             "input value not supported for 'custom_textsubdata' type - "
             "only str or list is supported",
         )
-    elif param["type"] not in [
+    if param["type"] not in [
         "group",
         "mapping",
         "textsubdata",
@@ -575,11 +567,9 @@ def validate_param_value(param, value, workspace):
     # check types. str is pretty much anything (it'll just get
     # casted), but ints, floats, or lists are funky.
     if param["type"] == "int" and not isinstance(value, int):
-        return (ws_ref, "Given value {} is not an int".format(value))
-    elif param["type"] == "float" and not (
-        isinstance(value, float) or isinstance(value, int)
-    ):
-        return (ws_ref, "Given value {} is not a number".format(value))
+        return (ws_ref, f"Given value {value} is not an int")
+    if param["type"] == "float" and not (isinstance(value, float | int)):
+        return (ws_ref, f"Given value {value} is not a number")
 
     # if it's expecting a workspace object, check if that's present,
     # and a valid type
@@ -597,43 +587,40 @@ def validate_param_value(param, value, workspace):
                         return (
                             ws_ref,
                             (
-                                "Data reference named {} does not "
+                                f"Data reference named {value} does not "
                                 + "have the right format - should be "
                                 + "workspace/object/version(optional)"
-                            ).format(value),
+                            ),
                         )
                 info = clients.get("workspace").get_object_info_new(
                     {"objects": [{"ref": value}]}
                 )[0]
-                path_items[len(path_items) - 1] = "{}/{}/{}".format(
-                    info[6], info[0], info[4]
-                )
+                path_items[len(path_items) - 1] = f"{info[6]}/{info[0]}/{info[4]}"
                 ws_ref = ";".join(path_items)
             # Otherwise, assume it's a name, not a reference.
             else:
                 info = clients.get("workspace").get_object_info_new(
                     {"objects": [{"workspace": workspace, "name": value}]}
                 )[0]
-                ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
+                ws_ref = f"{info[6]}/{info[0]}/{info[4]}"
             type_ok = False
             for t in param["allowed_types"]:
                 if re.match(t, info[2]):
                     type_ok = True
             if not type_ok:
-                msg = "Type of data object, {}, " "does not match allowed types"
-                return (ws_ref, msg.format(info[2]))
+                msg = f"Type of data object, {info[2]}, does not match allowed types"
+                return (ws_ref, msg)
         except Exception as e:
             print(e)
-            msg = "Data object named {} not found with this Narrative."
-            return (ws_ref, msg.format(value))
+            msg = f"Data object named {value} not found with this Narrative."
+            return (ws_ref, msg)
 
     # if it expects a set of allowed values, check if this one matches
-    if "allowed_values" in param:
-        if value not in param["allowed_values"]:
-            return (
-                ws_ref,
-                "Given value '{}' is not permitted" "in the allowed set.".format(value),
-            )
+    if "allowed_values" in param and value not in param["allowed_values"]:
+        return (
+            ws_ref,
+            f"Given value '{value}' is not permitted in the allowed set.",
+        )
 
     # if it expects a numerical value in a certain range, check that.
     if "max_val" in param:
@@ -641,20 +628,20 @@ def validate_param_value(param, value, workspace):
             if float(value) > param["max_val"]:
                 return (
                     ws_ref,
-                    "Given value {} should be <= {}".format(value, param["max_val"]),
+                    f"Given value {value} should be <= {param['max_val']}",
                 )
         except BaseException:
-            return (ws_ref, "Given value {} must be a number".format(value))
+            return (ws_ref, f"Given value {value} must be a number")
 
     if "min_val" in param:
         try:
             if float(value) < param["min_val"]:
                 return (
                     ws_ref,
-                    "Given value {} should be >= {}".format(value, param["min_val"]),
+                    f"Given value {value} should be >= {param['min_val']}",
                 )
         except BaseException:
-            return (ws_ref, "Given value {} must be a number".format(value))
+            return (ws_ref, f"Given value {value} must be a number")
 
     # if it's an output object, make sure it follows the data object rules.
     if param.get("is_output", False):
@@ -692,14 +679,14 @@ def resolve_single_ref(workspace, value):
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"ref": value}]}
         )[0]
-        path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
+        path_items[len(path_items) - 1] = f"{info[6]}/{info[0]}/{info[4]}"
         ret = ";".join(path_items)
     # Otherwise, assume it's a name, not a reference.
     else:
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"workspace": workspace, "name": value}]}
         )[0]
-        ret = "{}/{}/{}".format(info[6], info[0], info[4])
+        ret = f"{info[6]}/{info[0]}/{info[4]}"
     return ret
 
 
@@ -726,7 +713,7 @@ def resolve_ref_if_typed(value, spec_param):
 
 
 def transform_param_value(
-    transform_type: Optional[str], value: Any, spec_param: Optional[dict]
+    transform_type: str | None, value: Any, spec_param: dict[str, Any] | None
 ) -> Any:
     """
     Transforms an input according to the rules given in
@@ -839,13 +826,11 @@ def transform_param_value(
             return [transform_param_value(list_type, v, None) for v in value]
         return [transform_param_value(list_type, value, None)]
 
-    else:
-        raise ValueError("Unsupported Transformation type: " + transform_type)
+    err_msg = f"Unsupported Transformation type: {transform_type}"
+    raise ValueError(err_msg)
 
 
-def transform_object_value(
-    transform_type: Optional[str], value: Optional[str]
-) -> Optional[str]:
+def transform_object_value(transform_type: str | None, value: str | None) -> str | None:
     """
     Cases:
     transform = ref, unresolved-ref, or putative-ref:

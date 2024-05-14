@@ -3,7 +3,7 @@ REPO_NAME = narrative
 
 # Installer script
 INSTALLER = ./scripts/install_narrative.sh
-BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
+BACKEND_TEST_SCRIPT = scripts/run_backend_tests.sh
 FRONTEND_TEST_DIR = test
 
 # Docker build script

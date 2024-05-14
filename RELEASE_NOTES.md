@@ -25,19 +25,27 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
-  - black: 23.7.0 -> 24.1.1
-  - coverage: 7.3.1 -> 7.4.1
-  - cryptography: 41.0.4 -> 42.0.2
+  - black: 23.7.0 -> 24.4.2
+  - coverage: 7.3.1 -> 7.5.0
+  - cryptography: 41.0.4 -> 42.0.5
   - flake8: 6.1.0 -> 7.0.0
   - idna: 3.4 -> 3.6
   - isort: 5.12.0 -> 5.13.2
+  - ipython: 8.10.0 -> 8.24.0
   - jinja2: 3.1.2 -> 3.1.3
   - markupsafe: 2.1.3 -> 2.1.4
+  - pillow: 9.4.0 -> 10.3.0
   - pygments: 2.16.1 -> 2.17.2
-  - pymongo: 4.5.0 -> 4.6.1
+  - pymongo: 4.5.0 -> 4.7.0
   - pyopenssl: 23.2.0 -> 24.0.0
-  - pytest: 7.4.0 -> 8.0.0
+  - pytest: 7.4.0 -> 8.2.0
+  - pytest-cov: 4.1.0 -> 5.0.0
+  - pytest-recording: 0.13.1 (new)
+  - requests-mock: 1.11.0 -> 1.12.1
+  - ruff: 0.4.2 (new)
+  - scikit-learn: 1.2.1 -> 1.4.2
   - terminado: 0.17.1 -> 0.18.0
+  - tornado: 6.2 -> 6.4
   - vcrpy: 5.1.0 -> 6.0.1
 
 

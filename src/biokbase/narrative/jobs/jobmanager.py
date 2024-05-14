@@ -2,6 +2,9 @@ import copy
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from IPython.display import HTML
+from jinja2 import Template
+
 from biokbase.narrative import clients
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import (
@@ -9,8 +12,6 @@ from biokbase.narrative.exception_util import (
     transform_job_exception,
 )
 from biokbase.narrative.system import system_variable
-from IPython.display import HTML
-from jinja2 import Template
 
 from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
 
@@ -59,7 +60,7 @@ class JobManager:
         return JobManager.__instance
 
     @staticmethod
-    def _reorder_parents_children(states: dict) -> dict:
+    def _reorder_parents_children(states: dict[str, Any]) -> dict[str, Any]:
         ordering = []
         for job_id, state in states.items():
             if state.get("batch_job"):
@@ -185,7 +186,7 @@ class JobManager:
 
             self.register_new_job(job, refresh)
 
-    def _create_jobs(self: "JobManager", job_ids: list[str]) -> dict:
+    def _create_jobs(self: "JobManager", job_ids: list[str]) -> dict[str, Any]:
         """
         Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary.
         TODO: error handling
@@ -354,7 +355,7 @@ class JobManager:
 
     def get_all_job_states(
         self: "JobManager", ignore_refresh_flag: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Fetches states for all running jobs.
         If ignore_refresh_flag is True, then returns states for all jobs this
@@ -397,9 +398,11 @@ class JobManager:
             raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
-            cell_id: self._jobs_by_cell_id[cell_id]
-            if cell_id in self._jobs_by_cell_id
-            else set()
+            cell_id: (
+                self._jobs_by_cell_id[cell_id]
+                if cell_id in self._jobs_by_cell_id
+                else set()
+            )
             for cell_id in cell_id_list
         }
         # union of all the job_ids in the cell_to_job_mapping
@@ -408,7 +411,7 @@ class JobManager:
 
     def get_job_states_by_cell_id(
         self: "JobManager", cell_id_list: list[str] | None = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Retrieves the job states for jobs associated with the cell_id_list supplied.
 
@@ -429,7 +432,7 @@ class JobManager:
 
         return {"jobs": job_states, "mapping": cell_to_job_mapping}
 
-    def get_job_info(self: "JobManager", job_ids: list[str]) -> dict:
+    def get_job_info(self: "JobManager", job_ids: list[str]) -> dict[str, Any]:
         """
         Gets job information for a list of job IDs.
 
@@ -473,7 +476,7 @@ class JobManager:
         first_line: int = 0,
         num_lines: int | None = None,
         latest: bool = False,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Retrieves job logs for the job ID supplied.
 
@@ -556,7 +559,7 @@ class JobManager:
         first_line: int = 0,
         num_lines: int | None = None,
         latest: bool = False,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Fetch the logs for a list of jobs. Note that the parameters supplied are applied to all jobs.
 
@@ -586,7 +589,7 @@ class JobManager:
 
         return self.add_errors_to_results(output, error_ids)
 
-    def cancel_jobs(self: "JobManager", job_id_list: list[str]) -> dict:
+    def cancel_jobs(self: "JobManager", job_id_list: list[str]) -> dict[str, Any]:
         """
         Cancel a list of jobs and return their new state. After sending the cancellation
         request, the job states are refreshed and their new output states returned.
@@ -649,7 +652,7 @@ class JobManager:
         del self._running_jobs[job_id]["canceling"]
         return error
 
-    def retry_jobs(self: "JobManager", job_id_list: list[str]) -> dict:
+    def retry_jobs(self: "JobManager", job_id_list: list[str]) -> dict[str, Any]:
         """
         Retry a list of job IDs, returning job output states for the jobs to be retried
         and the new jobs created by the retry command.
@@ -724,7 +727,7 @@ class JobManager:
 
     def add_errors_to_results(
         self: "JobManager", results: dict, error_ids: list[str]
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Add the generic "not found" error for each job_id in error_ids.
 
@@ -788,7 +791,7 @@ class JobManager:
 
         return [batch_id] + child_ids
 
-    def list_jobs(self):
+    def list_jobs(self: "JobManager") -> HTML | str:
         """
         List all job ids, their info, and status in a quick HTML format.
         """

@@ -431,7 +431,7 @@ class Job:
                             "Unable to generate App output viewer!\nThe App appears to have "
                             "completed successfully,\nbut we cannot construct its output "
                             "viewer.\nPlease contact https://kbase.us/support for assistance."
-                        )
+                        ),
                     },
                 }
 
@@ -518,7 +518,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line:first_line+num_lines],  # noqa:E203
+            self._job_logs[first_line : first_line + num_lines],  # noqa:E203
         )
 
     def _update_log(self: "Job") -> None:

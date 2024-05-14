@@ -62,7 +62,7 @@
         "postcss-discard-comments": "6.0.0",
         "postcss-scss": "^4.0.6",
         "postcss-unprefix": "^2.1.4",
-        "prettier": "3.2.4",
+        "prettier": "3.2.5",
         "puppeteer": "22.6.1",
         "requirejs": "2.3.6",
         "sass": "1.63.6",

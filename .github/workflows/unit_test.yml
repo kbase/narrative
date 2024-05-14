@@ -7,6 +7,8 @@ on:
         required: true
       GHCR_TOKEN:
         required: true
+      CODECOV_TOKEN:
+        required: true
 
 jobs:
   run_unit_tests:
@@ -74,7 +76,7 @@ jobs:
     -
       name: Send to Codecov
       id: send_to_codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

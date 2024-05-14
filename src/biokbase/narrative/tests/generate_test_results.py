@@ -1,5 +1,4 @@
-"""
-generate_test_results.py is used to generate the job message data that the narrative
+"""generate_test_results.py is used to generate the job message data that the narrative
 backend produces and that the frontend consumes. It uses data from
 `ee2_job_test_data_file` and `app_specs_file` and provides expected narrative backend
 message data, as well as a number of mappings that are used in python tests.
@@ -82,9 +81,7 @@ def _generate_job_output(job_id: str) -> dict[str, Any]:
 
     state.update(
         {
-            "batch_id": state.get(
-                "batch_id", job_id if state.get("batch_job", False) else None
-            ),
+            "batch_id": state.get("batch_id", job_id if state.get("batch_job", False) else None),
             "job_output": state.get("job_output", {}),
             "child_jobs": state.get("child_jobs", []),
         }
@@ -109,12 +106,8 @@ def generate_bad_jobs() -> dict[str, dict[str, Any]]:
     }
 
 
-def generate_job_output_state(
-    all_jobs: dict[str, dict[str, Any]]
-) -> dict[str, dict[str, Any]]:
-    """
-    Generate the expected output from a `job_status` request
-    """
+def generate_job_output_state(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Generate the expected output from a `job_status` request"""
     job_status = generate_bad_jobs()
     for job_id in all_jobs:
         job_status[job_id] = _generate_job_output(job_id)
@@ -122,28 +115,16 @@ def generate_job_output_state(
 
 
 def generate_job_info(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """
-    Expected output from a `job_info` request
-    """
+    """Expected output from a `job_info` request"""
     job_info = generate_bad_jobs()
     for job_id in all_jobs:
         test_job = get_test_job(job_id)
         app_id = test_job.get("job_input", {}).get("app_id")
-        tag = (
-            test_job.get("job_input", {})
-            .get("narrative_cell_info", {})
-            .get("tag", "release")
-        )
-        params = test_job.get("job_input", {}).get(
-            "params", JOB_ATTR_DEFAULTS["params"]
-        )
+        tag = test_job.get("job_input", {}).get("narrative_cell_info", {}).get("tag", "release")
+        params = test_job.get("job_input", {}).get("params", JOB_ATTR_DEFAULTS["params"])
         batch_job = test_job.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
         app_name = "batch" if batch_job else get_test_spec(tag, app_id)["info"]["name"]
-        batch_id = (
-            job_id
-            if batch_job
-            else test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
-        )
+        batch_id = job_id if batch_job else test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
 
         job_info[job_id] = {
             "app_id": app_id,
@@ -158,9 +139,7 @@ def generate_job_info(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str
 def generate_job_retries(
     all_jobs: dict[str, dict[str, Any]], retried_jobs: dict[str, str]
 ) -> dict[str, dict[str, Any]]:
-    """
-    Expected output from a `retry_job` request
-    """
+    """Expected output from a `retry_job` request"""
     job_retries = generate_bad_jobs()
     for job_id in all_jobs:
         if job_id in retried_jobs:
@@ -190,9 +169,7 @@ def log_gen(n_lines: int) -> list[dict[str, int | str]]:
 
 
 def generate_job_logs(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """
-    Expected output from a `job_logs` request. Note that only completed jobs have logs in this case.
-    """
+    """Expected output from a `job_logs` request. Note that only completed jobs have logs in this case."""
     job_logs = generate_bad_jobs()
     for job_id in all_jobs:
         test_job = get_test_job(job_id)

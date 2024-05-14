@@ -6,7 +6,6 @@ import re
 from unittest import mock
 
 import pytest
-
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
@@ -496,8 +495,7 @@ def test_transform_param_value_fail_all_types(
 
 class RefChainWorkspace:
     def get_object_info3(self, params):
-        """
-        Makes quite a few assumptions about input, as it's used for a specific test.
+        """Makes quite a few assumptions about input, as it's used for a specific test.
         1. params = {"objects": [{"ref": ref}, {"ref": ref}, ...]}
         2. ref is a ;-separated chain of either wsname/objid or upas, not a mix.
         3. we don't really care about names or object info here in responses

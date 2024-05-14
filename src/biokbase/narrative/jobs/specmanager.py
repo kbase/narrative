@@ -1,12 +1,12 @@
 """Code for managing app specs."""
+
 import json
 from typing import Any
 
-from IPython.display import HTML
-from jinja2 import Template
-
 from biokbase.narrative import clients
 from biokbase.narrative.app_util import app_param, app_version_tags, check_tag
+from IPython.display import HTML
+from jinja2 import Template
 
 
 class SpecManager:
@@ -24,9 +24,7 @@ class SpecManager:
             SpecManager.__instance.reload()
         return SpecManager.__instance
 
-    def get_spec(
-        self: "SpecManager", app_id: str, tag: str = "release"
-    ) -> dict[str, Any]:
+    def get_spec(self: "SpecManager", app_id: str, tag: str = "release") -> dict[str, Any]:
         """Fetch the specs for an app."""
         self.check_app(app_id, tag, raise_exception=True)
         return self.app_specs[tag][app_id]
@@ -114,9 +112,7 @@ class SpecManager:
         return HTML(
             Template(tmpl).render(
                 tag=tag,
-                apps=sorted(
-                    self.app_specs[tag].values(), key=lambda m: m["info"]["id"]
-                ),
+                apps=sorted(self.app_specs[tag].values(), key=lambda m: m["info"]["id"]),
             )
         )
 
@@ -207,9 +203,7 @@ class SpecManager:
             }
             params.append(p_info)
 
-        return sorted(
-            params, key=lambda p: (p.get("optional", False), p.get("is_output", False))
-        )
+        return sorted(params, key=lambda p: (p.get("optional", False), p.get("is_output", False)))
 
 
 class AppUsage:
@@ -288,19 +282,14 @@ class AppUsage:
         )
         for p in self.usage["params"]:
             if not p.get("is_constant", False):
-                p_def = "\n{}{} - {}".format(
-                    "*" if not p["optional"] else "", p["id"], p["type"]
-                )
+                p_def = "\n{}{} - {}".format("*" if not p["optional"] else "", p["id"], p["type"])
                 if "allowed_types" in p:
-                    p_def = (
-                        f"{p_def} - is a data object where the type is one of:"
-                        + json.dumps(p["allowed_types"])
+                    p_def = f"{p_def} - is a data object where the type is one of:" + json.dumps(
+                        p["allowed_types"]
                     )
                 # ??? indentation error?
                 if "allowed_values" in p:
-                    p_def = (
-                        f"{p_def} - must be one of {json.dumps(p['allowed_values'])}"
-                    )
+                    p_def = f"{p_def} - must be one of {json.dumps(p['allowed_values'])}"
                 s = s + p_def
 
         return s

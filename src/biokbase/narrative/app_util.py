@@ -15,23 +15,20 @@ app_version_tags = ["release", "beta", "dev"]
 
 
 def check_tag(tag, raise_exception: bool = False):
-    """
-    Checks if the given tag is one of "release", "beta", or "dev".
+    """Checks if the given tag is one of "release", "beta", or "dev".
     Returns a boolean.
     if raise_exception == True and the tag is bad, raises a ValueError
     """
     tag_exists = tag in app_version_tags
     if not tag_exists and raise_exception:
         raise ValueError(
-            "Can't find tag %s - allowed tags are %s"
-            % (tag, ", ".join(app_version_tags))
+            "Can't find tag %s - allowed tags are %s" % (tag, ", ".join(app_version_tags))
         )
     return tag_exists
 
 
 def map_inputs_from_job(job_inputs, app_spec):
-    """
-    Unmaps the actual list of job inputs back to the parameters specified by app_spec.
+    """Unmaps the actual list of job inputs back to the parameters specified by app_spec.
     For example, the inputs given to a method might be a list like this:
     ['input1', {'ws': 'my_workspace', 'foo': 'bar'}]
     and the input mapping looks like:
@@ -89,20 +86,17 @@ def map_inputs_from_job(job_inputs, app_spec):
 
 
 def _untransform(transform_type, value):
-    if transform_type in ["ref", "putative-ref", "unresolved-ref"] and isinstance(
-        value, str
-    ):
+    if transform_type in ["ref", "putative-ref", "unresolved-ref"] and isinstance(value, str):
         # shear off everything before the first '/' - there should just be one.
         slash = value.find("/")
         if slash == -1:
             return value
-        return value[(slash + 1) :]  # noqa:E203
+        return value[(slash + 1) :]
     return value
 
 
 def app_param(p):
-    """
-    TODO: create an AppParam class to hold and validate this
+    """TODO: create an AppParam class to hold and validate this
     TODO: create a Spec class to hold, validate, and process App Specs
     Converts a param dictionary from a NarrativeMethodStore param spec into this structure with
     a number of optional keys:
@@ -144,9 +138,7 @@ def app_param(p):
         p_info["allow_multiple"] = True
 
     if p_info["type"] == "dropdown":
-        p_info["allowed_values"] = [
-            opt["value"] for opt in p["dropdown_options"]["options"]
-        ]
+        p_info["allowed_values"] = [opt["value"] for opt in p["dropdown_options"]["options"]]
     if p_info["type"] == "checkbox":
         p_info["allowed_values"] = [True, False]
 
@@ -170,11 +162,7 @@ def app_param(p):
             p_info["is_output"] = opts["is_output_name"]
         if "valid_ws_types" in opts and len(opts["valid_ws_types"]) > 0:
             p_info["allowed_types"] = opts["valid_ws_types"]
-        if (
-            "validate_as" in opts
-            and p_info["type"] != "checkbox"
-            and p_info["type"] != "custom"
-        ):
+        if "validate_as" in opts and p_info["type"] != "checkbox" and p_info["type"] != "custom":
             p_info["type"] = opts["validate_as"]
         if "min_float" in opts:
             p_info["min_val"] = opts["min_float"]
@@ -190,8 +178,7 @@ def app_param(p):
 
 
 def map_outputs_from_state(state, params, app_spec):
-    """
-    Returns the dict of output values from a completed app.
+    """Returns the dict of output values from a completed app.
     Also returns the output widget.
     """
     if "behavior" not in app_spec:
@@ -225,9 +212,7 @@ def map_outputs_from_state(state, params, app_spec):
         spec_param = None
         if input_param_id:
             spec_param = spec_params.get(input_param_id)
-        value = transform_param_value(
-            out_param.get("target_type_transform"), value, spec_param
-        )
+        value = transform_param_value(out_param.get("target_type_transform"), value, spec_param)
 
         p_id = out_param.get("target_property", None)
         if p_id is not None:
@@ -235,9 +220,7 @@ def map_outputs_from_state(state, params, app_spec):
         else:
             widget_params = value
 
-    output_widget = app_spec.get("widgets", {}).get(
-        "output", "kbaseDefaultNarrativeOutput"
-    )
+    output_widget = app_spec.get("widgets", {}).get("output", "kbaseDefaultNarrativeOutput")
     # Yes, sometimes silly people put the string 'null' in their spec.
     if output_widget == "null":
         output_widget = "kbaseDefaultNarrativeOutput"
@@ -246,8 +229,7 @@ def map_outputs_from_state(state, params, app_spec):
 
 
 def get_result_sub_path(result, path):
-    """
-    Peels the right value out of the result with the given path.
+    """Peels the right value out of the result with the given path.
     result - list
         This is a list of objects - each object is either a singleton, list, or object.
     path - list
@@ -303,21 +285,16 @@ def get_result_sub_path(result, path):
 
 
 def extract_ws_refs(app_id, tag, spec_params, params):
-    """
-    Returns a list of workspace refs (xxx/yyy/zzz) from the given parameters,
+    """Returns a list of workspace refs (xxx/yyy/zzz) from the given parameters,
     if they are actual workspace objects.
     """
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict(
-        (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-    )
+    params_dict = dict((spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params)))
     workspace = system_variable("workspace")
     ws_input_refs = []
     for p in spec_params:
         if p["id"] in params:
-            (wsref, err) = check_parameter(
-                p, params[p["id"]], workspace, all_params=params_dict
-            )
+            (wsref, err) = check_parameter(p, params[p["id"]], workspace, all_params=params_dict)
             if wsref is not None:
                 if isinstance(wsref, list):
                     for ref in wsref:
@@ -329,8 +306,7 @@ def extract_ws_refs(app_id, tag, spec_params, params):
 
 
 def validate_parameters(app_id, tag, spec_params, params):
-    """
-    Validates the dict of params against the spec_params. If all is good,
+    """Validates the dict of params against the spec_params. If all is good,
     it updates a few parameters that need it - checkboxes go from
     True/False to 1/0, and sets default values where necessary.
     Then it returns a tuple like this:
@@ -345,9 +321,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     spec_param_ids = [p["id"] for p in spec_params]
 
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict(
-        (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-    )
+    params_dict = dict((spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params)))
 
     # First, test for presence.
     missing_params = [
@@ -389,9 +363,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     ws_input_refs = []
     for p in spec_params:
         if p["id"] in params:
-            (wsref, err) = check_parameter(
-                p, params[p["id"]], workspace, all_params=params_dict
-            )
+            (wsref, err) = check_parameter(p, params[p["id"]], workspace, all_params=params_dict)
             if err is not None:
                 param_errors.append(f"{p['id']} - {err}")
             if wsref is not None:
@@ -420,8 +392,7 @@ def validate_parameters(app_id, tag, spec_params, params):
 
 
 def check_parameter(param, value, workspace, all_params: dict[str, Any] | None = None):
-    """
-    Checks if the given value matches the rules provided in the param dict.
+    """Checks if the given value matches the rules provided in the param dict.
     If yes, returns None
     If no, returns a String with an error.
 
@@ -492,8 +463,7 @@ def validate_group_values(param, value, workspace, spec_params):
 
 
 def validate_param_value(param, value, workspace):
-    """
-    Tests a value to make sure it's valid, based on the rules given in the
+    """Tests a value to make sure it's valid, based on the rules given in the
     param dict. Returns None if valid, an error string if not.
 
     Parameters:
@@ -526,23 +496,16 @@ def validate_param_value(param, value, workspace):
 
     # cases - value == list (checked by wrapping function,
     #  check_parameter), int, float, others get rejected
-    if param["type"] == "group" and not (
-        isinstance(value, list) or isinstance(value, dict)
-    ):
+    if param["type"] == "group" and not (isinstance(value, dict | list)):
         return (ws_ref, "a parameter group must be of type list or dict")
     if param["type"] == "mapping" and not isinstance(value, dict):
         return (ws_ref, "a parameter of type 'mapping' must be a dict")
-    if param["type"] == "textsubdata" and not (
-        isinstance(value, str) or isinstance(value, list)
-    ):
+    if param["type"] == "textsubdata" and not (isinstance(value, list | str)):
         return (
             ws_ref,
-            "input value not supported for 'textsubdata' type - "
-            "only str or list is supported",
+            "input value not supported for 'textsubdata' type - " "only str or list is supported",
         )
-    if param["type"] == "custom_textsubdata" and not (
-        isinstance(value, str) or isinstance(value, list)
-    ):
+    if param["type"] == "custom_textsubdata" and not (isinstance(value, list | str)):
         return (
             ws_ref,
             "input value not supported for 'custom_textsubdata' type - "
@@ -554,9 +517,7 @@ def validate_param_value(param, value, workspace):
         "textsubdata",
         "custom_textsubdata",
         "custom",
-    ] and not (
-        isinstance(value, str) or isinstance(value, int) or isinstance(value, float)
-    ):
+    ] and not (isinstance(value, float | int | str)):
         return (
             ws_ref,
             "input value not supported for '"
@@ -573,11 +534,7 @@ def validate_param_value(param, value, workspace):
 
     # if it's expecting a workspace object, check if that's present,
     # and a valid type
-    if (
-        "allowed_types" in param
-        and len(param["allowed_types"]) > 0
-        and not param["is_output"]
-    ):
+    if "allowed_types" in param and len(param["allowed_types"]) > 0 and not param["is_output"]:
         try:
             # If we see a / , assume it's already an object reference.
             if "/" in value:
@@ -592,9 +549,9 @@ def validate_param_value(param, value, workspace):
                                 + "workspace/object/version(optional)"
                             ),
                         )
-                info = clients.get("workspace").get_object_info_new(
-                    {"objects": [{"ref": value}]}
-                )[0]
+                info = clients.get("workspace").get_object_info_new({"objects": [{"ref": value}]})[
+                    0
+                ]
                 path_items[len(path_items) - 1] = f"{info[6]}/{info[0]}/{info[4]}"
                 ws_ref = ";".join(path_items)
             # Otherwise, assume it's a name, not a reference.
@@ -676,9 +633,7 @@ def resolve_single_ref(workspace, value):
                 raise ValueError(
                     f"Object reference {value} has too many slashes - should be ws/object/version"
                 )
-        info = clients.get("workspace").get_object_info_new(
-            {"objects": [{"ref": value}]}
-        )[0]
+        info = clients.get("workspace").get_object_info_new({"objects": [{"ref": value}]})[0]
         path_items[len(path_items) - 1] = f"{info[6]}/{info[0]}/{info[4]}"
         ret = ";".join(path_items)
     # Otherwise, assume it's a name, not a reference.
@@ -698,8 +653,7 @@ def resolve_ref(workspace, value):
 
 
 def resolve_ref_if_typed(value, spec_param):
-    """
-    For a given value and associated spec, if this is not an output param,
+    """For a given value and associated spec, if this is not an output param,
     then ensure that the reference points to an object in the current
     workspace, and transform the value into an absolute reference to it.
     """
@@ -715,8 +669,7 @@ def resolve_ref_if_typed(value, spec_param):
 def transform_param_value(
     transform_type: str | None, value: Any, spec_param: dict[str, Any] | None
 ) -> Any:
-    """
-    Transforms an input according to the rules given in
+    """Transforms an input according to the rules given in
     NarrativeMethodStore.ServiceMethodInputMapping
     Really, there are three types of transforms possible:
       1. ref - turns the input string into a workspace ref.
@@ -783,11 +736,7 @@ def transform_param_value(
     ):
         is_input_object_param = True
 
-    if (
-        transform_type is None
-        and spec_param is not None
-        and spec_param["type"] == "textsubdata"
-    ):
+    if transform_type is None and spec_param is not None and spec_param["type"] == "textsubdata":
         transform_type = "string"
 
     if not is_input_object_param and transform_type is None:
@@ -831,8 +780,7 @@ def transform_param_value(
 
 
 def transform_object_value(transform_type: str | None, value: str | None) -> str | None:
-    """
-    Cases:
+    """Cases:
     transform = ref, unresolved-ref, or putative-ref:
         - should return wsname / object name
     transform = upa or resolved-ref:
@@ -868,11 +816,7 @@ def transform_object_value(transform_type: str | None, value: str | None) -> str
 
     if is_upa and transform_type in ["upa", "resolved-ref"]:
         return value
-    if (
-        not is_upa
-        and is_ref
-        and transform_type in ["ref", "unresolved-ref", "putative-ref"]
-    ):
+    if not is_upa and is_ref and transform_type in ["ref", "unresolved-ref", "putative-ref"]:
         return value
     if not is_upa and not is_ref and transform_type is None:
         return value
@@ -881,9 +825,7 @@ def transform_object_value(transform_type: str | None, value: str | None) -> str
     if not is_upa and not is_ref:
         search_ref = f"{system_variable('workspace')}/{value}"
     try:
-        obj_info = clients.get("workspace").get_object_info3(
-            {"objects": [{"ref": search_ref}]}
-        )
+        obj_info = clients.get("workspace").get_object_info3({"objects": [{"ref": search_ref}]})
     except Exception as e:
         # a putative-ref can be an extant or a to-be-created object; if the object
         # is not found, the workspace name/object name can be returned
@@ -896,8 +838,7 @@ def transform_object_value(transform_type: str | None, value: str | None) -> str
         if transform is None:
             transform = "object name"
         raise ValueError(
-            f"Unable to find object reference '{search_ref}' to transform as {transform}: "
-            + str(e)
+            f"Unable to find object reference '{search_ref}' to transform as {transform}: " + str(e)
         )
 
     if is_path or transform_type in ["resolved-ref", "upa"]:

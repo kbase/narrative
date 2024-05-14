@@ -4,12 +4,11 @@ import copy
 import threading
 from typing import Any
 
-from ipykernel.comm import Comm
-
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.jobs.util import load_job_constants
+from ipykernel.comm import Comm
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 
@@ -118,8 +117,7 @@ class JobRequest:
 
     @property
     def ts(self: "JobRequest"):
-        """
-        Optional field sent with STATUS requests indicating to filter out
+        """Optional field sent with STATUS requests indicating to filter out
         job states in the STATUS response that have not been updated since
         this epoch time (in ns)
         """
@@ -194,8 +192,7 @@ class JobComm:
             }
 
     def _get_job_ids(self: "JobComm", req: JobRequest) -> list[str]:
-        """
-        Extract the job IDs from a job request object
+        """Extract the job IDs from a job request object
 
         :param req: the job request to take the IDs from
         :type req: JobRequest
@@ -213,8 +210,7 @@ class JobComm:
         init_jobs: bool = False,
         cell_list: list[str] | None = None,
     ) -> None:
-        """
-        Starts the job status lookup loop, which runs every LOOKUP_TIMER_INTERVAL seconds.
+        """Starts the job status lookup loop, which runs every LOOKUP_TIMER_INTERVAL seconds.
 
         :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
             the JobManager's list of known jobs from the workspace.
@@ -241,8 +237,7 @@ class JobComm:
             self._lookup_job_status_loop()
 
     def stop_job_status_loop(self: "JobComm") -> None:
-        """
-        Stops the job status lookup loop if it's running. Otherwise, this effectively
+        """Stops the job status lookup loop if it's running. Otherwise, this effectively
         does nothing.
         """
         if self._lookup_timer:
@@ -251,8 +246,7 @@ class JobComm:
         self._running_lookup_loop = False
 
     def _lookup_job_status_loop(self: "JobComm") -> None:
-        """
-        Run a loop that will look up job info. After running, this spawns a Timer thread on
+        """Run a loop that will look up job info. After running, this spawns a Timer thread on
         a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
         all_job_states = self.get_all_job_states()
@@ -269,19 +263,15 @@ class JobComm:
         req: JobRequest | None = None,
         ignore_refresh_flag: bool = False,
     ) -> dict[str, Any]:
-        """
-        Fetches status of all jobs in the current workspace and sends them to the front end.
+        """Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.get_all_job_states(
-            ignore_refresh_flag=ignore_refresh_flag
-        )
+        all_job_states = self._jm.get_all_job_states(ignore_refresh_flag=ignore_refresh_flag)
         self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
         return all_job_states
 
     def get_job_states_by_cell_id(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Fetches status of all jobs associated with the given cell ID(s).
+        """Fetches status of all jobs associated with the given cell ID(s).
 
         :param req: job request object with the cell_id_list param set
         :type req: JobRequest, optional
@@ -302,15 +292,12 @@ class JobComm:
         }
         :rtype: dict
         """
-        cell_job_states = self._jm.get_job_states_by_cell_id(
-            cell_id_list=req.cell_id_list
-        )
+        cell_job_states = self._jm.get_job_states_by_cell_id(cell_id_list=req.cell_id_list)
         self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
         return cell_job_states
 
     def get_job_info(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Gets job information for a list of job IDs.
+        """Gets job information for a list of job IDs.
 
         Job info for a given job ID is in the form:
         {
@@ -340,8 +327,7 @@ class JobComm:
     def _get_job_states(
         self: "JobComm", job_id_list: list, ts: int | None = None
     ) -> dict[str, Any]:
-        """
-        Retrieves the job states for the supplied job_ids.
+        """Retrieves the job states for the supplied job_ids.
 
         See Job.output_state() for details of job state structure.
 
@@ -366,8 +352,7 @@ class JobComm:
         return output_states
 
     def get_job_state(self: "JobComm", job_id: str) -> dict[str, Any]:
-        """
-        Retrieve the job state for a single job.
+        """Retrieve the job state for a single job.
 
         This differs from the _get_job_states (underscored version) in that
         it just takes a job_id string, not a JobRequest.
@@ -381,8 +366,7 @@ class JobComm:
         return self._get_job_states([job_id])
 
     def get_job_states(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Retrieves the job states for the supplied job_ids.
+        """Retrieves the job states for the supplied job_ids.
 
         See Job.output_state() for details of job state structure.
 
@@ -396,8 +380,7 @@ class JobComm:
         return self._get_job_states(job_id_list, req.ts)
 
     def _modify_job_updates(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Modifies how many things want to listen to a job update.
+        """Modifies how many things want to listen to a job update.
         If this is a request to start a job update, then this starts the update loop that
         returns update messages across the job channel.
         If this is a request to stop a job update, then this sends that request to the
@@ -427,8 +410,7 @@ class JobComm:
         return output_states
 
     def cancel_jobs(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Cancel a job or list of jobs. After sending the cancellation request, the job states
+        """Cancel a job or list of jobs. After sending the cancellation request, the job states
         are refreshed and their new output states returned.
 
         See JobManager.cancel_jobs() for more details.
@@ -445,8 +427,7 @@ class JobComm:
         return cancel_results
 
     def retry_jobs(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Retry a job or list of jobs.
+        """Retry a job or list of jobs.
 
         See JobManager.retry_jobs() for more details.
 
@@ -462,8 +443,7 @@ class JobComm:
         return retry_results
 
     def get_job_logs(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """
-        Fetch the logs for a job or list of jobs.
+        """Fetch the logs for a job or list of jobs.
 
         See JobManager.get_job_logs_for_list() for more details.
 
@@ -484,8 +464,7 @@ class JobComm:
         return log_output
 
     def _handle_comm_message(self: "JobComm", msg: dict[str, Any]) -> dict[str, Any]:
-        """
-        Handle incoming messages on the KBaseJobs channel.
+        """Handle incoming messages on the KBaseJobs channel.
 
         Messages get translated into one or more JobRequest objects, which are then
         passed to the right handler, based on the request.
@@ -507,21 +486,14 @@ class JobComm:
         with exc_to_msg(msg):
             request = JobRequest(msg)
 
-            kblogging.log_event(
-                self._log, "handle_comm_message", {"msg": request.request_type}
-            )
+            kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request_type})
             if request.request_type not in self._msg_map:
-                raise JobRequestException(
-                    f"Unknown KBaseJobs message '{request.request_type}'"
-                )
+                raise JobRequestException(f"Unknown KBaseJobs message '{request.request_type}'")
 
             return self._msg_map[request.request_type](request)
 
-    def send_comm_message(
-        self: "JobComm", msg_type: str, content: dict[str, Any]
-    ) -> None:
-        """
-        Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
+    def send_comm_message(self: "JobComm", msg_type: str, content: dict[str, Any]) -> None:
+        """Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
         msg = {"msg_type": msg_type, "content": content}
@@ -532,8 +504,7 @@ class JobComm:
         req: JobRequest | dict[str, Any] | str,
         content: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Sends an error message over the KBaseJobs channel. This will have msg_type set to
+        """Sends an error message over the KBaseJobs channel. This will have msg_type set to
         ERROR ('job_error'), and include the original request in the message content as
         "source".
 
@@ -584,11 +555,8 @@ class exc_to_msg:
 
     jc = JobComm()
 
-    def __init__(
-        self: "exc_to_msg", req: JobRequest | dict[str, Any] | str | None = None
-    ) -> None:
-        """
-        req can be several different things because this context manager
+    def __init__(self: "exc_to_msg", req: JobRequest | dict[str, Any] | str | None = None) -> None:
+        """Req can be several different things because this context manager
         supports being used in several different places. Generally it is
         a request dict or request object, but when used outside of a request,
         e.g., from appmanager, req can inform of the source of the JobComm
@@ -600,8 +568,7 @@ class exc_to_msg:
         pass  # nothing to do here
 
     def __exit__(self: "exc_to_msg", exc_type, exc_value, exc_tb) -> None:
-        """
-        If an exception is caught during execution in the JobComm code,
+        """If an exception is caught during execution in the JobComm code,
         this will send back a comm error message like:
         {
             "msg_type": "job_error",

@@ -1,6 +1,5 @@
-"""
-Test log proxy and kblogging
-"""
+"""Test log proxy and kblogging"""
+
 import logging
 import os
 import time

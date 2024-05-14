@@ -22,20 +22,14 @@ def assert_is_valid_cell_code(js_obj):
         code_lines[1].strip()
         == "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {"
     )
-    assert (
-        code_lines[2]
-        .strip()
-        .startswith("var w = new KBaseNarrativeOutputCell($('#kb-vis")
-    )
+    assert code_lines[2].strip().startswith("var w = new KBaseNarrativeOutputCell($('#kb-vis")
 
 
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         config = ConfigTests()
-        os.environ[
-            "KB_WORKSPACE_ID"
-        ] = "12345"  # That's the same workspace as my luggage!
+        os.environ["KB_WORKSPACE_ID"] = "12345"  # That's the same workspace as my luggage!
         app_specs_list = config.load_json_file(config.get("specs", "app_specs_file"))
         app_specs_dict = {}
         for s in app_specs_list:
@@ -133,8 +127,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_show_data_cell(self):
-        """
-        Tests - should do the following:
+        """Tests - should do the following:
             def show_data_widget(self, upa, title=None, cell_id=None, tag="release"):
         fail message with no upa
         fail message with malformed upa
@@ -179,9 +172,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_none(self):
-        """
-        Test infer_upas when no upas are given. Should return an empty dict.
-        """
+        """Test infer_upas when no upas are given. Should return an empty dict."""
         upas = self.wm.infer_upas(
             "testCrazyExample",
             {"some_param": "some_value", "another_param": "another_value"},
@@ -191,9 +182,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_simple_widget(self):
-        """
-        Test infer_upas against the "default" widget - i.e. params don't matter and UPAs don't matter.
-        """
+        """Test infer_upas against the "default" widget - i.e. params don't matter and UPAs don't matter."""
         upas = self.wm.infer_upas(
             "kbaseDefaultNarrativeOutput",
             {
@@ -208,8 +197,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.widgetmanager.clients.get", get_mock_client)
     def test_infer_upas_nulls(self):
-        """
-        Test infer_upas when None is passed to it as an object name. Fields with None
+        """Test infer_upas when None is passed to it as an object name. Fields with None
         as input should not map to an UPA.
         """
         test_result_upa = "18836/5/1"

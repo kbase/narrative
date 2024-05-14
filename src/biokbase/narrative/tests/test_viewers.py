@@ -85,9 +85,7 @@ class ViewersTestCase(unittest.TestCase):
         )
         assert ids, viewers._get_categories(ids == self.generic_ref)
         with pytest.raises(ValueError, match="not in the provided mapping"):
-            viewers._get_categories(
-                ["boo"], self.generic_ref, self.attribute_set_ref, mapping
-            )
+            viewers._get_categories(["boo"], self.generic_ref, self.attribute_set_ref, mapping)
         with pytest.raises(ValueError, match="has no attribute"):
             viewers._get_categories(["boo"], self.generic_ref, self.attribute_set_ref)
         assert index == viewers._get_categories(

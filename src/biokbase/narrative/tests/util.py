@@ -16,9 +16,7 @@ from biokbase.workspace.client import Workspace
 
 _log = logging.getLogger("kbtest")
 _hnd = logging.StreamHandler()
-_hnd.setFormatter(
-    logging.Formatter("[%(levelname)s] %(asctime)s %(name)s: %(message)s")
-)
+_hnd.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s %(name)s: %(message)s"))
 _log.addHandler(_hnd)
 _log.setLevel(logging.DEBUG)
 
@@ -34,9 +32,7 @@ def test_logger(name):
 
 
 class ConfigTests:
-    """
-    Test utility functions
-    """
+    """Test utility functions"""
 
     def __init__(self) -> None:
         self._path_prefix = os.path.join(
@@ -59,8 +55,7 @@ class ConfigTests:
         return self.file_path(val, from_root)
 
     def load_json_file(self, filename):
-        """
-        Reads, parses, and returns as a dict, a JSON file.
+        """Reads, parses, and returns as a dict, a JSON file.
         The filename parameter is expected to be a path relative to this file's expected
         location in <narrative_root>/src/biokbase/narrative/tests
         """
@@ -77,8 +72,7 @@ class ConfigTests:
             f.close()
 
     def file_path(self, filename, from_root=False):
-        """
-        Returns the path to the filename, relative to this file's expected location.
+        """Returns the path to the filename, relative to this file's expected location.
         <narrative root>/src/biokbase/narrative/tests
         """
         if from_root:
@@ -87,8 +81,7 @@ class ConfigTests:
 
 
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
-    """
-    Fetches a Narrative object with the given reference id (of the form ##/##).
+    """Fetches a Narrative object with the given reference id (of the form ##/##).
     If a file_name is given, then it is printed to that file.
     If the narrative is found, the jsonized string of it is returned.
 
@@ -107,8 +100,7 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
 
 
 def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False):
-    """
-    Uploads a Narrative from a downloaded object file.
+    """Uploads a Narrative from a downloaded object file.
     This file needs to be in JSON format, and it expects all
     data and info that is usually returned by the Workspace.get_objects
     method.
@@ -118,7 +110,6 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
         obj: the id of the narrative object
         ref: the above two joined together into an object ref (for convenience)
     """
-
     # read the file
     with open(nar_file) as f:
         nar = json.loads(f.read())
@@ -156,9 +147,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     obj_info = ws_client.save_objects({"id": ws_id, "objects": [ws_save_obj]})
 
     # tweak the workspace's metadata to properly present its narrative
-    ws_client.alter_workspace_metadata(
-        {"wsi": {"id": ws_id}, "new": {"narrative": obj_info[0][0]}}
-    )
+    ws_client.alter_workspace_metadata({"wsi": {"id": ws_id}, "new": {"narrative": obj_info[0][0]}})
     return {
         "ws": ws_info[0],
         "obj": obj_info[0][0],
@@ -168,8 +157,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
 
 
 def delete_narrative(ws_id, auth_token, url=ci_ws):
-    """
-    Deletes a workspace with the given id. Throws a ServerError if the user given
+    """Deletes a workspace with the given id. Throws a ServerError if the user given
     by auth_token isn't allowed to do so.
     """
     ws_client = Workspace(url=url, token=auth_token)
@@ -177,8 +165,7 @@ def delete_narrative(ws_id, auth_token, url=ci_ws):
 
 
 def read_token_file(path):
-    """
-    Reads in a token file.
+    """Reads in a token file.
     A token file is just expected to have a single line in it - the token itself.
     """
     if not os.path.isfile(path):
@@ -191,8 +178,7 @@ def read_token_file(path):
 
 
 def read_json_file(path):
-    """
-    Generically reads in any JSON file and returns it as a dict.
+    """Generically reads in any JSON file and returns it as a dict.
     Especially intended for reading a Narrative file.
     """
     with open(path) as f:
@@ -281,8 +267,7 @@ def find_free_port() -> int:
 
 
 def validate_job_state(job_state: dict) -> None:
-    """
-    Validates the structure and entries in a job state as returned by the JobManager.
+    """Validates the structure and entries in a job state as returned by the JobManager.
     If any keys are missing, or extra keys exist, or values are weird, then this
     raises an AssertionError.
     """
@@ -329,14 +314,10 @@ def validate_job_state(job_state: dict) -> None:
     for requiredness in ["required", "optional"]:
         for attr, type_list in state_keys[requiredness].items():
             if requiredness == "required":
-                assert (
-                    attr in state
-                ), f"attribute {attr} ({requiredness}) is missing from state"
+                assert attr in state, f"attribute {attr} ({requiredness}) is missing from state"
             if attr in state:
-                assert isinstance(
-                    state[attr], type_list
-                ), f"{state[attr]} does not match type(s) {type_list}: " + json.dumps(
-                    state[attr]
+                assert isinstance(state[attr], type_list), (
+                    f"{state[attr]} does not match type(s) {type_list}: " + json.dumps(state[attr])
                 )
 
 

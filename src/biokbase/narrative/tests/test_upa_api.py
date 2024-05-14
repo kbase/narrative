@@ -1,6 +1,5 @@
-"""
-Tests for the Python side of the UPA api.
-"""
+"""Tests for the Python side of the UPA api."""
+
 import os
 import unittest
 from unittest import mock
@@ -33,9 +32,9 @@ class UpaApiTestCase(unittest.TestCase):
         ]
 
         self.serialize_external_test_data = [
-            {"upa": "5/1/2", "serial": "{}5/1/2".format(external_tag)},
-            {"upa": "5/1/2;1/2/3", "serial": "{}5/1/2;1/2/3".format(external_tag)},
-            {"upa": "5/5/5;1/1/1", "serial": "{}5/5/5;1/1/1".format(external_tag)},
+            {"upa": "5/1/2", "serial": f"{external_tag}5/1/2"},
+            {"upa": "5/1/2;1/2/3", "serial": f"{external_tag}5/1/2;1/2/3"},
+            {"upa": "5/5/5;1/1/1", "serial": f"{external_tag}5/5/5;1/1/1"},
         ]
 
         self.bad_upas = [
@@ -125,9 +124,7 @@ class UpaApiTestCase(unittest.TestCase):
     def test_deserialize_bad_type(self):
         bad_types = [["123/4/5", "6/7/8"], {"123": "456"}, None]
         for t in bad_types:
-            with pytest.raises(
-                ValueError, match="Can only deserialize UPAs from strings."
-            ):
+            with pytest.raises(ValueError, match="Can only deserialize UPAs from strings."):
                 deserialize(t)
 
     def test_missing_ws_deserialize(self):
@@ -146,8 +143,7 @@ class UpaApiTestCase(unittest.TestCase):
                 os.environ["KB_WORKSPACE_ID"] = tmp
 
     def test_is_ref(self):
-        """
-        Explicitly test the is_ref function.
+        """Explicitly test the is_ref function.
         UPAs should pass, as well as shorter ws_name/obj_name, ws_id/obj_name, ws_id/obj_id references.
         """
         for ref in self.good_refs:

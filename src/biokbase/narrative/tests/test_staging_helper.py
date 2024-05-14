@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-
 from biokbase.narrative.staging.helper import Helper
 
 
@@ -31,9 +30,9 @@ class StagingHelperTest(unittest.TestCase):
         with pytest.raises(
             ValueError,
             match=re.escape(
-                "The server could not fulfill the request.\nServer message: b'Error " +
-                "connecting to auth service: 401 Unauthorized\\n10020 Invalid token'\n" +
-                "Reason: Unauthorized\nError code: 401\n"
+                "The server could not fulfill the request.\nServer message: b'Error "
+                + "connecting to auth service: 401 Unauthorized\\n10020 Invalid token'\n"
+                + "Reason: Unauthorized\nError code: 401\n"
             ),
         ):
             self.staging_helper.list()
@@ -128,8 +127,7 @@ class StagingHelperTest(unittest.TestCase):
         mv_ret = self.staging_helper.mv("test.pdf ", "test_1.pdf")
         assert "server_response" in mv_ret
         assert (
-            mv_ret.get("server_response")
-            == "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
+            mv_ret.get("server_response") == "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
         )
 
 

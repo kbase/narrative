@@ -7,7 +7,6 @@ from typing import Any
 import pytest
 import vcr
 import vcr.request
-
 from biokbase.narrative.tests.util import ConfigTests, read_token_file
 
 # initialise logging for vcrpy
@@ -29,9 +28,7 @@ def user_name(test_config: ConfigTests) -> str:
 
 @pytest.fixture(scope="session")
 def user_token(test_config: ConfigTests) -> str | None:
-    return read_token_file(
-        test_config.get_path("token_files", "test_user", from_root=True)
-    )
+    return read_token_file(test_config.get_path("token_files", "test_user", from_root=True))
 
 
 # Set up a local instance of VCR that stores its recordings in

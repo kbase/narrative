@@ -1,16 +1,12 @@
 import clustergrammer_widget
 import pandas as pd
+from biokbase.narrative import clients
+from biokbase.narrative.system import system_variable
 from clustergrammer_widget.clustergrammer import Network
 
-import biokbase.narrative.clients as clients
-from biokbase.narrative.system import system_variable
 
-
-def view_as_clustergrammer(
-    ws_ref, col_categories=(), row_categories=(), normalize_on=None
-):
-    """
-    This function returns an interactive clustergrammer widget for a specified object. Data type
+def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normalize_on=None):
+    """This function returns an interactive clustergrammer widget for a specified object. Data type
     must contain a 'data' key with a FloatMatrix2D type value
     :param ws_ref: Object workspace reference
     :param col_categories: iterable with the permitted factors from the col_attributemapping.
@@ -36,8 +32,7 @@ def view_as_clustergrammer(
 
 
 def get_df(ws_ref, col_attributes=(), row_attributes=(), clustergrammer=False):
-    """
-    Gets a dataframe from the WS object
+    """Gets a dataframe from the WS object
 
     :param ws_ref: The Workspace reference of the 2DMatrix containing object
     :param col_attributes: Which column attributes should appear in the resulting DataFrame as a
@@ -48,15 +43,14 @@ def get_df(ws_ref, col_attributes=(), row_attributes=(), clustergrammer=False):
         Defaults to False.
     :return: A Pandas DataFrame
     """
-
     ws = clients.get("workspace")
     if "/" not in ws_ref:
         ws_ref = "{}/{}".format(system_variable("workspace"), ws_ref)
     generic_data = ws.get_objects2({"objects": [{"ref": ws_ref}]})["data"][0]["data"]
     if not _is_compatible_matrix(generic_data):
         raise ValueError(
-            "{} is not a compatible data type for this viewer. Data type must "
-            "contain a 'data' key with a FloatMatrix2D type value".format(ws_ref)
+            f"{ws_ref} is not a compatible data type for this viewer. Data type must "
+            "contain a 'data' key with a FloatMatrix2D type value"
         )
     cols = _get_categories(
         generic_data["data"]["col_ids"],
@@ -114,14 +108,10 @@ def _get_categories(
             attribute_values = attribute_data["instances"][mapping[_id]]
         except KeyError:
             if _id not in mapping:
-                raise ValueError(
-                    "Row or column id {} is not in the provided mapping".format(_id)
-                )
+                raise ValueError(f"Row or column id {_id} is not in the provided mapping")
             raise ValueError(
-                "AttributeMapping {} has no attribute {} which corresponds to row or "
-                "column id {} in the provided object.".format(
-                    attributemapping_ref, mapping[_id], _id
-                )
+                f"AttributeMapping {attributemapping_ref} has no attribute {mapping[_id]} which corresponds to row or "
+                f"column id {_id} in the provided object."
             )
         cats = [_id]
         for i, val in enumerate(attribute_values):
@@ -129,7 +119,7 @@ def _get_categories(
             if whitelist and cat_name not in whitelist:
                 continue
             if clustergrammer:
-                cats.append("{}: {}".format(cat_name, val))
+                cats.append(f"{cat_name}: {val}")
             else:
                 cats.append(val)
         cat_list.append(tuple(cats))

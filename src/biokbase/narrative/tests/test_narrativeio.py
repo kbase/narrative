@@ -1,7 +1,7 @@
-"""
-Tests for Mixin class that handles IO between the
+"""Tests for Mixin class that handles IO between the
 Narrative and workspace service.
 """
+
 import unittest
 from unittest.mock import patch
 
@@ -41,7 +41,7 @@ READ_NARRATIVE_REF_WARNING = "read_narrative must use a NarrativeRef as input!"
 
 
 def get_exp_nar(i):
-    return dict(zip(LIST_OBJECTS_FIELDS, get_nar_obj(i)))
+    return dict(zip(LIST_OBJECTS_FIELDS, get_nar_obj(i), strict=False))
 
 
 def skipUnlessToken():
@@ -133,16 +133,10 @@ class NarrIOTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         if self.test_token is not None:
-            util.delete_narrative(
-                self.public_nar["ws"], self.test_token, url=self.ws_uri
-            )
-            util.delete_narrative(
-                self.private_nar["ws"], self.test_token, url=self.ws_uri
-            )
+            util.delete_narrative(self.public_nar["ws"], self.test_token, url=self.ws_uri)
+            util.delete_narrative(self.private_nar["ws"], self.test_token, url=self.ws_uri)
         if self.private_token is not None:
-            util.delete_narrative(
-                self.unauth_nar["ws"], self.private_token, url=self.ws_uri
-            )
+            util.delete_narrative(self.unauth_nar["ws"], self.private_token, url=self.ws_uri)
 
     @classmethod
     def setUp(self):
@@ -161,9 +155,7 @@ class NarrIOTestCase(unittest.TestCase):
         biokbase.auth.set_environ_token(None)
 
     def test_mixin_instantiated(self):
-        assert isinstance(
-            self.mixin, biokbase.narrative.contents.narrativeio.KBaseWSManagerMixin
-        )
+        assert isinstance(self.mixin, biokbase.narrative.contents.narrativeio.KBaseWSManagerMixin)
 
     # test KBaseWSManagerMixin.narrative_exists #####
 
@@ -188,8 +180,7 @@ class NarrIOTestCase(unittest.TestCase):
     # test KBaseWSManagerMixin.read_narrative #####
 
     def validate_narrative(self, nar, with_content, with_meta):
-        """
-        Validates a narrative object's overall structure.
+        """Validates a narrative object's overall structure.
         We're just making sure that the right elements are expected
         to be here - we leave the Jupyter Notebook validation part to
         the Jupyter test suite.
@@ -255,9 +246,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_read_narrative_valid_content_no_metadata(self):
         if self.test_token is None:
             self.skipTest("No auth token")
-        nar = self.mixin.read_narrative(
-            self.public_nar["ref"], content=True, include_metadata=True
-        )
+        nar = self.mixin.read_narrative(self.public_nar["ref"], content=True, include_metadata=True)
         assert self.validate_narrative(nar, True, False) is None
 
     def test_read_narrative_valid_no_content_metadata(self):
@@ -307,9 +296,7 @@ class NarrIOTestCase(unittest.TestCase):
         # should return (nar, wsid, objid)
         self.login()
         nar = self.mixin.read_narrative(self.private_nar["ref"])["data"]
-        result = self.mixin.write_narrative(
-            self.private_nar["ref"], nar, self.test_user
-        )
+        result = self.mixin.write_narrative(self.private_nar["ref"], nar, self.test_user)
         assert result[1] == self.private_nar["ws"]
         assert result[2] == self.private_nar["obj"]
         assert result[0]["metadata"]["is_temporary"] == "false"
@@ -424,25 +411,19 @@ class NarrIOTestCase(unittest.TestCase):
         if self.test_token is None:
             self.skipTest("No auth token")
         with pytest.raises(WorkspaceError):
-            self.mixin.rename_narrative(
-                self.public_nar["ref"], self.test_user, "new_name"
-            )
+            self.mixin.rename_narrative(self.public_nar["ref"], self.test_user, "new_name")
 
     def test_rename_narrative_unauth(self):
         if self.test_token is None:
             self.skipTest("No auth token")
         self.login()
         with pytest.raises(WorkspaceError):
-            self.mixin.rename_narrative(
-                self.unauth_nar["ref"], self.test_user, "new_name"
-            )
+            self.mixin.rename_narrative(self.unauth_nar["ref"], self.test_user, "new_name")
         self.logout()
 
     def test_rename_narrative_invalid(self):
         with pytest.raises(WorkspaceError):
-            self.mixin.rename_narrative(
-                self.invalid_nar_ref, self.test_user, "new_name"
-            )
+            self.mixin.rename_narrative(self.invalid_nar_ref, self.test_user, "new_name")
 
     def test_rename_narrative_bad(self):
         with pytest.raises(AssertionError, match=READ_NARRATIVE_REF_WARNING):
@@ -502,9 +483,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__0_ws_ids(self):
         ws_ids = {"workspaces": [], "pub": []}
 
-        with patch.object(
-            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
-        ):
+        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
             nar_l = self.mixin.list_narratives()
 
         assert [] == nar_l
@@ -514,9 +493,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__9999_ws_ids(self):
         ws_ids = {"workspaces": list(range(9999)), "pub": []}
 
-        with patch.object(
-            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
-        ):
+        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
             nar_l = self.mixin.list_narratives()
 
         assert [get_exp_nar(i) for i in range(9999)] == nar_l
@@ -526,9 +503,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__10000_ws_ids(self):
         ws_ids = {"workspaces": list(range(10000)), "pub": []}
 
-        with patch.object(
-            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
-        ):
+        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
             nar_l = self.mixin.list_narratives()
 
         assert [get_exp_nar(i) for i in range(10000)] == nar_l
@@ -538,9 +513,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_list_narratives__no_ws_id__10001_ws_ids(self):
         ws_ids = {"workspaces": list(range(10000)), "pub": [10000]}
 
-        with patch.object(
-            MockClients, "list_workspace_ids", create=True, return_value=ws_ids
-        ):
+        with patch.object(MockClients, "list_workspace_ids", create=True, return_value=ws_ids):
             nar_l = self.mixin.list_narratives()
 
         assert [get_exp_nar(i) for i in range(10001)] == nar_l
@@ -661,19 +634,14 @@ class NarrIOTestCase(unittest.TestCase):
 
     # test KBaseWSManagerMixin._validate_nar_type #####
     def test__validate_nar_type_ok(self):
-        assert (
-            self.mixin._validate_nar_type("KBaseNarrative.Narrative-123.45", None)
-            is None
-        )
+        assert self.mixin._validate_nar_type("KBaseNarrative.Narrative-123.45", None) is None
         assert self.mixin._validate_nar_type("KBaseNarrative.Narrative", None) is None
 
     def test__validate_nar_type_fail(self):
         bad_type = "NotANarrative"
         ref = "123/45"
 
-        with pytest.raises(
-            HTTPError, match=f"Expected a Narrative object, got a {bad_type}"
-        ):
+        with pytest.raises(HTTPError, match=f"Expected a Narrative object, got a {bad_type}"):
             self.mixin._validate_nar_type(bad_type, None)
 
         with pytest.raises(

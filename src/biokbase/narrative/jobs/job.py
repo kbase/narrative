@@ -4,11 +4,10 @@ import uuid
 from pprint import pprint
 from typing import Any
 
-from jinja2 import Template
-
 from biokbase.narrative import clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
+from jinja2 import Template
 
 from .specmanager import SpecManager
 
@@ -96,8 +95,7 @@ class Job:
         extra_data: dict[str, Any] | None = None,
         children: list["Job"] | None = None,
     ):
-        """
-        Parameters:
+        """Parameters:
         -----------
         job_state - dict
             the job information returned from ee2.check_job, or something in that format
@@ -149,28 +147,21 @@ class Job:
             {
                 "job_ids": job_ids,
                 "exclude_fields": (
-                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
-                    if init
-                    else EXCLUDED_JOB_STATE_FIELDS
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS if init else EXCLUDED_JOB_STATE_FIELDS
                 ),
                 "return_list": 0,
             }
         )
 
     @staticmethod
-    def _trim_ee2_state(
-        state: dict[str, Any], exclude_fields: list[str] | None
-    ) -> None:
+    def _trim_ee2_state(state: dict[str, Any], exclude_fields: list[str] | None) -> None:
         if exclude_fields:
             for field in exclude_fields:
                 if field in state:
                     del state[field]
 
     def __getattr__(self: "Job", name: str) -> None | str | int | list | dict:
-        """
-        Map expected job attributes to paths in stored ee2 state
-        """
-
+        """Map expected job attributes to paths in stored ee2 state"""
         attr = {
             "app_id": lambda: self._acc_state.get("job_input", {}).get(
                 "app_id", JOB_ATTR_DEFAULTS["app_id"]
@@ -183,17 +174,13 @@ class Job:
                 if self.batch_job
                 else self._acc_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
             ),
-            "batch_job": lambda: self._acc_state.get(
-                "batch_job", JOB_ATTR_DEFAULTS["batch_job"]
-            ),
+            "batch_job": lambda: self._acc_state.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"]),
             "cell_id": lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
             "job_id": lambda: self._acc_state.get("job_id"),
             "params": lambda: copy.deepcopy(
-                self._acc_state.get("job_input", {}).get(
-                    "params", JOB_ATTR_DEFAULTS["params"]
-                )
+                self._acc_state.get("job_input", {}).get("params", JOB_ATTR_DEFAULTS["params"])
             ),
             "retry_parent": lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
@@ -243,9 +230,7 @@ class Job:
 
     def __setattr__(self: "Job", name: str, value: None | str | int | list | dict):
         if name in ALL_ATTRS:
-            raise AttributeError(
-                "Job attributes must be updated using the `update_state` method"
-            )
+            raise AttributeError("Job attributes must be updated using the `update_state` method")
 
         object.__setattr__(self, name, value)
 
@@ -254,9 +239,7 @@ class Job:
         return "batch" if self.batch_job else self.app_spec()["info"]["name"]
 
     def in_terminal_state(self: "Job") -> bool:
-        """
-        Checks if last queried ee2 state (or those of its children) was terminal.
-        """
+        """Checks if last queried ee2 state (or those of its children) was terminal."""
         # add in a check for the case where this is a batch parent job
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
@@ -269,8 +252,7 @@ class Job:
         return self._acc_state.get("status") in TERMINAL_STATUSES
 
     def in_cells(self: "Job", cell_ids: list[str]) -> bool:
-        """
-        For job initialization.
+        """For job initialization.
         See if job is associated with present cells
 
         A batch job technically can have children in different cells,
@@ -287,8 +269,7 @@ class Job:
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def parameters(self: "Job") -> dict[str, Any]:
-        """
-        Returns the parameters used to start the job. Job tries to use its params field, but
+        """Returns the parameters used to start the job. Job tries to use its params field, but
         if that's None, then it makes a call to EE2.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
@@ -299,15 +280,12 @@ class Job:
                 state = self.query_ee2_states([self.job_id], init=True)
                 self.update_state(state[self.job_id])
             except Exception as e:
-                raise Exception(
-                    f"Unable to fetch parameters for job {self.job_id} - {e}"
-                ) from e
+                raise Exception(f"Unable to fetch parameters for job {self.job_id} - {e}") from e
 
         return self.params
 
     def update_state(self: "Job", state: dict[str, Any]) -> None:
-        """
-        Given a state data structure (as emitted by ee2), update the stored state in the job object.
+        """Given a state data structure (as emitted by ee2), update the stored state in the job object.
         All updates to the job state should go through this function.
         """
         if not isinstance(state, dict):
@@ -327,26 +305,21 @@ class Job:
         force_refresh: bool = False,
         exclude_fields: list[str] | None = JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
     ):
-        """
-        Queries the job service to see the state of the current job.
-        """
+        """Queries the job service to see the state of the current job."""
         if force_refresh or not self.in_terminal_state():
             state = self.query_ee2_states([self.job_id], init=False)
             self.update_state(state[self.job_id])
 
         return self.cached_state(exclude_fields)
 
-    def cached_state(
-        self: "Job", exclude_fields: list[str] | None = None
-    ) -> dict[str, Any]:
+    def cached_state(self: "Job", exclude_fields: list[str] | None = None) -> dict[str, Any]:
         """Wrapper for self._acc_state"""
         state = copy.deepcopy(self._acc_state)
         self._trim_ee2_state(state, exclude_fields)
         return state
 
     def output_state(self: "Job") -> dict[str, str | dict[str, Any]]:
-        """
-        Request the current job state in a format suitable for sending to the front end.
+        """Request the current job state in a format suitable for sending to the front end.
         N.b. this method does not perform a data update.
 
         :return:        dict, with structure
@@ -441,11 +414,8 @@ class Job:
             "outputWidgetInfo": widget_info,
         }
 
-    def show_output_widget(
-        self: "Job", state: dict[str, Any] | None = None
-    ) -> str | None:
-        """
-        For a complete job, returns the job results.
+    def show_output_widget(self: "Job", state: dict[str, Any] | None = None) -> str | None:
+        """For a complete job, returns the job results.
         An incomplete job throws an exception
         """
         from biokbase.narrative.widgetmanager import WidgetManager
@@ -458,15 +428,11 @@ class Job:
 
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
-            return WidgetManager().show_output_widget(
-                output_widget, widget_params, tag=self.tag
-            )
+            return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         return f"Job is incomplete! It has status '{state['status']}'"
 
     def get_viewer_params(self: "Job", state: dict[str, Any]) -> dict[str, Any] | None:
-        """
-        Maps job state 'result' onto the inputs for a viewer.
-        """
+        """Maps job state 'result' onto the inputs for a viewer."""
         if state is None or state["status"] != COMPLETED_STATUS:
             return None
         (output_widget, widget_params) = self._get_output_info(state)
@@ -474,15 +440,12 @@ class Job:
 
     def _get_output_info(self: "Job", state: dict[str, Any]):
         spec = self.app_spec()
-        return map_outputs_from_state(
-            state, map_inputs_from_job(self.parameters(), spec), spec
-        )
+        return map_outputs_from_state(state, map_inputs_from_job(self.parameters(), spec), spec)
 
     def log(
         self: "Job", first_line: int = 0, num_lines: int | None = None
     ) -> tuple[int, list[dict[str, Any]]]:
-        """
-        Fetch a list of Job logs from the Job Service.
+        """Fetch a list of Job logs from the Job Service.
         This returns a 2-tuple (number of available log lines, list of log lines)
         Each log 'line' is a dict with two properties:
         is_error - boolean
@@ -518,7 +481,7 @@ class Job:
             return (num_available_lines, [])
         return (
             num_available_lines,
-            self._job_logs[first_line : first_line + num_lines],  # noqa:E203
+            self._job_logs[first_line : first_line + num_lines],
         )
 
     def _update_log(self: "Job") -> None:
@@ -533,9 +496,7 @@ class Job:
             raise ValueError("Not a batch container job")
 
         if children is None:
-            raise ValueError(
-                "Must supply children when setting children of batch job parent"
-            )
+            raise ValueError("Must supply children when setting children of batch job parent")
 
         inst_child_ids = [job.job_id for job in children]
         if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
@@ -551,8 +512,7 @@ class Job:
         error_msg: str,
         code: int,
     ) -> dict[str, Any]:
-        """
-        Creates an error state to return if
+        """Creates an error state to return if
         1. the state is missing or unretrievable
         2. Job is none
         This creates the whole state dictionary to return, as described in
@@ -581,9 +541,7 @@ class Job:
         return "KBase Narrative Job - " + str(self.job_id)
 
     def info(self: "Job") -> None:
-        """
-        Printed job info
-        """
+        """Printed job info"""
         spec = self.app_spec()
         print(f"App name (id): {spec['info']['name']} ({self.app_id})")
         print(f"Version: {spec['info']['ver']}")
@@ -597,16 +555,14 @@ class Job:
             print("Unable to retrieve current running state!")
 
     def _repr_javascript_(self: "Job") -> str:
-        """
-        Called by Jupyter when a Job object is entered into a code cell
-        """
+        """Called by Jupyter when a Job object is entered into a code cell"""
         tmpl = """
         element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
             var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}, 'outputWidgetInfo': {{output_widget_info}}});
         });
-        """  # noqa: E501
+        """
         output_widget_info = None
         try:
             state = self.refresh_state()
@@ -632,8 +588,5 @@ class Job:
         )
 
     def dump(self: "Job") -> dict[str, Any]:
-        """
-        Display job info without having to iterate through the attributes
-        """
-
+        """Display job info without having to iterate through the attributes"""
         return {attr: getattr(self, attr) for attr in [*JOB_ATTRS, "_acc_state"]}

@@ -6,7 +6,6 @@ import unittest
 from unittest import mock
 
 import pytest
-
 from biokbase.narrative.exception_util import (
     JobRequestException,
     NarrativeException,
@@ -100,9 +99,7 @@ STOP_UPDATE = MESSAGE_TYPE["STOP_UPDATE"]
 LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG_LINES)]
 
 
-def make_comm_msg(
-    msg_type: str, job_id_like, as_job_request: bool, content: dict = None
-):
+def make_comm_msg(msg_type: str, job_id_like, as_job_request: bool, content: dict = None):
     if content is None:
         content = {}
     job_arguments = {}
@@ -143,8 +140,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.stop_job_status_loop()
 
     def check_error_message(self, req, err, extra_params=None):
-        """
-        response when no input was submitted with a query
+        """Response when no input was submitted with a query
         args:
             req: the JobRequest, dictionary, or string passed when throwing the error
             extra_params: any extra content
@@ -322,7 +318,7 @@ class JobCommTestCase(unittest.TestCase):
         req_dict = make_comm_msg(STATUS_ALL, None, False)
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        assert STATUS_ALL == msg["msg_type"]
+        assert msg["msg_type"] == STATUS_ALL
 
     def test_req_no_inputs__fail(self):
         functions = [
@@ -408,8 +404,7 @@ class JobCommTestCase(unittest.TestCase):
                 exp_msg = {
                     "msg_type": "job_status_all",
                     "content": {
-                        job_id: ALL_RESPONSE_DATA[STATUS][job_id]
-                        for job_id in exp_job_ids
+                        job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in exp_job_ids
                     },
                 }
                 assert exp_msg == msg
@@ -469,8 +464,7 @@ class JobCommTestCase(unittest.TestCase):
         ok_states=None,
         error_states=None,
     ):
-        """
-        Handle any request that returns a dictionary of job state objects; this
+        """Handle any request that returns a dictionary of job state objects; this
         includes STATUS, CANCEL, START_UPDATE, STOP_UPDATE, and more.
         The output of the query is verified against the stored job states.
 
@@ -517,43 +511,31 @@ class JobCommTestCase(unittest.TestCase):
     # -----------------------
     def test_get_job_state__1_ok(self):
         output_states = self.jc.get_job_state(JOB_COMPLETED)
-        self.check_job_output_states(
-            output_states=output_states, ok_states=[JOB_COMPLETED]
-        )
+        self.check_job_output_states(output_states=output_states, ok_states=[JOB_COMPLETED])
 
     def test_get_job_state__no_job(self):
-        with pytest.raises(
-            JobRequestException, match=re.escape(f"{JOBS_MISSING_ERR}: {[None]}")
-        ):
+        with pytest.raises(JobRequestException, match=re.escape(f"{JOBS_MISSING_ERR}: {[None]}")):
             self.jc.get_job_state(None)
 
     # -----------------------
     # Lookup select job states
     # -----------------------
     def test_get_job_states__job_id__ok(self):
-        self.check_job_output_states(
-            params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED]
-        )
+        self.check_job_output_states(params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED])
 
     def test_get_job_states__job_id__dne(self):
-        self.check_job_output_states(
-            params={JOB_ID: JOB_NOT_FOUND}, error_states=[JOB_NOT_FOUND]
-        )
+        self.check_job_output_states(params={JOB_ID: JOB_NOT_FOUND}, error_states=[JOB_NOT_FOUND])
 
     def test_get_job_states__job_id__invalid(self):
         self.check_job_id__no_job_test(STATUS)
 
     def test_get_job_states__job_id_list__1_ok(self):
         job_id_list = [JOB_COMPLETED]
-        self.check_job_output_states(
-            params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
-        )
+        self.check_job_output_states(params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list)
 
     def test_get_job_states__job_id_list__2_ok(self):
         job_id_list = [JOB_COMPLETED, BATCH_PARENT]
-        self.check_job_output_states(
-            params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list
-        )
+        self.check_job_output_states(params={JOB_ID_LIST: job_id_list}, ok_states=job_id_list)
 
     def test_get_job_states__job_id_list__ok_bad(self):
         job_id_list = [BAD_JOB_ID, JOB_COMPLETED]
@@ -587,10 +569,7 @@ class JobCommTestCase(unittest.TestCase):
         exc = Exception("Test exception")
         exc_message = str(exc)
 
-        expected = {
-            job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id])
-            for job_id in ALL_JOBS
-        }
+        expected = {job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id]) for job_id in ALL_JOBS}
         for job_id in ACTIVE_JOBS:
             # add in the ee2_error message
             expected[job_id]["error"] = exc_message
@@ -656,9 +635,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_states_by_cell_id__all_results(self):
         cell_id_list = TEST_CELL_ID_LIST
         expected_ids = ALL_JOBS
-        expected_states = {
-            job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in expected_ids
-        }
+        expected_states = {job_id: ALL_RESPONSE_DATA[STATUS][job_id] for job_id in expected_ids}
 
         req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list}, False)
         self.jc._handle_comm_message(req_dict)
@@ -829,9 +806,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(CLIENTS, get_mock_client)
     def check_retry_jobs(self, job_args, job_id_list):
         req_dict = make_comm_msg(RETRY, job_args, False)
-        expected = {
-            job_id: ALL_RESPONSE_DATA[RETRY][job_id] for job_id in job_id_list if job_id
-        }
+        expected = {job_id: ALL_RESPONSE_DATA[RETRY][job_id] for job_id in job_id_list if job_id}
         retry_data = self.jc._handle_comm_message(req_dict)
         assert expected == retry_data
         retry_msg = self.jc._comm.pop_message()
@@ -879,9 +854,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_retry_jobs__job_id_list__failure(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
         req_dict = make_comm_msg(RETRY, job_id_list, False)
-        err = transform_job_exception(
-            generate_ee2_error(RETRY), "Unable to retry job(s)"
-        )
+        err = transform_job_exception(generate_ee2_error(RETRY), "Unable to retry job(s)")
 
         with pytest.raises(type(err), match=re.escape(str(err))):
             self.jc._handle_comm_message(req_dict)
@@ -930,7 +903,7 @@ class JobCommTestCase(unittest.TestCase):
             req_dict = make_comm_msg(LOGS, [job_id], False, content)
             self.jc._handle_comm_message(req_dict)
             msg = self.jc._comm.last_message
-            assert LOGS == msg["msg_type"]
+            assert msg["msg_type"] == LOGS
             msg_content = msg["content"][job_id]
             assert job_id == msg_content["job_id"]
             assert msg_content["batch_id"] is None
@@ -947,7 +920,7 @@ class JobCommTestCase(unittest.TestCase):
             assert first == msg_content["first"]
             for idx, line in enumerate(msg_content["lines"]):
                 assert str(first + idx) in line["line"]
-                assert 0 == line["is_error"]
+                assert line["is_error"] == 0
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__job_id__failure(self):
@@ -991,12 +964,10 @@ class JobCommTestCase(unittest.TestCase):
 
     @mock.patch(CLIENTS, get_mock_client)
     def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail(self):
-        req_dict = make_comm_msg(
-            LOGS, [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND], False
-        )
+        req_dict = make_comm_msg(LOGS, [JOB_COMPLETED, JOB_CREATED, JOB_NOT_FOUND], False)
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        assert LOGS == msg["msg_type"]
+        assert msg["msg_type"] == LOGS
 
         assert msg["content"] == {
             JOB_COMPLETED: {
@@ -1034,7 +1005,7 @@ class JobCommTestCase(unittest.TestCase):
         )
         self.jc._handle_comm_message(req_dict)
         msg = self.jc._comm.last_message
-        assert LOGS == msg["msg_type"]
+        assert msg["msg_type"] == LOGS
 
         assert msg["content"] == {
             JOB_COMPLETED: {
@@ -1200,14 +1171,11 @@ class JobCommTestCase(unittest.TestCase):
             JobRequestException,
             match=re.escape(f"Unknown KBaseJobs message '{unknown}'"),
         ):
-            self.jc._handle_comm_message(
-                {"content": {"data": {"request_type": unknown}}}
-            )
+            self.jc._handle_comm_message({"content": {"data": {"request_type": unknown}}})
 
 
 class JobRequestTestCase(unittest.TestCase):
-    """
-    Test the JobRequest module.
+    """Test the JobRequest module.
     This makes sure that it knows what to do with ok requests, bad requests,
     etc.
     """
@@ -1497,9 +1465,7 @@ class exc_to_msgTestCase(unittest.TestCase):
     def test_dict_req__both_inputs(self):
         req_type = STATUS
         # can give it both job_id and job_id_list since it's not a JobRequest
-        req_dict = make_comm_msg(
-            req_type, {JOB_ID: JOB_CREATED, JOB_ID_LIST: []}, False
-        )
+        req_dict = make_comm_msg(req_type, {JOB_ID: JOB_CREATED, JOB_ID_LIST: []}, False)
         message = (
             "What some people call racism could be seen as merely "
             "one manifestation of the degree to which we have internalized "

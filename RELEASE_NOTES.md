@@ -22,15 +22,16 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - Image dependencies are all found in the `docker_image_dependencies` directory, and combined into the `python-requirements.txt` file.
 - the requirements in `src/requirements.txt` are needed for the Narrative to run.
 - the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
+- flake8, isort, and black have been replaced by the multifunctional formatter and linter Ruff.
 
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
-  - black: 23.7.0 -> 24.4.2
+  - black: 24.4.2 -> replaced by Ruff
   - coverage: 7.3.1 -> 7.5.0
   - cryptography: 41.0.4 -> 42.0.5
-  - flake8: 6.1.0 -> 7.0.0
+  - flake8: 7.0.0 -> replaced by Ruff
   - idna: 3.4 -> 3.6
-  - isort: 5.12.0 -> 5.13.2
+  - isort: 5.13.2 -> replaced by Ruff
   - ipython: 8.10.0 -> 8.24.0
   - jinja2: 3.1.2 -> 3.1.3
   - markupsafe: 2.1.3 -> 2.1.4

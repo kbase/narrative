@@ -1,6 +1,5 @@
-"""
-A module for managing apps, specs, requirements, and for starting jobs.
-"""
+"""A module for managing apps, specs, requirements, and for starting jobs."""
+
 import datetime
 import functools
 import random
@@ -45,8 +44,7 @@ def timestamp() -> str:
 
 
 def _app_error_wrapper(app_func: Callable) -> Callable:
-    """
-    This is a decorator meant to wrap any of the `run_app*` methods here.
+    """This is a decorator meant to wrap any of the `run_app*` methods here.
     It captures any raised exception, formats it into a message that can be sent
     over the comm channel to the frontend, then prints a more friendly form of the
     error, instead of showing an arcane traceback.
@@ -91,8 +89,7 @@ def _app_error_wrapper(app_func: Callable) -> Callable:
 
 
 class AppManager:
-    """
-    The main class for managing how KBase apps get run. This contains functions
+    """The main class for managing how KBase apps get run. This contains functions
     for showing app descriptions, their usage (how to invoke various
     parameters), and, ultimately, for running the app.
 
@@ -122,16 +119,14 @@ class AppManager:
         return AppManager.__instance
 
     def reload(self: "AppManager"):
-        """
-        Reloads all app specs into memory from the App Catalog.
+        """Reloads all app specs into memory from the App Catalog.
         Any outputs of app_usage, app_description, or available_apps
         should be run again after the update.
         """
         self.spec_manager.reload()
 
     def app_usage(self: "AppManager", app_id: str, tag: str = "release"):
-        """
-        This shows the list of inputs and outputs for a given app with a given
+        """This shows the list of inputs and outputs for a given app with a given
         tag. By default, this is done in a pretty HTML way, but this app can be
         wrapped in str() to show a bare formatted string.
 
@@ -149,8 +144,7 @@ class AppManager:
         return self.spec_manager.app_usage(app_id, tag)
 
     def app_description(self: "AppManager", app_id: str, tag: str = "release"):
-        """
-        Returns the app description in a printable HTML format.
+        """Returns the app description in a printable HTML format.
 
         If either the app_id is unknown, or isn't found with the given release
         tag, or if the tag is unknown, a ValueError will be raised.
@@ -166,8 +160,7 @@ class AppManager:
         return self.spec_manager.app_description(app_id, tag)
 
     def available_apps(self: "AppManager", tag: str = "release"):
-        """
-        Lists the set of available apps for a given tag in a simple table.
+        """Lists the set of available apps for a given tag in a simple table.
         If the tag is not found, a ValueError will be raised.
 
         Parameters:
@@ -328,8 +321,7 @@ class AppManager:
         run_id: str | None = None,
         dry_run=False,
     ) -> dict[str, Any]:
-        """
-        Attempts to run the app, returns a Job with the running app info.
+        """Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the
         generated Job object.
 
@@ -414,8 +406,7 @@ class AppManager:
         run_id: str | None = None,
         dry_run: bool = False,
     ) -> None | dict[str, Job | list[Job]] | dict[str, dict[str, str | int] | list]:
-        """
-        Attempts to run a batch of apps in bulk using the Execution Engine's run_app_batch endpoint.
+        """Attempts to run a batch of apps in bulk using the Execution Engine's run_app_batch endpoint.
         If a cell_id is provided, this sends various job messages over the comm channel, and returns None.
         If dry_run is True, this returns the structure that would be sent to EE2.run_job_batch
 
@@ -471,11 +462,8 @@ class AppManager:
             ]
         }])
         """
-
         if not isinstance(app_info, list) or len(app_info) == 0:
-            raise ValueError(
-                "app_info must be a list with at least one set of app information"
-            )
+            raise ValueError("app_info must be a list with at least one set of app information")
         batch_run_inputs = []
         ws_id = strict_system_variable("workspace_id")
         batch_params = {"wsid": ws_id}  # for EE2.run_job_batch
@@ -520,9 +508,7 @@ class AppManager:
             return {"batch_run_params": batch_run_inputs, "batch_params": batch_params}
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        agent_token = self._get_agent_token(
-            f"KBase_app_batch_{len(batch_run_inputs)}_apps"
-        )
+        agent_token = self._get_agent_token(f"KBase_app_batch_{len(batch_run_inputs)}_apps")
 
         # add the token id to the meta for all jobs
         for job_input in batch_run_inputs:
@@ -568,8 +554,7 @@ class AppManager:
             return {"parent_job": parent_job, "child_jobs": child_jobs}
 
     def _validate_bulk_app_info(self: "AppManager", app_info: dict):
-        """
-        Validation consists of:
+        """Validation consists of:
         1. must have "app_id" with format xyz/abc
         2. must have "tag" with "release, beta, dev" options
         3. optionally have "version" that's a string
@@ -581,9 +566,7 @@ class AppManager:
         required_keys = ["app_id", "tag", "params"]
         for key in required_keys:
             if key not in app_info:
-                raise ValueError(
-                    f"app info must contain keys {', '.join(required_keys)}"
-                )
+                raise ValueError(f"app info must contain keys {', '.join(required_keys)}")
         # make sure app is of the form "module/app"
         if (
             not isinstance(app_info["app_id"], str)
@@ -600,20 +583,13 @@ class AppManager:
         # make sure tag is an allowed item
         allowed_tags = ["release", "beta", "dev"]
         if app_info["tag"] not in allowed_tags:
-            raise ValueError(
-                f"tag must be one of {', '.join(allowed_tags)}, not {app_info['tag']}"
-            )
+            raise ValueError(f"tag must be one of {', '.join(allowed_tags)}, not {app_info['tag']}")
         # make sure version is a string, if present
         if "version" in app_info and not isinstance(app_info["version"], str):
-            raise ValueError(
-                f"an app version must be a string, not {app_info['version']}"
-            )
+            raise ValueError(f"an app version must be a string, not {app_info['version']}")
 
-    def _reconstitute_shared_params(
-        self: "AppManager", app_info_el: dict[str, Any]
-    ) -> None:
-        """
-        Mutate each params dict to include any shared_params
+    def _reconstitute_shared_params(self: "AppManager", app_info_el: dict[str, Any]) -> None:
+        """Mutate each params dict to include any shared_params
         app_info_el is structured like:
         {
             "app_id": "Some_module/reads_to_contigset",
@@ -649,8 +625,7 @@ class AppManager:
         run_id: str | None = None,
         ws_id: int | None = None,
     ) -> dict:
-        """
-        Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec
+        """Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec
         and set of inputs/parameters.
 
         Parameters:
@@ -684,9 +659,7 @@ class AppManager:
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        spec_params_map = {
-            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
-        }
+        spec_params_map = {spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))}
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
         input_vals = self._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map
@@ -736,8 +709,7 @@ class AppManager:
         run_id: str | None = None,
         widget_state=None,
     ):
-        """
-        Attempts to run a local app. These do not return a Job object, but just
+        """Attempts to run a local app. These do not return a Job object, but just
         the result of the app. In most cases, this will be a Javascript display
         of the result, but could be anything.
 
@@ -807,9 +779,7 @@ class AppManager:
             return wm.show_advanced_viewer_widget(
                 output_widget, widget_params, widget_state, cell_id=cell_id, tag=tag
             )
-        return wm.show_output_widget(
-            output_widget, widget_params, cell_id=cell_id, tag=tag
-        )
+        return wm.show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
 
     def run_local_app_advanced(
         self: "AppManager",
@@ -892,9 +862,7 @@ class AppManager:
             if value[param_id] is None:
                 target_val = None
             else:
-                target_val = resolve_ref_if_typed(
-                    value[param_id], spec_params[param_id]
-                )
+                target_val = resolve_ref_if_typed(value[param_id], spec_params[param_id])
 
             mapped_value[target_key] = target_val
         return mapped_value
@@ -905,8 +873,7 @@ class AppManager:
         params: dict[str, Any],
         spec_params: dict[str, Any],
     ):
-        """
-        Maps the dictionary of parameters and inputs based on rules provided in
+        """Maps the dictionary of parameters and inputs based on rules provided in
         the input_mapping. This iterates over the list of input_mappings, and
         uses them as a filter to apply to each parameter.
 
@@ -943,9 +910,7 @@ class AppManager:
             spec_param = None
             if input_param_id:
                 spec_param = spec_params[input_param_id]
-            p_value = transform_param_value(
-                p.get("target_type_transform"), p_value, spec_param
-            )
+            p_value = transform_param_value(p.get("target_type_transform"), p_value, spec_param)
 
             # get position!
             arg_position = p.get("target_argument_position", 0)
@@ -956,8 +921,8 @@ class AppManager:
                     # This is case when slashes in target_prop separate
                     # elements in nested maps. We ignore escaped slashes
                     # (separate backslashes should be escaped as well).
-                    bck_slash = "\u244A"
-                    fwd_slash = "\u20EB"
+                    bck_slash = "\u244a"
+                    fwd_slash = "\u20eb"
                     temp_string = target_prop.replace("\\\\", bck_slash)
                     temp_string = temp_string.replace("\\/", fwd_slash)
                     temp_path = []
@@ -991,8 +956,7 @@ class AppManager:
         return inputs_list
 
     def _generate_input(self: "AppManager", generator: dict[str, Any] | None):
-        """
-        Generates an input value using rules given by
+        """Generates an input value using rules given by
         NarrativeMethodStore.AutoGeneratedValue.
         generator - dict
             has 3 optional properties:
@@ -1008,8 +972,7 @@ class AppManager:
                 symbols = int(generator["symbols"])
             except BaseException:
                 raise ValueError(
-                    'The "symbols" input to the generated value must be an '
-                    + "integer > 0!"
+                    'The "symbols" input to the generated value must be an ' + "integer > 0!"
                 ) from None
         if symbols < 1:
             raise ValueError("Must have at least 1 symbol to randomly generate!")
@@ -1024,8 +987,7 @@ class AppManager:
         JobComm().send_comm_message(msg_type, content)
 
     def _get_agent_token(self: "AppManager", name: str) -> auth.TokenInfo:
-        """
-        Retrieves an agent token from the Auth service with a formatted name.
+        """Retrieves an agent token from the Auth service with a formatted name.
         This prepends "KBApp_" to the name for filtering, and trims to make sure the name
         isn't longer than it should be.
         """

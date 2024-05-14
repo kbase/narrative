@@ -12,9 +12,7 @@ from .narrative_mock.mockclients import get_mock_client
 user_token = "SOME_TOKEN"
 config = util.ConfigTests()
 user_id = config.get("users", "test_user")
-user_token = util.read_token_file(
-    config.get_path("token_files", "test_user", from_root=True)
-)
+user_token = util.read_token_file(config.get_path("token_files", "test_user", from_root=True))
 
 # inject phony variables into the environment
 bad_fake_token = "NotAGoodTokenLOL"
@@ -99,8 +97,6 @@ def test_strict_sys_var_user_ok():
 
 def test_strict_sys_var_user_bad():
     biokbase.auth.set_environ_token(bad_fake_token)
-    with pytest.raises(
-        ValueError, match='Unable to retrieve system variable: "user_id"'
-    ):
+    with pytest.raises(ValueError, match='Unable to retrieve system variable: "user_id"'):
         strict_system_variable("user_id")
     biokbase.auth.set_environ_token(None)

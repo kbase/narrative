@@ -1,4 +1,4 @@
-$kb-narr-outline: 2px solid use_color('base-lighter');
+$kb-narr-outline: 2px solid use-color('base-lighter');
 
 .kb-narr-outline {
   padding: 0.5em 0.5em 0.5em 0.25em;
@@ -90,13 +90,13 @@ $kb-narr-outline: 2px solid use_color('base-lighter');
     }
 
     &--highlight::before {
-      background-color: use_color('base-lightest');
-      border: 1px solid use_color('base-light');
+      background-color: use-color('base-lightest');
+      border: 1px solid use-color('base-light');
     }
 
     &--highlight-selected::before {
-      background-color: use_rgba_color('mid-green', 0.15);
-      border: 1px solid use_color('mid-green');
+      background-color: use-rgba-color('mid-green', 0.15);
+      border: 1px solid use-color('mid-green');
     }
   }
 }

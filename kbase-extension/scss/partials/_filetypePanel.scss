@@ -63,17 +63,17 @@ $filetype-hover-color: use-color('base-lighter');
 
       // .kb-filetype-panel__filetype_icon--complete
       &--complete {
-        color: use_color('green');
+        color: use-color('green');
       }
 
       // .kb-filetype-panel__filetype_icon--incomplete
       &--incomplete {
-        color: use_color('error');
+        color: use-color('error');
       }
 
       // .kb-filetype-panel__filetype_icon--warning
       &--warning {
-        color: use_color('warning-dark');
+        color: use-color('warning-dark');
       }
     }
 

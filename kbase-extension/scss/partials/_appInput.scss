@@ -86,7 +86,7 @@
 
         // .kb-appInput__struct__subcontrols
         &__subcontrols {
-            border-left: 5px solid silver;
+            border-left: 5px solid use-color('silver');
             padding: 2px;
             margin: 6px
         }

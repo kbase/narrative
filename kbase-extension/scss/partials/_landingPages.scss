@@ -58,7 +58,7 @@ table {
 }
 
 .caret-up {
-  border-color: currentColor transparent rgb(255 255 255);
+  border-color: currentcolor transparent rgb(255 255 255);
   border-style: dotted solid solid;
   border-width: 0 4px 4px;
   content: '';
@@ -71,8 +71,7 @@ table {
 
 .scroll-pane {
   height: 200px;
-  overflow-x: hidden;
-  overflow-y: scroll;
+  overflow: hidden scroll;
 }
 
 #select-box tr td {
@@ -170,7 +169,7 @@ table {
 
 .modal-cover-content {
   background: rgb(255 255 255);
-  border: 1px solid use_color('base');
+  border: 1px solid use-color('base');
   border-radius: 3px;
   padding: 5px;
 }
@@ -207,7 +206,7 @@ table {
 /* custom checkboxes (prototyped) */
 
 .ncheck {
-  border: 1px solid use_color('base-lighter');
+  border: 1px solid use-color('base-lighter');
   height: 15px;
   margin-left: auto;
   margin-right: auto;
@@ -313,7 +312,7 @@ table {
   list-style: none;
 }
 
-@media (min-width: 960px) {
+@media (width >= 960px) {
   .narrative-sidebar {
     position: fixed;
     width: 20%;

@@ -7,6 +7,7 @@
   // .kb-app-params__toggle--advanced-errors
   &__toggle--advanced-errors {
     @include base-text;
+
     background-color: use-color('error-lightest');
     color: use-color('ink');
 

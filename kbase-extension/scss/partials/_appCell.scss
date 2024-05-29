@@ -55,7 +55,7 @@
     padding: 5px;
 
     &:hover {
-      background-color: rgb(0 0 0 / 0.03);
+      background-color: rgb(0 0 0 / 3%);
     }
   }
 
@@ -114,7 +114,7 @@
   }
 
   .kb-app-parameter-accepted-glyph {
-    color: use_color('mid-green');
+    color: use-color('mid-green');
   }
 
   .kb-app-advanced-options-controller-inactive,
@@ -158,12 +158,12 @@
     display: none;
   }
 
-  [data-element=run-control-panel] {
+  [data-element="run-control-panel"] {
     width: 100%;
   }
 
-  [data-element=tab-pane] {
-    border-top: 2px solid use_color('mid-blue');
+  [data-element="tab-pane"] {
+    border-top: 2px solid use-color('mid-blue');
 
     > div {
       padding: 0;
@@ -275,46 +275,46 @@ Buttons
 
 .btn {
   &.batch-active {
-    background-color: use_color('base-lightest');
+    background-color: use-color('base-lightest');
     border-color: rgb(173 173 173);
-    box-shadow: inset 0 3px 7px rgb(0 0 0 / 0.125);
+    box-shadow: inset 0 3px 7px rgb(0 0 0 / 12.5%);
 
     &:hover {
-      background-color: use_color('base-lighter');
+      background-color: use-color('base-lighter');
     }
   }
 
   &.kb-app-cell-btn {
     background-color: rgb(255 255 255);
-    border: 2px solid use_color('mid-blue');
-    color: use_color('mid-blue');
+    border: 2px solid use-color('mid-blue');
+    color: use-color('mid-blue');
     margin-bottom: 4px;
 
     &.btn-primary {
-      border: 2px solid use_color('mid-blue');
-      color: use_color('mid-blue');
+      border: 2px solid use-color('mid-blue');
+      color: use-color('mid-blue');
 
       &:hover {
-        border-bottom: 6px solid use_color('mid-blue');
+        border-bottom: 6px solid use-color('mid-blue');
         margin-bottom: 0;
       }
 
       &.active,
       &:active,
       &:hover {
-        background-color: use_color('mid-blue');
+        background-color: use-color('mid-blue');
         color: rgb(255 255 255);
       }
 
       &.active {
-        border: solid use_color('mid-blue');
+        border: solid use-color('mid-blue');
         border-width: 2px 2px 6px;
         margin-bottom: 0;
 
         &:hover {
           background-color: rgb(221 221 221);
-          border-bottom: 2px solid use_color('mid-blue');
-          color: use_color('mid-blue');
+          border-bottom: 2px solid use-color('mid-blue');
+          color: use-color('mid-blue');
           margin-bottom: 4px;
         }
       }
@@ -377,7 +377,7 @@ Buttons
 
 .kb-app-status {
   &-ok {
-    color: use_color('mid-green');
+    color: use-color('mid-green');
   }
 
   &-warning {
@@ -390,7 +390,7 @@ Buttons
   }
 
   &-default {
-    color: use_color('mid-blue');
+    color: use-color('mid-blue');
   }
 }
 
@@ -405,7 +405,7 @@ Buttons
 
 .tt-input,
 .tt-query {
-  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.075);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 7.5%);
   width: 100%;
 }
 
@@ -415,9 +415,9 @@ Buttons
 
 .tt-menu {
   background-color: rgb(255 255 255);
-  border: 1px solid rgb(0 0 0 / 0.2);
+  border: 1px solid rgb(0 0 0 / 20%);
   border-radius: 4px;
-  box-shadow: 0 5px 10px rgb(0 0 0 / 0.2);
+  box-shadow: 0 5px 10px rgb(0 0 0 / 20%);
 
   /* used to be tt-dropdown-menu in older versions */
   margin-top: 4px;

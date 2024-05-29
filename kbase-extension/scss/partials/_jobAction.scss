@@ -20,44 +20,44 @@
           &--cancel {
             @include body-text;
 
-            background: use_color('white');
+            background: use-color('white');
             border: 0;
-            border-bottom: 1px solid rgb(0 0 0 / 0.15);
+            border-bottom: 1px solid rgb(0 0 0 / 15%);
             line-height: 2.5;
             text-align: left;
             width: 100%;
 
             &:disabled {
-              color: use_color('base');
+              color: use-color('base');
               cursor: not-allowed;
             }
 
             &:hover,
             &:active {
               &:disabled {
-                background: use_color('base-light');
-                color: use_color('white');
+                background: use-color('base-light');
+                color: use-color('white');
               }
             }
           }
 
           &--retry {
-            color: use_color('primary');
+            color: use-color('primary');
 
             &:hover,
             &:active {
-              background: use_color('primary');
-              color: use_color('white');
+              background: use-color('primary');
+              color: use-color('white');
             }
           }
 
           &--cancel {
-            color: use_color('error-dark');
+            color: use-color('error-dark');
 
             &:hover,
             &:active {
-              background: use_color('error');
-              color: use_color('white');
+              background: use-color('error');
+              color: use-color('white');
             }
           }
         }

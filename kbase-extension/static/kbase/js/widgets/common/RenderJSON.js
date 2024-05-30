@@ -1,4 +1,4 @@
-define(['jquery', 'css!styles/widgets/common/RenderJSON.css'], ($) => {
+define(['jquery'], ($) => {
     'use strict';
 
     /**

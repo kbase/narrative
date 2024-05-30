@@ -1,34 +1,34 @@
 .kb-tour {
-  background-color: use_color('mid-blue');
+  background-color: use-color('mid-blue');
 
   &.popover {
     &.top > .arrow::after {
-      border-top-color: use_color('mid-blue');
+      border-top-color: use-color('mid-blue');
     }
 
     &.bottom > .arrow::after {
-      border-bottom-color: use_color('mid-blue');
+      border-bottom-color: use-color('mid-blue');
     }
 
     &.right > .arrow::after {
-      border-right-color: use_color('mid-blue');
+      border-right-color: use-color('mid-blue');
     }
 
     &.left > .arrow::after {
-      border-left-color: use_color('mid-blue');
+      border-left-color: use-color('mid-blue');
     }
   }
 
   > {
     h3.popover-title {
-      background-color: use_color('mid-blue');
-      color: use_color('white');
+      background-color: use-color('mid-blue');
+      color: use-color('white');
       font: 16px $typeface-page-text;
     }
 
     .popover-content,
     .popover-navigation {
-      background-color: use_color('base-lightest');
+      background-color: use-color('base-lightest');
     }
 
     .close-btn {

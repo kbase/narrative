@@ -43,21 +43,21 @@ $outline-offset: 1px;
     //  .kb-icon__icon_background--app-toolbar
     &--app,
     &--app-toolbar {
-      color: use_color('icon-app');
+      color: use-color('icon-app');
     }
 
     //  .kb-icon__icon_background--generic,
     //  .kb-icon__icon_background--generic-toolbar
     &--generic,
     &--generic-toolbar {
-      color: use_color('icon-generic');
+      color: use-color('icon-generic');
     }
 
     //  .kb-icon__icon_background--type,
     //  .kb-icon__icon_background--type-toolbar
     &--type,
     &--type-toolbar {
-      color: use_color('icon-type');
+      color: use-color('icon-type');
     }
   }
 
@@ -92,7 +92,7 @@ $outline-offset: 1px;
 
   &__outline--l1,
   &__outline--l2 {
-    color: use_color('white');
+    color: use-color('white');
   }
 }
 

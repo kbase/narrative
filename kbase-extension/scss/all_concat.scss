@@ -39,6 +39,7 @@
 @import "partials/dataStaging";
 @import "partials/dropzoneDz";
 @import "partials/errorDisplay";
+@import "partials/errorMessage";
 @import "partials/filePath";
 @import "partials/filetypePanel";
 @import "partials/fsm";
@@ -47,11 +48,14 @@
 @import "partials/jobAction";
 @import "partials/jobLog";
 @import "partials/jobStatus";
+@import "partials/jQueryUtils";
 @import "partials/kb-icon";
 @import "partials/kbaseTabs";
 @import "partials/loadingBlocker";
+@import "partials/loadingMessage";
 @import "partials/narrativeOutline";
 @import "partials/rcp";
+@import "partials/renderJSON";
 @import "partials/reportViewer";
 @import "partials/select2";
 @import "partials/stagingTable";

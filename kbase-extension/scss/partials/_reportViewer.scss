@@ -18,7 +18,7 @@
   &__summary {
     @include fixed-width;
 
-    color: use_color('base-dark');
+    color: use-color('base-dark');
     height: auto;
     max-height: 500px;
     overflow: auto;
@@ -70,10 +70,11 @@
 
   &__item_toggle {
     @include font-h4;
+
     padding: 0.5rem 0;
     margin: 0 -1rem;
-
     color: use-color('blue');
+
     &:hover {
       color: use-color('blue-hlink');
     }

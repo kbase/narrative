@@ -95,7 +95,7 @@
       &--download {
         @extend %kbase-button;
 
-        @include button-variant(use_color('white'), use_color('primary'), transparent);
+        @include button-variant(use-color('white'), use-color('primary'), transparent);
         @include button-size(0.5rem, 0.5rem, 12px, 12px, 0);
 
         margin-left: 0.5rem;
@@ -107,12 +107,12 @@
       &--folder {
         @extend %kbase-button;
 
-        @include button-variant(use_color('primary'), transparent, transparent);
+        @include button-variant(use-color('primary'), transparent, transparent);
         @include button-size(0.5rem, 0.5rem, 18px, 12px, 0);
 
         &:active,
         &:hover {
-          color: use_color('primary-vivid');
+          color: use-color('primary-vivid');
         }
       }
     }
@@ -149,8 +149,8 @@
     // .kb-staging-table-body .kb-staging-table-body__import-dropdown
     .kb-staging-table-body__import-dropdown {
       align-items: center;
-      background: use_color('white');
-      border: 1px solid use_color('error-dark');
+      background: use-color('white');
+      border: 1px solid use-color('error-dark');
       border-radius: 4px;
       box-sizing: border-box;
       display: flex;
@@ -160,7 +160,7 @@
       .select2-selection {
         // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered
         &__rendered {
-          color: use_color('ink');
+          color: use-color('ink');
           flex: 1 1 auto;
           font-size: 14px;
           line-height: 20px;
@@ -169,7 +169,7 @@
 
         // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder
         &__placeholder {
-          color: use_color('error-dark');
+          color: use-color('error-dark');
         }
 
         // style for Import As dropdown container arrow
@@ -178,7 +178,7 @@
           margin-top: 4px;
 
           b {
-            border-color: use_color('error-dark') transparent transparent;
+            border-color: use-color('error-dark') transparent transparent;
           }
         }
       }
@@ -186,7 +186,7 @@
       &.kb-staging-table-body__import-type-selected,
       &:focus {
         .select2-selection__arrow b {
-          border-color: use_color('grey') transparent transparent;
+          border-color: use-color('grey') transparent transparent;
         }
       }
       // Import as dropdown placeholder text is red
@@ -254,7 +254,7 @@
   }
 
   &__notice {
-    background-color: use_color('base-lightest');
+    background-color: use-color('base-lightest');
     font: normal 700 16px/20px $typeface-page-text;
     padding: 1rem;
     text-align: center;
@@ -266,7 +266,7 @@
     &__button {
       @extend %kbase-button;
 
-      @include button-variant(use_color('white'), use_color('primary'), transparent);
+      @include button-variant(use-color('white'), use-color('primary'), transparent);
       @include button-size($padding-large-vertical, $padding-large-horizontal, $font-size-base, $line-height-large, $btn-border-radius-large);
 
       bottom: -50px;
@@ -275,14 +275,14 @@
       text-transform: none;
 
       &[disabled] {
-        background-color: use_color('info');
+        background-color: use-color('info');
         cursor: not-allowed;
         opacity: 1;
 
         &:active,
         &:hover,
         &:focus {
-          background-color: use_color('info');
+          background-color: use-color('info');
         }
 
         &:focus {
@@ -292,14 +292,14 @@
     }
 
     &__tooltip.tooltip {
-      background: use_color('white');
+      background: use-color('white');
       border-radius: 4px;
-      box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
+      box-shadow: 2px 4px 6px rgb(0 0 0 / 15%);
 
       .tooltip-inner {
         align-items: center;
-        background: use_color('white');
-        color: use_color('black');
+        background: use-color('white');
+        color: use-color('black');
         display: flex;
         font: normal 400 14px/16px $typeface-page-text;
         height: 6rem;

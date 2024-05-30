@@ -1,8 +1,4 @@
-define([
-    'jquery',
-
-    'css!styles/widgets/common/jQueryUtils.css'
-], ($) => {
+define(['jquery'], ($) => {
     'use strict';
 
     function $el(tagName) {

@@ -1,0 +1,56 @@
+interactions:
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1"}]}],
+      "version": "1.1", "id": "5071905890755527"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '130'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":{"Instrument":"Old
+        Faithful","Scientist":"Marie Currie"},"col_attributemapping_ref":"36095/72/1","col_mapping":{"instance_1":"test_col_instance_1","instance_2":"test_col_instance_2","instance_3":"test_col_instance_3","instance_4":"test_col_instance_4"},"col_normalization":"test_col_normalization","data":{"col_ids":["instance_1","instance_2","instance_3","instance_4"],"row_ids":["WRI_RS00010_CDS_1","WRI_RS00015_CDS_1","WRI_RS00025_CDS_1"],"values":[[0.1,0.2,0.3,0.4],[0.5,0.6,0.7,0.8],[0.0,0.0,1.1,1.2]]},"description":"test_desc","genome_ref":"36795/2/1","row_attributemapping_ref":"36095/73/1","row_mapping":{"WRI_RS00010_CDS_1":"test_row_instance_1","WRI_RS00015_CDS_1":"test_row_instance_2","WRI_RS00025_CDS_1":"test_row_instance_3"},"row_normalization":"test_row_normalization","scale":"log2","search_attributes":["Scientist
+        | Marie Currie","Instrument | Old Faithful"]},"info":[74,"test_ExpressionMatrix","KBaseMatrices.ExpressionMatrix-3.1","2018-10-02T15:04:11+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","586ad7f04569c0be2263063de61e5e6e",892,{"row_normalization":"test_row_normalization","genome":"36795/2/1","condition_count":"4","col_attribute_mapping":"36095/72/1","col_normalization":"test_col_normalization","feature_count":"3","scale":"log2","row_attribute_mapping":"36095/73/1"}],"path":["36095/74/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:11+0000","epoch":1538492651257,"refs":["36795/2/1","36095/73/1","36095/72/1"],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c8848c5e3c250c-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 17:00:01 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=A38QEcvOjcd1qAiAcpweOxk7jeYcP1LP0XjbBpaJuSI-1717174801-1.0.1.1-PHELusPhwGTfHrZD1H6jkJ9DrRUsBPuBtbpHj0oKo.B8IM5ZXBSEaa3uViCQ4AkQRXJe4TWiPmeUHkqUJopDug;
+        path=/; expires=Fri, 31-May-24 17:30:01 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+version: 1

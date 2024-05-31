@@ -1,3 +1,5 @@
+"""Tests of the Job object."""
+
 import copy
 import itertools
 import re

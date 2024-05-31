@@ -1,6 +1,4 @@
-"""Tests for Mixin class that handles IO between the
-Narrative and workspace service.
-"""
+"""Tests for Mixin class that handles IO between the Narrative and workspace service."""
 
 import unittest
 from unittest.mock import patch
@@ -51,8 +49,8 @@ def skipUnlessToken():
     return None
 
 
-def str_to_ref(s):
-    """Takes a ref string, returns a NarrativeRef object"""
+def str_to_ref(s: str) -> NarrativeRef:
+    """Takes a ref string, returns a NarrativeRef object."""
     vals = s.split("/")
     ref = {"wsid": vals[0], "objid": vals[1]}
     if len(vals) == 3:
@@ -68,20 +66,20 @@ class NarrIOTestCase(unittest.TestCase):
     private_token = None
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls: type["NarrIOTestCase"]) -> None:
         config = util.ConfigTests()
 
-        self.test_user = config.get("users", "test_user")
-        self.private_user = config.get("users", "private_user")
+        cls.test_user = config.get("users", "test_user")
+        cls.private_user = config.get("users", "private_user")
 
-        self.test_token = util.read_token_file(
+        cls.test_token = util.read_token_file(
             config.get_path("token_files", "test_user", from_root=True)
         )
-        self.private_token = util.read_token_file(
+        cls.private_token = util.read_token_file(
             config.get_path("token_files", "private_user", from_root=True)
         )
 
-        if self.test_token is None or self.private_token is None:
+        if cls.test_token is None or cls.private_token is None:
             print("Skipping most narrativeio.py tests due to missing tokens.")
             print(
                 "To enable these, update {} and place a valid auth token in files\n{}\nand\n{}".format(
@@ -92,66 +90,66 @@ class NarrIOTestCase(unittest.TestCase):
             )
             print("Note that these should belong to different users.")
 
-        if self.test_token is not None:
+        if cls.test_token is not None:
             global HAS_TEST_TOKEN
             HAS_TEST_TOKEN = True
 
-        self.ws_uri = URLS.workspace
+        cls.ws_uri = URLS.workspace
 
-        self.invalid_nar_ref_str = config.get("strings", "invalid_nar_ref")
-        self.invalid_nar_ref = str_to_ref(self.invalid_nar_ref_str)
-        self.bad_nar_ref = config.get("strings", "bad_nar_ref")
-        self.invalid_ws_id = config.get("strings", "invalid_ws_id")
-        self.bad_ws_id = config.get("strings", "bad_ws_id")
+        cls.invalid_nar_ref_str = config.get("strings", "invalid_nar_ref")
+        cls.invalid_nar_ref = str_to_ref(cls.invalid_nar_ref_str)
+        cls.bad_nar_ref = config.get("strings", "bad_nar_ref")
+        cls.invalid_ws_id = config.get("strings", "invalid_ws_id")
+        cls.bad_ws_id = config.get("strings", "bad_ws_id")
 
-        if self.test_token is not None:
+        if cls.test_token is not None:
             # Now we need to inject some data!
             # To avoid cross-contamination (we're testing the new_narrative() code here,
             # so we shouldn't use it, right?) this will be done manually using the Workspace
             # client.
-            self.public_nar = util.upload_narrative(
+            cls.public_nar = util.upload_narrative(
                 config.get_path("narratives", "public_file"),
-                self.test_token,
-                self.test_user,
+                cls.test_token,
+                cls.test_user,
                 set_public=True,
-                url=self.ws_uri,
+                url=cls.ws_uri,
             )
-            self.private_nar = util.upload_narrative(
+            cls.private_nar = util.upload_narrative(
                 config.get_path("narratives", "private_file"),
-                self.test_token,
-                self.test_user,
-                url=self.ws_uri,
+                cls.test_token,
+                cls.test_user,
+                url=cls.ws_uri,
             )
-        if self.private_token is not None:
-            self.unauth_nar = util.upload_narrative(
+        if cls.private_token is not None:
+            cls.unauth_nar = util.upload_narrative(
                 config.get_path("narratives", "unauth_file"),
-                self.private_token,
-                self.private_user,
-                url=self.ws_uri,
+                cls.private_token,
+                cls.private_user,
+                url=cls.ws_uri,
             )
 
     @classmethod
-    def tearDownClass(self):
-        if self.test_token is not None:
-            util.delete_narrative(self.public_nar["ws"], self.test_token, url=self.ws_uri)
-            util.delete_narrative(self.private_nar["ws"], self.test_token, url=self.ws_uri)
-        if self.private_token is not None:
-            util.delete_narrative(self.unauth_nar["ws"], self.private_token, url=self.ws_uri)
+    def tearDownClass(cls: type["NarrIOTestCase"]) -> None:
+        if cls.test_token is not None:
+            util.delete_narrative(cls.public_nar["ws"], cls.test_token, url=cls.ws_uri)
+            util.delete_narrative(cls.private_nar["ws"], cls.test_token, url=cls.ws_uri)
+        if cls.private_token is not None:
+            util.delete_narrative(cls.unauth_nar["ws"], cls.private_token, url=cls.ws_uri)
 
     @classmethod
-    def setUp(self):
-        self.mixin = KBaseWSManagerMixin()
+    def setUp(cls: type["NarrIOTestCase"]) -> None:
+        cls.mixin = KBaseWSManagerMixin()
         # monkeypatch the ws url so it doesn't go to the auto-configured one
-        self.mixin.ws_uri = self.ws_uri
+        cls.mixin.ws_uri = cls.ws_uri
 
     @classmethod
-    def login(self, token=None):
+    def login(cls: type["NarrIOTestCase"], token=None) -> None:
         if token is None:
-            token = self.test_token
+            token = cls.test_token
         biokbase.auth.set_environ_token(token)
 
     @classmethod
-    def logout(self):
+    def logout(cls: type["NarrIOTestCase"]) -> None:
         biokbase.auth.set_environ_token(None)
 
     def test_mixin_instantiated(self):

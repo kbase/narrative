@@ -1,3 +1,5 @@
+"""JobManager class."""
+
 import copy
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -38,9 +40,10 @@ CELLS_NOT_PROVIDED_ERR = "cell_id_list not provided"
 
 
 class JobManager:
-    """The KBase Job Manager class. This handles all jobs and makes their status available.
-    It sends the results to the KBaseJobs channel that the front end
-    listens to.
+    """The KBase Job Manager class.
+
+    This handles all jobs and makes their status available.
+    It sends the results to the KBaseJobs channel that the front end listens to.
     """
 
     __instance = None
@@ -52,7 +55,8 @@ class JobManager:
 
     _log = kblogging.get_logger(__name__)
 
-    def __new__(cls) -> "JobManager":
+    def __new__(cls: type["JobManager"]) -> "JobManager":
+        """Generate the JobManager singleton."""
         if JobManager.__instance is None:
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
@@ -71,6 +75,7 @@ class JobManager:
         self: "JobManager", input_ids: list[str] | None = None
     ) -> tuple[list[str], list[str]]:
         """Deduplicates the input job list, maintaining insertion order.
+
         Any jobs not present in self._running_jobs are added to an error list
 
         :param input_ids: list of putative job IDs, defaults to []
@@ -88,7 +93,8 @@ class JobManager:
             raise JobRequestException(JOBS_MISSING_ERR, input_ids)
 
         if not isinstance(input_ids, list):
-            raise JobRequestException(f"{JOBS_TYPE_ERR}: {input_ids}")
+            err_msg = f"{JOBS_TYPE_ERR}: {input_ids}"
+            raise JobRequestException(err_msg)
 
         job_ids = []
         error_ids = []
@@ -106,6 +112,7 @@ class JobManager:
 
     def register_new_job(self: "JobManager", job: Job, refresh: bool | None = None) -> None:
         """Registers a new Job with the manager and stores the job locally.
+
         This should only be invoked when a new Job gets started.
 
         :param job: a Job object for the new job that was started
@@ -130,6 +137,7 @@ class JobManager:
 
     def initialize_jobs(self: "JobManager", cell_ids: list[str] | None = None) -> None:
         """Initializes this JobManager.
+
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
         It runs the following steps:
         1. gets the current workspace ID from app_util.system_variable('workspace_id')
@@ -180,6 +188,7 @@ class JobManager:
 
     def _create_jobs(self: "JobManager", job_ids: list[str]) -> dict[str, Any]:
         """Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary.
+
         TODO: error handling
 
         :param job_ids: job IDs to create job objects for
@@ -264,7 +273,8 @@ class JobManager:
         :rtype: dict
         """
         if not isinstance(job_ids, list):
-            raise JobRequestException("job_ids must be a list")
+            err_msg = "job_ids must be a list"
+            raise JobRequestException(err_msg)
 
         if not job_ids:
             return {}
@@ -341,6 +351,7 @@ class JobManager:
 
     def get_all_job_states(self: "JobManager", ignore_refresh_flag: bool = False) -> dict[str, Any]:
         """Fetches states for all running jobs.
+
         If ignore_refresh_flag is True, then returns states for all jobs this
         JobManager knows about (i.e. all jobs associated with the workspace).
 
@@ -364,6 +375,7 @@ class JobManager:
 
     def _get_job_ids_by_cell_id(self: "JobManager", cell_id_list: list[str] | None = None) -> tuple:
         """Finds jobs with a cell_id in cell_id_list.
+
         Mappings of job ID to cell ID are added when new jobs are registered.
 
         :param cell_id_list: cell IDs to retrieve job state data for
@@ -378,8 +390,7 @@ class JobManager:
             raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
         cell_to_job_mapping = {
-            cell_id: (self._jobs_by_cell_id[cell_id] if cell_id in self._jobs_by_cell_id else set())
-            for cell_id in cell_id_list
+            cell_id: (self._jobs_by_cell_id.get(cell_id, set())) for cell_id in cell_id_list
         }
         # union of all the job_ids in the cell_to_job_mapping
         job_id_list = set().union(*cell_to_job_mapping.values())
@@ -508,6 +519,7 @@ class JobManager:
                     logs = logs[first_line:]
             else:
                 (max_lines, logs) = job.log(first_line=first_line, num_lines=num_lines)
+        # TODO: more specific exception type(s)
         except Exception as e:
             return {
                 "job_id": job.job_id,
@@ -531,7 +543,9 @@ class JobManager:
         num_lines: int | None = None,
         latest: bool = False,
     ) -> dict[str, Any]:
-        """Fetch the logs for a list of jobs. Note that the parameters supplied are applied to all jobs.
+        """Fetch the logs for a list of jobs.
+
+        Note that the parameters supplied are applied to all jobs.
 
         Jobs that cannot be found in the `_running_jobs` index will return
         {
@@ -560,8 +574,10 @@ class JobManager:
         return self.add_errors_to_results(output, error_ids)
 
     def cancel_jobs(self: "JobManager", job_id_list: list[str]) -> dict[str, Any]:
-        """Cancel a list of jobs and return their new state. After sending the cancellation
-        request, the job states are refreshed and their new output states returned.
+        """Cancel a list of jobs and return their new state.
+
+        After sending the cancellation request,
+        the job states are refreshed and their new output states returned.
 
         Jobs that trigger an error when cancelled will return
         {
@@ -597,7 +613,9 @@ class JobManager:
         return self.add_errors_to_results(job_states, error_ids)
 
     def _cancel_job(self: "JobManager", job_id: str) -> Exception | None:
-        """Cancel a single job. If an error occurs during cancellation, that error is converted
+        """Cancel a single job.
+
+        If an error occurs during cancellation, that error is converted
         into a NarrativeException and returned to the caller.
 
         :param job_id: job ID to be cancelled
@@ -613,6 +631,7 @@ class JobManager:
         error = None
         try:
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
+        # TODO: more precise exception(s)
         except Exception as e:
             error = transform_job_exception(e, "Unable to cancel job")
 
@@ -621,7 +640,9 @@ class JobManager:
         return error
 
     def retry_jobs(self: "JobManager", job_id_list: list[str]) -> dict[str, Any]:
-        """Retry a list of job IDs, returning job output states for the jobs to be retried
+        """Retry a list of job IDs.
+
+        This method returns job output states for the jobs to be retried
         and the new jobs created by the retry command.
 
         Retry data for a given job ID is in the form:
@@ -714,6 +735,7 @@ class JobManager:
 
     def modify_job_refresh(self: "JobManager", job_ids: list[str], update_refresh: bool) -> None:
         """Modifies how many things want to get the job updated.
+
         If this sets the current "refresh" key to be less than 0, it gets reset to 0.
         Jobs that are not present in the _running_jobs dictionary are ignored.
         """
@@ -723,12 +745,14 @@ class JobManager:
             self._running_jobs[job_id]["refresh"] = update_refresh
 
     def update_batch_job(self: "JobManager", batch_id: str) -> list[str]:
-        """Update a batch job and create child jobs if necessary"""
+        """Update a batch job and create child jobs if necessary."""
         batch_job = self.get_job(batch_id)
         if not batch_job.batch_job:
             raise JobRequestException(JOB_NOT_BATCH_ERR, batch_id)
 
-        child_ids = batch_job.child_jobs
+        child_ids: list = batch_job.child_jobs
+        if not child_ids:
+            return [batch_id]
 
         reg_child_jobs = []
         unreg_child_ids = []
@@ -749,7 +773,7 @@ class JobManager:
 
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)
 
-        return [batch_id] + child_ids
+        return [batch_id, *child_ids]
 
     def list_jobs(self: "JobManager") -> HTML | str:
         """List all job ids, their info, and status in a quick HTML format."""
@@ -763,9 +787,9 @@ class JobManager:
             state_list = sorted(state_list, key=lambda s: s.get("created", 0))
             for state in state_list:
                 job = self.get_job(state["job_id"])
-                state["created"] = datetime.fromtimestamp(state["created"] / 1000.0).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
+                state["created"] = datetime.fromtimestamp(
+                    state["created"] / 1000.0, tz=UTC
+                ).strftime("%Y-%m-%d %H:%M:%S")
                 state["run_time"] = "Not started"
                 state["user"] = job.user
                 state["app_id"] = job.app_id
@@ -773,17 +797,15 @@ class JobManager:
                 exec_start = state.get("running")
 
                 if state.get("finished"):
-                    finished_time = datetime.fromtimestamp(state.get("finished") / 1000.0)
+                    finished_time = datetime.fromtimestamp(state.get("finished") / 1000.0, tz=UTC)
                     state["finish_time"] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
                     if exec_start:
-                        exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
+                        exec_start_time = datetime.fromtimestamp(exec_start / 1000.0, tz=UTC)
                         delta = finished_time - exec_start_time
                         delta = delta - timedelta(microseconds=delta.microseconds)
                         state["run_time"] = str(delta)
                 elif exec_start:
-                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0).replace(
-                        tzinfo=UTC
-                    )
+                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0, tz=UTC)
                     delta = datetime.now(UTC) - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
                     state["run_time"] = str(delta)

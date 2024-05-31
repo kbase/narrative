@@ -30,14 +30,14 @@ from .util import ConfigTests
 CONFIG = ConfigTests()
 WS_NAME = CONFIG.get("app_tests", "public_ws_name")
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
-TOKEN_ID = "ABCDE12345"
+TOKEN_ID = "ABCDE12345"  # noqa: S105
 UNKNOWN_APP_ID = "Unknown app id"
 READS_FILE_1 = "reads file 1"
 READS_FILE_2 = "reads file 2"
 NEW_READS_SET = "New Reads Set"
 
 JOB_COMM_MOCK = "biokbase.narrative.jobs.appmanager.JobComm"
-GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"
+GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"  # noqa: S105
 CLIENTS_AM = "biokbase.narrative.jobs.appmanager.clients.get"
 CLIENTS_AM_SM = "biokbase.narrative.jobs.appmanager.specmanager.clients.get"
 CLIENTS_SM = "biokbase.narrative.jobs.specmanager.clients.get"
@@ -63,7 +63,7 @@ def get_timestamp():
 
 
 def get_bulk_run_good_inputs():
-    """This DS is meant to be mutated"""
+    """This DS is meant to be mutated."""
     return [
         {
             "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",

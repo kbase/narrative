@@ -1,3 +1,5 @@
+"""Mock versions of various KBase service clients."""
+
 import copy
 import functools
 from unittest.mock import call
@@ -30,10 +32,12 @@ NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
 def generate_ee2_error(fn: str) -> EEServerError:
+    """Generate an EE2 error."""
     return EEServerError("JSONRPCError", -32000, fn + " failed")
 
 
 def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
+    """Get a narrative object info list."""
     return [
         i,
         "My_Test_Narrative",
@@ -51,6 +55,7 @@ def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
 
 class MockClients:
     """Mock KBase service clients as needed for Narrative backend tests.
+
     Use this with the Python mock library to mock the biokbase.narrative.clients.get call
     as a test function decorator, like this:
 
@@ -108,6 +113,7 @@ class MockClients:
 
     def get_workspace_info(self, params):
         """Some magic workspace ids.
+
         12345 (WSID_STANDARD) - the standard one.
         678 - doesn't have useful narrative info in its metadata
         789 - raises a permissions error
@@ -152,6 +158,7 @@ class MockClients:
 
     def get_object_info_new(self, params):
         """Returns a (more or less) random object.
+
         But we introspect the params a little bit to return something crafted to the test.
         Add more to this if it's helpful.
         """
@@ -299,7 +306,9 @@ class MockClients:
         return job_states
 
     def get_job_logs(self, params):
-        """params: job_id, skip_lines
+        """Generate some job logs.
+
+        params: job_id, skip_lines
         skip_lines = number of lines to skip, get all the rest
 
         single line: {
@@ -502,10 +511,12 @@ class MockClients:
 
 
 def get_mock_client(client_name, token=None):
+    """Get a client that can return data successfully."""
     return MockClients(client_name=client_name, token=token)
 
 
 def get_failing_mock_client(client_name, token=None):
+    """Get a client that raises various errors when returning data."""
     return FailingMockClient(token=token)
 
 
@@ -536,7 +547,8 @@ class FailingMockClient:
 class MockStagingHelper:
     def list(self):
         """Mock the call to the staging service to get the "user's" files.
-        This returns a total of 7 files, 6 of while have "file" in the name,
+
+        This returns a total of 7 files, 6 of which have "file" in the name,
         and 3 are paths.
         """
         return [
@@ -551,7 +563,9 @@ class MockStagingHelper:
 
 
 class assert_obj_method_called:
-    """Invocations:
+    """Assert that an object method has or has not been called.
+
+    Invocations:
 
     with assert_obj_method_called(MyTargetClass, "my_target_method"):
     with assert_obj_method_called(MyTargetClass, "my_target_method", False) as aomc:
@@ -564,12 +578,14 @@ class assert_obj_method_called:
     )
     """
 
-    def __init__(self, target, method_name, call_status=True) -> None:
+    def __init__(
+        self: "assert_obj_method_called", target, method_name: str, call_status: bool = True
+    ) -> None:
         self.target = target
         self.method_name = method_name
         self.call_status = call_status
 
-    def __enter__(self):
+    def __enter__(self: "assert_obj_method_called"):
         self.orig_method = getattr(self.target, self.method_name)
 
         @functools.wraps(self.orig_method)
@@ -586,7 +602,7 @@ class assert_obj_method_called:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self: "assert_obj_method_called", exc_type, exc_value, traceback):
         # raises the error
         if exc_value:
             return
@@ -598,10 +614,10 @@ class assert_obj_method_called:
 
         self.assert_called(self.call_status)
 
-    def assert_has_calls(self, calls):
+    def assert_has_calls(self: "assert_obj_method_called", calls):
         assert calls == self.calls, f"Expected:\n{calls}\nGot:\n{self.calls}"
 
-    def assert_called(self, call_status=True):
+    def assert_called(self: "assert_obj_method_called", call_status: bool = True):
         assert (
             call_status and len(self.calls) or not call_status and not len(self.calls)
         ), f"Call status of method {self.target.__name__}.{self.method_name} was not {call_status}"

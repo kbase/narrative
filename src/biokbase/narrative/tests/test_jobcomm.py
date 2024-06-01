@@ -878,7 +878,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id_list = [BAD_JOB_ID, BAD_JOB_ID_2]
         check_retry_jobs(self.jc, job_id_list, job_id_list)
 
-    @mock.patch(CLIENTS, get_failing_mock_client)
+    @mock.patch(CLIENTS, get_mock_client)
     def test_retry_jobs__job_id_list__failure(self):
         job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
         req_dict = make_comm_msg(RETRY, job_id_list)

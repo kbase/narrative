@@ -5,9 +5,8 @@
 
 import copy
 import itertools
-import os
 import re
-import unittest
+from threading import Timer
 from typing import Any
 from unittest import mock
 
@@ -39,7 +38,6 @@ from biokbase.narrative.tests.generate_test_results import (
     TEST_CELL_IDs,
 )
 from biokbase.narrative.tests.job_test_constants import (
-    ACTIVE_JOBS,
     ALL_JOBS,
     BAD_JOB_ID,
     BAD_JOB_ID_2,
@@ -66,13 +64,7 @@ from biokbase.narrative.tests.narrative_mock.mockclients import (
     get_failing_mock_client,
     get_mock_client,
 )
-from biokbase.narrative.tests.narrative_mock.mockcomm import MockComm
-from biokbase.narrative.tests.util import (
-    ConfigTests,
-    make_comm_msg,
-    make_job_request,
-    validate_job_state,
-)
+from biokbase.narrative.tests.util import make_comm_msg, make_job_request, validate_job_state
 
 APP_NAME = "The Best App in the World"
 
@@ -106,7 +98,7 @@ LOG_LINES = [{"is_error": 0, "line": f"This is line {i}"} for i in range(MAX_LOG
 
 # Fixture to set and unset environment variable
 @pytest.fixture(autouse=True)
-def set_env_var(monkeypatch, job_test_wsname: str) -> None:
+def _set_env_var(monkeypatch, job_test_wsname: str) -> None:
     """Set the KB_WORKSPACE_ID env var for all job comm tests."""
     # Set the environment variable; monkey patch automatically removes it afterwards
     monkeypatch.setenv("KB_WORKSPACE_ID", job_test_wsname)
@@ -195,14 +187,13 @@ def check_id_error(job_comm: JobComm, req_dict: dict[str, Any], err: Exception) 
     check_error_message(job_comm, req_dict, err)
 
 
-def check_job_id__no_job_test(job_comm: JobComm, request_type: str) -> None:
+def check_job_id__no_job_test(job_comm: JobComm, request_type: str, job_id: str | None) -> None:
     """Check that the correct error is raised with no job provided."""
-    for job_id in [None, ""]:
-        job_comm._comm.clear_message_cache()
-        req_dict = make_comm_msg(request_type, {JOB_ID: job_id})
-        req = make_job_request(request_type, {JOB_ID: job_id})
-        err = JobRequestException(JOBS_MISSING_ERR, [job_id])
-        check_id_error(job_comm, req_dict, err)
+    job_comm._comm.clear_message_cache()
+    req_dict = make_comm_msg(request_type, {JOB_ID: job_id})
+    req = make_job_request(request_type, {JOB_ID: job_id})
+    err = JobRequestException(JOBS_MISSING_ERR, [job_id])
+    check_id_error(job_comm, req_dict, err)
 
     # run directly
     with pytest.raises(type(err), match=re.escape(str(err))):
@@ -216,12 +207,11 @@ def check_job_id__dne_test(job_comm: JobComm, request_type: str) -> None:
     check_id_error(job_comm, req_dict, err)
 
 
-def check_batch_id__no_job_test(job_comm: JobComm, request_type: str) -> None:
+def check_batch_id__no_job_test(job_comm: JobComm, request_type: str, job_id: str | None) -> None:
     """Check that the correct error is raised with no batch job provided."""
-    for job_id in [None, ""]:
-        req_dict = make_comm_msg(request_type, {BATCH_ID: job_id})
-        err = JobRequestException(JOB_NOT_REG_ERR, job_id)
-        check_id_error(job_comm, req_dict, err)
+    req_dict = make_comm_msg(request_type, {BATCH_ID: job_id})
+    err = JobRequestException(JOB_NOT_REG_ERR, job_id)
+    check_id_error(job_comm, req_dict, err)
 
 
 def check_batch_id__dne_test(job_comm: JobComm, request_type: str) -> None:
@@ -239,7 +229,9 @@ def check_batch_id__not_batch_test(job_comm: JobComm, request_type: str) -> None
 
 
 @mock.patch(CLIENTS, get_mock_client)
-def check_job_info_results(job_comm: JobComm, job_args, job_id_list):
+def check_job_info_results(
+    job_comm: JobComm, job_args: dict[str, Any] | list[str], job_id_list: list[str]
+) -> None:
     req_dict = make_comm_msg(INFO, job_args)
     job_comm._handle_comm_message(req_dict)
     msg = job_comm._comm.last_message
@@ -253,12 +245,12 @@ def check_job_info_results(job_comm: JobComm, job_args, job_id_list):
 @mock.patch(CLIENTS, get_mock_client)
 def check_job_output_states(
     job_comm: JobComm,
-    output_states=None,
-    params=None,
+    output_states: dict[str, Any] | None = None,
+    params: dict[str, Any] | None = None,
     request_type: str = STATUS,
     response_type: str = STATUS,
-    ok_states=None,
-    error_states=None,
+    ok_states: list[str] | None = None,
+    error_states: list[str] | None = None,
 ) -> None:
     """Check the job output states are correct.
 
@@ -318,6 +310,8 @@ def check_retry_jobs(
 # ---------------------
 # Send comms methods
 # ---------------------
+
+
 def test_send_comm_msg_ok(job_comm: JobComm) -> None:
     job_comm.send_comm_message("some_msg", {"foo": "bar"})
     msg = job_comm._comm.last_message
@@ -325,7 +319,6 @@ def test_send_comm_msg_ok(job_comm: JobComm) -> None:
         "msg_type": "some_msg",
         "content": {"foo": "bar"},
     }
-    job_comm._comm.clear_message_cache()
 
 
 def test_send_error_msg__JobRequest(job_comm: JobComm) -> None:
@@ -386,6 +379,8 @@ def test_send_error_msg__str(job_comm: JobComm) -> None:
 # ---------------------
 # Requests
 # ---------------------
+
+
 @mock.patch(CLIENTS, get_mock_client)
 def test_req_no_inputs__succeed(job_comm: JobComm) -> None:
     req_dict = make_comm_msg(STATUS_ALL, None)
@@ -433,6 +428,8 @@ def test_req_multiple_inputs__fail(job_comm: JobComm) -> None:
 # ---------------------
 # Start job status loop
 # ---------------------
+
+
 @mock.patch(CLIENTS, get_mock_client)
 def test_start_stop_job_status_loop(job_comm: JobComm) -> None:
     assert job_comm._running_lookup_loop is False
@@ -450,7 +447,7 @@ def test_start_stop_job_status_loop(job_comm: JobComm) -> None:
     }
 
     assert job_comm._running_lookup_loop is True
-    assert job_comm._lookup_timer is not None
+    assert isinstance(job_comm._lookup_timer, Timer)
 
     job_comm.stop_job_status_loop()
     assert job_comm._running_lookup_loop is False
@@ -484,7 +481,7 @@ def test_start_job_status_loop__cell_ids(job_comm: JobComm) -> None:
 
             if exp_job_ids:
                 assert job_comm._running_lookup_loop
-                assert job_comm._lookup_timer
+                assert isinstance(job_comm._lookup_timer, Timer)
 
                 job_comm.stop_job_status_loop()
 
@@ -533,7 +530,6 @@ def test_start_job_status_loop__no_jobs_stop_loop(job_comm: JobComm) -> None:
 # ---------------------
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_get_all_job_states__ok(job_comm: JobComm) -> None:
     check_job_output_states(
         job_comm, request_type=STATUS_ALL, response_type=STATUS_ALL, ok_states=ALL_JOBS
@@ -543,6 +539,8 @@ def test_get_all_job_states__ok(job_comm: JobComm) -> None:
 # -----------------------
 # Lookup single job state
 # -----------------------
+
+
 def test_get_job_state__1_ok(job_comm: JobComm) -> None:
     output_states = job_comm.get_job_state(JOB_COMPLETED)
     check_job_output_states(job_comm, output_states=output_states, ok_states=[JOB_COMPLETED])
@@ -550,12 +548,14 @@ def test_get_job_state__1_ok(job_comm: JobComm) -> None:
 
 def test_get_job_state__no_job(job_comm: JobComm) -> None:
     with pytest.raises(JobRequestException, match=re.escape(f"{JOBS_MISSING_ERR}: {[None]}")):
-        job_comm.get_job_state(None)  # type: ignore
+        job_comm.get_job_state(None)  # type: ignore[arg-type]
 
 
 # -----------------------
 # Lookup select job states
 # -----------------------
+
+
 def test_get_job_states__job_id__ok(job_comm: JobComm) -> None:
     check_job_output_states(job_comm, params={JOB_ID: JOB_COMPLETED}, ok_states=[JOB_COMPLETED])
 
@@ -564,8 +564,9 @@ def test_get_job_states__job_id__dne(job_comm: JobComm) -> None:
     check_job_output_states(job_comm, params={JOB_ID: JOB_NOT_FOUND}, error_states=[JOB_NOT_FOUND])
 
 
-def test_get_job_states__job_id__invalid(job_comm: JobComm) -> None:
-    check_job_id__no_job_test(job_comm, STATUS)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_get_job_states__job_id__invalid(job_comm: JobComm, job_id: str | None) -> None:
+    check_job_id__no_job_test(job_comm, STATUS, job_id)
 
 
 def test_get_job_states__job_id_list__1_ok(job_comm: JobComm) -> None:
@@ -605,21 +606,21 @@ def test_get_job_states__batch_id__dne(job_comm: JobComm) -> None:
     check_batch_id__dne_test(job_comm, STATUS)
 
 
-def test_get_job_states__batch_id__no_job(job_comm: JobComm) -> None:
-    check_batch_id__no_job_test(job_comm, STATUS)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_get_job_states__batch_id__no_job(job_comm: JobComm, job_id: str | None) -> None:
+    check_batch_id__no_job_test(job_comm, STATUS, job_id)
 
 
 def test_get_job_states__batch_id__not_batch(job_comm: JobComm) -> None:
     check_batch_id__not_batch_test(job_comm, STATUS)
 
 
-@mock.patch(CLIENTS, get_mock_client)
-def test_get_job_states__job_id_list__ee2_error(job_comm: JobComm) -> None:
+def test_get_job_states__job_id_list__ee2_error(job_comm: JobComm, active_jobs: list[str]) -> None:
     exc = Exception("Test exception")
     exc_message = str(exc)
 
     expected = {job_id: copy.deepcopy(ALL_RESPONSE_DATA[STATUS][job_id]) for job_id in ALL_JOBS}
-    for job_id in ACTIVE_JOBS:
+    for job_id in active_jobs:
         # add in the ee2_error message
         expected[job_id]["error"] = exc_message
 
@@ -642,6 +643,8 @@ def test_get_job_states__job_id_list__ee2_error(job_comm: JobComm) -> None:
 # -----------------------
 # get cell job states
 # -----------------------
+
+
 def test_get_job_states_by_cell_id__cell_id_list_none(job_comm: JobComm) -> None:
     cell_id_list = None
     req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list})
@@ -694,7 +697,7 @@ def test_get_job_states_by_cell_id__all_results(job_comm: JobComm) -> None:
     req_dict = make_comm_msg(CELL_JOB_STATUS, {CELL_ID_LIST: cell_id_list})
     job_comm._handle_comm_message(req_dict)
     msg = job_comm._comm.last_message
-    assert set(msg.keys()), set(["msg_type" == "content"])
+    assert set(msg.keys()) == {"msg_type", "content"}
     assert msg["msg_type"] == CELL_JOB_STATUS
     assert msg["content"]["jobs"] == expected_states
     assert set(cell_id_list) == set(msg["content"]["mapping"].keys())
@@ -707,21 +710,19 @@ def test_get_job_states_by_cell_id__all_results(job_comm: JobComm) -> None:
 # -----------------------
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_get_job_info__job_id__ok(job_comm: JobComm) -> None:
     check_job_info_results(job_comm, {JOB_ID: JOB_COMPLETED}, [JOB_COMPLETED])
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_get_job_info__job_id__dne(job_comm: JobComm) -> None:
     check_job_info_results(job_comm, {JOB_ID: JOB_NOT_FOUND}, [JOB_NOT_FOUND])
 
 
-def test_get_job_info__job_id__invalid(job_comm: JobComm) -> None:
-    check_job_id__no_job_test(job_comm, INFO)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_get_job_info__job_id__invalid(job_comm: JobComm, job_id: str | None) -> None:
+    check_job_id__no_job_test(job_comm, INFO, job_id)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_get_job_info__job_id_list__ok(job_comm: JobComm) -> None:
     check_job_info_results(job_comm, ALL_JOBS, ALL_JOBS)
 
@@ -735,14 +736,14 @@ def test_get_job_info__job_id_list__ok_bad(job_comm: JobComm) -> None:
     check_job_info_results(job_comm, job_id_list, job_id_list)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_get_job_info__batch_id__ok(job_comm: JobComm) -> None:
     job_id = BATCH_PARENT
     check_job_info_results(job_comm, {BATCH_ID: job_id}, BATCH_PARENT_CHILDREN)
 
 
-def test_get_job_info__batch_id__no_job(job_comm: JobComm) -> None:
-    check_batch_id__no_job_test(job_comm, INFO)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_get_job_info__batch_id__no_job(job_comm: JobComm, job_id: str | None) -> None:
+    check_batch_id__no_job_test(job_comm, INFO, job_id)
 
 
 def test_get_job_info__batch_id__dne(job_comm: JobComm) -> None:
@@ -756,6 +757,8 @@ def test_get_job_info__batch_id__not_batch(job_comm: JobComm) -> None:
 # ------------
 # Cancel list of jobs
 # ------------
+
+
 def test_cancel_jobs__job_id__ok(job_comm: JobComm) -> None:
     check_job_output_states(
         job_comm, request_type=CANCEL, params={JOB_ID: JOB_RUNNING}, ok_states=[JOB_RUNNING]
@@ -771,15 +774,15 @@ def test_cancel_jobs__job_id__dne(job_comm: JobComm) -> None:
     )
 
 
-def test_cancel_jobs__job_id__invalid(job_comm: JobComm) -> None:
-    check_job_id__no_job_test(job_comm, CANCEL)
-    job_id_list = [None, ""]
-    for job_id in job_id_list:
-        req_dict = make_comm_msg(CANCEL, {JOB_ID: job_id})
-        err = JobRequestException(JOBS_MISSING_ERR, [job_id])
-        with pytest.raises(type(err), match=re.escape(str(err))):
-            job_comm._handle_comm_message(req_dict)
-        check_error_message(job_comm, req_dict, err)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_cancel_jobs__job_id__invalid(job_comm: JobComm, job_id: str | None) -> None:
+    check_job_id__no_job_test(job_comm, CANCEL, job_id)
+
+    req_dict = make_comm_msg(CANCEL, {JOB_ID: job_id})
+    err = JobRequestException(JOBS_MISSING_ERR, [job_id])
+    with pytest.raises(type(err), match=re.escape(str(err))):
+        job_comm._handle_comm_message(req_dict)
+    check_error_message(job_comm, req_dict, err)
 
 
 def test_cancel_jobs__job_id_list__1_ok(job_comm: JobComm) -> None:
@@ -878,17 +881,16 @@ def test_retry_jobs__job_id__ok(job_comm: JobComm) -> None:
     check_retry_jobs(job_comm, {JOB_ID: BATCH_TERMINATED_RETRIED}, job_id_list)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_retry_jobs__job_id__dne(job_comm: JobComm) -> None:
     job_id_list = [JOB_NOT_FOUND]
     check_retry_jobs(job_comm, {JOB_ID: JOB_NOT_FOUND}, job_id_list)
 
 
-def test_retry_jobs__job_id__invalid(job_comm: JobComm) -> None:
-    check_job_id__no_job_test(job_comm, RETRY)
+@pytest.mark.parametrize("job_id", [None, ""])
+def test_retry_jobs__job_id__invalid(job_comm: JobComm, job_id: str | None) -> None:
+    check_job_id__no_job_test(job_comm, RETRY, job_id)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_retry_jobs__job_id_list__2_ok(job_comm: JobComm) -> None:
     job_id_list = [BATCH_TERMINATED_RETRIED, BATCH_ERROR_RETRIED, None]
     check_retry_jobs(job_comm, job_id_list, job_id_list)
@@ -910,13 +912,11 @@ def test_retry_jobs__job_id_list__all_jobs(job_comm: JobComm) -> None:
     check_retry_jobs(job_comm, job_id_list, job_id_list)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_retry_jobs__job_id_list__all_bad_jobs(job_comm: JobComm) -> None:
     job_id_list = [BAD_JOB_ID, BAD_JOB_ID_2]
     check_retry_jobs(job_comm, job_id_list, job_id_list)
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_retry_jobs__job_id_list__failure(job_comm: JobComm) -> None:
     job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
     req_dict = make_comm_msg(RETRY, job_id_list)
@@ -944,6 +944,8 @@ def test_retry_jobs__job_id_list__failure(job_comm: JobComm) -> None:
 # -----------------
 # Fetching job logs
 # -----------------
+
+
 @mock.patch(CLIENTS, get_mock_client)
 def test_get_job_logs__job_id__ok(job_comm: JobComm) -> None:
     job_id = JOB_COMPLETED
@@ -1065,8 +1067,8 @@ def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail(job_comm: JobC
 
 @mock.patch(CLIENTS, get_mock_client)
 def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail__with_params(
-    job_comm,
-):
+    job_comm: JobComm,
+) -> None:
     num_lines = int(MAX_LOG_LINES / 5)
     first = MAX_LOG_LINES - num_lines
     lines = LOG_LINES[-num_lines::]
@@ -1104,6 +1106,8 @@ def test_get_job_logs__job_id_list__one_ok_one_bad_one_fetch_fail__with_params(
 # ------------------------
 # Modify job update
 # ------------------------
+
+
 @mock.patch(CLIENTS, get_mock_client)
 def test_modify_job_update__job_id_list__start__ok(job_comm: JobComm) -> None:
     job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
@@ -1118,7 +1122,7 @@ def test_modify_job_update__job_id_list__start__ok(job_comm: JobComm) -> None:
             assert job_comm._jm._running_jobs[job_id]["refresh"]
         else:
             assert job_comm._jm._running_jobs[job_id]["refresh"] == REFRESH_STATE[job_id]
-    assert job_comm._lookup_timer
+    assert isinstance(job_comm._lookup_timer, Timer)
     assert job_comm._running_lookup_loop
 
 
@@ -1142,7 +1146,7 @@ def test_modify_job_update__job_id_list__stop__ok(job_comm: JobComm) -> None:
 
 def test_modify_job_update__job_id_list__no_jobs(job_comm: JobComm) -> None:
     job_id_list = [None]
-    req_dict = make_comm_msg(START_UPDATE, job_id_list)  # type: ignore
+    req_dict = make_comm_msg(START_UPDATE, job_id_list)  # type: ignore[arg-type]
     err = JobRequestException(JOBS_MISSING_ERR, job_id_list)
     with pytest.raises(type(err), match=re.escape(str(err))):
         job_comm._handle_comm_message(req_dict)
@@ -1170,7 +1174,7 @@ def test_modify_job_update__job_id_list__stop__ok_bad_job(job_comm: JobComm) -> 
 
 @mock.patch(CLIENTS, get_mock_client)
 def test_modify_job_update__job_id_list__stop__loop_still_running(job_comm: JobComm) -> None:
-    """Lookup loop should not get stopped"""
+    """Lookup loop should not get stopped."""
     job_comm.start_job_status_loop()
 
     job_id_list = [JOB_COMPLETED, BATCH_PARENT, JOB_RUNNING]
@@ -1185,14 +1189,15 @@ def test_modify_job_update__job_id_list__stop__loop_still_running(job_comm: JobC
             assert job_comm._jm._running_jobs[job_id]["refresh"] is False
         else:
             assert job_comm._jm._running_jobs[job_id]["refresh"] == REFRESH_STATE[job_id]
-    assert job_comm._lookup_timer
+    assert isinstance(job_comm._lookup_timer, Timer)
     assert job_comm._running_lookup_loop
 
 
 # ------------------------
 # Modify job update batch
 # ------------------------
-@mock.patch(CLIENTS, get_mock_client)
+
+
 def test_modify_job_update__batch_id__start__ok(job_comm: JobComm) -> None:
     batch_id = BATCH_PARENT
     job_id_list = BATCH_PARENT_CHILDREN
@@ -1207,11 +1212,10 @@ def test_modify_job_update__batch_id__start__ok(job_comm: JobComm) -> None:
             assert job_comm._jm._running_jobs[job_id]["refresh"]
         else:
             assert job_comm._jm._running_jobs[job_id]["refresh"] == REFRESH_STATE[job_id]
-    assert job_comm._lookup_timer
+    assert isinstance(job_comm._lookup_timer, Timer)
     assert job_comm._running_lookup_loop
 
 
-@mock.patch(CLIENTS, get_mock_client)
 def test_modify_job_update__batch_id__stop__ok(job_comm: JobComm) -> None:
     batch_id = BATCH_PARENT
     job_id_list = BATCH_PARENT_CHILDREN
@@ -1230,28 +1234,35 @@ def test_modify_job_update__batch_id__stop__ok(job_comm: JobComm) -> None:
     assert job_comm._running_lookup_loop is False
 
 
-def test_modify_job_update__batch_id__no_job(job_comm: JobComm) -> None:
-    check_batch_id__no_job_test(job_comm, START_UPDATE)
-    check_batch_id__no_job_test(job_comm, STOP_UPDATE)
+@pytest.mark.parametrize("job_id", [None, ""])
+@pytest.mark.parametrize("cmd", [START_UPDATE, STOP_UPDATE])
+def test_modify_job_update__batch_id__no_job(
+    job_comm: JobComm, job_id: str | None, cmd: str
+) -> None:
+    check_batch_id__no_job_test(job_comm, cmd, job_id)
 
 
-def test_modify_job_update__batch_id__bad_job(job_comm: JobComm) -> None:
-    check_batch_id__dne_test(job_comm, START_UPDATE)
-    check_batch_id__dne_test(job_comm, STOP_UPDATE)
+@pytest.mark.parametrize("cmd", [START_UPDATE, STOP_UPDATE])
+def test_modify_job_update__batch_id__bad_job(job_comm: JobComm, cmd: str) -> None:
+    check_batch_id__dne_test(job_comm, cmd)
 
 
-def test_modify_job_update__batch_id__not_batch(job_comm: JobComm) -> None:
-    check_batch_id__not_batch_test(job_comm, START_UPDATE)
-    check_batch_id__not_batch_test(job_comm, STOP_UPDATE)
+@pytest.mark.parametrize("cmd", [START_UPDATE, STOP_UPDATE])
+def test_modify_job_update__batch_id__not_batch(job_comm: JobComm, cmd: str) -> None:
+    check_batch_id__not_batch_test(job_comm, cmd)
 
 
 # ------------------------
 # Handle bad comm messages
 # ------------------------
-def test_handle_comm_message_bad(job_comm: JobComm) -> None:
+
+
+def test_handle_comm_message_invalid_request(job_comm: JobComm) -> None:
     with pytest.raises(JobRequestException, match=INVALID_REQUEST_ERR):
         job_comm._handle_comm_message({"foo": "bar"})
 
+
+def test_handle_comm_message_missing_request(job_comm: JobComm) -> None:
     with pytest.raises(JobRequestException, match=MISSING_REQUEST_TYPE_ERR):
         job_comm._handle_comm_message({"content": {"data": {"request_type": None}}})
 

@@ -1,4 +1,5 @@
 """Updates Narratives to the most recent version.
+
 This is intended to operate on the Narrative Typed Object as returned
 from the Workspace, BEFORE it gets transformed into a notebook model.
 (e.g. should be injected into narrativeio.KBaseWSManagerMixin.read_narrative
@@ -13,6 +14,7 @@ import os
 import re
 import uuid
 
+from biokbase.catalog.Client import Catalog
 from biokbase.narrative import clients
 from biokbase.narrative.jobs.specmanager import SpecManager
 
@@ -130,7 +132,7 @@ def update_method_cell(cell, format_ver):
     #   if THAT fails, the cell can't be updated.
     # if no git_hash or module_name, it's not an SDK-based cell and can't be looked up.
     if git_hash and module_name:
-        cat = clients.get("catalog")
+        cat: Catalog = clients.get("catalog")
         tag_pref_order = ["release", "beta", "dev"]
         try:
             # print('looking up ' + module_name + ' hash ' + git_hash)

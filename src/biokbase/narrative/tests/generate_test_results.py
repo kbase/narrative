@@ -1,4 +1,6 @@
-"""generate_test_results.py is used to generate the job message data that the narrative
+"""Test results generation script.
+
+generate_test_results.py is used to generate the job message data that the narrative
 backend produces and that the frontend consumes. It uses data from
 `ee2_job_test_data_file` and `app_specs_file` and provides expected narrative backend
 message data, as well as a number of mappings that are used in python tests.
@@ -44,12 +46,14 @@ for tag in app_version_tags:
 
 
 def get_test_spec(tag: str, app_id: str) -> dict[str, dict[str, Any]]:
+    """Get the test specs for a given app_id with a given tag."""
     return copy.deepcopy(TEST_SPECS[tag][app_id])
 
 
 def generate_mappings(
     all_jobs: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, str], dict[str, dict[str, Any]], set[dict[str, Any]]]:
+    """Generate a set of mappings: retried jobs, jobs by cell ID, and batch jobs."""
     # collect retried jobs and generate the cell-to-job mapping
     retried_jobs = {}
     jobs_by_cell_id = {}
@@ -100,6 +104,7 @@ def _generate_job_output(job_id: str) -> dict[str, Any]:
 
 
 def generate_bad_jobs() -> dict[str, dict[str, Any]]:
+    """Generate the expected output when a job ID cannot be found."""
     return {
         job_id: {"job_id": job_id, "error": generate_error(job_id, "not_found")}
         for job_id in BAD_JOBS
@@ -107,7 +112,7 @@ def generate_bad_jobs() -> dict[str, dict[str, Any]]:
 
 
 def generate_job_output_state(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Generate the expected output from a `job_status` request"""
+    """Generate the expected output from a `job_status` request."""
     job_status = generate_bad_jobs()
     for job_id in all_jobs:
         job_status[job_id] = _generate_job_output(job_id)
@@ -115,7 +120,7 @@ def generate_job_output_state(all_jobs: dict[str, dict[str, Any]]) -> dict[str, 
 
 
 def generate_job_info(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Expected output from a `job_info` request"""
+    """Expected output from a `job_info` request."""
     job_info = generate_bad_jobs()
     for job_id in all_jobs:
         test_job = get_test_job(job_id)
@@ -139,7 +144,7 @@ def generate_job_info(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str
 def generate_job_retries(
     all_jobs: dict[str, dict[str, Any]], retried_jobs: dict[str, str]
 ) -> dict[str, dict[str, Any]]:
-    """Expected output from a `retry_job` request"""
+    """Expected output from a `retry_job` request."""
     job_retries = generate_bad_jobs()
     for job_id in all_jobs:
         if job_id in retried_jobs:
@@ -165,11 +170,15 @@ def generate_job_retries(
 
 
 def log_gen(n_lines: int) -> list[dict[str, int | str]]:
+    """Generate n_lines log lines."""
     return [{"is_error": 0, "line": f"This is line {i+1}"} for i in range(n_lines)]
 
 
 def generate_job_logs(all_jobs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Expected output from a `job_logs` request. Note that only completed jobs have logs in this case."""
+    """Expected output from a `job_logs` request.
+
+    Note that only completed jobs have logs in this case.
+    """
     job_logs = generate_bad_jobs()
     for job_id in all_jobs:
         test_job = get_test_job(job_id)
@@ -215,6 +224,7 @@ if not os.path.exists(RESPONSE_DATA_FILE):
 
 
 def main(args: list[str] | None = None) -> None:
+    """Run the test result generation script."""
     if args and args[0] == "--force" or not os.path.exists(RESPONSE_DATA_FILE):
         config.write_json_file(RESPONSE_DATA_FILE, ALL_RESPONSE_DATA)
 

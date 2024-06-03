@@ -8,6 +8,7 @@ from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.jobs.util import load_job_constants
+from comm.base_comm import BaseComm
 from ipykernel.comm import Comm
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
@@ -69,6 +70,7 @@ class JobRequest:
     """
 
     def __init__(self: "JobRequest", rq: dict) -> None:
+        """Initialise a JobRequest object."""
         rq = copy.deepcopy(rq)
         self.raw_request = rq
         self.msg_id = rq.get("msg_id")  # might be useful later?
@@ -87,13 +89,15 @@ class JobRequest:
             raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
-    def job_id(self: "JobRequest"):
+    def job_id(self: "JobRequest") -> str:
+        """Return the job_id, if available."""
         if PARAM["JOB_ID"] in self.rq_data:
             return self.rq_data[PARAM["JOB_ID"]]
         raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
-    def job_id_list(self: "JobRequest"):
+    def job_id_list(self: "JobRequest") -> list[str]:
+        """Return the job_id_list, falling back to the job_id, if available."""
         if PARAM["JOB_ID_LIST"] in self.rq_data:
             return self.rq_data[PARAM["JOB_ID_LIST"]]
         if PARAM["JOB_ID"] in self.rq_data:
@@ -101,23 +105,28 @@ class JobRequest:
         raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     @property
-    def batch_id(self: "JobRequest"):
+    def batch_id(self: "JobRequest") -> str:
+        """Return the batch_id, if available."""
         if PARAM["BATCH_ID"] in self.rq_data:
             return self.rq_data[PARAM["BATCH_ID"]]
         raise JobRequestException(ONE_INPUT_TYPE_ONLY_ERR)
 
     def has_batch_id(self: "JobRequest") -> bool:
+        """Bool indicating whether the job request has a batch ID."""
         return PARAM["BATCH_ID"] in self.rq_data
 
     @property
-    def cell_id_list(self: "JobRequest"):
+    def cell_id_list(self: "JobRequest") -> list[str]:
+        """Return the cell_id_list, if available."""
         if PARAM["CELL_ID_LIST"] in self.rq_data:
             return self.rq_data[PARAM["CELL_ID_LIST"]]
         raise JobRequestException(CELLS_NOT_PROVIDED_ERR)
 
     @property
-    def ts(self: "JobRequest"):
-        """Optional field sent with STATUS requests indicating to filter out
+    def ts(self: "JobRequest") -> int:
+        """Timestamp.
+
+        Optional field sent with STATUS requests indicating to filter out
         job states in the STATUS response that have not been updated since
         this epoch time (in ns)
         """
@@ -157,22 +166,24 @@ class JobComm:
     __instance = None
 
     # The kernel job comm channel that talks to the front end.
-    _comm = None
+    _comm: BaseComm | None = None
 
     # The JobManager that actually manages things.
-    _jm = None
+    _jm: JobManager | None = None
 
-    _msg_map = None
-    _running_lookup_loop = False
+    _msg_map: dict[str, Any] | None = None
+    _running_lookup_loop: bool = False
     _lookup_timer = None
     _log = kblogging.get_logger(__name__)
 
     def __new__(cls: type["JobComm"]) -> "JobComm":
+        """Generate the JobComm singleton."""
         if JobComm.__instance is None:
             JobComm.__instance = object.__new__(cls)
         return JobComm.__instance
 
     def __init__(self: "JobComm") -> None:
+        """Initialise the JobComm class."""
         if self._comm is None:
             self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
@@ -192,7 +203,7 @@ class JobComm:
             }
 
     def _get_job_ids(self: "JobComm", req: JobRequest) -> list[str]:
-        """Extract the job IDs from a job request object
+        """Extract the job IDs from a job request object.
 
         :param req: the job request to take the IDs from
         :type req: JobRequest
@@ -237,8 +248,9 @@ class JobComm:
             self._lookup_job_status_loop()
 
     def stop_job_status_loop(self: "JobComm") -> None:
-        """Stops the job status lookup loop if it's running. Otherwise, this effectively
-        does nothing.
+        """Stops the job status lookup loop if it's running.
+
+        Otherwise, this effectively does nothing.
         """
         if self._lookup_timer:
             self._lookup_timer.cancel()
@@ -246,8 +258,10 @@ class JobComm:
         self._running_lookup_loop = False
 
     def _lookup_job_status_loop(self: "JobComm") -> None:
-        """Run a loop that will look up job info. After running, this spawns a Timer thread on
-        a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
+        """Run a loop that will look up job info.
+
+        After running, this spawns a Timer thread on a loop to run itself again.
+        LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
         all_job_states = self.get_all_job_states()
         if len(all_job_states) == 0 or not self._running_lookup_loop:
@@ -264,7 +278,15 @@ class JobComm:
         ignore_refresh_flag: bool = False,
     ) -> dict[str, Any]:
         """Fetches status of all jobs in the current workspace and sends them to the front end.
+
         req can be None, as it's not used.
+        :param req: job request object or None
+        :type req: JobRequest, optional
+        :param ignore_refresh_flag: whether or not to force a refresh of the job data
+        :type ignore_refresh_flag: bool
+
+        :return: dictionary containing all job states
+        :rtype: dict[str, Any]
         """
         all_job_states = self._jm.get_all_job_states(ignore_refresh_flag=ignore_refresh_flag)
         self.send_comm_message(MESSAGE_TYPE["STATUS_ALL"], all_job_states)
@@ -290,7 +312,7 @@ class JobComm:
                 "cell_two": [ ... ],
             }
         }
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         cell_job_states = self._jm.get_job_states_by_cell_id(cell_id_list=req.cell_id_list)
         self.send_comm_message(MESSAGE_TYPE["CELL_JOB_STATUS"], cell_job_states)
@@ -317,7 +339,7 @@ class JobComm:
         :param req: job request with a list of job IDs
         :type req: JobRequest
         :return: dictionary containing job info for each input job, indexed by job ID
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         job_id_list = self._get_job_ids(req)
         job_info = self._jm.get_job_info(job_id_list)
@@ -345,7 +367,7 @@ class JobComm:
         :type ts: int, optional
 
         :return: dictionary of job states, indexed by job ID
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         output_states = self._jm.get_job_states(job_id_list, ts)
         self.send_comm_message(MESSAGE_TYPE["STATUS"], output_states)
@@ -361,7 +383,7 @@ class JobComm:
         :type job_id: string
 
         :return: dictionary of job states, indexed by job ID
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         return self._get_job_states([job_id])
 
@@ -374,13 +396,14 @@ class JobComm:
         :type req: JobRequest
 
         :return: dictionary of job states, indexed by job ID
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         job_id_list = self._get_job_ids(req)
         return self._get_job_states(job_id_list, req.ts)
 
     def _modify_job_updates(self: "JobComm", req: JobRequest) -> dict[str, Any]:
         """Modifies how many things want to listen to a job update.
+
         If this is a request to start a job update, then this starts the update loop that
         returns update messages across the job channel.
         If this is a request to stop a job update, then this sends that request to the
@@ -392,13 +415,9 @@ class JobComm:
         """
         job_id_list = self._get_job_ids(req)
         update_type = req.request_type
+        update_refresh = False
         if update_type == MESSAGE_TYPE["START_UPDATE"]:
             update_refresh = True
-        elif update_type == MESSAGE_TYPE["STOP_UPDATE"]:
-            update_refresh = False
-        else:
-            # this should be impossible
-            raise JobRequestException("Unknown request")
 
         self._jm.modify_job_refresh(job_id_list, update_refresh)
 
@@ -410,7 +429,9 @@ class JobComm:
         return output_states
 
     def cancel_jobs(self: "JobComm", req: JobRequest) -> dict[str, Any]:
-        """Cancel a job or list of jobs. After sending the cancellation request, the job states
+        """Cancel a job or list of jobs.
+
+        After sending the cancellation request, the job states
         are refreshed and their new output states returned.
 
         See JobManager.cancel_jobs() for more details.
@@ -483,18 +504,20 @@ class JobComm:
         of job data indexed by job ID.
         :rtype: dict
         """
-        with exc_to_msg(msg):
+        with ExceptionToMessage(msg):
             request = JobRequest(msg)
 
             kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request_type})
             if request.request_type not in self._msg_map:
-                raise JobRequestException(f"Unknown KBaseJobs message '{request.request_type}'")
+                err_msg = f"Unknown KBaseJobs message '{request.request_type}'"
+                raise JobRequestException(err_msg)
 
             return self._msg_map[request.request_type](request)
 
     def send_comm_message(self: "JobComm", msg_type: str, content: dict[str, Any]) -> None:
-        """Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
-        and content. These just get encoded into the message itself.
+        """Sends a comm message to the KBaseJobs channel with the given msg_type and content.
+
+        These just get encoded into the message itself.
         """
         msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
@@ -504,9 +527,10 @@ class JobComm:
         req: JobRequest | dict[str, Any] | str,
         content: dict[str, Any] | None = None,
     ) -> None:
-        """Sends an error message over the KBaseJobs channel. This will have msg_type set to
-        ERROR ('job_error'), and include the original request in the message content as
-        "source".
+        """Sends an error message over the KBaseJobs channel.
+
+        This will have msg_type set to ERROR ('job_error'), and include the original
+        request in the message content as "source".
 
         req can be the original request message or its JobRequest form.
         Since the latter is made from the former, they have the same information.
@@ -546,7 +570,7 @@ class JobComm:
         self.send_comm_message(MESSAGE_TYPE["ERROR"], error_content)
 
 
-class exc_to_msg:
+class ExceptionToMessage:
     """Context manager to convert exceptions to comm messages.
 
     This is a context manager to wrap around JobComm code in order to catch any exception,
@@ -555,8 +579,12 @@ class exc_to_msg:
 
     jc = JobComm()
 
-    def __init__(self: "exc_to_msg", req: JobRequest | dict[str, Any] | str | None = None) -> None:
-        """Req can be several different things because this context manager
+    def __init__(
+        self: "ExceptionToMessage", req: JobRequest | dict[str, Any] | str | None = None
+    ) -> None:
+        """Initialise the context manager.
+
+        req can be several different things because this context manager
         supports being used in several different places. Generally it is
         a request dict or request object, but when used outside of a request,
         e.g., from appmanager, req can inform of the source of the JobComm
@@ -564,11 +592,14 @@ class exc_to_msg:
         """
         self.req = req
 
-    def __enter__(self: "exc_to_msg") -> None:
-        pass  # nothing to do here
+    def __enter__(self: "ExceptionToMessage") -> None:
+        """Entry method for ExceptionToMessage."""
+        # nothing to do here
 
-    def __exit__(self: "exc_to_msg", exc_type, exc_value, exc_tb) -> None:
-        """If an exception is caught during execution in the JobComm code,
+    def __exit__(self: "ExceptionToMessage", exc_type, exc_value, exc_tb) -> None:
+        """Exit method for ExceptionToMessage.
+
+        If an exception is caught during execution in the JobComm code,
         this will send back a comm error message like:
         {
             "msg_type": "job_error",

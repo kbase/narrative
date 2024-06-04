@@ -13,6 +13,10 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 -   UIP-41 - Fix Dropzone dependency issues, address problems with unit tests
 -   UIP-41 - Removed unused Python dependencies
 
+### Notebook widget updates
+
+- The clustergrammer widget was updated to clustergrammer2; see the python dependency changes below for version information.
+
 ### Dependency Changes
 
 - Updated to include all Python dependencies in the image built in this repo, and removed those that are not directly referenced in KBase code.
@@ -24,10 +28,13 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
 - flake8, isort, and black have been replaced by the multifunctional formatter and linter Ruff.
 
+
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
   - black: 24.4.2 -> replaced by Ruff
   - coverage: 7.3.1 -> 7.5.0
+  - clustergrammer_widget: removed
+  - clustergrammer2: 0.18.0 (new)
   - cryptography: 41.0.4 -> 42.0.5
   - flake8: 7.0.0 -> replaced by Ruff
   - idna: 3.4 -> 3.6

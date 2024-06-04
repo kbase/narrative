@@ -8,8 +8,8 @@ from biokbase.narrative.common import kblogging
 from biokbase.narrative.exception_util import JobRequestException, NarrativeException
 from biokbase.narrative.jobs.jobmanager import JobManager
 from biokbase.narrative.jobs.util import load_job_constants
+from comm import create_comm
 from comm.base_comm import BaseComm
-from ipykernel.comm import Comm
 
 (PARAM, MESSAGE_TYPE) = load_job_constants()
 
@@ -167,7 +167,6 @@ class JobComm:
 
     # The kernel job comm channel that talks to the front end.
     _comm: BaseComm | None = None
-
     # The JobManager that actually manages things.
     _jm: JobManager | None = None
 
@@ -185,10 +184,12 @@ class JobComm:
     def __init__(self: "JobComm") -> None:
         """Initialise the JobComm class."""
         if self._comm is None:
-            self._comm = Comm(target_name="KBaseJobs", data={})
+            self._comm = create_comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
+
         if self._jm is None:
             self._jm = JobManager()
+
         if self._msg_map is None:
             self._msg_map = {
                 MESSAGE_TYPE["CANCEL"]: self.cancel_jobs,
@@ -524,7 +525,7 @@ class JobComm:
 
     def send_error_message(
         self: "JobComm",
-        req: JobRequest | dict[str, Any] | str,
+        req: JobRequest | dict[str, Any] | str | None,
         content: dict[str, Any] | None = None,
     ) -> None:
         """Sends an error message over the KBaseJobs channel.

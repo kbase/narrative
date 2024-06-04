@@ -21,12 +21,6 @@ class MockComm(BaseComm):
             return None
         return self.messages[-1]
 
-    def pop_message(self: "MockComm") -> str | None:
-        """Pop the last message off the message list."""
-        if len(self.messages) == 0:
-            return None
-        return self.messages.pop()
-
     def on_msg(self: "MockComm", *args, **kwargs) -> None:
         """Mock the msg router."""
 

@@ -32,26 +32,29 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
   - black: 24.4.2 -> replaced by Ruff
-  - coverage: 7.3.1 -> 7.5.0
+  - certifi: 2022.12.7 -> 2023.7.22
+  - coverage: 7.3.1 -> 7.5.3
   - clustergrammer_widget: removed
   - clustergrammer2: 0.18.0 (new)
-  - cryptography: 41.0.4 -> 42.0.5
+  - cryptography: 41.0.4 -> 42.0.7
   - flake8: 7.0.0 -> replaced by Ruff
-  - idna: 3.4 -> 3.6
+  - idna: 3.4 -> 3.7
   - isort: 5.13.2 -> replaced by Ruff
-  - ipython: 8.10.0 -> 8.24.0
-  - jinja2: 3.1.2 -> 3.1.3
+  - ipython: 8.10.0 -> 8.25.0
+  - jinja2: 3.1.2 -> 3.1.4
   - markupsafe: 2.1.3 -> 2.1.4
   - pillow: 9.4.0 -> 10.3.0
   - pygments: 2.16.1 -> 2.17.2
-  - pymongo: 4.5.0 -> 4.7.0
+  - pymongo: 4.5.0 -> 4.7.2
   - pyopenssl: 23.2.0 -> 24.0.0
-  - pytest: 7.4.0 -> 8.2.0
+  - pytest: 7.4.0 -> 8.2.1
   - pytest-cov: 4.1.0 -> 5.0.0
   - pytest-recording: 0.13.1 (new)
   - requests-mock: 1.11.0 -> 1.12.1
-  - ruff: 0.4.2 (new)
-  - scikit-learn: 1.2.1 -> 1.4.2
+  - requests: 2.31.0 -> 2.32.2
+  - ruff: 0.4.7 (new)
+  - scikit-learn: 1.2.1 -> 1.5.0
+  - statsmodels: 0.14.2 (new)
   - terminado: 0.17.1 -> 0.18.0
   - tornado: 6.2 -> 6.4
   - vcrpy: 5.1.0 -> 6.0.1

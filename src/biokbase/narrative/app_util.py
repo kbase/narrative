@@ -21,9 +21,8 @@ def check_tag(tag, raise_exception: bool = False):
     """
     tag_exists = tag in app_version_tags
     if not tag_exists and raise_exception:
-        raise ValueError(
-            "Can't find tag %s - allowed tags are %s" % (tag, ", ".join(app_version_tags))
-        )
+        msg = f"Can't find tag {tag} - allowed tags are {', '.join(app_version_tags)}"
+        raise ValueError(msg)
     return tag_exists
 
 

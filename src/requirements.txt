@@ -1,4 +1,4 @@
-clustergrammer_widget==1.13.3
+clustergrammer2==0.18.0
 ipython==8.24.0
 ipywidgets==7.7.1
 jinja2==3.1.3
@@ -8,4 +8,5 @@ pymongo==4.7.0
 pyyaml==6.0.1
 requests==2.31.0
 scikit-learn==1.4.2
+statsmodels==0.14.2
 tornado==6.4

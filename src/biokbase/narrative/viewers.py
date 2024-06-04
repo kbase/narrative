@@ -2,13 +2,10 @@
 
 from typing import Any
 
-import clustergrammer_widget
 import pandas as pd
 from biokbase.narrative import clients
 from biokbase.narrative.system import system_variable
-from clustergrammer_widget.clustergrammer import Network
-
-# from clustergrammer2 import CGM2, Network
+from clustergrammer2 import CGM2, Network
 
 
 def view_as_clustergrammer(
@@ -16,7 +13,7 @@ def view_as_clustergrammer(
     col_categories: tuple | set | list | None = (),
     row_categories: tuple | set | list | None = (),
     normalize_on: str | None = None,
-):
+) -> CGM2:
     """This function returns an interactive clustergrammer widget for a specified object.
 
     Data type must contain a 'data' key with a FloatMatrix2D type value
@@ -43,7 +40,7 @@ def view_as_clustergrammer(
 
     generic_df = get_df(ws_ref, col_categories, row_categories, True)
 
-    net = Network(clustergrammer_widget)
+    net = Network(CGM2)
     # load pandas dataframe
     net.load_df(generic_df)
     if normalize_on:

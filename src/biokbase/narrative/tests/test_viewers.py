@@ -11,6 +11,7 @@ EXPRESSION_MATRIX_REF = "28852/11/1"
 
 @pytest.mark.parametrize("arg_type", ["col_categories", "row_categories", "normalize_on"])
 def test_bad_view_as_clustergrammer_params_generic_ref(arg_type: str) -> None:
+    """Test that the clustergrammer widget throws an error with invalid params."""
     with pytest.raises(
         AssertionError,
         match=f"Error with clustergrammer arguments:\n{arg_type}",
@@ -20,13 +21,14 @@ def test_bad_view_as_clustergrammer_params_generic_ref(arg_type: str) -> None:
 
 @pytest.mark.vcr()
 def test_bad_view_as_clustergrammer_params_attr_set_ref() -> None:
+    """Test that the clustergrammer widget throws an error with invalid input."""
     with pytest.raises(ValueError, match="not a compatible data type"):
         viewers.view_as_clustergrammer(ATTRIBUTE_SET_REF)
 
 
 @pytest.mark.vcr()
-@pytest.mark.skip("Clustergrammer widget is currently broken")
 def test_view_as_clustergrammer() -> None:
+    """Ensure that the clustergrammer widget can be successfully launched."""
     assert (
         str(type(viewers.view_as_clustergrammer(GENERIC_REF)))
         == "<class 'clustergrammer2.example.CGM2'>"

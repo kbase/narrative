@@ -1,3 +1,5 @@
+"""Implements the WidgetManager class that programmatically shows KBase JavaScript widgets."""
+
 import json
 import os
 import time
@@ -16,12 +18,6 @@ from jinja2 import Template
 
 from .upa import is_ref, is_upa
 
-"""
-widgetmanager.py
-
-Implements the WidgetManager class that programmatically shows
-KBase JavaScript widgets.
-"""
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 

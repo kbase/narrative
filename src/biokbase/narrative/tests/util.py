@@ -15,12 +15,12 @@ from contextlib import closing
 from types import NoneType
 from typing import Any
 
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.jobs.jobcomm import (
     PARAM,
     JobRequest,
 )
-from biokbase.workspace.client import Workspace
 
 BATCH_ID = PARAM["BATCH_ID"]
 JOB_ID = PARAM["JOB_ID"]

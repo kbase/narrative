@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 import pytest
-from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.common.exceptions import ServerError
 from requests.exceptions import HTTPError
 
 from . import fix_workspace_info

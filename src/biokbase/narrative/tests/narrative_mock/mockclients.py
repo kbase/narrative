@@ -4,7 +4,7 @@ import copy
 import functools
 from unittest.mock import call
 
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from biokbase.narrative.common.exceptions import ServerError
 from biokbase.narrative.jobs.job import COMPLETED_STATUS
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
@@ -18,7 +18,6 @@ from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
     generate_error,
 )
-from biokbase.workspace.baseclient import ServerError
 
 from src.biokbase.narrative.tests.util import ConfigTests
 
@@ -31,9 +30,9 @@ NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
-def generate_ee2_error(fn: str) -> EEServerError:
+def generate_ee2_error(fn: str) -> ServerError:
     """Generate an EE2 error."""
-    return EEServerError("JSONRPCError", -32000, fn + " failed")
+    return ServerError("JSONRPCError", -32000, fn + " failed")
 
 
 def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:

@@ -12,8 +12,8 @@ import json
 import sys
 
 import requests
-from biokbase.workspace import baseclient
-from biokbase.workspace.client import Workspace
+from biokbase.installed_clients.WorkspaceClient import Workspace
+from biokbase.narrative.common.exceptions import ServerError
 
 DEFAULT_OUTPUT_FILE = "update_results.json"
 
@@ -47,7 +47,7 @@ def fix_all_workspace_info(ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTP
                 all_results["update"].append(result["update"])
             if result.get("skip") is not None:
                 all_results["skip"].append(result["skip"])
-        except baseclient.ServerError as e:
+        except ServerError as e:
             if "No workspace with id" in str(e):
                 print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})

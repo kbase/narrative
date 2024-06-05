@@ -1,9 +1,7 @@
 """Describes a Narrative Ref and has utilities for dealing with it."""
 
 from biokbase.narrative import clients
-from biokbase.workspace.baseclient import ServerError
-
-from .exceptions import WorkspaceError
+from biokbase.narrative.common.exceptions import ServerError, WorkspaceError
 
 
 class NarrativeRef:

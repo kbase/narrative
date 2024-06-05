@@ -10,8 +10,8 @@ from io import StringIO
 from unittest import mock
 
 import pytest
-from biokbase.execution_engine2.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
+from biokbase.narrative.common.exceptions import ServerError
 from biokbase.narrative.jobs.job import (
     ALL_ATTRS,
     COMPLETED_STATUS,
@@ -39,8 +39,7 @@ from biokbase.narrative.tests.job_test_constants import (
     TERMINAL_JOBS,
     get_test_job,
 )
-
-from .narrative_mock.mockclients import (
+from biokbase.narrative.tests.narrative_mock.mockclients import (
     MockClients,
     assert_obj_method_called,
     get_failing_mock_client,

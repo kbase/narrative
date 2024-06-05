@@ -9,16 +9,13 @@ from collections import Counter
 
 import biokbase.auth
 import biokbase.narrative.clients
-import biokbase.workspace
 from biokbase.narrative.common import util
-from biokbase.narrative.common.exceptions import WorkspaceError
+from biokbase.narrative.common.exceptions import ServerError, WorkspaceError
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.common.url_config import URLS
-from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.contents.updater import update_narrative
 from tornado.web import HTTPError
-
-from .updater import update_narrative
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching

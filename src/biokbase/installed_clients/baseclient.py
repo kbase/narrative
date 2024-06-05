@@ -4,72 +4,63 @@
 # any changes made here will be overwritten
 #
 ############################################################
-
-import json as _json
-import os as _os
-import random as _random
-
-import requests as _requests
-
-try:
-    from configparser import ConfigParser as _ConfigParser  # py 3
-except ImportError:
-    from ConfigParser import ConfigParser as _ConfigParser  # py 2
-
-try:
-    from urllib.parse import urlparse as _urlparse  # py3
-except ImportError:
-    from urlparse import urlparse as _urlparse  # py2
-
+import json
+import os
+import random
 import time
+import traceback
+from configparser import ConfigParser
+from typing import Any
+from urllib.parse import quote, urlparse
+
+import requests
+from requests.exceptions import ConnectionError
+from urllib3.exceptions import ProtocolError
 
 _CT = "content-type"
 _AJ = "application/json"
 _URL_SCHEME = frozenset(["http", "https"])
+_CHECK_JOB_RETRYS = 3
+SERVER_ERROR_TYPE = "Unknown"
 
 
-def _get_token(user_id, password, auth_svc):
+def _get_token(user_id: str, password: str, auth_svc: str) -> str:
+    """Given a user name and password, retrieve an auth token for that user."""
     # This is bandaid helper function until we get a full
     # KBase python auth client released
     # note that currently globus usernames, and therefore kbase usernames,
     # cannot contain non-ascii characters. In python 2, quote doesn't handle
     # unicode, so if this changes this client will need to change.
-    body = (
-        "user_id="
-        + _requests.utils.quote(user_id)
-        + "&password="
-        + _requests.utils.quote(password)
-        + "&fields=token"
-    )
-    ret = _requests.post(auth_svc, data=body, allow_redirects=True)
+    body = "user_id=" + quote(user_id) + "&password=" + quote(password) + "&fields=token"
+    ret = requests.post(auth_svc, data=body, allow_redirects=True)
     status = ret.status_code
     if status >= 200 and status <= 299:
-        tok = _json.loads(ret.text)
+        tok = json.loads(ret.text)
     elif status == 403:
-        raise Exception(
-            "Authentication failed: Bad user_id/password " + "combination for user %s" % (user_id)
-        )
+        err_msg = f"Authentication failed: Bad user_id/password combination for user {user_id}"
+        raise Exception(err_msg)
     else:
         raise Exception(ret.text)
     return tok["token"]
 
 
-def _read_inifile(
-    file=_os.environ.get(  # @ReservedAssignment
-        "KB_DEPLOYMENT_CONFIG", _os.environ["HOME"] + "/.kbase_config"
-    ),
-):
+def _read_inifile(file: str = "") -> dict[str, str | None] | None:
+    """Read in the deployment config file, falling back to the .kbase_config file."""
+    if not file:
+        file = os.environ.get("KB_DEPLOYMENT_CONFIG", os.environ["HOME"] + "/.kbase_config")
     # Another bandaid to read in the ~/.kbase_config file if one is present
     authdata = None
-    if _os.path.exists(file):
+    if os.path.exists(file):
         try:
-            config = _ConfigParser()
+            config = ConfigParser()
             config.read(file)
             # strip down whatever we read to only what is legit
             authdata = {
-                x: config.get("authentication", x)
-                if config.has_option("authentication", x)
-                else None
+                x: (
+                    config.get("authentication", x)
+                    if config.has_option("authentication", x)
+                    else None
+                )
                 for x in (
                     "user_id",
                     "token",
@@ -80,12 +71,22 @@ def _read_inifile(
                 )
             }
         except Exception as e:
-            print("Error while reading INI file {}: {}".format(file, e))
+            print(f"Error while reading INI file {file}: {e!s}")
     return authdata
 
 
 class ServerError(Exception):
-    def __init__(self, name, code, message, data=None, error=None):
+    """Custom class for server errors."""
+
+    def __init__(  # noqa: PLR0913
+        self: "ServerError",
+        name: str,
+        code: int,
+        message: str | None,
+        data: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        """Create the error instance."""
         super(Exception, self).__init__(message)
         self.name = name
         self.code = code
@@ -93,22 +94,24 @@ class ServerError(Exception):
         self.data = data or error or ""
         # data = JSON RPC 2.0, error = 1.1
 
-    def __str__(self):
+    def __str__(self: "ServerError") -> str:
+        """Stringified error."""
         return self.name + ": " + str(self.code) + ". " + self.message + "\n" + self.data
 
 
-class _JSONObjectEncoder(_json.JSONEncoder):
-    def default(self, obj):
+class _JSONObjectEncoder(json.JSONEncoder):
+    def default(self: "_JSONObjectEncoder", obj):
+        """Return a serialisable object for the JSON encoder."""
         if isinstance(obj, set):
             return list(obj)
         if isinstance(obj, frozenset):
             return list(obj)
-        return _json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 class BaseClient:
-    """
-    The KBase base client.
+    """The KBase base client.
+
     Required initialization arguments (positional):
     url - the url of the the service to contact:
         For SDK methods: either the url of the callback service or the
@@ -132,28 +135,30 @@ class BaseClient:
     """
 
     def __init__(
-        self,
-        url=None,
-        timeout=30 * 60,
-        user_id=None,
-        password=None,
-        token=None,
-        ignore_authrc=False,
-        trust_all_ssl_certificates=False,
-        auth_svc="https://kbase.us/services/authorization/Sessions/Login",
-        lookup_url=False,
-        async_job_check_time_ms=100,
-        async_job_check_time_scale_percent=150,
-        async_job_check_max_time_ms=300000,
-    ):
+        self: "BaseClient",
+        url: str | None = None,
+        timeout: int = 30 * 60,
+        user_id: str | None = None,
+        password: str | None = None,
+        token: str | None = None,
+        ignore_authrc: bool = False,
+        trust_all_ssl_certificates: bool = False,
+        auth_svc: str = "https://kbase.us/services/auth/api/legacy/KBase/Sessions/Login",
+        lookup_url: bool = False,
+        async_job_check_time_ms: int = 100,
+        async_job_check_time_scale_percent: int = 150,
+        async_job_check_max_time_ms: int = 300000,
+    ) -> None:
+        """Initialise a BaseClient instance."""
         if url is None:
-            raise ValueError("A url is required")
-        scheme, _, _, _, _, _ = _urlparse(url)
+            err_msg = "An URL is required."
+            raise ValueError(err_msg)
+        scheme, _, _, _, _, _ = urlparse(url)
         if scheme not in _URL_SCHEME:
             raise ValueError(url + " isn't a valid http url")
         self.url = url
         self.timeout = int(timeout)
-        self._headers = dict()
+        self._headers = {}
         self.trust_all_ssl_certificates = trust_all_ssl_certificates
         self.lookup_url = lookup_url
         self.async_job_check_time = async_job_check_time_ms / 1000.0
@@ -164,10 +169,10 @@ class BaseClient:
             self._headers["AUTHORIZATION"] = token
         elif user_id is not None and password is not None:
             self._headers["AUTHORIZATION"] = _get_token(user_id, password, auth_svc)
-        elif "KB_AUTH_TOKEN" in _os.environ:
-            self._headers["AUTHORIZATION"] = _os.environ.get("KB_AUTH_TOKEN")
+        elif "KB_AUTH_TOKEN" in os.environ:
+            self._headers["AUTHORIZATION"] = os.environ.get("KB_AUTH_TOKEN")
         elif not ignore_authrc:
-            authdata = _read_inifile()
+            authdata: dict[str, Any] | None = _read_inifile()
             if authdata is not None:
                 if authdata.get("token") is not None:
                     self._headers["AUTHORIZATION"] = authdata["token"]
@@ -176,22 +181,31 @@ class BaseClient:
                         authdata["user_id"], authdata["password"], auth_svc
                     )
         if self.timeout < 1:
-            raise ValueError("Timeout value must be at least 1 second")
+            err_msg = "Timeout value must be at least 1 second"
+            raise ValueError(err_msg)
 
-    def _call(self, url, method, params, context=None):
+    def _call(
+        self: "BaseClient",
+        url: str,
+        method: str,
+        params: list[Any],
+        context: dict[str, Any] | None = None,
+    ):
+        """Send a request to an URL with the supplied method, params, and context."""
         arg_hash = {
             "method": method,
             "params": params,
             "version": "1.1",
-            "id": str(_random.random())[2:],
+            "id": str(random.random())[2:],  # noqa: S311
         }
         if context:
             if not isinstance(context, dict):
-                raise ValueError("context is not type dict as required.")
+                err_msg = "context is not type dict as required."
+                raise ValueError(err_msg)
             arg_hash["context"] = context
 
-        body = _json.dumps(arg_hash, cls=_JSONObjectEncoder)
-        ret = _requests.post(
+        body = json.dumps(arg_hash, cls=_JSONObjectEncoder)
+        ret = requests.post(
             url,
             data=body,
             headers=self._headers,
@@ -204,22 +218,23 @@ class BaseClient:
                 err = ret.json()
                 if "error" in err:
                     raise ServerError(**err["error"])
-                else:
-                    raise ServerError("Unknown", 0, ret.text)
-            else:
-                raise ServerError("Unknown", 0, ret.text)
+                raise ServerError(SERVER_ERROR_TYPE, 0, ret.text)
+            raise ServerError(SERVER_ERROR_TYPE, 0, ret.text)
         if not ret.ok:
             ret.raise_for_status()
         resp = ret.json()
         if "result" not in resp:
-            raise ServerError("Unknown", 0, "An unknown server error occurred")
+            raise ServerError(SERVER_ERROR_TYPE, 0, "An unknown server error occurred")
         if not resp["result"]:
-            return
+            return None
         if len(resp["result"]) == 1:
             return resp["result"][0]
         return resp["result"]
 
-    def _get_service_url(self, service_method, service_version):
+    def _get_service_url(
+        self: "BaseClient", service_method: str, service_version: str | None
+    ) -> str:
+        """Get the URL of a service."""
         if not self.lookup_url:
             return self.url
         service, _ = service_method.split(".")
@@ -230,24 +245,41 @@ class BaseClient:
         )
         return service_status_ret["url"]
 
-    def _set_up_context(self, service_ver=None, context=None):
+    def _set_up_context(
+        self: "BaseClient", service_ver: str | None = None, context: dict[str, Any] | None = None
+    ) -> dict[str, Any] | None:
+        """If service_ver exists, add it to the context."""
         if service_ver:
             if not context:
                 context = {}
             context["service_ver"] = service_ver
         return context
 
-    def _check_job(self, service, job_id):
+    def _check_job(self: "BaseClient", service: str, job_id: str):
+        """Alias for _call."""
         return self._call(self.url, service + "._check_job", [job_id])
 
-    def _submit_job(self, service_method, args, service_ver=None, context=None):
+    def _submit_job(
+        self: "BaseClient",
+        service_method: str,
+        args: list[Any],
+        service_ver: str | None = None,
+        context: dict[str, Any] | None = None,
+    ):
+        """Alias for _call with context set up."""
         context = self._set_up_context(service_ver, context)
         mod, meth = service_method.split(".")
         return self._call(self.url, mod + "._" + meth + "_submit", args, context)
 
-    def run_job(self, service_method, args, service_ver=None, context=None):
-        """
-        Run a SDK method asynchronously.
+    def run_job(
+        self: "BaseClient",
+        service_method: str,
+        args: list[Any],
+        service_ver: str | None = None,
+        context: dict[str, Any] | None = None,
+    ):
+        """Run an SDK method asynchronously.
+
         Required arguments:
         service_method - the service and method to run, e.g. myserv.mymeth.
         args - a list of arguments to the method.
@@ -257,26 +289,43 @@ class BaseClient:
         context - the rpc context dict.
         """
         mod, _ = service_method.split(".")
-        job_id = self._submit_job(service_method, args, service_ver, context)
+        job_id: str = self._submit_job(service_method, args, service_ver, context)  # type: ignore[arg-type]
         async_job_check_time = self.async_job_check_time
-        while True:
+        check_job_failures = 0
+        while check_job_failures < _CHECK_JOB_RETRYS:
             time.sleep(async_job_check_time)
             async_job_check_time = (
                 async_job_check_time * self.async_job_check_time_scale_percent / 100.0
             )
             if async_job_check_time > self.async_job_check_max_time:
                 async_job_check_time = self.async_job_check_max_time
-            job_state = self._check_job(mod, job_id)
+
+            try:
+                job_state: dict[str, Any] = self._check_job(mod, job_id)  # type: ignore[arg-type]
+            except (ConnectionError, ProtocolError):
+                traceback.print_exc()
+                check_job_failures += 1
+                continue
+
             if job_state["finished"]:
                 if not job_state["result"]:
-                    return
+                    return None
                 if len(job_state["result"]) == 1:
                     return job_state["result"][0]
                 return job_state["result"]
 
-    def call_method(self, service_method, args, service_ver=None, context=None):
-        """
-        Call a standard or dynamic service synchronously.
+        err_msg = f"_check_job failed {check_job_failures} times and exceeded limit"
+        raise RuntimeError(err_msg)
+
+    def call_method(
+        self: "BaseClient",
+        service_method: str,
+        args: list[Any],
+        service_ver: str | None = None,
+        context: dict[str, Any] | None = None,
+    ):
+        """Call a standard or dynamic service synchronously.
+
         Required arguments:
         service_method - the service and method to run, e.g. myserv.mymeth.
         args - a list of arguments to the method.

@@ -2,7 +2,7 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will follow).
 
 ## Version unreleased
 
@@ -32,11 +32,11 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
   - black: 24.4.2 -> replaced by Ruff
-  - certifi: 2022.12.7 -> 2023.7.22
+  - certifi: 2022.12.7 -> 2024.6.2
   - coverage: 7.3.1 -> 7.5.3
   - clustergrammer_widget: removed
   - clustergrammer2: 0.18.0 (new)
-  - cryptography: 41.0.4 -> 42.0.7
+  - cryptography: 41.0.4 -> 42.0.8
   - flake8: 7.0.0 -> replaced by Ruff
   - idna: 3.4 -> 3.7
   - isort: 5.13.2 -> replaced by Ruff
@@ -45,13 +45,13 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
   - markupsafe: 2.1.3 -> 2.1.4
   - pillow: 9.4.0 -> 10.3.0
   - pygments: 2.16.1 -> 2.17.2
-  - pymongo: 4.5.0 -> 4.7.2
+  - pymongo: 4.5.0 -> 4.7.3
   - pyopenssl: 23.2.0 -> 24.0.0
-  - pytest: 7.4.0 -> 8.2.1
+  - pytest: 7.4.0 -> 8.2.2
   - pytest-cov: 4.1.0 -> 5.0.0
   - pytest-recording: 0.13.1 (new)
   - requests-mock: 1.11.0 -> 1.12.1
-  - requests: 2.31.0 -> 2.32.2
+  - requests: 2.31.0 -> 2.32.3
   - ruff: 0.4.7 (new)
   - scikit-learn: 1.2.1 -> 1.5.0
   - statsmodels: 0.14.2 (new)

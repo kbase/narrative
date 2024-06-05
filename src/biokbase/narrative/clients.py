@@ -1,5 +1,7 @@
 """Module to get KBase service clients."""
 
+from functools import cache
+
 from biokbase.installed_clients.CatalogClient import Catalog
 from biokbase.installed_clients.execution_engine2Client import execution_engine2
 from biokbase.installed_clients.NarrativeMethodStoreClient import NarrativeMethodStore
@@ -15,6 +17,7 @@ def get(
     return __init_client(client_name, token=token)
 
 
+@cache
 def __init_client(
     client_name: str, token: str | None = None
 ) -> Workspace | execution_engine2 | NarrativeMethodStore | ServiceClient | Catalog:

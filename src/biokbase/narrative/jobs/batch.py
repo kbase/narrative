@@ -7,10 +7,9 @@ from itertools import product
 from string import Formatter, Template
 
 from biokbase.narrative import clients
+from biokbase.narrative.jobs import specmanager
 from biokbase.narrative.staging.helper import Helper as StagingHelper
 from biokbase.narrative.system import system_variable
-
-from . import specmanager
 
 
 def get_input_scaffold(app, tag="release", use_defaults=False):

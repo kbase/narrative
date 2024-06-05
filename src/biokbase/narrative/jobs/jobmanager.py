@@ -10,11 +10,10 @@ from biokbase.narrative.exception_util import (
     JobRequestException,
     transform_job_exception,
 )
+from biokbase.narrative.jobs.job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
 from biokbase.narrative.system import system_variable
 from IPython.display import HTML
 from jinja2 import Template
-
-from .job import JOB_INIT_EXCLUDED_JOB_STATE_FIELDS, Job
 
 """
 KBase Job Manager

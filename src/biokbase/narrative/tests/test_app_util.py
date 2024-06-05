@@ -6,6 +6,7 @@ import re
 from unittest import mock
 
 import pytest
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
@@ -18,7 +19,6 @@ from biokbase.narrative.app_util import (
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.tests import util
 from biokbase.narrative.upa import is_upa
-from biokbase.workspace.client import Workspace
 
 config = util.ConfigTests()
 user_name = config.get("users", "test_user")

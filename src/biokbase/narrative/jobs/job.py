@@ -7,9 +7,8 @@ from typing import Any
 from biokbase.narrative import clients
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.jobs.specmanager import SpecManager
 from jinja2 import Template
-
-from .specmanager import SpecManager
 
 """
 KBase job class

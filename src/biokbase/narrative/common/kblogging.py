@@ -14,15 +14,10 @@ import threading
 import time
 from logging import handlers
 
-from . import log_proxy
-from .log_common import format_event
-from .narrative_logger import NarrativeLogger
-
-# Local
-from .util import kbase_env
-
-__author__ = "Dan Gunter <dkgunter@lbl.gov>"
-__date__ = "2014-07-31"
+from biokbase.narrative.common import log_proxy
+from biokbase.narrative.common.log_common import format_event
+from biokbase.narrative.common.narrative_logger import NarrativeLogger
+from biokbase.narrative.common.util import kbase_env
 
 # Constants
 

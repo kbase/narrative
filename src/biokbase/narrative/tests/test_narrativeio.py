@@ -13,10 +13,13 @@ from biokbase.narrative.contents.narrativeio import (
     LIST_OBJECTS_FIELDS,
     KBaseWSManagerMixin,
 )
+from biokbase.narrative.tests import util
+from biokbase.narrative.tests.narrative_mock.mockclients import (
+    MockClients,
+    get_mock_client,
+    get_nar_obj,
+)
 from tornado.web import HTTPError
-
-from . import util
-from .narrative_mock.mockclients import MockClients, get_mock_client, get_nar_obj
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 

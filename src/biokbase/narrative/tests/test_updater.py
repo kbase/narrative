@@ -5,8 +5,7 @@ from biokbase.narrative.contents.updater import (
     suggest_apps,
     update_narrative,
 )
-
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
 
 
 class KeyErrorTest(ValueError):

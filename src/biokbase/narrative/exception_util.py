@@ -1,8 +1,6 @@
 """Exceptions and exception transformations."""
 
-from typing import Any
-
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from biokbase.narrative.common.exceptions import ServerError as EEServerError
 from requests.exceptions import HTTPError
 
 

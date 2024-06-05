@@ -14,8 +14,7 @@ from biokbase.narrative.jobs.batch import (
     list_files,
     list_objects,
 )
-
-from .narrative_mock.mockclients import MockStagingHelper, get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import MockStagingHelper, get_mock_client
 
 
 class BatchTestCase(unittest.TestCase):

@@ -22,10 +22,9 @@ from biokbase.narrative.tests.job_test_constants import (
     READS_OBJ_1,
     READS_OBJ_2,
 )
+from biokbase.narrative.tests.narrative_mock.mockclients import WSID_STANDARD, get_mock_client
+from biokbase.narrative.tests.util import ConfigTests
 from IPython.display import HTML, Javascript
-
-from .narrative_mock.mockclients import WSID_STANDARD, get_mock_client
-from .util import ConfigTests
 
 CONFIG = ConfigTests()
 WS_NAME = CONFIG.get("app_tests", "public_ws_name")

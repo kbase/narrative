@@ -13,10 +13,9 @@ from biokbase.narrative.app_util import (
 )
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.system import system_variable
+from biokbase.narrative.upa import is_ref, is_upa
 from IPython.display import Javascript
 from jinja2 import Template
-
-from .upa import is_ref, is_upa
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 

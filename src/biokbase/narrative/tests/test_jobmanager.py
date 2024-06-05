@@ -50,15 +50,14 @@ from biokbase.narrative.tests.job_test_constants import (
     generate_error,
     get_test_job,
 )
-from IPython.display import HTML
-
-from .narrative_mock.mockclients import (
+from biokbase.narrative.tests.narrative_mock.mockclients import (
     MockClients,
     assert_obj_method_called,
     get_failing_mock_client,
     get_mock_client,
 )
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
+from IPython.display import HTML
 
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]

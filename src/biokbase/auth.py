@@ -30,6 +30,7 @@ class TokenInfo:
     """
 
     def __init__(self: "TokenInfo", info_dict: dict, token: str | None = None) -> None:
+        """Create an instance of the TokenInfo class."""
         self.cachefor = info_dict.get("cachefor", 0)
         self.created = info_dict.get("created", 0)
         self.custom = info_dict.get("custom", {})
@@ -48,6 +49,7 @@ class UserInfo:
     """
 
     def __init__(self: "UserInfo", user_dict: dict[str, Any]) -> None:
+        """Create an instance of the UserInfo class."""
         self.anon_user_id = user_dict.get("anonid")
         self.custom_roles = user_dict.get("customroles", [])
         self.display_name = user_dict.get("display")
@@ -108,7 +110,7 @@ def init_session_env(token_info: TokenInfo, user_info: UserInfo, ip: str) -> Non
     kbase_env.client_ip = ip
 
 
-def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> TokenInfo:
+def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> TokenInfo:  # noqa: S107
     """Given a user token, get an agent token.
 
     Uses the given login token (if it's valid) to get and return an agent token from
@@ -128,6 +130,7 @@ def get_agent_token(login_token: str, token_name: str = "NarrativeAgent") -> Tok
 
 
 def get_display_names(auth_token: str, user_ids: list[str]) -> dict[str, Any]:
+    """Given a list of user IDs, get the corresponding display names."""
     headers = {"Authorization": auth_token}
     r = requests.get(token_api_url + endpt_user_display + ",".join(user_ids), headers=headers)
     r.raise_for_status()

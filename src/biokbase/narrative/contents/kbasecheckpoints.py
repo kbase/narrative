@@ -1,9 +1,8 @@
 """A (currently stubby) class for managing Narrative checkpoints."""
 
 import notebook._tz as tz
+from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin
 from notebook.services.contents.checkpoints import Checkpoints
-
-from .narrativeio import KBaseWSManagerMixin
 
 
 class KBaseCheckpoints(KBaseWSManagerMixin, Checkpoints):

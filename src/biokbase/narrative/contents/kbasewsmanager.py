@@ -26,15 +26,14 @@ from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.kblogging import get_narrative_logger
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.contents.kbasecheckpoints import KBaseCheckpoints
+from biokbase.narrative.contents.manager_util import base_model
+from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin
 from biokbase.narrative.services.user import UserService
 from nbformat import ValidationError, validate
 from notebook.services.contents.manager import ContentsManager
 from tornado.web import HTTPError
 from traitlets.traitlets import List, Unicode
-
-from .kbasecheckpoints import KBaseCheckpoints
-from .manager_util import base_model
-from .narrativeio import KBaseWSManagerMixin
 
 
 class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):

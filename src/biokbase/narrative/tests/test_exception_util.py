@@ -2,7 +2,7 @@
 
 import pytest
 import requests
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from biokbase.narrative.common.exceptions import ServerError as EEServerError
 from biokbase.narrative.exception_util import (
     NarrativeException,
     transform_job_exception,

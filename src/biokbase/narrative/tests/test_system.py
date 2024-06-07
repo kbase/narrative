@@ -7,9 +7,8 @@ from unittest import mock
 import biokbase.auth
 import pytest
 from biokbase.narrative.system import strict_system_variable, system_variable
-
-from . import util
-from .narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests import util
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
 
 user_token = "SOME_TOKEN"  # noqa: S105
 config = util.ConfigTests()

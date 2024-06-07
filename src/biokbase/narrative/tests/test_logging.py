@@ -6,8 +6,7 @@ import time
 import unittest
 
 from biokbase.narrative.common import kblogging
-
-from . import util
+from biokbase.narrative.tests import util
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 

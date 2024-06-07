@@ -4,9 +4,8 @@ from unittest import mock
 import pytest
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.contents.kbasewsmanager import KBaseWSManager
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
 from tornado.web import HTTPError
-
-from .narrative_mock.mockclients import get_mock_client
 
 
 class KBWSManagerTestCase(unittest.TestCase):

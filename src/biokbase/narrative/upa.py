@@ -5,7 +5,7 @@ documents.
 
 import re
 
-from .system import system_variable
+from biokbase.narrative.system import system_variable
 
 external_tag = "&"
 

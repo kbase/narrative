@@ -5,8 +5,7 @@ import unittest
 from biokbase.narrative.common.narrative_logger import NarrativeLogger
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
-
-from . import util
+from biokbase.narrative.tests import util
 
 
 def assert_log_msg(msg, event, narrative, version):

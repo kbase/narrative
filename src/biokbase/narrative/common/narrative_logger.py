@@ -1,8 +1,8 @@
 import json
 import socket
 
-from .url_config import URLS
-from .util import kbase_env
+from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.util import kbase_env
 
 """
 A simple ELK stack logger for a few Narrative events.

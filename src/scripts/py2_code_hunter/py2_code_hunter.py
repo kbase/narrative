@@ -9,8 +9,8 @@ import sys
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
 
 import nbformat
-from biokbase.workspace import baseclient
-from biokbase.workspace.client import Workspace
+from biokbase.installed_clients.WorkspaceClient import Workspace
+from biokbase.narrative.common.exceptions import ServerError
 from narr_info import NarrativeInfo
 
 DEFAULT_OUTPUT_FILE = "code_search_results.json"
@@ -40,7 +40,7 @@ def find_all_narrative_py2_code(
                 all_results["no_change"].append(result.to_dict())
             else:
                 all_results["changes"].append(result.to_dict())
-        except baseclient.ServerError as e:
+        except ServerError as e:
             if "No workspace with id" in str(e):
                 print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})

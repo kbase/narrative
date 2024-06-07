@@ -13,10 +13,13 @@ import json
 import os
 import re
 import uuid
+from typing import TYPE_CHECKING
 
-from biokbase.catalog.Client import Catalog
 from biokbase.narrative import clients
 from biokbase.narrative.jobs.specmanager import SpecManager
+
+if TYPE_CHECKING:
+    from biokbase.installed_clients.CatalogClient import Catalog
 
 
 def update_needed(narrative):

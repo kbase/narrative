@@ -6,8 +6,7 @@ import unittest
 
 import pytest
 from biokbase.narrative.appeditor import generate_app_cell
-
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
 
 
 class AppEditorTestCase(unittest.TestCase):

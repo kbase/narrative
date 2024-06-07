@@ -1,7 +1,7 @@
 import json
 import os
 
-from .util import kbase_env
+from biokbase.narrative.common.util import kbase_env
 
 
 class Struct:

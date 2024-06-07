@@ -6,8 +6,6 @@
 #
 ############################################################
 
-from __future__ import print_function
-
 # the following is a hack to get the baseclient to import whether we're in a
 # package or not. This makes pep8 unhappy hence the annotations.
 try:
@@ -18,7 +16,7 @@ except ImportError:
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
-class execution_engine2:
+class execution_engine2(object):
     def __init__(
         self,
         url=None,
@@ -255,14 +253,11 @@ class execution_engine2:
            parameter "wsid" of Long, parameter "as_admin" of type "boolean"
            (@range [0,1])
         :returns: instance of type "BatchSubmission" -> structure: parameter
-           "parent_job_id" of type "job_id" (A job id.), parameter
-           "child_job_ids" of list of type "job_id" (A job id.)
+           "batch_id" of type "job_id" (A job id.), parameter "child_job_ids"
+           of list of type "job_id" (A job id.)
         """
         return self._client.call_method(
-            "execution_engine2.run_job_batch",
-            [params, batch_params],
-            self._service_ver,
-            context,
+            "execution_engine2.run_job_batch", [params, batch_params], self._service_ver, context
         )
 
     def retry_job(self, params, context=None):
@@ -313,12 +308,12 @@ class execution_engine2:
     def abandon_children(self, params, context=None):
         """
         :param params: instance of type "AbandonChildren" -> structure:
-           parameter "parent_job_id" of type "job_id" (A job id.), parameter
+           parameter "batch_id" of type "job_id" (A job id.), parameter
            "child_job_ids" of list of type "job_id" (A job id.), parameter
            "as_admin" of type "boolean" (@range [0,1])
         :returns: instance of type "BatchSubmission" -> structure: parameter
-           "parent_job_id" of type "job_id" (A job id.), parameter
-           "child_job_ids" of list of type "job_id" (A job id.)
+           "batch_id" of type "job_id" (A job id.), parameter "child_job_ids"
+           of list of type "job_id" (A job id.)
         """
         return self._client.call_method(
             "execution_engine2.abandon_children", [params], self._service_ver, context
@@ -537,10 +532,7 @@ class execution_engine2:
            "boolean" (@range [0,1]), parameter "line_number" of Long
         """
         return self._client.call_method(
-            "execution_engine2.add_job_logs",
-            [params, lines],
-            self._service_ver,
-            context,
+            "execution_engine2.add_job_logs", [params, lines], self._service_ver, context
         )
 
     def get_job_logs(self, params, context=None):
@@ -618,29 +610,42 @@ class execution_engine2:
            id of the workspace where the job is bound authstrat - string -
            what strategy used to authenticate the job job_input - object -
            inputs to the job (from the run_job call)  ## TODO - verify
-           updated - int - timestamp since epoch in milliseconds of the last
-           time the status was updated running - int - timestamp since epoch
-           in milliseconds of when it entered the running state created - int
-           - timestamp since epoch in milliseconds when the job was created
-           finished - int - timestamp since epoch in milliseconds when the
-           job was finished status - string - status of the job. one of the
-           following: created - job has been created in the service
-           estimating - an estimation job is running to estimate resources
-           required for the main job, and which queue should be used queued -
-           job is queued to be run running - job is running on a worker node
-           completed - job was completed successfully error - job is no
-           longer running, but failed with an error terminated - job is no
-           longer running, terminated either due to user cancellation, admin
-           cancellation, or some automated task error_code - int - internal
-           reason why the job is an error. one of the following: 0 - unknown
-           1 - job crashed 2 - job terminated by automation 3 - job ran over
-           time limit 4 - job was missing its automated output document 5 -
-           job authentication token expired errormsg - string - message (e.g.
-           stacktrace) accompanying an errored job error - object - the
-           JSON-RPC error package that accompanies the error code and message
-           terminated_code - int - internal reason why a job was terminated,
-           one of: 0 - user cancellation 1 - admin cancellation 2 -
-           terminated by some automatic process @optional error @optional
+           job_output - object - outputs from the job (from the run_job call)
+           ## TODO - verify updated - int - timestamp since epoch in
+           milliseconds of the last time the status was updated running - int
+           - timestamp since epoch in milliseconds of when it entered the
+           running state created - int - timestamp since epoch in
+           milliseconds when the job was created finished - int - timestamp
+           since epoch in milliseconds when the job was finished status -
+           string - status of the job. one of the following: created - job
+           has been created in the service estimating - an estimation job is
+           running to estimate resources required for the main job, and which
+           queue should be used queued - job is queued to be run running -
+           job is running on a worker node completed - job was completed
+           successfully error - job is no longer running, but failed with an
+           error terminated - job is no longer running, terminated either due
+           to user cancellation, admin cancellation, or some automated task
+           error_code - int - internal reason why the job is an error. one of
+           the following: 0 - unknown 1 - job crashed 2 - job terminated by
+           automation 3 - job ran over time limit 4 - job was missing its
+           automated output document 5 - job authentication token expired
+           errormsg - string - message (e.g. stacktrace) accompanying an
+           errored job error - object - the JSON-RPC error package that
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
            error_code @optional errormsg @optional terminated_code @optional
            estimating @optional running @optional finished) -> structure:
            parameter "job_id" of type "job_id" (A job id.), parameter "user"
@@ -720,7 +725,8 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String
         """
         return self._client.call_method(
             "execution_engine2.check_job", [params], self._service_ver, context
@@ -736,146 +742,51 @@ class execution_engine2:
            "job_id" of type "job_id" (A job id.), parameter "exclude_fields"
            of list of String, parameter "as_admin" of type "boolean" (@range
            [0,1])
-        :returns: instance of type "CheckJobBatchResults" (parent_job - state
-           of parent job job_states - states of child jobs IDEA: ADD
-           aggregate_states - count of all available child job states, even
-           if they are zero) -> structure: parameter "parent_jobstate" of
-           type "JobState" (job_id - string - id of the job user - string -
-           user who started the job wsid - int - optional id of the workspace
-           where the job is bound authstrat - string - what strategy used to
-           authenticate the job job_input - object - inputs to the job (from
-           the run_job call)  ## TODO - verify updated - int - timestamp
-           since epoch in milliseconds of the last time the status was
-           updated running - int - timestamp since epoch in milliseconds of
-           when it entered the running state created - int - timestamp since
-           epoch in milliseconds when the job was created finished - int -
-           timestamp since epoch in milliseconds when the job was finished
-           status - string - status of the job. one of the following: created
-           - job has been created in the service estimating - an estimation
-           job is running to estimate resources required for the main job,
-           and which queue should be used queued - job is queued to be run
-           running - job is running on a worker node completed - job was
-           completed successfully error - job is no longer running, but
-           failed with an error terminated - job is no longer running,
-           terminated either due to user cancellation, admin cancellation, or
-           some automated task error_code - int - internal reason why the job
-           is an error. one of the following: 0 - unknown 1 - job crashed 2 -
-           job terminated by automation 3 - job ran over time limit 4 - job
-           was missing its automated output document 5 - job authentication
-           token expired errormsg - string - message (e.g. stacktrace)
-           accompanying an errored job error - object - the JSON-RPC error
-           package that accompanies the error code and message
-           terminated_code - int - internal reason why a job was terminated,
-           one of: 0 - user cancellation 1 - admin cancellation 2 -
-           terminated by some automatic process @optional error @optional
-           error_code @optional errormsg @optional terminated_code @optional
-           estimating @optional running @optional finished) -> structure:
-           parameter "job_id" of type "job_id" (A job id.), parameter "user"
-           of String, parameter "authstrat" of String, parameter "wsid" of
-           Long, parameter "status" of String, parameter "job_input" of type
-           "RunJobParams" (method - the SDK method to run in module.method
-           format, e.g. 'KBaseTrees.construct_species_tree' params - the
-           parameters to pass to the method. Optional parameters: app_id -
-           the id of the Narrative application (UI) running this job (e.g.
-           repo/name) service_ver - specific version of deployed service,
-           last version is used if this parameter is not defined
-           source_ws_objects - denotes the workspace objects that will serve
-           as a source of data when running the SDK method. These references
-           will be added to the autogenerated provenance. Must be in UPA
-           format (e.g. 6/90/4). meta - Narrative metadata to associate with
-           the job. wsid - an optional workspace id to associate with the
-           job. This is passed to the workspace service, which will share the
-           job based on the permissions of the workspace rather than owner of
-           the job parent_job_id - EE2 job id for the parent of the current
-           job. For run_job and run_job_concierge, this value can be
-           specified to denote the parent job of the job being created.
-           Warning: No checking is done on the validity of the job ID, and
-           the parent job record is not altered. Submitting a job with a
-           parent ID to run_job_batch will cause an error to be returned.
-           job_requirements: the requirements for the job. The user must have
-           full EE2 administration rights to use this parameter. Note that
-           the job_requirements are not returned along with the rest of the
-           job parameters when querying the EE2 API - they are only
-           considered when submitting a job. as_admin: run the job with full
-           EE2 permissions, meaning that any supplied workspace IDs are not
-           checked for accessibility and job_requirements may be supplied.
-           The user must have full EE2 administration rights. Note that this
-           field is not included in returned data when querying EE2.) ->
-           structure: parameter "method" of String, parameter "app_id" of
-           String, parameter "params" of list of unspecified object,
-           parameter "service_ver" of String, parameter "source_ws_objects"
-           of list of type "wsref" (A workspace object reference of the form
-           X/Y/Z, where X is the workspace id, Y is the object id, Z is the
-           version.), parameter "meta" of type "Meta" (Narrative metadata for
-           a job. All fields are optional. run_id - the Narrative-assigned ID
-           of the job run. 1:1 with a job ID. token_id - the ID of the token
-           used to run the method. tag - the release tag, e.g.
-           dev/beta/release. cell_id - the ID of the narrative cell from
-           which the job was run.) -> structure: parameter "run_id" of
-           String, parameter "token_id" of String, parameter "tag" of String,
-           parameter "cell_id" of String, parameter "wsid" of Long, parameter
-           "parent_job_id" of String, parameter "job_requirements" of type
-           "JobRequirements" (Job requirements for a job. All fields are
-           optional. To submit job requirements, the user must have full EE2
-           admin permissions. Ignored for the run concierge endpoint.
-           request_cpus: the number of CPUs to request for the job.
-           request_memory: the amount of memory, in MB, to request for the
-           job. request_disk: the amount of disk space, in GB, to request for
-           the job. client_group: the name of the client group on which to
-           run the job. client_group_regex: Whether to treat the client group
-           string, whether provided here, from the catalog, or as a default,
-           as a regular expression when matching clientgroups. Default True
-           for HTC, but the default depends on the scheduler. Omit to use the
-           default. bill_to_user: the job will be counted against the
-           provided user's fair share quota. ignore_concurrency_limits:
-           ignore any limits on simultaneous job runs. Default false.
-           scheduler_requirements: arbitrary key-value pairs to be provided
-           to the job scheduler. Requires knowledge of the scheduler
-           interface. debug_mode: Whether to run the job in debug mode.
-           Default false.) -> structure: parameter "request_cpus" of Long,
-           parameter "requst_memory" of Long, parameter "request_disk" of
-           Long, parameter "client_group" of String, parameter
-           "client_group_regex" of type "boolean" (@range [0,1]), parameter
-           "bill_to_user" of String, parameter "ignore_concurrency_limits" of
-           type "boolean" (@range [0,1]), parameter "scheduler_requirements"
-           of mapping from String to String, parameter "debug_mode" of type
-           "boolean" (@range [0,1]), parameter "as_admin" of type "boolean"
-           (@range [0,1]), parameter "created" of Long, parameter "queued" of
-           Long, parameter "estimating" of Long, parameter "running" of Long,
-           parameter "finished" of Long, parameter "updated" of Long,
-           parameter "error" of type "JsonRpcError" (Error block of JSON RPC
-           response) -> structure: parameter "name" of String, parameter
-           "code" of Long, parameter "message" of String, parameter "error"
-           of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long, parameter
-           "child_jobstates" of list of type "JobState" (job_id - string - id
-           of the job user - string - user who started the job wsid - int -
-           optional id of the workspace where the job is bound authstrat -
+        :returns: instance of type "CheckJobBatchResults" (batch_jobstate -
+           state of the coordinating job for the batch child_jobstates -
+           states of child jobs IDEA: ADD aggregate_states - count of all
+           available child job states, even if they are zero) -> structure:
+           parameter "batch_jobstate" of type "JobState" (job_id - string -
+           id of the job user - string - user who started the job wsid - int
+           - optional id of the workspace where the job is bound authstrat -
            string - what strategy used to authenticate the job job_input -
            object - inputs to the job (from the run_job call)  ## TODO -
-           verify updated - int - timestamp since epoch in milliseconds of
-           the last time the status was updated running - int - timestamp
-           since epoch in milliseconds of when it entered the running state
-           created - int - timestamp since epoch in milliseconds when the job
-           was created finished - int - timestamp since epoch in milliseconds
-           when the job was finished status - string - status of the job. one
-           of the following: created - job has been created in the service
-           estimating - an estimation job is running to estimate resources
-           required for the main job, and which queue should be used queued -
-           job is queued to be run running - job is running on a worker node
-           completed - job was completed successfully error - job is no
-           longer running, but failed with an error terminated - job is no
-           longer running, terminated either due to user cancellation, admin
-           cancellation, or some automated task error_code - int - internal
-           reason why the job is an error. one of the following: 0 - unknown
-           1 - job crashed 2 - job terminated by automation 3 - job ran over
-           time limit 4 - job was missing its automated output document 5 -
-           job authentication token expired errormsg - string - message (e.g.
-           stacktrace) accompanying an errored job error - object - the
-           JSON-RPC error package that accompanies the error code and message
-           terminated_code - int - internal reason why a job was terminated,
-           one of: 0 - user cancellation 1 - admin cancellation 2 -
-           terminated by some automatic process @optional error @optional
+           verify job_output - object - outputs from the job (from the
+           run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
+           milliseconds when the job was created finished - int - timestamp
+           since epoch in milliseconds when the job was finished status -
+           string - status of the job. one of the following: created - job
+           has been created in the service estimating - an estimation job is
+           running to estimate resources required for the main job, and which
+           queue should be used queued - job is queued to be run running -
+           job is running on a worker node completed - job was completed
+           successfully error - job is no longer running, but failed with an
+           error terminated - job is no longer running, terminated either due
+           to user cancellation, admin cancellation, or some automated task
+           error_code - int - internal reason why the job is an error. one of
+           the following: 0 - unknown 1 - job crashed 2 - job terminated by
+           automation 3 - job ran over time limit 4 - job was missing its
+           automated output document 5 - job authentication token expired
+           errormsg - string - message (e.g. stacktrace) accompanying an
+           errored job error - object - the JSON-RPC error package that
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
            error_code @optional errormsg @optional terminated_code @optional
            estimating @optional running @optional finished) -> structure:
            parameter "job_id" of type "job_id" (A job id.), parameter "user"
@@ -955,7 +866,129 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String, parameter "child_jobstates" of list of type "JobState"
+           (job_id - string - id of the job user - string - user who started
+           the job wsid - int - optional id of the workspace where the job is
+           bound authstrat - string - what strategy used to authenticate the
+           job job_input - object - inputs to the job (from the run_job call)
+           ## TODO - verify job_output - object - outputs from the job (from
+           the run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
+           milliseconds when the job was created finished - int - timestamp
+           since epoch in milliseconds when the job was finished status -
+           string - status of the job. one of the following: created - job
+           has been created in the service estimating - an estimation job is
+           running to estimate resources required for the main job, and which
+           queue should be used queued - job is queued to be run running -
+           job is running on a worker node completed - job was completed
+           successfully error - job is no longer running, but failed with an
+           error terminated - job is no longer running, terminated either due
+           to user cancellation, admin cancellation, or some automated task
+           error_code - int - internal reason why the job is an error. one of
+           the following: 0 - unknown 1 - job crashed 2 - job terminated by
+           automation 3 - job ran over time limit 4 - job was missing its
+           automated output document 5 - job authentication token expired
+           errormsg - string - message (e.g. stacktrace) accompanying an
+           errored job error - object - the JSON-RPC error package that
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
+           error_code @optional errormsg @optional terminated_code @optional
+           estimating @optional running @optional finished) -> structure:
+           parameter "job_id" of type "job_id" (A job id.), parameter "user"
+           of String, parameter "authstrat" of String, parameter "wsid" of
+           Long, parameter "status" of String, parameter "job_input" of type
+           "RunJobParams" (method - the SDK method to run in module.method
+           format, e.g. 'KBaseTrees.construct_species_tree' params - the
+           parameters to pass to the method. Optional parameters: app_id -
+           the id of the Narrative application (UI) running this job (e.g.
+           repo/name) service_ver - specific version of deployed service,
+           last version is used if this parameter is not defined
+           source_ws_objects - denotes the workspace objects that will serve
+           as a source of data when running the SDK method. These references
+           will be added to the autogenerated provenance. Must be in UPA
+           format (e.g. 6/90/4). meta - Narrative metadata to associate with
+           the job. wsid - an optional workspace id to associate with the
+           job. This is passed to the workspace service, which will share the
+           job based on the permissions of the workspace rather than owner of
+           the job parent_job_id - EE2 job id for the parent of the current
+           job. For run_job and run_job_concierge, this value can be
+           specified to denote the parent job of the job being created.
+           Warning: No checking is done on the validity of the job ID, and
+           the parent job record is not altered. Submitting a job with a
+           parent ID to run_job_batch will cause an error to be returned.
+           job_requirements: the requirements for the job. The user must have
+           full EE2 administration rights to use this parameter. Note that
+           the job_requirements are not returned along with the rest of the
+           job parameters when querying the EE2 API - they are only
+           considered when submitting a job. as_admin: run the job with full
+           EE2 permissions, meaning that any supplied workspace IDs are not
+           checked for accessibility and job_requirements may be supplied.
+           The user must have full EE2 administration rights. Note that this
+           field is not included in returned data when querying EE2.) ->
+           structure: parameter "method" of String, parameter "app_id" of
+           String, parameter "params" of list of unspecified object,
+           parameter "service_ver" of String, parameter "source_ws_objects"
+           of list of type "wsref" (A workspace object reference of the form
+           X/Y/Z, where X is the workspace id, Y is the object id, Z is the
+           version.), parameter "meta" of type "Meta" (Narrative metadata for
+           a job. All fields are optional. run_id - the Narrative-assigned ID
+           of the job run. 1:1 with a job ID. token_id - the ID of the token
+           used to run the method. tag - the release tag, e.g.
+           dev/beta/release. cell_id - the ID of the narrative cell from
+           which the job was run.) -> structure: parameter "run_id" of
+           String, parameter "token_id" of String, parameter "tag" of String,
+           parameter "cell_id" of String, parameter "wsid" of Long, parameter
+           "parent_job_id" of String, parameter "job_requirements" of type
+           "JobRequirements" (Job requirements for a job. All fields are
+           optional. To submit job requirements, the user must have full EE2
+           admin permissions. Ignored for the run concierge endpoint.
+           request_cpus: the number of CPUs to request for the job.
+           request_memory: the amount of memory, in MB, to request for the
+           job. request_disk: the amount of disk space, in GB, to request for
+           the job. client_group: the name of the client group on which to
+           run the job. client_group_regex: Whether to treat the client group
+           string, whether provided here, from the catalog, or as a default,
+           as a regular expression when matching clientgroups. Default True
+           for HTC, but the default depends on the scheduler. Omit to use the
+           default. bill_to_user: the job will be counted against the
+           provided user's fair share quota. ignore_concurrency_limits:
+           ignore any limits on simultaneous job runs. Default false.
+           scheduler_requirements: arbitrary key-value pairs to be provided
+           to the job scheduler. Requires knowledge of the scheduler
+           interface. debug_mode: Whether to run the job in debug mode.
+           Default false.) -> structure: parameter "request_cpus" of Long,
+           parameter "requst_memory" of Long, parameter "request_disk" of
+           Long, parameter "client_group" of String, parameter
+           "client_group_regex" of type "boolean" (@range [0,1]), parameter
+           "bill_to_user" of String, parameter "ignore_concurrency_limits" of
+           type "boolean" (@range [0,1]), parameter "scheduler_requirements"
+           of mapping from String to String, parameter "debug_mode" of type
+           "boolean" (@range [0,1]), parameter "as_admin" of type "boolean"
+           (@range [0,1]), parameter "created" of Long, parameter "queued" of
+           Long, parameter "estimating" of Long, parameter "running" of Long,
+           parameter "finished" of Long, parameter "updated" of Long,
+           parameter "error" of type "JsonRpcError" (Error block of JSON RPC
+           response) -> structure: parameter "name" of String, parameter
+           "code" of Long, parameter "message" of String, parameter "error"
+           of String, parameter "error_code" of Long, parameter "errormsg" of
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String
         """
         return self._client.call_method(
             "execution_engine2.check_job_batch", [params], self._service_ver, context
@@ -977,10 +1010,11 @@ class execution_engine2:
            the job wsid - int - optional id of the workspace where the job is
            bound authstrat - string - what strategy used to authenticate the
            job job_input - object - inputs to the job (from the run_job call)
-           ## TODO - verify updated - int - timestamp since epoch in
-           milliseconds of the last time the status was updated running - int
-           - timestamp since epoch in milliseconds of when it entered the
-           running state created - int - timestamp since epoch in
+           ## TODO - verify job_output - object - outputs from the job (from
+           the run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
            milliseconds when the job was created finished - int - timestamp
            since epoch in milliseconds when the job was finished status -
            string - status of the job. one of the following: created - job
@@ -997,34 +1031,45 @@ class execution_engine2:
            automated output document 5 - job authentication token expired
            errormsg - string - message (e.g. stacktrace) accompanying an
            errored job error - object - the JSON-RPC error package that
-           accompanies the error code and message terminated_code - int -
-           internal reason why a job was terminated, one of: 0 - user
-           cancellation 1 - admin cancellation 2 - terminated by some
-           automatic process @optional error @optional error_code @optional
-           errormsg @optional terminated_code @optional estimating @optional
-           running @optional finished) -> structure: parameter "job_id" of
-           type "job_id" (A job id.), parameter "user" of String, parameter
-           "authstrat" of String, parameter "wsid" of Long, parameter
-           "status" of String, parameter "job_input" of type "RunJobParams"
-           (method - the SDK method to run in module.method format, e.g.
-           'KBaseTrees.construct_species_tree' params - the parameters to
-           pass to the method. Optional parameters: app_id - the id of the
-           Narrative application (UI) running this job (e.g. repo/name)
-           service_ver - specific version of deployed service, last version
-           is used if this parameter is not defined source_ws_objects -
-           denotes the workspace objects that will serve as a source of data
-           when running the SDK method. These references will be added to the
-           autogenerated provenance. Must be in UPA format (e.g. 6/90/4).
-           meta - Narrative metadata to associate with the job. wsid - an
-           optional workspace id to associate with the job. This is passed to
-           the workspace service, which will share the job based on the
-           permissions of the workspace rather than owner of the job
-           parent_job_id - EE2 job id for the parent of the current job. For
-           run_job and run_job_concierge, this value can be specified to
-           denote the parent job of the job being created. Warning: No
-           checking is done on the validity of the job ID, and the parent job
-           record is not altered. Submitting a job with a parent ID to
-           run_job_batch will cause an error to be returned.
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
+           error_code @optional errormsg @optional terminated_code @optional
+           estimating @optional running @optional finished) -> structure:
+           parameter "job_id" of type "job_id" (A job id.), parameter "user"
+           of String, parameter "authstrat" of String, parameter "wsid" of
+           Long, parameter "status" of String, parameter "job_input" of type
+           "RunJobParams" (method - the SDK method to run in module.method
+           format, e.g. 'KBaseTrees.construct_species_tree' params - the
+           parameters to pass to the method. Optional parameters: app_id -
+           the id of the Narrative application (UI) running this job (e.g.
+           repo/name) service_ver - specific version of deployed service,
+           last version is used if this parameter is not defined
+           source_ws_objects - denotes the workspace objects that will serve
+           as a source of data when running the SDK method. These references
+           will be added to the autogenerated provenance. Must be in UPA
+           format (e.g. 6/90/4). meta - Narrative metadata to associate with
+           the job. wsid - an optional workspace id to associate with the
+           job. This is passed to the workspace service, which will share the
+           job based on the permissions of the workspace rather than owner of
+           the job parent_job_id - EE2 job id for the parent of the current
+           job. For run_job and run_job_concierge, this value can be
+           specified to denote the parent job of the job being created.
+           Warning: No checking is done on the validity of the job ID, and
+           the parent job record is not altered. Submitting a job with a
+           parent ID to run_job_batch will cause an error to be returned.
            job_requirements: the requirements for the job. The user must have
            full EE2 administration rights to use this parameter. Note that
            the job_requirements are not returned along with the rest of the
@@ -1080,7 +1125,8 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String
         """
         return self._client.call_method(
             "execution_engine2.check_jobs", [params], self._service_ver, context
@@ -1103,10 +1149,11 @@ class execution_engine2:
            the job wsid - int - optional id of the workspace where the job is
            bound authstrat - string - what strategy used to authenticate the
            job job_input - object - inputs to the job (from the run_job call)
-           ## TODO - verify updated - int - timestamp since epoch in
-           milliseconds of the last time the status was updated running - int
-           - timestamp since epoch in milliseconds of when it entered the
-           running state created - int - timestamp since epoch in
+           ## TODO - verify job_output - object - outputs from the job (from
+           the run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
            milliseconds when the job was created finished - int - timestamp
            since epoch in milliseconds when the job was finished status -
            string - status of the job. one of the following: created - job
@@ -1123,34 +1170,45 @@ class execution_engine2:
            automated output document 5 - job authentication token expired
            errormsg - string - message (e.g. stacktrace) accompanying an
            errored job error - object - the JSON-RPC error package that
-           accompanies the error code and message terminated_code - int -
-           internal reason why a job was terminated, one of: 0 - user
-           cancellation 1 - admin cancellation 2 - terminated by some
-           automatic process @optional error @optional error_code @optional
-           errormsg @optional terminated_code @optional estimating @optional
-           running @optional finished) -> structure: parameter "job_id" of
-           type "job_id" (A job id.), parameter "user" of String, parameter
-           "authstrat" of String, parameter "wsid" of Long, parameter
-           "status" of String, parameter "job_input" of type "RunJobParams"
-           (method - the SDK method to run in module.method format, e.g.
-           'KBaseTrees.construct_species_tree' params - the parameters to
-           pass to the method. Optional parameters: app_id - the id of the
-           Narrative application (UI) running this job (e.g. repo/name)
-           service_ver - specific version of deployed service, last version
-           is used if this parameter is not defined source_ws_objects -
-           denotes the workspace objects that will serve as a source of data
-           when running the SDK method. These references will be added to the
-           autogenerated provenance. Must be in UPA format (e.g. 6/90/4).
-           meta - Narrative metadata to associate with the job. wsid - an
-           optional workspace id to associate with the job. This is passed to
-           the workspace service, which will share the job based on the
-           permissions of the workspace rather than owner of the job
-           parent_job_id - EE2 job id for the parent of the current job. For
-           run_job and run_job_concierge, this value can be specified to
-           denote the parent job of the job being created. Warning: No
-           checking is done on the validity of the job ID, and the parent job
-           record is not altered. Submitting a job with a parent ID to
-           run_job_batch will cause an error to be returned.
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
+           error_code @optional errormsg @optional terminated_code @optional
+           estimating @optional running @optional finished) -> structure:
+           parameter "job_id" of type "job_id" (A job id.), parameter "user"
+           of String, parameter "authstrat" of String, parameter "wsid" of
+           Long, parameter "status" of String, parameter "job_input" of type
+           "RunJobParams" (method - the SDK method to run in module.method
+           format, e.g. 'KBaseTrees.construct_species_tree' params - the
+           parameters to pass to the method. Optional parameters: app_id -
+           the id of the Narrative application (UI) running this job (e.g.
+           repo/name) service_ver - specific version of deployed service,
+           last version is used if this parameter is not defined
+           source_ws_objects - denotes the workspace objects that will serve
+           as a source of data when running the SDK method. These references
+           will be added to the autogenerated provenance. Must be in UPA
+           format (e.g. 6/90/4). meta - Narrative metadata to associate with
+           the job. wsid - an optional workspace id to associate with the
+           job. This is passed to the workspace service, which will share the
+           job based on the permissions of the workspace rather than owner of
+           the job parent_job_id - EE2 job id for the parent of the current
+           job. For run_job and run_job_concierge, this value can be
+           specified to denote the parent job of the job being created.
+           Warning: No checking is done on the validity of the job ID, and
+           the parent job record is not altered. Submitting a job with a
+           parent ID to run_job_batch will cause an error to be returned.
            job_requirements: the requirements for the job. The user must have
            full EE2 administration rights to use this parameter. Note that
            the job_requirements are not returned along with the rest of the
@@ -1206,13 +1264,11 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String
         """
         return self._client.call_method(
-            "execution_engine2.check_workspace_jobs",
-            [params],
-            self._service_ver,
-            context,
+            "execution_engine2.check_workspace_jobs", [params], self._service_ver, context
         )
 
     def cancel_job(self, params, context=None):
@@ -1336,10 +1392,11 @@ class execution_engine2:
            the job wsid - int - optional id of the workspace where the job is
            bound authstrat - string - what strategy used to authenticate the
            job job_input - object - inputs to the job (from the run_job call)
-           ## TODO - verify updated - int - timestamp since epoch in
-           milliseconds of the last time the status was updated running - int
-           - timestamp since epoch in milliseconds of when it entered the
-           running state created - int - timestamp since epoch in
+           ## TODO - verify job_output - object - outputs from the job (from
+           the run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
            milliseconds when the job was created finished - int - timestamp
            since epoch in milliseconds when the job was finished status -
            string - status of the job. one of the following: created - job
@@ -1356,34 +1413,45 @@ class execution_engine2:
            automated output document 5 - job authentication token expired
            errormsg - string - message (e.g. stacktrace) accompanying an
            errored job error - object - the JSON-RPC error package that
-           accompanies the error code and message terminated_code - int -
-           internal reason why a job was terminated, one of: 0 - user
-           cancellation 1 - admin cancellation 2 - terminated by some
-           automatic process @optional error @optional error_code @optional
-           errormsg @optional terminated_code @optional estimating @optional
-           running @optional finished) -> structure: parameter "job_id" of
-           type "job_id" (A job id.), parameter "user" of String, parameter
-           "authstrat" of String, parameter "wsid" of Long, parameter
-           "status" of String, parameter "job_input" of type "RunJobParams"
-           (method - the SDK method to run in module.method format, e.g.
-           'KBaseTrees.construct_species_tree' params - the parameters to
-           pass to the method. Optional parameters: app_id - the id of the
-           Narrative application (UI) running this job (e.g. repo/name)
-           service_ver - specific version of deployed service, last version
-           is used if this parameter is not defined source_ws_objects -
-           denotes the workspace objects that will serve as a source of data
-           when running the SDK method. These references will be added to the
-           autogenerated provenance. Must be in UPA format (e.g. 6/90/4).
-           meta - Narrative metadata to associate with the job. wsid - an
-           optional workspace id to associate with the job. This is passed to
-           the workspace service, which will share the job based on the
-           permissions of the workspace rather than owner of the job
-           parent_job_id - EE2 job id for the parent of the current job. For
-           run_job and run_job_concierge, this value can be specified to
-           denote the parent job of the job being created. Warning: No
-           checking is done on the validity of the job ID, and the parent job
-           record is not altered. Submitting a job with a parent ID to
-           run_job_batch will cause an error to be returned.
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
+           error_code @optional errormsg @optional terminated_code @optional
+           estimating @optional running @optional finished) -> structure:
+           parameter "job_id" of type "job_id" (A job id.), parameter "user"
+           of String, parameter "authstrat" of String, parameter "wsid" of
+           Long, parameter "status" of String, parameter "job_input" of type
+           "RunJobParams" (method - the SDK method to run in module.method
+           format, e.g. 'KBaseTrees.construct_species_tree' params - the
+           parameters to pass to the method. Optional parameters: app_id -
+           the id of the Narrative application (UI) running this job (e.g.
+           repo/name) service_ver - specific version of deployed service,
+           last version is used if this parameter is not defined
+           source_ws_objects - denotes the workspace objects that will serve
+           as a source of data when running the SDK method. These references
+           will be added to the autogenerated provenance. Must be in UPA
+           format (e.g. 6/90/4). meta - Narrative metadata to associate with
+           the job. wsid - an optional workspace id to associate with the
+           job. This is passed to the workspace service, which will share the
+           job based on the permissions of the workspace rather than owner of
+           the job parent_job_id - EE2 job id for the parent of the current
+           job. For run_job and run_job_concierge, this value can be
+           specified to denote the parent job of the job being created.
+           Warning: No checking is done on the validity of the job ID, and
+           the parent job record is not altered. Submitting a job with a
+           parent ID to run_job_batch will cause an error to be returned.
            job_requirements: the requirements for the job. The user must have
            full EE2 administration rights to use this parameter. Note that
            the job_requirements are not returned along with the rest of the
@@ -1439,17 +1507,14 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long, parameter "count" of
-           Long, parameter "query_count" of Long, parameter "filter" of
-           mapping from String to String, parameter "skip" of Long, parameter
-           "projection" of list of String, parameter "limit" of Long,
-           parameter "sort_order" of String
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String, parameter "count" of Long, parameter "query_count" of
+           Long, parameter "filter" of mapping from String to String,
+           parameter "skip" of Long, parameter "projection" of list of
+           String, parameter "limit" of Long, parameter "sort_order" of String
         """
         return self._client.call_method(
-            "execution_engine2.check_jobs_date_range_for_user",
-            [params],
-            self._service_ver,
-            context,
+            "execution_engine2.check_jobs_date_range_for_user", [params], self._service_ver, context
         )
 
     def check_jobs_date_range_for_all(self, params, context=None):
@@ -1519,10 +1584,11 @@ class execution_engine2:
            the job wsid - int - optional id of the workspace where the job is
            bound authstrat - string - what strategy used to authenticate the
            job job_input - object - inputs to the job (from the run_job call)
-           ## TODO - verify updated - int - timestamp since epoch in
-           milliseconds of the last time the status was updated running - int
-           - timestamp since epoch in milliseconds of when it entered the
-           running state created - int - timestamp since epoch in
+           ## TODO - verify job_output - object - outputs from the job (from
+           the run_job call) ## TODO - verify updated - int - timestamp since
+           epoch in milliseconds of the last time the status was updated
+           running - int - timestamp since epoch in milliseconds of when it
+           entered the running state created - int - timestamp since epoch in
            milliseconds when the job was created finished - int - timestamp
            since epoch in milliseconds when the job was finished status -
            string - status of the job. one of the following: created - job
@@ -1539,34 +1605,45 @@ class execution_engine2:
            automated output document 5 - job authentication token expired
            errormsg - string - message (e.g. stacktrace) accompanying an
            errored job error - object - the JSON-RPC error package that
-           accompanies the error code and message terminated_code - int -
-           internal reason why a job was terminated, one of: 0 - user
-           cancellation 1 - admin cancellation 2 - terminated by some
-           automatic process @optional error @optional error_code @optional
-           errormsg @optional terminated_code @optional estimating @optional
-           running @optional finished) -> structure: parameter "job_id" of
-           type "job_id" (A job id.), parameter "user" of String, parameter
-           "authstrat" of String, parameter "wsid" of Long, parameter
-           "status" of String, parameter "job_input" of type "RunJobParams"
-           (method - the SDK method to run in module.method format, e.g.
-           'KBaseTrees.construct_species_tree' params - the parameters to
-           pass to the method. Optional parameters: app_id - the id of the
-           Narrative application (UI) running this job (e.g. repo/name)
-           service_ver - specific version of deployed service, last version
-           is used if this parameter is not defined source_ws_objects -
-           denotes the workspace objects that will serve as a source of data
-           when running the SDK method. These references will be added to the
-           autogenerated provenance. Must be in UPA format (e.g. 6/90/4).
-           meta - Narrative metadata to associate with the job. wsid - an
-           optional workspace id to associate with the job. This is passed to
-           the workspace service, which will share the job based on the
-           permissions of the workspace rather than owner of the job
-           parent_job_id - EE2 job id for the parent of the current job. For
-           run_job and run_job_concierge, this value can be specified to
-           denote the parent job of the job being created. Warning: No
-           checking is done on the validity of the job ID, and the parent job
-           record is not altered. Submitting a job with a parent ID to
-           run_job_batch will cause an error to be returned.
+           accompanies the error code and message #TODO, add these to the
+           structure? condor_job_ads - dict - condor related job information
+           retry_count - int - generated field based on length of retry_ids
+           retry_ids - list - list of jobs that are retried based off of this
+           job retry_parent - str - job_id of the parent this retry is based
+           off of. Not available on a retry_parent itself batch_id - str -
+           the coordinating job, if the job is a child job created via
+           run_job_batch batch_job - bool - whether or not this is a batch
+           parent container child_jobs - array - Only parent container should
+           have child job ids scheduler_type - str - scheduler, such as awe
+           or condor scheduler_id - str - scheduler generated id
+           scheduler_estimator_id - str - id for the job spawned for
+           estimation terminated_code - int - internal reason why a job was
+           terminated, one of: 0 - user cancellation 1 - admin cancellation 2
+           - terminated by some automatic process @optional error @optional
+           error_code @optional errormsg @optional terminated_code @optional
+           estimating @optional running @optional finished) -> structure:
+           parameter "job_id" of type "job_id" (A job id.), parameter "user"
+           of String, parameter "authstrat" of String, parameter "wsid" of
+           Long, parameter "status" of String, parameter "job_input" of type
+           "RunJobParams" (method - the SDK method to run in module.method
+           format, e.g. 'KBaseTrees.construct_species_tree' params - the
+           parameters to pass to the method. Optional parameters: app_id -
+           the id of the Narrative application (UI) running this job (e.g.
+           repo/name) service_ver - specific version of deployed service,
+           last version is used if this parameter is not defined
+           source_ws_objects - denotes the workspace objects that will serve
+           as a source of data when running the SDK method. These references
+           will be added to the autogenerated provenance. Must be in UPA
+           format (e.g. 6/90/4). meta - Narrative metadata to associate with
+           the job. wsid - an optional workspace id to associate with the
+           job. This is passed to the workspace service, which will share the
+           job based on the permissions of the workspace rather than owner of
+           the job parent_job_id - EE2 job id for the parent of the current
+           job. For run_job and run_job_concierge, this value can be
+           specified to denote the parent job of the job being created.
+           Warning: No checking is done on the validity of the job ID, and
+           the parent job record is not altered. Submitting a job with a
+           parent ID to run_job_batch will cause an error to be returned.
            job_requirements: the requirements for the job. The user must have
            full EE2 administration rights to use this parameter. Note that
            the job_requirements are not returned along with the rest of the
@@ -1622,17 +1699,14 @@ class execution_engine2:
            response) -> structure: parameter "name" of String, parameter
            "code" of Long, parameter "message" of String, parameter "error"
            of String, parameter "error_code" of Long, parameter "errormsg" of
-           String, parameter "terminated_code" of Long, parameter "count" of
-           Long, parameter "query_count" of Long, parameter "filter" of
-           mapping from String to String, parameter "skip" of Long, parameter
-           "projection" of list of String, parameter "limit" of Long,
-           parameter "sort_order" of String
+           String, parameter "terminated_code" of Long, parameter "batch_id"
+           of String, parameter "count" of Long, parameter "query_count" of
+           Long, parameter "filter" of mapping from String to String,
+           parameter "skip" of Long, parameter "projection" of list of
+           String, parameter "limit" of Long, parameter "sort_order" of String
         """
         return self._client.call_method(
-            "execution_engine2.check_jobs_date_range_for_all",
-            [params],
-            self._service_ver,
-            context,
+            "execution_engine2.check_jobs_date_range_for_all", [params], self._service_ver, context
         )
 
     def handle_held_job(self, cluster_id, context=None):
@@ -1643,10 +1717,7 @@ class execution_engine2:
            "held_job" of unspecified object
         """
         return self._client.call_method(
-            "execution_engine2.handle_held_job",
-            [cluster_id],
-            self._service_ver,
-            context,
+            "execution_engine2.handle_held_job", [cluster_id], self._service_ver, context
         )
 
     def is_admin(self, context=None):

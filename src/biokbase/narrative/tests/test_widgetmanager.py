@@ -4,10 +4,9 @@ from unittest import mock
 
 import IPython
 import pytest
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests.util import ConfigTests
 from biokbase.narrative.widgetmanager import WidgetManager
-
-from .narrative_mock.mockclients import get_mock_client
-from .util import ConfigTests
 
 """
 Tests for the WidgetManager class

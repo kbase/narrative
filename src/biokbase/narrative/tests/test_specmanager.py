@@ -3,8 +3,7 @@ from unittest import mock
 
 import pytest
 from biokbase.narrative.jobs.specmanager import SpecManager
-
-from .narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
 
 
 class SpecManagerTestCase(unittest.TestCase):

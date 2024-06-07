@@ -42,7 +42,6 @@ ADD ./package-lock.json /kb/dev_container/narrative/
 ADD ./test /kb/dev_container/narrative/test
 # all the UI stuff
 ADD ./kbase-extension /kb/dev_container/narrative/kbase-extension
-
 # narrative backend
 ADD ./src /kb/dev_container/narrative/src
 # needed for narrative_version

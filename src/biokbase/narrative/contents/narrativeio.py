@@ -6,9 +6,11 @@ Implements the KBaseWSManagerMixin class.
 import json
 import re
 from collections import Counter
+from typing import Any
 
 import biokbase.auth
 import biokbase.narrative.clients
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.common import util
 from biokbase.narrative.common.exceptions import ServerError, WorkspaceError
 from biokbase.narrative.common.kblogging import get_logger, log_event
@@ -47,16 +49,17 @@ g_log = get_logger("biokbase.narrative")
 
 
 class KBaseWSManagerMixin:
-    """Manages the connection to the workspace for a user"""
+    """Manages the connection to the workspace for a user."""
 
     ws_uri = URLS.workspace
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self: "KBaseWSManagerMixin", *args, **kwargs) -> None:
+        """Initialise an instance of the KBaseWSManagerMixin class."""
         if not self.ws_uri:
             raise HTTPError(412, "Missing KBase workspace service endpoint URI")
         self.test_connection()
 
-    def test_connection(self):
+    def test_connection(self: "KBaseWSManagerMixin") -> None:
         try:
             self.ws_client().ver()
         except ServerError as e:
@@ -65,18 +68,20 @@ class KBaseWSManagerMixin:
                 f"Unable to connect to workspace service at {self.ws_uri}: {e}",
             ) from e
 
-    def ws_client(self):
+    def ws_client(self: "KBaseWSManagerMixin") -> Workspace:
+        """Get a workspace client."""
         return biokbase.narrative.clients.get("workspace")
 
-    def _ws_id_to_name(self, wsid):
+    def _ws_id_to_name(self: "KBaseWSManagerMixin", wsid):
         try:
             ws_info = self.ws_client().get_workspace_info({"id": wsid})
             return ws_info[1]
         except ServerError as err:
             raise WorkspaceError(err, wsid) from err
 
-    def narrative_exists(self, ref):
+    def narrative_exists(self: "KBaseWSManagerMixin", ref) -> bool:
         """Test if a narrative exists.
+
         If we can fetch the narrative info (e.g. the get_object_info from the workspace), then it
         exists. If we can't, then it doesn't. If any non-404 looking error gets raised, then we
         don't know, and should just propagate the error on up.
@@ -89,7 +94,7 @@ class KBaseWSManagerMixin:
                 return False
             raise
 
-    def _validate_nar_type(self, t, ref):
+    def _validate_nar_type(self: "KBaseWSManagerMixin", t: str, ref) -> None:
         if not t.startswith(NARRATIVE_TYPE):
             err = "Expected a Narrative object"
             if ref is not None:
@@ -97,8 +102,14 @@ class KBaseWSManagerMixin:
             err += f", got a {t}"
             raise HTTPError(500, err)
 
-    def read_narrative(self, ref, content=True, include_metadata=True):
-        """Fetches a Narrative and its object info from the Workspace
+    def read_narrative(
+        self: "KBaseWSManagerMixin",
+        ref: NarrativeRef,
+        content: bool = True,
+        include_metadata: bool = True,
+    ) -> dict[str, Any]:
+        """Fetches a Narrative and its object info from the Workspace.
+
         If content is False, this only returns the Narrative's info
         and metadata, otherwise, it returns the whole workspace object.
 
@@ -137,7 +148,7 @@ class KBaseWSManagerMixin:
         except ServerError as err:
             raise WorkspaceError(err, ref.wsid) from err
 
-    def write_narrative(self, ref, nb, cur_user):
+    def write_narrative(self: "KBaseWSManagerMixin", ref, nb, cur_user):
         """:param ref: a NarrativeRef
         :param nb: a notebook model
         :cur_user: the current user id
@@ -285,7 +296,7 @@ class KBaseWSManagerMixin:
         except Exception as e:
             raise HTTPError(500, f"{type(e)} saving Narrative: {e}") from e
 
-    def _process_cell_usage(self, nb, metadata):
+    def _process_cell_usage(self: "KBaseWSManagerMixin", nb, metadata):
         """A shiny new version of _extract_cell_info that tallies up the methods
         and apps in a Narrative. The Workspace has two limits built into it,
         that the old way could easily violate:
@@ -421,7 +432,7 @@ class KBaseWSManagerMixin:
 
         return metadata
 
-    def _filter_app_methods(self, total_len, overflow_key, filter_dict):
+    def _filter_app_methods(self: "KBaseWSManagerMixin", total_len, overflow_key, filter_dict):
         overflow_count = 0
         overflow_key_size = len(overflow_key)
         while total_len + overflow_key_size + len(str(overflow_count)) > MAX_METADATA_SIZE_BYTES:
@@ -431,7 +442,7 @@ class KBaseWSManagerMixin:
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 
-    def rename_narrative(self, ref, cur_user, new_name):
+    def rename_narrative(self: "KBaseWSManagerMixin", ref, cur_user, new_name: str) -> None:
         """Renames a Narrative. Requires a ref (NarrativeRef)
         and the name to set for the Narrative. If the current name
         doesn't match the new name, nothing changes.
@@ -448,10 +459,10 @@ class KBaseWSManagerMixin:
         nar["metadata"]["name"] = new_name
         self.write_narrative(ref, nar, cur_user)
 
-    def copy_narrative(self, obj_ref, content=True):
+    def copy_narrative(self: "KBaseWSManagerMixin", obj_ref, content=True) -> None:
         pass
 
-    def list_narratives(self, ws_id=None):
+    def list_narratives(self: "KBaseWSManagerMixin", ws_id=None):
         # self.log.debug("Listing Narratives")
         # self.log.debug("kbase_session = %s" % str(self.kbase_session))
         """By default, this searches for Narrative types in any workspace that the
@@ -500,7 +511,7 @@ class KBaseWSManagerMixin:
 
         return my_narratives
 
-    def narrative_permissions(self, ref, user=None):
+    def narrative_permissions(self: "KBaseWSManagerMixin", ref, user=None):
         """Returns permissions to a Narrative.
         This is returned as a dict, where each key is a user.
         '*' is a special key, meaning public.
@@ -524,8 +535,9 @@ class KBaseWSManagerMixin:
             perms = {user: perms[user]} if user in perms else {user: "n"}
         return perms
 
-    def narrative_writable(self, ref, user):
+    def narrative_writable(self: "KBaseWSManagerMixin", ref, user) -> bool:
         """Returns True if the logged in user can know if the given user can write to this narrative.
+
         E.g. user A is logged in. If A can see user B's permissions, and user B can write to this
         narrative, True is returned.
 

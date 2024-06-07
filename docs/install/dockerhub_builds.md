@@ -1,30 +1,32 @@
 ## Building Narrative Images with Dockerhub
 (Updated 6/1/2018)
 
-We currently make use of Travis and Dockerhub (https://hub.docker.com) to manage Narrative production builds. There are three images here that stack on each other.
+We currently make use of GitHub Actions and the GitHub Packages (aka the GitHubContainer Repository, https://ghcr.io) to manage Narrative production builds. The narrative comprises two images (to facilitate reasonable narrative build times) and a third tiny image for the narrative version.
 
 ### List of images
-1. **kbase/kb_python:latest**
-This is currently a Debian 9 image built using Conda to support Python2 and Python3. It includes the basic requirements for a KBase core python service to run, such as KBase libraries for authentication, workspace, core services, etc... The repo for this is at https://github.com/kbase/kb_python and it is built automatically via dockerhub build hooks and pushed into dockerhub. If you do not have this on your local docker host running "docker pull kbase/kb_python:latest" will pull it down from dockerhub. With the proviso that a travis build+push takes some time, the dockerhub image should always track the github repo description.
+1. **kbase/narrative-base-image:latest**
 
-2. **narrbase**
-This image is the base for the KBase Narrative code. It builds on kb_python by using Conda to install specific versions of R, NodeJS, Jupyter, IPython, and IPywidgets. Basically this is an image that run a Jupyter notebook with support for R, NumPy, Pandas, etc... This layer allows us to manage versions of those components without rebuilding everything in kb_python. The Dockerfile for this image can be found under the narrbase-image directory. For local builds, this image should persist on the developer's machine, speeding up building/testing of narrative changes.
+Repository: https://github.com/kbase/narrative-base-image
 
-3. **narrative**
-This is the final image containing the Narrative. It contains the actual Narrative codebase that runs on top of the Jupyter environment in narrbase. There is a travis/github connector that triggers a Travis CI build/test/publish job based on the configuration in travis.yml. If the regression tests succeed then the Narrative image is built and pushed into dockerhub. This image is suitable to be run on a developer's local machine, or the KBase CI, AppDev, Next or Prod environments, depending on environment variables passed in at container runtime.
+Python 3 installation, NodeJS, various linux utilities, and a set of R libraries. The last of these are extremely slow to build, which would greatly increase the time necessary to run automated builds and testing on narrative pull requests.
 
-4. **narrative_version**
-This is a very small container who's sole purpose is to serve a JSON file containing the version number of the most recently deployed narrative. This version number is used by narratives to notify the user that there is a newer release of the narrative and that they should restart their narrative to picking the latest build. This image is currently 15.5mb in size, running nginx in alpine linux, serving a single file. This was created as an interim step between copying files from the narrative image into the kbase-ui image (the past practice) and having the narrative register the most recent narrative version with the narrative method service (the future state). This image is intended to be made available via the nginx services as something like /services/narrative_version with only the the URL /services/narrative_version/narrative_version returning any content. The narrative container is configured via the VERSION_CHECK environment variable to look at that URL.
+2. **narrative**
+
+Repository: https://github.com/kbase/narrative
+
+Built on top of the `narrative-base-image`, this loads the appropriate python and javascript packages for the narrative interface. It also holds the unit and integration tests for the front- and backends, which are run automatically when a new pull request is submitted. GitHub Actions is used to build a docker image for each pull request, which are saved to ghcr.io. These images are suitable for running on a developer's local machine, or the KBase CI, AppDev, Next or Prod environments, depending on environment variables passed in at container runtime.
+
+3. **narrative_version**
+This is a very small container with the sole purpose of serving a JSON file containing the version number of the most recently deployed narrative. This version number is used by narratives to notify the user that there is a newer release of the narrative and that they should restart their narrative to use the latest build. This image is currently 15.5mb in size, running nginx in alpine linux, serving a single file. This was created as an interim step between copying files from the narrative image into the kbase-ui image (the past practice) and having the narrative register the most recent narrative version with the narrative method service (the future state). This image is intended to be made available via the nginx services as something like /services/narrative_version with only the the URL /services/narrative_version/narrative_version returning any content. The narrative container is configured via the VERSION_CHECK environment variable to look at that URL.
 
 ### How to build images
-Travis-CI is used to run regression testing on the branches declared in the branches stanza of the top level travis.yml file. Currently the travis file builds on these branches:
+
+GitHub Actions is used to run regression testing on the branches declared in the branches stanza of the top level travis.yml file. Currently the travis file builds on these branches:
 ~~~
 branches:
   only:
     - develop
     - main
-    - travis-firefox
-    - dockerize
 ~~~
 If the regression tests complete, then docker images are built and pushed into Dockerhub as kbase/narrative:$TAG and kbase/narrative_version:$TAG where $TAG corresponds to the the branch ("latest" is substituted for main)
 

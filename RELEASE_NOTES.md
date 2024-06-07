@@ -23,7 +23,7 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will
 - Retained scientific computing dependencies that may be useful to the community (SciPy, numpy, pandas, etc.)
 - Removed directly required dependencies that are really just used by the Jupyter Notebook.
 - Separated requirements into image dependencies (i.e. packages that are generally useful to have on the Narrative Docker image, ported from the narrative-base-image repo), application requirements and dev requirements.
-- Image dependencies are all found in the `docker_image_dependencies` directory, and combined into the `python-requirements.txt` file.
+- Generally useful python packages are combined in the `src/requirements-general.txt` file.
 - the requirements in `src/requirements.txt` are needed for the Narrative to run.
 - the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
 - flake8, isort, and black have been replaced by the multifunctional formatter and linter Ruff.
@@ -56,7 +56,7 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will
   - scikit-learn: 1.2.1 -> 1.5.0
   - statsmodels: 0.14.2 (new)
   - terminado: 0.17.1 -> 0.18.0
-  - tornado: 6.2 -> 6.4
+  - tornado: 6.2 -> 6.4.1
   - vcrpy: 5.1.0 -> 6.0.1
 
 

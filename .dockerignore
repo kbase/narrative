@@ -1,4 +1,4 @@
-Dockerfile
+Dockerfile*
 .husky
 .github
 .vscode
@@ -8,3 +8,9 @@ node_modules/
 **/__pycache__
 karma-result.json
 install.log
+**/.pytest_cache
+.ruff*
+.eslint*
+.prettier*
+.stylelintrc*
+.coverage*

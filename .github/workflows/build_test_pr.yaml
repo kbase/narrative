@@ -17,7 +17,7 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
   trivy-scans:
-    if: (github.base_ref == 'develop' || github.base_ref == 'main' || github.base_ref == 'master' ) && github.event.pull_request.merged == false
+    if: (github.base_ref == 'develop' || github.base_ref == 'main' ) && github.event.pull_request.merged == false
     uses: kbase/.github/.github/workflows/reusable_trivy-scans.yml@main
     secrets: inherit
 

@@ -13,16 +13,6 @@ updates:
   ignore:
     - dependency-name: "notebook"
       versions: '>= 7.0.0'
-- package-ecosystem: pip
-  directory: "/docker_image_dependencies"
-  schedule:
-    interval: monthly
-    time: '11:00'
-  groups:
-    docker-image-python-deps:
-      patterns:
-        "*"
-  open-pull-requests-limit: 20
 - package-ecosystem: npm
   directory: "/"
   schedule:

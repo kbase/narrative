@@ -416,30 +416,17 @@
                 [0.2, 0.9, 0.8, 0.995],
             ];
 
-            const colors = [
-                '#BD362F', // red
-                '#0044CC', // blue
-                '#51A351', // green
-                '#F89406', // yellow
-                '#2F96B4', // lightblue
-                '#bd2fa6', // purple
-            ];
-
             if (renderer.settings.x_min === undefined) {
                 let x_min = undefined;
                 let x_max = undefined;
                 let y_min = undefined;
                 let y_max = undefined;
-                for (var i = 0; i < renderer.settings.data.points.length; i++) {
-                    for (let h = 0; h < renderer.settings.data.points[i].length; h++) {
-                        if (x_min === undefined || renderer.settings.data.points[i][h].x < x_min)
-                            x_min = renderer.settings.data.points[i][h].x;
-                        if (x_max === undefined || renderer.settings.data.points[i][h].x > x_max)
-                            x_max = renderer.settings.data.points[i][h].x;
-                        if (y_min === undefined || renderer.settings.data.points[i][h].y < y_min)
-                            y_min = renderer.settings.data.points[i][h].y;
-                        if (y_max === undefined || renderer.settings.data.points[i][h].y > y_max)
-                            y_max = renderer.settings.data.points[i][h].y;
+                for (const element of renderer.settings.data.points) {
+                    for (let h = 0; h < element.length; h++) {
+                        if (x_min === undefined || element[h].x < x_min) x_min = element[h].x;
+                        if (x_max === undefined || element[h].x > x_max) x_max = element[h].x;
+                        if (y_min === undefined || element[h].y < y_min) y_min = element[h].y;
+                        if (y_max === undefined || element[h].y > y_max) y_max = element[h].y;
                     }
                 }
                 const sx = rendererPlot[0].niceScale({ min: x_min, max: x_max });
@@ -458,9 +445,6 @@
                     renderer.settings.title_color,
                     renderer.settings.title_settings
                 );
-            for (i = 0; i < renderer.settings.data.length; i++) {
-                const d = renderer.settings.data[i];
-            }
 
             svg.plot.plotPoints = renderer.settings.data.points;
             svg.plot.connected = renderer.settings.connected;

@@ -1,4 +1,4 @@
-/* 
+/*
    Listselect Renderer
 
    Provides a select list that allows the selection of one or multiple data items that can be filtered by their attributes. The attribute to be filtered will be displayed as the label in the selection list. Filters can be chained by pressing the enter key in the filter box.
@@ -140,7 +140,7 @@
 
         render: function (index) {
             const renderer = rendererListselect[index];
-
+            let button_span, result_list;
             if (renderer.settings.navigation_url) {
                 renderer.settings.navigation_callback = renderer.update_data;
             }
@@ -231,14 +231,9 @@
                 renderer.settings.filter_attribute + ' <span class="caret"></span>';
             const filter_list = document.createElement('ul');
             filter_list.setAttribute('class', 'dropdown-menu');
-            filter_list.setAttribute(
-                'style',
-                renderer.settings.extra_wide
-                    ? 'max-height: 200px; overflow: auto;'
-                    : 'max-height: 200px; overflow: auto;'
-            );
+            filter_list.setAttribute('style', 'max-height: 200px; overflow: auto;');
             let filter_string = '';
-            for (var i = 0; i < renderer.settings.filter.length; i++) {
+            for (let i = 0; i < renderer.settings.filter.length; i++) {
                 filter_string +=
                     '<li><a onclick="rendererListselect[' +
                     renderer.index +
@@ -265,7 +260,7 @@
                 'style',
                 'font-size: 9px; position: relative; top: -5px;'
             );
-            for (var i = 0; i < renderer.settings.filter_breadcrumbs.length; i++) {
+            for (let i = 0; i < renderer.settings.filter_breadcrumbs.length; i++) {
                 const bc_button = document.createElement('button');
                 bc_button.setAttribute('class', 'btn btn-mini');
                 bc_button.setAttribute('style', 'margin-right: 3px;');
@@ -276,7 +271,7 @@
                     ': ' +
                     renderer.settings.filter_breadcrumbs[i][1] +
                     ' <span style="font-size: 11px; color: gray;">x</span>';
-                bc_button.addEventListener('click', function (event) {
+                bc_button.addEventListener('click', function () {
                     rendererListselect[index].removeBreadcrumb(this, index);
                 });
                 filter_breadcrumbs.appendChild(bc_button);
@@ -285,7 +280,7 @@
             // check for multi-select vs single select
             if (renderer.settings.multiple) {
                 // create the result list
-                var result_list = document.createElement('select');
+                const result_list = document.createElement('select');
                 result_list.setAttribute('multiple', '');
                 result_list.setAttribute('style', 'width: 415px');
                 result_list.setAttribute('size', renderer.settings.rows);
@@ -294,7 +289,7 @@
                 renderer.redrawResultlist(result_list, index);
 
                 // create the action buttons
-                var button_span = document.createElement('span');
+                button_span = document.createElement('span');
                 button_span.setAttribute('style', 'position: relative; bottom: 100px;');
                 const button_left = document.createElement('a');
                 button_left.setAttribute('class', 'btn btn-small btn-default');
@@ -411,12 +406,12 @@
                     ? renderer.settings.button.icon
                     : '<i class="fa fa-check"></i>');
             if (typeof renderer.settings.callback == 'function') {
-                var index = renderer.index;
+                const index = renderer.index;
                 if (renderer.settings.multiple) {
                     submit_button.addEventListener('click', () => {
                         const selection_result = [];
                         if (renderer.settings.return_object) {
-                            for (var x = 0; x < result_list.options.length; x++) {
+                            for (let x = 0; x < result_list.options.length; x++) {
                                 for (let y = 0; y < renderer.settings.data.length; y++) {
                                     if (
                                         result_list.options[x].value ==
@@ -428,7 +423,7 @@
                                 }
                             }
                         } else {
-                            for (var x = 0; x < result_list.options.length; x++) {
+                            for (let x = 0; x < result_list.options.length; x++) {
                                 selection_result.push(result_list.options[x].value);
                             }
                         }
@@ -550,7 +545,7 @@
         redrawResultlist: function (result_list, index) {
             const renderer = rendererListselect[index];
             const result_list_array = [];
-            for (var i = 0; i < renderer.settings.selection_data.length; i++) {
+            for (let i = 0; i < renderer.settings.selection_data.length; i++) {
                 result_list_array.push([
                     renderer.settings.selection_data[i][renderer.settings.value],
                     '<option value="' +
@@ -566,7 +561,7 @@
                 result_list_array.sort(renderer.listsort);
             }
             let result_list_string = '';
-            for (var i = 0; i < result_list_array.length; i++) {
+            for (let i = 0; i < result_list_array.length; i++) {
                 result_list_string += result_list_array[i][1];
             }
             result_list.innerHTML = result_list_string;
@@ -579,7 +574,7 @@
             renderer.settings.filtered_data = renderer.settings.data;
 
             // apply all filter breadcrumbs
-            for (var i = 0; i < renderer.settings.filter_breadcrumbs.length; i++) {
+            for (let i = 0; i < renderer.settings.filter_breadcrumbs.length; i++) {
                 renderer.settings.filtered_data = renderer.filter(
                     {
                         data: renderer.settings.filtered_data,
@@ -609,7 +604,7 @@
 
             // create the selection list
             let settings_string = '';
-            for (var i = 0; i < renderer.settings.filtered_data.length; i++) {
+            for (let i = 0; i < renderer.settings.filtered_data.length; i++) {
                 if (
                     !renderer.settings.selection[
                         renderer.settings.filtered_data[i][renderer.settings.value]
@@ -708,7 +703,7 @@
             }
         },
         update_data: function (params, index) {
-            const renderer = rendererListselect[index];
+            let renderer = rendererListselect[index];
 
             if (typeof params == 'string' && params == 'more') {
                 renderer.settings.offset = renderer.settings.data.length;
@@ -777,7 +772,7 @@
                 headers: headers,
                 dataType: 'json',
                 success: function (data) {
-                    const renderer = rendererListselect[index];
+                    renderer = rendererListselect[index];
                     renderer.settings.total_count = data.total_count;
                     if (typeof params == 'string' && params == 'more') {
                         renderer.settings.data = renderer.settings.data.concat(data.data);

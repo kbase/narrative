@@ -5,25 +5,13 @@
 
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
     'util/string',
     'narrativeConfig',
     'd3',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'jquery-dataTables',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    StringUtil,
-    Config,
-    d3,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    jquery_dataTables
-) => {
+], (KBWidget, $, StringUtil, Config, d3, kbaseAuthenticatedWidget, kbaseTabs) => {
     return KBWidget({
         name: 'kbaseSeqCompView',
         parent: kbaseAuthenticatedWidget,
@@ -52,9 +40,9 @@ define([
             // this.ws_id = 'ecoli.dnadiff.output';
             // this.ws_name = 'fangfang:1454986986211';
 
-            console.log('WS parameters:');
-            console.log(this.ws_id);
-            console.log(this.ws_name);
+            // console.log('WS parameters:');
+            // console.log(this.ws_id);
+            // console.log(this.ws_name);
             return this;
         },
 
@@ -86,14 +74,14 @@ define([
                         // kbws.get_object_subset([{ref: 'fangfang:1452395167784' +"/"+ 'Rhodobacter_CACIA_14H1_contigs', included: ['contigs/[*]/id', 'contigs/[*]/length', 'id', 'name', 'source', 'source_id', 'type']}], function(data) {
 
                         container.empty();
-                        var data = data[0].data;
-                        console.log(data);
+                        const dataData = data[0].data;
+                        console.log(dataData);
                         const tabPane = $('<div id="' + pref + 'tab-content">');
                         container.append(tabPane);
                         const tabWidget = new kbaseTabs(tabPane, { canDelete: true, tabs: [] });
                         const tabNames = ['Legend', 'DNAdiff Comparisons'];
                         const tabIds = ['legend', 'comparisons'];
-                        for (var i = 0; i < tabIds.length; i++) {
+                        for (let i = 0; i < tabIds.length; i++) {
                             const tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
                             tabWidget.addTab({
                                 tab: tabNames[i],
@@ -110,19 +98,17 @@ style="margin-left: auto; margin-right: auto;" id="' +
                                 pref +
                                 'legend-table"/>'
                         );
-                        // var legendLabels = ['KBase ID', 'Name', 'Object ID', 'Source', "Source ID", "Type"];
-                        // var legendData = [data.id, data.name, self.ws_id, data.source, data.source_id, data.type];
                         const legendLabels = [];
                         const legendData = [];
-                        const n_genomes = data.genome_names.length;
-                        for (var i = 0; i < n_genomes; i++) {
-                            const name = data.genome_names[i];
-                            var ii = i + 1;
+                        const n_genomes = dataData.genome_names.length;
+                        for (let i = 0; i < n_genomes; i++) {
+                            const name = dataData.genome_names[i];
+                            const ii = i + 1;
                             legendLabels.push(ii.toString());
                             legendData.push(name);
                         }
                         const legendTable = $('#' + pref + 'legend-table');
-                        for (var i = 0; i < legendData.length; i++) {
+                        for (let i = 0; i < legendData.length; i++) {
                             legendTable.append(
                                 '<tr><td>' +
                                     legendLabels[i] +
@@ -138,22 +124,19 @@ style="margin-left: auto; margin-right: auto;" id="' +
                                 pref +
                                 'comparisons-table"/>'
                         );
-                        // $('#'+pref+'comparisons').append('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="'+pref+'comparisons-table"/>');
-                        // $('#'+pref+'comparisons').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'comparisons-table" class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-                        const comparisonsData = [];
                         const compTable = $('#' + pref + 'comparisons-table');
-                        var row = '<tr><td>Query \\ Reference</td>';
-                        for (var i = 0; i < n_genomes; i++) {
-                            var ii = i + 1;
+                        let row = '<tr><td>Query \\ Reference</td>';
+                        for (let i = 0; i < n_genomes; i++) {
+                            const ii = i + 1;
                             row += '<td>' + ii.toString() + '</td>';
                         }
                         row += '</tr>';
                         compTable.append(row);
                         let minSim = 1;
-                        for (var i = 0; i < data.genome_comparisons.length; i++) {
-                            console.log(data.genome_comparisons[i].similarity);
-                            if (data.genome_comparisons[i].similarity < minSim) {
-                                minSim = data.genome_comparisons[i].similarity;
+                        for (let i = 0; i < dataData.genome_comparisons.length; i++) {
+                            console.log(dataData.genome_comparisons[i].similarity);
+                            if (dataData.genome_comparisons[i].similarity < minSim) {
+                                minSim = dataData.genome_comparisons[i].similarity;
                             }
                         }
                         // console.log(minSim);
@@ -162,19 +145,19 @@ style="margin-left: auto; margin-right: auto;" id="' +
                             .domain([minSim, (minSim + 1.0) / 2, 1.0])
                             .range(['PaleVioletRed', 'pink', 'white']);
                         const reports = [];
-                        for (var i = 0; i < n_genomes; i++) {
-                            var ii = i + 1;
-                            let iname = ii + '. ' + data.genome_names[i];
+                        for (let i = 0; i < n_genomes; i++) {
+                            const ii = i + 1;
+                            let iname = ii + '. ' + dataData.genome_names[i];
                             const lp = iname.indexOf('(');
                             if (lp > 0) {
                                 iname = iname.substring(0, lp - 1);
                             }
-                            var row = '<tr> <td>' + iname + '</td>';
-                            for (var j = 0; j < n_genomes; j++) {
-                                var jj = j + 1;
-                                comp = data.genome_comparisons.pop();
+                            let row = '<tr> <td>' + iname + '</td>';
+                            for (let j = 0; j < n_genomes; j++) {
+                                const jj = j + 1;
+                                const comp = dataData.genome_comparisons.pop();
                                 reports.push(comp.report);
-                                cellId = pref + '_td_' + ii + '_' + jj;
+                                const cellId = pref + '_td_' + ii + '_' + jj;
                                 row +=
                                     '<td><div id="' +
                                     cellId +
@@ -192,11 +175,11 @@ style="margin-left: auto; margin-right: auto;" id="' +
                             compTable.append(row);
                         }
 
-                        for (var i = 0; i < n_genomes; i++) {
-                            var ii = i + 1;
-                            for (var j = 0; j < n_genomes; j++) {
-                                var jj = j + 1;
-                                var cellId = pref + '_td_' + ii + '_' + jj;
+                        for (let i = 0; i < n_genomes; i++) {
+                            const ii = i + 1;
+                            for (let j = 0; j < n_genomes; j++) {
+                                const jj = j + 1;
+                                const cellId = pref + '_td_' + ii + '_' + jj;
                                 const report = reports.pop();
                                 $('#' + cellId).tooltip({
                                     container: 'body',
@@ -221,13 +204,13 @@ style="margin-left: auto; margin-right: auto;" id="' +
             return this;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             this.token = auth.token;
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;

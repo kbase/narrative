@@ -344,8 +344,8 @@
 
             // get the target div
             const target = renderer.settings.target;
-            var index = renderer.index;
-            target.innerHTML = "<div id='graph_div" + index + "'></div>";
+            const ix = renderer.index;
+            target.innerHTML = "<div id='graph_div" + ix + "'></div>";
             target.firstChild.setAttribute(
                 'style',
                 'width: ' +
@@ -354,18 +354,18 @@
                     renderer.settings.height +
                     'px;'
             );
-            jQuery('#graph_div' + index).svg();
+            jQuery('#graph_div' + ix).svg();
 
             let cmax = 0;
             if (
                 renderer.settings.type == 'deviation' &&
                 !renderer.settings.data[0].data.hasOwnProperty('upper')
             ) {
-                renderer.calculateData(renderer.settings.data, index);
+                renderer.calculateData(renderer.settings.data, ix);
                 cmax = renderer.cmax;
             }
 
-            rendererGraph[index].drawImage(jQuery('#graph_div' + index).svg('get'), cmax, index);
+            rendererGraph[ix].drawImage(jQuery('#graph_div' + ix).svg('get'), cmax, ix);
 
             return renderer;
         },
@@ -484,30 +484,18 @@
                 'url(#fadePurple)',
             ];
 
-            const colors = [
-                '#0044CC', // blue
-                '#BD362F', // red
-                '#51A351', // green
-                '#F89406', // yellow
-                '#2F96B4', // lightblue
-                '#bd2fa6', // purple
-            ];
-
             const defs = svg.defs();
             let max = 0;
             let y2max = 0;
-            for (i = 0; i < renderer.settings.data.length; i++) {
-                for (h = 0; h < renderer.settings.data[i].data.length; h++) {
-                    if (
-                        renderer.settings.data[i].settings &&
-                        renderer.settings.data[i].settings.isY2
-                    ) {
-                        if (parseFloat(renderer.settings.data[i].data[h]) > y2max) {
-                            y2max = parseFloat(renderer.settings.data[i].data[h]);
+            for (const element of renderer.settings.data) {
+                for (let h = 0; h < element.data.length; h++) {
+                    if (element.settings && element.settings.isY2) {
+                        if (parseFloat(element.data[h]) > y2max) {
+                            y2max = parseFloat(element.data[h]);
                         }
                     } else {
-                        if (parseFloat(renderer.settings.data[i].data[h]) > max) {
-                            max = parseFloat(renderer.settings.data[i].data[h]);
+                        if (parseFloat(element.data[h]) > max) {
+                            max = parseFloat(element.data[h]);
                         }
                     }
                 }
@@ -554,16 +542,16 @@
                 svg.graph.noDraw().gridlines({ stroke: 'gray', strokeDashArray: '2,2' }, 'gray');
             }
 
-            for (i = 0; i < renderer.settings.data.length; i++) {
+            for (const element of renderer.settings.data) {
                 svg.graph
                     .noDraw()
                     .addSeries(
-                        renderer.settings.data[i].name,
-                        renderer.settings.data[i].data,
+                        element.name,
+                        element.data,
                         null,
-                        renderer.settings.data[i].lineColor || 'white',
-                        renderer.settings.data[i].lineWidth || renderer.settings.default_line_width,
-                        renderer.settings.data[i].settings ? renderer.settings.data[i].settings : {}
+                        element.lineColor || 'white',
+                        element.lineWidth || renderer.settings.default_line_width,
+                        element.settings ? element.settings : {}
                     );
             }
 
@@ -645,7 +633,7 @@
                         : legendAreas[chartLegend]
                 )
                 .end();
-            for (i = 0; i < renderer.settings.data.length; i++) {
+            for (let i = 0; i < renderer.settings.data.length; i++) {
                 svg.graph
                     .noDraw()
                     .series(i)
@@ -668,7 +656,7 @@
             let min = data[0].data[0];
             let max = data[0].data[0];
 
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 data[i].data = data[i].data.sort((a, b) => {
                     return a - b;
                 });
@@ -681,7 +669,6 @@
                 fivenumbers[i] = [];
                 fivenumbers[i]['min'] = data[i].data[0];
                 fivenumbers[i]['max'] = data[i].data[data[i].data.length - 1];
-                const boxarray = [];
                 if (data[i].data.length % 2 == 1) {
                     const med = parseInt(data[i].data.length / 2);
                     fivenumbers[i]['median'] = data[i].data[med];
@@ -714,7 +701,7 @@
                 }
             }
 
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 renderer.settings.data[i].data = [fivenumbers[i]];
             }
             renderer.cmax = max;

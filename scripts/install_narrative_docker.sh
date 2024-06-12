@@ -18,7 +18,7 @@ function console () {
     echo "$now [install_narrative] $1"
 }
 
-# source activate base
+cd $NARRATIVE_ROOT_DIR
 
 # Install Narrative requirements
 # ------------------------------
@@ -29,20 +29,10 @@ cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d
 console "Installing dev requirements from src/requirements.txt"
 cat $NARRATIVE_ROOT_DIR/src/requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
 
-# Install Narrative code
-# ----------------------
-console "Installing biokbase modules"
-cd $NARRATIVE_ROOT_DIR/src
-console "Running local 'setup.py'"
-${PYTHON} setup.py install
-console "Done installing biokbase."
 
-cd $NARRATIVE_ROOT_DIR
-
-# Setup jupyter_narrative script
-# and headless narrative runner
+# Set up kbase-narrative script
 # ------------------------------
-console "Installing scripts"
+console "Installing kbase-narrative script"
 i=0
 while read s
     do
@@ -53,14 +43,10 @@ while read s
             i=1
         fi
 done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
-
-
 d=$(dirname `which python`)
 chmod 0755 $SCRIPT_TGT
 console "Putting new $SCRIPT_TGT command under $d"
 /bin/mv $SCRIPT_TGT $d
-
-
 console "Done installing scripts"
 
 NARRATIVE_DIR=$(pwd)
@@ -70,6 +56,7 @@ JUPYTER_DATA_DIR=/tmp/jupyter_data
 JUPYTER_PATH=$NARRATIVE_DIR/kbase-extension
 IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
 HOME=/tmp
+
 
 console "Installing nbextensions"
 cp -r nbextensions kbase-extension/static

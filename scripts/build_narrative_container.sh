@@ -3,12 +3,11 @@
 VER_OUTFILE="deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H%M )
 
-# This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
 
 # Get the current branch, so that we can tag images to branch
-BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
+BRANCH=${GIT_BRANCH:-`git symbolic-ref --short HEAD`}
 # Use the branch unless we are given an explicit DOCKER_TAG
 NARRATIVE_VER=${DOCKER_TAG:-$BRANCH}
 COMMIT=`git rev-parse --short HEAD`

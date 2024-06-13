@@ -38,7 +38,6 @@ module.exports = function (config) {
             'karma-coverage',
             'karma-mocha-reporter',
             'karma-es6-shim',
-            'karma-json-result-reporter',
             'karma-brief-reporter',
             'karma-jasmine-html-reporter',
         ],
@@ -102,7 +101,7 @@ module.exports = function (config) {
         exclude: [...alwaysExclude, ...isolatedTests],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'coverage', 'json-result'],
+        reporters: ['mocha', 'coverage'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',
@@ -120,9 +119,6 @@ module.exports = function (config) {
         },
         mochaReporter: {
             ignoreSkipped: true,
-        },
-        jsonResultReporter: {
-            outputFile: 'karma-result.json',
         },
         // web server port
         port: 9876,

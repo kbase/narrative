@@ -76,7 +76,7 @@ All test parameters are supplied as environment variables with upper case names.
 
 Since narrative operation requires a valid KBase auth token, this should be considered a required test parameter.
 
-The auth token may be any valid KBase auth token, including login and developer. 
+The auth token may be any valid KBase auth token, including login and developer.
 
 > TODO: A small set of integration tests which specifically test behavior without a token should NOT have a token. This is future work.
 
@@ -259,7 +259,7 @@ ChromeDriver runs on the local host and by default uses the version of chrome in
 
 This is a preset for selenium-standalone using chrome.
 
-Selenium standalone uses a "driver" to communicate with a browser. Drivers are installed when it is first run. Drivers for chrome and FireFox are supported out of the box. 
+Selenium standalone uses a "driver" to communicate with a browser. Drivers are installed when it is first run. Drivers for chrome and FireFox are supported out of the box.
 
 The drivers use the browser installed on the host machine running the tests. Drivers know where to find the binary for the associated browser on each supported OS.
 
@@ -531,7 +531,7 @@ On the other hand, many tests will be of specific per-narrative features, such a
 
 There are many issues to be worked out in this realm, such as:
 
-- standard practices for test narrative creation, ownership, and syncronization across environments
+- standard practices for test narrative creation, ownership, and synchronization across environments
 - stability of test data
 - creation and destruction of temporary narratives;;
 

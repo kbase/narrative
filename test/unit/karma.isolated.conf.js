@@ -23,5 +23,5 @@ module.exports = function (config) {
     });
 
     config.exclude = config.alwaysExclude;
-    config.reporters = ['mocha', 'json-result'];
+    config.reporters = ['mocha'];
 };

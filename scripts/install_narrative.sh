@@ -46,20 +46,20 @@ done
 
 console "Install: complete log in: $logfile"
 
+cd "$NARRATIVE_ROOT_DIR"
+
 if [ ! $update_only -eq 1 ]
 then
     # Install external JavaScript code
     # --------------------
     log "Installing front end build components with npm"
-    cd $NARRATIVE_ROOT_DIR
     npm install 2>&1 | tee -a ${logfile}
     npm run install-npm
 
     # Install Narrative requirements
     # ------------------------------
     log "Installing biokbase requirements from src/requirements.txt"
-    cd "$NARRATIVE_ROOT_DIR/src"
-    cat requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
+    cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
@@ -68,27 +68,18 @@ then
     # Install development requirements
     # --------------------------------
     log "Installing Narrative developer requirements from src/requirements-dev.txt"
-    cat requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
+    cat $NARRATIVE_ROOT_DIR/src/requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip --no-cache-dir install 2>&1 | tee -a "${logfile}"
     if [ $? -ne 0 ]; then
         console "pip install for Narrative development requirements failed: please examine $logfile"
         exit 1
     fi
 fi
 
-# Install Narrative code
-# ----------------------
-log "Installing biokbase modules"
-cd "$NARRATIVE_ROOT_DIR/src"
-log "Running local 'setup.py'"
-python setup.py install 2>&1 | tee -a "${logfile}"
-log "Done installing biokbase."
-cd "$NARRATIVE_ROOT_DIR"
-
 if [ ! $update_only -eq 1 ]
 then
-    # Setup jupyter_narrative script
+    # Set up kbase-narrative script
     # ------------------------------
-    console "Installing scripts"
+    console "Installing kbase-narrative script"
     i=0
     while read s
         do
@@ -110,7 +101,6 @@ then
     cd nbextensions
     sh install.sh
     cd ../..
-    jupyter nbextension enable --py --sys-prefix widgetsnbextension
     log "Done installing nbextensions"
 fi
 

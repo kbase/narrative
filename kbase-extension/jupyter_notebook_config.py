@@ -34,7 +34,7 @@ c = get_config()  # noqa: F821
 # API, and may change in future releases.
 # c.NotebookApp.server_extensions = []
 c.NotebookApp.server_extensions = ["biokbase.narrative.handlers.narrativehandler"]
-
+# c.NotebookApp.nbserver_extensions = {"biokbase.narrative.handlers.narrativehandler": True}
 # The random bytes used to secure cookies. By default this is a new random
 # number every time you start the Notebook. Set it to a value in a config file
 # to enable logins to persist across server sessions.

@@ -17,7 +17,6 @@ def get(
     return __init_client(client_name, token=token)
 
 
-@cache
 def __init_client(
     client_name: str, token: str | None = None
 ) -> Workspace | execution_engine2 | NarrativeMethodStore | ServiceClient | Catalog:

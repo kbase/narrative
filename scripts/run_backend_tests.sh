@@ -1,6 +1,6 @@
 #!/bin/bash
 export NARRATIVE_DIR=$(pwd)
-
+export PYTHONPATH=$NARRATIVE_DIR/src:$PYTHONPATH
 docker_container=${DOCKER_CONTAINER:-false}
 
 pytest \

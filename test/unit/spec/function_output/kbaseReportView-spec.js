@@ -341,7 +341,7 @@ define([
             Mocks.mockJsonRpc1Call({
                 url: Config.url('workspace'),
                 response: {
-                    error: 'This would be an error stacktrace',
+                    error: 'EXPECTED IN TEST - This would be an error stacktrace',
                     message: errorMessage,
                     code: -32500,
                     name: 'JSONRPCError',
@@ -386,6 +386,38 @@ define([
             });
             expect(reportWidget.options.autoRender).toBeFalse();
             expect(reportWidget.loadRenderPromise).toBeNull();
+        });
+
+        it('should set the src of the file download iframe on click', async function () {
+            mockReportLookup(REPORT_OBJ);
+            mockCreatedObjectInfo(CREATED_OBJECTS_INFO);
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                showCreatedObjects: true,
+                autoRender: false,
+            });
+            await reportWidget.loadAndRender();
+
+            // expect to see one file and a downloader iframe
+            const $fileLinksNode = this.$node.find('[data-element="downloadable-files"]');
+            const dlIframe = $fileLinksNode.find('iframe.kb-report-view__download-iframe')[0];
+            const $fileLinks = $fileLinksNode.find('a');
+            expect($fileLinks.length).toEqual(1);
+            expect($fileLinks.html()).toContain('file_number_1.txt');
+
+            await TestUtil.waitForElementState(
+                dlIframe,
+                () => {
+                    const iframeSrc = dlIframe.getAttribute('src');
+                    return iframeSrc !== null && iframeSrc.length > 0;
+                },
+                () => $fileLinks[0].click()
+            );
+            const fileInfo = REPORT_OBJ.file_links[0];
+            const fileUrlParts = fileInfo.URL.split('/');
+            const fileNode = fileUrlParts[fileUrlParts.length - 1];
+            const expectedUrl = `${Config.url('data_import_export')}/download?id=${fileNode}&wszip=0&name=${fileInfo.name}`;
+            expect(dlIframe.getAttribute('src')).toEqual(expectedUrl);
         });
     });
 });

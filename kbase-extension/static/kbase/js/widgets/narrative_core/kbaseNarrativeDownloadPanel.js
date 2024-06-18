@@ -109,6 +109,16 @@ define([
                             }
                         );
                     });
+                } else if (descr.name.toLocaleLowerCase() === 'json') {
+                    $dlBtn.click(() => {
+                        Jupyter.narrative.addAndPopulateApp(
+                            'kb_staging_exporter/export_json_to_staging',
+                            'dev',
+                            {
+                                input_ref: self.objName,
+                            }
+                        );
+                    });
                 } else {
                     $dlBtn.click(() => {
                         $btnTd.find('.kb-data-list-btn').prop('disabled', true);
@@ -120,24 +130,11 @@ define([
 
             const downloaders = self.prepareDownloaders(self.type);
             downloaders.forEach((dl) => addDownloader(dl));
+            addDownloader({
+                name: 'JSON',
+                local_function: ''
+            });
 
-            $btnTd.append(
-                $('<button>')
-                    .addClass('kb-data-list-btn')
-                    .append('JSON')
-                    .click(() => {
-                        const urlSuffix =
-                            '/download?' +
-                            'ref=' +
-                            encodeURIComponent(self.ref) +
-                            '&url=' +
-                            encodeURIComponent(self.wsUrl) +
-                            '&wszip=1' +
-                            '&name=' +
-                            encodeURIComponent(self.objName + '.JSON.zip');
-                        self.downloadFile(urlSuffix);
-                    })
-            );
             $btnTd.append(
                 $('<button>')
                     .addClass('kb-data-list-cancel-btn')

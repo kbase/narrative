@@ -11,7 +11,7 @@ define([
 
     const AUTH_TOKEN = 'fakeAuthToken';
     const readsItem = [
-            3,
+            6,
             'small.fq_reads',
             'KBaseFile.SingleEndLibrary-2.2',
             '2018-01-18T22:26:25+0000',
@@ -36,8 +36,21 @@ define([
             628,
             {},
         ],
-        dummyData = [readsItem, readsItem2],
-        dummyObjInfo = [objectify(readsItem), objectify(readsItem2)];
+        genomeItem = [
+            3,
+            'some_small_genome',
+            'KBaseGenomes.Genome-1.0',
+            '2024-06-18T22:26:27+0000',
+            1,
+            'wjriehl',
+            25022,
+            'wjriehl:narrative12345',
+            '9876543210',
+            628,
+            {}
+        ],
+        dummyData = [readsItem, readsItem2, genomeItem],
+        dummyObjInfo = [objectify(readsItem), objectify(readsItem2), objectify(genomeItem)];
     let runtime;
 
     function objectify(infoArr) {
@@ -59,16 +72,16 @@ define([
         };
     }
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(required, defaultValue, bus, objTypes) {
         return {
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue,
                     nullValue: '',
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
-                        types: ['KBaseFile.SingleEndLibrary'],
+                        required,
+                        defaultValue,
+                        types: objTypes,
                     },
                 },
             },
@@ -77,14 +90,11 @@ define([
     }
 
     function updateData(dataset, objectInfo) {
-        dataset = dataset || dummyData;
-        objectInfo = objectInfo || dummyObjInfo;
-
         runtime.bus().set(
             {
                 data: dataset,
                 timestamp: new Date().getTime(),
-                objectInfo: objectInfo,
+                objectInfo,
             },
             {
                 channel: 'data',
@@ -101,6 +111,12 @@ define([
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
+        const buildWidget = (objTypes) => {
+            testConfig = buildTestConfig(required, defaultValue, bus, objTypes);
+            widget = Select2ObjectInput.make(testConfig);
+            return widget;
+        }
+
         beforeEach(() => {
             container = document.createElement('div');
             runtime = Runtime.make();
@@ -112,7 +128,6 @@ define([
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
-            testConfig = buildTestConfig(required, defaultValue, bus);
 
             jasmine.Ajax.install();
 
@@ -163,8 +178,7 @@ define([
                 response: JSON.stringify(taxonSearchInfo),
             });
 
-            updateData();
-            widget = Select2ObjectInput.make(testConfig);
+            updateData(dummyData, dummyObjInfo);
         });
 
         afterEach(async () => {
@@ -180,6 +194,7 @@ define([
         });
 
         it('Should be instantiable', () => {
+            buildWidget(["KBaseGenomes.Genome"]);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toBeDefined();
@@ -189,11 +204,9 @@ define([
         });
 
         describe('the started widget', () => {
-            beforeEach(async () => {
-                await widget.start({ node: container });
-            });
-
             it('Should start and stop', async () => {
+                buildWidget(["KBaseGenomes.Genome"]);
+                await widget.start({ node: container });
                 expect(container.childElementCount).toBeGreaterThan(0);
                 const input = container.querySelector('select[data-element="input"]');
                 expect(input).toBeDefined();
@@ -226,42 +239,65 @@ define([
                 });
             });
 
-            it('Should respond to changed select2 option', async () => {
-                const initialNodeStructure = container.innerHTML;
-                const $select = $(container).find('select');
-                const $search =
-                    $select.data('select2').dropdown.$search ||
-                    $select.data('select2').selection.$search;
+            const objTypeSets = [
+                ['KBaseFile.SingleEndLibrary'],
+                ['KBaseGenomes.Genome'],
+                ['KBaseFile.SingleEndLibrary', 'KBaseGenomes.Genome'],
+                ['*']
+            ];
+            for (const typeSet of objTypeSets) {
+                it(`Should respond to changed select2 option with obj types ${typeSet}`, async () => {
+                    buildWidget(typeSet);
+                    await widget.start({node: container});
+                    const initialNodeStructure = container.innerHTML;
+                    const $select = $(container).find('select');
+                    const $search =
+                        $select.data('select2').dropdown.$search ||
+                        $select.data('select2').selection.$search;
 
-                $search.val('small').trigger('input');
-                // triggers a fake search, which returns readsItem and readsItem2
-                $select.trigger({
-                    type: 'select2:select',
-                    params: {
-                        data: {},
-                    },
-                });
-                await TestUtil.wait(1000);
+                    $search.val('small').trigger('input');
+                    // triggers a fake search, which returns readsItem and readsItem2
+                    $select.trigger({
+                        type: 'select2:select',
+                        params: {
+                            data: {},
+                        },
+                    });
+                    await TestUtil.wait(1000);
 
-                // the DOM structure of the select2 element has changed
-                expect(initialNodeStructure).not.toEqual(container.innerHTML);
-                dummyObjInfo.forEach((obj) => {
-                    expect(container.querySelector('select').textContent).toContain(obj.name);
-                    expect($select.data('select2').$results[0].textContent).toContain(obj.name);
-                });
+                    // the DOM structure of the select2 element has changed
+                    expect(initialNodeStructure).not.toEqual(container.innerHTML);
 
-                let validationMessage;
-                bus.on('validation', (msg) => {
-                    validationMessage = msg;
+                    // split our (few) objects based on type set used.
+                    const [expected, notExpected] = dummyObjInfo.reduce(([exp, notExp], obj) => {
+                        for (const objType of typeSet) {
+                            if (obj.type.startsWith(objType) || objType === '*') {
+                                return [[...exp, obj], notExp];
+                            }
+                        }
+                        return [exp, [...notExp, obj]];
+                    }, [[], []]);
+                    expected.forEach((obj) => {
+                        expect(container.querySelector('select').textContent).toContain(obj.name);
+                        expect($select.data('select2').$results[0].textContent).toContain(obj.name);
+                    });
+                    notExpected.forEach((obj) => {
+                        expect(container.querySelector('select').textContent).not.toContain(obj.name);
+                    });
+
+                    let validationMessage;
+                    bus.on('validation', (msg) => {
+                        validationMessage = msg;
+                    });
+                    // set the model value, which triggers a validation message
+                    $select.val('stuff').trigger('change');
+                    await TestUtil.wait(1000);
+                    expect(validationMessage).toEqual({
+                        errorMessage: undefined,
+                        diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
+                    });
                 });
-                // set the model value, which triggers a validation message
-                $select.val('stuff').trigger('change');
-                await TestUtil.wait(1000);
-                expect(validationMessage).toEqual({
-                    errorMessage: undefined,
-                    diagnosis: Constants.DIAGNOSIS.OPTIONAL_EMPTY,
-                });
-            });
+            }
         });
     });
 });

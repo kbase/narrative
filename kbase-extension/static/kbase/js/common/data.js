@@ -5,6 +5,9 @@ define(['kb_service/client/workspace', 'kb_service/utils', 'common/runtime'], (
 ) => {
     'use strict';
     function filterObjectInfoByType(objects, types) {
+        if (types.includes('*')) {
+            return objects.filter((item) => item !== undefined);
+        }
         return objects
             .map((objectInfo) => {
                 const type = objectInfo.typeModule + '.' + objectInfo.typeName;

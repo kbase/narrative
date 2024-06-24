@@ -16,6 +16,7 @@ define([
     return KBWidget({
         name: 'kbaseNarrativeDownloadPanel',
         version: '1.0.0',
+        // TODO: remove / refactor duplication in options.
         options: {
             token: null,
             type: null,
@@ -28,9 +29,8 @@ define([
         type: null, // Type of workspace object to show downloaders for
         objId: null,
         loadingImage: Config.get('loading_gif'),
-        wsUrl: Config.url('workspace'),
-        ujsURL: Config.url('user_and_job_state'),
         shockURL: Config.url('shock'),
+        // TODO: remove data_import_export code
         exportURL: Config.url('data_import_export'),
         useDynamicDownloadSupport: false,
         nmsURL: Config.url('narrative_method_store'),
@@ -54,9 +54,11 @@ define([
             const lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
             if (lastUpdateTime) {
                 this.render();
+                return Promise.resolve(this);
             } else {
+                // TODO: remove this, and fetch downloader info from NarrativeService, in a TBD function.
                 const nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
-                Promise.resolve(
+                return Promise.resolve(
                     nms.list_categories({ load_methods: 0, load_apps: 0, load_types: 1 })
                 )
                     .then((data) => {
@@ -76,18 +78,20 @@ define([
                         this.downloadSpecCache['types'] = types;
                         this.downloadSpecCache['lastUpdateTime'] = Date.now();
                         this.render();
+                        return this;
                     })
                     .catch((error) => {
                         this.showError(error);
+                        return this;
                     });
             }
-            return this;
         },
 
         render: function () {
             const self = this;
             const downloadPanel = this.$elem;
 
+            // TODO: migrate to SCSS
             const $labeltd = $('<td>')
                 .css({ 'white-space': 'nowrap', padding: '1px' })
                 .append('Export as:');
@@ -151,6 +155,7 @@ define([
             downloadPanel.append(self.$statusDiv.hide());
         },
 
+        // TODO: move this to result of as-yet-unwritten NarrativeService call
         prepareDownloaders: function (type) {
             const ret = [];
             if (!this.downloadSpecCache['types']) {

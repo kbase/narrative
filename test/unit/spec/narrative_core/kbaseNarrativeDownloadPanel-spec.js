@@ -8,7 +8,7 @@ define([
 ], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil, Config) => {
     'use strict';
 
-    fdescribe('The kbaseNarrativeDownloadPanel widget', () => {
+    describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         const ws = 1111,
             oid = 2222,

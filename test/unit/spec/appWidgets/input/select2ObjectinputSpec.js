@@ -114,7 +114,6 @@ define([
         const buildWidget = (objTypes) => {
             testConfig = buildTestConfig(required, defaultValue, bus, objTypes);
             widget = Select2ObjectInput.make(testConfig);
-            return widget;
         }
 
         beforeEach(() => {

@@ -4,7 +4,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will follow).
 
-## Version unreleased
+## Version 5.3.0
 
 -   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed;
     previously it showed an empty space.

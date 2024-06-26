@@ -19,7 +19,7 @@
   &__button {
     @extend %kbase-button;
 
-    @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+    @include button-variant(use-color('primary'), use-color('primary-lightest'), transparent);
 
     letter-spacing: 0.7px;
     margin-left: 1rem;

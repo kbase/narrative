@@ -28,19 +28,19 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
   min-height: 0;
 }
 
-@media (min-width: 1200px) {
+@media (width >= 1200px) {
   #notebook-container {
     width: auto;
   }
 }
 
-@media (min-width: 992px) {
+@media (width >= 992px) {
   #notebook-container {
     width: auto;
   }
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   #notebook-container {
     width: auto;
   }
@@ -72,7 +72,7 @@ div {
   }
 
   &.cell {
-    border: 1px solid use_color('base-lighter');
+    border: 1px solid use-color('base-lighter');
     border-left-width: 5px;
     border-radius: 0;
     margin: 8px 0;
@@ -80,7 +80,7 @@ div {
 
     &.selected {
       background: none;
-      border: 1px solid use_color('mid-green');
+      border: 1px solid use-color('mid-green');
       border-left-width: 5px;
       box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
       margin-left: 0;
@@ -124,14 +124,11 @@ div {
 }
 
 #notebook-container {
-  bottom: 0;
+  inset: 70px 0 0 380px;
   box-shadow: none;
-  left: 380px;
   min-width: 460px;
   overflow: auto;
   position: fixed;
-  right: 0;
-  top: 70px;
   width: auto;
 
   &::after {
@@ -232,7 +229,7 @@ div {
 
     &.selected.kb-cell {
       .rendered_html {
-        border-left: 1px solid use_color('mid-green');
+        border-left: 1px solid use-color('mid-green');
       }
 
       &.kb-error .rendered_html {
@@ -292,12 +289,12 @@ div {
 
   &.unselected {
     .btn-default {
-      color: use_color('base-lighter');
+      color: use-color('base-lighter');
     }
 
     .app-icon,
     .method-icon {
-      color: use_color('silver');
+      color: use-color('silver');
     }
   }
 }
@@ -347,7 +344,7 @@ div.code_cell {
 }
 
 /* collapsible Bootstrap toggle */
-[data-toggle=collapse] {
+[data-toggle="collapse"] {
   cursor: pointer;
 
   &::before {
@@ -370,7 +367,7 @@ div.code_cell {
 }
 
 /* up/down caret expander */
-[data-toggle=vertical-collapse-after] {
+[data-toggle="vertical-collapse-after"] {
   cursor: pointer;
 
   &::after {
@@ -383,6 +380,6 @@ div.code_cell {
   }
 }
 
-.vertical_collapse--open [data-toggle=vertical-collapse-after]::after {
+.vertical_collapse--open [data-toggle="vertical-collapse-after"]::after {
   content: ' \f0d7';
 }

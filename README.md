@@ -38,7 +38,7 @@ Requires the following:
 
 -   Python 3.6+
 -   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
--   Node.js (16.x+, Latest LTS recommended)
+-   Node.js (20.x+, Latest LTS recommended)
 
 ### *Using a Conda Environment*
 
@@ -100,7 +100,7 @@ A number of commands are available to automate parts of the development process.
 The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. Please ensure that any other git hook packages (e.g. the python `pre-commit` package) have been fully uninstalled first. If you run `npm install`, or use the standard install process, husky and the husky git hooks will be installed. If you are adding the module to an existing npm installation, you will need to run
 
 ```js
-npx husky install
+npx husky init
 ```
 
 to enable git hooks.

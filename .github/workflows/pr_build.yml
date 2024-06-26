@@ -25,20 +25,20 @@ jobs:
       tags: pr-${{ github.event.number }},latest
     secrets: inherit
   build-main-open:
-    if: (github.base_ref == 'main' || github.base_ref == 'master') && github.event.pull_request.merged == false
+    if: github.base_ref == 'main' && github.event.pull_request.merged == false
     uses: kbase/.github/.github/workflows/reusable_build-push.yml@main
     with:
       name: '${{ github.event.repository.name }}'
       tags: pr-${{ github.event.number }}
     secrets: inherit
   build-main-merge:
-    if: (github.base_ref == 'main' || github.base_ref == 'master') && github.event.pull_request.merged == true
+    if: github.base_ref == 'main' && github.event.pull_request.merged == true
     uses: kbase/.github/.github/workflows/reusable_build-push.yml@main
     with:
       name: '${{ github.event.repository.name }}'
       tags: pr-${{ github.event.number }},latest-rc
     secrets: inherit
   trivy-scans:
-    if: (github.base_ref == 'develop' || github.base_ref == 'main' || github.base_ref == 'master' ) && github.event.pull_request.merged == false
+    if: (github.base_ref == 'develop' || github.base_ref == 'main') && github.event.pull_request.merged == false
     uses: kbase/.github/.github/workflows/reusable_trivy-scans.yml@main
     secrets: inherit

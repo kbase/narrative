@@ -5,8 +5,17 @@ import unittest
 from biokbase.narrative.common.narrative_logger import NarrativeLogger
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
+from biokbase.narrative.tests import util
 
-from . import util
+
+def assert_log_msg(msg, event, narrative, version):
+    data = json.loads(msg)
+    assert data["type"] == "narrative"
+    assert data["user"] == "anonymous"
+    assert data["env"] == "ci"
+    assert data["narr_ver"] == version
+    assert data["narrative"] == narrative
+    assert data["operation"] == event
 
 
 class NarrativeLoggerTestCase(unittest.TestCase):
@@ -42,9 +51,9 @@ class NarrativeLoggerTestCase(unittest.TestCase):
 
     def test_logger_init(self):
         logger = NarrativeLogger()
-        self.assertEqual(logger.host, URLS.log_host)
-        self.assertEqual(logger.port, URLS.log_port)
-        self.assertEqual(logger.env, kbase_env.env)
+        assert logger.host == URLS.log_host
+        assert logger.port == URLS.log_port
+        assert logger.env == kbase_env.env
 
     def test_null_logger(self):
         URLS.log_host = None
@@ -55,7 +64,7 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         time.sleep(self.poll_interval * 4)
         data = self.log_recv.get_data()
         self.stop_log_stack()
-        self.assertFalse(data)
+        assert not data
         URLS.log_host = self.log_host
 
     def test_open_narr(self):
@@ -65,7 +74,7 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         logger = NarrativeLogger()
         logger.narrative_open(narrative, version)
         time.sleep(self.poll_interval * 4)
-        self.assert_log_msg(self.log_recv.get_data(), "open", narrative, version)
+        assert_log_msg(self.log_recv.get_data(), "open", narrative, version)
         self.stop_log_stack()
 
     def test_save_narr(self):
@@ -75,30 +84,18 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         logger = NarrativeLogger()
         logger.narrative_save(narrative, version)
         time.sleep(self.poll_interval * 4)
-        self.assert_log_msg(self.log_recv.get_data(), "save", narrative, version)
+        assert_log_msg(self.log_recv.get_data(), "save", narrative, version)
         self.stop_log_stack()
 
     def test_failed_message(self):
-        """
-        Test that we don't throw an exception if we try to write a log without a receiving server.
+        """Test that we don't throw an exception if we try to write a log without a receiving server.
         i.e. - don't start the log stack.
         """
         try:
             logger = NarrativeLogger()
             logger.narrative_save("12345/67", 8)
         except BaseException:
-            self.fail(
-                "Log writing threw an unexpected exception without a live socket!"
-            )
-
-    def assert_log_msg(self, msg, event, narrative, version):
-        data = json.loads(msg)
-        self.assertEqual(data["type"], "narrative")
-        self.assertEqual(data["user"], "anonymous")
-        self.assertEqual(data["env"], "ci")
-        self.assertEqual(data["narr_ver"], version)
-        self.assertEqual(data["narrative"], narrative)
-        self.assertEqual(data["operation"], event)
+            self.fail("Log writing threw an unexpected exception without a live socket!")
 
 
 if __name__ == "__main__":

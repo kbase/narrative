@@ -1,19 +1,17 @@
-"""
-Hunts for Python 2 code in all Narratives in a Workspace environment.
+"""Hunts for Python 2 code in all Narratives in a Workspace environment.
 Needs an Administrator token.
 """
+
 import argparse
 import json
 import lib2to3
 import sys
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
-from typing import List
 
 import nbformat
+from biokbase.installed_clients.WorkspaceClient import Workspace
+from biokbase.narrative.common.exceptions import ServerError
 from narr_info import NarrativeInfo
-
-import biokbase.workspace.baseclient as baseclient
-from biokbase.workspace.client import Workspace
 
 DEFAULT_OUTPUT_FILE = "code_search_results.json"
 
@@ -42,7 +40,7 @@ def find_all_narrative_py2_code(
                 all_results["no_change"].append(result.to_dict())
             else:
                 all_results["changes"].append(result.to_dict())
-        except baseclient.ServerError as e:
+        except ServerError as e:
             if "No workspace with id" in str(e):
                 print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})
@@ -52,7 +50,7 @@ def find_all_narrative_py2_code(
         except json.JSONDecodeError as e:
             print(f"WS:{ws_id} unable to unpack Narrative - not valid JSON!")
             all_results["fail"].append(
-                {"id": ws_id, "error": f"Invalid JSON in Narrative object: {str(e)}"}
+                {"id": ws_id, "error": f"Invalid JSON in Narrative object: {e!s}"}
             )
     with open(outfile, "w") as fjson:
         fjson.write(json.dumps(all_results, indent=4))
@@ -67,8 +65,7 @@ def find_all_narrative_py2_code(
 def _find_narrative_py2_code(
     ws_id: int, ws: Workspace, rt: RefactoringTool, verbose: bool = False
 ) -> NarrativeInfo:
-    """
-    ws_id - workspace id to scan for Narratives
+    """ws_id - workspace id to scan for Narratives
     ws - an authenticated workspace client
 
     returns a NarrativeInfo object
@@ -87,7 +84,7 @@ def _find_narrative_py2_code(
     narr_id = ws_info[8].get("narrative")
     if narr_id is None:
         print(f"WS:{ws_id} has no linked Narrative")
-        return
+        return None
 
     narr_obj = ws.administer(
         {
@@ -101,14 +98,10 @@ def _find_narrative_py2_code(
     return _update_narrative(narr_obj, ws_info, rt)
 
 
-def _update_narrative(
-    narr_obj: list, ws_info: list, rt: RefactoringTool
-) -> NarrativeInfo:
-    """
-    Core pieces of this taken from this gist by Thomas Takluyver and Fernando Perez:
+def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> NarrativeInfo:
+    """Core pieces of this taken from this gist by Thomas Takluyver and Fernando Perez:
     https://gist.github.com/takluyver/c8839593c615bb2f6e80
     """
-
     try:
         nb = nbformat.reads(json.dumps(narr_obj["data"]), 4.0)
     except BaseException:
@@ -147,7 +140,7 @@ def _update_narrative(
     return ninfo
 
 
-def parse_args(args: List[str]):
+def parse_args(args: list[str]):
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument(
         "-t",
@@ -156,9 +149,7 @@ def parse_args(args: List[str]):
         default=None,
         help="Auth token for workspace admin",
     )
-    p.add_argument(
-        "-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint"
-    )
+    p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
     p.add_argument(
         "-n",
         "--min_id",
@@ -195,7 +186,7 @@ def parse_args(args: List[str]):
     return args
 
 
-def main(args: List[str]):
+def main(args: list[str]):
     args = parse_args(args)
     return find_all_narrative_py2_code(
         args.ws_url,

@@ -11,9 +11,7 @@ JOB_CONFIG_FILE_PATH_PARTS = [
 
 
 def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
-    """
-    Load the job-related terms that are shared by front- and back ends.
-    """
+    """Load the job-related terms that are shared by front- and back ends."""
     full_path = [os.environ["NARRATIVE_DIR"]] + relative_path_to_file
     with open(os.path.join(*full_path)) as fh:
         config = json.load(fh)
@@ -47,9 +45,7 @@ def load_job_constants(relative_path_to_file=JOB_CONFIG_FILE_PATH_PARTS):
     missing = []
     for datatype, example_list in REQUIRED.items():
         if datatype not in config:
-            raise ValueError(
-                f"job_config.json is missing the '{datatype}' config section"
-            )
+            raise ValueError(f"job_config.json is missing the '{datatype}' config section")
         missing = [item for item in example_list if item not in config[datatype]]
         if missing:
             raise ValueError(

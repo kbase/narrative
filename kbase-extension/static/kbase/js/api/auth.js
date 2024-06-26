@@ -12,6 +12,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
         const cookieConfig = {
             auth: {
                 name: 'kbase_session',
+                domain: window.location.hostname,
             },
             backup: {
                 name: 'kbase_session_backup',
@@ -149,7 +150,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
         }
 
         /* Does a PUT request to post/update the profile of the current user */
-        function putCurrentProfile(profile) {
+        function putCurrentProfile() {
             return null;
         }
 
@@ -207,9 +208,10 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
         }
 
         function revokeAuthToken(token, id) {
-            const operation = '/tokens/revoke/' + id;
+            const operation = `tokens/revoke/${id}`;
             return makeAuthCall(token, {
-                operation: operation,
+                operation,
+                unversioned: true,
                 method: 'DELETE',
             });
         }
@@ -267,8 +269,13 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
          * parameters as expected.
          */
         function makeAuthCall(token, callParams) {
-            const version = callParams.version || 'V2';
-            const callString = [url, '/api/', version, callParams.operation].join('');
+            const callString = (() => {
+                if (callParams.unversioned) {
+                    return [url, callParams.operation].join('/');
+                }
+                const version = callParams.version || 'V2';
+                return [url, '/api/', version, callParams.operation].join('');
+            })();
 
             return Promise.resolve(
                 $.ajax({

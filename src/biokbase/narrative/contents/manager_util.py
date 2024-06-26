@@ -1,11 +1,10 @@
-"""
-Utils for implementing the KBase Narrative manager
-"""
+"""Utils for implementing the KBase Narrative manager."""
+
+from typing import Any
 
 
-def base_model(name, path):
-    """Build the common base of a contents model"""
-
+def base_model(name: str, path: str) -> dict[str, Any]:
+    """Build the common base of a contents model."""
     return {
         "name": name,
         "path": path,

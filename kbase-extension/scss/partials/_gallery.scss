@@ -1,0 +1,20 @@
+.gallery {
+    padding: 1em;
+}
+
+.gallery .Example {
+    border: 3px solid rgb(200 200 200);
+    padding: 1em;
+    border-radius: 1em;
+    background: repeating-linear-gradient(
+    45deg,
+    rgb(200 200 200 / 20%),
+    rgb(200 200 200 / 20%) 10px,
+    rgb(150 150 150 / 20%) 10px,
+    rgb(150 150 150 / 20%) 20px
+    );
+}
+
+.gallery .Example + .Example {
+    margin-top: 1em;
+}

@@ -1,14 +1,26 @@
+"""Various constants used throughout the tests."""
+
 import copy
+from typing import Any
 
 from biokbase.narrative.jobs.job import TERMINAL_STATUSES
-
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
 
 config = ConfigTests()
-TEST_JOBS = config.load_json_file(config.get("jobs", "ee2_job_test_data_file"))
+TEST_JOBS: dict[str, dict] = config.load_json_file(config.get("jobs", "ee2_job_test_data_file"))
 
 
-def generate_error(job_id, err_type):
+def generate_error(job_id: str, err_type: str) -> str:
+    """Given a job id and an error type, generate the appropriate error string.
+
+    :param job_id: job ID
+    :type job_id: str
+    :param err_type: error type
+    :type err_type: str
+    :raises KeyError: if the error type does not exist
+    :return: error string
+    :rtype: str
+    """
     user_id = None
     status = None
 
@@ -32,11 +44,25 @@ def generate_error(job_id, err_type):
     return error_strings[err_type]
 
 
-def get_test_job(job_id):
+def get_test_job(job_id: str) -> dict[str, Any]:
+    """Given a job ID, fetch the appropriate job.
+
+    :param job_id: job ID
+    :type job_id: str
+    :return: job data
+    :rtype: dict[str, Any]
+    """
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
-def get_test_jobs(job_ids):
+def get_test_jobs(job_ids: list[str]) -> dict[str, dict[str, Any]]:
+    """Given a list of job IDs, fetch the appropriate jobs.
+
+    :param job_ids: list of job IDs
+    :type job_ids: list[str]
+    :return: dict of jobs keyed by job ID
+    :rtype: dict[str, dict[str, Any]]
+    """
     return {job_id: get_test_job(job_id) for job_id in job_ids}
 
 
@@ -93,17 +119,16 @@ BATCH_CHILDREN = [
     BATCH_RETRY_ERROR,
 ]
 
-BATCH_PARENT_CHILDREN = [BATCH_PARENT] + BATCH_CHILDREN
+BATCH_PARENT_CHILDREN = [BATCH_PARENT, *BATCH_CHILDREN]
 
-JOBS_TERMINALITY = {
-    job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES
-    for job_id in TEST_JOBS.keys()
+JOB_TERMINAL_STATE: dict[str, bool] = {
+    job_id: TEST_JOBS[job_id]["status"] in TERMINAL_STATUSES for job_id in TEST_JOBS
 }
 
-TERMINAL_JOBS = []
-ACTIVE_JOBS = []
-REFRESH_STATE = {}
-for key, value in JOBS_TERMINALITY.items():
+TERMINAL_JOBS: list[str] = []
+ACTIVE_JOBS: list[str] = []
+REFRESH_STATE: dict[str, bool] = {}
+for key, value in JOB_TERMINAL_STATE.items():
     if value:
         TERMINAL_JOBS.append(key)
     else:

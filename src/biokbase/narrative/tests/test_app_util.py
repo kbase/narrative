@@ -1,15 +1,12 @@
-"""
-Tests for the app_util module
-"""
+"""Tests for the app_util module."""
+
 import copy
 import os
+import re
 from unittest import mock
 
 import pytest
-import re
-from biokbase.narrative.common.url_config import URLS
-from biokbase.workspace.client import Workspace
-
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.app_util import (
     app_param,
     check_tag,
@@ -19,16 +16,12 @@ from biokbase.narrative.app_util import (
     map_outputs_from_state,
     transform_param_value,
 )
-
-from biokbase.narrative.tests.conftest import narrative_vcr as vcr
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.tests import util
 from biokbase.narrative.upa import is_upa
 
 config = util.ConfigTests()
 user_name = config.get("users", "test_user")
-user_token = util.read_token_file(
-    config.get_path("token_files", "test_user", from_root=True)
-)
 
 good_tag = "release"
 bad_tag = "not_a_tag"
@@ -74,7 +67,7 @@ get_result_sub_path_cases = [
 ]
 
 
-@pytest.mark.parametrize("result,path,expected", get_result_sub_path_cases)
+@pytest.mark.parametrize(("result", "path", "expected"), get_result_sub_path_cases)
 def test_get_result_sub_path(result, path, expected):
     assert get_result_sub_path(result, path) == expected
 
@@ -275,7 +268,7 @@ app_param_cases = [
 ]
 
 
-@pytest.mark.parametrize("field_type,spec_add,expect_add", app_param_cases)
+@pytest.mark.parametrize(("field_type", "spec_add", "expect_add"), app_param_cases)
 def test_app_param(field_type, spec_add, expect_add):
     spec_param = copy.deepcopy(base_app_param)
     expected = copy.deepcopy(base_expect)
@@ -307,7 +300,8 @@ transform_param_value_simple_cases = [
 
 
 @pytest.mark.parametrize(
-    "transform_type,value,spec_param,expected", transform_param_value_simple_cases
+    ("transform_type", "value", "spec_param", "expected"),
+    transform_param_value_simple_cases,
 )
 def test_transform_param_value_simple(transform_type, value, spec_param, expected):
     assert transform_param_value(transform_type, value, spec_param) == expected
@@ -328,7 +322,7 @@ textsubdata_cases = [
 ]
 
 
-@pytest.mark.parametrize("value,expected", textsubdata_cases)
+@pytest.mark.parametrize(("value", "expected"), textsubdata_cases)
 def test_transform_param_value_textsubdata(value, expected):
     spec = {"type": "textsubdata"}
     assert transform_param_value(None, value, spec) == expected
@@ -369,8 +363,9 @@ input_list = [
 
 @pytest.mark.parametrize("tf_type", all_types)
 @pytest.mark.parametrize("inp", input_list)
+@pytest.mark.vcr()
 def test_transform_param_value_all_types_with_all_inputs(
-    inp, tf_type, workspace_name, monkeypatch, request
+    inp, tf_type, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -380,51 +375,48 @@ def test_transform_param_value_all_types_with_all_inputs(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
-        f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
-    ):
-        output = transform_param_value(tf_type, inp, None)
+    output = transform_param_value(tf_type, inp, None)
 
-        if inp is None:
-            if tf_type and "list" in tf_type:
-                assert output == [None]
-            else:
-                assert output is None
-            return
+    if inp is None:
+        if tf_type and "list" in tf_type:
+            assert output == [None]
+        else:
+            assert output is None
+        return
 
-        if tf_type is None:
-            assert output == inp
-            return
+    if tf_type is None:
+        assert output == inp
+        return
 
-        # list input
-        if isinstance(inp, list):
-            if len(inp) > 1:
-                if "upa" in tf_type or tf_type in [
-                    "resolved-ref",
-                    "list<resolved-ref>",
-                ]:
-                    assert output == [VALID_UPA_A, VALID_UPA_B]
-                else:
-                    assert output == [VALID_REF_A, VALID_REF_B]
-                return
+    # list input
+    if isinstance(inp, list):
+        if len(inp) > 1:
             if "upa" in tf_type or tf_type in [
                 "resolved-ref",
                 "list<resolved-ref>",
             ]:
-                assert output == [VALID_UPA_A]
+                assert output == [VALID_UPA_A, VALID_UPA_B]
             else:
-                assert output == [VALID_REF_A]
+                assert output == [VALID_REF_A, VALID_REF_B]
             return
-
-        # input is a single entity
-        if tf_type in ["list<resolved-ref>", "list<upa>"]:
+        if "upa" in tf_type or tf_type in [
+            "resolved-ref",
+            "list<resolved-ref>",
+        ]:
             assert output == [VALID_UPA_A]
-        elif tf_type in ["resolved-ref", "upa"]:
-            assert output == VALID_UPA_A
-        elif tf_type in ["ref", "unresolved-ref", "putative-ref"]:
-            assert output == VALID_REF_A
-        elif tf_type in ["list<ref>", "list<unresolved-ref>", "list<putative-ref>"]:
+        else:
             assert output == [VALID_REF_A]
+        return
+
+    # input is a single entity
+    if tf_type in ["list<resolved-ref>", "list<upa>"]:
+        assert output == [VALID_UPA_A]
+    elif tf_type in ["resolved-ref", "upa"]:
+        assert output == VALID_UPA_A
+    elif tf_type in ["ref", "unresolved-ref", "putative-ref"]:
+        assert output == VALID_REF_A
+    elif tf_type in ["list<ref>", "list<unresolved-ref>", "list<putative-ref>"]:
+        assert output == [VALID_REF_A]
 
 
 INVALID_UPA_A = "69356/666/666"  # object doesn't exist in this ws
@@ -444,8 +436,9 @@ putative_refs = [
 
 
 @pytest.mark.parametrize("params", putative_refs)
+@pytest.mark.vcr()
 def test_transform_param_value_putative_refs(
-    params, workspace_name, monkeypatch, request
+    params, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -454,10 +447,7 @@ def test_transform_param_value_putative_refs(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
-        f"test_app_util/transform_param_value-{request.node.callspec.id}.yaml",
-    ):
-        assert transform_param_value(params["tf"], params["in"], None) == params["out"]
+    assert transform_param_value(params["tf"], params["in"], None) == params["out"]
 
 
 invalid_upa_fails = [
@@ -487,8 +477,9 @@ invalid_ref_fails = [
 
 
 @pytest.mark.parametrize("params", invalid_upa_fails + invalid_ref_fails)
+@pytest.mark.vcr()
 def test_transform_param_value_fail_all_types(
-    params, workspace_name, monkeypatch, request
+    params, workspace_name, monkeypatch, request, user_name, user_token
 ):
     workspace_name(f"{user_name}:{ws_name}")
 
@@ -497,21 +488,14 @@ def test_transform_param_value_fail_all_types(
 
     monkeypatch.setattr(clients, "get", get_workspace)
 
-    with vcr.use_cassette(
-        f"test_app_util/transform_param_value-fail-{request.node.callspec.id}.yaml",
-    ):
-        regex = re.escape(params["error"]) + ".+"
-        with pytest.raises(ValueError, match=regex):
-            transform_param_value(params["tf"], params["in"], None)
+    regex = re.escape(params["error"]) + ".+"
+    with pytest.raises(ValueError, match=regex):
+        transform_param_value(params["tf"], params["in"], None)
 
 
 class RefChainWorkspace:
-    def __init__(self):
-        pass
-
     def get_object_info3(self, params):
-        """
-        Makes quite a few assumptions about input, as it's used for a specific test.
+        """Makes quite a few assumptions about input, as it's used for a specific test.
         1. params = {"objects": [{"ref": ref}, {"ref": ref}, ...]}
         2. ref is a ;-separated chain of either wsname/objid or upas, not a mix.
         3. we don't really care about names or object info here in responses
@@ -568,7 +552,7 @@ def get_ref_path_mock_ws(name="workspace"):
 )
 @mock.patch("biokbase.narrative.app_util.clients.get", get_ref_path_mock_ws)
 def test_transform_param_value_upa_path(tf_type):
-    upa_path = f"69375/2/2;67729/2/2"
+    upa_path = "69375/2/2;67729/2/2"
     assert transform_param_value(tf_type, upa_path, None) == upa_path
 
 

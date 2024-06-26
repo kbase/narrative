@@ -3,10 +3,6 @@ import os
 import urllib.parse
 
 import tornado.log
-from notebook.auth.login import LoginHandler
-from notebook.auth.logout import LogoutHandler
-from traitlets.config import Application
-
 from biokbase.auth import (
     get_token_info,
     get_user_info,
@@ -15,6 +11,9 @@ from biokbase.auth import (
 )
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env
+from notebook.auth.login import LoginHandler
+from notebook.auth.logout import LogoutHandler
+from traitlets.config import Application
 
 """
 KBase handlers for authentication in the Jupyter notebook.
@@ -42,10 +41,7 @@ class KBaseLoginHandler(LoginHandler):
     """
 
     def get(self):
-        """
-        Initializes the KBase session from the cookie passed into it.
-        """
-
+        """Initializes the KBase session from the cookie passed into it."""
         # cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
         client_ip = self.request.remote_ip
         http_headers = self.request.headers
@@ -60,9 +56,7 @@ class KBaseLoginHandler(LoginHandler):
                 auth_info = get_token_info(token)
                 user_info = get_user_info(token)
             except Exception:
-                app_log.error(
-                    "Unable to get user information from authentication token!"
-                )
+                app_log.error("Unable to get user information from authentication token!")
                 raise
 
             # re-enable if token logging info is needed.
@@ -73,11 +67,9 @@ class KBaseLoginHandler(LoginHandler):
             #                           tok=token))
             init_session_env(auth_info, user_info, client_ip)
             self.current_user = kbase_env.user
-            log_event(
-                g_log, "session_start", {"user": kbase_env.user, "user_agent": ua}
-            )
+            log_event(g_log, "session_start", {"user": kbase_env.user, "user_agent": ua})
 
-        app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
+        app_log.info(f"KBaseLoginHandler.get(): user={kbase_env.user}")
 
         if self.current_user:
             self.redirect(self.get_argument("next", default=self.base_url))
@@ -105,8 +97,7 @@ class KBaseLoginHandler(LoginHandler):
 
     @classmethod
     def login_available(cls, settings):
-        """
-        Whether this LoginHandler is needed - and therefore whether the login page should be
+        """Whether this LoginHandler is needed - and therefore whether the login page should be
         displayed.
         """
         return True
@@ -130,8 +121,4 @@ class KBaseLogoutHandler(LogoutHandler):
         app_log.info("Successfully logged out")
         log_event(g_log, "session_close", {"user": user, "user_agent": ua})
 
-        self.write(
-            self.render_template(
-                "logout.html", message={"info": "Successfully logged out"}
-            )
-        )
+        self.write(self.render_template("logout.html", message={"info": "Successfully logged out"}))

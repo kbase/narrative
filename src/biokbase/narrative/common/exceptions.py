@@ -1,12 +1,13 @@
-import re
+"""KBase Narrative errors."""
 
-from biokbase.workspace.baseclient import ServerError
+import re
+from typing import Any
+
+from biokbase.installed_clients.baseclient import ServerError
 
 
 class PermissionsError(ServerError):
-    """Raised if user does not have permission to
-    access the workspace.
-    """
+    """Raised if user does not have permission to access the workspace."""
 
     @staticmethod
     def is_permissions_error(err):
@@ -18,13 +19,22 @@ class PermissionsError(ServerError):
         )
         return pat.search(err) is not None
 
-    def __init__(self, name=None, code=None, message=None, **kw):
+    def __init__(
+        self: "PermissionsError",
+        name: str | None = None,
+        code: int | None = None,
+        message: str | None = None,
+        **kw: dict[str, Any],
+    ):
         ServerError.__init__(self, name, code, message, **kw)
 
 
 class WorkspaceError(Exception):
-    def __init__(self, ws_server_err, ws_id, message=None, http_code=500):
-        """
+    """Raised by WS calls involving the narrative."""
+
+    def __init__(self: "WorkspaceError", ws_server_err, ws_id, message=None, http_code=500):
+        """Initialise error instance.
+
         This wraps Workspace calls regarding Narratives into exceptions that are
         easier to parse for logging, user communication, etc.
 
@@ -50,14 +60,11 @@ class WorkspaceError(Exception):
             self.message = "You do not have access to this workspace."
             self.http_code = 403
         elif "No object with id" in ws_server_err.message:
-            self.message = (
-                "Unable to find this Narrative based on workspace information."
-            )
+            self.message = "Unable to find this Narrative based on workspace information."
             self.http_code = 404
         else:
             self.message = ws_server_err.message
 
-    def __str__(self):
-        return "WorkspaceError: {}: {}: {}".format(
-            self.ws_id, self.http_code, self.message
-        )
+    def __str__(self: "WorkspaceError") -> str:
+        """Stringified error."""
+        return f"WorkspaceError: {self.ws_id}: {self.http_code}: {self.message}"

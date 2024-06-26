@@ -1,40 +1,51 @@
-import json
+"""Code for managing app specs."""
 
+import json
+from typing import Any
+
+from biokbase.narrative import clients
+from biokbase.narrative.app_util import app_param, app_version_tags, check_tag
 from IPython.display import HTML
 from jinja2 import Template
 
-import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import app_param, app_version_tags, check_tag
-
 
 class SpecManager:
+    """Class to wrangle app specs."""
+
     __instance = None
 
-    app_specs = {}
-    type_specs = {}
+    app_specs: dict[str, Any] = {}
+    type_specs: dict[str, Any] = {}
 
-    def __new__(cls):
+    def __new__(cls: type["SpecManager"]) -> "SpecManager":
+        """Generate a new SpecManager instance."""
         if SpecManager.__instance is None:
             SpecManager.__instance = object.__new__(cls)
             SpecManager.__instance.reload()
         return SpecManager.__instance
 
-    def get_spec(self, app_id, tag="release"):
+    def get_spec(self: "SpecManager", app_id: str, tag: str = "release") -> dict[str, Any]:
+        """Fetch the specs for an app."""
         self.check_app(app_id, tag, raise_exception=True)
         return self.app_specs[tag][app_id]
 
-    def get_type_spec(self, type_id, raise_exception=True, allow_module_match=True):
+    def get_type_spec(
+        self: "SpecManager",
+        type_id: str,
+        raise_exception: bool = True,
+        allow_module_match: bool = True,
+    ):
+        """Fetch the specs for a type."""
         # if we can't find a full match for a type, try to match just the module
         if (type_id not in self.type_specs) and allow_module_match:
             type_id = type_id.split(".")[0]
         if (type_id not in self.type_specs) and raise_exception:
-            raise ValueError('Unknown type id "{}"'.format(type_id))
+            err_msg = f'Unknown type id "{type_id}"'
+            raise ValueError(err_msg)
         return self.type_specs.get(type_id)
 
-    def reload(self):
-        """
-        Reloads all app specs into memory from the latest update.
-        """
+    def reload(self: "SpecManager") -> None:
+        """Reload all app specs into memory from the latest update."""
         client = clients.get("narrative_method_store")
         for tag in app_version_tags:
             specs = client.list_methods_spec({"tag": tag})
@@ -46,10 +57,8 @@ class SpecManager:
         # And let's load all types from the beginning and cache them
         self.type_specs = client.list_categories({"load_types": 1})[3]
 
-    def app_description(self, app_id, tag="release"):
-        """
-        Returns the app description as a printable object. Makes it kinda pretty? repr_html, maybe?
-        """
+    def app_description(self: "SpecManager", app_id: str, tag: str = "release") -> str:
+        """Return the app description as a printable object."""
         self.check_app(app_id, tag, raise_exception=True)
 
         info = clients.get("narrative_method_store").get_method_full_info(
@@ -67,9 +76,9 @@ class SpecManager:
         """
         return HTML(Template(tmpl).render(info=info))
 
-    def available_apps(self, tag="release"):
-        """
-        Lists the set of available apps in a pretty HTML way.
+    def available_apps(self: "SpecManager", tag: str = "release") -> str:
+        """List the set of available apps in a pretty HTML way.
+
         Usable only in the Jupyter notebook.
         """
         check_tag(tag, raise_exception=True)
@@ -103,15 +112,14 @@ class SpecManager:
         return HTML(
             Template(tmpl).render(
                 tag=tag,
-                apps=sorted(
-                    self.app_specs[tag].values(), key=lambda m: m["info"]["id"]
-                ),
+                apps=sorted(self.app_specs[tag].values(), key=lambda m: m["info"]["id"]),
             )
         )
 
-    def app_usage(self, app_id, tag="release"):
-        """
-        Should show app inputs and outputs. Something like this:
+    def app_usage(self: "SpecManager", app_id: str, tag: str = "release"):
+        """Display app inputs and outputs.
+
+        Format is as follows:
         App id
         App name
         Subtitle
@@ -140,9 +148,14 @@ class SpecManager:
 
         return AppUsage(usage)
 
-    def check_app(self, app_id, tag="release", raise_exception=False):
-        """
-        Checks if a method (and release tag) is available for running and such.
+    def check_app(
+        self: "SpecManager",
+        app_id: str,
+        tag: str = "release",
+        raise_exception: bool = False,
+    ) -> bool:
+        """Check if a method (and release tag) is available for running and such.
+
         If raise_exception==True, and either the tag or app_id are invalid, a ValueError is raised.
         If raise_exception==False, and there's something invalid, it just returns False.
         If everything is hunky-dory, it returns True.
@@ -153,16 +166,16 @@ class SpecManager:
 
         if app_id not in self.app_specs[tag]:
             if raise_exception:
-                raise ValueError(
-                    'Unknown app id "{}" tagged as "{}"'.format(app_id, tag)
-                )
+                err_msg = f'Unknown app id "{app_id}" tagged as "{tag}"'
+                raise ValueError(err_msg)
             return False
 
         return True
 
-    def app_params(self, spec):
-        """
-        Should return a dict of params with key = id, val =
+    def app_params(self: "SpecManager", spec: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return a list of dicts of params.
+
+        Params are in the form key = id, val =
         {
             optional = boolean,
             is_constant = boolean,
@@ -174,37 +187,34 @@ class SpecManager:
             allowed_values = list (optional),
         }
         """
-        params = []
-        for p in spec["parameters"]:
-            p_info = app_param(p)
-            params.append(p_info)
+        params = [app_param(p) for p in spec["parameters"]]
 
         for p in spec.get("parameter_groups", []):
-            p_info = {"id": p.get("id", ""), "is_group": True}
-            p_info["optional"] = p.get("optional", 0) == 1
-            p_info["short_hint"] = p.get("short_hint", "")
-            p_info["description"] = p.get("ui_name", "")
-            p_info["parameter_ids"] = p.get("parameter_ids", [])
-            p_info["id_mapping"] = p.get("id_mapping", {})
-            p_info["allow_multiple"] = p.get("allow_multiple", 0)
-            p_info["type"] = "group"
-
+            p_info = {
+                "id": p.get("id", ""),
+                "is_group": True,
+                "optional": p.get("optional", 0) == 1,
+                "short_hint": p.get("short_hint", ""),
+                "description": p.get("ui_name", ""),
+                "parameter_ids": p.get("parameter_ids", []),
+                "id_mapping": p.get("id_mapping", {}),
+                "allow_multiple": p.get("allow_multiple", 0),
+                "type": "group",
+            }
             params.append(p_info)
 
-        return sorted(
-            params, key=lambda p: (p.get("optional", False), p.get("is_output", False))
-        )
+        return sorted(params, key=lambda p: (p.get("optional", False), p.get("is_output", False)))
 
 
 class AppUsage:
-    """
-    A tiny class for representing app usage in HTML (or as a pretty string)
-    """
+    """A tiny class for representing app usage in HTML (or as a pretty string)."""
 
-    def __init__(self, usage):
+    def __init__(self: "AppUsage", usage: dict[str, Any]) -> None:
+        """Initialise a new AppUsage instance."""
         self.usage = usage
 
-    def _repr_html_(self):
+    def _repr_html_(self: "AppUsage") -> str:
+        """Generate an HTML representation of the instance."""
         tmpl = """
         <h1>{{usage.name}}</h1>
         id = {{usage.id}}<br>
@@ -255,30 +265,31 @@ class AppUsage:
 
         return Template(tmpl).render(usage=self.usage)
 
-    def __repr__(self):
+    def __repr__(self: "AppUsage") -> str:
+        """Generate a string representation of the instance."""
         return self.__str__()
 
-    def __str__(self):
-        s = "id: {}\nname: {}\nsubtitle: {}\nparameters (*required):\n-----------------------".format(
-            self.usage["id"], self.usage["name"], self.usage["subtitle"]
+    def __str__(self: "AppUsage") -> str:
+        """Generate a string representation of the instance."""
+        s = "\n".join(
+            [
+                f'id: {self.usage["id"]}',
+                f'name: {self.usage["name"]}',
+                f'subtitle: {self.usage["subtitle"]}',
+                "parameters (*required):",
+                "-----------------------",
+            ]
         )
-
         for p in self.usage["params"]:
             if not p.get("is_constant", False):
-                p_def = "\n{}{} - {}".format(
-                    "*" if not p["optional"] else "", p["id"], p["type"]
-                )
+                p_def = "\n{}{} - {}".format("*" if not p["optional"] else "", p["id"], p["type"])
                 if "allowed_types" in p:
-                    p_def = (
-                        p_def
-                        + " - is a data object where the type is one of: {}".format(
-                            json.dumps(p["allowed_types"])
-                        )
+                    p_def = f"{p_def} - is a data object where the type is one of:" + json.dumps(
+                        p["allowed_types"]
                     )
+                # ??? indentation error?
                 if "allowed_values" in p:
-                    p_def = p_def + " - must be one of {}".format(
-                        json.dumps(p["allowed_values"])
-                    )
+                    p_def = f"{p_def} - must be one of {json.dumps(p['allowed_values'])}"
                 s = s + p_def
 
         return s

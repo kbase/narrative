@@ -1,0 +1,282 @@
+interactions:
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1;36095/73/1"}]}],
+      "version": "1.1", "id": "5582088734390334"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '141'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":[{"attribute":"test_attribute_1","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"Hour","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_2","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_3","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"}],"instances":{"test_row_instance_1":["1","4","7"],"test_row_instance_2":["2","5","8"],"test_row_instance_3":["3","6","9"]},"ontology_mapping_method":"User
+        Curation"},"info":[73,"row_attribute_mapping_test_ExpressionMatrix","KBaseExperiments.AttributeMapping-3.0","2018-10-02T15:04:00+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","acaf9d15188ae931dde6f105ffb56be3",797,{"Mapping
+        Method":"User Curation","Number of Attributes":"3","Number of Instances":"3"}],"path":["36095/74/1","36095/73/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:00+0000","epoch":1538492640886,"refs":[],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c8847cadec7ad9-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 16:59:58 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=vu.o.dnxzJ7Uyu8fZsOsRLclsLFmJ54dLPMZhXp4iKw-1717174798-1.0.1.1-5LfJStvorz7_JAtV.B9kthUYV4yxptmf4.SkVXXORQUXARLloKzojRl0UJdFOlp90MGvAFKqq_uKA7w_ft9QbA;
+        path=/; expires=Fri, 31-May-24 17:29:58 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1;36095/73/1"}]}],
+      "version": "1.1", "id": "11644342091156612"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '142'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":[{"attribute":"test_attribute_1","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"Hour","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_2","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_3","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"}],"instances":{"test_row_instance_1":["1","4","7"],"test_row_instance_2":["2","5","8"],"test_row_instance_3":["3","6","9"]},"ontology_mapping_method":"User
+        Curation"},"info":[73,"row_attribute_mapping_test_ExpressionMatrix","KBaseExperiments.AttributeMapping-3.0","2018-10-02T15:04:00+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","acaf9d15188ae931dde6f105ffb56be3",797,{"Mapping
+        Method":"User Curation","Number of Attributes":"3","Number of Instances":"3"}],"path":["36095/74/1","36095/73/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:00+0000","epoch":1538492640886,"refs":[],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c8847dfd9715bc-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 16:59:59 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=1vTAj6gbRyGJeELwo.Jw4MKxmanyoUXJMH4Ikhfk10g-1717174799-1.0.1.1-w82wRYIZ0TlpubV9Z1GuWbu_pgvkIBlWjPuc9QHu.RbQAdj398tuta1HnH0gUGslvSDgZztyMWcD8kuuahsL7Q;
+        path=/; expires=Fri, 31-May-24 17:29:59 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1;36095/73/1"}]}],
+      "version": "1.1", "id": "762619771599522"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '140'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":[{"attribute":"test_attribute_1","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"Hour","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_2","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_3","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"}],"instances":{"test_row_instance_1":["1","4","7"],"test_row_instance_2":["2","5","8"],"test_row_instance_3":["3","6","9"]},"ontology_mapping_method":"User
+        Curation"},"info":[73,"row_attribute_mapping_test_ExpressionMatrix","KBaseExperiments.AttributeMapping-3.0","2018-10-02T15:04:00+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","acaf9d15188ae931dde6f105ffb56be3",797,{"Mapping
+        Method":"User Curation","Number of Attributes":"3","Number of Instances":"3"}],"path":["36095/74/1","36095/73/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:00+0000","epoch":1538492640886,"refs":[],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c8847f1aa89e56-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 16:59:59 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=P94IB9LdaxlDSNliwKZ9e4iJr_CwztmBrkdQD8tJkkw-1717174799-1.0.1.1-HfwwIHI3bMjUZCCjTfvJrvY1L68EDvi9GFU0ZNt9YUORwEta4elhFtmzvKPdx2Ne5RXHuMKWdzsdR4qyNif3rQ;
+        path=/; expires=Fri, 31-May-24 17:29:59 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1;36095/73/1"}]}],
+      "version": "1.1", "id": "20738738336903784"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '142'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":[{"attribute":"test_attribute_1","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"Hour","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_2","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_3","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"}],"instances":{"test_row_instance_1":["1","4","7"],"test_row_instance_2":["2","5","8"],"test_row_instance_3":["3","6","9"]},"ontology_mapping_method":"User
+        Curation"},"info":[73,"row_attribute_mapping_test_ExpressionMatrix","KBaseExperiments.AttributeMapping-3.0","2018-10-02T15:04:00+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","acaf9d15188ae931dde6f105ffb56be3",797,{"Mapping
+        Method":"User Curation","Number of Attributes":"3","Number of Instances":"3"}],"path":["36095/74/1","36095/73/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:00+0000","epoch":1538492640886,"refs":[],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c88480483f15d0-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 16:59:59 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=IJv26gGOrZPsRy6dnn3Rp3Q0JV7WTnSXThefyonBh_Q-1717174799-1.0.1.1-hgI8v9sw4gN3CXJ7PqaAIwVPJT_6iKecKbxzUWVrru0xFZcQHfvxqntWjSgxOul8Xvqg6aIhHVmR0H7bth5VAg;
+        path=/; expires=Fri, 31-May-24 17:29:59 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+- request:
+    body: '{"method": "Workspace.get_objects2", "params": [{"objects": [{"ref": "36095/74/1;36095/73/1"}]}],
+      "version": "1.1", "id": "5765534939818532"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '141'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"data":[{"data":{"attributes":[{"attribute":"test_attribute_1","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"Hour","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_2","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"},{"attribute":"test_attribute_3","attribute_ont_id":"Custom:Term","attribute_ont_ref":"KbaseOntologies/Custom","unit":"nanogram
+        per milliliter","unit_ont_id":"Custom:Unit","unit_ont_ref":"KbaseOntologies/Custom"}],"instances":{"test_row_instance_1":["1","4","7"],"test_row_instance_2":["2","5","8"],"test_row_instance_3":["3","6","9"]},"ontology_mapping_method":"User
+        Curation"},"info":[73,"row_attribute_mapping_test_ExpressionMatrix","KBaseExperiments.AttributeMapping-3.0","2018-10-02T15:04:00+0000",1,"jjeffryes",36095,"jjeffryes:narrative_1535664989585","acaf9d15188ae931dde6f105ffb56be3",797,{"Mapping
+        Method":"User Curation","Number of Attributes":"3","Number of Instances":"3"}],"path":["36095/74/1","36095/73/1"],"provenance":[{"time":"2018-10-02T14:59:04+0000","epoch":1538492344000,"service":"GenericsAPI","service_ver":"local-dev","method":"run_local_tests","method_params":[],"input_ws_objects":[],"resolved_ws_objects":[],"intermediate_incoming":[],"intermediate_outgoing":[],"external_data":[],"subactions":[{"name":"GenericsAPI","ver":"local-dev","code_url":"https://localhost","commit":"local-docker-image"},{"name":"GenomeFileUtil","ver":"0.8.5-release","code_url":"https://github.com/kbaseapps/GenomeFileUtil","commit":"fe88588e83152e48b13e410c7410b340d1eab1df"},{"name":"DataFileUtil","ver":"0.0.24-release","code_url":"https://github.com/kbaseapps/DataFileUtil","commit":"52e7597218fdbeef6077d7822573cbf1b4a9d7c9"},{"name":"AssemblyUtil","ver":"1.0.6-release","code_url":"https://github.com/kbaseapps/AssemblyUtil","commit":"2b9b53d852190c94996e620d4754ca6aa98c0cb4"},{"name":"KBaseReport","ver":"3.0.3-release","code_url":"https://github.com/kbaseapps/KBaseReport","commit":"9a31e60babac154375cb6f2ff35d839ba5a3084a"}],"custom":{},"description":"KBase
+        SDK method run via the KBase Execution Engine"}],"creator":"jjeffryes","orig_wsid":36095,"created":"2018-10-02T15:04:00+0000","epoch":1538492640886,"refs":[],"copy_source_inaccessible":0,"extracted_ids":{}}]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 88c884844d9faaaf-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 31 May 2024 17:00:00 GMT
+      Server:
+      - cloudflare
+      Set-Cookie:
+      - __cf_bm=obV6RZEwZfHNuyzJuxJkS9KrTmFgC4p114jT5488oRQ-1717174800-1.0.1.1-omDEZFS_4aZzQ81SVUlwRCktaDLDFvvVO_kCeFhXKgdGUPjOcYhhc6FCKusQT3snUGHwifBVUQ1yggbYkhlz1A;
+        path=/; expires=Fri, 31-May-24 17:30:00 GMT; domain=.kbase.us; HttpOnly; Secure;
+        SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: ''
+version: 1

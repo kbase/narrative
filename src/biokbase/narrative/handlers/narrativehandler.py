@@ -1,15 +1,14 @@
 import urllib.parse
 
 import tornado.log
-from notebook.base.handlers import FilesRedirectHandler, IPythonHandler
-from notebook.utils import url_escape, url_path_join
-from tornado import web
-from traitlets.config import Application
-
 from biokbase.auth import get_token_info, get_user_info, init_session_env
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
+from notebook.base.handlers import FilesRedirectHandler, IPythonHandler
+from notebook.utils import url_escape, url_path_join
+from tornado import web
+from traitlets.config import Application
 
 HTTPError = web.HTTPError
 
@@ -40,9 +39,7 @@ def _init_session(request, cookies):
 
 
 class NarrativeMainHandler(IPythonHandler):
-    """
-    The primary narrative path handler. Handles paths like: ws.###.obj.###
-    """
+    """The primary narrative path handler. Handles paths like: ws.###.obj.###"""
 
     def get(self, path):
         _init_session(self.request, self.cookies)
@@ -61,16 +58,15 @@ class NarrativeMainHandler(IPythonHandler):
             log_event(g_log, "loading_error", {"error": str(e)})
             if e.status_code == 403:
                 self.write(self.render_template("403.html", status_code=403))
-                return
-            else:
-                self.write(
-                    self.render_template(
-                        "generic_error.html",
-                        message=e.log_message,
-                        status_code=e.status_code,
-                    )
+                return None
+            self.write(
+                self.render_template(
+                    "generic_error.html",
+                    message=e.log_message,
+                    status_code=e.status_code,
                 )
-                return
+            )
+            return None
         if model.get("type") != "notebook":
             # not a notebook, redirect to files
             return FilesRedirectHandler.redirect_to_files(self, path)
@@ -88,20 +84,18 @@ class NarrativeMainHandler(IPythonHandler):
                 google_ad_conversion=URLS.google_ad_conversion,
             )
         )
+        return None
 
 
 def load_jupyter_server_extension(nb_server_app):
-    """
-    Called when the extension is loaded.
+    """Called when the extension is loaded.
 
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
     web_app = nb_server_app.web_app
     host_pattern = ".*$"
-    route_pattern = url_path_join(
-        web_app.settings["base_url"], r"(ws\.\d+\.obj\.\d+.*)"
-    )
+    route_pattern = url_path_join(web_app.settings["base_url"], r"(ws\.\d+\.obj\.\d+.*)")
     web_app.add_handlers(host_pattern, [(route_pattern, NarrativeMainHandler)])
 
     route_pattern = url_path_join(web_app.settings["base_url"], r"(ws\.\d+)$")

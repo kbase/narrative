@@ -2,7 +2,86 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will follow).
+
+## Version 5.3.0
+
+-   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed;
+    previously it showed an empty space.
+-   PTV-1909 - Narrative sign out does sign out
+-   UIP-41 - Update Jupyter Notebook to version 6.5.6
+-   UIP-41 - Fix Dropzone dependency issues, address problems with unit tests
+-   UIP-41 - Removed unused Python dependencies
+
+### Notebook widget updates
+
+- The clustergrammer widget was updated to clustergrammer2; see the python dependency changes below for version information.
+
+### Dependency Changes
+
+- Updated to include all Python dependencies in the image built in this repo, and removed those that are not directly referenced in KBase code.
+- Retained scientific computing dependencies that may be useful to the community (SciPy, numpy, pandas, etc.)
+- Removed directly required dependencies that are really just used by the Jupyter Notebook.
+- Separated requirements into image dependencies (i.e. packages that are generally useful to have on the Narrative Docker image, ported from the narrative-base-image repo), application requirements and dev requirements.
+- Generally useful python packages are combined in the `src/requirements-general.txt` file.
+- the requirements in `src/requirements.txt` are needed for the Narrative to run.
+- the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
+- flake8, isort, and black have been replaced by the multifunctional formatter and linter Ruff.
+
+
+- Python dependency updates
+  - beautifulsoup4: 4.12.2 -> 4.12.3
+  - black: 24.4.2 -> replaced by Ruff
+  - certifi: 2022.12.7 -> 2024.6.2
+  - coverage: 7.3.1 -> 7.5.3
+  - clustergrammer_widget: removed
+  - clustergrammer2: 0.18.0 (new)
+  - cryptography: 41.0.4 -> 42.0.8
+  - flake8: 7.0.0 -> replaced by Ruff
+  - idna: 3.4 -> 3.7
+  - isort: 5.13.2 -> replaced by Ruff
+  - ipython: 8.10.0 -> 8.25.0
+  - jinja2: 3.1.2 -> 3.1.4
+  - markupsafe: 2.1.3 -> 2.1.4
+  - pillow: 9.4.0 -> 10.3.0
+  - pygments: 2.16.1 -> 2.17.2
+  - pymongo: 4.5.0 -> 4.7.3
+  - pyopenssl: 23.2.0 -> 24.0.0
+  - pytest: 7.4.0 -> 8.2.2
+  - pytest-cov: 4.1.0 -> 5.0.0
+  - pytest-recording: 0.13.1 (new)
+  - requests-mock: 1.11.0 -> 1.12.1
+  - requests: 2.31.0 -> 2.32.3
+  - ruff: 0.4.7 (new)
+  - scikit-learn: 1.2.1 -> 1.5.0
+  - statsmodels: 0.14.2 (new)
+  - terminado: 0.17.1 -> 0.18.0
+  - tornado: 6.2 -> 6.4.1
+  - vcrpy: 5.1.0 -> 6.0.1
+
+
+- Javascript dependency updates
+  - @babel/traverse: 7.22.8 -> 7.23.3
+  - @wdio/browserstack-service: 8.12.2 -> 8.29.3
+  - @wdio/cli: 8.12.2 -> 8.29.3
+  - axios: 1.4.0 -> 1.6.1
+  - chromedriver: 114.0.2 -> 123.0.0
+  - commander: 10.0.0 -> 11.1.0
+  - dropzone: 5.7.0 -> 5.9.3
+  - eslint-config-prettier: 8.8.0 -> 9.1.0
+  - follow-redirects: 1.15.2 -> 1.15.4
+  - handlebars: 4.7.7 -> 4.7.8
+  - karma: 6.4.1 -> 6.4.2
+  - nunjucks: 2.4.3 -> 3.2.4 in /src/nodejs/NarrativeServer
+  - plotly.js-dist-min: 2.18.2 -> 2.28.0
+  - postcss: 8.4.27 -> 8.4.33
+  - prettier: 3.0.0 -> 3.2.4
+  - puppeteer: 20.8.2 -> 21.10.0
+  - pure-uuid: 1.6.4 -> 1.8.1
+  - selenium-webdriver: 4.10.0 -> 4.17.0
+  - word-wrap: 1.2.3 -> 1.2.4
+  - ws: 7.2.0 -> 7.4.6 in /src/nodejs/NarrativeServer
+
 
 ## Version 5.2.1
 -   PTV-1900 - a previous bugfix exposed an issue in the SpeciesTreeBuilder apps. This provides a workaround to keep those apps running.
@@ -19,7 +98,7 @@ This is built on the Jupyter Notebook v6.4.12 and IPython 8.5.0 (more notes will
 ## Version 5.2.0
 A new feature here is that app cells now store object information internally as UPAs, instead of object names. This will lead to more reproducible results, and is on the path to fixing the long-standing copy-of-a-copy problem.
 
--   PTV-1810 - address object name display issues in the View Configure tab of app cells. This now saves all app inputs as UPAs in the cell. It also includes an update to input transforms to properly convert from UPAs <-> names or references as appropriate before starting the app. 
+-   PTV-1810 - address object name display issues in the View Configure tab of app cells. This now saves all app inputs as UPAs in the cell. It also includes an update to input transforms to properly convert from UPAs <-> names or references as appropriate before starting the app.
 -   PTV-1875 - fix public data paging issue by removing paging from workspace data sources
 -   PTV-1877 - fix app descriptions to replace the documentation link for the upload / download guide
 -   PTV-1878 - fix some failing front end unit tests

@@ -3,14 +3,11 @@
 VER_OUTFILE="deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H%M )
 
-# This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
-NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="7.0"
 
 # Get the current branch, so that we can tag images to branch
-BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
+BRANCH=${GIT_BRANCH:-`git symbolic-ref --short HEAD`}
 # Use the branch unless we are given an explicit DOCKER_TAG
 NARRATIVE_VER=${DOCKER_TAG:-$BRANCH}
 COMMIT=`git rev-parse --short HEAD`
@@ -57,21 +54,6 @@ echo "Updating configuration"
 mkdir -p $WEBROOT_DIR
 ./src/scripts/kb-update-config -f src/config.json.templ -o $WEBROOT_DIR/narrative_version -e $env -d $dev_mode || exit 1
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
-
-# Make sure the base image is there. If not, build it.
-echo "Checking for base image v$NAR_BASE_VER"
-docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
-
-if [ $? -eq 1 ] ; then
-  echo "Base image $NAR_BASE:$NAR_BASE_VER not found! Checking Dockerhub..."
-  docker pull $NAR_BASE:$NAR_BASE_VER
-fi
-
-if [ $? -eq 1 ] ; then
-  echo "Base image not found on Dockerhub either! Building..."
-  docker build -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
-  echo "Done. Recommend pushing this back to Dockerhub."
-fi
 
 echo "Building latest narrative version"
 

@@ -1,22 +1,19 @@
-"""
-A collection of helpful utilities for running batches of jobs.
-"""
+"""A collection of helpful utilities for running batches of jobs."""
+
 import re
 from copy import deepcopy
 from decimal import Decimal
 from itertools import product
 from string import Formatter, Template
 
-import biokbase.narrative.clients as clients
+from biokbase.narrative import clients
+from biokbase.narrative.jobs import specmanager
 from biokbase.narrative.staging.helper import Helper as StagingHelper
 from biokbase.narrative.system import system_variable
 
-from . import specmanager
-
 
 def get_input_scaffold(app, tag="release", use_defaults=False):
-    """
-    Builds a "scaffold" structure of what app inputs are used, in the structure that's
+    """Builds a "scaffold" structure of what app inputs are used, in the structure that's
     expected by 'run_legacy_batch_app' (also the structure expected by 'run_app'). This will
     effectively be a dictionary of keys to None (except for the case of group parameters,
     those will fill out the group with the proper keys, and wrap them in a list if necessary)
@@ -38,15 +35,12 @@ def get_input_scaffold(app, tag="release", use_defaults=False):
     input_scaffold = {}
     for p in spec_params:
         if p["id"] not in grouped_params:
-            input_scaffold[p["id"]] = _make_scaffold_input(
-                p, spec_params_dict, use_defaults
-            )
+            input_scaffold[p["id"]] = _make_scaffold_input(p, spec_params_dict, use_defaults)
     return input_scaffold
 
 
 def _index_spec_params(spec_params):
-    """
-    Makes an index of the spec parameters. It dict-ifies the list of spec params
+    """Makes an index of the spec parameters. It dict-ifies the list of spec params
     provided by the SpecManager, and also returns the set of param ids that are
     used in groups.
     This gets returned as a tuple (indexed params, group param ids)
@@ -65,8 +59,7 @@ def _index_spec_params(spec_params):
 
 
 def _make_scaffold_input(param, params_dict, use_defaults):
-    """
-    param = dict of info about one param - id, is it a group, what types are allowed, etc.
+    """Param = dict of info about one param - id, is it a group, what types are allowed, etc.
             this is the one that we are providing the info about for the scaffold.
     params_dict = dict of all params.
     """
@@ -85,8 +78,7 @@ def _make_scaffold_input(param, params_dict, use_defaults):
 
 
 def list_objects(obj_type=None, name=None, fuzzy_name=True):
-    """
-    Returns a list of all objects in the current workspace with type=obj_type
+    """Returns a list of all objects in the current workspace with type=obj_type
     obj_type is a string. if None, return all visible objects (no reports, data palettes, etc.)
     name is a string. if None, then return everything. if not None, use that string to filter the search. if fuzzy_name is set to True, use that string
     as a search filter. e.g., "foo" would match "Foobar" and "Bazfoo"
@@ -95,7 +87,7 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
     This has limited use, I know, but it's useful for fetching UPAs for objects you know, or names you're iterating over another way.
 
     This first prototype just returns a list of dictionaries, where each dict contains 'type', 'upa', and 'name' keys for each object.
-    """
+    """  # noqa: 501
     ws_name = system_variable("workspace")
     service = clients.get("service")
     service_params = {"ws_name": ws_name}
@@ -110,14 +102,10 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
         # foo.bar-1.2.0
         if not re.match(r"[A-Za-z]+\.[A-Za-z]+(-\d+\.\d+)?$", obj_type):
             raise ValueError(
-                '{} is not a valid type. Valid types are of the format "Module.Type" or "Module.Type-Version"'.format(
-                    obj_type
-                )
+                f'{obj_type} is not a valid type. Valid types are of the format "Module.Type" or "Module.Type-Version"'
             )
         service_params["types"] = [obj_type]
-    all_obj = service.sync_call(
-        "NarrativeService.list_objects_with_sets", [service_params]
-    )[0]
+    all_obj = service.sync_call("NarrativeService.list_objects_with_sets", [service_params])[0]
     obj_list = []
     for obj in all_obj["data"]:
         # filtration!
@@ -134,13 +122,11 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
                 continue
         upa_prefix = ""  # gavin's gonna wreck me.
         if "dp_info" in obj:  # seriously.
-            upa_prefix = (
-                obj["dp_info"]["ref"] + ";"
-            )  # not like I want to support this, either...
+            upa_prefix = obj["dp_info"]["ref"] + ";"  # not like I want to support this, either...
         info = obj["object_info"]
         obj_list.append(
             {
-                "upa": "{}{}/{}/{}".format(upa_prefix, info[6], info[0], info[4]),
+                "upa": f"{upa_prefix}{info[6]}/{info[0]}/{info[4]}",
                 "name": info[1],
                 "type": info[2],
             }
@@ -149,8 +135,7 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
 
 
 def list_files(name=None):
-    """
-    Returns a list of all files in the user's staging area. It uses the 'name' as a case-insensitive
+    """Returns a list of all files in the user's staging area. It uses the 'name' as a case-insensitive
     search string to filter the files. E.g., looking for files named "foo" will return files named
     "Foo.txt", "FOO", "myfoobar", etc.
     If name is None, returns all files.
@@ -165,8 +150,7 @@ def list_files(name=None):
 
 
 def generate_input_batch(app, tag="release", **kwargs):
-    """
-    This takes in an app, tag, and set of loosely-defined kwargs to build a batch of app runs.
+    """This takes in an app, tag, and set of loosely-defined kwargs to build a batch of app runs.
     app is the app id, in the format "Module/method", e.g.("MEGAHIT/run_megahit")
     tag should be one of 'dev', 'beta', or 'release'
 
@@ -269,7 +253,7 @@ def generate_input_batch(app, tag="release", **kwargs):
     output_vals = {}
     for k, v in kwargs.items():
         if k not in spec_params_dict:
-            raise ValueError("{} is not a parameter".format(k))
+            raise ValueError(f"{k} is not a parameter")
         if spec_params_dict[k].get("is_output"):
             output_vals[k] = v
         elif isinstance(v, tuple):
@@ -289,9 +273,7 @@ def generate_input_batch(app, tag="release", **kwargs):
     product_inputs = [input_vals[k] for k in param_ids]
     batch_size = 1
     for p in product_inputs:
-        batch_size *= len(
-            p
-        )  # reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+        batch_size *= len(p)  # reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
     # prepare output values
     output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
 
@@ -322,8 +304,7 @@ def generate_input_batch(app, tag="release", **kwargs):
 
 
 def _flatten_params(d):
-    """
-    Flattens a dict of params such that any group params are at the highest level, and all
+    """Flattens a dict of params such that any group params are at the highest level, and all
     values are strings that are appropriate for naming files.
 
     Group params are only one level deep, right?
@@ -336,9 +317,7 @@ def _flatten_params(d):
             # clean up lists to be acceptable output names
             # e.g. goes from [1, 2, 3] to '1_2_3'
             trim_list = str(v)
-            trim_list = re.sub(
-                r"[\[\]\s']", "", trim_list
-            )  # remove [, ], spaces and quotes
+            trim_list = re.sub(r"[\[\]\s']", "", trim_list)  # remove [, ], spaces and quotes
             trim_list = re.sub(
                 "[^A-Za-z0-9|._-]", "_", trim_list
             )  # turn unacceptable characters into underscores
@@ -351,8 +330,7 @@ def _flatten_params(d):
 
 
 def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
-    """
-    output_vals - dict with outputs set up from user input
+    """output_vals - dict with outputs set up from user input
     spec_params - dict with info about all parameters in the spec
 
     This validates output values that are present.
@@ -368,39 +346,27 @@ def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
             if isinstance(val, list):
                 if len(val) != batch_size:
                     raise ValueError(
-                        "The output parameter {} must have {} values if it's a list".format(
-                            p_id, batch_size
-                        )
+                        f"The output parameter {p_id} must have {batch_size} values if it's a list"
                     )
             elif val is not None:
                 # check keys in the string
                 for i in Formatter().parse(val):
                     field = i[1]
-                    if (
-                        field
-                        and field not in spec_params_dict
-                        and field != "run_number"
-                    ):
+                    if field and field not in spec_params_dict and field != "run_number":
                         raise ValueError(
-                            "Output template field {} doesn't match a parameter id or 'run_number'".format(
-                                field
-                            )
+                            f"Output template field {field} doesn't match a parameter id or 'run_number'"
                         )
-        else:
-            if p.get("is_output"):
-                if not p["default"]:
-                    raise ValueError(
-                        'No output template provided for parameter "{}" and no default value found!'.format(
-                            p_id
-                        )
-                    )
-                parsed_out_vals[p_id] = p["default"] + "${run_number}"
+        elif p.get("is_output"):
+            if not p["default"]:
+                raise ValueError(
+                    f'No output template provided for parameter "{p_id}" and no default value found!'
+                )
+            parsed_out_vals[p_id] = p["default"] + "${run_number}"
     return parsed_out_vals
 
 
 def _is_singleton(input_value, param_info):
-    """
-    Returns True if the given input value is a singleton of that parameter. E.g., if it's a
+    """Returns True if the given input value is a singleton of that parameter. E.g., if it's a
     single string or number for a text parameter, or a list of strings/numbers if the parameter
     allows multiples, or it's a dict if the parameter is a group param.
 
@@ -413,16 +379,13 @@ def _is_singleton(input_value, param_info):
     whether we have a list / dict / (int or str) where allow_multiple=True.
     """
     if input_value and isinstance(input_value, list):
-        if not param_info.get("allow_multiple", False) or isinstance(
-            input_value[0], list
-        ):
+        if not param_info.get("allow_multiple", False) or isinstance(input_value[0], list):
             return False
     return True
 
 
 def _generate_vals(t):
-    """
-    Interpolates values from a 3-tuple (min, interval, max)
+    """Interpolates values from a 3-tuple (min, interval, max)
     E.g. (0, 5, 20) would return [0, 5, 10, 15, 20]
     (0, 5, 19) would return [0, 5, 10, 15]
     (100, -5, 80) would return [100, 95, 90, 85, 80]

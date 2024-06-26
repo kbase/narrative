@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/common.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+    <meta charset="utf-8">
+    <title>KBase Demo - kbaseConfirmationPrompt.js</title>
+</head>
+<body class="gallery">
+<h1>KBase Confirmation Prompt Demo</h1>
+
+<p><a href="../index.html">Index</a></p>
+
+
+<h4>Confirmation Prompt Options</h4>
+<table class="table table-striped" style="width: auto;">
+    <caption>options for the kbaseConfirmationPrompt widget</caption>
+    <thead>
+    <tr>
+        <th>Setting</th>
+        <th>Type</th>
+        <th>Default</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                title
+            </td>
+            <td>
+                string
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A title for the confirmation prompt dialog
+            </td>
+        </tr>
+        <tr>
+            <td>
+                message
+            </td>
+            <td>
+                string, html string
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A message to be displayed in the body area of the confirmation prompt
+               dialog; may include html which will be rendered as such.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                verb
+            </td>
+            <td>
+                string
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A label for the Confirm button.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                onConfirm
+            </td>
+            <td>
+                function
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A function to be called when the user clicks the "Confirm" button. 
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Normal usage</h2>
+
+<p>
+   This is just plain usage of the confirmation prompt, nothing special.
+</p>
+
+<div class="Example">
+    <div id="demo1"></div>
+</div>
+
+<script>
+    require(['narrative_paths'], () => {
+        require(['jquery', 'widgets/kbaseConfirmationPrompt'], ($, $ConfirmationPrompt) => {
+            // Example 1
+            const $feedback = $('<span>').css('font-weight', 'bold');
+
+            const $modal = new $ConfirmationPrompt($('<div>'), {
+                title: "Example 1",
+                message: "Please confirm it, <i>or not</i>, your choice",
+                verb: "Confirm",
+                onCancel: (close) => {
+                    close();
+                    $feedback.text('Stand down, we have canceled.')
+                },
+                onConfirm: (close) => {
+                    close();
+                    // Do what you want to do
+                    $feedback.text('Okay, it is confirmed.')
+                }
+            });
+
+            const $openButton = $('<p>').append($('<button>')
+                .text('Open Confirmation Prompt')
+                .addClass('btn btn-default')
+                .click(() => {
+                    $modal.open();
+                }));
+
+            const $feedbackArea = $('<p>')
+                .append($('<span>').text('Your response? '))
+                .append($feedback);
+
+            $('#demo1').append($openButton).append($feedbackArea);
+        });
+    });
+</script>
+</body>
+</html>

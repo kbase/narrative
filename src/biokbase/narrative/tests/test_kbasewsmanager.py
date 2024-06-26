@@ -1,12 +1,11 @@
 import unittest
 from unittest import mock
 
-from tornado.web import HTTPError
-
+import pytest
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.contents.kbasewsmanager import KBaseWSManager
-
-from .narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
+from tornado.web import HTTPError
 
 
 class KBWSManagerTestCase(unittest.TestCase):
@@ -26,7 +25,7 @@ class KBWSManagerTestCase(unittest.TestCase):
             ),
         ]
         for c in cases:
-            self.assertEqual(c[1], manager._parse_path(c[0]))
+            assert c[1] == manager._parse_path(c[0])
 
     def test__parse_path_bad(self):
         manager = KBaseWSManager()
@@ -40,6 +39,5 @@ class KBWSManagerTestCase(unittest.TestCase):
             "ws.1.2",
         ]
         for c in cases:
-            with self.assertRaises(HTTPError) as e:
+            with pytest.raises(HTTPError, match=f"Invalid Narrative path {c}"):
                 manager._parse_path(c)
-            self.assertIn("Invalid Narrative path {}".format(c), str(e.exception))

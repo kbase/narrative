@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Sphinx documentation extension to fix traitlets junk.
-"""
+"""Sphinx documentation extension to fix traitlets junk."""
+
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "2/4/14"
 
@@ -22,13 +20,13 @@ def autodoc_fix_traitlets(app, what, name, obj, options, signature, return_annot
                     show_inheritance and noindex that are true if the flag option of same name was given
                     to the auto directive
     :param signature: function signature, as a string of the form "(parameter_1, parameter_2)", or None if introspection
-            didn’t succeed and signature wasn’t specified in the directive.
+            didn't succeed and signature wasn't specified in the directive.
     ::param return_annotation: function return annotation as a string of the form " -> annotation", or None if
                                there is no return annotation
     :return: (signature, return_annotation)
     :rtype: tuple
     """
-    app.debug("Called for {} with signature {}".format(what, signature))
+    app.debug(f"Called for {what} with signature {signature}")
     if what == "class" and signature is not None and "traitlets" in signature:
         app.debug("Changing signature for traitlets subclass")
         signature = "(Unicode, TypeMeta)"

@@ -1,12 +1,11 @@
+"""Implements the WidgetManager class that programmatically shows KBase JavaScript widgets."""
+
 import json
 import os
 import time
 import uuid
 
-from IPython.display import Javascript
-from jinja2 import Template
-
-import biokbase.narrative.clients as clients
+from biokbase.narrative import clients
 from biokbase.narrative.app_util import (
     check_tag,
     map_outputs_from_state,
@@ -14,21 +13,15 @@ from biokbase.narrative.app_util import (
 )
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.system import system_variable
+from biokbase.narrative.upa import is_ref, is_upa
+from IPython.display import Javascript
+from jinja2 import Template
 
-from .upa import is_ref, is_upa
-
-"""
-widgetmanager.py
-
-Implements the WidgetManager class that programmatically shows
-KBase JavaScript widgets.
-"""
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
 class WidgetManager:
-    """
-    Manages data (and other) visualization widgets for use in the KBase Narrative.
+    """Manages data (and other) visualization widgets for use in the KBase Narrative.
 
     Basic flow for use:
     1. Instantiate the manager:
@@ -62,23 +55,18 @@ class WidgetManager:
         self._sm = SpecManager()
         try:
             nar_path = os.environ["NARRATIVE_DIR"]
-            widget_param_file = open(
-                os.path.join(nar_path, "src", "widget_param_mapping.json")
-            )
+            widget_param_file = open(os.path.join(nar_path, "src", "widget_param_mapping.json"))
             self.widget_param_map = json.loads(widget_param_file.read())
         except BaseException:
             self.widget_param_map = {}
         self.reload_info()
 
     def reload_info(self):
-        """
-        Fetches all widget information from the method store and contains it in this object.
-        """
+        """Fetches all widget information from the method store and contains it in this object."""
         self.widget_info = self._load_all_widget_info()
 
     def _load_all_widget_info(self):
-        """
-        Loads all widget info and stores it in this object.
+        """Loads all widget info and stores it in this object.
         It does this by calling load_widget_info on all available tags.
         """
         info = {}
@@ -87,8 +75,7 @@ class WidgetManager:
         return info
 
     def load_widget_info(self, tag="release", verbose=False):
-        """
-        Loads widget info and mapping.
+        """Loads widget info and mapping.
         Eventually will fetch from kbase-ui, a kbase CDN, or the catalog service.
         For now, it gets known vis widgets from all method specs.
 
@@ -128,9 +115,7 @@ class WidgetManager:
             widget_name = method["widgets"].get("output", self._default_output_widget)
             if widget_name == "null":
                 if verbose:
-                    print(
-                        f"Ignoring a widget named 'null' in {tag} - {method['info']['id']}"
-                    )
+                    print(f"Ignoring a widget named 'null' in {tag} - {method['info']['id']}")
                 continue
             out_mapping = method["behavior"].get(
                 "kb_service_output_mapping",
@@ -163,21 +148,14 @@ class WidgetManager:
                                 if in_type == "text":
                                     param_type = "string"
                                     if "text_options" in spec_param:
-                                        validate_as = spec_param["text_options"].get(
-                                            "validate_as"
-                                        )
+                                        validate_as = spec_param["text_options"].get("validate_as")
                                         if validate_as == "int":
                                             param_type = "int"
                                         elif validate_as == "float":
                                             param_type = "float"
-                                        if (
-                                            "valid_ws_types"
-                                            in spec_param["text_options"]
-                                        ):
+                                        if "valid_ws_types" in spec_param["text_options"]:
                                             allowed_types.update(
-                                                spec_param["text_options"][
-                                                    "valid_ws_types"
-                                                ]
+                                                spec_param["text_options"]["valid_ws_types"]
                                             )
                                 elif param_type == "textarea":
                                     param_type = "string"
@@ -186,10 +164,7 @@ class WidgetManager:
                                 elif param_type == "dropdown":
                                     param_type = "dropdown"
                                     allowed_values.update(
-                                        [
-                                            o["value"]
-                                            for o in spec_param["dropdown_options"]
-                                        ]
+                                        [o["value"] for o in spec_param["dropdown_options"]]
                                     )
                     if "narrative_system_variable" in p:
                         # this is something like the ws name or token that needs to get fetched
@@ -214,12 +189,10 @@ class WidgetManager:
                 if widget_name in all_widgets:
                     # if it's already there, just update the allowed_types and allowed_values
                     # for some params that have them
-                    for p_name in params.keys():
+                    for p_name in params:
                         if "allowed_types" in params[p_name]:
                             if p_name not in all_widgets[widget_name]["params"]:
-                                all_widgets[widget_name]["params"][p_name] = params[
-                                    p_name
-                                ]
+                                all_widgets[widget_name]["params"][p_name] = params[p_name]
                             else:
                                 widget_types = (
                                     all_widgets[widget_name]["params"]
@@ -227,14 +200,12 @@ class WidgetManager:
                                     .get("allowed_types", set())
                                 )
                                 widget_types.update(params[p_name]["allowed_types"])
-                                all_widgets[widget_name]["params"][p_name][
-                                    "allowed_types"
-                                ] = widget_types
+                                all_widgets[widget_name]["params"][p_name]["allowed_types"] = (
+                                    widget_types
+                                )
                         if "allowed_values" in params[p_name]:
                             if p_name not in all_widgets[widget_name]["params"]:
-                                all_widgets[widget_name]["params"][p_name] = params[
-                                    p_name
-                                ]
+                                all_widgets[widget_name]["params"][p_name] = params[p_name]
                             else:
                                 widget_vals = (
                                     all_widgets[widget_name]["params"]
@@ -242,9 +213,9 @@ class WidgetManager:
                                     .get("allowed_values", set())
                                 )
                                 widget_vals.update(params[p_name]["allowed_values"])
-                                all_widgets[widget_name]["params"][p_name][
-                                    "allowed_values"
-                                ] = widget_vals
+                                all_widgets[widget_name]["params"][p_name]["allowed_values"] = (
+                                    widget_vals
+                                )
                 else:
                     all_widgets[widget_name] = {"params": params}
 
@@ -262,8 +233,7 @@ class WidgetManager:
         return all_widgets
 
     def print_widget_inputs(self, widget_name, tag="release"):
-        """
-        Prints a list of expected user inputs for a widget.
+        """Prints a list of expected user inputs for a widget.
         These are printed as the following:
         variable name - variable type - <extra information>
 
@@ -291,10 +261,8 @@ class WidgetManager:
             if not is_const or "allowed_values" in params[p]:
                 p_def = "%s - %s" % (p, params[p]["param_type"])
                 if "allowed_types" in params[p]:
-                    p_def = (
-                        p_def
-                        + " - is a workspace object where the type is one of: %s"
-                        % (json.dumps(params[p]["allowed_types"]))
+                    p_def = p_def + " - is a workspace object where the type is one of: %s" % (
+                        json.dumps(params[p]["allowed_types"])
                     )
                 if "allowed_values" in params[p]:
                     p_def = p_def + " - must be one of: %s" % (
@@ -303,8 +271,7 @@ class WidgetManager:
                 print(p_def)
 
     def get_widget_constants(self, widget_name, tag="release"):
-        """
-        Returns a Dict with constants required for each widget.
+        """Returns a Dict with constants required for each widget.
         These constants are either part of the widget spec itself, or are provided by the current
         Narrative environment (e.g. Workspace name, user name).
 
@@ -327,10 +294,7 @@ class WidgetManager:
             if params[p]["is_constant"]:
                 if "param_value" in params[p]:
                     constants[p] = params[p]["param_value"]
-                elif (
-                    "allowed_values" in params[p]
-                    and len(params[p]["allowed_values"]) == 1
-                ):
+                elif "allowed_values" in params[p] and len(params[p]["allowed_values"]) == 1:
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
@@ -346,8 +310,7 @@ class WidgetManager:
         check_widget=False,
         **kwargs,
     ):
-        """
-        Renders a widget using the generic kbaseNarrativeOutputWidget container.
+        """Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
         Parameters
         ----------
@@ -369,15 +332,12 @@ class WidgetManager:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
         """
-
         input_data = {}
 
         if check_widget:
             check_tag(tag, raise_exception=True)
             if widget_name not in self.widget_info[tag]:
-                raise ValueError(
-                    "Widget %s not found with %s tag!" % (widget_name, tag)
-                )
+                raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
             input_data = self.get_widget_constants(widget_name, tag)
 
         # Let the kwargs override constants
@@ -421,8 +381,7 @@ class WidgetManager:
         return Javascript(data=js, lib=None, css=None)
 
     def infer_upas(self, widget_name, params):
-        """
-        Use the given widget_name and parameters (to be passed to the widget) to infer any upas.
+        """Use the given widget_name and parameters (to be passed to the widget) to infer any upas.
         This will generally mean using the workspace object name and workspace name to do a
         lookup in the Workspace and constructing the upa or upa path from there.
 
@@ -562,8 +521,7 @@ class WidgetManager:
         check_widget=False,
         **kwargs,
     ):
-        """
-        Renders a widget using the generic kbaseNarrativeOutputWidget container.
+        """Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
         Parameters
         ----------
@@ -583,15 +541,12 @@ class WidgetManager:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
         """
-
         input_data = {}
 
         if check_widget:
             check_tag(tag, raise_exception=True)
             if widget_name not in self.widget_info[tag]:
-                raise ValueError(
-                    "Widget %s not found with %s tag!" % (widget_name, tag)
-                )
+                raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
             input_data = self.get_widget_constants(widget_name, tag)
 
         # Let the kwargs override constants
@@ -627,8 +582,7 @@ class WidgetManager:
         return Javascript(data=js, lib=None, css=None)
 
     def show_data_widget(self, upa, title=None, cell_id=None, tag="release"):
-        """
-        Renders a widget using the generic kbaseNarrativeOutputCell container.
+        """Renders a widget using the generic kbaseNarrativeOutputCell container.
         First, it looks up the UPA to get its object type. It then uses that type to look up
         what the viewer app should be. This contains the widget and the parameter mapping to view
         that widget. It then maps all of these together to run show_output_widget against a widget
@@ -652,7 +606,9 @@ class WidgetManager:
             All objects are related to their viewers by an app. This is the tag for that app's
             release state (should be one of release, beta, or dev)
         """
-        widget_name = "widgets/function_output/kbaseDefaultObjectView"  # set as default, overridden below
+        widget_name = (
+            "widgets/function_output/kbaseDefaultObjectView"  # set as default, overridden below
+        )
         widget_data = {}
         upas = {}
         info_tuple = clients.get("workspace").get_object_info_new(
@@ -698,8 +654,7 @@ class WidgetManager:
                 upa_params = []
                 for param in spec_params:
                     if param.get("allowed_types") is None or any(
-                        (t == bare_type or t == type_module)
-                        for t in param.get("allowed_types", [])
+                        (t == bare_type or t == type_module) for t in param.get("allowed_types", [])
                     ):
                         input_params[param["id"]] = obj_param_value
                         upa_params.append(param["id"])
@@ -707,9 +662,7 @@ class WidgetManager:
                 (input_params, ws_refs) = validate_parameters(
                     app_id, tag, spec_params, input_params
                 )
-                (widget_name, widget_data) = map_outputs_from_state(
-                    [], input_params, app_spec
-                )
+                (widget_name, widget_data) = map_outputs_from_state([], input_params, app_spec)
 
                 # Figure out params for upas.
                 for mapping in app_spec.get("behavior", {}).get("output_mapping", []):
@@ -728,11 +681,8 @@ class WidgetManager:
             cell_id=cell_id,
         )
 
-    def show_external_widget(
-        self, widget, widget_title, objects, options, auth_required=True
-    ):
-        """
-        Renders a JavaScript widget as loaded from a very simple hosted CDN.
+    def show_external_widget(self, widget, widget_title, objects, options, auth_required=True):
+        """Renders a JavaScript widget as loaded from a very simple hosted CDN.
         The CDN information is fetched dynamically from the local configuration.
 
         Parameters

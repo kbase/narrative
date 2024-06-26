@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/narrative/static/components/requirejs/require.js"></script>
+    <script src="/narrative/static/kbase/gallery/common.js"></script>
+    <link type="text/css" rel="stylesheet" href="/narrative/static/style/style.min.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/gallery/common.css">
+    <link type="text/css" rel="stylesheet" href="/narrative/static/kbase/css/all_concat.css">
+    <meta charset="utf-8">
+    <title>KBase Demo - kbaseConfirmationPrompt.js</title>
+</head>
+<body class="gallery">
+<h1>KBase Prompt Demo</h1>
+
+<p><a href="../index.html">Index</a></p>
+
+
+<h4>Prompt Options</h4>
+<table class="table table-striped" style="width: auto;">
+    <caption>options for the kbasePrompt2 widget</caption>
+    <thead>
+    <tr>
+        <th>Setting</th>
+        <th>Type</th>
+        <th>Default</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                title
+            </td>
+            <td>
+                string, html string, jquery object
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A title for the confirmation prompt dialog
+            </td>
+        </tr>
+        <tr>
+            <td>
+                body
+            </td>
+            <td>
+                string, html string, jquery object
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               Message content to be displayed in the body area of the confirmation prompt
+               dialog; may include html which will be rendered as such.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                footer
+            </td>
+            <td>
+                string, html string, jquery object
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+               A message to be displayed in the footer area of the confirmation prompt
+               dialog. If buttons are supplied, it will be displayed below the buttons.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                modalClass
+            </td>
+            <td>
+                string
+            </td>
+            <td>
+                'fade'
+            </td>
+            <td>
+               An additional class string to append to the modal container which will
+               already have the class "modal". The default behavior of "fade" ensures
+               that the modal smoothly fades in and out when opened and closed.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                controls
+            </td>
+            <td>
+                array of button specs
+            </td>
+            <td>
+                empty array
+            </td>
+            <td>
+               This array of controls, which are typically buttons, is displayed in the
+               footer area of the modal, right-aligned. See below for the button spec.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Button Spec</h4>
+
+<table class="table table-striped" style="width: auto;">
+    <caption>Structure of the button spec</caption>
+    <thead>
+    <tr>
+        <th>Key</th>
+        <th>Type</th>
+        <th>Default</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                type
+            </td>
+            <td>
+                string
+            </td>
+            <td>
+                "default"
+            </td>
+            <td>
+                The suffix to the "btn-" class assigned to the button. As per bootstrap,
+                these may be default, primary, success, info, warning, danger, or link.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                label
+            </td>
+            <td>
+                string, html string, jquery object
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+                The button label.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                callback
+            </td>
+            <td>
+                function, closer function as argument
+            </td>
+            <td>
+                none
+            </td>
+            <td>
+                The callback is called when the button is clicked. The sole parameter
+                to the callback is a function which, when called, will close the prompt
+                dialog modal.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+<h2>Normal usage</h2>
+
+<p>
+   This is just plain usage of the confirmation prompt, nothing special.
+</p>
+
+<div class="Example">
+    <div id="demo1"></div>
+</div>
+
+
+<script>
+    require(['narrative_paths'], () => {
+        require(['jquery', 'widgets/kbasePrompt2'], ($, Prompt) => {
+            // Example 1
+
+            const promptExample1 =  new Prompt($('<div>'), {
+                title : 'Acknowledge Receipt',
+                body : 'Did you get the message?',
+                // Not required. jquery animation class to show/hide. Defaults to 'fade'
+                modalClass : 'fade', 
+                buttons : [
+                    {
+                        label: 'No',
+                        type: 'danger',
+                        callback:  ((close) => { 
+                            close();
+                            $feedback.text('Well, that is too bad')
+                        })
+                    },
+                    {
+                        label: 'Yes',
+                        type: 'primary',
+                        callback:  ((close) => { 
+                            close();
+                            $feedback.text('Great, glad you got it!')
+                        })
+                    }
+                   
+                ],
+                footer : 'Some footer value here',
+            });
+
+            const $feedback = $('<span>').css('font-weight', 'bold');
+
+            const $openButton = $('<p>').append($('<button>')
+                .text('Open Confirmation Prompt')
+                .addClass('btn btn-default')
+                .click(() => {
+                    promptExample1.open();
+                }));
+
+            const $feedbackArea = $('<p>')
+                .append($('<span>').text('Your response? '))
+                .append($feedback);
+
+            $('#demo1').append($openButton).append($feedbackArea);
+        });
+    });
+</script>
+</body>
+</html>

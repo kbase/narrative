@@ -67,7 +67,7 @@
         "requirejs": "^2.3.6",
         "sass": "^1.77.5",
         "selenium-standalone": "^9.5.0",
-        "selenium-webdriver": "^4.21.0",
+        "selenium-webdriver": "^4.22.0",
         "string-template": "^1.0.0",
         "string.prototype.endswith": "^1.0.2",
         "string.prototype.startswith": "^1.0.0",

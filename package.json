@@ -20,7 +20,7 @@
         "autoprefixer": "^10.4.19",
         "axios": "^1.7.2",
         "bootstrap-sass": "^3.4.3",
-        "chrome-launcher": "^1.1.1",
+        "chrome-launcher": "^1.1.2",
         "chromedriver": "^126.0.0",
         "commander": "^12.1.0",
         "cssnano": "^7.0.2",

@@ -23,7 +23,7 @@ rsa==4.9
 setuptools==69.5.1
 six==1.16.0
 terminado==0.18.0
-biopython==1.79
+biopython==1.84
 bokeh==3.0.3
 chart_studio==1.1.0
 ete3==3.1.2

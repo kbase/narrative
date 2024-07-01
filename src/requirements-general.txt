@@ -24,7 +24,7 @@ setuptools==69.5.1
 six==1.16.0
 terminado==0.18.0
 biopython==1.79
-bokeh==3.0.3
+bokeh==3.4.2
 chart_studio==1.1.0
 ete3==3.1.2
 networkx==3.0

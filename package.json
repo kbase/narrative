@@ -21,7 +21,7 @@
         "axios": "^1.7.2",
         "bootstrap-sass": "^3.4.3",
         "chrome-launcher": "^1.1.1",
-        "chromedriver": "^126.0.0",
+        "chromedriver": "^126.0.4",
         "commander": "^12.1.0",
         "cssnano": "^7.0.2",
         "ejs": "^3.1.10",

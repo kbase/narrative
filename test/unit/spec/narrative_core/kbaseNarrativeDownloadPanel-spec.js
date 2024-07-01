@@ -9,7 +9,7 @@ define([
     const JSON_EXPORT_APP = 'kb_staging_exporter/export_json_to_staging';
     const STAGING_EXPORT_APP = 'kb_staging_exporter/export_to_staging';
 
-    fdescribe('The kbaseNarrativeDownloadPanel widget', () => {
+    describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         const ws = 1111,
             oid = 2222,

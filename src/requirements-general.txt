@@ -10,7 +10,7 @@ jsonschema==4.16.0
 markdown==3.4.1
 markupsafe==2.1.4
 ndg-httpsclient==0.5.1
-pexpect==4.8.0
+pexpect==4.9.0
 pickleshare==0.7.5
 pillow==10.3.0
 pyasn1==0.4.8

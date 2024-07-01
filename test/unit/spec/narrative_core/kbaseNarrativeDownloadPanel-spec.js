@@ -4,11 +4,25 @@ define([
     'base/js/namespace',
     'narrativeMocks',
     'testUtil',
-], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil) => {
+    'narrativeConfig'
+], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil, Config) => {
     'use strict';
 
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
+        const ws = 1111,
+            oid = 2222,
+            ver = 3333,
+            name = 'fake_test_object',
+            objType = 'FakeModule.FakeType',
+            saveDate = '2018-08-03T00:17:04+0000',
+            userId = 'fakeUser',
+            wsName = 'fakeWs',
+            checksum = '12345',
+            meta = {},
+            size = 1234567,
+            upa = `${ws}/${oid}/${ver}`;
+
         beforeEach(() => {
             jasmine.Ajax.install();
             const AUTH_TOKEN = 'fakeAuthToken';
@@ -27,95 +41,72 @@ define([
             TestUtil.clearRuntime();
         });
 
-        it('Should properly load with a valid upa', () => {
-            const ws = 1111,
-                oid = 2222,
-                ver = 3333,
-                name = 'fake_test_object',
-                objType = 'FakeModule.FakeType-7.7',
-                saveDate = '2018-08-03T00:17:04+0000',
-                userId = 'fakeUser',
-                wsName = 'fakeWs',
-                checksum = '12345',
-                meta = {},
-                size = 1234567,
-                upa = String(ws) + '/' + String(oid) + '/' + String(ver);
-
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
-                status: 200,
-                statusText: 'success',
-                contentType: 'application/json',
-                responseHeaders: '',
-                responseText: JSON.stringify({
-                    version: '1.1',
-                    result: [
-                        {
-                            infos: [
-                                [
-                                    oid,
-                                    name,
-                                    objType,
-                                    saveDate,
-                                    ver,
-                                    userId,
-                                    ws,
-                                    wsName,
-                                    checksum,
-                                    size,
-                                    meta,
-                                ],
-                            ],
-                            paths: [[upa]],
+        const exportCases = [
+            ['single method', { FAKE: 'fake_method' }],
+            ['a staging method', { FAKE: 'fake_method', STAGING: 'fake_staging_method' }],
+            ['no downloaders', {}]
+        ];
+        exportCases.forEach((exportCase) => {
+            it(`Should properly load with ${exportCase[0]}`, async () => {
+                const exporters = exportCase[1];
+                await new kbaseNarrativeDownloadPanel($div, {
+                    token: null,
+                    type: objType,
+                    objId: oid,
+                    ref: upa,
+                    objName: name,
+                    downloadSpecCache: {
+                        lastUpdateTime: 100,
+                        types: {
+                            [objType]: { export_functions: exporters },
                         },
-                    ],
-                }),
-            });
-
-            new kbaseNarrativeDownloadPanel($div, {
-                token: null,
-                type: objType,
-                objId: oid,
-                ref: upa,
-                objName: name,
-                downloadSpecCache: {
-                    lastUpdateTime: 100,
-                    types: {
-                        [objType]: { export_functions: { FAKE: 'fake_method' } },
                     },
-                },
+                });
+                const exportBtns = $div.find('.kb-data-list-btn');
+                const names = Object.keys(exporters);
+                expect(exportBtns.length).toEqual(1 + names.length);
+                [...names, 'JSON'].forEach((exporterName, idx) => {
+                    expect(exportBtns[idx].textContent).toContain(exporterName);
+                });
+                expect($div.find('.kb-data-list-cancel-btn').html()).toContain('Cancel');
             });
-            expect($div.html()).toContain('JSON');
-            expect($div.html()).toContain('FAKE');
         });
 
-        it('Should load and register a Staging app button', () => {
-            const ws = 1111,
-                oid = 2222,
-                ver = 3333,
-                name = 'fake_test_object',
-                objType = 'KBaseGenomes.Genome',
-                upa = String(ws) + '/' + String(oid) + '/' + String(ver);
-
-            new kbaseNarrativeDownloadPanel($div, {
-                token: null,
-                type: objType,
-                objName: name,
-                objId: oid,
-                ref: upa,
-                downloadSpecCache: {
-                    lastUpdateTime: 100,
-                    types: {
-                        [objType]: {
+        it('Should load after fetching exporter info from NMS', async () => {
+            jasmine.Ajax.stubRequest(
+                Config.url('narrative_method_store'),
+                /NarrativeMethodStore.list_categories/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    id: '12345',
+                    result: [{}, {}, {}, {
+                        'FakeModule.FakeType': {
                             export_functions: {
-                                FAKE: 'fake_method',
-                                STAGING: 'staging_method',
-                            },
-                        },
-                    },
-                },
+                                SOME_FORMAT: 'export_as_some_format'
+                            }
+                        }
+                    }]
+                })
             });
 
-            expect($div.html()).toContain('STAGING');
+            await new kbaseNarrativeDownloadPanel($div, {
+                token: null,
+                type: objType,
+                objId: oid,
+                ref: upa,
+                objName: name,
+                downloadSpecCache: {}
+            });
+            const exportBtns = $div.find('.kb-data-list-btn');
+            expect(exportBtns.length).toEqual(2);
+            ['SOME_FORMAT', 'JSON'].forEach((exporterName, idx) => {
+                expect(exportBtns[idx].textContent).toContain(exporterName);
+            });
+            expect($div.find('.kb-data-list-cancel-btn').html()).toContain('Cancel');
         });
     });
 });

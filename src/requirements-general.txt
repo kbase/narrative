@@ -13,7 +13,7 @@ ndg-httpsclient==0.5.1
 pexpect==4.8.0
 pickleshare==0.7.5
 pillow==10.3.0
-pyasn1==0.4.8
+pyasn1==0.6.0
 pycurl==7.45.1
 pygments==2.17.2
 pyopenssl==24.1.0

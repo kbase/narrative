@@ -114,6 +114,20 @@ define([
             expect($div.find('.kb-data-list-cancel-btn').html()).toContain('Cancel');
         });
 
+        it('Should show an error if NMS fails on start', async () => {
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('narrative_method_store'),
+                body: /list_categories/,
+                statusCode: 500,
+                response: 'an error happened',
+                isError: true,
+            });
+
+            await initDownloadPanel(null, {});
+            const $status = $div.find('.kb-download-status');
+            expect($status.text()).toContain('Error: an error happened');
+        });
+
         it('Should start a "hidden" download job when clicking an exporter', async () => {
             /* uses mocks
              *   ee2.run_job
@@ -194,6 +208,192 @@ define([
             expect(iframe.src).toBe(expectedUrl);
         });
 
+        it('Should show an error if the hidden download job fails to start', async () => {
+            const exportApp = 'exporter/export_as_some_format',
+                errorMsg = 'failed to start job',
+                exporterCache = {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: {
+                            export_functions: {
+                                SOME_FORMAT: exportApp,
+                            },
+                        },
+                    },
+                };
+            // set up mocks here
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('execution_engine2'),
+                body: /run_job/,
+                statusCode: 500,
+                response: errorMsg,
+                isError: true,
+            });
+
+            const widget = await initDownloadPanel(null, exporterCache);
+            const exportBtns = $div.find('.kb-data-list-btn');
+
+            await TestUtil.waitForElementState(
+                $div[0],
+                () => {
+                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    return text.endsWith(errorMsg);
+                },
+                () => {
+                    exportBtns[0].click();
+                }
+            );
+            expect($div[0].querySelector('.kb-download-status').textContent).toContain(errorMsg);
+            expect(widget.timer).toBeNull();
+        });
+
+        it('Should show running logs during a download job', async () => {
+            const fakeJobId = 'dl_job_123456',
+                exportApp = 'exporter/export_as_some_format',
+                exporterCache = {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: {
+                            export_functions: {
+                                SOME_FORMAT: exportApp,
+                            },
+                        },
+                    },
+                },
+                jobStates = [
+                    [{ running: 12345 }],
+                    [
+                        {
+                            running: 12345,
+                            finished: 11111,
+                            status: 'completed',
+                            job_output: {
+                                result: [
+                                    {
+                                        shock_id: 'foobar',
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                ];
+
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('execution_engine2'),
+                body: /run_job/,
+                response: [fakeJobId],
+            });
+
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('execution_engine2'),
+                body: /get_job_logs/,
+                response: {
+                    count: 1,
+                    last_line_number: 1,
+                    lines: [
+                        {
+                            line: 'some log',
+                            isError: 0,
+                        },
+                    ],
+                },
+            });
+
+            // we're running a couple times so things complete, and the mocks aren't set
+            // up for that, so just call jasmine.Ajax directly
+            jasmine.Ajax.stubRequest(Config.url('execution_engine2'), /check_job/).andCallFunction(
+                (request) => {
+                    const response = {
+                        version: '1.1',
+                        id: '12345',
+                        result: jobStates.shift(),
+                    };
+                    request.respondWith({
+                        status: 200,
+                        statusText: 'HTTP/1.1 200 OK',
+                        contentType: 'application/json',
+                        responseText: JSON.stringify(response),
+                    });
+                }
+            );
+
+            const widget = await initDownloadPanel(null, exporterCache);
+            const exportBtns = $div.find('.kb-data-list-btn');
+
+            await TestUtil.waitForElementState(
+                $div[0],
+                () => {
+                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    return text.endsWith('some log');
+                },
+                () => {
+                    exportBtns[0].click();
+                }
+            );
+            expect($div[0].querySelector('.kb-download-status').textContent).toContain('some log');
+            expect(widget.timer).not.toBeNull();
+
+            await TestUtil.waitForElementState($div[0], () => {
+                const text = $div[0].querySelector('.kb-download-status').textContent;
+                return text === '';
+            });
+
+            expect($div[0].querySelector('.kb-download-status').textContent).toBe('');
+            expect(widget.timer).toBeNull();
+        });
+
+        it('Should show an error if one happens while trying to get the job state', async () => {
+            /* uses mocks
+             *   ee2.run_job
+             *   ee2.check_job
+             *   ee2.job_logs
+             *   DataImportExport url
+             */
+            const fakeJobId = 'dl_job_123',
+                exportApp = 'exporter/export_as_some_format',
+                exporterCache = {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: {
+                            export_functions: {
+                                SOME_FORMAT: exportApp,
+                            },
+                        },
+                    },
+                },
+                errorMsg = 'error while checking job state';
+            // set up mocks here
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('execution_engine2'),
+                body: /run_job/,
+                response: [fakeJobId],
+            });
+            // instant finish to the job!
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('execution_engine2'),
+                body: /check_job/,
+                response: errorMsg,
+                isError: true,
+                statusCode: 500,
+            });
+
+            const widget = await initDownloadPanel(null, exporterCache);
+            const exportBtns = $div.find('.kb-data-list-btn');
+
+            await TestUtil.waitForElementState(
+                $div[0],
+                () => {
+                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    return text.endsWith(errorMsg);
+                },
+                () => {
+                    exportBtns[0].click();
+                }
+            );
+            expect($div[0].querySelector('.kb-download-status').textContent).toContain(errorMsg);
+            expect(widget.timer).toBeNull();
+        });
+
         it('Should create an app cell with the staging exporter', async () => {
             /* use mock for Jupyter.narrative.addAndPopulateApp */
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
@@ -232,6 +432,17 @@ define([
                 'release',
                 { input_ref: 'fake_test_object' }
             );
+        });
+
+        it('Should have a cancel button that empties the widget', async () => {
+            const widget = await initDownloadPanel(null, {
+                lastUpdateTime: 100,
+                types: { [objType]: {} },
+            });
+            const cancelBtn = $div.find('.kb-data-list-cancel-btn');
+            cancelBtn.click();
+            expect($div.children().length).toBe(0);
+            expect(widget.timer).toBeNull();
         });
     });
 });

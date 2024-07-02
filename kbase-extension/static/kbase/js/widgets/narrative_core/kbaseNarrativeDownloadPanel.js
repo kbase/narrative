@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * "Download" panel for each element in data list panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
@@ -25,7 +24,7 @@ define([
             token: null,
             type: null,
             objId: null,
-            ref: null,
+            upa: null,
             objName: null,
             downloadSpecCache: null, // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
         },
@@ -35,22 +34,15 @@ define([
         nmsURL: Config.url('narrative_method_store'),
         eeURL: Config.url('execution_engine2'),
         timer: null,
+        timeInterval: 5000,
 
         init: function (options) {
             this._super(options);
             Object.assign(this, options);
-            if (!this.objId) {
-                // we need the actual object id, so if we get an upa path (or just an upa),
-                // extract the object id from that.
-                // '1/2/3;4/5/6;7/8/9' would break down to:
-                // ['1/2/3', '4/5/6', '7/8/9']
-                // pop + trim -> '7/8/9'
-                // split on '/' and take the second element = the object id.
-                this.objId = this.ref.split(';').pop().trim().split('/')[1];
-            }
+            this.renderStructure();
             this.downloadSpecCache = options.downloadSpecCache;
             if (this.downloadSpecCache.lastUpdateTime) {
-                this.render();
+                this.renderDownloadButtons();
                 return this;
             } else {
                 // TODO: remove this, and fetch downloader info from NarrativeService, in a TBD function.
@@ -61,7 +53,7 @@ define([
                 )
                     .then((data) => {
                         this.updateDownloadSpecCache(data);
-                        this.render();
+                        this.renderDownloadButtons();
                     })
                     .catch((error) => this.showError(error))
                     .finally(() => this);
@@ -71,9 +63,6 @@ define([
         updateDownloadSpecCache: function (data) {
             const types = {};
             Object.keys(data[3]).forEach((key) => {
-                if (data[3][key].loading_error) {
-                    console.error(`Error loading type [${key}]: ${data[3][key].loading_error}`);
-                }
                 types[key] = data[3][key];
             });
             this.downloadSpecCache = {
@@ -91,30 +80,42 @@ define([
                     });
                 } else {
                     $dlBtn.parent().find('.kb-data-list-btn').prop('disabled', true);
-                    this.startDownloader(dlInfo).then(([jobId, wsObjectName]) => {
-                        this.waitForDownloadJob(jobId, wsObjectName);
-                    });
+                    this.startDownloader(dlInfo)
+                        .then(([jobId, wsObjectName]) => {
+                            this.waitForDownloadJob(jobId, wsObjectName);
+                        })
+                        .catch((error) => {
+                            this.showError(error);
+                        });
                 }
             });
             return $dlBtn;
         },
 
-        render: function () {
-            const downloadPanel = this.$elem;
-
-            // TODO: migrate to SCSS
-            const $labeltd = $('<td>')
-                .css({ 'white-space': 'nowrap', padding: '1px' })
+        renderStructure: function () {
+            const $container = $('<div>');
+            const $label = $('<div>')
+                .addClass('kb-download-label')
+                .css({ 'white-space': 'nowrap', padding: '1px', 'align-self': 'center' })
                 .append('Export as:');
-            const $btnTd = $('<td>').css({ padding: '1px' });
-            downloadPanel.append(
-                $('<table>').css({ width: '100%' }).append('<tr>').append($labeltd).append($btnTd)
-            );
+            const $buttons = $('<div>')
+                .addClass('kb-download-buttons')
+                .css({ padding: '1px', 'text-align': 'left' });
+            $container.css({ display: 'flex' }).append($label).append($buttons);
 
+            this.$elem.append($container);
+            this.$statusDiv = $('<div>')
+                .addClass('kb-download-status')
+                .css({ margin: '15px', 'word-wrap': 'wrap-word', overflow: 'none' });
+            this.$elem.append(this.$statusDiv.hide());
+        },
+
+        renderDownloadButtons: function () {
             const downloaders = this.prepareDownloaders(this.type);
+            const $btnPanel = this.$elem.find('.kb-download-buttons');
             downloaders.forEach((dlInfo) => {
                 if (dlInfo.name.toLocaleLowerCase() === 'staging') {
-                    $btnTd.append(
+                    $btnPanel.append(
                         this.makeDownloaderButton(
                             {
                                 name: 'STAGING',
@@ -124,10 +125,10 @@ define([
                         )
                     );
                 } else {
-                    $btnTd.append(this.makeDownloaderButton(dlInfo));
+                    $btnPanel.append(this.makeDownloaderButton(dlInfo));
                 }
             });
-            $btnTd.append(
+            $btnPanel.append(
                 this.makeDownloaderButton(
                     {
                         name: 'JSON',
@@ -137,20 +138,15 @@ define([
                 )
             );
 
-            $btnTd.append(
+            $btnPanel.append(
                 $('<button>')
                     .addClass('kb-data-list-cancel-btn')
                     .append('Cancel')
                     .click(() => {
                         this.stopTimer();
-                        downloadPanel.empty();
+                        this.$elem.empty();
                     })
             );
-
-            this.$statusDiv = $('<div>').css({ margin: '15px' });
-            this.$statusDivContent = $('<div>');
-            this.$statusDiv.append(this.$statusDivContent);
-            downloadPanel.append(this.$statusDiv.hide());
         },
 
         // TODO: move this to result of as-yet-unwritten NarrativeService call
@@ -167,13 +163,6 @@ define([
                 Object.keys(typeSpec['export_functions']).forEach((name) => {
                     ret.push({ name: name, appId: typeSpec['export_functions'][name] });
                 });
-            } else {
-                console.log(
-                    'Type [' +
-                        type +
-                        "] was skipped (no 'export_functions' block in " +
-                        'type-spec).'
-                );
             }
             return ret;
         },
@@ -193,22 +182,12 @@ define([
                 eeClient.sync_call('execution_engine2.run_job', [
                     {
                         method: method,
-                        params: [{ input_ref: this.ref }],
+                        params: [{ input_ref: this.upa }],
                         service_ver: tag,
                         app_id: method,
                     },
                 ])
-            )
-                .then(([jobId]) => {
-                    console.log(
-                        'Running ' + appInfo.appId + ' (tag="' + tag + '"), ' + 'job ID: ' + jobId
-                    );
-                    return [jobId, wsObjectName];
-                })
-                .catch((error) => {
-                    console.error(error);
-                    this.showError(error);
-                });
+            ).then(([jobId]) => [jobId, wsObjectName]);
         },
 
         waitForDownloadJob: function (jobId, wsObjectName) {
@@ -219,7 +198,6 @@ define([
                     eeClient.sync_call('execution_engine2.check_job', [{ job_id: jobId }])
                 )
                     .then(([jobState]) => {
-                        console.log('got job state', jobState);
                         if (!jobState.running) {
                             return [{}, []];
                         }
@@ -227,23 +205,22 @@ define([
                             eeClient.sync_call('execution_engine2.get_job_logs', [
                                 { job_id: jobId, skip_lines: skipLogLines },
                             ])
-                        ).then((logData) => [jobState, logData[0].lines]);
+                        ).then((logData) => {
+                            return [jobState, logData[0].lines];
+                        });
                     })
                     .then(([jobState, logLines]) => {
                         if (jobState.finished) {
                             this.stopTimer();
                             if (jobState.error) {
-                                console.error(jobState.error);
                                 this.showError(jobState.error.message);
                             } else {
-                                console.log('Export is complete');
                                 this.finishDownload(
                                     jobState.job_output.result[0].shock_id,
                                     wsObjectName
                                 );
                             }
                         } else if (logLines.length) {
-                            logLines.forEach((line) => console.log(line.line));
                             skipLogLines += logLines.length;
                             const line = logLines[logLines.length - 1].line;
                             const status = skipLogLines === 0 ? jobState.status : line;
@@ -254,17 +231,16 @@ define([
                     })
                     .catch((error) => {
                         this.stopTimer();
-                        console.log(error);
-                        this.showError(error.error.message);
+                        this.showError(error);
                     });
             };
 
-            this.timer = setInterval(timeLst, 5000);
+            this.timer = setInterval(timeLst, this.timeInterval);
             timeLst();
         },
 
         finishDownload: function (shockNode, wsObjectName) {
-            this.$statusDiv.hide();
+            this.$statusDiv.empty().hide();
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
             // once upon a time, there were versions where shockNode ids, or other results
             // from the download run, could result in URL formats like:
@@ -280,7 +256,6 @@ define([
             if (elems.length > 0) {
                 shockNode = elems[0];
             }
-            console.log('Shock node ID: ' + shockNode);
             const name = encodeURIComponent(wsObjectName + '.zip');
             const urlSuffix = `/download?id=${shockNode}&del=1&name=${name}&url=${encodeURIComponent(this.shockURL)}`;
             this.downloadFile(urlSuffix);
@@ -288,7 +263,6 @@ define([
 
         downloadFile: function (urlSuffix) {
             const url = this.exportURL + urlSuffix;
-            console.log('Downloading url=' + url);
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -301,7 +275,7 @@ define([
         },
 
         showMessage: function (msg) {
-            this.$statusDivContent.empty().append(msg);
+            this.$statusDiv.empty().append(msg);
         },
 
         showError: function (error) {
@@ -314,7 +288,7 @@ define([
             }
             // error is final state, so reactivate!
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
-            this.$statusDivContent.empty().append(
+            this.$statusDiv.empty().append(
                 $('<span>')
                     .css({ color: '#F44336' })
                     .append('Error: ' + error)

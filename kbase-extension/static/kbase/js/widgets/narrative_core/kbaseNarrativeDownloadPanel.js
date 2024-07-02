@@ -40,6 +40,12 @@ define([
             this._super(options);
             Object.assign(this, options);
             if (!this.objId) {
+                // we need the actual object id, so if we get an upa path (or just an upa),
+                // extract the object id from that.
+                // '1/2/3;4/5/6;7/8/9' would break down to:
+                // ['1/2/3', '4/5/6', '7/8/9']
+                // pop + trim -> '7/8/9'
+                // split on '/' and take the second element = the object id.
                 this.objId = this.ref.split(';').pop().trim().split('/')[1];
             }
             this.downloadSpecCache = options.downloadSpecCache;
@@ -260,6 +266,12 @@ define([
         finishDownload: function (shockNode, wsObjectName) {
             this.$statusDiv.hide();
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
+            // once upon a time, there were versions where shockNode ids, or other results
+            // from the download run, could result in URL formats like:
+            // https://some_shock_url/path/to/shock/some_shock_id?param=1&param=2
+            // where "some_shock_id" is really what we care about. This extracts
+            // that id out of those URLs.
+            // This is slated for demolition in the move to the blobstore.
             let elems = shockNode.split('/');
             if (elems.length > 1) {
                 shockNode = elems[elems.length - 1];

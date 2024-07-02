@@ -242,6 +242,12 @@ define([
         finishDownload: function (shockNode, wsObjectName) {
             this.$statusDiv.empty().hide();
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
+            // once upon a time, there were versions where shockNode ids, or other results
+            // from the download run, could result in URL formats like:
+            // https://some_shock_url/path/to/shock/some_shock_id?param=1&param=2
+            // where "some_shock_id" is really what we care about. This extracts
+            // that id out of those URLs.
+            // This is slated for demolition in the move to the blobstore.
             let elems = shockNode.split('/');
             if (elems.length > 1) {
                 shockNode = elems[elems.length - 1];

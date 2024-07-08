@@ -2,6 +2,7 @@
     "appdev": {
         "auth": "https://appdev.kbase.us/services/auth",
         "awe": "https://appdev.kbase.us/services/awe-api",
+        "blobstore": "https://appdev.kbase.us/services/blobstore",
         "catalog": "https://appdev.kbase.us/services/catalog",
         "cdn": "https://appdev.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -55,6 +56,7 @@
     "ci": {
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
+        "blobstore": "https://ci.kbase.us/services/blobstore",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdn": "https://ci.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -120,6 +122,7 @@
     "dev": {
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
+        "blobstore": "https://ci.kbase.us/services/blobstore",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdn": "https://ci.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -175,6 +178,7 @@
     "next": {
         "auth": "https://next.kbase.us/services/auth",
         "awe": "https://next.kbase.us/services/awe-api",
+        "blobstore": "https://next.kbase.us/services/blobstore",
         "catalog": "https://next.kbase.us/services/catalog",
         "cdn": "https://next.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -226,6 +230,7 @@
     "prod": {
         "auth": "https://kbase.us/services/auth",
         "awe": "https://kbase.us/services/awe-api",
+        "blobstore": "https://kbase.us/services/blobstore",
         "catalog": "https://kbase.us/services/catalog",
         "cdn": "https://kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -279,6 +284,7 @@
     "narrative-dev": {
         "auth": "https://narrative-dev.kbase.us/services/auth",
         "awe": "https://narrative-dev.kbase.us/services/awe-api",
+        "blobstore": "https://narrative-dev.kbase.us/services/blobstore",
         "catalog": "https://narrative-dev.kbase.us/services/catalog",
         "cdn": "https://narrative-dev.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
@@ -331,6 +337,7 @@
     "narrative-refactor": {
         "auth": "https://narrative-refactor.kbase.us/services/auth",
         "awe": "https://narrative-refactor.kbase.us/services/awe-api",
+        "blobstore": "https://narrative-refactor.kbase.us/services/blobstore",
         "catalog": "https://narrative-refactor.kbase.us/services/catalog",
         "cdn": "https://narrative-refactor.kbase.us/cdn/files",
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",

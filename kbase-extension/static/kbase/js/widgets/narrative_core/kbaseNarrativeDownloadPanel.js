@@ -29,9 +29,6 @@ define([
             downloadSpecCache: null, // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
         },
         loadingImage: Config.get('loading_gif'),
-        shockURL: Config.url('shock'),
-        exportURL: Config.url('data_import_export'),
-        nmsURL: Config.url('narrative_method_store'),
         eeURL: Config.url('execution_engine2'),
         timer: null,
         timeInterval: 5000,
@@ -47,7 +44,9 @@ define([
             } else {
                 // TODO: remove this, and fetch downloader info from NarrativeService, in a TBD function.
                 // eslint-disable-next-line no-undef
-                const nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
+                const nms = new NarrativeMethodStore(Config.url('narrative_method_store'), {
+                    token: this.token,
+                });
                 return Promise.resolve(
                     nms.list_categories({ load_methods: 0, load_apps: 0, load_types: 1 })
                 )
@@ -172,8 +171,6 @@ define([
                 '<img src="' + this.loadingImage + '" /> Export status: Preparing data'
             );
             this.$statusDiv.show();
-            const wsObjectName =
-                this.objName + '.' + appInfo.name.replace(/[^a-zA-Z0-9|.\-_]/g, '_');
             const tag = APIUtil.getAppVersionTag();
             const method = appInfo.appId.replace('/', '.');
             const eeClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
@@ -187,10 +184,10 @@ define([
                         app_id: method,
                     },
                 ])
-            ).then(([jobId]) => [jobId, wsObjectName]);
+            ).then(([jobId]) => [jobId]);
         },
 
-        waitForDownloadJob: function (jobId, wsObjectName) {
+        waitForDownloadJob: function (jobId) {
             const eeClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
             let skipLogLines = 0;
             const timeLst = () => {
@@ -215,10 +212,7 @@ define([
                             if (jobState.error) {
                                 this.showError(jobState.error.message);
                             } else {
-                                this.finishDownload(
-                                    jobState.job_output.result[0].shock_id,
-                                    wsObjectName
-                                );
+                                this.finishDownload(jobState.job_output.result[0].shock_id);
                             }
                         } else if (logLines.length) {
                             skipLogLines += logLines.length;
@@ -239,7 +233,7 @@ define([
             timeLst();
         },
 
-        finishDownload: function (shockNode, wsObjectName) {
+        finishDownload: function (shockNode) {
             this.$statusDiv.empty().hide();
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
             // once upon a time, there were versions where shockNode ids, or other results
@@ -247,7 +241,6 @@ define([
             // https://some_shock_url/path/to/shock/some_shock_id?param=1&param=2
             // where "some_shock_id" is really what we care about. This extracts
             // that id out of those URLs.
-            // This is slated for demolition in the move to the blobstore.
             let elems = shockNode.split('/');
             if (elems.length > 1) {
                 shockNode = elems[elems.length - 1];
@@ -256,13 +249,11 @@ define([
             if (elems.length > 0) {
                 shockNode = elems[0];
             }
-            const name = encodeURIComponent(wsObjectName + '.zip');
-            const urlSuffix = `/download?id=${shockNode}&del=1&name=${name}&url=${encodeURIComponent(this.shockURL)}`;
-            this.downloadFile(urlSuffix);
+            const downloadUrl = `${Config.url('blobstore')}/node/${shockNode}?download&del`;
+            this.downloadFile(downloadUrl);
         },
 
-        downloadFile: function (urlSuffix) {
-            const url = this.exportURL + urlSuffix;
+        downloadFile: function (downloadUrl) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -271,7 +262,7 @@ define([
                 iframe.style.display = 'none';
                 document.body.appendChild(iframe);
             }
-            iframe.src = url;
+            iframe.src = downloadUrl;
         },
 
         showMessage: function (msg) {

@@ -186,7 +186,7 @@ define([
                 },
             });
 
-            const dlUrlRegex = new RegExp(Config.url('data_import_export'));
+            const dlUrlRegex = new RegExp(Config.url('blobstore'));
             jasmine.Ajax.stubRequest(dlUrlRegex);
 
             await initDownloadPanel(null, exporterCache);
@@ -204,7 +204,7 @@ define([
             const iframe = document.getElementById('hiddenDownloader');
             expect(iframe).not.toBeNull();
             const expectedUrl =
-                'https://ci.kbase.us/services/data_import_export/download?id=some_shock_id&del=1&name=fake_test_object.SOME_FORMAT.zip&url=https%3A%2F%2Fci.kbase.us%2Fservices%2Fshock-api';
+                'https://ci.kbase.us/services/blobstore/node/some_shock_id?download&del';
             expect(iframe.src).toBe(expectedUrl);
         });
 

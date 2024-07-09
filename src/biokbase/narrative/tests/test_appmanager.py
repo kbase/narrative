@@ -987,6 +987,22 @@ class AppManagerTestCase(unittest.TestCase):
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     @mock.patch(CLIENTS_SM, get_mock_client)
+    def test_validate_params_wildcard_type(self):
+        inputs = {
+            "input_ref": READS_OBJ_1,
+            "destination_dir": "workspace_export",
+            "format": "legacy_data_import_export",
+        }
+        app_id = "kb_staging_exporter/export_json_to_staging"
+        tag = "dev"
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
+        (params, ws_inputs) = app_util.validate_parameters(app_id, tag, spec_params, inputs)
+        assert params == inputs
+        assert ws_inputs == ["12345/7/1"]
+
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
     @mock.patch(CLIENTS, get_mock_client)
     def test_input_mapping(self):
         self.maxDiff = None

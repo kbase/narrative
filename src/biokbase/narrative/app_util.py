@@ -14,10 +14,11 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 app_version_tags = ["release", "beta", "dev"]
 
 
-def check_tag(tag, raise_exception: bool = False):
+def check_tag(tag: str, *, raise_exception: bool = False) -> bool:
     """Checks if the given tag is one of "release", "beta", or "dev".
+
     Returns a boolean.
-    if raise_exception == True and the tag is bad, raises a ValueError
+    if raise_exception == True and the tag is bad, raises a ValueError.
     """
     tag_exists = tag in app_version_tags
     if not tag_exists and raise_exception:
@@ -26,8 +27,9 @@ def check_tag(tag, raise_exception: bool = False):
     return tag_exists
 
 
-def map_inputs_from_job(job_inputs, app_spec):
+def map_inputs_from_job(job_inputs: list[Any], app_spec: dict[str, Any]) -> dict[str, Any]:
     """Unmaps the actual list of job inputs back to the parameters specified by app_spec.
+
     For example, the inputs given to a method might be a list like this:
     ['input1', {'ws': 'my_workspace', 'foo': 'bar'}]
     and the input mapping looks like:
@@ -84,7 +86,12 @@ def map_inputs_from_job(job_inputs, app_spec):
     return input_dict
 
 
-def _untransform(transform_type, value):
+def _untransform(transform_type: str, value):  # noqa: ANN001 , ANN202
+    """If the value is a string and we have a reference (not UPA) transform type, untransform it.
+
+    This turns it back into either the object name or id.
+    Note that value can be Any and this can return Any, which ruffles ruff.
+    """
     if transform_type in ["ref", "putative-ref", "unresolved-ref"] and isinstance(value, str):
         # shear off everything before the first '/' - there should just be one.
         slash = value.find("/")
@@ -94,11 +101,10 @@ def _untransform(transform_type, value):
     return value
 
 
-def app_param(p):
-    """TODO: create an AppParam class to hold and validate this
-    TODO: create a Spec class to hold, validate, and process App Specs
-    Converts a param dictionary from a NarrativeMethodStore param spec into this structure with
-    a number of optional keys:
+def app_param(p: dict[str, Any]) -> dict[str, Any]:  # noqa: C901, PLR0912
+    """Converts a param dictionary from a NarrativeMethodStore param spec.
+
+    Creates the following structure with optional keys:
     {
         "id": string
         "is_group": boolean
@@ -118,7 +124,9 @@ def app_param(p):
         "min_val": either the "min_float" or "min_int" field, if present
         "max_val": either the "max_float" or "max_int" field, if present
         "regex_constraint": string
-    }
+    }.
+    TODO: create an AppParam class to hold and validate this.
+    TODO: create a Spec class to hold, validate, and process App Specs
     """
     p_info = {"id": p["id"], "is_group": False}
 
@@ -149,7 +157,7 @@ def app_param(p):
     else:
         p_info["default"] = defaults[0] if len(defaults) > 0 else None
 
-    if "checkbox_options" in p and len(p["checkbox_options"].keys()) == 2:
+    if "checkbox_options" in p and len(p["checkbox_options"].keys()) == 2:  # noqa: PLR2004
         p_info["checkbox_map"] = [
             p["checkbox_options"]["checked_value"],
             p["checkbox_options"]["unchecked_value"],
@@ -176,22 +184,25 @@ def app_param(p):
     return p_info
 
 
-def map_outputs_from_state(state, params, app_spec):
+def map_outputs_from_state(
+    state: dict[str, Any], params: dict[str, Any], app_spec: dict[str, Any]
+) -> tuple[str, dict[str, Any]]:  # noqa: C901
     """Returns the dict of output values from a completed app.
+
     Also returns the output widget.
     """
     if "behavior" not in app_spec:
-        raise ValueError("Invalid app spec - unable to map outputs")
+        err_str = "Invalid app spec - unable to map outputs"
+        raise ValueError(err_str)
     widget_params = {}
     out_mapping_key = "kb_service_output_mapping"
     if out_mapping_key not in app_spec["behavior"]:
         # for viewers or short-running things, but the inner keys are the same.
         out_mapping_key = "output_mapping"
 
-    spec_params = dict(
-        (app_spec_param["id"], app_param(app_spec_param))
-        for app_spec_param in app_spec["parameters"]
-    )
+    spec_params = {
+        app_spec_param["id"]: app_param(app_spec_param) for app_spec_param in app_spec["parameters"]
+    }
 
     for out_param in app_spec["behavior"].get(out_mapping_key, []):
         value = None
@@ -202,7 +213,7 @@ def map_outputs_from_state(state, params, app_spec):
             value = out_param["constant_value"]
         elif "input_parameter" in out_param:
             input_param_id = out_param["input_parameter"]
-            value = params.get(input_param_id, None)
+            value = params.get(input_param_id)
         elif "service_method_output_path" in out_param:
             value = get_result_sub_path(
                 state["job_output"]["result"], out_param["service_method_output_path"]
@@ -213,7 +224,7 @@ def map_outputs_from_state(state, params, app_spec):
             spec_param = spec_params.get(input_param_id)
         value = transform_param_value(out_param.get("target_type_transform"), value, spec_param)
 
-        p_id = out_param.get("target_property", None)
+        p_id = out_param.get("target_property")
         if p_id is not None:
             widget_params[p_id] = value
         else:
@@ -227,14 +238,15 @@ def map_outputs_from_state(state, params, app_spec):
     return (output_widget, widget_params)
 
 
-def get_result_sub_path(result, path):
+def get_result_sub_path(result, path: list[str]):  # noqa: ANN201, ANN001
     """Peels the right value out of the result with the given path.
+
+    Inputs and results are complicated, hence the poor typing. See below
+    TODO: rewrite to, well, make more sense.
     result - list
         This is a list of objects - each object is either a singleton, list, or object.
     path - list
         This is a list of strings
-    pos - int
-        This is the position in path that we're looking at right now.
 
     A typical run looks like this:
     result = [{'report': 'asdf', 'report_ref': 'xyz'}]
@@ -278,35 +290,37 @@ def get_result_sub_path(result, path):
         elem = int(path_head)
         if elem >= len(result):
             return None
-        else:
-            return get_result_sub_path(result[elem], path_tail)
+        return get_result_sub_path(result[elem], path_tail)
     return get_result_sub_path(result.get(path_head), path_tail)
 
 
-def extract_ws_refs(app_id, tag, spec_params, params):
-    """Returns a list of workspace refs (xxx/yyy/zzz) from the given parameters,
-    if they are actual workspace objects.
-    """
+def extract_ws_refs(
+    app_id: str, tag: str, spec_params: list[dict[str, Any]], params: dict[str, Any]
+) -> list[str]:  # noqa: ARG001
+    """Returns a list of UPAs from the given parameters if they are actual workspace objects."""
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict((spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params)))
+    params_dict = {spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))}
     workspace = system_variable("workspace")
     ws_input_refs = []
     for p in spec_params:
         if p["id"] in params:
-            (wsref, err) = check_parameter(p, params[p["id"]], workspace, all_params=params_dict)
+            (wsref, _) = check_parameter(p, params[p["id"]], workspace, all_params=params_dict)
             if wsref is not None:
                 if isinstance(wsref, list):
                     for ref in wsref:
                         if ref is not None:
-                            ws_input_refs.append(ref)
+                            ws_input_refs.append(ref)  # noqa: PERF401 too complex for a list comp.
                 else:
                     ws_input_refs.append(wsref)
     return ws_input_refs
 
 
-def validate_parameters(app_id, tag, spec_params, params):
-    """Validates the dict of params against the spec_params. If all is good,
-    it updates a few parameters that need it - checkboxes go from
+def validate_parameters(
+    app_id: str, tag: str, spec_params: list[dict[str, Any]], params: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:  # noqa: C901, PLR0912
+    """Validates the dict of params against the spec_params.
+
+    If all is good, it updates a few parameters that need it - checkboxes go from
     True/False to 1/0, and sets default values where necessary.
     Then it returns a tuple like this:
     (dict_of_params, list_of_ws_refs)
@@ -320,7 +334,7 @@ def validate_parameters(app_id, tag, spec_params, params):
     spec_param_ids = [p["id"] for p in spec_params]
 
     # Cheater way for making a dict of params with param[id] => param
-    params_dict = dict((spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params)))
+    params_dict = {spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))}
 
     # First, test for presence.
     missing_params = [
@@ -390,8 +404,11 @@ def validate_parameters(app_id, tag, spec_params, params):
     return (params, ws_input_refs)
 
 
-def check_parameter(param, value, workspace, all_params: dict[str, Any] | None = None):
+def check_parameter(
+    param: dict[str, Any], value, workspace: str, all_params: dict[str, Any] | None = None
+) -> str | None:  # noqa: ANN001
     """Checks if the given value matches the rules provided in the param dict.
+
     If yes, returns None
     If no, returns a String with an error.
 
@@ -437,7 +454,10 @@ def check_parameter(param, value, workspace, all_params: dict[str, Any] | None =
     return validate_param_value(param, value, workspace)
 
 
-def validate_group_values(param, value, workspace, spec_params):
+def validate_group_values(
+    param: dict[str, Any], value: dict[str, Any], workspace: str, spec_params: list[dict[str, Any]]
+) -> tuple[list[str], list[str]]:
+    """Validates group parameter values and returns the references or errors."""
     ref = []
     err = []
 
@@ -461,9 +481,13 @@ def validate_group_values(param, value, workspace, spec_params):
     return (ref, err)
 
 
-def validate_param_value(param, value, workspace):
-    """Tests a value to make sure it's valid, based on the rules given in the
-    param dict. Returns None if valid, an error string if not.
+def validate_param_value(param: dict[str, Any], value, workspace: str) -> tuple[str, str | None]:  # noqa: ANN001, C901, PLR0911, PLR0912
+    """Tests a value to make sure it's valid, based on the rules given in the param dict.
+
+    Returns a tuple with the value transformed to a workspace reference (if applicable, or None),
+    and either and error string or None if valid.
+
+    TODO: Wow this is too complex. Rewrite someday.
 
     Parameters:
     -----------
@@ -539,13 +563,13 @@ def validate_param_value(param, value, workspace):
             if "/" in value:
                 path_items = [item.strip() for item in value.split(";")]
                 for path_item in path_items:
-                    if len(path_item.split("/")) > 3:
+                    if len(path_item.split("/")) > 3:  # noqa: PLR2004
                         return (
                             ws_ref,
                             (
                                 f"Data reference named {value} does not "
-                                + "have the right format - should be "
-                                + "workspace/object/version(optional)"
+                                "have the right format - should be "
+                                "workspace/object/version(optional)"
                             ),
                         )
                 info = clients.get("workspace").get_object_info_new({"objects": [{"ref": value}]})[
@@ -561,13 +585,13 @@ def validate_param_value(param, value, workspace):
                 ws_ref = f"{info[6]}/{info[0]}/{info[4]}"
             type_ok = False
             for t in param["allowed_types"]:
-                if re.match(t, info[2]):
+                if t == "*" or re.match(t, info[2]):
                     type_ok = True
             if not type_ok:
                 msg = f"Type of data object, {info[2]}, does not match allowed types"
                 return (ws_ref, msg)
-        except Exception as e:
-            print(e)
+        except Exception as e:  # noqa: BLE001
+            print(e)  # noqa: T201  this error might be useful to get printed out for the user.
             msg = f"Data object named {value} not found with this Narrative."
             return (ws_ref, msg)
 
@@ -586,7 +610,7 @@ def validate_param_value(param, value, workspace):
                     ws_ref,
                     f"Given value {value} should be <= {param['max_val']}",
                 )
-        except BaseException:
+        except TypeError:
             return (ws_ref, f"Given value {value} must be a number")
 
     if "min_val" in param:
@@ -596,7 +620,7 @@ def validate_param_value(param, value, workspace):
                     ws_ref,
                     f"Given value {value} should be >= {param['min_val']}",
                 )
-        except BaseException:
+        except TypeError:
             return (ws_ref, f"Given value {value} must be a number")
 
     # if it's an output object, make sure it follows the data object rules.
@@ -613,7 +637,7 @@ def validate_param_value(param, value, workspace):
     # in python and vice versa
     # if 'regex_constraint' in param:
     #     for regex in param['regex_constraint']:
-    #         regex_string = regex.get('regex')
+    #         regex_string = regex.get('regex')  # noqa: ERA001
     #         if not re.match(regex_string, value):
     #             return (ws_ref,
     #                     'Value {} does not match required regex {}'.format(
@@ -623,15 +647,21 @@ def validate_param_value(param, value, workspace):
     return (ws_ref, None)
 
 
-def resolve_single_ref(workspace, value):
+def resolve_single_ref(workspace: str, value: str) -> str:
+    """Resolves a reference to an UPA, if it isn't one already.
+
+    This contacts the workspace (by the workspace name) and returns an UPA form
+    of the input value if it's not already in a reference format.
+    """
     ret = None
     if "/" in value:
         path_items = [item.strip() for item in value.split(";")]
         for path_item in path_items:
-            if len(path_item.split("/")) > 3:
-                raise ValueError(
+            if len(path_item.split("/")) > 3:  # noqa: PLR2004
+                err_str = (
                     f"Object reference {value} has too many slashes - should be ws/object/version"
                 )
+                raise ValueError(err_str)
         info = clients.get("workspace").get_object_info_new({"objects": [{"ref": value}]})[0]
         path_items[len(path_items) - 1] = f"{info[6]}/{info[0]}/{info[4]}"
         ret = ";".join(path_items)
@@ -644,15 +674,17 @@ def resolve_single_ref(workspace, value):
     return ret
 
 
-def resolve_ref(workspace, value):
+def resolve_ref(workspace: str, value: str | list[str]) -> str | list[str]:
+    """Resolves a reference to ensure it's an UPA."""
     if isinstance(value, list):
         return [resolve_single_ref(workspace, v) for v in value]
-    else:
-        return resolve_single_ref(workspace, value)
+    return resolve_single_ref(workspace, value)
 
 
-def resolve_ref_if_typed(value, spec_param):
-    """For a given value and associated spec, if this is not an output param,
+def resolve_ref_if_typed(value: str, spec_param: dict[str, Any]) -> str:
+    """If the parameter expects a typed object input, resolve the reference.
+
+    For a given value and associated spec, if this is not an output param,
     then ensure that the reference points to an object in the current
     workspace, and transform the value into an absolute reference to it.
     """
@@ -665,11 +697,13 @@ def resolve_ref_if_typed(value, spec_param):
     return value
 
 
-def transform_param_value(
-    transform_type: str | None, value: Any, spec_param: dict[str, Any] | None
-) -> Any:
-    """Transforms an input according to the rules given in
-    NarrativeMethodStore.ServiceMethodInputMapping
+def transform_param_value(  # noqa: C901, PLR0912, PLR0911, ANN201
+    transform_type: str | None,
+    value,
+    spec_param: dict[str, Any] | None,  # noqa: ANN001
+):
+    """Transforms an input using the rules in NarrativeMethodStore.ServiceMethodInputMapping.
+
     Really, there are three types of transforms possible:
       1. ref - turns the input string into a workspace ref.
       2. int - tries to coerce the input string into an int.
@@ -778,8 +812,10 @@ def transform_param_value(
     raise ValueError(err_msg)
 
 
-def transform_object_value(transform_type: str | None, value: str | None) -> str | None:
-    """Cases:
+def transform_object_value(transform_type: str | None, value: str | None) -> str | None:  # noqa: PLR0911, C901
+    """Transforms an input value according to the app spec.
+
+    Cases:
     transform = ref, unresolved-ref, or putative-ref:
         - should return wsname / object name
     transform = upa or resolved-ref:
@@ -797,7 +833,6 @@ def transform_object_value(transform_type: str | None, value: str | None) -> str
     "putative-ref" is a special case where the value is an object name and the object may or
     may not exist. It is used to deal with the input from SpeciesTreeBuilder; if that app gets
     fixed, it can be removed.
-
     """
     if value is None:
         return None
@@ -836,9 +871,10 @@ def transform_object_value(transform_type: str | None, value: str | None) -> str
         transform = transform_type
         if transform is None:
             transform = "object name"
-        raise ValueError(
+        err_str = (
             f"Unable to find object reference '{search_ref}' to transform as {transform}: " + str(e)
         )
+        raise ValueError(err_str) from e
 
     if is_path or transform_type in ["resolved-ref", "upa"]:
         return ";".join(obj_info["paths"][0])

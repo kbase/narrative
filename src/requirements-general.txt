@@ -1,6 +1,6 @@
 appdirs==1.4.4
 beautifulsoup4==4.12.3
-certifi==2024.6.2
+certifi==2024.7.4
 chardet==5.0.0
 cryptography==42.0.8
 decorator==5.1.1
@@ -20,7 +20,7 @@ pyopenssl==24.1.0
 python-daemon==2.3.2
 python-dateutil==2.8.2
 rsa==4.9
-setuptools==69.5.1
+setuptools==70.0.0
 six==1.16.0
 terminado==0.18.0
 biopython==1.79

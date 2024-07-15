@@ -7,9 +7,20 @@ define([
     'kb_service/client/narrativeMethodStore',
     'common/html',
     'util/display',
+    'util/string',
     'kbaseReportView',
-], (Promise, $, UI, Runtime, Events, NarrativeMethodStore, html, DisplayUtil, KBaseReportView) => {
-    'use strict';
+], (
+    Promise,
+    $,
+    UI,
+    Runtime,
+    Events,
+    NarrativeMethodStore,
+    html,
+    DisplayUtil,
+    StringUtil,
+    KBaseReportView
+) => {
     const t = html.tag,
         div = t('div'),
         a = t('a'),
@@ -90,15 +101,34 @@ define([
             // the job output
             if (!reportInputs) {
                 return Promise.try(() => {
+                    const viewerName = result ? result.name : null;
                     const jobOutput = jobState.job_output
                         ? jobState.job_output.result
                         : 'no output found';
+                    if (viewerName === 'text-only') {
+                        ui.setContent('results.body', buildOutputText(result.params.result_text));
+                    } else {
+                        ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
+                    }
                     ui.getElement('results').classList.remove('hidden');
-                    ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
                 });
             }
             // otherwise, render the report
             return renderReportView(reportInputs);
+        }
+
+        function buildOutputText(resultText) {
+            // default if text is empty, null, or undefined
+            if (resultText === null || resultText === undefined || resultText === '') {
+                resultText = 'App completed successfully.';
+            }
+            // cap the results at 1,000 characters.
+            if (resultText.length > 1000) {
+                resultText =
+                    resultText.substring(0, 1000) +
+                    ` [truncated from ${resultText.length} characters]`;
+            }
+            return div(StringUtil.escape(resultText));
         }
 
         function lazyRenderReport() {

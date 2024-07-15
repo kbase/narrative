@@ -6,8 +6,6 @@ define([
     'testUtil',
     'narrativeMocks',
 ], (ResultsViewer, Props, Jupyter, Config, TestUtil, Mocks) => {
-    'use strict';
-
     const mockModelData = {
         exec: {},
         app: {
@@ -23,6 +21,7 @@ define([
     };
 
     const mockOutputWidgetInfo = {
+        name: 'no-display',
         params: {
             report_name: 'some_report',
             report_ref: '1/2/3',
@@ -55,6 +54,32 @@ define([
             data.exec.outputWidgetInfo = TestUtil.JSONcopy(mockOutputWidgetInfo);
         }
         return Props.make({ data });
+    }
+
+    /**
+     * Builds and returns a mock data model (Props object) and final job state.
+     * @param {int} textLength
+     * @returns
+     */
+    function buildTextModel(textLength) {
+        const data = TestUtil.JSONcopy(mockModelData);
+        const resultText = 'A'.repeat(textLength);
+        const outputInfo = {
+            name: 'text-only',
+            params: {
+                result_text: resultText,
+            },
+        };
+        const state = {
+            job_output: {
+                result: [outputInfo],
+            },
+        };
+        data.exec.outputWidgetInfo = outputInfo;
+        return {
+            model: Props.make({ data }),
+            state,
+        };
     }
 
     describe('App Cell Results Viewer tests', () => {
@@ -121,6 +146,18 @@ define([
                 expect(node.innerHTML).toContain(k);
                 expect(node.innerHTML).toContain(v);
             }
+        });
+
+        it('starts a viewer with text output', async () => {
+            const { model, state } = buildTextModel(10);
+            const viewer = ResultsViewer.make({ model });
+            await viewer.start({
+                node,
+                jobState: state,
+                isParentJob: false,
+            });
+            expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
+            expect(node.innerHTML).toContain('A'.repeat(10));
         });
 
         it('starts and stops a viewer with a report from a batch job', async () => {

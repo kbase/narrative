@@ -160,6 +160,21 @@ define([
             expect(node.innerHTML).toContain('A'.repeat(10));
         });
 
+        it('starts a viewer with truncated output', async () => {
+            const textLength = 10000;
+            const maxLen = 1000;
+            const { model, state } = buildTextModel(textLength);
+            const viewer = ResultsViewer.make({ model });
+            await viewer.start({
+                node,
+                jobState: state,
+                isParentJob: false,
+            });
+            expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
+            expect(node.innerHTML).toContain('A'.repeat(maxLen));
+            expect(node.innerHTML).toContain(`[truncated from ${textLength} characters]`);
+        });
+
         it('starts and stops a viewer with a report from a batch job', async () => {
             const model = buildModel({ hasReport: true, isParentJob: true, jobComplete: true });
             const viewer = ResultsViewer.make({ model });

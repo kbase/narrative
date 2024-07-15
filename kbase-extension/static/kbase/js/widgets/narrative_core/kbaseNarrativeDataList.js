@@ -53,8 +53,6 @@ define([
     kbaseDataCard,
     DataProvider
 ) => {
-    'use strict';
-
     return KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: kbaseAuthenticatedWidget,
@@ -961,7 +959,7 @@ define([
                         token: this._attributes.auth.token,
                         type: type,
                         objId: objId,
-                        ref: objRef,
+                        upa: objRef,
                         objName: objData.objectInfo.name,
                         downloadSpecCache: this.downloadSpecCache,
                     });

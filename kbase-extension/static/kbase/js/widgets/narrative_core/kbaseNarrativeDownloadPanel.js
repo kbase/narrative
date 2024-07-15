@@ -8,152 +8,147 @@ define([
     'kbwidget',
     'jquery',
     'narrativeConfig',
+    'util/kbaseApiUtil',
     'kbase-client-api',
     'kbase-generic-client-api',
     'base/js/namespace',
-], (Promise, KBWidget, $, Config, kbase_client_api, GenericClient, Jupyter) => {
-    'use strict';
+], (Promise, KBWidget, $, Config, APIUtil, kbase_client_api, GenericClient, Jupyter) => {
+    const STAGING_EXPORT_APP = 'kb_staging_exporter/export_to_staging';
+    const JSON_EXPORT_APP = 'kb_staging_exporter/export_json_to_staging';
+
     return KBWidget({
         name: 'kbaseNarrativeDownloadPanel',
         version: '1.0.0',
+        // TODO: remove / refactor duplication in options.
         options: {
             token: null,
             type: null,
             objId: null,
-            ref: null,
+            upa: null,
             objName: null,
             downloadSpecCache: null, // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
         },
-        token: null,
-        type: null, // Type of workspace object to show downloaders for
-        objId: null,
         loadingImage: Config.get('loading_gif'),
-        wsUrl: Config.url('workspace'),
-        ujsURL: Config.url('user_and_job_state'),
-        shockURL: Config.url('shock'),
-        exportURL: Config.url('data_import_export'),
-        useDynamicDownloadSupport: false,
-        nmsURL: Config.url('narrative_method_store'),
         eeURL: Config.url('execution_engine2'),
-        srvWizURL: Config.url('service_wizard'),
         timer: null,
-        downloadSpecCache: null, // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
+        timeInterval: 5000,
 
         init: function (options) {
             this._super(options);
-            this.token = this.options.token;
-            this.type = this.options.type;
-            this.objId = this.options.objId;
-            this.objName = this.options.objName;
-            this.ref = this.options.ref;
-            if (!this.objId) {
-                const refPathItems = this.ref.split(';');
-                this.objId = refPathItems[refPathItems.length - 1].trim().split('/')[1];
-            }
-            this.downloadSpecCache = options['downloadSpecCache'];
-            const lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
-            if (lastUpdateTime) {
-                this.render();
+            Object.assign(this, options);
+            this.renderStructure();
+            this.downloadSpecCache = options.downloadSpecCache;
+            if (this.downloadSpecCache.lastUpdateTime) {
+                this.renderDownloadButtons();
+                return this;
             } else {
-                const nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
-                Promise.resolve(
+                // TODO: remove this, and fetch downloader info from NarrativeService, in a TBD function.
+                // eslint-disable-next-line no-undef
+                const nms = new NarrativeMethodStore(Config.url('narrative_method_store'), {
+                    token: this.token,
+                });
+                return Promise.resolve(
                     nms.list_categories({ load_methods: 0, load_apps: 0, load_types: 1 })
                 )
                     .then((data) => {
-                        const aTypes = data[3],
-                            types = {};
-                        Object.keys(aTypes).forEach((key) => {
-                            if (aTypes[key]['loading_error']) {
-                                console.error(
-                                    'Error loading type [' +
-                                        key +
-                                        ']: ' +
-                                        aTypes[key]['loading_error']
-                                );
-                            }
-                            types[key] = aTypes[key];
-                        });
-                        this.downloadSpecCache['types'] = types;
-                        this.downloadSpecCache['lastUpdateTime'] = Date.now();
-                        this.render();
+                        this.updateDownloadSpecCache(data);
+                        this.renderDownloadButtons();
                     })
-                    .catch((error) => {
-                        this.showError(error);
-                    });
+                    .catch((error) => this.showError(error))
+                    .finally(() => this);
             }
-            return this;
         },
 
-        render: function () {
-            const self = this;
-            const downloadPanel = this.$elem;
+        updateDownloadSpecCache: function (data) {
+            const types = {};
+            Object.keys(data[3]).forEach((key) => {
+                types[key] = data[3][key];
+            });
+            this.downloadSpecCache = {
+                types,
+                lastUpdateTime: Date.now(),
+            };
+        },
 
-            const $labeltd = $('<td>')
-                .css({ 'white-space': 'nowrap', padding: '1px' })
-                .append('Export as:');
-            const $btnTd = $('<td>').css({ padding: '1px' });
-            downloadPanel.append(
-                $('<table>').css({ width: '100%' }).append('<tr>').append($labeltd).append($btnTd)
-            );
-
-            const addDownloader = (descr) => {
-                const $dlBtn = $('<button>').addClass('kb-data-list-btn').append(descr.name);
-
-                if (descr.name.toLocaleLowerCase() === 'staging') {
-                    $dlBtn.click(() => {
-                        Jupyter.narrative.addAndPopulateApp(
-                            'kb_staging_exporter/export_to_staging',
-                            'beta',
-                            {
-                                input_ref: self.objName,
-                            }
-                        );
+        makeDownloaderButton: function (dlInfo, makeCell) {
+            const $dlBtn = $('<button>').addClass('kb-data-list-btn').append(dlInfo.name);
+            $dlBtn.click(() => {
+                if (makeCell) {
+                    Jupyter.narrative.addAndPopulateApp(dlInfo.appId, APIUtil.getAppVersionTag(), {
+                        input_ref: this.objName,
                     });
                 } else {
-                    $dlBtn.click(() => {
-                        $btnTd.find('.kb-data-list-btn').prop('disabled', true);
-                        self.runDownloader(self.type, self.ref, self.objName, descr);
-                    });
+                    $dlBtn.parent().find('.kb-data-list-btn').prop('disabled', true);
+                    this.startDownloader(dlInfo)
+                        .then(([jobId, wsObjectName]) => {
+                            this.waitForDownloadJob(jobId, wsObjectName);
+                        })
+                        .catch((error) => {
+                            this.showError(error);
+                        });
                 }
-                $btnTd.append($dlBtn);
-            };
+            });
+            return $dlBtn;
+        },
 
-            const downloaders = self.prepareDownloaders(self.type);
-            downloaders.forEach((dl) => addDownloader(dl));
+        renderStructure: function () {
+            const $container = $('<div>');
+            const $label = $('<div>')
+                .addClass('kb-download-label')
+                .css({ 'white-space': 'nowrap', padding: '1px', 'align-self': 'center' })
+                .append('Export as:');
+            const $buttons = $('<div>')
+                .addClass('kb-download-buttons')
+                .css({ padding: '1px', 'text-align': 'left' });
+            $container.css({ display: 'flex' }).append($label).append($buttons);
 
-            $btnTd.append(
-                $('<button>')
-                    .addClass('kb-data-list-btn')
-                    .append('JSON')
-                    .click(() => {
-                        const urlSuffix =
-                            '/download?' +
-                            'ref=' +
-                            encodeURIComponent(self.ref) +
-                            '&url=' +
-                            encodeURIComponent(self.wsUrl) +
-                            '&wszip=1' +
-                            '&name=' +
-                            encodeURIComponent(self.objName + '.JSON.zip');
-                        self.downloadFile(urlSuffix);
-                    })
+            this.$elem.append($container);
+            this.$statusDiv = $('<div>')
+                .addClass('kb-download-status')
+                .css({ margin: '15px', 'word-wrap': 'wrap-word', overflow: 'none' });
+            this.$elem.append(this.$statusDiv.hide());
+        },
+
+        renderDownloadButtons: function () {
+            const downloaders = this.prepareDownloaders(this.type);
+            const $btnPanel = this.$elem.find('.kb-download-buttons');
+            downloaders.forEach((dlInfo) => {
+                if (dlInfo.name.toLocaleLowerCase() === 'staging') {
+                    $btnPanel.append(
+                        this.makeDownloaderButton(
+                            {
+                                name: 'STAGING',
+                                appId: STAGING_EXPORT_APP,
+                            },
+                            true
+                        )
+                    );
+                } else {
+                    $btnPanel.append(this.makeDownloaderButton(dlInfo));
+                }
+            });
+            $btnPanel.append(
+                this.makeDownloaderButton(
+                    {
+                        name: 'JSON',
+                        appId: JSON_EXPORT_APP,
+                    },
+                    true
+                )
             );
-            $btnTd.append(
+
+            $btnPanel.append(
                 $('<button>')
                     .addClass('kb-data-list-cancel-btn')
                     .append('Cancel')
                     .click(() => {
-                        self.stopTimer();
-                        downloadPanel.empty();
+                        this.stopTimer();
+                        this.$elem.empty();
                     })
             );
-
-            self.$statusDiv = $('<div>').css({ margin: '15px' });
-            self.$statusDivContent = $('<div>');
-            self.$statusDiv.append(self.$statusDivContent);
-            downloadPanel.append(self.$statusDiv.hide());
         },
 
+        // TODO: move this to result of as-yet-unwritten NarrativeService call
         prepareDownloaders: function (type) {
             const ret = [];
             if (!this.downloadSpecCache['types']) {
@@ -165,198 +160,100 @@ define([
                 : this.downloadSpecCache['types'][module];
             if (typeSpec && typeSpec['export_functions']) {
                 Object.keys(typeSpec['export_functions']).forEach((name) => {
-                    ret.push({ name: name, local_function: typeSpec['export_functions'][name] });
+                    ret.push({ name: name, appId: typeSpec['export_functions'][name] });
                 });
-            } else {
-                console.log(
-                    'Type [' +
-                        type +
-                        "] was skipped (no 'export_functions' block in " +
-                        'type-spec).'
-                );
             }
             return ret;
         },
 
-        getVersionTag: function () {
-            let tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
-            if (!tag) {
-                tag = 'release';
-            }
-            return tag;
-        },
-
-        runDownloader: function (type, ref, objId, descr) {
-            // descr is {name: ..., local_function: ...}
+        startDownloader: function (appInfo) {
             this.showMessage(
                 '<img src="' + this.loadingImage + '" /> Export status: Preparing data'
             );
             this.$statusDiv.show();
-            const wsObjectName = objId + '.' + descr.name.replace(/[^a-zA-Z0-9|\.\-_]/g, '_');
-            const tag = this.getVersionTag();
-            const method = descr.local_function.replace('/', '.');
-            const genericClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
+            const tag = APIUtil.getAppVersionTag();
+            const method = appInfo.appId.replace('/', '.');
+            const eeClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
 
-            Promise.resolve(
-                genericClient.sync_call('execution_engine2.run_job', [
+            return Promise.resolve(
+                eeClient.sync_call('execution_engine2.run_job', [
                     {
                         method: method,
-                        params: [{ input_ref: ref }],
+                        params: [{ input_ref: this.upa }],
                         service_ver: tag,
                         app_id: method,
                     },
                 ])
-            )
-                .then((data) => {
-                    const jobId = data[0];
-                    console.log(
-                        'Running ' +
-                            descr.local_function +
-                            ' (tag="' +
-                            tag +
-                            '"), ' +
-                            'job ID: ' +
-                            jobId
-                    );
-                    this.waitForSdkJob(jobId, wsObjectName);
-                })
-                .catch((error) => {
-                    console.error(error);
-                    this.showError(error);
-                });
+            ).then(([jobId]) => [jobId]);
         },
 
-        waitForSdkJob: function (jobId, wsObjectName) {
-            const self = this;
-            const genericClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
+        waitForDownloadJob: function (jobId) {
+            const eeClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
             let skipLogLines = 0;
-            let lastLogLine = null;
-            const timeLst = function (event) {
-                genericClient.sync_call(
-                    'execution_engine2.check_job',
-                    [{ job_id: jobId }],
-                    (data) => {
-                        const jobState = data[0];
-                        if (jobState['running']) {
-                            genericClient.sync_call(
-                                'execution_engine2.get_job_logs',
-                                [{ job_id: jobId, skip_lines: skipLogLines }],
-                                (data2) => {
-                                    const logLines = data2[0].lines;
-                                    for (let i = 0; i < logLines.length; i++) {
-                                        lastLogLine = logLines[i];
-                                        if (lastLogLine.is_error) {
-                                            console.error('Export logging: ' + lastLogLine.line);
-                                        } else {
-                                            console.log('Export logging: ' + lastLogLine.line);
-                                        }
-                                    }
-                                    skipLogLines += logLines.length;
-                                    const complete = jobState['finished'];
-                                    const error = jobState['error'];
-                                    if (complete) {
-                                        self.stopTimer();
-                                        if (error) {
-                                            console.error(error);
-                                            self.showError(error['message']);
-                                        } else {
-                                            console.log('Export is complete');
-                                            // Starting download from Shock
-                                            self.$statusDiv.hide();
-                                            self.$elem
-                                                .find('.kb-data-list-btn')
-                                                .prop('disabled', false);
-                                            const result = jobState['job_output']['result'];
-                                            self.downloadUJSResults(
-                                                result[0].shock_id,
-                                                self.shockURL,
-                                                wsObjectName
-                                            );
-                                        }
-                                    } else {
-                                        const status =
-                                            skipLogLines == 0
-                                                ? jobState['job_state']
-                                                : lastLogLine.line;
-                                        if (skipLogLines == 0)
-                                            console.log('Export status: ' + status);
-                                        self.showMessage(
-                                            '<img src="' +
-                                                self.loadingImage +
-                                                '" /> ' +
-                                                'Export status: ' +
-                                                status
-                                        );
-                                    }
-                                },
-                                (data) => {
-                                    self.stopTimer();
-                                    console.log(data.error.message);
-                                    self.showError(data.error.message);
-                                }
+            const timeLst = () => {
+                Promise.resolve(
+                    eeClient.sync_call('execution_engine2.check_job', [{ job_id: jobId }])
+                )
+                    .then(([jobState]) => {
+                        if (!jobState.running) {
+                            return [{}, []];
+                        }
+                        return Promise.resolve(
+                            eeClient.sync_call('execution_engine2.get_job_logs', [
+                                { job_id: jobId, skip_lines: skipLogLines },
+                            ])
+                        ).then((logData) => {
+                            return [jobState, logData[0].lines];
+                        });
+                    })
+                    .then(([jobState, logLines]) => {
+                        if (jobState.finished) {
+                            this.stopTimer();
+                            if (jobState.error) {
+                                this.showError(jobState.error.message);
+                            } else {
+                                this.finishDownload(jobState.job_output.result[0].shock_id);
+                            }
+                        } else if (logLines.length) {
+                            skipLogLines += logLines.length;
+                            const line = logLines[logLines.length - 1].line;
+                            const status = skipLogLines === 0 ? jobState.status : line;
+                            this.showMessage(
+                                `<img src="${this.loadingImage}"/> Export status: ${status}`
                             );
                         }
-                    },
-                    (data) => {
-                        self.stopTimer();
-                        console.log(data.error.message);
-                        self.showError(data.error.message);
-                    }
-                );
+                    })
+                    .catch((error) => {
+                        this.stopTimer();
+                        this.showError(error);
+                    });
             };
-            self.timer = setInterval(timeLst, 5000);
+
+            this.timer = setInterval(timeLst, this.timeInterval);
             timeLst();
         },
 
-        downloadUJSResults: function (shockNode, remoteShockUrl, wsObjectName, unzip) {
-            const self = this;
+        finishDownload: function (shockNode) {
+            this.$statusDiv.empty().hide();
+            this.$elem.find('.kb-data-list-btn').prop('disabled', false);
+            // once upon a time, there were versions where shockNode ids, or other results
+            // from the download run, could result in URL formats like:
+            // https://some_shock_url/path/to/shock/some_shock_id?param=1&param=2
+            // where "some_shock_id" is really what we care about. This extracts
+            // that id out of those URLs.
             let elems = shockNode.split('/');
-            if (elems.length > 1) shockNode = elems[elems.length - 1];
-            elems = shockNode.split('?');
-            if (elems.length > 0) shockNode = elems[0];
-            console.log('Shock node ID: ' + shockNode);
-            const shockClient = new ShockClient({ url: self.shockURL, token: self.token });
-            const downloadShockNodeWithName = function (name) {
-                let urlSuffix = '/download?id=' + shockNode + '&del=1';
-                if (unzip) {
-                    urlSuffix += '&unzip=' + encodeURIComponent(unzip);
-                } else {
-                    urlSuffix += '&name=' + encodeURIComponent(name);
-                }
-                if (remoteShockUrl) urlSuffix += '&url=' + encodeURIComponent(remoteShockUrl);
-                self.downloadFile(urlSuffix);
-            };
-            downloadShockNodeWithName(wsObjectName + '.zip');
-        },
-
-        downloadFile: function (urlSuffix) {
-            const self = this;
-            if (self.useDynamicDownloadSupport) {
-                const genericClient = new GenericClient(
-                    self.srvWizURL,
-                    { token: self.token },
-                    null,
-                    false
-                );
-                genericClient.sync_call(
-                    'ServiceWizard.get_service_status',
-                    [{ module_name: 'NarrativeDownloadSupport', version: 'dev' }],
-                    (data) => {
-                        const urlPrefix = data[0]['url'];
-                        self.downloadFileInner(urlPrefix + urlSuffix);
-                    },
-                    (error) => {
-                        console.error(error);
-                        self.showError(error);
-                    }
-                );
-            } else {
-                self.downloadFileInner(self.exportURL + urlSuffix);
+            if (elems.length > 1) {
+                shockNode = elems[elems.length - 1];
             }
+            elems = shockNode.split('?');
+            if (elems.length > 0) {
+                shockNode = elems[0];
+            }
+            const downloadUrl = `${Config.url('blobstore')}/node/${shockNode}?download&del`;
+            this.downloadFile(downloadUrl);
         },
 
-        downloadFileInner: function (url) {
-            console.log('Downloading url=' + url);
+        downloadFile: function (downloadUrl) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -365,30 +262,27 @@ define([
                 iframe.style.display = 'none';
                 document.body.appendChild(iframe);
             }
-            iframe.src = url;
+            iframe.src = downloadUrl;
         },
 
         showMessage: function (msg) {
-            const self = this;
-            self.$statusDivContent.empty();
-            self.$statusDivContent.append(msg);
+            this.$statusDiv.empty().append(msg);
         },
 
-        showError: function (msg) {
-            const self = this;
-            if (typeof msg === 'object' && msg.error) {
-                msg = msg.error;
-                if (typeof msg === 'object' && msg.message) {
-                    msg = msg.message;
+        showError: function (error) {
+            if (typeof error === 'object') {
+                if (error.error) {
+                    error = error.error;
+                } else if (error.message) {
+                    error = error.message;
                 }
             }
-            self.$statusDivContent.empty();
             // error is final state, so reactivate!
-            self.$elem.find('.kb-data-list-btn').prop('disabled', false);
-            self.$statusDivContent.append(
+            this.$elem.find('.kb-data-list-btn').prop('disabled', false);
+            this.$statusDiv.empty().append(
                 $('<span>')
                     .css({ color: '#F44336' })
-                    .append('Error: ' + msg)
+                    .append('Error: ' + error)
             );
         },
 

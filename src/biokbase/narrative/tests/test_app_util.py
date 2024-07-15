@@ -262,6 +262,11 @@ app_param_cases = [
     ),
     (
         "text",
+        {"text_options": {"valid_ws_types": ["*", "FooBar.Baz"]}},
+        {"allowed_types": ["*", "FooBar.Baz"]},
+    ),
+    (
+        "text",
         {"text_options": {"regex_constraint": "/\\d+/"}},
         {"regex_constraint": "/\\d+/"},
     ),

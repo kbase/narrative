@@ -34,7 +34,6 @@ define([
     Events,
     OutputWidget
 ) => {
-    'use strict';
     return KBWidget({
         name: 'kbaseReportView',
         version: '1.0.0',
@@ -86,26 +85,15 @@ define([
         },
 
         /**
-         * This builds a link to the data_import_export service for downloading some file from
+         * This builds a link to the Blobstore service for downloading some file from
          * a shock node. This gets used for downloading files referenced from the report object.
          * If the given url is not really a shock node, this returns null.
          * @param {string} shockUrl - the URL to the shock node containing some file to fetch
-         * @param {string} name - the name of the file to download
          */
-        importExportLink: function (shockUrl, name) {
+        importExportLink: function (shockUrl) {
             const m = shockUrl.match(/\/node\/(.+)$/);
             if (m) {
-                const query = {
-                    id: m[1],
-                    wszip: 0,
-                    name: name,
-                };
-                const queryString = Object.keys(query)
-                    .map((key) => {
-                        return [key, query[key]].map(encodeURIComponent).join('=');
-                    })
-                    .join('&');
-                return Config.url('data_import_export') + '/download?' + queryString;
+                return `${Config.url('blobstore')}/node/${m[1]}?download`;
             }
             return null;
         },
@@ -479,18 +467,16 @@ define([
 
             const downloadIframeId = 'file-download-' + new UUID(4).format();
             const linkList = ul(
-                fileLinks.map((link, idx) => {
+                fileLinks.map((link) => {
                     const linkText = link.name || link.URL;
+                    const dlLink = this.importExportLink(link.URL);
                     return li(
                         a(
                             {
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: () => {
-                                        const dlLink = this.importExportLink(
-                                            link.URL,
-                                            link.name || 'download-' + idx
-                                        );
+                                    handler: (e) => {
+                                        e.preventDefault();
                                         ui.getElement(downloadIframeId).setAttribute('src', dlLink);
                                     },
                                 }),
@@ -498,6 +484,7 @@ define([
                                 type: 'button',
                                 ariaLabel: `download file ${linkText}`,
                                 download: 'download',
+                                href: dlLink,
                             },
                             linkText
                         )

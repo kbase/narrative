@@ -92,26 +92,19 @@ define([
         },
 
         renderStructure: function () {
-            const $container = $('<div>');
-            const $label = $('<div>')
-                .addClass('kb-download-label')
-                .css({ 'white-space': 'nowrap', padding: '1px', 'align-self': 'center' })
-                .append('Export as:');
-            const $buttons = $('<div>')
-                .addClass('kb-download-buttons')
-                .css({ padding: '1px', 'text-align': 'left' });
-            $container.css({ display: 'flex' }).append($label).append($buttons);
+            const $container = $('<div>').addClass('kb-download-panel');
+            const $label = $('<div>').addClass('kb-download-panel__label').append('Export as:');
+            const $buttons = $('<div>').addClass('kb-download-panel__buttons');
+            $container.append($label).append($buttons);
 
             this.$elem.append($container);
-            this.$statusDiv = $('<div>')
-                .addClass('kb-download-status')
-                .css({ margin: '15px', 'word-wrap': 'wrap-word', overflow: 'none' });
+            this.$statusDiv = $('<div>').addClass('kb-download-panel__status');
             this.$elem.append(this.$statusDiv.hide());
         },
 
         renderDownloadButtons: function () {
             const downloaders = this.prepareDownloaders(this.type);
-            const $btnPanel = this.$elem.find('.kb-download-buttons');
+            const $btnPanel = this.$elem.find('.kb-download-panel__buttons');
             downloaders.forEach((dlInfo) => {
                 if (dlInfo.name.toLocaleLowerCase() === 'staging') {
                     $btnPanel.append(
@@ -281,7 +274,7 @@ define([
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
             this.$statusDiv.empty().append(
                 $('<span>')
-                    .css({ color: '#F44336' })
+                    .addClass('kb-download-panel__status_error')
                     .append('Error: ' + error)
             );
         },

@@ -58,19 +58,18 @@ define([
 
     /**
      * Builds and returns a mock data model (Props object) and final job state.
-     * @param {int} textLength
+     * @param {string} text - if present, this gets used instead of a random string
      * @returns
      */
-    function buildTextModel(textLength) {
+    function buildTextModel(resultText) {
         const data = TestUtil.JSONcopy(mockModelData);
-        const resultText = 'A'.repeat(textLength);
         const outputInfo = {
             name: 'text-only',
             params: {
                 result_text: resultText,
             },
         };
-        const state = {
+        const jobState = {
             job_output: {
                 result: [outputInfo],
             },
@@ -78,7 +77,7 @@ define([
         data.exec.outputWidgetInfo = outputInfo;
         return {
             model: Props.make({ data }),
-            state,
+            jobState,
         };
     }
 
@@ -149,30 +148,60 @@ define([
         });
 
         it('starts a viewer with text output', async () => {
-            const { model, state } = buildTextModel(10);
+            const resultText = 'ABCDEFGHIJKL';
+            const { model, jobState } = buildTextModel(resultText);
             const viewer = ResultsViewer.make({ model });
             await viewer.start({
                 node,
-                jobState: state,
+                jobState,
                 isParentJob: false,
             });
             expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
-            expect(node.innerHTML).toContain('A'.repeat(10));
+            expect(node.innerHTML).toContain(resultText);
         });
 
         it('starts a viewer with truncated output', async () => {
             const textLength = 10000;
+            const resultText = 'A'.repeat(textLength);
             const maxLen = 1000;
-            const { model, state } = buildTextModel(textLength);
+            const { model, jobState } = buildTextModel(resultText);
             const viewer = ResultsViewer.make({ model });
             await viewer.start({
                 node,
-                jobState: state,
+                jobState,
                 isParentJob: false,
             });
             expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
-            expect(node.innerHTML).toContain('A'.repeat(maxLen));
+            expect(node.innerHTML).toContain(resultText.substring(0, maxLen));
             expect(node.innerHTML).toContain(`[truncated from ${textLength} characters]`);
+        });
+
+        const defaultCases = [null, undefined, {}, [], '', '   '];
+        defaultCases.forEach((testCase) =>
+            it(`creates a text viewer with default success for input ${testCase}`, async () => {
+                const { model, jobState } = buildTextModel(testCase);
+                const viewer = ResultsViewer.make({ model });
+                await viewer.start({
+                    node,
+                    jobState,
+                    isParentJob: false,
+                });
+                expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
+                expect(node.innerHTML).toContain('App completed successfully.');
+            })
+        );
+
+        it('creates a text viewer that escapes html', async () => {
+            const resultText = '<script>alert("this failed!")</script>';
+            const { model, jobState } = buildTextModel(resultText);
+            const viewer = ResultsViewer.make({ model });
+            await viewer.start({
+                node,
+                jobState,
+                isParentJob: false,
+            });
+            expect(node.querySelector('.kb-app-results-tab')).toBeDefined();
+            expect(node.innerHTML).toContain('&lt;script&gt;alert');
         });
 
         it('starts and stops a viewer with a report from a batch job', async () => {

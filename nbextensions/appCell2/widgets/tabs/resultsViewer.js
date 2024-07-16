@@ -117,11 +117,24 @@ define([
             return renderReportView(reportInputs);
         }
 
+        /**
+         * Expects that the result text should be a string, but handles other cases as well.
+         * If resultText is not a string or number, or is an empty string, this sets the text
+         * to "App completed successfully." Otherwise, it truncates the result to 1000 characters.
+         *
+         * This then gets HTML-escaped and embedded in a div for returning.
+         * @param {str} resultText
+         * @returns
+         */
         function buildOutputText(resultText) {
             // default if text is empty, null, or undefined
-            if (resultText === null || resultText === undefined || resultText === '') {
+            if (
+                !(typeof resultText === 'string' && resultText.trim().length > 0) &&
+                typeof resultText !== 'number'
+            ) {
                 resultText = 'App completed successfully.';
             }
+            resultText = String(resultText).trim();
             // cap the results at 1,000 characters.
             if (resultText.length > 1000) {
                 resultText =

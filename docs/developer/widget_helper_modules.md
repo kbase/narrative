@@ -21,7 +21,6 @@ This replies with the currently configured service (or other) url endpoints. Sup
 ```
 awe
 catalog
-data_import_export
 fba
 feature_values
 gene_families

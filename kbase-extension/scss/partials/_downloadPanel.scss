@@ -1,0 +1,27 @@
+.kb-download-panel {
+    display: flex;
+
+    // .kb-download-panel__label
+    &__label {
+        white-space: nowrap;
+        padding: 1px;
+        align-self: center;
+    }
+
+    // .kb-download-panel__buttons
+    &__buttons {
+        text-align: left;
+        padding: 1px;
+    }
+
+    // .kb-download-panel__status
+    &__status {
+        margin: 15px;
+        word-wrap: wrap-word;
+        overflow: none;
+
+        &__error {
+            color: use-color('error');
+        }
+    }
+}

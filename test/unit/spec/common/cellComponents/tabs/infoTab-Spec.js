@@ -3,7 +3,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
     Props,
     TestUtil
 ) => {
-    fdescribe('The App Info Tab module', () => {
+    describe('The App Info Tab module', () => {
         it('loads', () => {
             expect(InfoTab).not.toBe(null);
         });
@@ -14,7 +14,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
         });
     });
 
-    fdescribe('The App Info Tab instance', () => {
+    describe('The App Info Tab instance', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
         });

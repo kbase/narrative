@@ -3,9 +3,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
     Props,
     TestUtil
 ) => {
-    'use strict';
-
-    describe('The App Info Tab module', () => {
+    fdescribe('The App Info Tab module', () => {
         it('loads', () => {
             expect(InfoTab).not.toBe(null);
         });
@@ -16,7 +14,7 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
         });
     });
 
-    describe('The App Info Tab instance', () => {
+    fdescribe('The App Info Tab instance', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
         });
@@ -85,6 +83,13 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                         {
                             ui_name: 'Adapters',
                             id: 'adapters',
+                        },
+                        {
+                            text_options: {
+                                valid_ws_types: ['*', 'SomeModule.SomeType'],
+                            },
+                            ui_name: 'Any old object',
+                            id: 'any_old_object',
                         },
                     ],
                 },
@@ -303,6 +308,19 @@ define(['common/cellComponents/tabs/infoTab', 'common/props', 'testUtil'], (
                     expect(
                         paramTwo.querySelector(`.${cssBaseClass}__param--ui-name`).textContent
                     ).toBe(appData[APP.ONE.ID].app.spec.parameters[1].ui_name);
+                });
+
+                it('renders no links for a parameter than can be a wildcard type', () => {
+                    const paramThree = container.querySelectorAll(
+                        `.${cssBaseClass}__list_item--params`
+                    )[2];
+                    expect(
+                        paramThree.querySelector(`.${cssBaseClass}__param--id`).textContent
+                    ).toBe(appData[APP.ONE.ID].app.spec.parameters[2].id);
+                    expect(
+                        paramThree.querySelector(`.${cssBaseClass}__param--ui-name`).textContent
+                    ).toBe(appData[APP.ONE.ID].app.spec.parameters[2].ui_name);
+                    expect(paramThree.querySelectorAll('a').length).toBe(0);
                 });
 
                 it('renders run stats correctly', () => {

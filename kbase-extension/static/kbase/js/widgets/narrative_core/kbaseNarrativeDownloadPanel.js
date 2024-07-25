@@ -15,6 +15,7 @@ define([
 ], (Promise, KBWidget, $, Config, APIUtil, kbase_client_api, GenericClient, Jupyter) => {
     const STAGING_EXPORT_APP = 'kb_staging_exporter/export_to_staging';
     const JSON_EXPORT_APP = 'kb_staging_exporter/export_json_to_staging';
+    const CSS_BASE = 'kb-download-panel';
 
     return KBWidget({
         name: 'kbaseNarrativeDownloadPanel',
@@ -92,19 +93,19 @@ define([
         },
 
         renderStructure: function () {
-            const $container = $('<div>').addClass('kb-download-panel');
-            const $label = $('<div>').addClass('kb-download-panel__label').append('Export as:');
-            const $buttons = $('<div>').addClass('kb-download-panel__buttons');
+            const $container = $('<div>').addClass(CSS_BASE);
+            const $label = $('<div>').addClass(`${CSS_BASE}__label`).append('Export as:');
+            const $buttons = $('<div>').addClass(`${CSS_BASE}__buttons`);
             $container.append($label).append($buttons);
 
             this.$elem.append($container);
-            this.$statusDiv = $('<div>').addClass('kb-download-panel__status');
+            this.$statusDiv = $('<div>').addClass(`${CSS_BASE}__status`);
             this.$elem.append(this.$statusDiv.hide());
         },
 
         renderDownloadButtons: function () {
             const downloaders = this.prepareDownloaders(this.type);
-            const $btnPanel = this.$elem.find('.kb-download-panel__buttons');
+            const $btnPanel = this.$elem.find(`.${CSS_BASE}__buttons`);
             downloaders.forEach((dlInfo) => {
                 if (dlInfo.name.toLocaleLowerCase() === 'staging') {
                     $btnPanel.append(
@@ -259,7 +260,7 @@ define([
         },
 
         showMessage: function (msg) {
-            this.$statusDiv.empty().append(msg);
+            this.$statusDiv.empty().append(msg).show();
         },
 
         showError: function (error) {
@@ -272,11 +273,14 @@ define([
             }
             // error is final state, so reactivate!
             this.$elem.find('.kb-data-list-btn').prop('disabled', false);
-            this.$statusDiv.empty().append(
-                $('<span>')
-                    .addClass('kb-download-panel__status_error')
-                    .append('Error: ' + error)
-            );
+            this.$statusDiv
+                .empty()
+                .append(
+                    $('<span>')
+                        .addClass(`${CSS_BASE}__status_error`)
+                        .append('Error: ' + error)
+                )
+                .show();
         },
 
         stopTimer: function () {

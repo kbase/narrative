@@ -8,6 +8,7 @@ define([
 ], ($, kbaseNarrativeDownloadPanel, Jupyter, Mocks, TestUtil, Config) => {
     const JSON_EXPORT_APP = 'kb_staging_exporter/export_json_to_staging';
     const STAGING_EXPORT_APP = 'kb_staging_exporter/export_to_staging';
+    const CSS_BASE = 'kb-download-panel';
 
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
@@ -124,7 +125,7 @@ define([
             });
 
             await initDownloadPanel(null, {});
-            const $status = $div.find('.kb-download-status');
+            const $status = $div.find(`.${CSS_BASE}__status`);
             expect($status.text()).toContain('Error: an error happened');
         });
 
@@ -236,14 +237,14 @@ define([
             await TestUtil.waitForElementState(
                 $div[0],
                 () => {
-                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    const text = $div[0].querySelector(`.${CSS_BASE}__status`).textContent || '';
                     return text.endsWith(errorMsg);
                 },
                 () => {
                     exportBtns[0].click();
                 }
             );
-            expect($div[0].querySelector('.kb-download-status').textContent).toContain(errorMsg);
+            expect($div[0].querySelector(`.${CSS_BASE}__status`).textContent).toContain(errorMsg);
             expect(widget.timer).toBeNull();
         });
 
@@ -323,22 +324,22 @@ define([
             await TestUtil.waitForElementState(
                 $div[0],
                 () => {
-                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    const text = $div[0].querySelector(`.${CSS_BASE}__status`).textContent || '';
                     return text.endsWith('some log');
                 },
                 () => {
                     exportBtns[0].click();
                 }
             );
-            expect($div[0].querySelector('.kb-download-status').textContent).toContain('some log');
+            expect($div[0].querySelector(`.${CSS_BASE}__status`).textContent).toContain('some log');
             expect(widget.timer).not.toBeNull();
 
             await TestUtil.waitForElementState($div[0], () => {
-                const text = $div[0].querySelector('.kb-download-status').textContent;
+                const text = $div[0].querySelector(`.${CSS_BASE}__status`).textContent;
                 return text === '';
             });
 
-            expect($div[0].querySelector('.kb-download-status').textContent).toBe('');
+            expect($div[0].querySelector(`.${CSS_BASE}__status`).textContent).toBe('');
             expect(widget.timer).toBeNull();
         });
 
@@ -383,14 +384,14 @@ define([
             await TestUtil.waitForElementState(
                 $div[0],
                 () => {
-                    const text = $div[0].querySelector('.kb-download-status').textContent || '';
+                    const text = $div[0].querySelector(`.${CSS_BASE}__status`).textContent || '';
                     return text.endsWith(errorMsg);
                 },
                 () => {
                     exportBtns[0].click();
                 }
             );
-            expect($div[0].querySelector('.kb-download-status').textContent).toContain(errorMsg);
+            expect($div[0].querySelector(`.${CSS_BASE}__status`).textContent).toContain(errorMsg);
             expect(widget.timer).toBeNull();
         });
 

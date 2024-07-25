@@ -4,6 +4,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will follow).
 
+## Version 5.4.0
+-   UIP-43
+    -   Change Narrative JSON downloads to use a download-to-staging app.
+    -   Add an optional "wildcard" field to app cells that can be used to allow any data object as an app input.
+    -   Add a text-only output field for app cells to optionally use.
+-   UIP-44 - Convert data object transform-and-download URLs to use the Blobstore endpoint instead of the Data Import Export service
+-   UIP-45 - Convert the report object viewer to use the Blobstore endpoint instead of the Data Import Export service
+-   Remove last references to the Data Import Export service so we can lay it to rest in KBase.
+
 ## Version 5.3.0
 
 -   PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed;

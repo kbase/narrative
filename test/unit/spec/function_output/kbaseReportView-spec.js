@@ -6,7 +6,6 @@ define([
     'narrativeConfig',
     'testUtil',
 ], (ReportView, Jupyter, $, Mocks, Config, TestUtil) => {
-    'use strict';
     const FAKE_SERV_URL = 'https://ci.kbase.us/report_serv';
     const REPORT_REF = '1/2/3';
 
@@ -330,10 +329,8 @@ define([
                 badUrl = 'https://ci.kbase.us/not/a/shock/url';
             expect(reportWidget.importExportLink(badUrl, name)).toBeNull();
             const result = reportWidget.importExportLink(goodUrl, name);
-            expect(result).toMatch(new RegExp('^' + Config.url('data_import_export')));
-            expect(result).toContain('wszip=0');
-            expect(result).toContain('name=some_file.txt');
-            expect(result).toContain('id=' + shockNode);
+            expect(result).toMatch(new RegExp('^' + Config.url('blobstore')));
+            expect(result).toContain('/node/' + shockNode + '?download');
         });
 
         it('should respond to errors by rendering an error string', async function () {
@@ -416,7 +413,7 @@ define([
             const fileInfo = REPORT_OBJ.file_links[0];
             const fileUrlParts = fileInfo.URL.split('/');
             const fileNode = fileUrlParts[fileUrlParts.length - 1];
-            const expectedUrl = `${Config.url('data_import_export')}/download?id=${fileNode}&wszip=0&name=${fileInfo.name}`;
+            const expectedUrl = `${Config.url('blobstore')}/node/${fileNode}?download`;
             expect(dlIframe.getAttribute('src')).toEqual(expectedUrl);
         });
     });

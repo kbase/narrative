@@ -4,6 +4,36 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.25.0 (more notes will follow).
 
+## Version 5.4.1
+### Dependency Changes
+- Python dependency updates
+  - biopython 1.79 -> 1.84
+  - bokeh 3.0.3 -> 3.4.2
+  - networkx 3.0 -> 3.3
+  - numpy 1.24.1 -> 2.0.0
+  - plotly 5.13.0 -> 5.22.0
+  - pyasn1 0.4.8 -> 0.6.0
+  - ruff 0.4.7 -> 0.5.0
+  - pygments 2.17.2 -> 2.18.0
+  - pexpect 4.8.0 -> 4.9.0
+  - seaborn 0.12.0 -> 0.13.2
+  - setuptools 69.5.1 -> 70.1.1
+  - certifi 2024.6.2 -> 2024.7.4
+  - sympy 1.10.1 -> 1.12.1
+  - pillow 10.3.0 -> 10.4.0
+  - python-daemon 2.3.2 -> 3.0.1
+  - chardet 5.0.0 -> 5.2.0
+  - python-dateutil 2.8.2 -> 2.9.0.post0
+  - scipy 1.10.0 -> 1.14.0
+  - ipython 8.25.0 -> 8.26.0
+
+- JavaScript dependency updates
+  - chromedriver  126.0.0 -> 126.0.4 
+  - postcss  8.4.38 -> 8.4.39 
+  - chrome-launcher  1.1.1 -> 1.1.2 
+  - @wdio/mocha-framework  8.38.2 -> 8.39.0 
+  - selenium-webdriver  4.21.0 -> 4.22.0 
+
 ## Version 5.4.0
 -   UIP-43
     -   Change Narrative JSON downloads to use a download-to-staging app.

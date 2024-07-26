@@ -76,7 +76,7 @@ define([
             $dlBtn.click(() => {
                 if (makeCell) {
                     Jupyter.narrative.addAndPopulateApp(dlInfo.appId, APIUtil.getAppVersionTag(), {
-                        input_ref: this.objName,
+                        input_ref: this.upa,
                     });
                 } else {
                     $dlBtn.parent().find('.kb-data-list-btn').prop('disabled', true);

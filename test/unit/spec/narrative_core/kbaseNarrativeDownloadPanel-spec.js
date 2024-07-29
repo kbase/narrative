@@ -12,20 +12,20 @@ define([
 
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
-        const ws = 1111,
-            oid = 2222,
-            ver = 3333,
-            name = 'fake_test_object',
-            objType = 'FakeModule.FakeType',
-            upa = `${ws}/${oid}/${ver}`;
+        const WS = 1111,
+            OBJ_ID = 2222,
+            OBJ_VER = 3333,
+            OBJ_NAME = 'fake_test_object',
+            OBJ_TYPE = 'FakeModule.FakeType',
+            INPUT_UPA = `${WS}/${OBJ_ID}/${OBJ_VER}`;
 
         const initDownloadPanel = async (authToken, exporterCache) => {
             return await new kbaseNarrativeDownloadPanel($div, {
                 token: authToken,
-                type: objType,
-                objId: oid,
-                ref: upa,
-                objName: name,
+                type: OBJ_TYPE,
+                objId: OBJ_ID,
+                upa: INPUT_UPA,
+                objName: OBJ_NAME,
                 downloadSpecCache: exporterCache,
             });
         };
@@ -65,7 +65,7 @@ define([
                 const exporterCache = {
                     lastUpdateTime: 100,
                     types: {
-                        [objType]: { export_functions: exporters },
+                        [OBJ_TYPE]: { export_functions: exporters },
                     },
                 };
 
@@ -141,7 +141,7 @@ define([
                 exporterCache = {
                     lastUpdateTime: 100,
                     types: {
-                        [objType]: {
+                        [OBJ_TYPE]: {
                             export_functions: {
                                 SOME_FORMAT: exportApp,
                             },
@@ -215,7 +215,7 @@ define([
                 exporterCache = {
                     lastUpdateTime: 100,
                     types: {
-                        [objType]: {
+                        [OBJ_TYPE]: {
                             export_functions: {
                                 SOME_FORMAT: exportApp,
                             },
@@ -254,7 +254,7 @@ define([
                 exporterCache = {
                     lastUpdateTime: 100,
                     types: {
-                        [objType]: {
+                        [OBJ_TYPE]: {
                             export_functions: {
                                 SOME_FORMAT: exportApp,
                             },
@@ -355,7 +355,7 @@ define([
                 exporterCache = {
                     lastUpdateTime: 100,
                     types: {
-                        [objType]: {
+                        [OBJ_TYPE]: {
                             export_functions: {
                                 SOME_FORMAT: exportApp,
                             },
@@ -401,7 +401,7 @@ define([
             const exporterCache = {
                 lastUpdateTime: 100,
                 types: {
-                    [objType]: {
+                    [OBJ_TYPE]: {
                         export_functions: {
                             STAGING: 'gets_overwritten_right_now',
                         },
@@ -416,14 +416,14 @@ define([
             expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledOnceWith(
                 STAGING_EXPORT_APP,
                 'release',
-                { input_ref: 'fake_test_object' }
+                { input_ref: INPUT_UPA }
             );
         });
 
         it('Should create an app cell with the JSON exporter', async () => {
             /* use mock for Jupyter.narrative.addAndPopulateApp */
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
-            await initDownloadPanel(null, { lastUpdateTime: 100, types: { [objType]: {} } });
+            await initDownloadPanel(null, { lastUpdateTime: 100, types: { [OBJ_TYPE]: {} } });
             const exportBtn = $div.find('.kb-data-list-btn');
             // only one is JSON
             expect(exportBtn.length).toEqual(1);
@@ -431,14 +431,14 @@ define([
             expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledOnceWith(
                 JSON_EXPORT_APP,
                 'release',
-                { input_ref: 'fake_test_object' }
+                { input_ref: INPUT_UPA }
             );
         });
 
         it('Should have a cancel button that empties the widget', async () => {
             const widget = await initDownloadPanel(null, {
                 lastUpdateTime: 100,
-                types: { [objType]: {} },
+                types: { [OBJ_TYPE]: {} },
             });
             const cancelBtn = $div.find('.kb-data-list-cancel-btn');
             cancelBtn.click();

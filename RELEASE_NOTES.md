@@ -10,24 +10,24 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
 ### Dependency Changes
 - Python dependency updates
   - biopython 1.79 -> 1.84
-  - bokeh 3.0.3 -> 3.4.2
+  - bokeh 3.0.3 -> 3.5.1
   - certifi 2024.6.2 -> 2024.7.4
   - chardet 5.0.0 -> 5.2.0
   - ipython 8.25.0 -> 8.26.0
   - networkx 3.0 -> 3.3
-  - numpy 1.24.1 -> 2.0.0
+  - numpy 1.24.1 -> 2.0.1
   - pexpect 4.8.0 -> 4.9.0
   - pillow 10.3.0 -> 10.4.0
-  - plotly 5.13.0 -> 5.22.0
+  - plotly 5.13.0 -> 5.23.0
   - pyasn1 0.4.8 -> 0.6.0
   - pygments 2.17.2 -> 2.18.0
   - python-daemon 2.3.2 -> 3.0.1
   - python-dateutil 2.8.2 -> 2.9.0.post0
   - scipy 1.10.0 -> 1.14.0
   - seaborn 0.12.0 -> 0.13.2
-  - setuptools 69.5.1 -> 70.1.1
-  - sympy 1.10.1 -> 1.12.1
-  - ruff 0.4.7 -> 0.5.0
+  - setuptools 69.5.1 -> 71.1.0
+  - sympy 1.10.1 -> 1.13.1
+  - ruff 0.4.7 -> 0.5.5
 
 - JavaScript dependency updates
   - @wdio/mocha-framework  8.38.2 -> 8.39.0 

@@ -14,7 +14,7 @@ pexpect==4.9.0
 pickleshare==0.7.5
 pillow==10.4.0
 pyasn1==0.6.0
-pycurl==7.45.1
+pycurl==7.45.3
 pygments==2.18.0
 pyopenssl==24.1.0
 python-daemon==3.0.1

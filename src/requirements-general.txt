@@ -6,7 +6,7 @@ cryptography==42.0.8
 decorator==5.1.1
 html5lib==1.1
 idna==3.7
-jsonschema==4.16.0
+jsonschema==4.23.0
 markdown==3.4.1
 markupsafe==2.1.4
 ndg-httpsclient==0.5.1

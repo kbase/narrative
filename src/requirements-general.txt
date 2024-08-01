@@ -16,7 +16,7 @@ pillow==10.4.0
 pyasn1==0.6.0
 pycurl==7.45.1
 pygments==2.18.0
-pyopenssl==24.1.0
+pyopenssl==24.2.1
 python-daemon==3.0.1
 python-dateutil==2.9.0.post0
 rsa==4.9

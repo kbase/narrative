@@ -8,7 +8,7 @@
         "node": ">=20"
     },
     "devDependencies": {
-        "@babel/traverse": "^7.24.7",
+        "@babel/traverse": "^7.25.3",
         "@eslint/eslintrc": "^3.1.0",
         "@eslint/js": "^9.6.0",
         "@lodder/grunt-postcss": "^3.1.1",

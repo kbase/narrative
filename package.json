@@ -43,7 +43,7 @@
         "jasmine-ajax": "^4.0.0",
         "jasmine-core": "^5.1.2",
         "jasmine-jquery": "^2.1.1",
-        "jquery-migrate": "^1.4.1",
+        "jquery-migrate": "^3.0.0",
         "karma": "^6.4.3",
         "karma-brief-reporter": "^0.2.2",
         "karma-chrome-launcher": "^3.2.0",

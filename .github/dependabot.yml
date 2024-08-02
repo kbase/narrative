@@ -1,12 +1,11 @@
 version: 2
 updates:
-- package-ecosystem: pip
+- package-ecosystem: "pip"
   directory: "/src"
   schedule:
     interval: monthly
-    time: '11:00'
   groups:
-    python-dependencies:
+    pip:
       patterns:
         - "*"
   open-pull-requests-limit: 20
@@ -17,21 +16,18 @@ updates:
   directory: "/"
   schedule:
     interval: monthly
-    time: '11:00'
   groups:
-    npm-dependencies:
+    npm:
       patterns:
-        "*"
+        - "*"
   open-pull-requests-limit: 20
 - package-ecosystem: docker
   directory: "/"
   schedule:
     interval: monthly
-    time: '11:00'
   open-pull-requests-limit: 20
 - package-ecosystem: github-actions
   directory: "/.github"
   schedule:
     interval: monthly
-    time: '11:00'
   open-pull-requests-limit: 20

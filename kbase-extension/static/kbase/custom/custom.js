@@ -135,8 +135,6 @@ define([
     NarrativeRuntime,
     html
 ) => {
-    'use strict';
-
     // Handlebars global configuration. Since these changes affect all usage of handlebars
     // in this app, they should be performed just once.
     Handlebars.registerHelper('numeral', (value, format, defaultValue, options) => {
@@ -145,19 +143,8 @@ define([
             options = defaultValue;
             defaultValue = undefined;
         }
-        let missing = false;
-        if (typeof value === 'string') {
-            if (value.trim().length === 0) {
-                missing = true;
-            }
-        } else if (typeof value !== 'number') {
-            missing = true;
-        }
         const numeralValue = numeral(value);
-        if (isNaN(numeralValue)) {
-            missing = true;
-        }
-        if (missing) {
+        if (numeralValue.value() === null) {
             return defaultValue || 'n/a';
         }
         try {

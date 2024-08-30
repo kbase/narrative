@@ -92,7 +92,7 @@ fi
 
 if [ "${run_integration}" == 1 ]; then
     base_url=${BASE_URL:-"http://localhost:$JUPYTER_PORT"}
-    export BASE_URL=$BASE_URL
+    export BASE_URL=$base_url
     npx wdio test/integration/wdio.conf.js
     integration=$?
 fi

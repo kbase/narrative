@@ -112,23 +112,6 @@ do
 done
 
 echo "Killing server"
-
-# kill_descendant_processes() {
-#     local pid="$1"
-#     local and_self="${2:-false}"
-#     if children="$(pgrep -P "$pid")"; then
-#         for child in $children; do
-#             kill_descendant_processes "$child" true
-#         done
-#     fi
-#     if [[ "$and_self" == true ]]; then
-#         echo "killing $pid"
-#         kill -9 "$pid"
-#     fi
-# }
-
-# echo "Killing process $bg_pid and children"
 pkill -P "$bg_pid"
-# kill_descendant_processes $bg_pid
 
 exit $exit_code

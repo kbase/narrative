@@ -1,4 +1,4 @@
-'use strict';
+/* global browser */
 
 const { login } = require('../wdioUtils.js');
 const { NarrativeTesting } = require('../NarrativeTesting');
@@ -26,8 +26,11 @@ describe('Test kbaseFeatureSet', () => {
             const cell = await t.waitForCell(notebookContainer, cellCase.cell);
 
             // Test description display.
-            const titleEl = await cell.$('.kb-cell-toolbar__title-container > [data-element="title"]');
+            const titleEl = await cell.$(
+                '.kb-cell-toolbar__title-container > [data-element="title"]'
+            );
 
+            // Wait until the expected title shows up, or a timeout.
             await browser.waitUntil(async () => {
                 const title = await titleEl.getText();
                 return title === cellCase.title;
@@ -36,13 +39,13 @@ describe('Test kbaseFeatureSet', () => {
             const description = await cell.$('[data-testid="description"] > [data-testid="value"]');
             await expect(description).toHaveText(cellCase.description);
 
-            // Test the 3rd row of the table.
+            // Test the feature set table.
             const tableBody = await cell.$('table.dataTable > tbody');
 
             const rows = await tableBody.$$('tr');
             await expect(rows.length).toEqual(cellCase.rowCount);
-            const cols = await rows[cellCase.row - 1].$$('td');
 
+            const cols = await rows[cellCase.row - 1].$$('td');
             await expect(cols.length).toEqual(cellCase.cols.length);
 
             for (let colIndex = 0; colIndex < cols.length; colIndex += 1) {

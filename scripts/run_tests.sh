@@ -46,13 +46,13 @@ if [ "$run_docker" == 1 ]; then
         --template \
         "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json" \
         kbase-narrative --no-browser --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
-    bg_pid=$!
+    bg_pid=$(jobs -p)
 else
     echo "starting local narrative"
     rm -f $OUTPUT_FILE
     touch $OUTPUT_FILE
     kbase-narrative --no-browser --ServerApp.allow_origin="*" --ip=$IP_ADDRESS --port=$JUPYTER_PORT 2>&1 | tee $OUTPUT_FILE &
-    bg_pid=$!
+    bg_pid=$(jobs -p)
 fi
 
 while :; do
@@ -92,7 +92,7 @@ fi
 
 if [ "${run_integration}" == 1 ]; then
     base_url=${BASE_URL:-"http://localhost:$JUPYTER_PORT"}
-    export BASE_URL=$BASE_URL
+    export BASE_URL=$base_url
     npx wdio test/integration/wdio.conf.js
     integration=$?
 fi
@@ -112,20 +112,6 @@ do
 done
 
 echo "Killing server"
-
-kill_descendant_processes() {
-    local pid="$1"
-    local and_self="${2:-false}"
-    if children="$(pgrep -P "$pid")"; then
-        for child in $children; do
-            kill_descendant_processes "$child" true
-        done
-    fi
-    if [[ "$and_self" == true ]]; then
-        kill -9 "$pid"
-    fi
-}
-
-kill_descendant_processes $bg_pid
+pkill -P "$bg_pid"
 
 exit $exit_code

@@ -14,7 +14,6 @@ define([
     'userMenu',
     'util/bootstrapDialog',
 ], ($, Promise, kbapi, JupyterUtils, Config, Auth, UserMenu, BootstrapDialog) => {
-    'use strict';
     const baseUrl = JupyterUtils.get_body_data('baseUrl');
     const authClient = Auth.make({ url: Config.url('auth') });
     let sessionInfo = null;
@@ -98,10 +97,8 @@ define([
     function showNotLoggedInDialog() {
         const message = `
         <p>You are logged out (or your session has expired).</p>
-        <p>You will be redirected to the sign in page after closing this, or ${
-            AUTO_LOGOUT_DELAY / 1000
-        } seconds,
-           whichever comes first.</p>
+        <p>You will be redirected to the sign in page after closing this, or
+        ${AUTO_LOGOUT_DELAY / 1000} seconds, whichever comes first.</p>
         `;
         const dialog = new BootstrapDialog({
             title: 'Logged Out',
@@ -309,6 +306,7 @@ define([
             authClient.getUserProfile(sessionToken),
         ])
             .then(([tokenInfo, accountInfo]) => {
+                authClient.setAuthToken(sessionToken);
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.accountInfo = accountInfo;

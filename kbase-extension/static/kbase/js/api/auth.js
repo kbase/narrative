@@ -1,6 +1,4 @@
 define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
-    'use strict';
-
     function factory(config) {
         const url = config.url;
         const secureCookies =
@@ -276,6 +274,16 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                 const version = callParams.version || 'V2';
                 return [url, '/api/', version, callParams.operation].join('');
             })();
+
+            // const options = {
+            //     method: callParams.method,
+            //     headers: {
+            //         Authorization: token,
+            //         'Content-Type': 'application/json',
+            //     },
+
+            // }
+            // return fetch(callString, options);
 
             return Promise.resolve(
                 $.ajax({

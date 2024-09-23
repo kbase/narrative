@@ -75,6 +75,12 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
   - stylelint-config-standard 36.0.0 -> 36.0.1
   - terser 5.31.1 -> 5.31.6
   - webdriverio 8.38.2 -> 9.0.9
+  
+  - dompurify 2.5.5 -> 3.1.6
+  - follow-redirects 1.15.6 -> 1.15.9
+  - jquery-ui 1.13.2 -> 1.14.0
+  - plotly.js-dist-min 2.33.0 -> 2.35.0
+  - underscore 1.13.6 -> 1.13.7
 
 ## Version 5.4.1
 - UIP-51 fix issue where JSON and STAGING download apps aren't getting properly instantiated with object inputs.

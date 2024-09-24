@@ -4,8 +4,6 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
-const CHROME_BINARY = require('puppeteer').executablePath();
-
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
  * This is useful because testing services support a limited number of browser dimensions, which differs
@@ -176,7 +174,6 @@ const serviceConfigs = {
         logPath: 'selenium-standalone-logs',
         // drivers
     },
-    chromedriver: {},
     browserstack: {
         browserstackLocal: true,
         opts: {},
@@ -196,21 +193,19 @@ function makeCapabilities(config) {
         case 'chromedriver':
             return (() => {
                 const args = [
-                    '--disable-gpu',
-                    '--no-sandbox',
+                    'headless',
+                    'disable-gpu',
                     `window-size=${config.WIDTH},${config.HEIGHT}`,
                 ];
-                if (config.HEADLESS === 't') {
-                    args.push('--headless');
-                }
                 return {
                     browserName: 'chrome',
+                    browserVersion: '128',
                     acceptInsecureCerts: true,
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
-                        binary: CHROME_BINARY,
                     },
+                    'wdio:enforceWebDriverClassic': true
                 };
             })();
         case 'selenium-standalone':
@@ -322,7 +317,7 @@ const wdioConfig = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 10,
+    maxInstances: 1,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -392,7 +387,6 @@ const wdioConfig = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: [[testParams.SERVICE, serviceConfigs[testParams.SERVICE]]],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -427,6 +421,7 @@ const wdioConfig = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter.html
     reporters: ['spec'],
+
 
     //
     // Options to be passed to Mocha.

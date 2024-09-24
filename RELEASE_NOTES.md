@@ -4,6 +4,39 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will follow).
 
+## Version Next
+
+### Dependency Changes
+- Python dependency updates
+  - coverage 7.5.3 -> 7.6.1
+  - pytest 8.2.2 -> 8.3.2
+  - pytest-recording 0.13.1 -> 0.13.2
+  - ruff 0.5.5 -> 0.6.3
+
+  - certifi 2027.7.4 -> 2024.8.30
+  - cryptography 42.0.8 -> 43.0.0
+  - idna 3.7 -> 3.8
+  - jsonschema 4.16.0 -> 4.23.0
+  - markdown 3.4.1 -> 3.7
+  - markupsafe 2.1.4 -> 2.1.5
+  - pycurl 7.45.1 -> 7.45.3
+  - pyopenssl 24.1.0 -> 24.2.1
+  - setuptools 71.1.0 -> 74.0.0
+  - terminado 0.18.0 -> 0.18.1
+  - bokeh 3.5.1 -> 3.5.2
+  - ete3 3.1.2 -> 3.1.3
+  - numpy 2.0.1 -> 2.1.0
+  - plotly 5.23.0 -> 5.24.0
+  - scipy 1.14.0 -> 1.14.1
+  - sympy 1.13.1 -> 1.13.2
+
+  - ipython 8.26.0 -> 8.27.0
+  - ipywidgets 7.7.1 -> 8.1.5
+  - notebook 6.5.6 -> 6.5.7
+  - pymongo 4.7.3 -> 4.8.0
+  - pyyaml 6.0.1 -> 6.0.2
+  - scikit-learn 1.5.0 -> 1.5.1
+
 ## Version 5.4.1
 - UIP-51 fix issue where JSON and STAGING download apps aren't getting properly instantiated with object inputs.
 

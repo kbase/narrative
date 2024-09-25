@@ -7,7 +7,7 @@ const testCases = testData.envs[env];
 const AUTH_COOKIE = 'kbase_session';
 const AUTH_BACKUP_COOKIE = 'kbase_session_backup';
 
-describe('Narrative tree page with login', () => {
+describe('Auth cookie tests', () => {
     beforeEach(async () => {
         await browser.setTimeout({ pageLoad: TIMEOUT });
         await browser.reloadSession();
@@ -35,19 +35,23 @@ describe('Narrative tree page with login', () => {
 
         const KBASE_ENV = browser.options.testParams.ENV;
         const cookies = await browser.getCookies();
+        const expectedNames = [AUTH_COOKIE, AUTH_BACKUP_COOKIE];
+        const authCookies = cookies.reduce((cookies, cookie) => {
+            if (expectedNames.includes(cookie.name)) {
+                cookies[cookie.name] = cookie;
+            }
+            return cookies;
+        }, {});
         if (KBASE_ENV === 'narrative') {
-            expect(cookies.length).toBe(2);
-            const cookieNames = cookies.reduce((cookie, names) => {
-                names[cookie.name] = cookie.value;
-                return names;
+            expect(authCookies.length).toBe(2);
+            expectedNames.forEach((cookieName) => {
+                expect(cookieName in authCookies).toBeTruthy();
             });
-            [AUTH_COOKIE, AUTH_BACKUP_COOKIE].forEach((cookieName) => {
-                expect(cookieName in cookieNames).toBeTruthy();
-            });
-            expect(cookieNames[AUTH_COOKIE]).toEqual(cookieNames[AUTH_BACKUP_COOKIE]);
+            expect(authCookies[AUTH_COOKIE].value).toEqual(authCookies[AUTH_BACKUP_COOKIE].value);
         } else {
-            expect(cookies.length).toBe(1);
-            expect(cookies[0].name).toBe(AUTH_COOKIE);
+            expect(Object.keys(authCookies).length).toBe(1);
+            expect(AUTH_COOKIE in authCookies).toBeTruthy();
+            expect(AUTH_BACKUP_COOKIE in authCookies).toBeFalsy();
         }
     });
 });

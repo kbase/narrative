@@ -301,12 +301,15 @@ define([
          */
         clearTokenCheckTimers();
         const sessionToken = authClient.getAuthToken();
-        return Promise.all([
-            authClient.getTokenInfo(sessionToken),
-            authClient.getUserProfile(sessionToken),
-        ])
+        return authClient
+            .setAuthToken(sessionToken)
+            .then(() =>
+                Promise.all([
+                    authClient.getTokenInfo(sessionToken),
+                    authClient.getUserProfile(sessionToken),
+                ])
+            )
             .then(([tokenInfo, accountInfo]) => {
-                authClient.setAuthToken(sessionToken);
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.accountInfo = accountInfo;

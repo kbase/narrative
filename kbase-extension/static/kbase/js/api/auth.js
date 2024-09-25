@@ -64,6 +64,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             if (cookie.domain) {
                 props.domain = cookie.domain;
             }
+            props['max-age'] = parseInt((props.expires - Date.now()) / 1000);
             props.expires = new Date(props.expires).toUTCString();
 
             const fields = Object.keys(props).map((key) => {
@@ -76,7 +77,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
 
             const propStr = fields.join(';');
 
-            const newCookie = `${name}=${value}; ${propStr}`;
+            const newCookie = `${name}=${value};${propStr}`;
             document.cookie = newCookie;
         }
 

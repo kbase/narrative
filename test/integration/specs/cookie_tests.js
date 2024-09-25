@@ -1,7 +1,9 @@
 /* global browser, $ */
 const { login } = require('../wdioUtils.js');
 const TIMEOUT = 30000;
+const env = process.env.ENV || 'ci';
 const testData = require('./narrative_basic_data.json');
+const testCases = testData.envs[env];
 const AUTH_COOKIE = 'kbase_session';
 const AUTH_BACKUP_COOKIE = 'kbase_session_backup';
 
@@ -17,7 +19,7 @@ describe('Narrative tree page with login', () => {
     });
 
     it('opens a narrative and has a backup cookie, if expected by the env', async () => {
-        await browser.url(`/narrative/${testData.CASE_1.narrativeId}`);
+        await browser.url(`/narrative/${testCases.CASE_1.narrativeId}`);
         const loadingBlocker = await $('#kb-loading-blocker');
         await loadingBlocker.waitForDisplayed({
             timeout: TIMEOUT,

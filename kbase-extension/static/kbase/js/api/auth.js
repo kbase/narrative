@@ -174,10 +174,8 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
 
             function setToken(config) {
                 // Honor cookie host whitelist if present.
-                if (config.enableIn) {
-                    if (config.enableIn.indexOf(deployEnv) === -1) {
-                        return;
-                    }
+                if (config.enableIn && !config.enableIn.includes(deployEnv)) {
+                    return;
                 }
                 const cookieField = {
                     name: config.name,

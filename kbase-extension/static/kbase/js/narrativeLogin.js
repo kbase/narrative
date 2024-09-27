@@ -14,6 +14,8 @@ define([
     'userMenu',
     'util/bootstrapDialog',
 ], ($, Promise, kbapi, JupyterUtils, Config, Auth, UserMenu, BootstrapDialog) => {
+    'use strict';
+
     const baseUrl = JupyterUtils.get_body_data('baseUrl');
     const authClient = Auth.make({ url: Config.url('auth') });
     let sessionInfo = null;

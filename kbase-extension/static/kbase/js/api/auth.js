@@ -1,4 +1,6 @@
 define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
+    'use strict';
+
     function factory(config) {
         const url = config.url;
         const secureCookies =

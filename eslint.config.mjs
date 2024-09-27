@@ -41,8 +41,6 @@ export default [{
     },
 
     rules: {
-        strict: ["error", "function"],
-
         "no-console": ["error", {
             allow: ["warn", "error"],
         }],

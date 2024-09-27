@@ -1,6 +1,4 @@
 define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid, TestUtil) => {
-    'use strict';
-
     let authClient;
     const FAKE_TOKEN = 'a_fake_auth_token',
         FAKE_USER = 'some_user',
@@ -43,6 +41,28 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
         email: `${FAKE_NAME}@kbase.us`,
         idents: [],
     };
+
+    /**
+     * Makes a dummy token that expires either 100 seconds from now or 100 seconds ago,
+     * depending on the isValid variable.
+     * @param {int} lifespan in ms from Date.now(), default 100000.
+     *  Make 0 or negative for an expired token.
+     * @param {string} tokenType default 'Login'
+     * @returns {object} a tokenInfo object from the auth service.
+     */
+    function makeTokenInfo(lifespan, tokenType) {
+        tokenType = tokenType || 'Login';
+        lifespan = lifespan || 100000;
+        return {
+            expires: Date.now() + lifespan,
+            created: Date.now(),
+            name: 'some_token',
+            id: 'some_uuid',
+            type: tokenType,
+            user: FAKE_USER,
+            cachefor: 500000,
+        };
+    }
 
     function setToken(token) {
         cookieKeys.forEach((key) => {
@@ -229,15 +249,7 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
         });
 
         it('Should get auth token info', () => {
-            const tokenInfo = {
-                expires: Date.now() + 10 * 60 * 60 * 24 * 1000,
-                created: Date.now(),
-                name: 'some_token',
-                id: 'some_uuid',
-                type: 'Login',
-                user: FAKE_USER,
-                cachefor: 500000,
-            };
+            const tokenInfo = makeTokenInfo(10 * 1000 * 60 * 60 * 24);
             mockAuthRequest('token', tokenInfo, 200);
             return authClient.getTokenInfo(FAKE_TOKEN).then((response) => {
                 Object.keys(tokenInfo).forEach((tokenKey) => {
@@ -300,11 +312,45 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
             });
         });
 
-        it('Should set an auth token cookie', () => {
+        it('Should set a valid auth token cookie', async () => {
             clearToken();
-            const newToken = 'someRandomToken';
-            authClient.setAuthToken(newToken);
+            const tokenInfo = makeTokenInfo();
+            mockAuthRequest('token', tokenInfo, 200);
+            const newToken = 'someNewToken';
+            await authClient.setAuthToken(newToken);
             expect(authClient.getAuthToken()).toEqual(newToken);
+            expect(authClient.getCookie('kbase_session')).toEqual(newToken);
+        });
+
+        /* Leaving this in here though it's not working as expected.
+         * some mish-mash of Jasmine + the test runner + the headless browser really doesn't
+         * want to expire old cookies. Testing in a real browser by hand works, but not unit
+         * tests. Argh!
+         * Things tried:
+         * 1. TestUtil.wait for time out
+         * 2. setTimeout timeouts
+         * 3. jasmine.clock() mock the clock skipping ahead
+         * 4. time skips in ranges of seconds to (mocked) days
+         */
+        xit('Should set a valid auth token cookie that expires after 2 seconds', async () => {
+            clearToken();
+            const timeoutTime = 2000;
+            const newToken = 'someTimeoutToken';
+            const tokenInfo = makeTokenInfo(timeoutTime);
+            mockAuthRequest('token', tokenInfo, 200);
+            await authClient.setAuthToken(newToken);
+            expect(authClient.getAuthToken()).toEqual(newToken);
+            expect(authClient.getCookie('kbase_session')).toEqual(newToken);
+            await TestUtil.wait(timeoutTime + 1000);
+            expect(authClient.getCookie('kbase_session')).toBeNull();
+        });
+
+        it('Should not set an expired token cookie', async () => {
+            clearToken();
+            mockAuthRequest('token', makeTokenInfo(-1000));
+            await authClient.setAuthToken('unsetToken');
+            expect(authClient.getAuthToken()).toBeNull();
+            expect(authClient.getCookie('kbase_session')).toBeNull();
         });
 
         // test validateToken with either good or invalid tokens
@@ -354,14 +400,16 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
             });
         });
 
-        it('Should clear auth token cookie on request', () => {
+        it('Should clear auth token cookie on request', async () => {
             // Ensure that the token automagically set is removed first.
             clearToken();
 
+            const fakeToken = 'fakeAuthToken';
+            const tokenInfo = makeTokenInfo();
+            mockAuthRequest('token', tokenInfo, 200);
             // Setting an arbitrary token should work.
-            const cookieValue = new Uuid(4).format();
-            authClient.setAuthToken(cookieValue);
-            expect(authClient.getAuthToken()).toEqual(cookieValue);
+            await authClient.setAuthToken(fakeToken);
+            expect(authClient.getAuthToken()).toEqual(fakeToken);
 
             // Clearing an auth token should also work.
             authClient.clearAuthToken();
@@ -372,7 +420,7 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
         });
 
         // FIXME: this fails on successive test runs
-        it('Should properly handle backup cookie in non-prod environment', () => {
+        it('Should properly handle backup cookie in non-prod environment', async () => {
             const env = Config.get('environment');
             const backupCookieName = 'kbase_session_backup';
             if (env === 'prod') {
@@ -386,8 +434,9 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
             // Get a unique fake token, to ensure we don't conflict with
             // another cookie value.
             const cookieValue = new Uuid(4).format();
-
-            authClient.setAuthToken(cookieValue);
+            const tokenInfo = makeTokenInfo();
+            mockAuthRequest('token', tokenInfo, 200);
+            await authClient.setAuthToken(cookieValue);
             expect(authClient.getAuthToken()).toEqual(cookieValue);
 
             // There should not be a backup cookie set yet
@@ -414,8 +463,9 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
             expect(authClient.getCookie(backupCookieName)).toEqual(backupCookieValue);
         });
 
-        it('Should set and clear backup cookie in prod', () => {
+        it('Should set and clear backup cookie in prod', async () => {
             const env = Config.get('environment');
+            const tokenCookie = 'kbase_session';
             const backupCookieName = 'kbase_session_backup';
             if (env !== 'prod') {
                 pending('This test is only valid for a prod config');
@@ -427,14 +477,16 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
 
             // Setting an arbitrary token should work.
             const cookieValue = new Uuid(4).format();
-            authClient.setAuthToken(cookieValue);
+            mockAuthRequest('token', makeTokenInfo(), 200);
+            await authClient.setAuthToken(cookieValue);
             expect(authClient.getAuthToken()).toEqual(cookieValue);
+            expect(authClient.getCookie(tokenCookie)).toEqual(cookieValue);
             expect(authClient.getCookie(backupCookieName)).toEqual(cookieValue);
 
             // Clearing an auth token should also work.
             authClient.clearAuthToken();
             expect(authClient.getAuthToken()).toBeNull();
-            expect(authClient.getCookie('kbase_session')).toBeNull();
+            expect(authClient.getCookie(tokenCookie)).toBeNull();
             expect(authClient.getCookie(backupCookieName)).toBeNull();
         });
 
@@ -448,7 +500,7 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
             authClient.setCookie({
                 name: 'narrative_session',
                 value: cookieValue,
-                expires: 14,
+                expires: Date.now() + 14 * 1000 * 60 * 60 * 24,
             });
 
             // Okay, it should be set.

@@ -24,7 +24,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             },
         };
 
-        const TOKEN_AGE = 14; // days
+        const DEFAULT_TOKEN_LIFE = 14 * 24 * 60 * 60 * 1000; // millis
 
         /**
          * Meant for managing auth or session cookies (mainly auth cookies as set by
@@ -33,10 +33,10 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
          * If it's missing name or value, does nothing.
          * Default expiration time is 14 days.
          * domain, expires, and max-age are optional
-         * expires is expected to be in days
-         * auto set fields are:
+         * expires is expected to be the timestamp (ms since epoch) it will expire
+         * default fields are:
          *  - path = '/'
-         *  - expires = TOKEN_AGE (default 14) days
+         *  - expires = now + 14 days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
          *  - adds secure=true, samesite=Lax for KBase use.
@@ -50,7 +50,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             const name = encodeURIComponent(cookie.name);
             const value = encodeURIComponent(cookie.value || '');
             const props = {
-                expires: TOKEN_AGE, // gets translated to GMT string
+                expires: Date.now() + DEFAULT_TOKEN_LIFE, // gets translated to GMT string
                 path: '/',
                 samesite: 'Lax',
             };
@@ -66,14 +66,8 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             if (cookie.domain) {
                 props.domain = cookie.domain;
             }
-            props['max-age'] = 86400 * props.expires;
-            if (props.expires === 0) {
-                props.expires = new Date(0).toUTCString();
-            } else {
-                props.expires = new Date(
-                    new Date().getTime() + 86400000 * props.expires
-                ).toUTCString();
-            }
+            props['max-age'] = parseInt((props.expires - Date.now()) / 1000);
+            props.expires = new Date(props.expires).toUTCString();
 
             const fields = Object.keys(props).map((key) => {
                 return `${key}=${props[key]}`;
@@ -85,7 +79,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
 
             const propStr = fields.join(';');
 
-            const newCookie = `${name}=${value}; ${propStr}`;
+            const newCookie = `${name}=${value};${propStr}`;
             document.cookie = newCookie;
         }
 
@@ -161,22 +155,34 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             return getCookie(cookieConfig.auth.name);
         }
 
-        /* Sets the given auth token into the browser's cookie.
-         * Does nothing if the token is null.
+        /**
+         * Returns a Promise that ets the given auth token into the
+         * browser's cookie, as configured. The cookie has the
+         * same lifespan as the token.
+         * If the token is null or expired, this does nothing.
+         * If there's an error in looking up the token, this throws
+         * an error.
+         * @param {string} token
+         * @returns
          */
-        function setAuthToken(token) {
+        async function setAuthToken(token) {
+            const tokenInfo = await getTokenInfo(token);
+            // if it's expired, don't set (actually should've thrown
+            // here, and get caught by the caller, but check anyway)
+            if (tokenInfo.expires - Date.now() <= 0) {
+                return;
+            }
             const deployEnv = Config.get('environment');
 
             function setToken(config) {
                 // Honor cookie host whitelist if present.
-                if (config.enableIn) {
-                    if (config.enableIn.indexOf(deployEnv) === -1) {
-                        return;
-                    }
+                if (config.enableIn && !config.enableIn.includes(deployEnv)) {
+                    return;
                 }
                 const cookieField = {
                     name: config.name,
                     value: token,
+                    expires: tokenInfo.expires,
                 };
                 if (config.domain) {
                     cookieField.domain = config.domain;

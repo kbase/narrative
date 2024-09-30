@@ -4,7 +4,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will follow).
 
-## Version Next
+## Version 5.4.2
+- UIP-52 - repair integration tests, get WebDriverIO up to date
+- PTV-1913 - fix potential authentication issues affecting report viewing and downloads in narratives
 
 ### Dependency Changes
 - Python dependency updates

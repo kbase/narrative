@@ -4,6 +4,86 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will follow).
 
+## Version 5.4.2
+- UIP-52 - repair integration tests, get WebDriverIO up to date
+- PTV-1913 - fix potential authentication issues affecting report viewing and downloads in narratives
+
+### Dependency Changes
+- Python dependency updates
+  - coverage 7.5.3 -> 7.6.1
+  - pytest 8.2.2 -> 8.3.2
+  - pytest-recording 0.13.1 -> 0.13.2
+  - ruff 0.5.5 -> 0.6.3
+
+  - certifi 2027.7.4 -> 2024.8.30
+  - cryptography 42.0.8 -> 43.0.0
+  - idna 3.7 -> 3.8
+  - jsonschema 4.16.0 -> 4.23.0
+  - markdown 3.4.1 -> 3.7
+  - markupsafe 2.1.4 -> 2.1.5
+  - pycurl 7.45.1 -> 7.45.3
+  - pyopenssl 24.1.0 -> 24.2.1
+  - setuptools 71.1.0 -> 74.0.0
+  - terminado 0.18.0 -> 0.18.1
+  - bokeh 3.5.1 -> 3.5.2
+  - ete3 3.1.2 -> 3.1.3
+  - numpy 2.0.1 -> 2.1.0
+  - plotly 5.23.0 -> 5.24.0
+  - scipy 1.14.0 -> 1.14.1
+  - sympy 1.13.1 -> 1.13.2
+
+  - ipython 8.26.0 -> 8.27.0
+  - ipywidgets 7.7.1 -> 8.1.5
+  - notebook 6.5.6 -> 6.5.7
+  - pymongo 4.7.3 -> 4.8.0
+  - pyyaml 6.0.1 -> 6.0.2
+  - scikit-learn 1.5.0 -> 1.5.1
+
+- Javascript Dependency Changes
+  - wdio-chromedriver-service -- Deprecated and removed, functionality is now built-in to WebdriverIO
+
+  - @babel/traverse 7.24.7 -> 7.25.6
+  - @eslint/js 9.6.0 -> 9.9.1
+  - @wdio/browserstack-service 8.38.2 -> 9.0.9
+  - @wdio/cli 8.38.2 -> 9.0.9
+  - @wdio/local-runner 8.38.2 -> 9.0.9
+  - @wdio/mocha-framwork 8.39.0 -> 9.0.8
+  - @wdio/spec-reporter 8.38.2 -> 9.0.8
+  - autoprefixer 10.4.19 -> 10.4.20
+  - axios 1.7.2 -> 1.7.7
+  - chromedriver 128.0.0 -> 128.0.1
+  - cssnano 7.0.2 -> 7.0.6
+  - eslint 9.4.0 -> 9.9.1
+  - expect-webdriverio 3.6.0 -> 5.0.2
+  - glob 10.4.1 -> 11.0.0
+  - globals 15.6.0 -> 15.9.0
+  - grunt-cli 1.4.3 -> 1.5.0
+  - grunt-stylelint 0.20.0 -> 0.20.1
+  - husky 9.0.11 -> 9.1.5
+  - jasmine-core 5.1.2 -> 5.2.0
+  - jquery-migrate 1.4.1 -> 3.5.2
+  - karma 6.4.3 -> 6.4.4
+  - lint-staged 15.2.6 -> 15.2.10
+  - postcss 8.4.39 -> 8.4.45
+  - prettier 3.3.2 -> 3.3.3
+  - puppeteer 23.2.1 -> 23.3.0
+  - requirejs 2.3.6 -> 2.3.7
+  - sass 1.77.5 -> 1.78.0
+  - selenium-standalone 9.5.0 -> 10.0.0
+  - selenium-webdriver 4.22.0 -> 4.24.0
+  - stylelint 16.6.1 -> 16.9.0
+  - stylelint-config-recommended 14.0.0 -> 14.0.1
+  - stylelint-config-sass-guidelines 11.1.0 -> 12.0.0
+  - stylelint-config-standard 36.0.0 -> 36.0.1
+  - terser 5.31.1 -> 5.31.6
+  - webdriverio 8.38.2 -> 9.0.9
+  
+  - dompurify 2.5.5 -> 3.1.6
+  - follow-redirects 1.15.6 -> 1.15.9
+  - jquery-ui 1.13.2 -> 1.14.0
+  - plotly.js-dist-min 2.33.0 -> 2.35.0
+  - underscore 1.13.6 -> 1.13.7
+
 ## Version 5.4.1
 - UIP-51 fix issue where JSON and STAGING download apps aren't getting properly instantiated with object inputs.
 

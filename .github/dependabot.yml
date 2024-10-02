@@ -1,37 +1,33 @@
 version: 2
 updates:
-- package-ecosystem: pip
+- package-ecosystem: "pip"
   directory: "/src"
   schedule:
-    interval: monthly
-    time: '11:00'
+    interval: "monthly"
   groups:
-    python-dependencies:
+    pip:
       patterns:
         - "*"
   open-pull-requests-limit: 20
   ignore:
     - dependency-name: "notebook"
-      versions: '>= 7.0.0'
-- package-ecosystem: npm
+      versions: ">= 7.0.0"
+- package-ecosystem: "npm"
   directory: "/"
   schedule:
-    interval: monthly
-    time: '11:00'
+    interval: "monthly"
   groups:
-    npm-dependencies:
+    npm:
       patterns:
-        "*"
+        - "*"
   open-pull-requests-limit: 20
-- package-ecosystem: docker
+- package-ecosystem: "docker"
   directory: "/"
   schedule:
-    interval: monthly
-    time: '11:00'
+    interval: "monthly"
   open-pull-requests-limit: 20
-- package-ecosystem: github-actions
+- package-ecosystem: "github-actions"
   directory: "/.github"
   schedule:
-    interval: monthly
-    time: '11:00'
+    interval: "monthly"
   open-pull-requests-limit: 20

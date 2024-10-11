@@ -2,7 +2,34 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
+
+## Unreleased
+
+- Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
+
+- Python dependencies updated to the following versions:
+  - coverage: 7.6.2
+  - pytest: 8.3.3
+  - ruff: 0.6.9
+  - vcrpy: 6.0.2
+  - bokeh: 3.6.0
+  - cryptography: 43.0.1
+  - idna: 3.10
+  - markupsafe: 3.0.1
+  - networkx: 3.4
+  - numpy: 2.1.2
+  - plotly: 5.24.1
+  - pyasn1: 0.6.1
+  - setuptools: 75.1.0
+  - sympy: 1.13.3
+  - ipython: 8.28.2
+  - pandas: 2.2.3
+  - pymongo: 4.10.1
+  - scikit-learn: 1.5.2
+  - statsmodels: 0.14.4
+
+
 
 ## Version 5.4.2
 - UIP-52 - repair integration tests, get WebDriverIO up to date
@@ -77,7 +104,7 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
   - stylelint-config-standard 36.0.0 -> 36.0.1
   - terser 5.31.1 -> 5.31.6
   - webdriverio 8.38.2 -> 9.0.9
-  
+
   - dompurify 2.5.5 -> 3.1.6
   - follow-redirects 1.15.6 -> 1.15.9
   - jquery-ui 1.13.2 -> 1.14.0
@@ -110,11 +137,11 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
   - ruff 0.4.7 -> 0.5.5
 
 - JavaScript dependency updates
-  - @wdio/mocha-framework  8.38.2 -> 8.39.0 
-  - chrome-launcher  1.1.1 -> 1.1.2 
-  - chromedriver  126.0.0 -> 126.0.4 
-  - postcss  8.4.38 -> 8.4.39 
-  - selenium-webdriver  4.21.0 -> 4.22.0 
+  - @wdio/mocha-framework  8.38.2 -> 8.39.0
+  - chrome-launcher  1.1.1 -> 1.1.2
+  - chromedriver  126.0.0 -> 126.0.4
+  - postcss  8.4.38 -> 8.4.39
+  - selenium-webdriver  4.21.0 -> 4.22.0
 
 ## Version 5.4.0
 -   UIP-43

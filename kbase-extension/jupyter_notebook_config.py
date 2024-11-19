@@ -1,3 +1,5 @@
+# ruff: noqa: ERA001
+
 import os
 
 # Configuration file for ipython-notebook.
@@ -32,7 +34,7 @@ c = get_config()  # noqa: F821
 # API, and may change in future releases.
 # c.NotebookApp.server_extensions = []
 c.NotebookApp.server_extensions = ["biokbase.narrative.handlers.narrativehandler"]
-
+# c.NotebookApp.nbserver_extensions = {"biokbase.narrative.handlers.narrativehandler": True}
 # The random bytes used to secure cookies. By default this is a new random
 # number every time you start the Notebook. Set it to a value in a config file
 # to enable logins to persist across server sessions.
@@ -74,9 +76,7 @@ c.NotebookApp.port = 8888
 # c.NotebookApp.allow_origin = ''
 
 # The notebook manager class to use.
-c.NotebookApp.contents_manager_class = (
-    "biokbase.narrative.contents.kbasewsmanager.KBaseWSManager"
-)
+c.NotebookApp.contents_manager_class = "biokbase.narrative.contents.kbasewsmanager.KBaseWSManager"
 # default: 'IPython.html.services.contents.filemanager.FileContentsManager'
 
 # Use a regular expression for the Access-Control-Allow-Origin header
@@ -94,9 +94,7 @@ c.NotebookApp.contents_manager_class = (
 # c.NotebookApp.certfile = u''
 
 # The logout handler class to use.
-c.NotebookApp.logout_handler_class = (
-    "biokbase.narrative.handlers.authhandlers.KBaseLogoutHandler"
-)
+c.NotebookApp.logout_handler_class = "biokbase.narrative.handlers.authhandlers.KBaseLogoutHandler"
 
 # The base URL for the notebook server.
 #
@@ -126,7 +124,7 @@ c.NotebookApp.tornado_settings = {
 # c.NotebookApp.kernel_manager_class = <class 'IPython.html.services.kernels.kernelmanager.MappingKernelManager'>
 
 # The file where the cookie secret is stored.
-c.NotebookApp.cookie_secret_file = "/tmp/notebook_cookie"
+c.NotebookApp.cookie_secret_file = "/tmp/notebook_cookie"  # noqa: S105, S108
 
 # Supply SSL options for the tornado HTTPServer. See the tornado docs for
 # details.
@@ -235,9 +233,7 @@ c.NotebookApp.extra_template_paths = [os.path.join(myfile, "kbase_templates")]
 
 # The login handler class to use.
 # c.NotebookApp.login_handler_class = <class 'IPython.html.auth.login.LoginHandler'>
-c.NotebookApp.login_handler_class = (
-    "biokbase.narrative.handlers.authhandlers.KBaseLoginHandler"
-)
+c.NotebookApp.login_handler_class = "biokbase.narrative.handlers.authhandlers.KBaseLoginHandler"
 
 # DEPRECATED, use tornado_settings
 # c.NotebookApp.webapp_settings = {}

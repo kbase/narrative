@@ -1,26 +1,22 @@
-"""
-This is a reasonably tiny API for serializing and deserializing UPAs for storage in Narrative
+"""This is a reasonably tiny API for serializing and deserializing UPAs for storage in Narrative
 documents.
 
 """
 
 import re
 
-from .system import system_variable
+from biokbase.narrative.system import system_variable
 
 external_tag = "&"
 
 
 def is_upa(upa: str) -> bool:
-    """
-    Returns True if the given upa string is valid, False, otherwise.
-    """
+    """Returns True if the given upa string is valid, False, otherwise."""
     return re.match(r"^\d+(\/\d+){2}(;\d+(\/\d+){2})*$", upa) is not None
 
 
 def is_ref(ref: str) -> bool:
-    """
-    Returns True if the given string is a reference or upa, False otherwise.
+    """Returns True if the given string is a reference or upa, False otherwise.
     That is, if it has this structure:
     blahblah/blahblah
     or
@@ -44,15 +40,12 @@ def _prepare_upa_serialization(upa: str) -> str:
     if isinstance(upa, list):
         upa = ";".join(upa)
     if not is_upa(upa):
-        raise ValueError(
-            '"{}" is not a valid UPA. It may have already been serialized.'.format(upa)
-        )
+        raise ValueError(f'"{upa}" is not a valid UPA. It may have already been serialized.')
     return upa
 
 
 def serialize(upa: str) -> str:
-    """
-    Serializes an UPA - prepares it for storage as a part of Narrative cell metadata.
+    """Serializes an UPA - prepares it for storage as a part of Narrative cell metadata.
     This means a bit of a tweak to the UPA itself. Currently, we want to store it in a way
     that designates it as a serialized string, and gives an easy path to substitute the
     initial workspace part of the UPA with a different workspace.
@@ -68,8 +61,7 @@ def serialize(upa: str) -> str:
 
 
 def serialize_external(upa: str) -> str:
-    """
-    In the case of UPAs representing objects that are located in a different workspace all
+    """In the case of UPAs representing objects that are located in a different workspace all
     together (e.g. set items that aren't copied into the Narrative with the set container
     object), they get flagged with a special character. In that case, the UPA is maintained,
     but transformed into:
@@ -85,8 +77,7 @@ def serialize_external(upa: str) -> str:
 
 
 def deserialize(serial_upa: str) -> str:
-    """
-    Deserializes a serialized UPA to one that is valid for use with the Workspace (or other
+    """Deserializes a serialized UPA to one that is valid for use with the Workspace (or other
     services that consume Workspace objects).
     A serialized UPA is either of the form:
     [ws]/obj/ver;ws/obj/ver;...
@@ -98,14 +89,12 @@ def deserialize(serial_upa: str) -> str:
     if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
-        deserial = serial_upa[len(external_tag):]  # noqa:E203
+        deserial = serial_upa[len(external_tag) :]
     else:
         ws_id = system_variable("workspace_id")
         if ws_id is None:
-            raise RuntimeError(
-                "Currently loaded workspace is unknown! Unable to deserialize UPA."
-            )
+            raise RuntimeError("Currently loaded workspace is unknown! Unable to deserialize UPA.")
         deserial = re.sub(r"^\[(\d+)\]\/", str(ws_id) + "/", serial_upa)
     if not is_upa(deserial):
-        raise ValueError('Deserialized UPA: "{}" is invalid!'.format(deserial))
+        raise ValueError(f'Deserialized UPA: "{deserial}" is invalid!')
     return deserial

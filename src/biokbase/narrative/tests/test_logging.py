@@ -1,14 +1,12 @@
-"""
-Test log proxy and kblogging
-"""
+"""Test log proxy and kblogging"""
+
 import logging
 import os
 import time
 import unittest
 
 from biokbase.narrative.common import kblogging
-
-from . import util
+from biokbase.narrative.tests import util
 
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 

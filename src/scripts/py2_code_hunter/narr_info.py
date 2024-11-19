@@ -8,11 +8,11 @@ class NarrativeInfo:
         self.saved_by = narr_info[5]
         self.ws_owner = ws_owner
         self.updated_cells = 0
-        self.changed_cells = dict()  # cell idx - CellChange
+        self.changed_cells = {}  # cell idx - CellChange
 
     def add_updated_cell(self, idx: int, original_source: str, updated_source: str):
-        """
-        Check original vs updated
+        """Check original cell vs updated.
+
         if different, mark them and add an updated cell to the count
         """
         if original_source != updated_source:

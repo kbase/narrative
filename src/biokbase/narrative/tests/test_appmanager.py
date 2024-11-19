@@ -1,6 +1,5 @@
-"""
-Tests for the app manager.
-"""
+"""Tests for the app manager."""
+
 import contextlib
 import copy
 import io
@@ -23,22 +22,21 @@ from biokbase.narrative.tests.job_test_constants import (
     READS_OBJ_1,
     READS_OBJ_2,
 )
+from biokbase.narrative.tests.narrative_mock.mockclients import WSID_STANDARD, get_mock_client
+from biokbase.narrative.tests.util import ConfigTests
 from IPython.display import HTML, Javascript
-
-from .narrative_mock.mockclients import WSID_STANDARD, get_mock_client
-from .util import ConfigTests
 
 CONFIG = ConfigTests()
 WS_NAME = CONFIG.get("app_tests", "public_ws_name")
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
-TOKEN_ID = "ABCDE12345"
+TOKEN_ID = "ABCDE12345"  # noqa: S105
 UNKNOWN_APP_ID = "Unknown app id"
 READS_FILE_1 = "reads file 1"
 READS_FILE_2 = "reads file 2"
 NEW_READS_SET = "New Reads Set"
 
 JOB_COMM_MOCK = "biokbase.narrative.jobs.appmanager.JobComm"
-GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"
+GET_AGENT_TOKEN = "biokbase.narrative.jobs.appmanager.auth.get_agent_token"  # noqa: S105
 CLIENTS_AM = "biokbase.narrative.jobs.appmanager.clients.get"
 CLIENTS_AM_SM = "biokbase.narrative.jobs.appmanager.specmanager.clients.get"
 CLIENTS_SM = "biokbase.narrative.jobs.specmanager.clients.get"
@@ -52,11 +50,7 @@ with mock.patch(CLIENTS, get_mock_client):
 
 def get_method(tag, app_id):
     spec = copy.deepcopy(TEST_SPECS[tag][app_id])
-    return (
-        spec["behavior"]["kb_service_name"]
-        + "."
-        + spec["behavior"]["kb_service_method"]
-    )
+    return spec["behavior"]["kb_service_name"] + "." + spec["behavior"]["kb_service_method"]
 
 
 def mock_agent_token(*args, **kwargs):
@@ -68,7 +62,7 @@ def get_timestamp():
 
 
 def get_bulk_run_good_inputs():
-    """This DS is meant to be mutated"""
+    """This DS is meant to be mutated."""
     return [
         {
             "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
@@ -122,8 +116,7 @@ def get_bulk_run_good_inputs():
 
 
 def iter_bulk_run_good_inputs_param_sets(spec_mapped=False):
-    """
-    Return generator of param_sets
+    """Return generator of param_sets
     These test param_sets get spec mapped in am._build_run_job_params
     TODO are these tests hardcoded against the deployed app?
     """
@@ -191,11 +184,8 @@ class AppManagerTestCase(unittest.TestCase):
         with contextlib.suppress(Exception):
             del os.environ["KB_WORKSPACE_ID"]
 
-    def run_app_expect_error(
-        self, comm_mock, run_func, func_name, print_error, cell_id=None
-    ):
-        """
-        A wrapper for various versions of run_app* that'll test and verify that errors get
+    def run_app_expect_error(self, comm_mock, run_func, func_name, print_error, cell_id=None):
+        """A wrapper for various versions of run_app* that'll test and verify that errors get
         1. printed to stdout and
         2. sent over the (mocked) comm channel as expected
         The stdout prints and the comm channel responses are both side effects that get
@@ -283,9 +273,7 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_app__good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        new_job = self.am.run_app(
-            self.test_app_id, self.test_app_params, tag=self.test_tag
-        )
+        new_job = self.am.run_app(self.test_app_id, self.test_app_params, tag=self.test_tag)
         assert isinstance(new_job, Job)
         assert self.jm.get_job(self.test_job_id) == new_job
         self._verify_comm_success(c.return_value.send_comm_message, False)
@@ -310,9 +298,7 @@ class AppManagerTestCase(unittest.TestCase):
             )
             is None
         )
-        self._verify_comm_success(
-            c.return_value.send_comm_message, False, cell_id=cell_id
-        )
+        self._verify_comm_success(c.return_value.send_comm_message, False, cell_id=cell_id)
 
     # N.b. the following three tests contact the workspace
     # src/config/config.json must be set to use the CI configuration
@@ -381,9 +367,7 @@ class AppManagerTestCase(unittest.TestCase):
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_app(
-                self.bad_app_id, self.test_app_params, tag=self.test_tag
-            ),
+            lambda: self.am.run_app(self.bad_app_id, self.test_app_params, tag=self.test_tag),
             "run_app",
             UNKNOWN_APP_ID,
         )
@@ -504,9 +488,7 @@ class AppManagerTestCase(unittest.TestCase):
             )
             is None
         )
-        self._verify_comm_success(
-            c.return_value.send_comm_message, False, cell_id=cell_id
-        )
+        self._verify_comm_success(c.return_value.send_comm_message, False, cell_id=cell_id)
 
     # N.b. the following three tests contact the workspace
     # src/config/config.json must be set to use the CI configuration
@@ -529,9 +511,7 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_legacy_batch_app(
-                self.good_app_id, None, tag=self.bad_tag
-            )
+            return self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.bad_tag)
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
@@ -546,9 +526,7 @@ class AppManagerTestCase(unittest.TestCase):
         c.return_value.send_comm_message = MagicMock()
 
         def run_func():
-            return self.am.run_legacy_batch_app(
-                self.good_app_id, None, tag="dev", version="0.0.1"
-            )
+            return self.am.run_legacy_batch_app(self.good_app_id, None, tag="dev", version="0.0.1")
 
         self.run_app_expect_error(
             c.return_value.send_comm_message,
@@ -567,10 +545,7 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_legacy_batch_app__missing_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        assert (
-            self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.good_tag)
-            is not None
-        )
+        assert self.am.run_legacy_batch_app(self.good_app_id, None, tag=self.good_tag) is not None
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
     @mock.patch(CLIENTS_AM, get_mock_client)
@@ -685,9 +660,7 @@ class AppManagerTestCase(unittest.TestCase):
         # should print an error if there is no cell id
         self.run_app_expect_error(
             comm_mock,
-            lambda: self.am.run_local_app(
-                self.bad_app_id, self.test_app_params, tag=self.test_tag
-            ),
+            lambda: self.am.run_local_app(self.bad_app_id, self.test_app_params, tag=self.test_tag),
             "run_local_app",
             UNKNOWN_APP_ID,
         )
@@ -738,7 +711,7 @@ class AppManagerTestCase(unittest.TestCase):
 
         # expect shared_params to have been merged into respective param_sets
         for exp, outp in zip(
-            iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params
+            iter_bulk_run_good_inputs_param_sets(spec_mapped=True), batch_run_params, strict=False
         ):
             got = outp["params"][0]
             assert {**got, **exp} == got
@@ -814,9 +787,7 @@ class AppManagerTestCase(unittest.TestCase):
         # should return None, fire a couple of messages
         for run_id in run_ids:
             assert (
-                self.am.run_app_batch(
-                    get_bulk_run_good_inputs(), cell_id=cell_id, run_id=run_id
-                )
+                self.am.run_app_batch(get_bulk_run_good_inputs(), cell_id=cell_id, run_id=run_id)
                 is None
             )
 
@@ -832,9 +803,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch(CLIENTS_AM, get_mock_client)
     @mock.patch(JOB_COMM_MOCK)
     def test_run_app_batch__bad_inputs(self, c):
-        no_info_error = (
-            "app_info must be a list with at least one set of app information"
-        )
+        no_info_error = "app_info must be a list with at least one set of app information"
         missing_key_error = "app info must contain keys app_id, tag, params"
         bad_id_error = "an app_id must be of the format module_name/app_name"
         bad_params_error = "params must be a list of dicts of app parameters"
@@ -874,9 +843,7 @@ class AppManagerTestCase(unittest.TestCase):
             for bad_value in app_info_case["bad_values"]:
                 app_info = get_bulk_run_good_inputs()
                 app_info[0][app_info_case["key"]] = bad_value
-                cases.append(
-                    {"arg": app_info, "expected_error": app_info_case["error"]}
-                )
+                cases.append({"arg": app_info, "expected_error": app_info_case["error"]})
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
         for test_case in cases:
@@ -1013,12 +980,26 @@ class AppManagerTestCase(unittest.TestCase):
         tag = "dev"
         spec = self.am.spec_manager.get_spec(app_id, tag=tag)
         spec_params = self.am.spec_manager.app_params(spec)
-        (params, ws_inputs) = app_util.validate_parameters(
-            app_id, tag, spec_params, inputs
-        )
+        (params, ws_inputs) = app_util.validate_parameters(app_id, tag, spec_params, inputs)
         assert params == inputs
         assert "12345/8/1" in ws_inputs
         assert "12345/7/1" in ws_inputs
+
+    @mock.patch(CLIENTS_AM_SM, get_mock_client)
+    @mock.patch(CLIENTS_SM, get_mock_client)
+    def test_validate_params_wildcard_type(self):
+        inputs = {
+            "input_ref": READS_OBJ_1,
+            "destination_dir": "workspace_export",
+            "format": "legacy_data_import_export",
+        }
+        app_id = "kb_staging_exporter/export_json_to_staging"
+        tag = "dev"
+        spec = self.am.spec_manager.get_spec(app_id, tag=tag)
+        spec_params = self.am.spec_manager.app_params(spec)
+        (params, ws_inputs) = app_util.validate_parameters(app_id, tag, spec_params, inputs)
+        assert params == inputs
+        assert ws_inputs == ["12345/7/1"]
 
     @mock.patch(CLIENTS_AM_SM, get_mock_client)
     @mock.patch(CLIENTS_SM, get_mock_client)
@@ -1046,9 +1027,7 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         spec = self.am.spec_manager.get_spec(app_id, tag=tag)
         spec_params = self.am.spec_manager.app_params(spec)
-        spec_params_map = {
-            spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))
-        }
+        spec_params_map = {spec_params[i]["id"]: spec_params[i] for i in range(len(spec_params))}
         mapped_inputs = self.am._map_inputs(
             spec["behavior"]["kb_service_input_mapping"], inputs, spec_params_map
         )
@@ -1074,9 +1053,7 @@ class AppManagerTestCase(unittest.TestCase):
             }
         ]
         assert expected[0] == mapped_inputs[0]
-        ref_path = (
-            ws_name + "/MyReadsSet; " + ws_name + "/rhodobacterium.art.q10.PE.reads"
-        )
+        ref_path = ws_name + "/MyReadsSet; " + ws_name + "/rhodobacterium.art.q10.PE.reads"
         # ref_paths get mocked as 1/1/1;2/2/2;...N/N/N;18836/5/1
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         assert ret == "1/1/1;18836/5/1"
@@ -1179,15 +1156,11 @@ class AppManagerTestCase(unittest.TestCase):
         transformed_call_args_list = []
         for call in comm_mock.call_args_list:
             [msg_type, content] = call[0]
-            transformed_call_args_list.append(
-                {"msg_type": msg_type, "content": content}
-            )
+            transformed_call_args_list.append({"msg_type": msg_type, "content": content})
         return transformed_call_args_list
 
     def _verify_comm_error(self, comm_mock, cell_id=None, run_id=None) -> None:
-        """
-        Generates standard error messages and tests it against stored comm messages.
-        """
+        """Generates standard error messages and tests it against stored comm messages."""
         transformed_call_args_list = self._transform_comm_messages(comm_mock)
         expected_message = {
             "msg_type": MESSAGE_TYPE["RUN_STATUS"],

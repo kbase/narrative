@@ -4,8 +4,6 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
     html,
     string
 ) => {
-    'use strict';
-
     // Note - would destructure in the arguments, but that would require a change to eslint rules.
     const { sanitize } = DOMPurify;
 
@@ -29,7 +27,11 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
         const parameterArray = appSpec.parameters.map((param) => {
             const textOptions = param.text_options;
             let types = null;
-            if (textOptions && Array.isArray(textOptions.valid_ws_types)) {
+            if (
+                textOptions &&
+                Array.isArray(textOptions.valid_ws_types) &&
+                textOptions.valid_ws_types.indexOf('*') === -1
+            ) {
                 const typesArray = textOptions.valid_ws_types.map((type) => {
                     return a(
                         {
@@ -220,12 +222,12 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
                             ),
                             appTag
                                 ? span(
-                                    {
-                                        class: `${cssBaseClass}__tag label label-primary`,
-                                        title: `${appTag} version of the app`,
-                                    },
-                                    appTag
-                                )
+                                      {
+                                          class: `${cssBaseClass}__tag label label-primary`,
+                                          title: `${appTag} version of the app`,
+                                      },
+                                      appTag
+                                  )
                                 : '',
                         ]
                     ),

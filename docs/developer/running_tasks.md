@@ -68,18 +68,19 @@ npm run prettier # formats JS files
 
 ### Python formatting and linting
 
-The narrative repo installation includes the modules [black](https://github.com/psf/black), for code formatting, and [flake8](https://flake8.pycqa.org/) for code QA. You can run these manually using the aliases set up in the `package.json` file:
+The narrative repo installation includes [Ruff][https://docs.astral.sh/ruff/], a code formatter and linter, for code QA. You can run these commands manually using the aliases set up in the `package.json` file:
 
 ```sh
-$ npm run black  # autoformats python code
+$ npm run py-format  # autoformats python code
 ```
 
 ```sh
-$ npm run flake8  # runs flake8 code linter
+$ npm run py-lint  # runs code linter
 ```
 
 or trigger them directly from the command line, e.g.
 
 ```sh
-$ flake8 .
+$ ruff format .
+$ ruff check --autofix .
 ```

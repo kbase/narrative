@@ -2,9 +2,157 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
 
-## Version unreleased
+## Unreleased
+
+- Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
+
+- Python dependencies updated to the following versions:
+  - coverage: 7.6.2
+  - pytest: 8.3.3
+  - ruff: 0.6.9
+  - vcrpy: 6.0.2
+  - bokeh: 3.6.0
+  - cryptography: 43.0.1
+  - idna: 3.10
+  - markupsafe: 3.0.1
+  - networkx: 3.4
+  - numpy: 2.1.2
+  - plotly: 5.24.1
+  - pyasn1: 0.6.1
+  - setuptools: 75.1.0
+  - sympy: 1.13.3
+  - ipython: 8.28.2
+  - pandas: 2.2.3
+  - pymongo: 4.10.1
+  - scikit-learn: 1.5.2
+  - statsmodels: 0.14.4
+
+
+
+## Version 5.4.2
+- UIP-52 - repair integration tests, get WebDriverIO up to date
+- PTV-1913 - fix potential authentication issues affecting report viewing and downloads in narratives
+
+### Dependency Changes
+- Python dependency updates
+  - coverage 7.5.3 -> 7.6.1
+  - pytest 8.2.2 -> 8.3.2
+  - pytest-recording 0.13.1 -> 0.13.2
+  - ruff 0.5.5 -> 0.6.3
+
+  - certifi 2027.7.4 -> 2024.8.30
+  - cryptography 42.0.8 -> 43.0.0
+  - idna 3.7 -> 3.8
+  - jsonschema 4.16.0 -> 4.23.0
+  - markdown 3.4.1 -> 3.7
+  - markupsafe 2.1.4 -> 2.1.5
+  - pycurl 7.45.1 -> 7.45.3
+  - pyopenssl 24.1.0 -> 24.2.1
+  - setuptools 71.1.0 -> 74.0.0
+  - terminado 0.18.0 -> 0.18.1
+  - bokeh 3.5.1 -> 3.5.2
+  - ete3 3.1.2 -> 3.1.3
+  - numpy 2.0.1 -> 2.1.0
+  - plotly 5.23.0 -> 5.24.0
+  - scipy 1.14.0 -> 1.14.1
+  - sympy 1.13.1 -> 1.13.2
+
+  - ipython 8.26.0 -> 8.27.0
+  - ipywidgets 7.7.1 -> 8.1.5
+  - notebook 6.5.6 -> 6.5.7
+  - pymongo 4.7.3 -> 4.8.0
+  - pyyaml 6.0.1 -> 6.0.2
+  - scikit-learn 1.5.0 -> 1.5.1
+
+- Javascript Dependency Changes
+  - wdio-chromedriver-service -- Deprecated and removed, functionality is now built-in to WebdriverIO
+
+  - @babel/traverse 7.24.7 -> 7.25.6
+  - @eslint/js 9.6.0 -> 9.9.1
+  - @wdio/browserstack-service 8.38.2 -> 9.0.9
+  - @wdio/cli 8.38.2 -> 9.0.9
+  - @wdio/local-runner 8.38.2 -> 9.0.9
+  - @wdio/mocha-framwork 8.39.0 -> 9.0.8
+  - @wdio/spec-reporter 8.38.2 -> 9.0.8
+  - autoprefixer 10.4.19 -> 10.4.20
+  - axios 1.7.2 -> 1.7.7
+  - chromedriver 128.0.0 -> 128.0.1
+  - cssnano 7.0.2 -> 7.0.6
+  - eslint 9.4.0 -> 9.9.1
+  - expect-webdriverio 3.6.0 -> 5.0.2
+  - glob 10.4.1 -> 11.0.0
+  - globals 15.6.0 -> 15.9.0
+  - grunt-cli 1.4.3 -> 1.5.0
+  - grunt-stylelint 0.20.0 -> 0.20.1
+  - husky 9.0.11 -> 9.1.5
+  - jasmine-core 5.1.2 -> 5.2.0
+  - jquery-migrate 1.4.1 -> 3.5.2
+  - karma 6.4.3 -> 6.4.4
+  - lint-staged 15.2.6 -> 15.2.10
+  - postcss 8.4.39 -> 8.4.45
+  - prettier 3.3.2 -> 3.3.3
+  - puppeteer 23.2.1 -> 23.3.0
+  - requirejs 2.3.6 -> 2.3.7
+  - sass 1.77.5 -> 1.78.0
+  - selenium-standalone 9.5.0 -> 10.0.0
+  - selenium-webdriver 4.22.0 -> 4.24.0
+  - stylelint 16.6.1 -> 16.9.0
+  - stylelint-config-recommended 14.0.0 -> 14.0.1
+  - stylelint-config-sass-guidelines 11.1.0 -> 12.0.0
+  - stylelint-config-standard 36.0.0 -> 36.0.1
+  - terser 5.31.1 -> 5.31.6
+  - webdriverio 8.38.2 -> 9.0.9
+
+  - dompurify 2.5.5 -> 3.1.6
+  - follow-redirects 1.15.6 -> 1.15.9
+  - jquery-ui 1.13.2 -> 1.14.0
+  - plotly.js-dist-min 2.33.0 -> 2.35.0
+  - underscore 1.13.6 -> 1.13.7
+
+## Version 5.4.1
+- UIP-51 fix issue where JSON and STAGING download apps aren't getting properly instantiated with object inputs.
+
+### Dependency Changes
+- Python dependency updates
+  - biopython 1.79 -> 1.84
+  - bokeh 3.0.3 -> 3.5.1
+  - certifi 2024.6.2 -> 2024.7.4
+  - chardet 5.0.0 -> 5.2.0
+  - ipython 8.25.0 -> 8.26.0
+  - networkx 3.0 -> 3.3
+  - numpy 1.24.1 -> 2.0.1
+  - pexpect 4.8.0 -> 4.9.0
+  - pillow 10.3.0 -> 10.4.0
+  - plotly 5.13.0 -> 5.23.0
+  - pyasn1 0.4.8 -> 0.6.0
+  - pygments 2.17.2 -> 2.18.0
+  - python-daemon 2.3.2 -> 3.0.1
+  - python-dateutil 2.8.2 -> 2.9.0.post0
+  - scipy 1.10.0 -> 1.14.0
+  - seaborn 0.12.0 -> 0.13.2
+  - setuptools 69.5.1 -> 71.1.0
+  - sympy 1.10.1 -> 1.13.1
+  - ruff 0.4.7 -> 0.5.5
+
+- JavaScript dependency updates
+  - @wdio/mocha-framework  8.38.2 -> 8.39.0
+  - chrome-launcher  1.1.1 -> 1.1.2
+  - chromedriver  126.0.0 -> 126.0.4
+  - postcss  8.4.38 -> 8.4.39
+  - selenium-webdriver  4.21.0 -> 4.22.0
+
+## Version 5.4.0
+-   UIP-43
+    -   Change Narrative JSON downloads to use a download-to-staging app.
+    -   Add an optional "wildcard" field to app cells that can be used to allow any data object as an app input.
+    -   Add a text-only output field for app cells to optionally use.
+-   UIP-44 - Convert data object transform-and-download URLs to use the Blobstore endpoint instead of the Data Import Export service
+-   UIP-45 - Convert the report object viewer to use the Blobstore endpoint instead of the Data Import Export service
+-   Remove last references to the Data Import Export service so we can lay it to rest in KBase.
+
+## Version 5.3.0
 
 - PTV-1845 - kbaseTabs now shows another tab after a closable tab is closed;
     previously it showed an empty space.
@@ -15,31 +163,50 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.10.0 (more notes will
 - UIP-41 - Fix Dropzone dependency issues, address problems with unit tests
 - UIP-41 - Removed unused Python dependencies
 
+### Notebook widget updates
+
+- The clustergrammer widget was updated to clustergrammer2; see the python dependency changes below for version information.
+
 ### Dependency Changes
 
 - Updated to include all Python dependencies in the image built in this repo, and removed those that are not directly referenced in KBase code.
 - Retained scientific computing dependencies that may be useful to the community (SciPy, numpy, pandas, etc.)
 - Removed directly required dependencies that are really just used by the Jupyter Notebook.
 - Separated requirements into image dependencies (i.e. packages that are generally useful to have on the Narrative Docker image, ported from the narrative-base-image repo), application requirements and dev requirements.
-- Image dependencies are all found in the `docker_image_dependencies` directory, and combined into the `python-requirements.txt` file.
+- Generally useful python packages are combined in the `src/requirements-general.txt` file.
 - the requirements in `src/requirements.txt` are needed for the Narrative to run.
 - the requirements in `src/requirements-dev.txt` are needed for Narrative development and testing.
+- flake8, isort, and black have been replaced by the multifunctional formatter and linter Ruff.
+
 
 - Python dependency updates
   - beautifulsoup4: 4.12.2 -> 4.12.3
-  - black: 23.7.0 -> 24.1.1
-  - coverage: 7.3.1 -> 7.4.1
-  - cryptography: 41.0.4 -> 42.0.2
-  - flake8: 6.1.0 -> 7.0.0
-  - idna: 3.4 -> 3.6
-  - isort: 5.12.0 -> 5.13.2
-  - jinja2: 3.1.2 -> 3.1.3
+  - black: 24.4.2 -> replaced by Ruff
+  - certifi: 2022.12.7 -> 2024.6.2
+  - coverage: 7.3.1 -> 7.5.3
+  - clustergrammer_widget: removed
+  - clustergrammer2: 0.18.0 (new)
+  - cryptography: 41.0.4 -> 42.0.8
+  - flake8: 7.0.0 -> replaced by Ruff
+  - idna: 3.4 -> 3.7
+  - isort: 5.13.2 -> replaced by Ruff
+  - ipython: 8.10.0 -> 8.25.0
+  - jinja2: 3.1.2 -> 3.1.4
   - markupsafe: 2.1.3 -> 2.1.4
+  - pillow: 9.4.0 -> 10.3.0
   - pygments: 2.16.1 -> 2.17.2
-  - pymongo: 4.5.0 -> 4.6.1
+  - pymongo: 4.5.0 -> 4.7.3
   - pyopenssl: 23.2.0 -> 24.0.0
-  - pytest: 7.4.0 -> 8.0.0
+  - pytest: 7.4.0 -> 8.2.2
+  - pytest-cov: 4.1.0 -> 5.0.0
+  - pytest-recording: 0.13.1 (new)
+  - requests-mock: 1.11.0 -> 1.12.1
+  - requests: 2.31.0 -> 2.32.3
+  - ruff: 0.4.7 (new)
+  - scikit-learn: 1.2.1 -> 1.5.0
+  - statsmodels: 0.14.2 (new)
   - terminado: 0.17.1 -> 0.18.0
+  - tornado: 6.2 -> 6.4.1
   - vcrpy: 5.1.0 -> 6.0.1
 
 - Javascript dependency updates

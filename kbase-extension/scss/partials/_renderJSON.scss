@@ -1,0 +1,9 @@
+.RenderJSON-headerCell {
+    color: rgb(150 150 150 / 100%);
+}
+
+/* override bootstrap table style if used */
+.table > tbody > tr > th.RenderJSON-headerCell {
+    color: rgb(150 150 150 / 100%);
+    text-align: left;
+}

@@ -7,9 +7,20 @@ define([
     'kb_service/client/narrativeMethodStore',
     'common/html',
     'util/display',
+    'util/string',
     'kbaseReportView',
-], (Promise, $, UI, Runtime, Events, NarrativeMethodStore, html, DisplayUtil, KBaseReportView) => {
-    'use strict';
+], (
+    Promise,
+    $,
+    UI,
+    Runtime,
+    Events,
+    NarrativeMethodStore,
+    html,
+    DisplayUtil,
+    StringUtil,
+    KBaseReportView
+) => {
     const t = html.tag,
         div = t('div'),
         a = t('a'),
@@ -90,15 +101,47 @@ define([
             // the job output
             if (!reportInputs) {
                 return Promise.try(() => {
+                    const viewerName = result ? result.name : null;
                     const jobOutput = jobState.job_output
                         ? jobState.job_output.result
                         : 'no output found';
+                    if (viewerName === 'text-only') {
+                        ui.setContent('results.body', buildOutputText(result.params.result_text));
+                    } else {
+                        ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
+                    }
                     ui.getElement('results').classList.remove('hidden');
-                    ui.setContent('results.body', ui.buildPresentableJson(jobOutput));
                 });
             }
             // otherwise, render the report
             return renderReportView(reportInputs);
+        }
+
+        /**
+         * Expects that the result text should be a string, but handles other cases as well.
+         * If resultText is not a string or number, or is an empty string, this sets the text
+         * to "App completed successfully." Otherwise, it truncates the result to 1000 characters.
+         *
+         * This then gets HTML-escaped and embedded in a div for returning.
+         * @param {str} resultText
+         * @returns
+         */
+        function buildOutputText(resultText) {
+            // default if text is empty, null, or undefined
+            if (
+                !(typeof resultText === 'string' && resultText.trim().length > 0) &&
+                typeof resultText !== 'number'
+            ) {
+                resultText = 'App completed successfully.';
+            }
+            resultText = String(resultText).trim();
+            // cap the results at 1,000 characters.
+            if (resultText.length > 1000) {
+                resultText =
+                    resultText.substring(0, 1000) +
+                    ` [truncated from ${resultText.length} characters]`;
+            }
+            return div(StringUtil.escape(resultText));
         }
 
         function lazyRenderReport() {

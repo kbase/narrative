@@ -1,8 +1,8 @@
-"""
-Code to proxy logs from the narrative, over a socket, to a DB.
+"""Code to proxy logs from the narrative, over a socket, to a DB.
 The proxy will tend to have root permissions so it can read protected
 configuration files.
 """
+
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "8/22/14"
 
@@ -19,13 +19,13 @@ from logging import handlers
 
 import pymongo
 import yaml
-from dateutil.tz import tzlocal
 
 # Local
 from biokbase import narrative
 from biokbase.narrative.common import log_common
 from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
+from dateutil.tz import tzlocal
 
 EVENT_MSG_SEP = log_common.EVENT_MSG_SEP
 
@@ -37,16 +37,13 @@ m_fwd = None  # global forwarder object
 
 class DBAuthError(Exception):
     def __init__(self, host, port, db):
-        msg = "Authorization failed to {host}:{port:d}/{db}".format(
-            host=host, port=port, db=db
-        )
+        msg = f"Authorization failed to {host}:{port:d}/{db}"
         Exception.__init__(self, msg)
 
 
 class Configuration:
     def __init__(self, input_file):
-        """
-        Read and parse configuration from input file.
+        """Read and parse configuration from input file.
         Format is any valid YAML variant, which includes JSON.
         But the basic thing to know is that "name: value" is supported.
 
@@ -59,17 +56,17 @@ class Configuration:
         self._obj = {}
         if input_file:
             if not isinstance(input_file, IOBase):
-                input_file = open(str(input_file), "r")
+                input_file = open(str(input_file))
             try:
                 self._obj = yaml.load(input_file, Loader=yaml.SafeLoader)
                 if self._obj is None:
-                    raise ValueError("Empty configuration file")
-            except (IOError, ValueError):
+                    err_msg = "Empty configuration file"
+                    raise ValueError(err_msg)
+            except (OSError, ValueError):
                 raise
             except Exception as err:
-                raise ValueError(
-                    "Unknown error while parsing '{}': {}".format(input_file, err)
-                )
+                err_msg = f"Unknown error while parsing '{input_file}': {err}"
+                raise ValueError(err_msg) from err
 
 
 class ProxyConfiguration(Configuration):
@@ -97,8 +94,7 @@ class ProxyConfigurationWrapper(ProxyConfiguration):
 
 
 class DBConfiguration(Configuration):
-    """
-    Parameters controlling connection to remote database server.
+    """Parameters controlling connection to remote database server.
     Use superclass to parse YAML file.
     Spurious/unknown fields and sections are ignored.
     `db_host` and `db_port` are set to `DEFAULT_DB_HOST` and `DEFAULT_DB_PORT`
@@ -122,8 +118,7 @@ class DBConfiguration(Configuration):
     DEFAULT_DB_PORT = 27017
 
     def __init__(self, *a, **k):
-        """
-        Call superclass to parse configuration file, then perform some
+        """Call superclass to parse configuration file, then perform some
         sanity checks on the data.
 
         :param a: Positional arguments for superclass constructor
@@ -139,44 +134,36 @@ class DBConfiguration(Configuration):
         d, c = "db", "collection"
         for k in d, c:
             if k not in self._obj:
-                raise KeyError("Missing {k} from configuration".format(k=k))
+                err_msg = f"Missing {k} from configuration"
+                raise KeyError(err_msg)
         d, c = self._obj[d], self._obj[c]  # replace key with value
         total_len = len(d) + len(c) + 1
         if total_len > 123:
-            raise ValueError(
-                "Database + collection name is too long, "
-                "{:d} > 123: '{}.{}'".format(total_len, d, c)
-            )
+            err_msg = "Database + collection name is too long, " f"{total_len:d} > 123: '{d}.{c}'"
+            raise ValueError(err_msg)
         # Check DB name for illegal chars
         m = re.match("^[a-zA-Z][_a-zA-Z0-9]*", d)
         if m is None:
-            raise ValueError(
-                "Initial character not a letter in database '{}'".format(d)
-            )
+            err_msg = f"Initial character not a letter in database '{d}'"
+            raise ValueError(err_msg)
         if m.end() < len(d):
-            raise ValueError(
-                "Bad character at {:d}: '{}' in database '{}'".format(
-                    m.end() + 1, d[m.end()], d
-                )
-            )
+            err_msg = f"Bad character at {m.end() + 1:d}: '{d[m.end()]}' in database '{d}'"
+            raise ValueError(err_msg)
         # Check collection name for illegal chars
         m = re.match("^[a-zA-Z][_.a-zA-Z0-9]*", c)
         if m is None:
-            raise ValueError(
-                "Initial character not a letter in collection '{}'".format(c)
-            )
+            err_msg = f"Initial character not a letter in collection '{c}'"
+            raise ValueError(err_msg)
         if m.end() < len(d):
-            raise ValueError(
-                "Bad character at {:d}: '{}' in collection '{}'".format(
-                    m.end() + 1, c[m.end()], c
-                )
-            )
+            err_msg = f"Bad character at {m.end() + 1:d}: '{c[m.end()]}' in collection '{c}'"
+            raise ValueError(err_msg)
 
     def _check_auth_keys(self):
         u, p = "user", "password"
         if u in self._obj:
             if p not in self._obj:
-                raise KeyError('Key "{}" given but "{}" missing'.format(u, p))
+                err_msg = f'Key "{u}" given but "{p}" missing'
+                raise KeyError(err_msg)
         elif p in self._obj:
             del self._obj[p]  # just delete unused password
 
@@ -215,9 +202,7 @@ class SyslogConfiguration(Configuration):
     def __init__(self, *a, **k):
         Configuration.__init__(self, *a, **k)
         self.host, self.port, self.facility, self.proto = None, None, None, None
-        for default in filter(
-            lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
-        ):
+        for default in filter(lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()):
             # transform name to corresponding property in config file
             prop = default.replace("DEFAULT_", "syslog_").lower()
             name = prop[7:]  # strip 'syslog_' prefix
@@ -231,22 +216,18 @@ class SyslogConfiguration(Configuration):
         try:
             h.encodePriority(self.facility, "info")
         except KeyError:
-            raise ValueError(
-                "Invalid syslog facility '{}', must be one of: {}".format(
-                    self.facility, ", ".join(h.facility_names)
-                )
+            err_msg = f"Invalid syslog facility '{self.facility}', must be one of: " + ", ".join(
+                h.facility_names
             )
+            raise ValueError(err_msg) from KeyError
         if self.proto not in ("tcp", "udp"):
-            raise ValueError(
-                "Invalid syslog protocol '{}', must be either " "'udp' or 'tcp'"
-            )
+            err_msg = f"Invalid syslog protocol '{self.proto}', must be either 'udp' or 'tcp'"
+            raise ValueError(err_msg)
         # keyword args for logging.SysLogHandler constructor
         self.handler_args = {
             "address": (self.host, self.port),
             "facility": self.facility,
-            "socktype": {"tcp": socket.SOCK_STREAM, "udp": socket.SOCK_DGRAM}[
-                self.proto
-            ],
+            "socktype": {"tcp": socket.SOCK_STREAM, "udp": socket.SOCK_DGRAM}[self.proto],
         }
 
 
@@ -254,21 +235,21 @@ def get_sample_config():
     """Get a sample configuration."""
     fields = [
         "# proxy listen host and port",
-        "host: {}".format(ProxyConfiguration.DEFAULT_HOST),
-        "port: {}".format(ProxyConfiguration.DEFAULT_PORT),
+        f"host: {ProxyConfiguration.DEFAULT_HOST}",
+        f"port: {ProxyConfiguration.DEFAULT_PORT}",
         "# mongodb server host and port",
-        "db_host: {}".format(DBConfiguration.DEFAULT_DB_HOST),
-        "db_port: {}".format(DBConfiguration.DEFAULT_DB_PORT),
+        f"db_host: {DBConfiguration.DEFAULT_DB_HOST}",
+        f"db_port: {DBConfiguration.DEFAULT_DB_PORT}",
         "# mongodb server user/pass and database",
         "user: joeschmoe",
         "password: letmein",
         "db: mymongodb",
         "collection: kbaselogs",
         "# syslog destination",
-        "syslog_facility: {}".format(SyslogConfiguration.DEFAULT_FACILITY),
-        "syslog_host: {}".format(SyslogConfiguration.DEFAULT_HOST),
-        "syslog_port: {}".format(SyslogConfiguration.DEFAULT_PORT),
-        "syslog_proto: {}".format(SyslogConfiguration.DEFAULT_PROTO),
+        f"syslog_facility: {SyslogConfiguration.DEFAULT_FACILITY}",
+        f"syslog_host: {SyslogConfiguration.DEFAULT_HOST}",
+        f"syslog_port: {SyslogConfiguration.DEFAULT_PORT}",
+        f"syslog_proto: {SyslogConfiguration.DEFAULT_PROTO}",
     ]
     return "\n".join(fields)
 
@@ -292,9 +273,7 @@ class LogForwarder(asyncore.dispatcher):
                 self.__ip = socket.gethostbyname(self.__host)
             except socket.gaierror:
                 self.__ip = "0.0.0.0"
-            g_log.info(
-                "Done getting fully qualified domain name: {}".format(self.__host)
-            )
+            g_log.info(f"Done getting fully qualified domain name: {self.__host}")
         ver = narrative.version()
         self._meta.update(
             {
@@ -320,13 +299,12 @@ class LogForwarder(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            g_log.info("Accepted connection from {}".format(addr))
+            g_log.info(f"Accepted connection from {addr}")
             LogStreamForwarder(sock, self._hnd, self._meta)
 
     @staticmethod
     def connect_mongo(config):
-        """
-        Connect to configured MongoDB collection.
+        """Connect to configured MongoDB collection.
 
         :param config: Params for connecting
         :type config: Configuration
@@ -366,15 +344,14 @@ class LogStreamForwarder(asyncore.dispatcher):
             size = struct.unpack(">L", self._hdr)[0]
             if size > 65536:
                 g_log.error(
-                    "Log message size ({:d}) > 64K, possibly corrupt header"
-                    ": <{}>".format(size, self._hdr)
+                    f"Log message size ({size:d}) > 64K, possibly corrupt header" f": <{self._hdr}>"
                 )
                 self._hdr = ""
                 return
             self._body_remain = size
             self._hdr = ""
             if self._dbg:
-                g_log.debug("Expect msg size={}".format(size))
+                g_log.debug(f"Expect msg size={size}")
         # read body data
         if self._body_remain > 0:
             chunk = self.recv(self._body_remain)
@@ -385,16 +362,16 @@ class LogStreamForwarder(asyncore.dispatcher):
                 try:
                     record = pickle.loads(chunk)
                 except Exception as err:
-                    g_log.error("Could not unpickle record: {}".format(err))
+                    g_log.error(f"Could not unpickle record: {err}")
                     self._body = ""
                     return
                 if self._dbg:
-                    g_log.debug("handle_read: record={}".format(record))
+                    g_log.debug(f"handle_read: record={record}")
                 meta = self._meta or {}
                 # Dispatch to handlers
                 for h in self._hnd:
                     if self._dbg:
-                        g_log.debug("Dispatch to handler {}".format(h))
+                        g_log.debug(f"Dispatch to handler {h}")
                     h.handle(record, meta)
 
 
@@ -423,7 +400,7 @@ class MongoDBHandler(Handler):
         try:
             kbrec = DBRecord(record, strict=True)
         except ValueError as err:
-            g_log.error("Bad input to 'handle_read': {}".format(err))
+            g_log.error(f"Bad input to 'handle_read': {err}")
             return
         kbrec.record.update(meta)
         kbrec.record.update(self._get_record_meta(kbrec.record))
@@ -441,7 +418,7 @@ class SyslogHandler(Handler):
 
     def handle(self, record, meta):
         if self._dbg:
-            g_log.debug("SyslogHandler: rec.in={}".format(record))
+            g_log.debug(f"SyslogHandler: rec.in={record}")
         kvp = meta.copy()
         kvp.update(self._get_record_meta(record))
         message = record.get("message", record.get("msg", ""))
@@ -449,7 +426,7 @@ class SyslogHandler(Handler):
         if "message" in record:
             del record["message"]  # ??
         if self._dbg:
-            g_log.debug("SyslogHandler: rec.out={}".format(record))
+            g_log.debug(f"SyslogHandler: rec.out={record}")
         logrec = logging.makeLogRecord(record)
         self._hnd.emit(logrec)
 
@@ -486,15 +463,15 @@ class DBRecord:
         rec = self.record  # alias
         message = rec.get("message", rec.get("msg", None))
         if message is None:
-            g_log.error("No 'message' or 'msg' field found in record: {}".format(rec))
+            g_log.error(f"No 'message' or 'msg' field found in record: {rec}")
             message = "unknown;Message field not found"
         # Split out event name
         try:
             event, msg = message.split(log_common.EVENT_MSG_SEP, 1)
-        except ValueError:
+        except ValueError as e:
             event, msg = "event", message  # assign generic event name
             if self.strict:
-                raise ValueError("Cannot split event/msg in '{}'".format(message))
+                raise ValueError(f"Cannot split event/msg in '{message}'") from e
         # Break into key=value pairs
         text = parse_kvp(msg, rec)
         # Anything not parsed goes back into message
@@ -565,8 +542,7 @@ class DBRecord:
 
 
 def run(args):
-    """
-    Run the proxy
+    """Run the proxy
     :param args: Object with the following attributes
        conf - Configuration filename
 
@@ -579,20 +555,20 @@ def run(args):
     # Read configuration for destinations
     try:
         db_config = DBConfiguration(args.conf)
-    except (IOError, ValueError, KeyError) as err:
-        g_log.warn("Database configuration failed: {}".format(err))
+    except (OSError, ValueError, KeyError) as err:
+        g_log.warn(f"Database configuration failed: {err}")
         db_config = None
     try:
         syslog_config = SyslogConfiguration(args.conf)
-    except (IOError, ValueError, KeyError) as err:
-        g_log.warn("Syslog configuration failed: {}".format(err))
+    except (OSError, ValueError, KeyError) as err:
+        g_log.warn(f"Syslog configuration failed: {err}")
         syslog_config = None
 
     # Read configuration for proxy
     try:
         pconfig = ProxyConfiguration(args.conf)
-    except (IOError, ValueError, KeyError) as err:
-        g_log.critical("Proxy configuration failed: {}".format(err))
+    except (OSError, ValueError, KeyError) as err:
+        g_log.critical(f"Proxy configuration failed: {err}")
         return 2
 
     # Create LogForwarder
@@ -601,24 +577,16 @@ def run(args):
         m_fwd = LogForwarder(pconfig, db=db_config, syslog=syslog_config, meta=metadata)
     except pymongo.errors.ConnectionFailure as err:
         g_log.warn(
-            "Could not connect to MongoDB server at '{}:{:d}': {}".format(
-                db_config.db_host, db_config.db_port, err
-            )
+            f"Could not connect to MongoDB server at '{db_config.db_host}:{db_config.db_port:d}': {err}"
         )
 
     # Let user know what's up
-    g_log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
+    g_log.info(f"Listening on {pconfig.host}:{pconfig.port:d}")
     if db_config:
-        g_log.info(
-            "Connected to MongoDB server at {}:{:d}".format(
-                db_config.db_host, db_config.db_port
-            )
-        )
+        g_log.info(f"Connected to MongoDB server at {db_config.db_host}:{db_config.db_port:d}")
     if syslog_config:
         g_log.info(
-            "Connected to syslog at {}:{:d} ({})".format(
-                syslog_config.host, syslog_config.port, syslog_config.proto.upper()
-            )
+            f"Connected to syslog at {syslog_config.host}:{syslog_config.port:d} ({syslog_config.proto.upper()})"
         )
 
     # Main loop

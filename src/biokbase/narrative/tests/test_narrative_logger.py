@@ -5,8 +5,7 @@ import unittest
 from biokbase.narrative.common.narrative_logger import NarrativeLogger
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
-
-from . import util
+from biokbase.narrative.tests import util
 
 
 def assert_log_msg(msg, event, narrative, version):
@@ -89,17 +88,14 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         self.stop_log_stack()
 
     def test_failed_message(self):
-        """
-        Test that we don't throw an exception if we try to write a log without a receiving server.
+        """Test that we don't throw an exception if we try to write a log without a receiving server.
         i.e. - don't start the log stack.
         """
         try:
             logger = NarrativeLogger()
             logger.narrative_save("12345/67", 8)
         except BaseException:
-            self.fail(
-                "Log writing threw an unexpected exception without a live socket!"
-            )
+            self.fail("Log writing threw an unexpected exception without a live socket!")
 
 
 if __name__ == "__main__":

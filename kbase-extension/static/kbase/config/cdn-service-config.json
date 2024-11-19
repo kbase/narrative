@@ -8,10 +8,6 @@
             "url": "https://kbase.us/services/cdmi_api",
             "name": "CDMI"
         },
-        "data_import_export": {
-            "url": "https://ci.kbase.us/services/data_import_export",
-            "name": "Data Import Export"
-        },
         "fba": {
             "url": "https://ci.kbase.us/services/KBaseFBAModeling",
             "name": "FBA"

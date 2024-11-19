@@ -47,9 +47,7 @@ bad_request_error = {
 
 @pytest.fixture()
 def mock_auth_call(requests_mock):
-    def run_mock_auth(
-        verb: str, endpoint: str, token: str, return_data: dict, status_code=200
-    ):
+    def run_mock_auth(verb: str, endpoint: str, token: str, return_data: dict, status_code=200):
         if status_code == 400:
             return_data = json.dumps(bad_request_error)
         elif status_code == 401:
@@ -72,9 +70,7 @@ def mock_token_endpoint(mock_auth_call):
     def token_mocker(token, verb, return_info=None, status_code=200):
         if return_info is None:
             return_info = {}
-        return mock_auth_call(
-            verb, "token", token, return_info, status_code=status_code
-        )
+        return mock_auth_call(verb, "token", token, return_info, status_code=status_code)
 
     return token_mocker
 

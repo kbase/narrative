@@ -1,3 +1,5 @@
+"""Test utility functions."""
+
 import configparser
 import json
 import logging
@@ -10,15 +12,25 @@ import threading
 import time
 import unittest
 from contextlib import closing
+from types import NoneType
+from typing import Any
 
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.common.narrative_ref import NarrativeRef
-from biokbase.workspace.client import Workspace
+from biokbase.narrative.jobs.jobcomm import (
+    PARAM,
+    JobRequest,
+)
+
+BATCH_ID = PARAM["BATCH_ID"]
+JOB_ID = PARAM["JOB_ID"]
+JOB_ID_LIST = PARAM["JOB_ID_LIST"]
+CELL_ID_LIST = PARAM["CELL_ID_LIST"]
+
 
 _log = logging.getLogger("kbtest")
 _hnd = logging.StreamHandler()
-_hnd.setFormatter(
-    logging.Formatter("[%(levelname)s] %(asctime)s %(name)s: %(message)s")
-)
+_hnd.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s %(name)s: %(message)s"))
 _log.addHandler(_hnd)
 _log.setLevel(logging.DEBUG)
 
@@ -34,11 +46,10 @@ def test_logger(name):
 
 
 class ConfigTests:
-    """
-    Test utility functions
-    """
+    """Test config and utility functions."""
 
-    def __init__(self) -> None:
+    def __init__(self: "ConfigTests") -> None:
+        """Init the config tests object and read in the config."""
         self._path_prefix = os.path.join(
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"
         )
@@ -47,20 +58,22 @@ class ConfigTests:
         self._config = configparser.ConfigParser()
         self._config.read(self.config_file_path)
 
-    def get(self, *args, **kwargs):
+    def get(self: "ConfigTests", *args: str, **kwargs: dict[str, Any]) -> str:
+        """Get a variable from the config."""
         return self._config.get(*args, **kwargs)
 
-    def get_path(self, *args, **kwargs):
+    def get_path(self: "ConfigTests", *args: str, **kwargs: dict[str, Any]) -> str:
+        """Return the file path for a given file in the config."""
         from_root = False
-        if "from_root" in kwargs:
+        if "from_root" in kwargs and kwargs["from_root"] is True:
             from_root = kwargs["from_root"]
             del kwargs["from_root"]
         val = self.get(*args, **kwargs)
         return self.file_path(val, from_root)
 
-    def load_json_file(self, filename):
-        """
-        Reads, parses, and returns as a dict, a JSON file.
+    def load_json_file(self: "ConfigTests", filename: str) -> dict[str, Any]:
+        """Reads, parses, and returns as a dict, a JSON file.
+
         The filename parameter is expected to be a path relative to this file's expected
         location in <narrative_root>/src/biokbase/narrative/tests
         """
@@ -70,15 +83,15 @@ class ConfigTests:
             f.close()
             return data
 
-    def write_json_file(self, filename, data):
+    def write_json_file(self: "ConfigTests", filename: str, data: dict[str, Any]) -> None:
         json_file_path = self.file_path(filename)
         with open(json_file_path, "w") as f:
             f.write(json.dumps(data, indent=4, sort_keys=True))
             f.close()
 
-    def file_path(self, filename, from_root=False):
-        """
-        Returns the path to the filename, relative to this file's expected location.
+    def file_path(self: "ConfigTests", filename: str, from_root: bool = False) -> str:
+        """Returns the path to the filename, relative to this file's expected location.
+
         <narrative root>/src/biokbase/narrative/tests
         """
         if from_root:
@@ -87,8 +100,8 @@ class ConfigTests:
 
 
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
-    """
-    Fetches a Narrative object with the given reference id (of the form ##/##).
+    """Fetches a Narrative object with the given reference id (of the form ##/##).
+
     If a file_name is given, then it is printed to that file.
     If the narrative is found, the jsonized string of it is returned.
 
@@ -106,9 +119,11 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     return {}
 
 
-def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False):
-    """
-    Uploads a Narrative from a downloaded object file.
+def upload_narrative(
+    nar_file: str, auth_token: str, user_id, url: str = ci_ws, set_public: bool = False
+) -> dict[str, Any]:
+    """Uploads a Narrative from a downloaded object file.
+
     This file needs to be in JSON format, and it expects all
     data and info that is usually returned by the Workspace.get_objects
     method.
@@ -118,7 +133,6 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
         obj: the id of the narrative object
         ref: the above two joined together into an object ref (for convenience)
     """
-
     # read the file
     with open(nar_file) as f:
         nar = json.loads(f.read())
@@ -156,9 +170,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     obj_info = ws_client.save_objects({"id": ws_id, "objects": [ws_save_obj]})
 
     # tweak the workspace's metadata to properly present its narrative
-    ws_client.alter_workspace_metadata(
-        {"wsi": {"id": ws_id}, "new": {"narrative": obj_info[0][0]}}
-    )
+    ws_client.alter_workspace_metadata({"wsi": {"id": ws_id}, "new": {"narrative": obj_info[0][0]}})
     return {
         "ws": ws_info[0],
         "obj": obj_info[0][0],
@@ -168,17 +180,17 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
 
 
 def delete_narrative(ws_id, auth_token, url=ci_ws):
-    """
-    Deletes a workspace with the given id. Throws a ServerError if the user given
-    by auth_token isn't allowed to do so.
+    """Deletes a workspace with the given id.
+
+    Throws a ServerError if the user given by auth_token isn't allowed to do so.
     """
     ws_client = Workspace(url=url, token=auth_token)
     ws_client.delete_workspace({"id": ws_id})
 
 
-def read_token_file(path):
-    """
-    Reads in a token file.
+def read_token_file(path: str) -> str | None:
+    """Reads in a token file.
+
     A token file is just expected to have a single line in it - the token itself.
     """
     if not os.path.isfile(path):
@@ -190,9 +202,9 @@ def read_token_file(path):
         return token
 
 
-def read_json_file(path):
-    """
-    Generically reads in any JSON file and returns it as a dict.
+def read_json_file(path: str) -> dict[str, Any] | list[Any]:
+    """Generically reads in any JSON file and returns it as a dict.
+
     Especially intended for reading a Narrative file.
     """
     with open(path) as f:
@@ -281,13 +293,11 @@ def find_free_port() -> int:
 
 
 def validate_job_state(job_state: dict) -> None:
-    """
-    Validates the structure and entries in a job state as returned by the JobManager.
+    """Validates the structure and entries in a job state as returned by the JobManager.
+
     If any keys are missing, or extra keys exist, or values are weird, then this
     raises an AssertionError.
     """
-    NoneType = type(None)
-
     assert "jobState" in job_state, "jobState key missing"
     assert isinstance(job_state["jobState"], dict), "jobState is not a dict"
     assert "outputWidgetInfo" in job_state, "outputWidgetInfo key missing"
@@ -329,15 +339,43 @@ def validate_job_state(job_state: dict) -> None:
     for requiredness in ["required", "optional"]:
         for attr, type_list in state_keys[requiredness].items():
             if requiredness == "required":
-                assert (
-                    attr in state
-                ), f"attribute {attr} ({requiredness}) is missing from state"
+                assert attr in state, f"attribute {attr} ({requiredness}) is missing from state"
             if attr in state:
-                assert isinstance(
-                    state[attr], type_list
-                ), f"{state[attr]} does not match type(s) {type_list}: " + json.dumps(
-                    state[attr]
+                assert isinstance(state[attr], type_list), (
+                    f"{state[attr]} does not match type(s) {type_list}: " + json.dumps(state[attr])
                 )
+
+
+def make_job_request(
+    msg_type: str,
+    job_id_like: str | list[str] | dict[str, Any],
+    content: dict[str, Any] | None = None,
+) -> JobRequest:
+    """Make a JobRequest object."""
+    comm_msg = make_comm_msg(msg_type, job_id_like, content)
+    return JobRequest(comm_msg)
+
+
+def make_comm_msg(
+    msg_type: str,
+    job_id_like: None | str | list[str] | dict[str, Any],
+    content: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Generate the comm message for a given set of params."""
+    if content is None:
+        content = {}
+    job_arguments = {}
+    if isinstance(job_id_like, dict):
+        job_arguments = job_id_like
+    elif isinstance(job_id_like, list):
+        job_arguments[JOB_ID_LIST] = job_id_like
+    elif job_id_like:
+        job_arguments[JOB_ID] = job_id_like
+
+    return {
+        "msg_id": "some_id",
+        "content": {"data": {"request_type": msg_type, **job_arguments, **content}},
+    }
 
 
 if __name__ == "__main__":

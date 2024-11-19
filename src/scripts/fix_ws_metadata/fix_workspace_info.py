@@ -1,5 +1,4 @@
-"""
-Fixes workspace info to do the following.
+"""Fixes workspace info to do the following.
 1. Make sure the "narrative" metadata field contains an int that points to the narrative.
 2. Make sure the "narrative_nice_name" metadata field is correct.
 3. Make sure the "is_temporary" metadata field exists and is correct.
@@ -7,23 +6,20 @@ Fixes workspace info to do the following.
 5. Does nothing at all if there's > 1 narrative in the workspace.
 Note that while this fetches the Narrative object, it doesn't modify it in any way.
 """
+
 import argparse
 import json
 import sys
 
 import requests
-
-import biokbase.workspace.baseclient as baseclient
-from biokbase.workspace.client import Workspace
+from biokbase.installed_clients.WorkspaceClient import Workspace
+from biokbase.narrative.common.exceptions import ServerError
 
 DEFAULT_OUTPUT_FILE = "update_results.json"
 
 
-def fix_all_workspace_info(
-    ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTPUT_FILE
-):
-    """
-    Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
+def fix_all_workspace_info(ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTPUT_FILE):
+    """Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
     and applies _fix_single_workspace_info to each.
     ws_url = endpoint for the workspace service to modify
     auth_url = endpoint for the auth service that the workspace talks to
@@ -51,9 +47,9 @@ def fix_all_workspace_info(
                 all_results["update"].append(result["update"])
             if result.get("skip") is not None:
                 all_results["skip"].append(result["skip"])
-        except baseclient.ServerError as e:
+        except ServerError as e:
             if "No workspace with id" in str(e):
-                print("WS:{} does not exist".format(ws_id))
+                print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})
     print("Done. Results in update_results.json")
     with open("update_results.json", "w") as f:
@@ -61,18 +57,17 @@ def fix_all_workspace_info(
 
 
 def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
-    """
-    ws_id = id of the workspace to update.
+    """ws_id = id of the workspace to update.
     ws = an authenticated workspace client.
     """
     assert ws is not None
     assert str(ws_id).isdigit()
 
-    result = dict()
-    new_meta = dict()
+    result = {}
+    new_meta = {}
 
     if verbose:
-        print("WS:{} Checking workspace {}".format(ws_id, ws_id))
+        print(f"WS:{ws_id} Checking workspace {ws_id}")
 
     # test if there's exactly 1 Narrative object in the workspace
     narr_obj_list = ws.administer(
@@ -82,17 +77,13 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         }
     )
     # fetch the workspace info and narrative object (with metadata)
-    ws_info = ws.administer(
-        {"command": "getWorkspaceInfo", "params": {"id": int(ws_id)}}
-    )
+    ws_info = ws.administer({"command": "getWorkspaceInfo", "params": {"id": int(ws_id)}})
     ws_meta = ws_info[8]
     if len(narr_obj_list) != 1:
         if "narrative" not in ws_meta:
             if verbose:
                 print(
-                    "WS:{} Found {} Narratives and metadata isn't initialized! Skipping this workspace".format(
-                        ws_id, len(narr_obj_list)
-                    )
+                    f"WS:{ws_id} Found {len(narr_obj_list)} Narratives and metadata isn't initialized! Skipping this workspace"
                 )
             result["skip"] = {
                 "id": ws_id,
@@ -100,26 +91,25 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
                 "moddate": ws_info[3],
             }
             return result
-        else:
-            if verbose:
-                print(
-                    "WS:{} Found {} Narratives, metadata configured to point to Narrative with obj id {}. Skipping, but do this manually.".format(
-                        ws_id, len(narr_obj_list), ws_meta["narrative"]
-                    )
+        if verbose:
+            print(
+                "WS:{} Found {} Narratives, metadata configured to point to Narrative with obj id {}. Skipping, but do this manually.".format(
+                    ws_id, len(narr_obj_list), ws_meta["narrative"]
                 )
-            result["multiple"] = {
-                "id": ws_id,
-                "num_narr": len(narr_obj_list),
-                "moddate": ws_info[3],
-            }
-            return result
+            )
+        result["multiple"] = {
+            "id": ws_id,
+            "num_narr": len(narr_obj_list),
+            "moddate": ws_info[3],
+        }
+        return result
 
     narr_info = narr_obj_list[0]
     narr_obj_id = narr_info[0]
     narr_obj = ws.administer(
         {
             "command": "getObjects",
-            "params": {"objects": [{"ref": "{}/{}".format(ws_id, narr_obj_id)}]},
+            "params": {"objects": [{"ref": f"{ws_id}/{narr_obj_id}"}]},
         }
     )["data"][0]
     narr_name = narr_obj["data"]["metadata"]["name"]
@@ -154,9 +144,7 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         if narr_info[4] > 1 or narr_name != "Untitled":
             if verbose:
                 print(
-                    "WS:{} Narrative is named {} and has {} versions - marking not temporary".format(
-                        ws_id, narr_name, narr_info[4]
-                    )
+                    f"WS:{ws_id} Narrative is named {narr_name} and has {narr_info[4]} versions - marking not temporary"
                 )
             new_meta["is_temporary"] = "false"
         if len(cells) > 1 or cells[0]["cell_type"] != "markdown":
@@ -176,17 +164,13 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         ):
             if verbose:
                 print(
-                    "WS:{} Narrative has no 'is_temporary' key - it appears temporary, so marking it that way".format(
-                        ws_id
-                    )
+                    f"WS:{ws_id} Narrative has no 'is_temporary' key - it appears temporary, so marking it that way"
                 )
             new_meta["is_temporary"] = "true"
         else:
             if verbose:
                 print(
-                    "WS:{} Narrative has no 'is_temporary' key - it doesn't appear temporary, so marking it that way".format(
-                        ws_id
-                    )
+                    f"WS:{ws_id} Narrative has no 'is_temporary' key - it doesn't appear temporary, so marking it that way"
                 )
             new_meta["is_temporary"] = "false"
 
@@ -195,16 +179,12 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     if (current_name is None and current_temp == "false") or current_name != narr_name:
         new_meta["narrative_nice_name"] = narr_name
         if verbose:
-            print(
-                "WS:{} Updating 'narrative_nice_name' from {} -> {}".format(
-                    ws_id, current_name, narr_name
-                )
-            )
+            print(f"WS:{ws_id} Updating 'narrative_nice_name' from {current_name} -> {narr_name}")
 
     # 4. Add the total cell count while we're at it.
     new_meta["cell_count"] = str(len(cells))
     if verbose:
-        print("WS:{} Adding cell_count of {}".format(ws_id, str(len(cells))))
+        print(f"WS:{ws_id} Adding cell_count of {len(cells)!s}")
 
     # 5. Finally, add the searchtags field to metadata.
     new_meta["searchtags"] = "narrative"
@@ -216,13 +196,11 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
 
 
 def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
-    """
-    ws = workspace client with admin rights
+    """Ws = workspace client with admin rights
     admin_id = username of the admin who's token was used to set up the ws client.
     ws_id = the workspace to tweak
     new_meta = the new metadata to set
     """
-
     # Now we can update the metadata. This is a little tricky from
     # If we don't have permission to write to the workspace, grab it.
     perms = ws.administer(
@@ -256,8 +234,7 @@ def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
 
 
 def _get_user_id(auth_url, token):
-    """
-    This uses the given token to query the authentication service for information
+    """This uses the given token to query the authentication service for information
     about the user who created the token.
     """
     token_api_url = auth_url + "/api/V2/token"
@@ -278,12 +255,8 @@ def parse_args(args):
         default=None,
         help="Auth token for workspace admin",
     )
-    p.add_argument(
-        "-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint"
-    )
-    p.add_argument(
-        "-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint"
-    )
+    p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
+    p.add_argument("-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint")
     p.add_argument(
         "-m",
         "--max_id",
@@ -310,9 +283,7 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
-    return fix_all_workspace_info(
-        args.ws_url, args.auth_url, args.token, args.max_id, args.outfile
-    )
+    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token, args.max_id, args.outfile)
 
 
 if __name__ == "__main__":

@@ -1,14 +1,13 @@
+"""Various constants used throughout the tests."""
+
 import copy
 from typing import Any
 
 from biokbase.narrative.jobs.job import TERMINAL_STATUSES
-
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
 
 config = ConfigTests()
-TEST_JOBS: dict[str, dict] = config.load_json_file(
-    config.get("jobs", "ee2_job_test_data_file")
-)
+TEST_JOBS: dict[str, dict] = config.load_json_file(config.get("jobs", "ee2_job_test_data_file"))
 
 
 def generate_error(job_id: str, err_type: str) -> str:

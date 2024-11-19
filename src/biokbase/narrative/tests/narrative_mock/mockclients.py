@@ -1,8 +1,10 @@
+"""Mock versions of various KBase service clients."""
+
 import copy
 import functools
 from unittest.mock import call
 
-from biokbase.execution_engine2.baseclient import ServerError as EEServerError
+from biokbase.narrative.common.exceptions import ServerError
 from biokbase.narrative.jobs.job import COMPLETED_STATUS
 from biokbase.narrative.jobs.jobcomm import MESSAGE_TYPE
 from biokbase.narrative.tests.generate_test_results import RETRIED_JOBS
@@ -16,7 +18,6 @@ from biokbase.narrative.tests.job_test_constants import (
     TEST_JOBS,
     generate_error,
 )
-from biokbase.workspace.baseclient import ServerError
 
 from src.biokbase.narrative.tests.util import ConfigTests
 
@@ -29,11 +30,13 @@ NARR_WS = "wjriehl:1490995018528"
 NARR_HASH = "278abf8f0dbf8ab5ce349598a8674a6e"
 
 
-def generate_ee2_error(fn: str) -> EEServerError:
-    return EEServerError("JSONRPCError", -32000, fn + " failed")
+def generate_ee2_error(fn: str) -> ServerError:
+    """Generate an EE2 error."""
+    return ServerError("JSONRPCError", -32000, fn + " failed")
 
 
 def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
+    """Get a narrative object info list."""
     return [
         i,
         "My_Test_Narrative",
@@ -50,8 +53,8 @@ def get_nar_obj(i: int) -> list[str | int | dict[str, str]]:
 
 
 class MockClients:
-    """
-    Mock KBase service clients as needed for Narrative backend tests.
+    """Mock KBase service clients as needed for Narrative backend tests.
+
     Use this with the Python mock library to mock the biokbase.narrative.clients.get call
     as a test function decorator, like this:
 
@@ -100,9 +103,7 @@ class MockClients:
         return self.config.load_json_file(self.config.get("specs", "type_specs_file"))
 
     def get_method_full_info(self, params):
-        return self.config.load_json_file(
-            self.config.get("specs", "app_full_infos_file")
-        )
+        return self.config.load_json_file(self.config.get("specs", "app_full_infos_file"))
 
     # ----- Workspace functions -----
 
@@ -110,8 +111,8 @@ class MockClients:
         return "0.0.0"
 
     def get_workspace_info(self, params):
-        """
-        Some magic workspace ids.
+        """Some magic workspace ids.
+
         12345 (WSID_STANDARD) - the standard one.
         678 - doesn't have useful narrative info in its metadata
         789 - raises a permissions error
@@ -133,9 +134,7 @@ class MockClients:
                 {},
             ]
         if wsid == 789:
-            raise ServerError(
-                "JSONRPCError", -32500, "User you may not read workspace 789"
-            )
+            raise ServerError("JSONRPCError", -32500, "User you may not read workspace 789")
         if wsid == 890:
             raise ServerError("JSONRPCError", -32500, "Workspace 890 is deleted")
         if name != "invalid_workspace":
@@ -157,8 +156,8 @@ class MockClients:
         raise Exception("not found")
 
     def get_object_info_new(self, params):
-        """
-        Returns a (more or less) random object.
+        """Returns a (more or less) random object.
+
         But we introspect the params a little bit to return something crafted to the test.
         Add more to this if it's helpful.
         """
@@ -177,9 +176,7 @@ class MockClients:
         ]
 
         infos = []
-        for obj_ident in params.get(
-            "objects", [{"name": "Sbicolor2", "workspace": "whatever"}]
-        ):
+        for obj_ident in params.get("objects", [{"name": "Sbicolor2", "workspace": "whatever"}]):
             if obj_ident.get("name") == READS_OBJ_1:
                 infos.append(
                     [
@@ -259,9 +256,7 @@ class MockClients:
         return self.test_job_id
 
     def run_job_batch(self, batch_job_inputs, batch_params):
-        child_job_ids = [
-            self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))
-        ]
+        child_job_ids = [self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))]
         return {"batch_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, params):
@@ -310,7 +305,8 @@ class MockClients:
         return job_states
 
     def get_job_logs(self, params):
-        """
+        """Generate some job logs.
+
         params: job_id, skip_lines
         skip_lines = number of lines to skip, get all the rest
 
@@ -332,19 +328,13 @@ class MockClients:
         if job_id == JOB_COMPLETED:
             return log_gen(params, total_lines=MAX_LOG_LINES)
 
-        job = self.job_state_data.get(
-            job_id, {"job_id": job_id, "status": "does_not_exist"}
-        )
+        job = self.job_state_data.get(job_id, {"job_id": job_id, "status": "does_not_exist"})
 
         if job["status"] == "does_not_exist":
-            raise ServerError(
-                "JSONRPCError", 99, "Job ID is not registered: " + job["job_id"]
-            )
+            raise ServerError("JSONRPCError", 99, "Job ID is not registered: " + job["job_id"])
 
         if job["status"] != COMPLETED_STATUS:
-            raise ServerError(
-                "JSONRPCError", 2, "Cannot find job log with id: " + job["job_id"]
-            )
+            raise ServerError("JSONRPCError", 2, "Cannot find job log with id: " + job["job_id"])
 
         # otherwise, return five lines of logs
         return log_gen(params, total_lines=5)
@@ -356,8 +346,7 @@ class MockClients:
         return None
 
     def _mock_ns_list_objects_with_sets(self, params):
-        """
-        Always returns the same several objects. Should be enough to
+        """Always returns the same several objects. Should be enough to
         cover all data cases.
         """
         params = params[0]
@@ -509,9 +498,7 @@ class MockClients:
             # the filter if so
             data["data"] = list(
                 filter(
-                    lambda x: any(
-                        x["object_info"][2].lower().startswith(t.lower()) for t in types
-                    ),
+                    lambda x: any(x["object_info"][2].lower().startswith(t.lower()) for t in types),
                     data["data"],
                 )
             )
@@ -523,10 +510,12 @@ class MockClients:
 
 
 def get_mock_client(client_name, token=None):
+    """Get a client that can return data successfully."""
     return MockClients(client_name=client_name, token=token)
 
 
 def get_failing_mock_client(client_name, token=None):
+    """Get a client that raises various errors when returning data."""
     return FailingMockClient(token=token)
 
 
@@ -556,9 +545,9 @@ class FailingMockClient:
 
 class MockStagingHelper:
     def list(self):
-        """
-        Mock the call to the staging service to get the "user's" files.
-        This returns a total of 7 files, 6 of while have "file" in the name,
+        """Mock the call to the staging service to get the "user's" files.
+
+        This returns a total of 7 files, 6 of which have "file" in the name,
         and 3 are paths.
         """
         return [
@@ -573,7 +562,8 @@ class MockStagingHelper:
 
 
 class assert_obj_method_called:
-    """
+    """Assert that an object method has or has not been called.
+
     Invocations:
 
     with assert_obj_method_called(MyTargetClass, "my_target_method"):
@@ -587,12 +577,14 @@ class assert_obj_method_called:
     )
     """
 
-    def __init__(self, target, method_name, call_status=True) -> None:
+    def __init__(
+        self: "assert_obj_method_called", target, method_name: str, call_status: bool = True
+    ) -> None:
         self.target = target
         self.method_name = method_name
         self.call_status = call_status
 
-    def __enter__(self):
+    def __enter__(self: "assert_obj_method_called"):
         self.orig_method = getattr(self.target, self.method_name)
 
         @functools.wraps(self.orig_method)
@@ -609,7 +601,7 @@ class assert_obj_method_called:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self: "assert_obj_method_called", exc_type, exc_value, traceback):
         # raises the error
         if exc_value:
             return
@@ -621,10 +613,10 @@ class assert_obj_method_called:
 
         self.assert_called(self.call_status)
 
-    def assert_has_calls(self, calls):
+    def assert_has_calls(self: "assert_obj_method_called", calls):
         assert calls == self.calls, f"Expected:\n{calls}\nGot:\n{self.calls}"
 
-    def assert_called(self, call_status=True):
+    def assert_called(self: "assert_obj_method_called", call_status: bool = True):
         assert (
             call_status and len(self.calls) or not call_status and not len(self.calls)
         ), f"Call status of method {self.target.__name__}.{self.method_name} was not {call_status}"

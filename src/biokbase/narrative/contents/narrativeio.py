@@ -1,25 +1,23 @@
-"""
-Utilities for doing IO operations on Narrative objects.
+"""Utilities for doing IO operations on Narrative objects.
+
 Implements the KBaseWSManagerMixin class.
 """
 
 import json
 import re
 from collections import Counter
-
-from tornado.web import HTTPError
+from typing import Any
 
 import biokbase.auth
 import biokbase.narrative.clients
-import biokbase.workspace
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative.common import util
-from biokbase.narrative.common.exceptions import WorkspaceError
+from biokbase.narrative.common.exceptions import ServerError, WorkspaceError
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.common.url_config import URLS
-from biokbase.workspace.baseclient import ServerError
-
-from .updater import update_narrative
+from biokbase.narrative.contents.updater import update_narrative
+from tornado.web import HTTPError
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -37,7 +35,7 @@ LIST_OBJECTS_FIELDS = [
     "size",
     "meta",
 ]
-obj_field = dict(zip(LIST_OBJECTS_FIELDS, range(len(LIST_OBJECTS_FIELDS))))
+obj_field = dict(zip(LIST_OBJECTS_FIELDS, range(len(LIST_OBJECTS_FIELDS)), strict=False))
 
 obj_ref_regex = re.compile(r"^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
 
@@ -51,57 +49,52 @@ g_log = get_logger("biokbase.narrative")
 
 
 class KBaseWSManagerMixin:
-    """
-    Manages the connection to the workspace for a user
-    """
+    """Manages the connection to the workspace for a user."""
 
     ws_uri = URLS.workspace
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self: "KBaseWSManagerMixin", *args, **kwargs) -> None:
+        """Initialise an instance of the KBaseWSManagerMixin class."""
         if not self.ws_uri:
             raise HTTPError(412, "Missing KBase workspace service endpoint URI")
         self.test_connection()
 
-    def test_connection(self):
+    def test_connection(self: "KBaseWSManagerMixin") -> None:
         try:
             self.ws_client().ver()
         except ServerError as e:
             raise HTTPError(
                 500,
-                "Unable to connect to workspace service at {}: {}".format(
-                    self.ws_uri, e
-                ),
-            )
+                f"Unable to connect to workspace service at {self.ws_uri}: {e}",
+            ) from e
 
-    def ws_client(self):
+    def ws_client(self: "KBaseWSManagerMixin") -> Workspace:
+        """Get a workspace client."""
         return biokbase.narrative.clients.get("workspace")
 
-    def _ws_id_to_name(self, wsid):
+    def _ws_id_to_name(self: "KBaseWSManagerMixin", wsid):
         try:
             ws_info = self.ws_client().get_workspace_info({"id": wsid})
             return ws_info[1]
         except ServerError as err:
-            raise WorkspaceError(err, wsid)
+            raise WorkspaceError(err, wsid) from err
 
-    def narrative_exists(self, ref):
-        """
-        Test if a narrative exists.
+    def narrative_exists(self: "KBaseWSManagerMixin", ref) -> bool:
+        """Test if a narrative exists.
+
         If we can fetch the narrative info (e.g. the get_object_info from the workspace), then it
         exists. If we can't, then it doesn't. If any non-404 looking error gets raised, then we
         don't know, and should just propagate the error on up.
         :param ref: a NarrativeRef object
         """
         try:
-            return (
-                self.read_narrative(ref, content=False, include_metadata=False)
-                is not None
-            )
+            return self.read_narrative(ref, content=False, include_metadata=False) is not None
         except WorkspaceError as err:
             if err.http_code == 404:
                 return False
             raise
 
-    def _validate_nar_type(self, t, ref):
+    def _validate_nar_type(self: "KBaseWSManagerMixin", t: str, ref) -> None:
         if not t.startswith(NARRATIVE_TYPE):
             err = "Expected a Narrative object"
             if ref is not None:
@@ -109,9 +102,14 @@ class KBaseWSManagerMixin:
             err += f", got a {t}"
             raise HTTPError(500, err)
 
-    def read_narrative(self, ref, content=True, include_metadata=True):
-        """
-        Fetches a Narrative and its object info from the Workspace
+    def read_narrative(
+        self: "KBaseWSManagerMixin",
+        ref: NarrativeRef,
+        content: bool = True,
+        include_metadata: bool = True,
+    ) -> dict[str, Any]:
+        """Fetches a Narrative and its object info from the Workspace.
+
         If content is False, this only returns the Narrative's info
         and metadata, otherwise, it returns the whole workspace object.
 
@@ -129,35 +127,29 @@ class KBaseWSManagerMixin:
             "reading narrative",
             {"ref": str(ref), "content": content, "include_meta": include_metadata},
         )
-        assert isinstance(
-            ref, NarrativeRef
-        ), "read_narrative must use a NarrativeRef as input!"
+        assert isinstance(ref, NarrativeRef), "read_narrative must use a NarrativeRef as input!"
         try:
             if content:
-                nar_data = self.ws_client().get_objects2(
-                    {"objects": [{"ref": str(ref)}]}
-                )
+                nar_data = self.ws_client().get_objects2({"objects": [{"ref": str(ref)}]})
                 nar = nar_data["data"][0]
                 self._validate_nar_type(nar["info"][2], ref)
                 nar["data"] = update_narrative(nar["data"])
                 return nar
-            else:
-                log_event(g_log, "read_narrative testing existence", {"ref": str(ref)})
-                nar_data = self.ws_client().get_object_info3(
-                    {
-                        "objects": [{"ref": str(ref)}],
-                        "includeMetadata": 1 if include_metadata else 0,
-                    }
-                )
-                nar_info = nar_data["infos"][0]
-                self._validate_nar_type(nar_info[2], ref)
-                return {"info": nar_info}
+            log_event(g_log, "read_narrative testing existence", {"ref": str(ref)})
+            nar_data = self.ws_client().get_object_info3(
+                {
+                    "objects": [{"ref": str(ref)}],
+                    "includeMetadata": 1 if include_metadata else 0,
+                }
+            )
+            nar_info = nar_data["infos"][0]
+            self._validate_nar_type(nar_info[2], ref)
+            return {"info": nar_info}
         except ServerError as err:
-            raise WorkspaceError(err, ref.wsid)
+            raise WorkspaceError(err, ref.wsid) from err
 
-    def write_narrative(self, ref, nb, cur_user):
-        """
-        :param ref: a NarrativeRef
+    def write_narrative(self: "KBaseWSManagerMixin", ref, nb, cur_user):
+        """:param ref: a NarrativeRef
         :param nb: a notebook model
         :cur_user: the current user id
         Given a notebook, break this down into a couple parts:
@@ -167,10 +159,7 @@ class KBaseWSManagerMixin:
         4. Return any notebook changes as a list-
            (narrative, ws_id, obj_id, ver)
         """
-
-        assert isinstance(
-            ref, NarrativeRef
-        ), "write_narrative must use a NarrativeRef as input!"
+        assert isinstance(ref, NarrativeRef), "write_narrative must use a NarrativeRef as input!"
         if "worksheets" in nb:
             # it's an old version. update it by replacing the 'worksheets' key with
             # the 'cells' subkey
@@ -183,7 +172,7 @@ class KBaseWSManagerMixin:
             ):
                 nb["cells"] = nb["worksheets"][0]["cells"]
             else:
-                nb["cells"] = list()
+                nb["cells"] = []
             del nb["worksheets"]
             nb["nbformat"] = 4
 
@@ -204,7 +193,7 @@ class KBaseWSManagerMixin:
             if "description" not in meta:
                 meta["description"] = ""
             if "data_dependencies" not in meta:
-                meta["data_dependencies"] = list()
+                meta["data_dependencies"] = []
             if "job_ids" not in meta:
                 meta["job_ids"] = {
                     "methods": [],
@@ -212,22 +201,20 @@ class KBaseWSManagerMixin:
                     "job_usage": {"queue_time": 0, "run_time": 0},
                 }
             if "methods" not in meta["job_ids"]:
-                meta["job_ids"]["methods"] = list()
+                meta["job_ids"]["methods"] = []
             if "apps" not in meta["job_ids"]:
-                meta["job_ids"]["apps"] = list()
+                meta["job_ids"]["apps"] = []
             if "job_usage" not in meta["job_ids"]:
                 meta["job_ids"]["job_usage"] = {"queue_time": 0, "run_time": 0}
             meta["is_temporary"] = "false"
             meta["format"] = "ipynb"
 
             if len(meta["name"]) > MAX_METADATA_STRING_BYTES - len("name"):
-                meta["name"] = meta["name"][0:MAX_METADATA_STRING_BYTES-len("name")]  # noqa:E203
+                meta["name"] = meta["name"][0 : MAX_METADATA_STRING_BYTES - len("name")]
 
             nb["metadata"] = meta
         except Exception as e:
-            raise HTTPError(
-                400, "Unexpected error setting Narrative attributes: %s" % e
-            )
+            raise HTTPError(400, f"Unexpected error setting Narrative attributes: {e}") from e
 
         # With that set, update the workspace metadata with the new info.
         perms = self.narrative_permissions(ref, user=cur_user)
@@ -247,7 +234,7 @@ class KBaseWSManagerMixin:
                     ws_id,
                     message="Error adjusting Narrative metadata",
                     http_code=500,
-                )
+                ) from err
 
         # Now we can save the Narrative object.
         try:
@@ -281,9 +268,7 @@ class KBaseWSManagerMixin:
                 "completed": 0,
                 "error": 0,
             }
-            for job in (
-                nb["metadata"]["job_ids"]["methods"] + nb["metadata"]["job_ids"]["apps"]
-            ):
+            for job in nb["metadata"]["job_ids"]["methods"] + nb["metadata"]["job_ids"]["apps"]:
                 status = job.get("status", "running")
                 if status.startswith("complete"):
                     job_info["completed"] += 1
@@ -302,20 +287,17 @@ class KBaseWSManagerMixin:
             ws_save_obj["meta"] = self._process_cell_usage(nb, ws_save_obj["meta"])
 
             # Actually do the save now!
-            obj_info = self.ws_client().save_objects(
-                {"id": ws_id, "objects": [ws_save_obj]}
-            )[0]
+            obj_info = self.ws_client().save_objects({"id": ws_id, "objects": [ws_save_obj]})[0]
 
             return (nb, obj_info[6], obj_info[0], obj_info[4])
 
         except ServerError as err:
-            raise WorkspaceError(err, ws_id)
+            raise WorkspaceError(err, ws_id) from err
         except Exception as e:
-            raise HTTPError(500, "%s saving Narrative: %s" % (type(e), e))
+            raise HTTPError(500, f"{type(e)} saving Narrative: {e}") from e
 
-    def _process_cell_usage(self, nb, metadata):
-        """
-        A shiny new version of _extract_cell_info that tallies up the methods
+    def _process_cell_usage(self: "KBaseWSManagerMixin", nb, metadata):
+        """A shiny new version of _extract_cell_info that tallies up the methods
         and apps in a Narrative. The Workspace has two limits built into it,
         that the old way could easily violate:
         1. The total size of each key/value in the metadata must be less than
@@ -331,7 +313,6 @@ class KBaseWSManagerMixin:
         key/value pairs allowed (just among apps and methods - pre-existing
         keys are ignored.)
         """
-
         cells = []
         if "cells" in nb:  # ipynb v4+
             cells = nb["cells"]
@@ -349,48 +330,40 @@ class KBaseWSManagerMixin:
             meta = cell["metadata"]
             if "kb-cell" in meta:
                 # It's a KBase cell! So either an app, method, or viewer
-                if (
-                    "type" in meta["kb-cell"]
-                    and meta["kb-cell"]["type"] == "function_output"
-                ):
+                if "type" in meta["kb-cell"] and meta["kb-cell"]["type"] == "function_output":
                     cell_info["viewer"] += 1
+                elif "app" in meta["kb-cell"]:
+                    app_id = meta["kb-cell"]["app"]["info"]["id"]
+                    app_hash = meta["kb-cell"]["app"]["info"].get("git_commit_hash", "")
+                    app_info["app." + app_id + "/" + app_hash] += 1
+                    num_apps += 1
+                elif "method" in meta["kb-cell"]:
+                    method_id = meta["kb-cell"]["method"]["info"]["id"]
+                    method_hash = meta["kb-cell"]["method"]["info"].get("git_commit_hash", "")
+                    method_info["method." + method_id + "/" + method_hash] += 1
+                    num_methods += 1
                 else:
-                    if "app" in meta["kb-cell"]:
-                        app_id = meta["kb-cell"]["app"]["info"]["id"]
-                        app_hash = meta["kb-cell"]["app"]["info"].get(
-                            "git_commit_hash", ""
-                        )
-                        app_info["app." + app_id + "/" + app_hash] += 1
-                        num_apps += 1
-                    elif "method" in meta["kb-cell"]:
-                        method_id = meta["kb-cell"]["method"]["info"]["id"]
-                        method_hash = meta["kb-cell"]["method"]["info"].get(
-                            "git_commit_hash", ""
-                        )
-                        method_info["method." + method_id + "/" + method_hash] += 1
-                        num_methods += 1
-                    else:
-                        # covers the cases we care about
-                        continue
+                    # covers the cases we care about
+                    continue
             elif "kbase" in meta and "type" in meta["kbase"]:
                 kbase_type = meta["kbase"]["type"]
                 if kbase_type == "app":
                     app = meta["kbase"].get("appCell", {}).get("app", {})
-                    id = app.get("id", "UnknownApp")
+                    app_id = app.get("id", "UnknownApp")
                     commit_hash = app.get("gitCommitHash", "unknown")
-                    method_info["method." + id + "/" + commit_hash] += 1
+                    method_info["method." + app_id + "/" + commit_hash] += 1
                     num_methods += 1
                 elif kbase_type == "editor":
                     app = meta["kbase"].get("editorCell", {}).get("app", {})
-                    id = app.get("id", "UnknownApp")
+                    app_id = app.get("id", "UnknownApp")
                     commit_hash = app.get("gitCommitHash", "unknown")
-                    method_info["method." + id + "/" + commit_hash] += 1
+                    method_info["method." + app_id + "/" + commit_hash] += 1
                     num_methods += 1
                 elif kbase_type == "view":
                     app = meta["kbase"].get("viewCell", {}).get("app", {})
-                    id = app.get("id", "UnknownApp")
+                    app_id = app.get("id", "UnknownApp")
                     commit_hash = app.get("gitCommitHash", "unknown")
-                    method_info["method." + id + "/" + commit_hash] += 1
+                    method_info["method." + app_id + "/" + commit_hash] += 1
                     num_methods += 1
             else:
                 cell_info["jupyter." + cell.get("cell_type", "code")] += 1
@@ -424,16 +397,11 @@ class KBaseWSManagerMixin:
             # do so by removing some. So pop them out one at a time, and keep track of the lengths chopped.
             # otherwise, remove them all.
             if (
-                total_size
-                - method_size
-                + len(meth_overflow_key)
-                + len(str(num_methods))
+                total_size - method_size + len(meth_overflow_key) + len(str(num_methods))
                 < MAX_METADATA_SIZE_BYTES
             ):
                 # filter them.
-                method_info = self._filter_app_methods(
-                    total_size, meth_overflow_key, method_info
-                )
+                method_info = self._filter_app_methods(total_size, meth_overflow_key, method_info)
             else:
                 method_info = Counter({meth_overflow_key: num_methods})
             total_size -= method_size
@@ -449,9 +417,7 @@ class KBaseWSManagerMixin:
                 total_size - app_size + len(app_overflow_key) + len(str(num_apps))
                 < MAX_METADATA_SIZE_BYTES
             ):
-                app_info = self._filter_app_methods(
-                    total_size, app_overflow_key, app_info
-                )
+                app_info = self._filter_app_methods(total_size, app_overflow_key, app_info)
             else:
                 app_info = Counter({app_overflow_key: num_apps})
             total_size -= app_size
@@ -466,22 +432,18 @@ class KBaseWSManagerMixin:
 
         return metadata
 
-    def _filter_app_methods(self, total_len, overflow_key, filter_dict):
+    def _filter_app_methods(self: "KBaseWSManagerMixin", total_len, overflow_key, filter_dict):
         overflow_count = 0
         overflow_key_size = len(overflow_key)
-        while (
-            total_len + overflow_key_size + len(str(overflow_count))
-            > MAX_METADATA_SIZE_BYTES
-        ):
+        while total_len + overflow_key_size + len(str(overflow_count)) > MAX_METADATA_SIZE_BYTES:
             key, val = filter_dict.popitem()
             overflow_count += val
             total_len = total_len - len(key) - len(str(val))
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 
-    def rename_narrative(self, ref, cur_user, new_name):
-        """
-        Renames a Narrative. Requires a ref (NarrativeRef)
+    def rename_narrative(self: "KBaseWSManagerMixin", ref, cur_user, new_name: str) -> None:
+        """Renames a Narrative. Requires a ref (NarrativeRef)
         and the name to set for the Narrative. If the current name
         doesn't match the new name, nothing changes.
 
@@ -497,14 +459,13 @@ class KBaseWSManagerMixin:
         nar["metadata"]["name"] = new_name
         self.write_narrative(ref, nar, cur_user)
 
-    def copy_narrative(self, obj_ref, content=True):
+    def copy_narrative(self: "KBaseWSManagerMixin", obj_ref, content=True) -> None:
         pass
 
-    def list_narratives(self, ws_id=None):
+    def list_narratives(self: "KBaseWSManagerMixin", ws_id=None):
         # self.log.debug("Listing Narratives")
         # self.log.debug("kbase_session = %s" % str(self.kbase_session))
-        """
-        By default, this searches for Narrative types in any workspace that the
+        """By default, this searches for Narrative types in any workspace that the
         current token has read access to. Works anonymously as well.
 
         If the ws_id field is not None, it will only look up Narratives in that
@@ -524,9 +485,7 @@ class KBaseWSManagerMixin:
         if ws_id:
             ws_ids = [int(ws_id)]  # will throw an exception if ws_id isn't an int
         else:
-            ret = ws.list_workspace_ids(
-                {"perm": "r", "onlyGlobal": 0, "excludeGlobal": 0}
-            )
+            ret = ws.list_workspace_ids({"perm": "r", "onlyGlobal": 0, "excludeGlobal": 0})
             ws_ids = ret.get("workspaces", []) + ret.get("pub", [])
 
         try:
@@ -534,15 +493,15 @@ class KBaseWSManagerMixin:
             for i in range(0, len(ws_ids), MAX_WORKSPACES):
                 res += ws.list_objects(
                     {
-                        "ids": ws_ids[i:i+MAX_WORKSPACES],  # noqa:E203
+                        "ids": ws_ids[i : i + MAX_WORKSPACES],
                         "type": NARRATIVE_TYPE,
                         "includeMetadata": 1,
                     }
                 )
         except ServerError as err:
-            raise WorkspaceError(err, ws_ids)
+            raise WorkspaceError(err, ws_ids) from err
 
-        my_narratives = [dict(zip(LIST_OBJECTS_FIELDS, obj)) for obj in res]
+        my_narratives = [dict(zip(LIST_OBJECTS_FIELDS, obj, strict=False)) for obj in res]
         for nar in my_narratives:
             # Look first for the name in the object metadata. if it's not there, use
             # the object's name. If THAT'S not there, use Untitled.
@@ -552,9 +511,8 @@ class KBaseWSManagerMixin:
 
         return my_narratives
 
-    def narrative_permissions(self, ref, user=None):
-        """
-        Returns permissions to a Narrative.
+    def narrative_permissions(self: "KBaseWSManagerMixin", ref, user=None):
+        """Returns permissions to a Narrative.
         This is returned as a dict, where each key is a user.
         '*' is a special key, meaning public.
         This is a wrapper around Workspace.get_permissions.
@@ -572,17 +530,14 @@ class KBaseWSManagerMixin:
         try:
             perms = self.ws_client().get_permissions({"id": ref.wsid})
         except ServerError as err:
-            raise WorkspaceError(err, ref.wsid)
+            raise WorkspaceError(err, ref.wsid) from err
         if user is not None:
-            if user in perms:
-                perms = {user: perms[user]}
-            else:
-                perms = {user: "n"}
+            perms = {user: perms[user]} if user in perms else {user: "n"}
         return perms
 
-    def narrative_writable(self, ref, user):
-        """
-        Returns True if the logged in user can know if the given user can write to this narrative.
+    def narrative_writable(self: "KBaseWSManagerMixin", ref, user) -> bool:
+        """Returns True if the logged in user can know if the given user can write to this narrative.
+
         E.g. user A is logged in. If A can see user B's permissions, and user B can write to this
         narrative, True is returned.
 
@@ -598,11 +553,8 @@ class KBaseWSManagerMixin:
         :param user: str - the user to check for permissions
         """
         if user is None:
-            raise ValueError(
-                "A user must be given for testing whether a Narrative can be written"
-            )
+            raise ValueError("A user must be given for testing whether a Narrative can be written")
         perms = self.narrative_permissions(ref, user)
         if user in perms:
             return perms[user] == "w" or perms[user] == "a"
-        else:
-            return False
+        return False

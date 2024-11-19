@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 import pytest
-from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.common.exceptions import ServerError
 from requests.exceptions import HTTPError
 
 from . import fix_workspace_info
@@ -15,7 +15,7 @@ FAKE_WS_DB = {}
 
 def reset_fake_ws_db():
     global FAKE_WS_DB
-    with open(FAKE_WS_FILE, "r") as f:
+    with open(FAKE_WS_FILE) as f:
         FAKE_WS_DB = json.loads(f.read().strip())
 
 
@@ -36,8 +36,7 @@ def mocked_requests_get(*args, **kwargs):
 
 
 class MockWorkspace:
-    """
-    Some rules for the mock, for each "workspace" by workspace id.
+    """Some rules for the mock, for each "workspace" by workspace id.
     ws1 - 0 narratives, no metadata
         - should do nothing
     ws2 - 1 narrative, 1 cell, proper metadata
@@ -61,9 +60,7 @@ class MockWorkspace:
 
     def _check_ws_id(self, ws_id):
         if str(ws_id) not in self.fake_ws_db:
-            raise ServerError(
-                "JSONRPCError", -32500, "No workspace with id {} exists".format(ws_id)
-            )
+            raise ServerError("JSONRPCError", -32500, f"No workspace with id {ws_id} exists")
 
     def administer(self, params):
         cmd = params["command"]
@@ -107,6 +104,8 @@ class MockWorkspace:
             else:
                 self.fake_ws_db[str(ws_id)]["perms"][user_id] = new_perm
 
+        return None
+
     def alter_workspace_metadata(self, params):
         ws_id = params["wsi"]["id"]
         self._check_ws_id(ws_id)
@@ -115,9 +114,7 @@ class MockWorkspace:
             raise ServerError(
                 "JSONRPCError",
                 -32500,
-                "User {} may not alter metadata for workspace {}".format(
-                    FAKE_ADMIN_ID, ws_id
-                ),
+                f"User {FAKE_ADMIN_ID} may not alter metadata for workspace {ws_id}",
             )
         self.fake_ws_db[str(ws_id)]["ws_info"][8].update(new_meta)
 
@@ -211,13 +208,9 @@ class TestWSInfoFix(unittest.TestCase):
         fake_ws = MockWorkspace()
         fix_workspace_info.Workspace = MockWorkspace
         with pytest.raises(HTTPError):
-            fix_workspace_info.fix_all_workspace_info(
-                "fake_ws", "fake_auth", "bad_token", 20
-            )
+            fix_workspace_info.fix_all_workspace_info("fake_ws", "fake_auth", "bad_token", 20)
 
-        fix_workspace_info.fix_all_workspace_info(
-            "fake_ws", "fake_auth", "good_token", 20
-        )
+        fix_workspace_info.fix_all_workspace_info("fake_ws", "fake_auth", "good_token", 20)
         # TODO: add actual tests for results of "database"
         # ws1 - no change to metadata
         assert fake_ws.fake_ws_db["1"]["ws_info"][8] == {}

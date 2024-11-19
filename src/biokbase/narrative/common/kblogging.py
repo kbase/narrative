@@ -1,6 +1,4 @@
-"""
-Common narrative logging functions.
-
+"""Common narrative logging functions.
 
 To log an event with proper metadata and formatting use 'log_event':
 
@@ -8,6 +6,7 @@ You can also do free-form logs, but these will be ignored by
 most upstream consumers.
 
 """
+
 import collections
 import logging
 import os
@@ -15,15 +14,10 @@ import threading
 import time
 from logging import handlers
 
-from . import log_proxy
-from .log_common import format_event
-from .narrative_logger import NarrativeLogger
-
-# Local
-from .util import kbase_env
-
-__author__ = "Dan Gunter <dkgunter@lbl.gov>"
-__date__ = "2014-07-31"
+from biokbase.narrative.common import log_proxy
+from biokbase.narrative.common.log_common import format_event
+from biokbase.narrative.common.narrative_logger import NarrativeLogger
+from biokbase.narrative.common.util import kbase_env
 
 # Constants
 
@@ -100,7 +94,7 @@ def _kbase_log_name(name):
 
 
 def _has_handler_type(log, type_):
-    return any([isinstance(h, type_) for h in log.handlers])
+    return any(isinstance(h, type_) for h in log.handlers)
 
 
 # Custom handlers
@@ -108,6 +102,7 @@ def _has_handler_type(log, type_):
 
 class BufferedSocketHandler(handlers.SocketHandler):
     """Buffer up messages to a socket, sending them asynchronously.
+
     Starts a separate thread to pull messages off and send them.
     Ignores any messages that did not come from `log_event()`, above.
     """
@@ -116,7 +111,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
         handlers.SocketHandler.__init__(self, *args)
         self._dbg = _log.isEnabledFor(logging.DEBUG)
         if self._dbg:
-            _log.debug("Created SocketHandler with args = {}".format(args))
+            _log.debug(f"Created SocketHandler with args = {args}")
         self.buf = collections.deque([], 100)
         self.buf_lock = threading.Lock()
         # start thread to send data from buffer
@@ -168,7 +163,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
         # kblogging.log_event
         if record.funcName != "log_event":
             if self._dbg:
-                _log.debug("Skip: funcName {} != log_event".format(record.funcName))
+                _log.debug(f"Skip: funcName {record.funcName} != log_event")
             return
 
     def _emit(self, record):
@@ -181,7 +176,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception as err:
-            _log.debug("Emit record to socket failed: {}".format(err))
+            _log.debug(f"Emit record to socket failed: {err}")
             self.handleError(record)
         if success and _log.isEnabledFor(logging.DEBUG):
             _log.debug("Record sent to socket")
@@ -190,6 +185,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
 
 def init_handlers():
     """Initialize and add the log handlers.
+
     We only allow one FileHandler and one SocketHandler to exist,
     no matter how many times this is called.
     """
@@ -207,7 +203,7 @@ def init_handlers():
 
     if not _has_handler_type(g_log, handlers.SocketHandler):
         cfg = get_proxy_config()
-        g_log.debug("Opening socket to proxy at {}:{}".format(cfg.host, cfg.port))
+        g_log.debug(f"Opening socket to proxy at {cfg.host}:{cfg.port}")
         sock_handler = BufferedSocketHandler(cfg.host, cfg.port)
         g_log.addHandler(sock_handler)
 
@@ -215,12 +211,10 @@ def init_handlers():
 def get_proxy_config():
     config_file = os.environ.get(KBASE_PROXY_ENV, None)
     if config_file:
-        _log.info("Configuring KBase logging from file '{}'".format(config_file))
+        _log.info(f"Configuring KBase logging from file '{config_file}'")
     else:
         _log.warning(
-            "Configuring KBase logging from defaults ({} is empty, or not found)".format(
-                KBASE_PROXY_ENV
-            )
+            f"Configuring KBase logging from defaults ({KBASE_PROXY_ENV} is empty, or not found)"
         )
     #    return log_proxy.ProxyConfiguration(config_file)
     return log_proxy.ProxyConfigurationWrapper(config_file)

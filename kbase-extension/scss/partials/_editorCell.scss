@@ -76,7 +76,7 @@
   }
 
   .kb-app-parameter-accepted-glyph {
-    color: use_color('mid-green');
+    color: use-color('mid-green');
   }
 
   .kb-app-advanced-options-controller-inactive,
@@ -120,12 +120,12 @@
     display: none;
   }
 
-  [data-element=run-control-panel] {
+  [data-element="run-control-panel"] {
     width: 100%;
   }
 
-  [data-element=tab-pane] {
-    border-top: 2px solid use_color('mid-blue');
+  [data-element="tab-pane"] {
+    border-top: 2px solid use-color('mid-blue');
 
     > div {
       padding: 4px;
@@ -138,11 +138,11 @@
 
   .btn-primary.kb-btn-action {
     &.-rerun {
-      color: use_color('mid-blue');
+      color: use-color('mid-blue');
     }
 
     &.-run {
-      color: use_color('mid-green');
+      color: use-color('mid-green');
     }
   }
 
@@ -188,35 +188,35 @@ Buttons
 
 .btn.kb-editor-cell-btn {
   background-color: rgb(255 255 255);
-  border: 2px solid use_color('mid-blue');
-  color: use_color('mid-blue');
+  border: 2px solid use-color('mid-blue');
+  color: use-color('mid-blue');
   margin-bottom: 4px;
 
   &.btn-primary {
-    border: 2px solid use_color('mid-blue');
-    color: use_color('mid-blue');
+    border: 2px solid use-color('mid-blue');
+    color: use-color('mid-blue');
 
     &:hover {
-      border-bottom: 6px solid use_color('mid-blue');
+      border-bottom: 6px solid use-color('mid-blue');
       margin-bottom: 0;
     }
 
     &.active,
     &:active,
     &:hover {
-      background-color: use_color('mid-blue');
+      background-color: use-color('mid-blue');
       color: rgb(255 255 255);
     }
 
     &.active {
-      border: solid use_color('mid-blue');
+      border: solid use-color('mid-blue');
       border-width: 2px 2px 6px;
       margin-bottom: 0;
 
       &:hover {
         background-color: rgb(221 221 221);
-        border-bottom: 2px solid use_color('mid-blue');
-        color: use_color('mid-blue');
+        border-bottom: 2px solid use-color('mid-blue');
+        color: use-color('mid-blue');
         margin-bottom: 4px;
       }
     }

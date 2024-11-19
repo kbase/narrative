@@ -1,19 +1,19 @@
+"""Tests of the clients module."""
+
 import pytest
-from biokbase.catalog.Client import Catalog as Catalog_Client
-from biokbase.execution_engine2.execution_engine2Client import (
-    execution_engine2 as EE2_Client,
-)
+from biokbase.installed_clients.CatalogClient import Catalog
+from biokbase.installed_clients.execution_engine2Client import execution_engine2
+from biokbase.installed_clients.NarrativeMethodStoreClient import NarrativeMethodStore
+from biokbase.installed_clients.ServiceClient import Client as ServiceClient
+from biokbase.installed_clients.WorkspaceClient import Workspace
 from biokbase.narrative import clients
-from biokbase.narrative_method_store.client import NarrativeMethodStore as NMS_Client
-from biokbase.service.Client import Client as Service_Client
-from biokbase.workspace.client import Workspace as WS_Client
 
 name_to_type_tests = [
-    ("workspace", WS_Client),
-    ("execution_engine2", EE2_Client),
-    ("narrative_method_store", NMS_Client),
-    ("service", Service_Client),
-    ("catalog", Catalog_Client),
+    ("workspace", Workspace),
+    ("execution_engine2", execution_engine2),
+    ("narrative_method_store", NarrativeMethodStore),
+    ("service", ServiceClient),
+    ("catalog", Catalog),
 ]
 
 

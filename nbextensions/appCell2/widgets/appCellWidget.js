@@ -76,8 +76,6 @@ define(
         AppParamsWidget,
         AppParamsViewWidget
     ) => {
-        'use strict';
-
         const t = html.tag,
             div = t('div'),
             span = t('span'),
@@ -1356,7 +1354,8 @@ define(
                 skip the output cell creation.
                 */
                 // widgets named 'no-display' are a trigger to skip the output cell process.
-                const skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
+                const widgetName = model.getItem('exec.outputWidgetInfo.name');
+                const skipOutputCell = widgetName === 'no-display' || widgetName === 'text-only';
                 let cellInfo;
                 if (skipOutputCell) {
                     cellInfo = {
@@ -1889,7 +1888,6 @@ define(
         };
     },
     (err) => {
-        'use strict';
         console.error('ERROR loading appCell appCellWidget', err);
     }
 );

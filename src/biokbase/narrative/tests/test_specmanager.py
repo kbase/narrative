@@ -3,8 +3,7 @@ from unittest import mock
 
 import pytest
 from biokbase.narrative.jobs.specmanager import SpecManager
-
-from .narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
 
 
 class SpecManagerTestCase(unittest.TestCase):
@@ -45,9 +44,7 @@ class SpecManagerTestCase(unittest.TestCase):
     def test_get_type_spec(self):
         self.sm.reload()
         assert "export_functions" in list(self.sm.get_type_spec("KBaseFBA.FBA").keys())
-        assert "export_functions" in list(
-            self.sm.get_type_spec("KBaseFBA.NU_FBA").keys()
-        )
+        assert "export_functions" in list(self.sm.get_type_spec("KBaseFBA.NU_FBA").keys())
         with pytest.raises(ValueError, match="Unknown type"):
             self.sm.get_type_spec("KBaseExpression.NU_FBA")
 

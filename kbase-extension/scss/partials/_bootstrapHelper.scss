@@ -6,7 +6,7 @@
 */
 
 .text-silver {
-  color: use_color('silver');
+  color: use-color('silver');
 }
 
 .modal {
@@ -20,7 +20,7 @@
     color: unset;
   }
 
-  input[type=checkbox] {
+  input[type="checkbox"] {
     margin-top: 1px;
   }
 }
@@ -37,7 +37,7 @@
 
     .panel-heading {
       background-color: transparent;
-      color: use_color('base');
+      color: use-color('base');
       font-weight: 700;
     }
   }
@@ -47,19 +47,19 @@
   margin-bottom: 10px;
 
   &.panel-danger .panel-title {
-    color: rgb(169, 68, 66);
+    color: rgb(169 68 66);
   }
 
   &.panel-success .panel-title {
-    color: rgb(60, 118, 61);
+    color: rgb(60 118 61);
   }
 
   &.panel-warning .panel-title {
-    color: rgb(138, 109, 59);
+    color: rgb(138 109 59);
   }
 
   &.panel-info .panel-title {
-    color: rgb(0, 0, 255);
+    color: rgb(0 0 255);
   }
 
   .panel-heading {
@@ -107,7 +107,7 @@
 
 .kb-panel-container {
   .panel-heading {
-    border-bottom: 2px solid use_color('base-lighter');
+    border-bottom: 2px solid use-color('base-lighter');
     padding-bottom: 2px;
   }
 }
@@ -127,7 +127,7 @@
 // the user can take, be visually distinct from the other bits surrounding it.
 
 .btn-toolbar.kb-btn-toolbar-cell-widget {
-  background-color: use_color('base-lightest');
+  background-color: use-color('base-lightest');
   margin-bottom: 20px;
   padding: 6px;
 }

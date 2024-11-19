@@ -6,7 +6,6 @@ define([
     'narrativeConfig',
     'testUtil',
 ], (ReportView, Jupyter, $, Mocks, Config, TestUtil) => {
-    'use strict';
     const FAKE_SERV_URL = 'https://ci.kbase.us/report_serv';
     const REPORT_REF = '1/2/3';
 
@@ -330,10 +329,8 @@ define([
                 badUrl = 'https://ci.kbase.us/not/a/shock/url';
             expect(reportWidget.importExportLink(badUrl, name)).toBeNull();
             const result = reportWidget.importExportLink(goodUrl, name);
-            expect(result).toMatch(new RegExp('^' + Config.url('data_import_export')));
-            expect(result).toContain('wszip=0');
-            expect(result).toContain('name=some_file.txt');
-            expect(result).toContain('id=' + shockNode);
+            expect(result).toMatch(new RegExp('^' + Config.url('blobstore')));
+            expect(result).toContain('/node/' + shockNode + '?download');
         });
 
         it('should respond to errors by rendering an error string', async function () {
@@ -341,7 +338,7 @@ define([
             Mocks.mockJsonRpc1Call({
                 url: Config.url('workspace'),
                 response: {
-                    error: 'This would be an error stacktrace',
+                    error: 'EXPECTED IN TEST - This would be an error stacktrace',
                     message: errorMessage,
                     code: -32500,
                     name: 'JSONRPCError',
@@ -386,6 +383,38 @@ define([
             });
             expect(reportWidget.options.autoRender).toBeFalse();
             expect(reportWidget.loadRenderPromise).toBeNull();
+        });
+
+        it('should set the src of the file download iframe on click', async function () {
+            mockReportLookup(REPORT_OBJ);
+            mockCreatedObjectInfo(CREATED_OBJECTS_INFO);
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+                showCreatedObjects: true,
+                autoRender: false,
+            });
+            await reportWidget.loadAndRender();
+
+            // expect to see one file and a downloader iframe
+            const $fileLinksNode = this.$node.find('[data-element="downloadable-files"]');
+            const dlIframe = $fileLinksNode.find('iframe.kb-report-view__download-iframe')[0];
+            const $fileLinks = $fileLinksNode.find('a');
+            expect($fileLinks.length).toEqual(1);
+            expect($fileLinks.html()).toContain('file_number_1.txt');
+
+            await TestUtil.waitForElementState(
+                dlIframe,
+                () => {
+                    const iframeSrc = dlIframe.getAttribute('src');
+                    return iframeSrc !== null && iframeSrc.length > 0;
+                },
+                () => $fileLinks[0].click()
+            );
+            const fileInfo = REPORT_OBJ.file_links[0];
+            const fileUrlParts = fileInfo.URL.split('/');
+            const fileNode = fileUrlParts[fileUrlParts.length - 1];
+            const expectedUrl = `${Config.url('blobstore')}/node/${fileNode}?download`;
+            expect(dlIframe.getAttribute('src')).toEqual(expectedUrl);
         });
     });
 });

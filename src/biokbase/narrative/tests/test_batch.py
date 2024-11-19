@@ -1,6 +1,5 @@
-"""
-Tests for the app_util module
-"""
+"""Tests for the app_util module"""
+
 import unittest
 from unittest import mock
 
@@ -15,8 +14,7 @@ from biokbase.narrative.jobs.batch import (
     list_files,
     list_objects,
 )
-
-from .narrative_mock.mockclients import MockStagingHelper, get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import MockStagingHelper, get_mock_client
 
 
 class BatchTestCase(unittest.TestCase):
@@ -50,9 +48,7 @@ class BatchTestCase(unittest.TestCase):
         with pytest.raises(ValueError, match="is not a valid type."):
             list_objects(obj_type="NotAType")
 
-    @mock.patch(
-        "biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch("biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
     def test_get_input_scaffold(self):
         # basic test. includes group stuff.
@@ -86,9 +82,7 @@ class BatchTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
     def test_get_input_scaffold_bad_id(self):
-        with pytest.raises(
-            ValueError, match='Unknown app id "foo" tagged as "release"'
-        ):
+        with pytest.raises(ValueError, match='Unknown app id "foo" tagged as "release"'):
             get_input_scaffold("foo")
 
     @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
@@ -98,15 +92,11 @@ class BatchTestCase(unittest.TestCase):
         ):
             get_input_scaffold("foo", tag="bar")
 
-    @mock.patch(
-        "biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch("biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client)
     def test_get_input_scaffold_defaults(self):
         # Do standard, group params, lists, etc.
         biokbase.narrative.jobs.specmanager.SpecManager().reload()
-        scaffold = get_input_scaffold(
-            "kb_trimmomatic/run_trimmomatic", use_defaults=True
-        )
+        scaffold = get_input_scaffold("kb_trimmomatic/run_trimmomatic", use_defaults=True)
         scaffold_standard = {
             "adapter_clip": [
                 {
@@ -181,9 +171,7 @@ class BatchTestCase(unittest.TestCase):
             ):
                 _generate_vals(t)
 
-        with pytest.raises(
-            ValueError, match="The input tuple must be entirely numeric"
-        ):
+        with pytest.raises(ValueError, match="The input tuple must be entirely numeric"):
             _generate_vals(("a", -1, 1))
 
         with pytest.raises(ValueError, match="The interval value must not be 0"):
@@ -227,9 +215,7 @@ class BatchTestCase(unittest.TestCase):
         assert _is_singleton([["a", "b"], ["c", "d"]], list_param) is False
         assert _is_singleton([["a"]], list_param) is False
 
-    @mock.patch(
-        "biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client
-    )
+    @mock.patch("biokbase.narrative.jobs.batch.specmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
     def test_generate_input_batch(self):
         biokbase.narrative.jobs.specmanager.SpecManager().reload()
@@ -286,7 +272,7 @@ class BatchTestCase(unittest.TestCase):
         palindrome_ranges = {5: 0, 7: 0}
 
         # test for templated outputs in above
-        out_strs = dict.fromkeys(["foo_{}".format(i) for i in range(22)], 0)
+        out_strs = dict.fromkeys([f"foo_{i}" for i in range(22)], 0)
 
         for b in input_batch:
             palindrome_ranges[b["adapter_clip"][0]["palindrome_clip_threshold"]] += 1
@@ -335,8 +321,7 @@ class BatchTestCase(unittest.TestCase):
             {"output": "foo", "other_param": None}, basic_params_dict, 3
         )
         assert (
-            out_vals["other_param"]
-            == basic_params_dict["other_param"]["default"] + "${run_number}"
+            out_vals["other_param"] == basic_params_dict["other_param"]["default"] + "${run_number}"
         )
 
         # some fails

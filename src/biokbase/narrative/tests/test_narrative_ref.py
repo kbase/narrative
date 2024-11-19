@@ -4,8 +4,7 @@ from unittest import mock
 import pytest
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.narrative_ref import NarrativeRef
-
-from .narrative_mock.mockclients import get_mock_client
+from biokbase.narrative.tests.narrative_mock.mockclients import get_mock_client
 
 
 class NarrativeRefTestCase(unittest.TestCase):
@@ -49,8 +48,6 @@ class NarrativeRefTestCase(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.common.narrative_ref.clients.get", get_mock_client)
     def test_no_ws_perm(self):
-        with pytest.raises(
-            WorkspaceError, match="You do not have access to this workspace"
-        ) as e:
+        with pytest.raises(WorkspaceError, match="You do not have access to this workspace") as e:
             NarrativeRef({"wsid": 789, "objid": None, "ver": None})
         assert e._excinfo[1].http_code == 403

@@ -39,4 +39,6 @@ jupyter nbextension install "${dir}/serviceWidgetCell" --symlink --sys-prefix
 jupyter nbextension enable serviceWidgetCell/main --sys-prefix
 
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
-jupyter nbextension enable --py --sys-prefix clustergrammer_widget
+
+jupyter nbextension install --py --sys-prefix clustergrammer2
+jupyter nbextension enable --py --sys-prefix clustergrammer2

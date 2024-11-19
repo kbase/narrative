@@ -1,0 +1,98 @@
+interactions:
+- request:
+    body: '{"method": "Workspace.get_object_info3", "params": [{"objects": [{"ref":
+      "test_narrative:narrative_1695311690413/Abiotrophia_defectiva_ATCC_49176"}]}],
+      "version": "1.1", "id": "6145416954696407"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '195'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"infos":[[5,"Abiotrophia_defectiva_ATCC_49176","KBaseGenomes.Genome-17.0","2023-09-26T13:13:47+0000",2,"test_narrative",69356,"test_narrative:narrative_1695311690413","5611e4279ef739e36214c81531c54a7a",7027991,null]],"paths":[["69356/5/2"]]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 87c79db6ac7967f3-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 30 Apr 2024 12:43:11 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"method": "Workspace.get_object_info3", "params": [{"objects": [{"ref":
+      "test_narrative:narrative_1695311690413/_Nostoc_azollae__0708"}]}], "version":
+      "1.1", "id": "8832227572668299"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '184'
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://ci.kbase.us/services/ws
+  response:
+    body:
+      string: '{"version":"1.1","result":[{"infos":[[4,"_Nostoc_azollae__0708","KBaseGenomes.Genome-17.0","2023-09-21T16:11:43+0000",1,"test_narrative",69356,"test_narrative:narrative_1695311690413","2a22a2cadd2807d6161cd20bfd54079b",16108545,null]],"paths":[["69356/4/1"]]}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - authorization
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 87c79db7ea30ce6c-SJC
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 30 Apr 2024 12:43:12 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    status:
+      code: 200
+      message: OK
+version: 1

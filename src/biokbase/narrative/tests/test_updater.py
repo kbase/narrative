@@ -5,8 +5,7 @@ from biokbase.narrative.contents.updater import (
     suggest_apps,
     update_narrative,
 )
-
-from .util import ConfigTests
+from biokbase.narrative.tests.util import ConfigTests
 
 
 class KeyErrorTest(ValueError):
@@ -20,19 +19,16 @@ class UpdaterTestCase(unittest.TestCase):
         config = ConfigTests()
 
         # read in test file stuff from ./data/...
-        cls.test_nar = config.load_json_file(config.get("narratives", "updater_file"))[
+        cls.test_nar = config.load_json_file(config.get("narratives", "updater_file"))["data"]
+        cls.test_nar_big = config.load_json_file(config.get("narratives", "updater_file_big"))[
             "data"
         ]
-        cls.test_nar_big = config.load_json_file(
-            config.get("narratives", "updater_file_big")
-        )["data"]
         cls.test_nar_poplar = config.load_json_file(
             config.get("narratives", "updater_file_poplar")
         )["data"]
 
     def validate_narrative(self, nar):
-        """
-        a valid narrative nar should have:
+        """A valid narrative nar should have:
         nar.metadata = {
             description : string,
             data_dependencies : list,
@@ -91,8 +87,7 @@ class UpdaterTestCase(unittest.TestCase):
         return True
 
     def validate_cell(self, cell):
-        """
-        a valid cell should have:
+        """A valid cell should have:
         cell.source = string,
         cell.cell_type = ("markdown" | "code")
         cell.metadata = (optional) {

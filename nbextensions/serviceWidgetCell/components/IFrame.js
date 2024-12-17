@@ -37,9 +37,7 @@ define(['preact', 'preact_compat', 'prop_types', 'htm'], (preact, preactCompat, 
                     src=${url.toString()}
                     class="nbextensions-serviceWidgetCell-IFrame"
                     data-app-host="true"
-                    onLoad=${(ev) => {
-                        this.props.onLoaded(ev.target);
-                    }}
+                    onLoad=${(ev) => { this.props.onLoaded(ev.target); }}
                 />
             `;
         }

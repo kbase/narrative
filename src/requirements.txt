@@ -49,4 +49,4 @@ pyyaml==6.0.2
 requests==2.32.3
 scikit-learn==1.5.2
 statsmodels==0.14.4
-tornado==6.4.1
+tornado==6.4.2

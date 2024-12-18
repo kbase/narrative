@@ -14,7 +14,7 @@ define([
 
     /**
      * This makes a call to the Staging Service to fetch information from bulk specification files.
-     * This then gets processed through `processSpreadsheetFileData` before being returned.
+     * This then gets processed through `processBulkImportSpecData` before being returned.
      * @param {Array[string]} files - array of file path names to treat as import specifications
      * @returns Promise that resolves into information that can be used to open a bulk import cell.
      * This has the format:
@@ -32,45 +32,15 @@ define([
      *   }
      * }
      * @throws Errors.ImportSetupError if an error occurs in either data fetching from the Staging
-     *   Service, or in the initial parsing done by `processSpreadsheetFileData`
+     *   Service, or in the initial parsing done by `processBulkImportSpecData`
      */
-    function getSpreadsheetFileInfo(files) {
-        if (!files || files.length === 0) {
-            return Promise.resolve({});
-        }
-        const stagingUrl = Config.url('staging_api_url');
-        const stagingServiceClient = new StagingServiceClient({
-            root: stagingUrl,
-            token: Runtime.make().authToken(),
-        });
+    function getBulkImportFileInfo(xsvFiles, dtsFiles) {
+        // noting here that these are effectively jQuery promises, so we can't just
+        // make this an async/await function, but need to wrap with Promise.all.
+        const xsvFileProms = requestBulkImportSpec(xsvFiles);
+        const dtsFileProms = requestBulkImportSpec(dtsFiles, 'dts');
 
-        // This is overkill, but a little future proofing. We have to make a GET call with an
-        // undetermined number of files, so if there are more than we can allow in the URL, gotta break that
-        // into multiple calls.
-
-        // a little cheating here to figure out the length allowance. Maybe it should be in the client?
-        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification/?files='.length;
-        const bulkSpecProms = [];
-
-        while (files.length) {
-            const fileBatch = [];
-            let remainingLength = maxQueryLength;
-            while (
-                files.length &&
-                remainingLength - files[0].length - 1 >= 0 // -1 is for the comma
-            ) {
-                const nextFile = files.shift();
-                fileBatch.push(nextFile);
-                remainingLength -= nextFile.length + 1;
-            }
-            bulkSpecProms.push(
-                stagingServiceClient.bulkSpecification({
-                    files: encodeURIComponent(fileBatch.join(',')),
-                })
-            );
-        }
-
-        return Promise.all(bulkSpecProms)
+        return Promise.all([...xsvFileProms, ...dtsFileProms])
             .then((result) => {
                 // join results of all calls together
                 const errors = [];
@@ -123,8 +93,52 @@ define([
                 );
             })
             .then((result) => {
-                return processSpreadsheetFileData(result);
+                return processBulkImportSpecData(result);
             });
+    }
+
+    function requestBulkImportSpec(files, flag = '') {
+        /**
+         * This returns an array of jQuery Promises, which is what
+         * the staging service client uses, so it can't be (easily)
+         * cast into async/await.
+         */
+        if (!files || files.length === 0) {
+            return [];
+        }
+        const stagingUrl = Config.url('staging_api_url');
+        const stagingServiceClient = new StagingServiceClient({
+            root: stagingUrl,
+            token: Runtime.make().authToken(),
+        });
+        // This is overkill, but a little future proofing. We have to make a GET call with an
+        // undetermined number of files, so if there are more than we can allow in the URL, gotta break that
+        // into multiple calls.
+
+        // a little cheating here to figure out the length allowance. Maybe it should be in the client?
+        const path = '/bulk_specification/?' + (flag ? flag + '&' : '') + 'files=';
+        const maxQueryLength = 2048 - stagingUrl.length - path.length;
+        const bulkSpecProms = [];
+
+        while (files.length) {
+            const fileBatch = [];
+            let remainingLength = maxQueryLength;
+            while (
+                files.length &&
+                remainingLength - files[0].length - 1 >= 0 // -1 is for the comma
+            ) {
+                const nextFile = files.shift();
+                fileBatch.push(nextFile);
+                remainingLength -= nextFile.length + 1;
+            }
+            bulkSpecProms.push(
+                stagingServiceClient.bulkSpecification({
+                    files: encodeURIComponent(fileBatch.join(',')),
+                    flag,
+                })
+            );
+        }
+        return bulkSpecProms;
     }
 
     /**
@@ -153,7 +167,7 @@ define([
      * TODO: also return the fetched app specs to avoid fetching them twice?
      * @param {Object} data
      */
-    async function processSpreadsheetFileData(data) {
+    async function processBulkImportSpecData(data) {
         // map from given datatype to app id.
         // if any data types are missing, record that
         // if any data types are not bulk import ready, record that, too.
@@ -390,6 +404,7 @@ define([
         const bulkFiles = {};
         const singleFiles = [];
         const xsvFiles = [];
+        const dtsFiles = [];
         fileInfo.forEach((file) => {
             const importType = file.type;
             if (bulkIds.has(importType)) {
@@ -404,33 +419,38 @@ define([
                 bulkFiles[importType].files.push(file.name);
             } else if (importType === 'import_specification') {
                 xsvFiles.push(file.name);
+            } else if (importType === 'dts_manifest') {
+                dtsFiles.push(file.name);
             } else {
                 singleFiles.push(file);
             }
         });
-        return getSpreadsheetFileInfo(xsvFiles)
-            .then((result) => {
-                if (result.types) {
-                    Object.keys(result.types).forEach((dataType) => {
-                        if (!(dataType in bulkFiles)) {
-                            bulkFiles[dataType] = {
-                                appId: uploaders.app_info[dataType].app_id,
-                                files: [],
-                                outputSuffix: uploaders.app_info[dataType].app_output_suffix,
-                            };
-                        }
-                        bulkFiles[dataType].appParameters = result.types[dataType];
-                    });
-                }
-                if (Object.keys(bulkFiles).length) {
-                    return Jupyter.narrative.insertBulkImportCell(bulkFiles);
-                } else {
-                    return Promise.resolve();
-                }
-            })
-            .then(() => {
-                return initSingleFileUploads(singleFiles);
-            });
+        return (
+            getBulkImportFileInfo(xsvFiles, dtsFiles)
+                // return getSpreadsheetFileInfo(xsvFiles)
+                .then((result) => {
+                    if (result.types) {
+                        Object.keys(result.types).forEach((dataType) => {
+                            if (!(dataType in bulkFiles)) {
+                                bulkFiles[dataType] = {
+                                    appId: uploaders.app_info[dataType].app_id,
+                                    files: [],
+                                    outputSuffix: uploaders.app_info[dataType].app_output_suffix,
+                                };
+                            }
+                            bulkFiles[dataType].appParameters = result.types[dataType];
+                        });
+                    }
+                    if (Object.keys(bulkFiles).length) {
+                        return Jupyter.narrative.insertBulkImportCell(bulkFiles);
+                    } else {
+                        return Promise.resolve();
+                    }
+                })
+                .then(() => {
+                    return initSingleFileUploads(singleFiles);
+                })
+        );
     }
 
     return {

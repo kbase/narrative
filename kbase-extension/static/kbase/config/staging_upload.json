@@ -53,6 +53,10 @@
             "name": "Import Specification"
         },
         {
+            "id": "dts_manifest",
+            "name": "Data Transfer Service Manifest"
+        },
+        {
             "id": "decompress",
             "name": "Decompress/Unpack"
         }

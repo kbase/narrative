@@ -287,6 +287,10 @@ define([
             };
         })();
 
+        p.getToggleMode = function () {
+            return $(this.element).data('toggleMinMax');
+        }
+
         p.renderMinMax = function () {
             const $cellNode = $(this.element),
                 metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax');

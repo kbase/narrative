@@ -234,6 +234,41 @@ define([], () => {
         return pythonCode;
     }
 
+    /**
+     *
+     * Builds a snippet of Python code (which itself will build and render Javascript)
+     * for rendering a service widget.
+     *
+     * @param {*} param0
+     * @returns
+     */
+    function buildServiceWidgetRunner({
+        cellId,
+        moduleName,
+        widgetName,
+        params,
+        isDynamicService,
+        widgetState,
+    }) {
+        const positionalArgs = [
+            pythonifyValue(cellId),
+            pythonifyValue(moduleName),
+            pythonifyValue(widgetName),
+            pythonifyValue(params, { autoIndent: true }),
+            pythonifyValue(isDynamicService),
+            pythonifyValue(widgetState),
+        ];
+
+        const pythonCode = [
+            'from biokbase.cells.service_widget import render',
+            'import importlib',
+            'importlib.reload(biokbase.cells.service_widget)',
+            `render(${buildNiceArgsList(positionalArgs)})`,
+        ].join('\n');
+
+        return pythonCode;
+    }
+
     function buildCustomWidgetRunner(cellId, runId, app) {
         const positionalArgs = [pythonifyValue(app.id)],
             namedArgs = objectToNamedArgs({
@@ -299,5 +334,6 @@ define([], () => {
         buildCustomWidgetRunner,
         buildDataWidgetRunner,
         buildBulkAppRunner,
+        buildServiceWidgetRunner,
     };
 });

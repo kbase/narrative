@@ -10,6 +10,8 @@
 
 define([
     'jquery',
+    'preact',
+    'htm',
     'bluebird',
     'handlebars',
     'narrativeConfig',
@@ -38,9 +40,15 @@ define([
     'widgets/loadingWidget',
     'kb_service/client/workspace',
     'util/kbaseApiUtil',
+    'widgets/serviceWidgetCell/AddServiceWidgetDataViewer',
+    'widgets/serviceWidgetCell/AddServiceWidget',
+
+    /* for effect */
     'bootstrap',
 ], (
     $,
+    preact,
+    htm,
     Promise,
     Handlebars,
     Config,
@@ -68,7 +76,9 @@ define([
     ServiceUtils,
     LoadingWidget,
     Workspace,
-    APIUtil
+    APIUtil,
+    AddServiceWidgetDataViewer,
+    AddServiceWidget
 ) => {
     'use strict';
 
@@ -382,6 +392,109 @@ define([
     };
 
     /**
+     * Ensures any element with the "data-developer-only" attribute is displayed by
+     * removing the "hide" bootstrap class, and initializes any ui elements that need
+     * some javascript setup.
+     */
+    Narrative.prototype.enableDeveloperUI = function () {
+        document.querySelectorAll('[data-developer-only]').forEach((element) => {
+            element.classList.remove('hide');
+        });
+
+        this.initAddServiceWidgetDataViewerMenu();
+        this.initAddServiceWidgetMenu();
+    };
+
+    /**
+     * Configures the "developer mode" hamburger menu item, which is only enabled for
+     * users with the "DevToken" role. Note that the developer mode is available to
+     * anyone who knows the secret incantation, but we don't necessarily want to make it
+     * available to all users.
+     *
+     * NB this could be altered to enable ui elements by DevToken or any
+     * other token. E.g. have a flag attribute like data-edit-mode-only, say
+     * data-devtoken-only, or data-if-devtoken, or data-show-if-devtoken, or
+     * data-show-for-roles="DevToken,ServiceToken", etc.
+     */
+    Narrative.prototype.initDeveloperHamburgerMenuItem = function () {
+        const menuItem = $('#kb-developer-menu-item');
+        const { roles } = NarrativeLogin.accountInfo;
+        const isDeveloperMode = this.runtime.isFeatureEnabled('developer');
+
+        // We show the menu if developer mode is already enabled (in order to be able to
+        // switch it off) or the user has a suitable role to enable developer mode.
+        const enableDeveloperMenuItem =
+            isDeveloperMode ||
+            roles.some(({ id }) => {
+                return ['DevToken'].includes(id);
+            });
+
+        if (!enableDeveloperMenuItem) {
+            return;
+        }
+
+        menuItem.removeClass('hide');
+
+        if (isDeveloperMode) {
+            menuItem.find('[data-element="label"]').text('Reopen in User Mode');
+        } else {
+            // This may be the default text in the narrative_header.html template, but
+            // we repeat it here for completeness with the above.
+            menuItem.find('[data-element="label"]').text('Reopen in Developer Mode');
+        }
+    };
+
+    /**
+     * Initializes the developer menu "Add Service Widget Data Viewer" button
+     */
+    Narrative.prototype.initAddServiceWidgetDataViewerMenu = () => {
+        const { h } = preact;
+        const html = htm.bind(h);
+        const $body = $('<div>');
+        const staticDialog = new BootstrapDialog({
+            title: 'Add Object Viewer Service Widget',
+            body: $body,
+            closeButton: true,
+        });
+        staticDialog.onShown(() => {
+            Jupyter.narrative.disableKeyboardManager();
+            const body = html` <${AddServiceWidgetDataViewer} done=${() => staticDialog.hide()} />`;
+            preact.render(body, $body.get(0));
+        });
+        staticDialog.onHidden(() => {
+            Jupyter.narrative.enableKeyboardManager();
+        });
+        $('#kb-develop-add-service-widget-data-btn').click(() => {
+            staticDialog.show();
+        });
+    };
+
+    /**
+     *
+     */
+    Narrative.prototype.initAddServiceWidgetMenu = () => {
+        const { h } = preact;
+        const html = htm.bind(h);
+        const $body = $('<div>');
+        const staticDialog = new BootstrapDialog({
+            title: 'Insert Generic Service Widget',
+            body: $body,
+            closeButton: true,
+        });
+        staticDialog.onShown(() => {
+            Jupyter.narrative.disableKeyboardManager();
+            const body = html` <${AddServiceWidget} done=${() => staticDialog.hide()} />`;
+            preact.render(body, $body.get(0));
+        });
+        staticDialog.onHidden(() => {
+            Jupyter.narrative.enableKeyboardManager();
+        });
+        $('#kb-develop-add-service-widget-btn').click(() => {
+            staticDialog.show();
+        });
+    };
+
+    /**
      * This checks the loaded Narrative document version against the given value.
      * If the loaded document version is not the same as the given version parameter,
      * then the document version mismatch button should be shown.
@@ -623,6 +736,30 @@ define([
         $('#kb-about-btn').click(() => {
             aboutDialog.show();
         });
+
+        $('#kb-developer-menu-item-btn').click(() => {
+            // Toggles between developer and "normal" mode.
+            // This is accomplished by adding the search params "features=developer"
+            // to or removing it from the current url and then re-navigating to the
+            // Narrative with the resulting url.
+
+            // The developer feature may be enabled by various means - we don't really
+            // care how here. It is important to know, however, that the features set in
+            // the URL have the highest precedence -- they override other means of
+            // setting features.
+            const disable = this.runtime.isFeatureEnabled('developer');
+
+            try {
+                const features = this.runtime.getFeaturesFromURL().filter(({ name }) => {
+                    return name !== 'developer';
+                });
+                features.push({ name: 'developer', disable });
+                const url = this.runtime.setFeaturesInURL(features);
+                window.location = url.toString();
+            } catch (ex) {
+                console.error('ERROR getting features', ex);
+            }
+        });
     };
 
     Narrative.prototype.initShutdownDialog = function () {
@@ -820,6 +957,11 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
+
+            if (this.runtime.isFeatureEnabled('developer')) {
+                this.enableDeveloperUI();
+            }
+            this.initDeveloperHamburgerMenuItem();
             this.updateDocumentVersion().finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {

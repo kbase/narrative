@@ -1,9 +1,11 @@
-define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeMethodStore'], (
-    $,
-    _,
-    Config,
-    NarrativeMethodStore
-) => {
+define([
+    'jquery',
+    'underscore',
+    'narrativeConfig',
+    'kb_service/client/narrativeMethodStore',
+    'base/js/namespace',
+    'common/props',
+], ($, _, Config, NarrativeMethodStore, Jupyter, Props) => {
     'use strict';
 
     // this is the cached promise about the viewer info
@@ -11,17 +13,45 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
     let lastViewerCache = 0; // age in ms since epoch
     const VIEWER_CACHE_MAX = 5 * 60 * 1000; // 5 min in ms
 
+    // Store the tag for the last time the "viewer info" was loaded and cached.
+    // If the tag changes between requests, we need to re-fetch it.
+    let viewerInfoCacheTag = null;
+
     /**
      * returns the cached data viewer promise if needed.
      * If it's old (> 5 minutes), it makes and returns a new one.
      * @returns {Promise} a promise that resolves into viewer info, see loadViewerInfo.
      */
     function getViewerInfo() {
-        if (!viewerInfoCache || Date.now() - lastViewerCache > VIEWER_CACHE_MAX) {
-            viewerInfoCache = loadViewerInfo();
+        const currentTag = getAppVersionTag();
+        if (
+            !viewerInfoCache ||
+            viewerInfoCacheTag !== currentTag ||
+            Date.now() - lastViewerCache > VIEWER_CACHE_MAX
+        ) {
+            viewerInfoCache = loadViewerInfo(currentTag);
+            viewerInfoCacheTag = currentTag;
             lastViewerCache = Date.now();
         }
         return viewerInfoCache;
+    }
+
+    /**
+     * Simply returns the current app version tag in the app panel.
+     *
+     * @returns The current app version tag set in the app panel, or 'release' if not set
+     */
+    function getAppVersionTag() {
+        // The narrativeViewers may be loaded before the side panel. Since the current
+        // app panel tag resides in the app panel (aka `$methodsWidget` itself), we need
+        // to be tolerant of it not existing yet.
+        // We use the good ol' props api because, although awkwardly named, it allows us
+        // to safely traverse the object.
+        return Props.getDataItem(
+            Jupyter,
+            'narrative.sidePanel.$methodsWidget.currentTag',
+            'release'
+        );
     }
 
     /**
@@ -46,15 +76,22 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
      *
      * would dump out the object with the five keys outlined above.
      */
-    function loadViewerInfo() {
+    function loadViewerInfo(appTag) {
         const viewers = {};
         const landingPageUrls = {};
         const typeNames = {};
         let methodIds = [];
 
         const methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+        //
+        // NB - this did not previously respect the currently selected tag, so this is a
+        // change in behavior
+        // Without specifying the tag, it would have defaulted to 'release', which is
+        // the common model in NMS, although not documented for this method.
+        //
         return methodStoreClient
             .list_categories({
+                tag: appTag,
                 load_methods: 1,
                 load_apps: 0,
                 load_types: 1,
@@ -71,6 +108,7 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
                     // If it has at least one method id, make sure it's there.
                     else if (val.view_method_ids && val.view_method_ids.length > 0) {
                         const methodId = val.view_method_ids[0];
+
                         if (!methodInfo[methodId]) {
                             console.warn("Can't find method info for id: " + methodId);
                         } else if (methodInfo[methodId].loading_error) {
@@ -90,11 +128,11 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
                 });
 
                 methodIds = _.uniq(methodIds);
-                return methodStoreClient.get_method_spec({ ids: methodIds });
+                return methodStoreClient.get_method_spec({ tag: appTag, ids: methodIds });
             })
             .then((specs) => {
-                _.each(specs, (val) => {
-                    specs[val.info.id] = val;
+                _.each(specs, (spec) => {
+                    specs[spec.info.id] = spec;
                 });
                 return {
                     viewers: viewers,
@@ -159,6 +197,7 @@ define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeM
             const o = dataCell.obj_info;
             const methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
+                // eslint-disable-next-line no-console
                 console.debug('No viewer found for type=' + o.bare_type);
                 return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }

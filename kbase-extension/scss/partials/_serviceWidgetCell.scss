@@ -1,0 +1,57 @@
+.nbextensions-serviceWidgetCell .kb-panel-container[data-element=parameters-group] > div.panel-collapse > .panel-body {
+  padding: 0;
+}
+
+.nbextensions-serviceWidgetCell>.output_wrapper>.output {
+  height: 500px;
+  /* default height */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  resize: vertical;
+  overflow: hidden;
+  /* to enable resizing */
+  padding-bottom: 1em;
+}
+
+.nbextensions-serviceWidgetCell>.output_wrapper>.output>.output_area {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+
+.nbextensions-serviceWidgetCell>.output_wrapper>.output>.output_area>.output_subarea.output_javascript {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+
+.nbextensions-serviceWidgetCell>.output_wrapper>.output>.output_area>.output_subarea.output_javascript>div {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+
+/* Main component */
+.nbextensions-serviceWidgetCell-Main {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* IFrame component */
+.nbextensions-serviceWidgetCell-IFrame {
+  flex: 1 1 0;
+  border: none;
+}
+
+.nbextensions-serviceWidgetCell-Root {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}

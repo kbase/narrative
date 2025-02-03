@@ -97,7 +97,7 @@ def _untransform(transform_type: str, value):  # noqa: ANN001 , ANN202
         slash = value.find("/")
         if slash == -1:
             return value
-        return value[(slash + 1) :]
+        return value[(slash + 1) :]  # noqa:E203
     return value
 
 

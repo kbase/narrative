@@ -27,6 +27,7 @@
 @import "partials/tour";
 @import "partials/batchMode";
 @import "partials/advancedViewCell";
+@import "partials/serviceWidgetCell";
 @import "partials/errorDialog";
 @import "partials/appCell";
 @import "partials/editorCell";
@@ -36,6 +37,9 @@
 @import "partials/appParams";
 @import "partials/bulkImportCell";
 @import "partials/cellToolbar";
+@import "partials/preactComponents/errorAlert";
+@import "partials/preactComponents/loading";
+@import "partials/preactComponents/RotatedTable";
 @import "partials/dataStaging";
 @import "partials/downloadPanel";
 @import "partials/dropzoneDz";

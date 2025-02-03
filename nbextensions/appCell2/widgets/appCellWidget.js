@@ -1245,19 +1245,74 @@ define(
             }
 
             function createOutputCell(jobId) {
-                const parentCellId = cellUtils.getMeta(cell, 'attributes', 'id'),
-                    cellIndex = Jupyter.notebook.find_cell_index(cell),
-                    // the new output cell ID
-                    cellId = new Uuid(4).format(),
-                    setupData = {
-                        cellId,
-                        jobId,
-                        parentCellId,
-                        type: 'output',
-                        widget: model.getItem('exec.outputWidgetInfo'),
-                    };
-                Jupyter.notebook.insert_cell_below('code', cellIndex, setupData);
+                const parentCellId = cellUtils.getMeta(cell, 'attributes', 'id');
+                const cellIndex = Jupyter.notebook.find_cell_index(cell);
+                // the new output cell ID
+                const cellId = new Uuid(4).format();
+                const widget = model.getItem('exec.outputWidgetInfo');
 
+                const cellSetupData = (() => {
+                    if (widget.name === 'ServiceWidget') {
+                        //
+                        // Here we handle this widget name with the serviceWidget cell
+                        // type. Specifying an output widget of
+                        // "ServiceWidgetGeneric" will cause widget to be
+                        // handled by the serviceWidget cell.
+                        //
+                        // he specific widget is specified by a pair of values - the
+                        // service module name and the widget name in that service.
+                        //
+                        // A service widget may be provided by a dynamic service or core
+                        // service; however, the primary use case is a dynamic service,
+                        // and until otherwise, support is limited to dynamic services.
+                        //
+                        // We extract the service module name and widget name which are
+                        // parameters for the service widget cell, not for the widget.
+                        // The "rest" of the parameters are extracted for the widget
+                        // itself.
+                        ///
+                        const { service_module_name, widget_name, title, subtitle, ...params } =
+                            widget.params;
+
+                        const appSpec = model.getItem('app.spec');
+
+                        return {
+                            type: 'serviceWidget',
+                            attributes: {
+                                title,
+                                subtitle,
+                                icon: {
+                                    type: 'appoutput',
+                                    params: {
+                                        appSpec,
+                                        extraIcon: {
+                                            classSuffix: 'arrow-right',
+                                        },
+                                        stacked: false,
+                                    },
+                                },
+                            },
+                            params: {
+                                service: {
+                                    moduleName: service_module_name,
+                                    widgetName: widget_name,
+                                    params,
+                                    isDynamicService: true,
+                                },
+                            },
+                        };
+                    } else {
+                        return {
+                            cellId,
+                            jobId,
+                            parentCellId,
+                            type: 'output',
+                            widget,
+                        };
+                    }
+                })();
+
+                Jupyter.notebook.insert_cell_below('code', cellIndex, cellSetupData);
                 return cellId;
             }
 

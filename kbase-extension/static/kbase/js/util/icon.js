@@ -65,20 +65,21 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
 
         // XXX: Assume color is in form '#RRGGBB'
         if (color) {
-            if (color[0] == '#') {
-                parsed_color = color.match(/#(..)(..)(..)/);
+            if (color.startsWith('#')) {
+                parsed_color = /#(..)(..)(..)/.exec(color);
                 r = parseInt(parsed_color[1], 16);
                 g = parseInt(parsed_color[2], 16);
                 b = parseInt(parsed_color[3], 16);
             }
             // XXX: Assume color is in form "rgb(#,#,#)"
             else {
-                parsed_color = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
-                r = parsed_color[1];
-                g = parsed_color[2];
-                b = parsed_color[3];
+                parsed_color = /rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/.exec(color);
+                r = parseInt(parsed_color[1], 10);
+                g = parseInt(parsed_color[2], 10);
+                b = parseInt(parsed_color[3], 10);
             }
         }
+
         // Add circles with lighter colors
         for (let i = num_stacked_circles; i > 0; i--) {
             const stacked_color = color
@@ -119,7 +120,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
      */
 
     function _makeIcon(iconType, iconClass, shape = 'square', color = null, stacked = false) {
-        const style = color ? { color: color } : {};
+        const style = color ? { color } : {};
         const layers = stacked ? _makeStackLayers(shape, color) : [];
         iconClass = iconClass.replace('icon ', '');
 
@@ -153,6 +154,7 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
                 ? iconSpec.color_mapping[type]
                 : logoColorLookup(type),
             icon = _.has(iconSpec.data, type) ? iconSpec.data[type] : iconSpec.data.DEFAULT;
+
         return _makeIcon(iconType, icon[0], 'circle', color, stacked);
     }
 
@@ -205,6 +207,23 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
         return _makeIcon(isToolbarIcon ? 'app-toolbar' : 'app', 'fa-cube', 'square');
     }
 
+    /**
+     * Creates a an icon suitable for an app output cell.
+     *
+     * @param {object} appSpec
+     * @param {boolean} isToolbarIcon
+     * @returns
+     */
+    function makeAppOutputIcon(appSpec = {}) {
+        const iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+
+        if (iconUrl) {
+            return _makeIconFromUrl(nmsBase + iconUrl);
+        }
+        // The only place the app output icon exists is in a cell toolbar.
+        return _makeIcon('app-toolbar', 'fa-cube', 'square');
+    }
+
     function makeToolbarAppIcon(appSpec) {
         return makeAppIcon(appSpec, true);
     }
@@ -243,16 +262,17 @@ define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativ
     }
 
     return {
-        cssBaseName: cssBaseName,
-        makeAppIcon: makeAppIcon,
-        makeGenericIcon: makeGenericIcon,
-        makeToolbarAppIcon: makeToolbarAppIcon,
-        makeToolbarGenericIcon: makeToolbarGenericIcon,
-        makeTypeIcon: makeTypeIcon,
-        makeToolbarTypeIcon: makeToolbarTypeIcon,
-        makeDataIcon: makeDataIcon,
+        cssBaseName,
+        makeAppIcon,
+        makeAppOutputIcon,
+        makeGenericIcon,
+        makeToolbarAppIcon,
+        makeToolbarGenericIcon,
+        makeTypeIcon,
+        makeToolbarTypeIcon,
+        makeDataIcon,
         // legacy methods
-        overwriteDataIcon: overwriteDataIcon,
-        buildDataIcon: buildDataIcon,
+        overwriteDataIcon,
+        buildDataIcon,
     };
 });

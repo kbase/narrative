@@ -21,6 +21,9 @@ define([
     'common/props',
     'common/jobCommMessages',
     'text!kbase/templates/report_error_button.html',
+    'narrativeViewers',
+
+    // For effect
     'bootstrap',
 ], (
     Jupyter,
@@ -34,7 +37,8 @@ define([
     Handlebars,
     Props,
     jcm,
-    ReportErrorBtnTmpl
+    ReportErrorBtnTmpl,
+    narrativeViewers
 ) => {
     'use strict';
 
@@ -410,13 +414,13 @@ define([
          * This is called during initialization and by the view-mode toggle.
          * Note that this is for the view-only ui mode, and thus the narrative
          * itself may be writable (read-write). This crossover of terminology is
-         * a bit confusing to follow, and thus I've attempted to introduct the
-         * ui view/edit mode as orthgonal to narrative
+         * a bit confusing to follow, and thus I've attempted to introduce the
+         * ui view/edit mode as orthogonal to narrative
          * permission (read-only/read-write/read-write-share).
          *
-         * TODO: probably a better design to set the read / view only flags
-         * and thsn simply render everything that is interested in this.
-         * Otherwise, we just have to propogate the state that _will_ be true when
+         * Probably a better design to set the read / view only flags
+         * and then simply render everything that is interested in this.
+         * Otherwise, we just have to propagate the state that _will_ be true when
          * this operation is complete, because sub-rendering tasks can't just
          * look at the current state.
          */
@@ -470,6 +474,7 @@ define([
                 });
             }
             $('#kb-view-only-msg').removeClass('hidden');
+            $('[data-edit-mode-only]').addClass('hidden');
         },
 
         /**
@@ -492,6 +497,9 @@ define([
             // Remove the view-only buttons (first 1 or 2 children)
             $('#kb-view-only-msg').addClass('hidden');
             $('#kb-view-only-copy').addClass('hidden');
+            // How about an attribute that indicates the element wants to be
+            // hidden when in view-only.
+            $('[data-edit-mode-only]').removeClass('hidden');
 
             // re-enable clicking on narrative name
             $('#save_widget').click(() => {
@@ -568,15 +576,96 @@ define([
          *  - placement (optional) - either 'above' or 'below',
          *  - info: an Object Info array (see Workspace docs)
          */
-        buildViewerCell: function (cellIndex, data) {
+        buildViewerCell: async function (cellIndex, data) {
             let placement = data.placement;
             if (['above', 'below'].indexOf(placement) === -1) {
                 placement = 'below';
             }
-            const cellData = {
-                type: 'data',
-                objectInfo: data.info,
-            };
+
+            // We want to have the type definitions, since we dispatch to different
+            // behavior depending on the type of the object being viewed...
+
+            // May already be cached, so not as expensive as it looks.
+            const viewersInfo = await narrativeViewers.getViewerInfo();
+            const {
+                id: objectId,
+                version: objectVersion,
+                wsid: workspaceId,
+                type: workspaceObjectType,
+            } = data.info;
+
+            const [versionlessType] = workspaceObjectType.split('-');
+            const [, typeName] = versionlessType.split('.');
+            const viewerMethodId = viewersInfo.viewers[versionlessType];
+            const viewerSpec = viewersInfo.specs[viewerMethodId];
+
+            // We just use a simple object ref, as by definition we can only view
+            // objects within this narrative.
+            const ref = `${workspaceId}/${objectId}/${objectVersion}`;
+
+            const cellData = (() => {
+                if (viewerSpec && viewerSpec.widgets.output == 'ServiceWidget') {
+                    // Extract constant params out of the viewer's output mapping.
+                    // We only support sending constant params for a viewer, as we
+                    // generate the ref.
+                    const constantParams = viewerSpec.behavior.output_mapping
+                        .filter((mapping) => {
+                            return 'constant_value' in mapping;
+                        })
+                        .reduce((accum, { constant_value, target_property }) => {
+                            accum[target_property] = constant_value;
+                            return accum;
+                        }, {});
+
+                    // Remove the required service module name and widget name from the
+                    // params, as they are intended as directives to the dynamic service
+                    // widget mechanism, not the widget itself.
+                    const moduleName = constantParams.service_module_name;
+                    const widgetName = constantParams.widget_name;
+                    delete constantParams.service_module_name;
+                    delete constantParams.widget_name;
+
+                    const params = Object.assign({}, constantParams, { ref });
+
+                    const title = `${data.info.name}`;
+                    const subtitle = `v${data.info.version} - ${data.info.type}`;
+
+                    // Finally, we return an object as the serviceWidget handler expects.
+                    return {
+                        type: 'serviceWidget',
+                        attributes: {
+                            title,
+                            subtitle,
+                            icon: {
+                                type: 'data',
+                                params: {
+                                    type: typeName,
+                                    stacked: false,
+                                },
+                            },
+                        },
+                        params: {
+                            // Parameters required for service functionality.
+                            service: {
+                                moduleName,
+                                widgetName,
+                                // We put the title and subtitle here, because otherwise
+                                // they'll be displayed directly, and we want to tweak
+                                // them first ... maybe?
+                                params,
+                                // todo: get this from the form.
+                                isDynamicService: true,
+                            },
+                        },
+                    };
+                } else {
+                    return {
+                        type: 'data',
+                        objectInfo: data.info,
+                    };
+                }
+            })();
+
             if (placement === 'above') {
                 return Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
             } else {

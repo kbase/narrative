@@ -35,6 +35,9 @@ jupyter nbextension enable codeCell/main --sys-prefix
 jupyter nbextension install "${dir}/bulkImportCell" --symlink --sys-prefix
 jupyter nbextension enable bulkImportCell/main --sys-prefix
 
+jupyter nbextension install "${dir}/serviceWidgetCell" --symlink --sys-prefix
+jupyter nbextension enable serviceWidgetCell/main --sys-prefix
+
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
 
 jupyter nbextension install --py --sys-prefix clustergrammer2

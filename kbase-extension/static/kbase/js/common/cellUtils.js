@@ -111,12 +111,15 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
      * metadata item (i.e. kbase.appCell.params...).
      * e.g.:
      * setCellMeta(cell, 'kbase.appCell.params', {})
+     *
      * @param {Object} cell a Jupyter notebook cell
      * @param {string|Array} path a path to the value to set (with dots between
      *   layers for a string, or an array of layers)
      * @param {any} value the value to set
      * @param {boolean} forceRefresh (optional, default false) if true, will force
      *   the cell to refresh itself by resetting the metadata object
+     *
+     * @returns {void} nothing
      */
     function setCellMeta(cell, path, value, forceRefresh) {
         if (!cell.metadata) {
@@ -140,28 +143,89 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
      *   return this as a default instead (default undefined)
      * @returns a value from the cell metadata
      */
-    function getCellMeta(cell, path, defaultValue) {
+    function getCellMeta(cellOrId, path, defaultValue) {
+        const cell = getCell(cellOrId);
         return Props.getDataItem(cell.metadata, path, defaultValue);
     }
 
+    function getCell(cellOrId) {
+        if (typeof cellOrId === 'string') {
+            return findById(cellOrId);
+        }
+        return cellOrId;
+    }
+
     /**
-     * Given a cell with the given id (as stored in the kbase.attributes metadata), this
-     * returns the title of that cell (as stored in kbase.attributes.title).
+     * Given a cell, this returns the title of that cell (as stored in
+     * kbase.attributes.title).
+     *
      * If no cell is present with that id, returns undefined
+     *
      * @param {string} cellId the cell id stored in the kbase.attributes.id metadata field
      * @returns {string} the title of the cell with that id or undefined
      */
-    function getTitle(cellId) {
-        const cellWithId = findById(cellId);
-        if (cellWithId) {
-            return getCellMeta(cellWithId, 'kbase.attributes.title');
+    function getTitle(cellOrId) {
+        const cell = getCell(cellOrId);
+        if (cell) {
+            return getCellMeta(cell, 'kbase.attributes.title');
         }
+    }
+
+    /**
+     * Given a cell, this sets the title of that cell (as stored in
+     * kbase.attributes.title).
+     *
+     * @param {string} cellId the cell id stored in the kbase.attributes.id metadata field
+     * @param {string} title The title for the cell
+     * @returns {string} the title of the cell with that id or undefined
+     */
+    function setTitle(cellOrId, title) {
+        const cell = getCell(cellOrId);
+        setCellMeta(cell, 'kbase.attributes.title', title);
+    }
+
+    const TOOLBAR_RENDER_DEBOUNCE_INTERVAL = 25;
+    const cellToolbarRendersInProgress = new Map();
+
+    /**
+     * Renders the cell toolbar with "debouncing".
+     *
+     * Causes the cell's toolbar to be re-rendered, reflecting the state of the cell.
+     *
+     * How this works is beyond scope here, but it relies upon the setter for the
+     * "metadata" property of the Notebook cell object. When the metadata is set, it
+     * triggers a re-render of the cell toolbar (implemented in kbaseCellToolbarMenu.js)
+     *
+     * Anyway, after setting any state that affects the cell toolbar, one should
+     * force it to re-render. There are various places this is done in the codebase,
+     * but generally I think it is best to not try to automate the re-render, but to
+     * call this method after any changes which may affect the cell toolbar.
+     *
+     * @returns {void}
+     *
+     * @param {NotebookCell} cell A notebook cell
+     *
+     * @returns {void}
+     */
+    function renderCellToolbar(cell) {
+        const cellId = getCellMeta(cell, 'kbase.attributes.id');
+        const inProgress = cellToolbarRendersInProgress.get(cellId);
+        if (inProgress) {
+            return;
+        }
+        const timer = window.setTimeout(() => {
+            // eslint-disable-next-line no-self-assign
+            cell.metadata = cell.metadata;
+            cellToolbarRendersInProgress.delete(cellId);
+        }, TOOLBAR_RENDER_DEBOUNCE_INTERVAL);
+        cellToolbarRendersInProgress.set(cellId, timer);
     }
 
     /**
      * Given a unique cell id, this attempts to find and return associated the Jupyter
      * notebook cell. If there is no cell with that id, or more than one cell with that id,
      * this returns undefined. If and only if there's a single cell with that id, it gets returned.
+     *
      * @param {string} id the unique cell id stored in the kbase.attributes.id metadata
      * @returns a Jupyter notebook cell with the id, or undefined
      */
@@ -183,6 +247,8 @@ define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
         getCellMeta,
         setCellMeta,
         getTitle,
+        setTitle,
         findById,
+        renderCellToolbar,
     };
 });

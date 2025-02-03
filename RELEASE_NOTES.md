@@ -29,7 +29,33 @@ This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will
   - scikit-learn: 1.5.2
   - statsmodels: 0.14.4
 
-
+- Javascript dependency updates
+  - dompurify 3.1.6 -> 3.2.3
+  - plotly.js-dist-min 2.35.0 -> 2.35.3
+  - @babel/traverse 7.25.6 -> 7.26.4
+  - @eslint/eslintrc 3.1.0 -> 3.2.0
+  - @eslint/js 9.11.1 -> 9.17.0
+  - @wdio/browserstack-service 9.0.9 -> 9.4.2
+  - @wdio/cli 9.0.9 -> 9.4.2
+  - @wdio/local-runner 9.0.9 -> 9.4.2
+  - @wdio/mocha-framework 9.0.8 -> 9.4.2
+  - @wdio/spec-reporter 9.0.8 -> 9.4.2
+  - axios 1.7.7 -> 1.7.9
+  - chromedriver 128.0.3 -> 131.0.3
+  - eslint 9.11.1 -> 9.17.0
+  - expect-webdriverio 5.0.2 -> 5.0.5
+  - globals 15.9.0 -> 15.13.0
+  - husky 9.1.6 -> 9.1.7
+  - jasmine-core 5.3.0 -> 5.5.0
+  - lint-staged 15.2.10 -> 15.2.11
+  - postcss 8.4.47 -> 8.4.49
+  - prettier 3.3.3 -> 3.4.2
+  - puppeteer 23.4.0 -> 23.10.4
+  - sass 1.79.3 -> 1.83.0
+  - selenium-webdriver 4.25.0 -> 4.27.0
+  - string.prototype.startswith 1.0.0 -> 1.0.1
+  - stylelint 16.9.0 -> 16.12.0
+  - terser 5.33.0 -> 5.37.0
 
 ## Version 5.4.2
 - UIP-52 - repair integration tests, get WebDriverIO up to date

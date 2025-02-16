@@ -18,7 +18,7 @@
         init: function (options) {
             this._super(options);
             this.params = {};
-            jQuery.extend(true, this.params, this.options, options);
+            $.extend(true, this.params, this.options, options);
             return this.render();
         },
         render: function () {
@@ -58,11 +58,6 @@
                             );
                             return 1;
                         }
-                    } else if (typeof params.externalProgressTarget == 'undefined') {
-                        console.log(
-                            'error in uploader invocation: progress target div is undefined'
-                        );
-                        return 1;
                     } else if (!params.externalProgressTarget.hasOwnProperty('innerHTML')) {
                         console.log(
                             'error in uploader invocation: progress target div is not an HTML container element'
@@ -129,7 +124,7 @@
                     error.statusText +
                     '\
 </div>';
-                if (typeof uploader.callback == 'function') {
+                if (typeof ul.callback == 'function') {
                     ul.callback.call(null, {
                         result: 'error',
                         error: error.statusText,

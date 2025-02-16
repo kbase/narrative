@@ -10,6 +10,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
     Config,
     kbaseNarrativeInput
 ) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseDefaultNarrativeInput',
         parent: kbaseNarrativeInput,
@@ -48,7 +49,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
                     p.default !== '' && p.default !== undefined
                         ? " placeholder='" + p.default + "'"
                         : '';
-                input =
+                const input =
                     "<input class='form-control' style='width: 95%' name='" +
                     pid +
                     "'" +
@@ -93,7 +94,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
             $(this.$elem)
                 .find('[name^=param]')
                 .filter(':input')
-                .each((key, field) => {
+                .each((_key, field) => {
                     let value = field.value;
                     if (!value) value = field.placeholder;
                     paramList.push(value.trim());
@@ -117,7 +118,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
             $(this.$elem)
                 .find('[name^=param]')
                 .filter(':input')
-                .each((key, field) => {
+                .each((_key, field) => {
                     state[field.name] = field.value;
                 });
 
@@ -135,18 +136,16 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
             $(this.$elem)
                 .find('[name^=param]')
                 .filter(':input')
-                .each((key, field) => {
+                .each((_key, field) => {
                     const $field = $(field);
                     const fieldName = $field.attr('name');
 
                     // If it's a text field, just dump the value in there.
-                    if ($field.is('input') && $field.attr('type') === 'text') {
-                        $field.val(state[fieldName]);
-                    }
-
-                    // If it's a select field, do the same... we'll have comboboxen or something,
-                    // eventually, so I'm just leaving this open for that.
-                    else if ($field.is('select')) {
+                    // If it's a select field, do the same.
+                    if (
+                        ($field.is('input') && $field.attr('type') === 'text') ||
+                        $field.is('select')
+                    ) {
                         $field.val(state[fieldName]);
                     }
                 });
@@ -223,7 +222,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
                         // case 3 - data, need new datalist
                         // case 4 - data, need to update existing datalist
                         else if (objList.length > 0) {
-                            var $datalist;
+                            let $datalist;
                             if (!datalistID) {
                                 datalistID = this.genUUID();
                                 $input.attr('list', datalistID);
@@ -233,9 +232,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInp
                                 $datalist = $(this.$elem.find('#' + datalistID));
                             }
                             $datalist.empty();
-                            for (let j = 0; j < objList.length; j++) {
+                            for (const element of objList) {
                                 $datalist.append(
-                                    $('<option>').attr('value', objList[j][1]).append(objList[j][1])
+                                    $('<option>').attr('value', element[1]).append(element[1])
                                 );
                             }
                         }

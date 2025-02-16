@@ -34,7 +34,8 @@ define([
     'geometry_rectangle',
     'geometry_point',
     'geometry_size',
-], (KBWidget, bootstrap, $, geometry_rectangle, geometry_point, geometry_size) => {
+], (KBWidget, bootstrap, $, Rectangle, Point, Size) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseButtonControls',
 
@@ -113,9 +114,6 @@ define([
             this._rewireIds($elem, this);
 
             if (this.options.onMouseover && this.options.type == 'floating') {
-                const overControls = false;
-                let overParent = false;
-
                 const $controls = this;
 
                 $elem
@@ -130,44 +128,22 @@ define([
                         $(this).children().first().show();
 
                         window._active_kbaseButtonControls = $controlButtons;
-                        overParent = true;
                     })
                     .mouseout((e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        const controlBounds = $controls.bounds($controlButtons);
                         const controlBoundsV = $controls.visibleBounds($controlButtons);
-                        const elemBounds = $controls.bounds($elem);
-
-                        const bounds = elemBounds.intersectRect(controlBounds);
 
                         if (!controlBoundsV.containsPoint(new Point(e.pageX, e.pageY))) {
-                            //if (! $.contains($elem.get(0), e.target)) {
                             window._active_kbaseButtonControls.hide();
 
                             window._active_kbaseButtonControls = undefined;
                         }
-                        overParent = false;
                     })
                     .children()
                     .first()
                     .hide();
-
-                /*$controlButtons
-                    .mouseover(
-                        function(e) {
-                            overControls = true;
-                        }
-                    )
-                    .mouseout(
-                        function(e) {
-                            overControls = false;
-                            if (! overParent) {
-                                $(this).hide();
-                            }
-                        }
-                    )*/
             }
 
             this.setControls(this.options.controls);
@@ -185,7 +161,7 @@ define([
 
         setControls: function (controls) {
             this.data('control-buttons').empty();
-            for (control in this._controls) {
+            for (const control in this._controls) {
                 this._controls[control] = undefined;
             }
 
@@ -193,7 +169,7 @@ define([
 
             $.each(
                 controls,
-                $.proxy(function (idx, val) {
+                $.proxy(function (_idx, val) {
                     if (val.condition) {
                         if (
                             val.condition.call(
@@ -212,23 +188,19 @@ define([
                         btnClass = btnClass + ' btn-' + val.type;
                     }
 
-                    tooltip = val.tooltip;
+                    let tooltip = val.tooltip;
 
                     if (typeof val.tooltip == 'string') {
                         tooltip = { title: val.tooltip };
                     }
 
                     if (tooltip != undefined && tooltip.container == undefined) {
-                        tooltip.container = this.data('control-buttons'); //this.$elem;//'body';//this.$elem;//'body';
+                        tooltip.container = this.data('control-buttons');
                     }
 
                     if (tooltip != undefined && tooltip.placement == undefined) {
                         tooltip.placement = 'top';
                     }
-
-                    //if (tooltip != undefined) {
-                    //    tooltip.trigger = 'manual';
-                    //}
 
                     if (tooltip != undefined) {
                         tooltip.delay = 1;
@@ -250,18 +222,6 @@ define([
                             }
                             val.callback.call(this, e, $buttonControls.options.context);
                         });
-                    /*.on('mouseover',
-                                function(e) {
-                                    e.preventDefault(); e.stopPropagation();
-                                    $(this).tooltip('show');
-                                }
-                            )
-                            .on('mouseout',
-                                function(e) {
-                                    e.preventDefault(); e.stopPropagation();
-                                    $(this).tooltip('hide');
-                                }
-                            );*/
                     if (val.id) {
                         this._controls[val.id] = $button;
                     }

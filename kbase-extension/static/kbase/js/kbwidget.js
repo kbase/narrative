@@ -27,7 +27,7 @@ return KBWidget(
         version : "1.0.0",  //future proofing, but completely unused
 
         _accessors : [  //optional. A list of values to automatically create setter/getters for.
-            'foo'       //you'll now be able to store something at $widget.foo('newValue') and access it via var foo = $widget.foo();
+            'foo'       //you'll now be able to store something at $widget.foo('newValue') and access it via const foo = $widget.foo();
             {name : 'bar', setter : 'setBar', getter : 'getBar'}    // the setter/getter can also be overridden If these functions are not
                                                                     // defined in your object, you'll get default implementations. Add new methods
                                                                     // in the object body for specific behavior. See the caveat about bindings and notifications
@@ -59,14 +59,14 @@ return KBWidget(
 
 Instantiate as follows:
 
-var $fancy = $('some-jquery-selector').myFancyNewWidget(
+const $fancy = $('some-jquery-selector').myFancyNewWidget(
     {
         bar : 7
     }
 );
 
-var foo = $fancy.foo();
-var $element = $fancy.$elem; //is the same as $('some-jquery-selector');
+const foo = $fancy.foo();
+const $element = $fancy.$elem; //is the same as $('some-jquery-selector');
 
 You get a lot of methods availabe by default:
 
@@ -198,7 +198,7 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
     };
 
     const makeBindingBlurCallback = function (elem, $target, attribute, transformers, accessors) {
-        return $.proxy(function (e, vals) {
+        return $.proxy(function (e) {
             if (e.type === 'keypress' && e.which !== 13) {
                 return;
             }
@@ -410,15 +410,15 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
         return $(tag);
     };
 
-    const KBWidget = function (def) {
+    var KBWidget = function (def) {
         def = def || {};
 
-        var Widget = function ($elem) {
+        const Widget = function ($elem) {
             let self = this;
 
             //XXX THIS IS FOR BACKWARDS COMPATIBILITY WITH JQUERY PLUGIN SYNTAX __ONLY__
             if (!(this instanceof Widget)) {
-                var args = $elem;
+                const args = $elem;
                 self = new Widget(this, args);
                 $elem = this;
                 if (window.console) {
@@ -443,7 +443,7 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
                 $elem.get(0).kb_obj = self;
             }
 
-            var args = Array.prototype.slice.call(arguments, 1);
+            const args = Array.prototype.slice.call(arguments, 1);
 
             $elem[def.name] = function (method) {
                 if (window.console) {
@@ -471,7 +471,6 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
         Widget.prototype.__attributes = {};
 
         if (defCopy._accessors !== undefined) {
-            //for (var accessor in defCopy._accessors) {
             $.each(
                 defCopy._accessors,
                 $.proxy((idx, accessor) => {
@@ -615,15 +614,13 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
             const opts = $.extend(true, {}, this.options);
             this.options = $.extend(true, {}, opts, args);
 
-            let arg;
-            for (arg in args) {
+            for (const arg in args) {
                 if (args[arg] === undefined && this.options[arg] !== undefined) {
                     delete this.options[arg];
                 }
             }
 
-            let attribute;
-            for (attribute in this.__attributes) {
+            for (const attribute in this.__attributes) {
                 if (this.options[attribute] !== undefined) {
                     const setter = this.__attributes[attribute].setter;
                     this[setter](this.options[attribute]);
@@ -645,12 +642,12 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
             if (this.options.template) {
                 $.ajax(this.options.template)
                     .done(
-                        $.proxy(function (res) {
+                        $.proxy(function () {
                             this.templateSuccess.apply(this, arguments);
                         }, this)
                     )
                     .fail(
-                        $.proxy(function (res) {
+                        $.proxy(function () {
                             this.templateFailure.apply(this, arguments);
                         }, this)
                     );
@@ -662,10 +659,7 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
         templateSuccess: function (templateString) {
             const template = Handlebars.compile(templateString);
 
-            const html = template();
-
             const res = template(this.templateContent());
-
             const $res = $.jqElem('span').append(res);
             this._rewireIds($res, this);
 
@@ -727,7 +721,7 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
         setValuesForKeys: function setValuesForKeys(obj) {
             const objCopy = $.extend({}, obj);
 
-            for (attribute in this.__attributes) {
+            for (const attribute in this.__attributes) {
                 if (objCopy[attribute] !== undefined) {
                     const setter = this.__attributes[attribute].setter;
                     this[setter](objCopy[attribute]);
@@ -769,7 +763,7 @@ define(['jquery', 'handlebars'], ($, Handlebars) => {
                 $elem.removeAttr('id');
             }
 
-            $.each($elem.find('[id]'), function (idx) {
+            $.each($elem.find('[id]'), function () {
                 $target.data($(this).attr('id'), $(this));
                 $(this).attr('data-id', $(this).attr('id'));
                 $(this).removeAttr('id');

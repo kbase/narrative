@@ -9,25 +9,40 @@ This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will
 - Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
 
 - Python dependencies updated to the following versions:
-  - coverage: 7.6.2
-  - pytest: 8.3.3
-  - ruff: 0.6.9
-  - vcrpy: 6.0.2
-  - bokeh: 3.6.0
-  - cryptography: 43.0.1
+  - coverage: 7.6.12
+  - pytest: 8.3.4
+  - pytest-cov: 6.0.0
+  - ruff: 0.9.9
+  - vcrpy: 7.0.0
+  - beautifulsoup4: 4.13.3
+  - biopython: 1.85
+  - bokeh: 3.6.2
+  - certifi: 2025.1.31
+  - cryptography: 44.0.1
+  - decorator: 5.2.1
   - idna: 3.10
-  - markupsafe: 3.0.1
-  - networkx: 3.4
-  - numpy: 2.1.2
+  - markupsafe: 3.0.2
+  - networkx: 3.4.2
+  - numpy: 2.2.3
+  - pillow: 11.1.0
   - plotly: 5.24.1
   - pyasn1: 0.6.1
-  - setuptools: 75.1.0
+  - pycurl: 7.45.4
+  - pygments: 2.19.1
+  - pyopenssl: 25.0.0
+  - python-daemon: 3.1.2
+  - scipy: 1.15.2
+  - setuptools: 75.8.2
+  - six: 1.17.0
   - sympy: 1.13.3
-  - ipython: 8.28.2
+  - wordcloud: 1.9.4
+  - ipython: 8.33.0
+  - jinja2: 3.1.5
   - pandas: 2.2.3
-  - pymongo: 4.10.1
-  - scikit-learn: 1.5.2
+  - pymongo: 4.11.1
+  - scikit-learn: 1.6.1
   - statsmodels: 0.14.4
+  - tornado: 6.4.2
 
 - Javascript dependency updates
   - dompurify 3.1.6 -> 3.2.3

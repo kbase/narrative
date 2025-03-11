@@ -169,17 +169,6 @@ const authToken = (() => {
 // the most recent version of Firefox is supported.
 //
 
-// const serviceConfigs = {
-//     'selenium-standalone': {
-//         logPath: 'selenium-standalone-logs',
-//         // drivers
-//     },
-//     browserstack: {
-//         browserstackLocal: true,
-//         opts: {},
-//     },
-// };
-
 const testParams = makeConfig();
 
 /**

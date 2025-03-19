@@ -16,6 +16,8 @@ define([
     'select2',
 ], (Promise, KBWidget, bootstrap, $, Config, kbaseAuthenticatedWidget, Auth, StringUtil) => {
     'use strict';
+    const className = 'kb-share-panel';
+
     return KBWidget({
         name: 'kbaseNarrativeSharePanel',
         parent: kbaseAuthenticatedWidget,
@@ -27,7 +29,6 @@ define([
             user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
             max_name_length: 35,
-            max_list_height: '250px',
             add_user_input_width: '200px',
             wsID: Config.get('workspaceId'),
         },
@@ -39,7 +40,7 @@ define([
             this._super(options);
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
-            this.$mainPanel = $('<div style="text-align:center">');
+            this.$mainPanel = $('<div>').addClass(className);
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
 
@@ -231,28 +232,25 @@ define([
             }
             self.$mainPanel.empty();
 
-            let globalReadStatus =
-                '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
-            let globalReadClass = 'alert alert-info';
+            let globalReadStatus = `<strong><span class="fa fa-lock ${className}__global_read_icon"></span>Private</strong>`;
+            let globalReadClass = `${className}__global_read_status alert`;
             self.isPrivate = true;
             if (self.ws_info[6] === 'r') {
                 self.isPrivate = false;
-                globalReadClass = 'alert alert-success';
-                globalReadStatus =
-                    '<strong><span class="fa fa-unlock" style="margin-right:10px"></span>Public</strong>';
+                globalReadClass += ' alert-success';
+                globalReadStatus = `<strong><span class="fa fa-unlock ${className}__global_read_icon"></span>Public</strong>`;
+            } else {
+                globalReadClass += ' alert-info';
             }
 
-            const $topDiv = $('<div>')
-                .addClass(globalReadClass)
-                .css({ 'text-align': 'center', padding: '10px', margin: '5px' })
-                .append(globalReadStatus);
+            const $topDiv = $('<div>').addClass(globalReadClass).append(globalReadStatus);
             self.$mainPanel.append($topDiv);
 
-            var $togglePublicPrivate = self.makePublicPrivateToggle($togglePublicPrivate).hide();
+            const $togglePublicPrivate = self.makePublicPrivateToggle().hide();
             self.$mainPanel.append($togglePublicPrivate);
 
             // meDiv
-            const $meDiv = $('<div>').css({ margin: '5px', 'margin-top': '20px' });
+            const $meDiv = $('<div>').addClass(`${className}__my_access`);
             let status = 'You do not have access to this Narrative.';
             let isAdmin = false;
             let isOwner = false;
@@ -273,7 +271,7 @@ define([
                 // either you can read it, or it is globally readable
                 status = 'You can view this Narrative, but you cannot edit or share it.';
             }
-            $meDiv.append($('<div>').css({ 'margin-top': '10px' }).append(status));
+            $meDiv.append(status);
             self.$mainPanel.append($meDiv);
 
             /**
@@ -281,10 +279,10 @@ define([
              *     - $tab1 for sharing user
              *     - $tab2 for sharing with org
              */
-            const $tabDiv = $('<div class="tabs">').css({ margin: '0px 5px' });
+            const $tabDiv = $('<div>').addClass(`${className}__tabs`);
 
             // make divs for each tab.
-            const $tab1 = createTab('white', 'Users').css({ 'border-top-left-radius': '2px' });
+            const $tab1 = createTab(true, true, 'Users');
 
             $tab1.click(function () {
                 tabSwitch($(this), $tab2);
@@ -293,12 +291,7 @@ define([
             });
             $tabDiv.append($tab1);
 
-            var $tab2 = createTab('#d8d8d8', 'Orgs').css({
-                'padding-bottom': '9px',
-                'border-bottom': '1px solid',
-                'border-top-right-radius': '2px',
-            });
-
+            const $tab2 = createTab(false, false, 'Orgs');
             $tab2.click(function () {
                 tabSwitch($(this), $tab1);
                 $shareWithOrgDiv.css('display', 'inherit');
@@ -306,31 +299,18 @@ define([
             });
             $tabDiv.append($tab2);
 
-            function createTab(color, text) {
-                return $('<div class="shareTab">')
-                    .css({
-                        'background-color': color,
-                        width: '50%',
-                        display: 'inline-block',
-                        padding: '10px',
-                        border: 'solid',
-                        'border-width': '1px 1px 0px',
-                        cursor: 'pointer',
-                    })
-                    .append(text);
+            function createTab(isLeft, isSelected, text) {
+                let classes = `${className}__tabs__share`;
+                if (isSelected) {
+                    classes += ' selected';
+                }
+                classes += isLeft ? ' left' : ' right';
+                return $(`<div class="${classes}">`).append(text);
             }
 
             function tabSwitch(tab, otherTab) {
-                tab.css({
-                    'background-color': 'white',
-                    'border-bottom': 'none',
-                    'padding-bottom': '10px',
-                });
-                otherTab.css({
-                    'background-color': '#d8d8d8',
-                    'border-bottom': '1px solid',
-                    'padding-bottom': '9px',
-                });
+                tab.addClass('selected');
+                otherTab.removeClass('selected');
             }
 
             self.$mainPanel.append($tabDiv);
@@ -341,35 +321,26 @@ define([
              *     - share with user div /$shareWithUserDiv
              *     - share with org div /$shareWithOrgDiv
              */
-            const $tabContent = $('<div class="tab-content">').css({
-                border: 'solid',
-                'border-width': '0px 1px 1px 1px',
-                'border-radius': '0px 0px 2px 2px',
-                padding: '15px',
-                margin: '0px 5px',
-            });
+            const $tabContent = $(`<div class="${className}__tabs__content">`);
 
-            var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({
+            const $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({
                 display: 'inherit',
             });
-            var $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({
+            const $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({
                 display: 'none',
             });
 
             // Content of Share with Org (Request to add to Org) Div
             if (isOwner) {
-                const $addOrgDiv = $('<div>').css({ 'margin-top': '10px' });
+                const $addOrgDiv = $('<div>');
                 const $inputOrg = $(
                     '<select single data-placeholder="Associate with..." id="orgInput">'
-                )
-                    .addClass('form-control kb-share-select')
-                    .css('display', 'inline');
+                ).addClass('form-control kb-share-select');
                 $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
 
                 const $applyOrgBtn = $('<button>')
-                    .addClass('btn btn-primary disabled')
+                    .addClass(`btn btn-primary disabled ${className}__btn_apply_orgs`)
                     .append('Apply')
-                    .css('margin-left', '10px')
                     .click(function () {
                         if (!$(this).hasClass('disabled')) {
                             const org = $inputOrg.select2('data');
@@ -393,49 +364,38 @@ define([
                     }
                 });
 
-                $addOrgDiv.find('span.select2-selection--single').css({ 'min-height': '32px' });
+                $addOrgDiv.find('span.select2-selection--single');
+                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
 
                 // if there are orgs already associated with the narrative, add the org list.
                 if (this.narrativeOrgList) {
-                    var $narrativeOrgsDiv = $('<table>').css({
-                        border: '1px solid rgb(170, 170, 170)',
-                        'border-radius': '4px',
-                        'text-align': 'left',
-                        width: '51%',
-                        padding: '10px',
-                        margin: 'auto',
-                        'margin-top': '10px',
-                    });
-                    this.narrativeOrgList.forEach((value, key, map) => {
+                    const $narrativeOrgsDiv = $('<table>').addClass(`${className}__orgs_table`);
+                    this.narrativeOrgList.forEach((value, key) => {
                         const url = window.location.origin + '/#org/' + key;
                         const $href = $('<a>').attr('href', url);
                         const $logo = $('<img>')
                             .attr('src', value[1])
-                            .css({ width: '40', margin: '8px' });
+                            .addClass(`${className}__org_icon`);
                         $href.append($logo).append(value[0]);
-                        const $tr = $('<tr>').css({ padding: '2px' }).append($href);
+                        const $tr = $('<tr>').append($href);
                         $narrativeOrgsDiv.append($tr);
                     });
+                    $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
                 }
-
-                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
-                $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
             } else {
                 $shareWithOrgDiv.append(
-                    '<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>'
+                    `<p class="${className}__org_owner_message">You must be the owner to request to add this narrative.</p>`
                 );
             } // end of if(isOwner)
 
             // content of share with user div
             if (isAdmin) {
-                const $addUsersDiv = $('<div>').css({ 'margin-top': '10px' });
+                const $addUsersDiv = $('<div>');
                 const $input = $('<select multiple data-placeholder="Share with...">').addClass(
                     'form-control kb-share-select'
                 );
 
                 const $permSelect = $('<select>')
-                    .css({ width: '25%', display: 'inline-block' })
-                    // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
                     .append($('<option value="r">').append('View only'))
                     .append($('<option value="w">').append('Edit and save'))
                     .append($('<option value="a">').append('Edit, save, and share'));
@@ -468,12 +428,6 @@ define([
                     }
                 });
 
-                // Silly Select2 has different height rules for multiple and single select.
-                $addUsersDiv.find('span.select2-selection--single').css({ 'min-height': '32px' });
-                $addUsersDiv
-                    .find('.select2-container')
-                    .css({ 'margin-left': '5px', 'margin-right': '5px' });
-
                 $shareWithUserDiv.append($addUsersDiv);
             } // end of if(isAdmin)
 
@@ -484,14 +438,7 @@ define([
             // end of Tab content divs
 
             // div contains other users sharing the narrative
-            const $othersDiv = $('<div>').css({
-                'margin-top': '15px',
-                'max-height': self.options.max_list_height,
-                'overflow-y': 'auto',
-                'overflow-x': 'hidden',
-                display: 'flex',
-                'justify-content': 'center',
-            });
+            const $othersDiv = $('<div>').addClass(`${className}__shared_users_table`);
             const $tbl = $('<table>');
             $othersDiv.append($tbl);
 
@@ -526,7 +473,7 @@ define([
                 ) {
                     continue;
                 }
-                var $select;
+                let $select;
                 let $removeBtn = null;
                 const thisUser = self.ws_permissions[i][0];
                 if (isAdmin && thisUser !== self.narrOwner) {
@@ -571,15 +518,12 @@ define([
                     true
                 );
                 const $userRow = $('<tr>')
-                    .append($('<td style="text-align:left">').append(user_display[0]))
-                    .append(
-                        $('<td style="text-align:left">')
-                            .css({ padding: '4px', 'padding-top': '6px' })
-                            .append(user_display[1])
-                    )
-                    .append($('<td style="text-align:right">').append($select));
+                    .append($('<td>').addClass('user_icon'))
+                    .append(user_display[0])
+                    .append($('<td>').addClass('user_name').append(user_display[1]))
+                    .append($('<td>').addClass('user_perm_select').append($select));
                 if ($removeBtn) {
-                    $userRow.append($('<td style="text-align:left">').append($removeBtn));
+                    $userRow.append($('<td>').addClass('user_remove_btn').append($removeBtn));
                 }
                 $tbl.append($userRow);
             }
@@ -740,11 +684,16 @@ define([
                         },
                         templateSelection: function (object) {
                             if (object.found) {
-                                const toShow = self.renderUserIconAndName(object.id, object.text);
+                                const toShow = self.renderUserIconAndName(
+                                    object.id,
+                                    object.text,
+                                    false,
+                                    true
+                                );
                                 return $('<span>')
+                                    .addClass(`${className}__share_user_selected`)
                                     .append(toShow[0])
-                                    .append(toShow[1].css({ 'white-space': 'normal' }))
-                                    .css({ width: '100%' });
+                                    .append(toShow[1]);
                             }
                             return $('<b>' + object.text + '</b> (not found)');
                         },
@@ -767,32 +716,29 @@ define([
             const orgData = [];
             const noMatchedOrgFoundStr = 'Search by Organization name';
 
-            $.fn.select2.amd.require(
-                ['select2/data/array', 'select2/utils'],
-                (ArrayData, Utils) => {
-                    if (!orgList) return;
-                    orgList.forEach((org) => {
-                        orgData.push({ id: org.id, text: org.name });
-                    });
-                    $inputOrg.select2({
-                        formatNoMatches: noMatchedOrgFoundStr,
-                        placeholder: function () {
-                            return $(this).data('placeholder');
+            $.fn.select2.amd.require(['select2/data/array', 'select2/utils'], () => {
+                if (!orgList) return;
+                orgList.forEach((org) => {
+                    orgData.push({ id: org.id, text: org.name });
+                });
+                $inputOrg.select2({
+                    formatNoMatches: noMatchedOrgFoundStr,
+                    placeholder: function () {
+                        return $(this).data('placeholder');
+                    },
+                    delay: 250,
+                    width: '40%',
+                    data: orgData,
+                    minimumResultsForSearch: 0,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return noMatchedOrgFoundStr;
                         },
-                        delay: 250,
-                        width: '40%',
-                        data: orgData,
-                        minimumResultsForSearch: 0,
-                        allowClear: true,
-                        language: {
-                            noResults: function () {
-                                return noMatchedOrgFoundStr;
-                            },
-                        },
-                    });
-                    $inputOrg.trigger('change');
-                }
-            );
+                    },
+                });
+                $inputOrg.trigger('change');
+            });
         },
 
         showWorking: function (message) {
@@ -839,7 +785,7 @@ define([
             '#9E9E9E', //grey
             '#607D8B', //blue grey
         ],
-        renderUserIconAndName: function (username, realName, turnOnLink) {
+        renderUserIconAndName: function (username, realName, turnOnLink, wrapName) {
             let code = 0;
             for (let i = 0; i < username.length; i++) {
                 code += username.charCodeAt(i);
@@ -862,8 +808,10 @@ define([
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
             }
+            const nameClass = wrapName ? `wrap` : `nowrap`;
             let $name = $('<span>')
-                .css({ color: userColor, 'white-space': 'nowrap' })
+                .addClass(`${className}__${nameClass}`)
+                .css({ color: userColor })
                 .append(StringUtil.escape(shortName));
             if (isShortened) {
                 $name.tooltip({ title: userString, placement: 'bottom' });
@@ -874,7 +822,8 @@ define([
                     '<a href="' + this.options.user_page_link + username + '" target="_blank">'
                 ).append(
                     $('<span>')
-                        .css({ color: userColor, 'white-space': 'nowrap' })
+                        .addClass(`${className}__${nameClass}`)
+                        .css({ color: userColor })
                         .append(StringUtil.escape(shortName))
                 );
             }

@@ -256,13 +256,13 @@ define([
             let isOwner = false;
             if (self.narrOwner === self.my_user_id) {
                 status =
-                    'You can edit and share it with other users or request to add to an organization.';
+                    'You can edit and share this Narrative with other users or request to add to an organization.';
                 isAdmin = true;
                 isOwner = true;
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'a') {
                 status =
-                    'You can edit and share this Narrative, but you cannot request to add to and organization.';
+                    'You can edit and share this Narrative, but you cannot request to add to an organization.';
                 isAdmin = true; // not really, but set this so we show sharing controls
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'w') {
@@ -272,6 +272,15 @@ define([
                 status = 'You can view this Narrative, but you cannot edit or share it.';
             }
             $meDiv.append(status);
+            if (isAdmin) {
+                $meDiv.append(
+                    $('<p>')
+                        .addClass(`${className}__doi_request`)
+                        .append(
+                            'Please email <a href="mailto:engage@kbase.us">engage@kbase.us</a> for a DOI prior to publishing.</p>'
+                        )
+                );
+            }
             self.$mainPanel.append($meDiv);
 
             /**

@@ -1,0 +1,134 @@
+.kb-share-panel {
+    text-align: center;
+
+    // .kb-share-panel__global_read_status
+    &__global_read_icon {
+        margin-right: 10px;
+    }
+
+    // .kb-share-panel__global_read_status
+    &__global_read_status {
+        margin: 5px;
+        padding: 10px;
+    }
+
+    // .kb-share-panel__my_access
+    &__my_access {
+        margin: 20px 5px 5px;
+    }
+
+    // .kb-share-panel__tabs
+    &__tabs {
+        margin: 0px 5px;
+
+        &__share {
+            width: 50%;
+            display: inline-block;
+            padding: 10px;
+            border: solid;
+            border-width: 1px 1px 0px;
+            cursor: pointer;
+            background-color: #d8d8d8;
+            border-bottom: 1px solid;
+            padding-bottom: 9px;
+        }
+
+        .left {
+            border-top-left-radius: 2px;
+            border-right: none;
+        }
+
+        .right {
+            border-top-right-radius: 2px;
+        }
+
+        .selected {
+            background-color: white;
+            border-bottom: none;
+            padding-bottom: 10px;
+        }
+
+        &__content {
+            border: solid;
+            border-width: 0px 1px 1px 1px;
+            border-radius: 0px 0px 2px 2px;
+            padding: 25px 15px 15px;
+            margin: 0px 5px;
+
+            .select2-selection--single {
+                min-height: 32px;
+            }
+
+            .select2-container {
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+        }
+    }
+
+    &__btn_apply_orgs {
+        margin-left: 10px;
+    }
+
+    &__orgs_table {
+        border: 1px solid rgb(170, 170, 170);
+        border-radius: 4px;
+        text-align: left;
+        width: 51%;
+        padding: 10px;
+        margin: auto;
+        margin-top: 10px;
+    }
+
+    &__org_owner_message {
+        margin-top: 18px;
+    }
+
+    &__org_icon {
+        width: 40px;
+        margin: 8px;
+    }
+
+    &__shared_users_table {
+        margin-top: 15px;
+        max-height: 250px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        justify-content: center;
+
+        tr {
+            .user_icon {
+                text-align: left;
+
+            }
+            .user_name {
+                text-align: left;
+                padding: 6px 4px 4px;
+            }
+            .user_perm_select {
+                text-align: right;
+            }
+            .user_remove_btn {
+                text-align: left;
+            }
+        }
+    }
+
+    &__share_user_selected {
+        width: 100%;
+
+        &__name {
+            white-space: normal;
+        }
+    }
+
+    // these two are used to override Select2 template selection text.
+    &__wrap {
+        white-space: normal;
+    }
+
+    &__nowrap {
+        white-space: nowrap;
+    }
+}

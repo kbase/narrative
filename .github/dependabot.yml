@@ -21,6 +21,11 @@ updates:
       patterns:
         - "*"
   open-pull-requests-limit: 20
+  ignore:
+    - dependency-name: "bootstrap"
+    - dependency-name: "bowser"
+    - dependency-name: "d3"
+    - dependency-name: "jquery"
 - package-ecosystem: "docker"
   directory: "/"
   schedule:

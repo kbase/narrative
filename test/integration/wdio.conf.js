@@ -169,17 +169,6 @@ const authToken = (() => {
 // the most recent version of Firefox is supported.
 //
 
-const serviceConfigs = {
-    'selenium-standalone': {
-        logPath: 'selenium-standalone-logs',
-        // drivers
-    },
-    browserstack: {
-        browserstackLocal: true,
-        opts: {},
-    },
-};
-
 const testParams = makeConfig();
 
 /**
@@ -193,9 +182,11 @@ function makeCapabilities(config) {
         case 'chromedriver':
             return (() => {
                 const args = [
-                    'headless',
-                    'disable-gpu',
-                    `window-size=${config.WIDTH},${config.HEIGHT}`,
+                    '--headless',
+                    '--no-sandbox',
+                    '--disable-gpu',
+                    '--disable-dev-shm-usage',
+                    `--window-size=${config.WIDTH},${config.HEIGHT}`,
                 ];
                 return {
                     browserName: 'chrome',
@@ -205,7 +196,7 @@ function makeCapabilities(config) {
                     'goog:chromeOptions': {
                         args,
                     },
-                    'wdio:enforceWebDriverClassic': true
+                    'wdio:enforceWebDriverClassic': true,
                 };
             })();
         case 'selenium-standalone':
@@ -421,7 +412,6 @@ const wdioConfig = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter.html
     reporters: ['spec'],
-
 
     //
     // Options to be passed to Mocha.

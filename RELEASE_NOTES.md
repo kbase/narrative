@@ -2,7 +2,83 @@
 
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
+
+## Version 5.4.3
+URO-363 - add note to the sharing panel to contact KBase about DOIs
+
+- Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
+
+- Python dependencies updated to the following versions:
+  - coverage: 7.6.12
+  - pytest: 8.3.4
+  - pytest-cov: 6.0.0
+  - ruff: 0.9.9
+  - vcrpy: 7.0.0
+  - beautifulsoup4: 4.13.3
+  - biopython: 1.85
+  - bokeh: 3.6.2
+  - certifi: 2025.1.31
+  - cryptography: 44.0.1
+  - decorator: 5.2.1
+  - idna: 3.10
+  - markupsafe: 3.0.2
+  - networkx: 3.4.2
+  - numpy: 2.2.3
+  - pillow: 11.1.0
+  - plotly: 5.24.1
+  - pyasn1: 0.6.1
+  - pycurl: 7.45.4
+  - pygments: 2.19.1
+  - pyopenssl: 25.0.0
+  - python-daemon: 3.1.2
+  - scipy: 1.15.2
+  - setuptools: 75.8.2
+  - six: 1.17.0
+  - sympy: 1.13.3
+  - wordcloud: 1.9.4
+  - ipython: 8.33.0
+  - jinja2: 3.1.5
+  - pandas: 2.2.3
+  - pymongo: 4.11.1
+  - scikit-learn: 1.6.1
+  - statsmodels: 0.14.4
+  - tornado: 6.4.2
+
+- Javascript dependency updates
+  - dompurify 3.1.6 -> 3.2.4
+  - plotly.js-dist-min 2.35.0 -> 2.35.3  (note: next is 3.0.1, with breaking changes)
+  - @babel/traverse 7.25.6 -> 7.26.9
+  - @eslint/eslintrc 3.1.0 -> 3.3.0
+  - @eslint/js 9.11.1 -> 9.21.0
+  - @wdio/browserstack-service 9.0.9 -> 9.10.1
+  - @wdio/cli 9.0.9 -> 9.10.1
+  - @wdio/local-runner 9.0.9 -> 9.10.1
+  - @wdio/mocha-framework 9.0.8 -> 9.10.1
+  - @wdio/spec-reporter 9.0.8 -> 9.10.1
+  - axios 1.7.7 -> 1.8.1
+  - chromedriver 128.0.3 -> 133.0.3
+  - commander 12.1.0 -> 13.1.0
+  - eslint 9.11.1 -> 9.21.0
+  - eslint-config-prettier 9.1.0 -> 10.0.2
+  - expect-webdriverio 5.0.2 -> 5.0.5
+  - glob 11.0.0 -> 11.0.1
+  - globals 15.9.0 -> 16.0.0
+  - husky 9.1.6 -> 9.1.7
+  - jasmine-core 5.3.0 -> 5.6.0
+  - jquery-ui 1.14.0 -> 1.14.1
+  - lint-staged 15.2.10 -> 15.4.3
+  - postcss 8.4.47 -> 8.5.3
+  - prettier 3.3.3 -> 3.5.2
+  - puppeteer 23.4.0 -> 24.3.0
+  - sass 1.79.3 -> 1.85.1
+  - selenium-standalone 10.0.0 -> 10.0.1
+  - selenium-webdriver 4.25.0 -> 4.29.0
+  - string.prototype.startswith 1.0.0 -> 1.0.1
+  - stylelint 16.9.0 -> 16.15.0
+  - stylelint-config-recommended 14.0.1 -> 15.0.0
+  - stylelint-config-standard 36.0.1 -> 37.0.0
+  - terser 5.33.0 -> 5.39.0
 
 ## Version 5.4.2
 - UIP-52 - repair integration tests, get WebDriverIO up to date
@@ -77,7 +153,7 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
   - stylelint-config-standard 36.0.0 -> 36.0.1
   - terser 5.31.1 -> 5.31.6
   - webdriverio 8.38.2 -> 9.0.9
-  
+
   - dompurify 2.5.5 -> 3.1.6
   - follow-redirects 1.15.6 -> 1.15.9
   - jquery-ui 1.13.2 -> 1.14.0
@@ -110,11 +186,11 @@ This is built on the Jupyter Notebook v6.5.6 and IPython 8.26.0 (more notes will
   - ruff 0.4.7 -> 0.5.5
 
 - JavaScript dependency updates
-  - @wdio/mocha-framework  8.38.2 -> 8.39.0 
-  - chrome-launcher  1.1.1 -> 1.1.2 
-  - chromedriver  126.0.0 -> 126.0.4 
-  - postcss  8.4.38 -> 8.4.39 
-  - selenium-webdriver  4.21.0 -> 4.22.0 
+  - @wdio/mocha-framework  8.38.2 -> 8.39.0
+  - chrome-launcher  1.1.1 -> 1.1.2
+  - chromedriver  126.0.0 -> 126.0.4
+  - postcss  8.4.38 -> 8.4.39
+  - selenium-webdriver  4.21.0 -> 4.22.0
 
 ## Version 5.4.0
 -   UIP-43

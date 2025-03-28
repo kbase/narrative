@@ -23,8 +23,8 @@ ARG SKIP_MINIFY
 EXPOSE 8888
 
 # Set the default environment to be CI, can be overridden by passing new CONFIG_ENV setting at container start
-ENV CONFIG_ENV ci
-ENV DOCKER_CONTAINER true
+ENV CONFIG_ENV=ci
+ENV DOCKER_CONTAINER=true
 
 # Copy in the narrative repo
 ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
@@ -59,8 +59,6 @@ RUN mkdir -p /kb/deployment/ui-common/ && \
     # Generate a version file that we can scrape later
     ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
     rm -r .git && \
-    # install core Python necessities + KBase scientific computing packages
-    pip install -r ./src/requirements-general.txt && \
     # install jupyter notebook and the narrative interface
     /bin/bash scripts/install_narrative_docker.sh && \
     chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative && \
@@ -70,7 +68,7 @@ RUN mkdir -p /kb/deployment/ui-common/ && \
 # into the location to check for a new narrative version. Normally we would put this in the template itself
 # but since the raw template is consumed at build time as a JSON file, a template with a default string would
 # cause JSON parsing to fail - GRRRRR!!!
-ENV VERSION_CHECK /narrative_version
+ENV VERSION_CHECK=/narrative_version
 
 USER nobody
 

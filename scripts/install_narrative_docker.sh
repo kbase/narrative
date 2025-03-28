@@ -26,7 +26,7 @@ cd $NARRATIVE_ROOT_DIR
 console "Installing biokbase requirements from src/requirements.txt"
 cat $NARRATIVE_ROOT_DIR/src/requirements.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
 
-console "Installing dev requirements from src/requirements.txt"
+console "Installing dev requirements from src/requirements-dev.txt"
 cat $NARRATIVE_ROOT_DIR/src/requirements-dev.txt | sed -e '/^\s*#.*$/d' -e '/^\s*$/d' | xargs -n 1 pip install
 
 

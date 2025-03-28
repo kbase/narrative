@@ -14,7 +14,7 @@ define([
 
     /**
      * This makes a call to the Staging Service to fetch information from bulk specification files.
-     * This then gets processed through `processSpreadsheetFileData` before being returned.
+     * This then gets processed through `processBulkImportSpecData` before being returned.
      * @param {Array[string]} files - array of file path names to treat as import specifications
      * @returns Promise that resolves into information that can be used to open a bulk import cell.
      * This has the format:
@@ -32,45 +32,18 @@ define([
      *   }
      * }
      * @throws Errors.ImportSetupError if an error occurs in either data fetching from the Staging
-     *   Service, or in the initial parsing done by `processSpreadsheetFileData`
+     *   Service, or in the initial parsing done by `processBulkImportSpecData`
      */
-    function getSpreadsheetFileInfo(files) {
-        if (!files || files.length === 0) {
-            return Promise.resolve({});
-        }
-        const stagingUrl = Config.url('staging_api_url');
-        const stagingServiceClient = new StagingServiceClient({
-            root: stagingUrl,
-            token: Runtime.make().authToken(),
-        });
+    function getBulkImportFileInfo(xsvFiles, dtsFiles) {
+        // dtsFiles gets wiped out by the spec requester.
+        const dtsFileList = [...dtsFiles];
 
-        // This is overkill, but a little future proofing. We have to make a GET call with an
-        // undetermined number of files, so if there are more than we can allow in the URL, gotta break that
-        // into multiple calls.
+        // noting here that these are effectively jQuery promises, so we can't just
+        // make this an async/await function, but need to wrap with Promise.all.
+        const xsvFileProms = requestBulkImportSpec(xsvFiles);
+        const dtsFileProms = requestBulkImportSpec(dtsFiles, 'dts');
 
-        // a little cheating here to figure out the length allowance. Maybe it should be in the client?
-        const maxQueryLength = 2048 - stagingUrl.length - '/bulk_specification/?files='.length;
-        const bulkSpecProms = [];
-
-        while (files.length) {
-            const fileBatch = [];
-            let remainingLength = maxQueryLength;
-            while (
-                files.length &&
-                remainingLength - files[0].length - 1 >= 0 // -1 is for the comma
-            ) {
-                const nextFile = files.shift();
-                fileBatch.push(nextFile);
-                remainingLength -= nextFile.length + 1;
-            }
-            bulkSpecProms.push(
-                stagingServiceClient.bulkSpecification({
-                    files: encodeURIComponent(fileBatch.join(',')),
-                })
-            );
-        }
-
-        return Promise.all(bulkSpecProms)
+        return Promise.all([...xsvFileProms, ...dtsFileProms])
             .then((result) => {
                 // join results of all calls together
                 const errors = [];
@@ -92,6 +65,13 @@ define([
                             } else {
                                 allCalls.types[dataType] = callResult.types[dataType];
                                 allCalls.files[dataType] = callResult.files[dataType];
+                                // These files have the username in there. We don't want that.
+                                // So need to compare after stripping them out.
+                                const fileName = allCalls.files[dataType].file;
+                                const pathIdx = fileName.indexOf('/');
+                                const strippedFile =
+                                    pathIdx !== -1 ? fileName.substring(pathIdx + 1) : fileName;
+                                allCalls.files[dataType].isDts = dtsFileList.includes(strippedFile);
                             }
                         });
                         return allCalls;
@@ -123,8 +103,52 @@ define([
                 );
             })
             .then((result) => {
-                return processSpreadsheetFileData(result);
+                return processBulkImportSpecData(result);
             });
+    }
+
+    function requestBulkImportSpec(files, flag = '') {
+        /**
+         * This returns an array of jQuery Promises, which is what
+         * the staging service client uses, so it can't be (easily)
+         * cast into async/await.
+         */
+        if (!files || files.length === 0) {
+            return [];
+        }
+        const stagingUrl = Config.url('staging_api_url');
+        const stagingServiceClient = new StagingServiceClient({
+            root: stagingUrl,
+            token: Runtime.make().authToken(),
+        });
+        // This is overkill, but a little future proofing. We have to make a GET call with an
+        // undetermined number of files, so if there are more than we can allow in the URL, gotta break that
+        // into multiple calls.
+
+        // a little cheating here to figure out the length allowance. Maybe it should be in the client?
+        const path = '/bulk_specification/?' + (flag ? flag + '&' : '') + 'files=';
+        const maxQueryLength = 2048 - stagingUrl.length - path.length;
+        const bulkSpecProms = [];
+
+        while (files.length) {
+            const fileBatch = [];
+            let remainingLength = maxQueryLength;
+            while (
+                files.length &&
+                remainingLength - files[0].length - 1 >= 0 // -1 is for the comma
+            ) {
+                const nextFile = files.shift();
+                fileBatch.push(nextFile);
+                remainingLength -= nextFile.length + 1;
+            }
+            bulkSpecProms.push(
+                stagingServiceClient.bulkSpecification({
+                    files: encodeURIComponent(fileBatch.join(',')),
+                    flag,
+                })
+            );
+        }
+        return bulkSpecProms;
     }
 
     /**
@@ -153,7 +177,7 @@ define([
      * TODO: also return the fetched app specs to avoid fetching them twice?
      * @param {Object} data
      */
-    async function processSpreadsheetFileData(data) {
+    async function processBulkImportSpecData(data) {
         // map from given datatype to app id.
         // if any data types are missing, record that
         // if any data types are not bulk import ready, record that, too.
@@ -254,17 +278,56 @@ define([
         );
 
         /*
+         * Map from datatype to all file parameters. These are found (as in the bulk import cell)
+         * by looking for those params that are dynamic dropdowns that look at ftp_staging.
+         */
+        const typeToFileParams = Object.entries(appIdToType).reduce(
+            (_typeToFileParams, [appId, dataType]) => {
+                const spec = appIdToSpec[appId].appSpec;
+                const specParams = spec.parameters.filter((param) => {
+                    return (
+                        param.dynamic_dropdown_options &&
+                        param.dynamic_dropdown_options.data_source === 'ftp_staging'
+                    );
+                });
+                _typeToFileParams[dataType] = specParams.map((param) => param.id);
+                return _typeToFileParams;
+            },
+            {}
+        );
+
+        /*
          * Now, update all parameters in place.
          * For each set of parameters in each type, look at the translated spec parameters.
          * If any of those are in the given parameter set, do the translation.
+         *
+         * If the datatype comes from a DTS manifest file, adjust the file paths to always be
+         * relative to the subdirectory of that file.
          */
         Object.values(appIdToType).forEach((dataType) => {
             const specParams = typeToAlteredParams[dataType];
+            const fileParams = typeToFileParams[dataType];
+            let filePrefix = '';
+            if (data.files[dataType].isDts) {
+                const file = data.files[dataType].file;
+                const parts = file.split('/');
+                if (parts.length > 2) {
+                    filePrefix = parts.slice(1, -1).join('/') + '/';
+                }
+            }
+
             data.types[dataType] = data.types[dataType].map((parameterSet) => {
                 Object.keys(parameterSet).forEach((paramId) => {
                     const value = parameterSet[paramId];
                     if (specParams[paramId] && value in specParams[paramId]) {
                         parameterSet[paramId] = specParams[paramId][value];
+                    }
+                    if (
+                        data.files[dataType].isDts &&
+                        fileParams.includes(paramId) &&
+                        parameterSet[paramId] !== null
+                    ) {
+                        parameterSet[paramId] = filePrefix + parameterSet[paramId];
                     }
                 });
                 return parameterSet;
@@ -390,6 +453,7 @@ define([
         const bulkFiles = {};
         const singleFiles = [];
         const xsvFiles = [];
+        const dtsFiles = [];
         fileInfo.forEach((file) => {
             const importType = file.type;
             if (bulkIds.has(importType)) {
@@ -404,33 +468,38 @@ define([
                 bulkFiles[importType].files.push(file.name);
             } else if (importType === 'import_specification') {
                 xsvFiles.push(file.name);
+            } else if (importType === 'dts_manifest') {
+                dtsFiles.push(file.name);
             } else {
                 singleFiles.push(file);
             }
         });
-        return getSpreadsheetFileInfo(xsvFiles)
-            .then((result) => {
-                if (result.types) {
-                    Object.keys(result.types).forEach((dataType) => {
-                        if (!(dataType in bulkFiles)) {
-                            bulkFiles[dataType] = {
-                                appId: uploaders.app_info[dataType].app_id,
-                                files: [],
-                                outputSuffix: uploaders.app_info[dataType].app_output_suffix,
-                            };
-                        }
-                        bulkFiles[dataType].appParameters = result.types[dataType];
-                    });
-                }
-                if (Object.keys(bulkFiles).length) {
-                    return Jupyter.narrative.insertBulkImportCell(bulkFiles);
-                } else {
-                    return Promise.resolve();
-                }
-            })
-            .then(() => {
-                return initSingleFileUploads(singleFiles);
-            });
+        return (
+            getBulkImportFileInfo(xsvFiles, dtsFiles)
+                // return getSpreadsheetFileInfo(xsvFiles)
+                .then((result) => {
+                    if (result.types) {
+                        Object.keys(result.types).forEach((dataType) => {
+                            if (!(dataType in bulkFiles)) {
+                                bulkFiles[dataType] = {
+                                    appId: uploaders.app_info[dataType].app_id,
+                                    files: [],
+                                    outputSuffix: uploaders.app_info[dataType].app_output_suffix,
+                                };
+                            }
+                            bulkFiles[dataType].appParameters = result.types[dataType];
+                        });
+                    }
+                    if (Object.keys(bulkFiles).length) {
+                        return Jupyter.narrative.insertBulkImportCell(bulkFiles);
+                    } else {
+                        return Promise.resolve();
+                    }
+                })
+                .then(() => {
+                    return initSingleFileUploads(singleFiles);
+                })
+        );
     }
 
     return {

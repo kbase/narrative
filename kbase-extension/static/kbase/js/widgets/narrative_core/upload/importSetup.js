@@ -35,6 +35,9 @@ define([
      *   Service, or in the initial parsing done by `processBulkImportSpecData`
      */
     function getBulkImportFileInfo(xsvFiles, dtsFiles) {
+        // dtsFiles gets wiped out by the spec requester.
+        const dtsFileList = [...dtsFiles];
+
         // noting here that these are effectively jQuery promises, so we can't just
         // make this an async/await function, but need to wrap with Promise.all.
         const xsvFileProms = requestBulkImportSpec(xsvFiles);
@@ -62,6 +65,13 @@ define([
                             } else {
                                 allCalls.types[dataType] = callResult.types[dataType];
                                 allCalls.files[dataType] = callResult.files[dataType];
+                                // These files have the username in there. We don't want that.
+                                // So need to compare after stripping them out.
+                                const fileName = allCalls.files[dataType].file;
+                                const pathIdx = fileName.indexOf('/');
+                                const strippedFile =
+                                    pathIdx !== -1 ? fileName.substring(pathIdx + 1) : fileName;
+                                allCalls.files[dataType].isDts = dtsFileList.includes(strippedFile);
                             }
                         });
                         return allCalls;
@@ -268,17 +278,56 @@ define([
         );
 
         /*
+         * Map from datatype to all file parameters. These are found (as in the bulk import cell)
+         * by looking for those params that are dynamic dropdowns that look at ftp_staging.
+         */
+        const typeToFileParams = Object.entries(appIdToType).reduce(
+            (_typeToFileParams, [appId, dataType]) => {
+                const spec = appIdToSpec[appId].appSpec;
+                const specParams = spec.parameters.filter((param) => {
+                    return (
+                        param.dynamic_dropdown_options &&
+                        param.dynamic_dropdown_options.data_source === 'ftp_staging'
+                    );
+                });
+                _typeToFileParams[dataType] = specParams.map((param) => param.id);
+                return _typeToFileParams;
+            },
+            {}
+        );
+
+        /*
          * Now, update all parameters in place.
          * For each set of parameters in each type, look at the translated spec parameters.
          * If any of those are in the given parameter set, do the translation.
+         *
+         * If the datatype comes from a DTS manifest file, adjust the file paths to always be
+         * relative to the subdirectory of that file.
          */
         Object.values(appIdToType).forEach((dataType) => {
             const specParams = typeToAlteredParams[dataType];
+            const fileParams = typeToFileParams[dataType];
+            let filePrefix = '';
+            if (data.files[dataType].isDts) {
+                const file = data.files[dataType].file;
+                const parts = file.split('/');
+                if (parts.length > 2) {
+                    filePrefix = parts.slice(1, -1).join('/') + '/';
+                }
+            }
+
             data.types[dataType] = data.types[dataType].map((parameterSet) => {
                 Object.keys(parameterSet).forEach((paramId) => {
                     const value = parameterSet[paramId];
                     if (specParams[paramId] && value in specParams[paramId]) {
                         parameterSet[paramId] = specParams[paramId][value];
+                    }
+                    if (
+                        data.files[dataType].isDts &&
+                        fileParams.includes(paramId) &&
+                        parameterSet[paramId] !== null
+                    ) {
+                        parameterSet[paramId] = filePrefix + parameterSet[paramId];
                     }
                 });
                 return parameterSet;

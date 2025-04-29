@@ -4,7 +4,8 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
 
-## Unreleased
+## Version 5.4.3
+URO-363 - add note to the sharing panel to contact KBase about DOIs
 
 - Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
 

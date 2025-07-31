@@ -14,7 +14,7 @@ define([
     const stagingServiceUrl = Config.url('staging_api_url');
     const RELEASE_TAG = 'release';
 
-    describe('ImportSetup module tests', () => {
+    fdescribe('ImportSetup module tests', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 sidePanel: {

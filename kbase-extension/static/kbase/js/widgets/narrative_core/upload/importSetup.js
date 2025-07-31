@@ -181,6 +181,9 @@ define([
         // map from given datatype to app id.
         // if any data types are missing, record that
         // if any data types are not bulk import ready, record that, too.
+        if (Object.keys(data.types).length === 0 && Object.keys(data.files).length === 0) {
+            return data;
+        }
         const appIdToType = {};
         const dataTypeErrors = [];
         Object.keys(data.types).forEach((dataType) => {
@@ -474,32 +477,29 @@ define([
                 singleFiles.push(file);
             }
         });
-        return (
-            getBulkImportFileInfo(xsvFiles, dtsFiles)
-                // return getSpreadsheetFileInfo(xsvFiles)
-                .then((result) => {
-                    if (result.types) {
-                        Object.keys(result.types).forEach((dataType) => {
-                            if (!(dataType in bulkFiles)) {
-                                bulkFiles[dataType] = {
-                                    appId: uploaders.app_info[dataType].app_id,
-                                    files: [],
-                                    outputSuffix: uploaders.app_info[dataType].app_output_suffix,
-                                };
-                            }
-                            bulkFiles[dataType].appParameters = result.types[dataType];
-                        });
-                    }
-                    if (Object.keys(bulkFiles).length) {
-                        return Jupyter.narrative.insertBulkImportCell(bulkFiles);
-                    } else {
-                        return Promise.resolve();
-                    }
-                })
-                .then(() => {
-                    return initSingleFileUploads(singleFiles);
-                })
-        );
+        return getBulkImportFileInfo(xsvFiles, dtsFiles)
+            .then((result) => {
+                if (result.types) {
+                    Object.keys(result.types).forEach((dataType) => {
+                        if (!(dataType in bulkFiles)) {
+                            bulkFiles[dataType] = {
+                                appId: uploaders.app_info[dataType].app_id,
+                                files: [],
+                                outputSuffix: uploaders.app_info[dataType].app_output_suffix,
+                            };
+                        }
+                        bulkFiles[dataType].appParameters = result.types[dataType];
+                    });
+                }
+                if (Object.keys(bulkFiles).length) {
+                    return Jupyter.narrative.insertBulkImportCell(bulkFiles);
+                } else {
+                    return Promise.resolve();
+                }
+            })
+            .then(() => {
+                return initSingleFileUploads(singleFiles);
+            });
     }
 
     return {

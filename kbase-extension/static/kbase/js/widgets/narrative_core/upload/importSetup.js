@@ -126,7 +126,7 @@ define([
         // into multiple calls.
 
         // a little cheating here to figure out the length allowance. Maybe it should be in the client?
-        const path = '/bulk_specification/?' + (flag ? flag + '&' : '') + 'files=';
+        const path = '/bulk_specification/?' + flag + 'files=&';
         const maxQueryLength = 2048 - stagingUrl.length - path.length;
         const bulkSpecProms = [];
 
@@ -181,6 +181,7 @@ define([
         // map from given datatype to app id.
         // if any data types are missing, record that
         // if any data types are not bulk import ready, record that, too.
+
         if (Object.keys(data.types).length === 0 && Object.keys(data.files).length === 0) {
             return data;
         }

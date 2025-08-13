@@ -12,6 +12,34 @@ This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will
 - URO-352 - add support for DTS manifest.json importer files for bulk import
 - adjust the readonly / writeable display toggle icon
 
+- Python dependencies updated to the following versions:
+  - coverage: 7.10.1
+  - pytest: 8.4.1
+  - pytest-cov: 6.2.1
+  - pytest-recording: 0.13.4
+  - ruff: 0.12.7
+  - beautifulsoup4: 4.13.4
+  - certifi: 2025.7.14
+  - cryptography: 45.0.5
+  - jsonschema: 4.25.0
+  - markdown: 3.8.2
+  - pillow: 11.3.0
+  - plotly: 6.2.0
+  - pycurl: 7.45.6
+  - pygments: 2.19.2
+  - pyopenssl: 25.1.0
+  - rsa: 4.9.1
+  - setuptools: 80.9.0
+  - sympy: 1.14.0
+  - ipywidgets: 8.1.7
+  - jinja2: 3.1.6
+  - pandas: 2.3.1
+  - pymongo: 4.13.2
+  - requests: 2.32.4
+  - statsmodels: 0.14.5
+  - tornado: 6.5.1
+
+
 ## Version 5.4.3
 - URO-363 - add note to the sharing panel to contact KBase about DOIs
 

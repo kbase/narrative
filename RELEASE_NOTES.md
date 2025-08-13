@@ -4,8 +4,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
 
+## Version 5.5.0
+- UIP-52 - fix integration tests
+- PTV-1913 - force backup authentication cookie to reset on load
+- URO-362 - add text for DOI requests
+- URO-366 - users should be able to paste usernames into the share search field
+- URO-352 - add support for DTS manifest.json importer files for bulk import
+- adjust the readonly / writeable display toggle icon
+
 ## Version 5.4.3
-URO-363 - add note to the sharing panel to contact KBase about DOIs
+- URO-363 - add note to the sharing panel to contact KBase about DOIs
 
 - Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
 

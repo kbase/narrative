@@ -101,10 +101,13 @@ define([
                 };
             }
 
-            function stubBulkSpecificationRequest(status, statusText, response) {
-                jasmine.Ajax.stubRequest(
-                    new RegExp(`${stagingServiceUrl}/bulk_specification`)
-                ).andReturn({
+            function stubBulkSpecificationRequest(status, statusText, response, isDts) {
+                let requestRegex = `${stagingServiceUrl}/bulk_specification/\\?files=.+&`;
+                if (isDts) {
+                    requestRegex += 'dts';
+                }
+                requestRegex += '$';
+                jasmine.Ajax.stubRequest(new RegExp(requestRegex)).andReturn({
                     status,
                     statusText,
                     contentType: 'text/plain',
@@ -193,31 +196,113 @@ define([
                 expect(Jupyter.narrative.insertBulkImportCell).not.toHaveBeenCalled();
             });
 
-            it('should load a happy path bulk specification file into a bulk import cell', async () => {
-                const readsDataType = 'fastq_reads_interleaved',
-                    assemblyDataType = 'assembly',
-                    importReadsData = [
+            [
+                { type: 'import_specification', name: 'bulk specification' },
+                { type: 'dts_manifest', name: 'DTS manifest' },
+            ].forEach((bulkInfoType) => {
+                it(`should load a happy path ${bulkInfoType.name} file into a bulk import cell`, async () => {
+                    const isDts = bulkInfoType.type === 'dts_manifest',
+                        readsDataType = 'fastq_reads_interleaved',
+                        assemblyDataType = 'assembly',
+                        importReadsData = [
+                            {
+                                fastq_fwd_staging_file_name: 'some_reads.fasta',
+                                name: 'some_reads',
+                                sequencing_tech: 'PacBio CLR',
+                                single_genome: '1',
+                                read_orientation_outward: '0',
+                                insert_size_std_dev: 6.66,
+                                insert_size_mean: 66.66,
+                            },
+                        ],
+                        processedReadsData = [
+                            {
+                                fastq_fwd_staging_file_name: 'some_reads.fasta',
+                                name: 'some_reads',
+                                sequencing_tech: 'PacBio CLR',
+                                single_genome: 1,
+                                read_orientation_outward: 0,
+                                insert_size_std_dev: 6.66,
+                                insert_size_mean: 66.66,
+                            },
+                        ],
+                        importAssemblyData = [
+                            {
+                                staging_file_subdir_path: 'some_assembly.fasta',
+                                assembly_name: 'some_assembly',
+                                type: 'Single amplified genome (SAG)',
+                                min_contig_length: 1000,
+                            },
+                        ],
+                        processedAssemblyData = [
+                            {
+                                staging_file_subdir_path: 'some_assembly.fasta',
+                                assembly_name: 'some_assembly',
+                                type: 'sag',
+                                min_contig_length: 1000,
+                            },
+                        ],
+                        readsFile = 'some_reads_file.' + (isDts ? 'json' : 'csv'),
+                        assemblyFile = 'some_assembly_file.' + (isDts ? 'json' : 'csv');
+
+                    stubBulkSpecificationRequest(
+                        200,
+                        'success',
                         {
-                            fastq_fwd_staging_file_name: 'some_reads.fasta',
-                            name: 'some_reads',
-                            sequencing_tech: 'PacBio CLR',
-                            single_genome: '1',
-                            read_orientation_outward: '0',
-                            insert_size_std_dev: 6.66,
-                            insert_size_mean: 66.66,
+                            types: {
+                                [readsDataType]: importReadsData,
+                                [assemblyDataType]: importAssemblyData,
+                            },
+                            files: {
+                                [readsDataType]: { file: readsFile, tab: null },
+                                [assemblyDataType]: { file: assemblyFile, tab: null },
+                            },
                         },
-                    ],
-                    processedReadsData = [
+                        bulkInfoType.type === 'dts_manifest'
+                    );
+
+                    Mocks.mockJsonRpc1Call({
+                        url: Config.url('narrative_method_store'),
+                        body: /get_method_spec/,
+                        response: [ImportFastqSpec, ImportAssemblySpec],
+                    });
+
+                    Mocks.mockJsonRpc1Call({
+                        url: Config.url('narrative_method_store'),
+                        body: /get_method_full_info/,
+                        response: [{}, {}],
+                    });
+
+                    await ImportSetup.setupImportCells([
                         {
-                            fastq_fwd_staging_file_name: 'some_reads.fasta',
-                            name: 'some_reads',
-                            sequencing_tech: 'PacBio CLR',
-                            single_genome: 1,
-                            read_orientation_outward: 0,
-                            insert_size_std_dev: 6.66,
-                            insert_size_mean: 66.66,
+                            name: readsFile,
+                            type: bulkInfoType.type,
                         },
-                    ],
+                        {
+                            name: assemblyFile,
+                            type: bulkInfoType.type,
+                        },
+                    ]);
+                    expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith({
+                        [readsDataType]: {
+                            files: [],
+                            appId: uploaders.app_info[readsDataType].app_id,
+                            outputSuffix: uploaders.app_info[readsDataType].app_output_suffix,
+                            appParameters: processedReadsData,
+                        },
+                        [assemblyDataType]: {
+                            files: [],
+                            appId: uploaders.app_info[assemblyDataType].app_id,
+                            outputSuffix: uploaders.app_info[assemblyDataType].app_output_suffix,
+                            appParameters: processedAssemblyData,
+                        },
+                    });
+                });
+            });
+
+            it('should properly adjust the paths of any files in a DTS manifest to be relative to the DTS manifest file', async () => {
+                const assemblyDataType = 'assembly',
+                    subDir = 'some/deep/subdirectory',
                     importAssemblyData = [
                         {
                             staging_file_subdir_path: 'some_assembly.fasta',
@@ -228,55 +313,47 @@ define([
                     ],
                     processedAssemblyData = [
                         {
-                            staging_file_subdir_path: 'some_assembly.fasta',
+                            staging_file_subdir_path: `${subDir}/some_assembly.fasta`,
                             assembly_name: 'some_assembly',
                             type: 'sag',
                             min_contig_length: 1000,
                         },
                     ],
-                    readsCsv = 'some_reads_file.csv',
-                    assemblyCsv = 'some_assembly_file.csv';
+                    manifestPath = `${subDir}/manifest.json`;
 
-                stubBulkSpecificationRequest(200, 'success', {
-                    types: {
-                        [readsDataType]: importReadsData,
-                        [assemblyDataType]: importAssemblyData,
+                stubBulkSpecificationRequest(
+                    200,
+                    'success',
+                    {
+                        types: {
+                            [assemblyDataType]: importAssemblyData,
+                        },
+                        files: {
+                            [assemblyDataType]: { file: `a_user/${manifestPath}`, tab: null },
+                        },
                     },
-                    files: {
-                        [readsDataType]: { file: readsCsv, tab: null },
-                        [assemblyDataType]: { file: assemblyCsv, tab: null },
-                    },
-                });
+                    true
+                );
 
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
                     body: /get_method_spec/,
-                    response: [ImportFastqSpec, ImportAssemblySpec],
+                    response: [ImportAssemblySpec],
                 });
 
                 Mocks.mockJsonRpc1Call({
                     url: Config.url('narrative_method_store'),
                     body: /get_method_full_info/,
-                    response: [{}, {}],
+                    response: [{}],
                 });
 
                 await ImportSetup.setupImportCells([
                     {
-                        name: 'some_reads_file.csv',
-                        type: 'import_specification',
-                    },
-                    {
-                        name: 'some_assembly_file.csv',
-                        type: 'import_specification',
+                        name: manifestPath,
+                        type: 'dts_manifest',
                     },
                 ]);
                 expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith({
-                    [readsDataType]: {
-                        files: [],
-                        appId: uploaders.app_info[readsDataType].app_id,
-                        outputSuffix: uploaders.app_info[readsDataType].app_output_suffix,
-                        appParameters: processedReadsData,
-                    },
                     [assemblyDataType]: {
                         files: [],
                         appId: uploaders.app_info[assemblyDataType].app_id,
@@ -379,7 +456,7 @@ define([
                         };
 
                     jasmine.Ajax.stubRequest(
-                        `${stagingServiceUrl}/bulk_specification/?files=${file1}`
+                        `${stagingServiceUrl}/bulk_specification/?files=${file1}&`
                     ).andReturn({
                         status: 200,
                         statusText: 'ok',
@@ -388,7 +465,7 @@ define([
                         responseText: JSON.stringify(response1),
                     });
                     jasmine.Ajax.stubRequest(
-                        `${stagingServiceUrl}/bulk_specification/?files=${file2}`
+                        `${stagingServiceUrl}/bulk_specification/?files=${file2}&`
                     ).andReturn({
                         status: 200,
                         statusText: 'ok',

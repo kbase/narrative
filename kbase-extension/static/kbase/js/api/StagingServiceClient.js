@@ -21,7 +21,10 @@ define(['RestAPIClient'], (RestAPIClient) => {
                 rename: { method: 'post', path: 'rename/${path}' },
                 decompress: { method: 'patch', path: 'decompress/${path}' },
                 importer_mappings: { method: 'get', path: 'importer_mappings/?${file_list}' },
-                bulkSpecification: { method: 'get', path: 'bulk_specification/?files=${files}' },
+                bulkSpecification: {
+                    method: 'get',
+                    path: 'bulk_specification/?files=${files}&${flag}',
+                },
                 write_bulk_specification: { method: 'post', path: 'write_bulk_specification/' },
             },
         });

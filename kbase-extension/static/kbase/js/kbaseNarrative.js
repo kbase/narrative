@@ -360,6 +360,12 @@ define([
                 shareWidget.refresh();
             }
             shareDialog.show();
+
+            // After a few seconds, focus the share field.
+            setTimeout(() => {
+                $('.select2-search__field').focus();
+            }, 2000);
+
         });
     };
 

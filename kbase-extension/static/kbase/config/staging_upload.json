@@ -53,6 +53,10 @@
             "name": "Import Specification"
         },
         {
+            "id": "dts_manifest",
+            "name": "Data Transfer Service Manifest"
+        },
+        {
             "id": "decompress",
             "name": "Decompress/Unpack"
         }
@@ -62,6 +66,7 @@
         "fastq_reads_interleaved",
         "fastq_reads_noninterleaved",
         "gff_metagenome",
+        "gff_genome",
         "assembly",
         "genbank_genome"
     ],
@@ -69,6 +74,7 @@
         "web_upload": {
             "app_id": "kb_uploadmethods/upload_web_file"
         },
+        "dts_manifest": { },
         "import_specification": { },
         "test_fastq_reads": {
             "app_id": "NarrativeTest/example_reads_upload",

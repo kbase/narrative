@@ -4,8 +4,79 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
 
+## Version 5.5.0
+- UIP-52 - fix integration tests
+- PTV-1913 - force backup authentication cookie to reset on load
+- URO-362 - add text for DOI requests
+- URO-366 - users should be able to paste usernames into the share search field
+- URO-352 - add support for DTS manifest.json importer files for bulk import
+- adjust the readonly / writeable display toggle icon
+
+- Python dependencies updated to the following versions:
+  - coverage: 7.10.1
+  - pytest: 8.4.1
+  - pytest-cov: 6.2.1
+  - pytest-recording: 0.13.4
+  - ruff: 0.12.7
+  - beautifulsoup4: 4.13.4
+  - certifi: 2025.7.14
+  - cryptography: 45.0.5
+  - jsonschema: 4.25.0
+  - markdown: 3.8.2
+  - pillow: 11.3.0
+  - plotly: 6.2.0
+  - pycurl: 7.45.6
+  - pygments: 2.19.2
+  - pyopenssl: 25.1.0
+  - rsa: 4.9.1
+  - setuptools: 80.9.0
+  - sympy: 1.14.0
+  - ipywidgets: 8.1.7
+  - jinja2: 3.1.6
+  - pandas: 2.3.1
+  - pymongo: 4.13.2
+  - requests: 2.32.4
+  - statsmodels: 0.14.5
+  - tornado: 6.5.1
+
+- Javascript dependencies updated to the following versions:
+  - dompurify: 3.2.6
+  - follow-redirects: 1.15.11
+  - plotly.js-dist-min: 3.1.0
+  - @babel/traverse: 7.28.0
+  - @eslint/eslintrc: 3.3.1
+  - @eslint/js: 9.33.0
+  - @wdio/browserstack-service: 9.19.1
+  - @wdio/cli: 9.19.1
+  - @wdio/local-runner: 9.19.1
+  - @wdio/mocha-framework: 9.19.1
+  - @wdio/spec-reporter: 9.19.1
+  - autoprefixer: 10.4.21
+  - axios: 1.11.0
+  - chromedriver: 139.0.0
+  - commander: 14.0.0
+  - cssnano: 7.1.0
+  - eslint: 9.33.0
+  - eslint-config-prettier: 10.1.8
+  - glob: 11.0.3
+  - globals: 16.3.0
+  - jquery-migrate: 3.5.2
+  - lint-staged: 16.1.5
+  - postcss: 8.5.6
+  - postcss-cli: 11.0.1
+  - prettier: 3.6.2
+  - puppeteer: 24.16.1
+  - sass: 1.90.0
+  - selenium-standalone: 10.0.2
+  - selenium-webdriver: 4.35.0
+  - stylelint: 16.23.1
+  - stylelint-config-recommended: 17.0.0
+  - stylelint-config-standard: 39.0.0
+  - terser: 5.43.1
+
+
 ## Version 5.4.3
-URO-363 - add note to the sharing panel to contact KBase about DOIs
+- URO-363 - add note to the sharing panel to contact KBase about DOIs
 
 - Python `requirements-general.txt` and `requirements.txt` merged into a single file so that all runtime deps are installed in one place.
 

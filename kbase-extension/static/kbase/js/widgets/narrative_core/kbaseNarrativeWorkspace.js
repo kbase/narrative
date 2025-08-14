@@ -358,7 +358,7 @@ define([
             // mechanism should be disabled (and the button hidden as well.)
             const icon = $('#kb-view-mode span');
             icon.toggleClass('fa-eye', this.uiMode === 'view');
-            icon.toggleClass('fa-pencil', this.uiMode === 'edit');
+            icon.toggleClass('fa-eye-slash', this.uiMode === 'edit');
             Jupyter.narrative.readonly = this.uiMode === 'view';
 
             // Warning, do not look for the code for this ... it will burn your

@@ -1,7 +1,7 @@
-coverage==7.10.1
-pytest==8.4.1
-pytest-cov==6.2.1
+coverage==7.13.1
+pytest==9.0.2
+pytest-cov==7.0.0
 pytest-recording==0.13.4
 requests-mock==1.12.1
-ruff==0.12.7
-vcrpy==7.0.0
+ruff==0.14.10
+vcrpy==8.1.0

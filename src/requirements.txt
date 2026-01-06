@@ -1,6 +1,6 @@
 appdirs==1.4.4
 beautifulsoup4==4.13.4
-biopython==1.85
+biopython==1.86
 bokeh==3.6.2
 certifi==2025.7.14
 chardet==5.2.0

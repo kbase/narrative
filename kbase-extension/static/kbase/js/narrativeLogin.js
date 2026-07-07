@@ -80,14 +80,27 @@ define([
             buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
-                    .click(() => {
-                        dialog.hide();
+                    .click(async () => {
                         const newToken = $inputField.val();
+                        // Look up the token's real expiration from the auth service
+                        // rather than assuming a fixed lifetime, so the dev cookie
+                        // matches the actual token lifetime.
+                        let tokenInfo;
+                        try {
+                            tokenInfo = await authClient.getTokenInfo(newToken);
+                        } catch (error) {
+                            alert(
+                                'That auth token could not be validated against the auth service. Please check the token and try again.'
+                            );
+                            return;
+                        }
+                        dialog.hide();
                         authClient.setCookie({
                             name: 'kbase_session',
                             value: newToken,
                             domain: 'localhost',
                             secure: false,
+                            expires: tokenInfo.expires,
                         });
                         location.reload();
                     }),

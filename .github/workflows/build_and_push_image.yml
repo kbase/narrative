@@ -13,6 +13,9 @@ jobs:
   docker_build_image:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     -
       name: Check out GitHub Repo
@@ -48,8 +51,8 @@ jobs:
       uses: docker/login-action@master
       with:
         registry: ghcr.io
-        username: ${{ secrets.GHCR_USERNAME }}
-        password: ${{ secrets.GHCR_TOKEN }}
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
     -
       name: Build narrative image
       uses: docker/build-push-action@master
@@ -68,7 +71,7 @@ jobs:
     -
       name: Build version image
       uses: docker/build-push-action@master
-      if: ${{ github.base_ref }} == 'main' || ${{ github.base_ref }} == 'develop'
+      if: ${{ github.base_ref == 'main' || github.base_ref == 'develop' }}
       with:
         context: .
         push: true

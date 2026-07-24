@@ -183,6 +183,13 @@ define(['domPurify', 'common/format', 'common/html', 'util/string'], (
                 };
 
                 try {
+                    // A valid description must be a string. Anything else (e.g. an object
+                    // with a non-function toString) is treated as invalid. Older versions of
+                    // DOMPurify threw on such input, newer versions coerce it silently.
+                    // To keep with the older style, we continue to throw the error here.
+                    if (typeof descriptionText !== 'string') {
+                        throw new Error('App description is not a string');
+                    }
                     const node = document.createElement('div');
                     node.innerHTML = sanitize(descriptionText);
                     // After sanitization and fixing, we want the raw html string back.

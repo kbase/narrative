@@ -3,16 +3,14 @@ name: Build and push narrative images
 
 on:
   workflow_call:
-    secrets:
-      GHCR_USERNAME:
-        required: true
-      GHCR_TOKEN:
-        required: true
 
 jobs:
   docker_build_image:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     -
       name: Check out GitHub Repo
@@ -42,17 +40,17 @@ jobs:
       run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
     -
       name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@master
+      uses: docker/setup-buildx-action@v4
     -
       name: Log in to the Container registry
-      uses: docker/login-action@master
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
-        username: ${{ secrets.GHCR_USERNAME }}
-        password: ${{ secrets.GHCR_TOKEN }}
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
     -
       name: Build narrative image
-      uses: docker/build-push-action@master
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: ./Dockerfile
@@ -61,14 +59,14 @@ jobs:
         tags: ${{ env.APP_IMAGE_TAG }}
         build-args: |
           BRANCH=${{ github.head_ref }}
-          BUILD_DATE=${{ steps.date.output.date }}
+          BUILD_DATE=${{ steps.date.outputs.date }}
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
           VCS_REF=${{ github.sha }}
           TAG='${{ github.ref }}'
     -
       name: Build version image
-      uses: docker/build-push-action@master
-      if: ${{ github.base_ref }} == 'main' || ${{ github.base_ref }} == 'develop'
+      uses: docker/build-push-action@v7
+      if: ${{ github.base_ref == 'main' || github.base_ref == 'develop' }}
       with:
         context: .
         push: true
@@ -76,7 +74,7 @@ jobs:
         tags: ${{ env.APP_VERSION_IMAGE_TAG }}
         build-args: |
           BRANCH=${{ github.head_ref }}
-          BUILD_DATE=${{ steps.date.output.date }}
+          BUILD_DATE=${{ steps.date.outputs.date }}
           NARRATIVE_VERSION=${{ env.NARRATIVE_VERSION }}
           NARRATIVE_GIT_HASH=${{ env.NARRATIVE_GIT_HASH }}
           VCS_REF=${{ github.sha }}

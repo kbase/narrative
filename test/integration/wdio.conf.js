@@ -3,6 +3,7 @@
 
 const testConfig = require('../testConfig');
 const fs = require('fs');
+const os = require('os');
 
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
@@ -79,9 +80,21 @@ function processPreset(preset) {
                 OS: null, // not used by chromedriver; it is run on the host, whatever it is
                 OS_VERSION: null, // TODO: detect os version.
                 BROWSER: 'chrome',
-                BROWSER_VERSION: null, // will use the installed chrome on this host
+                // Defaults to the installed chrome on this host; override with BROWSER_VERSION.
+                BROWSER_VERSION: e.BROWSER_VERSION || null,
                 HEADLESS: e.HEADLESS || 't',
                 SERVICE: 'chromedriver',
+            };
+        case 'gd':
+            // geckodriver: runs the Firefox installed on this host. WebdriverIO's
+            // built-in driver management downloads a matching geckodriver.
+            return {
+                OS: null,
+                OS_VERSION: null,
+                BROWSER: 'firefox',
+                BROWSER_VERSION: e.BROWSER_VERSION || null,
+                HEADLESS: e.HEADLESS || 't',
+                SERVICE: 'geckodriver',
             };
         default:
             throw new Error(`Sorry, "${preset}" is not a preset`);
@@ -186,15 +199,69 @@ function makeCapabilities(config) {
                     '--no-sandbox',
                     '--disable-gpu',
                     '--disable-dev-shm-usage',
+                    // The Narrative makes direct cross-origin XHR calls to the KBase
+                    // services (auth, workspace, etc.), which do not send CORS headers for
+                    // a localhost origin. An interactive browser typically bypasses this;
+                    // headless Chrome does not, so the workspace lookup fails and every cell
+                    // extension errors out during load. Disabling web security lets the
+                    // throwaway test browser make those calls. Chrome only honors
+                    // --disable-web-security when given a dedicated (fresh) user-data-dir.
+                    '--disable-web-security',
+                    `--user-data-dir=${os.tmpdir()}/wdio-chrome-${process.pid}`,
                     `--window-size=${config.WIDTH},${config.HEIGHT}`,
                 ];
                 return {
                     browserName: 'chrome',
-                    browserVersion: '128',
+                    // No browserVersion pin: WebdriverIO's built-in driver management
+                    // (Selenium Manager) uses the Chrome installed on this host and
+                    // downloads the matching chromedriver automatically. Set the
+                    // BROWSER_VERSION env var if a specific version is ever needed.
+                    ...(config.BROWSER_VERSION ? { browserVersion: config.BROWSER_VERSION } : {}),
                     acceptInsecureCerts: true,
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
+                    },
+                    // Capture the browser console log so it can be dumped after each test
+                    // (see the afterTest hook). Requires the classic webdriver protocol.
+                    'goog:loggingPrefs': {
+                        browser: 'ALL',
+                    },
+                    'wdio:enforceWebDriverClassic': true,
+                };
+            })();
+        case 'geckodriver':
+            return (() => {
+                const args = [];
+                if (config.HEADLESS === 't') {
+                    args.push('-headless');
+                }
+                args.push('--width', `${config.WIDTH}`, '--height', `${config.HEIGHT}`);
+                return {
+                    browserName: 'firefox',
+                    // No browserVersion pin: WebdriverIO uses the installed Firefox and
+                    // downloads a matching geckodriver. Set BROWSER_VERSION to override.
+                    ...(config.BROWSER_VERSION ? { browserVersion: config.BROWSER_VERSION } : {}),
+                    acceptInsecureCerts: true,
+                    maxInstances: 1,
+                    'moz:firefoxOptions': {
+                        args,
+                        prefs: {
+                            // The Narrative makes direct cross-origin XHR calls to the KBase
+                            // services, which don't send CORS headers for a localhost origin.
+                            // Relax Firefox's CORS enforcement so the throwaway test browser
+                            // can make those calls (equivalent to Chrome's
+                            // --disable-web-security).
+                            'security.fileuri.strict_origin_policy': false,
+                            'content.cors.disable': true,
+                            'network.cors_preflight.block_synchronous_requests': false,
+                        },
+                    },
+                    // Capture the browser console log after each test (see the afterTest
+                    // hook). Firefox exposes fewer log types than Chrome, so this may be
+                    // empty; it is best-effort.
+                    'goog:loggingPrefs': {
+                        browser: 'ALL',
                     },
                     'wdio:enforceWebDriverClassic': true,
                 };
@@ -495,9 +562,34 @@ const wdioConfig = {
     // },
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
+     * Dumps the browser console log so failures that originate in page JS (errors,
+     * warnings, uncaught exceptions) are visible in the test output. Only the browser
+     * log is captured; it's cleared by each getLogs call, so this shows the log for the
+     * just-completed test. Guarded so it never masks the real test failure.
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterTest: async function (test, context, { passed }) {
+        // getLogs is only available on the classic protocol with loggingPrefs enabled
+        // (chromedriver). Skip quietly for services that don't support it.
+        if (typeof browser === 'undefined' || typeof browser.getLogs !== 'function') {
+            return;
+        }
+        try {
+            const logs = await browser.getLogs('browser');
+            if (!logs || !logs.length) {
+                return;
+            }
+            const header = `----- browser console log for "${test.title}"${
+                passed ? '' : ' (FAILED)'
+            } -----`;
+            console.log(header);
+            logs.forEach((entry) => {
+                console.log(`[${entry.level}] ${entry.message}`);
+            });
+            console.log('-'.repeat(header.length));
+        } catch (err) {
+            console.log(`(could not retrieve browser console log: ${err.message})`);
+        }
+    },
 
     /**
      * Hook that gets executed after the suite has ended

@@ -55,10 +55,10 @@ jobs:
         docker run -v "${{ github.workspace }}/output:/tmp/output" --user nobody ${{ env.APP_IMAGE_TAG }} /bin/bash scripts/run_backend_tests.sh
       continue-on-error: true
     -
-      name: Use Node JS 20
+      name: Use Node JS 24
       uses: actions/setup-node@main
       with:
-        node-version: 20
+        node-version: 24
     -
       name: Install JS dependencies
       run: |

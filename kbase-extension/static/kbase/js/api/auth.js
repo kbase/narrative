@@ -304,7 +304,7 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                     },
                 }).fail((jqXHR, textStatus) => {
                     console.warn(
-                        `[auth diag] FAILED ${callString} status=${jqXHR.status} ${textStatus} body=${jqXHR.responseText}`
+                        `auth FAILED ${callString} status=${jqXHR.status} ${textStatus} body=${jqXHR.responseText}`
                     );
                 })
             );

@@ -1,5 +1,24 @@
 # Integration Testing
 
+## New instructions as of July 2026
+Most of this document is made obsolete by how Cloudflare now sits in front
+of the KBase CI server and blocks headless requests. It's likely possible
+to run integration tests in a live mode that will pass Cloudflare's 
+challenges, but that doesn't help the Github Actions workflows.
+
+So here's how to run using the KBase dev server.
+
+1. Get access to dev1 (out of scope for this doc).
+2. Install the Narrative in a local space there.
+3. Run the selenium standalone Docker image:
+  `docker run -d --name selenium-chrome --network host --shm-size=2g   selenium/standalone-chrome:latest`
+4. With that in the background, you can now start your tests:
+  `PRESET=grid BASE_URL=http://localhost:32323 ./scripts/run_tests.sh -i`
+
+as Github Actions, and running locally headless, no longer works, treat the rest of this document as a fun piece of history. Though, it's still useful
+for updating and adding to the tests if necessary.
+
+
 ## Contents
 
 - For the impatient

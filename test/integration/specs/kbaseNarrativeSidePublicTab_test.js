@@ -1,7 +1,6 @@
 'use strict';
 
 const { login, openNarrative, sendString, clickWhenReady, KBASE_ENV } = require('../wdioUtils.js');
-const { setDefaultOptions } = require('expect-webdriverio');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -778,9 +777,6 @@ async function simpleSearchTest(testCase) {
 }
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
-    before(() => {
-        setDefaultOptions({ wait: 5000 });
-    });
     beforeEach(async () => {
         await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();

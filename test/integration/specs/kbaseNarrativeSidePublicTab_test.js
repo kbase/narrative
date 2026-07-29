@@ -777,9 +777,6 @@ async function simpleSearchTest(testCase) {
 }
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
-    before(() => {
-        require('expect-webdriverio').setOptions({ wait: 5000 });
-    });
     beforeEach(async () => {
         await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();

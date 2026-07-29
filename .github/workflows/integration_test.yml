@@ -45,10 +45,10 @@ jobs:
       shell: bash -l {0}
       run: docker pull ${{ env.APP_IMAGE_TAG }}
     -
-      name: Use Node JS 20
+      name: Use Node JS 24
       uses: actions/setup-node@master
       with:
-        node-version: 20
+        node-version: 24
     -
       name: Install JS dependencies
       run: |

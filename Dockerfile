@@ -49,6 +49,9 @@ ADD ./.git /kb/dev_container/narrative/.git
 
 WORKDIR /kb/dev_container/narrative
 
+RUN curl -sL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs
+
 RUN mkdir -p /kb/deployment/ui-common/ && \
     mkdir -p /tmp/narrative && \
     # install JS deps
